@@ -1,0 +1,290 @@
+-- Fling GUI v3.0
+-- Credits: V0C0N1337
+
+-- Servisler
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local OldFPDH = workspace.FallenPartsDestroyHeight
+
+-- Credits Animasyonu
+local CreditsGui = Instance.new("ScreenGui")
+local CreditsLabel = Instance.new("TextLabel")
+CreditsGui.Parent = game.CoreGui
+CreditsLabel.Size = UDim2.new(1, 0, 0.1, 0)
+CreditsLabel.Position = UDim2.new(0, 0, 0.45, 0)
+CreditsLabel.BackgroundTransparency = 1
+CreditsLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+CreditsLabel.TextScaled = true
+CreditsLabel.Text = "V0C0N1337"
+CreditsLabel.Font = Enum.Font.GothamBold
+CreditsLabel.Parent = CreditsGui
+
+spawn(function()
+    wait(2)
+    TweenService:Create(CreditsLabel, TweenInfo.new(2), {TextTransparency = 1}):Play()
+    wait(2)
+    CreditsGui:Destroy()
+end)
+
+-- GUI Oluşturma
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+ScreenGui.Parent = game.CoreGui
+MainFrame.Size = UDim2.new(0.5, 0, 0.3, 0)
+MainFrame.Position = UDim2.new(0.25, 0, 0.6, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Parent = ScreenGui
+UICorner.CornerRadius = UDim.new(0.02, 0)
+UICorner.Parent = MainFrame
+
+-- Functions
+local function GetPlayer(Name)
+    Name = Name:lower()
+    if Name == "all" or Name == "others" then
+        return "all"
+    elseif Name == "random" then
+        local GetPlayers = Players:GetPlayers()
+        table.remove(GetPlayers, table.find(GetPlayers, LocalPlayer))
+        return GetPlayers[math.random(#GetPlayers)]
+    else
+        for _, x in next, Players:GetPlayers() do
+            if x ~= LocalPlayer then
+                if x.Name:lower():match("^" .. Name) or x.DisplayName:lower():match("^" .. Name) then
+                    return x
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function FWait(Number)
+    local Current = tick()
+    Number = Number or 0
+    repeat RunService.Heartbeat:Wait()
+    until tick() - Current >= Number
+    return tick() - Current
+end
+
+-- Ana Fling Methodu
+local function Fling(Target)
+    local Character = LocalPlayer.Character
+    local RootPart = Character.HumanoidRootPart
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    local Head = Character:FindFirstChild("Head")
+
+    local TargetCharacter = Target.Character
+    local TargetHead = TargetCharacter:FindFirstChild("Head")
+    local TargetHumanoid = TargetCharacter:FindFirstChild("Humanoid")
+    local TargetRoot = TargetCharacter:FindFirstChild("HumanoidRootPart")
+
+    if Character and Humanoid and RootPart and Head then
+        local OldPos = RootPart.CFrame
+        workspace.CurrentCamera.CameraSubject = TargetHead or TargetCharacter
+
+        local function ForcePosition(Base, Position, Angle)
+            LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(Base.Position) * Position * Angle)
+            RootPart.Velocity = Vector3.new(9e9, 9e9, 9e9)
+            RootPart.RotVelocity = Vector3.new(9e9, 9e9, 9e9)
+            RootPart.AssemblyAngularVelocity = Vector3.new(9e9, 9e9, 9e9)
+            RootPart.AssemblyLinearVelocity = Vector3.new(9e9, 9e9, 9e9)
+        end
+
+        local function ForceBasePart(BasePart)
+            local FlingTime = 9999
+            local Time = tick()
+            local Angle = 0
+
+            repeat
+                if RootPart and TargetCharacter then
+                    Angle = Angle + 100
+                    -- Gelişmiş Hareket Döngüsü
+                    for i = 1, 6 do
+                        ForcePosition(
+                            BasePart,
+                            CFrame.new(0, (i % 2 == 0) and 3 or -3, 0) + 
+                            TargetHumanoid.MoveDirection * BasePart.Velocity.Magnitude / 2,
+                            CFrame.Angles(0, 0, math.rad(Angle))
+                        )
+                        FWait(0)
+                    end
+                else
+                    break
+                end
+            until BasePart.Velocity.Magnitude > 1000 or 
+                  BasePart.Parent ~= TargetCharacter or 
+                  Humanoid.Health <= 0 or 
+                  tick() > Time + FlingTime
+        end
+
+        -- Pre-Fling Hazırlık
+        workspace.FallenPartsDestroyHeight = 0/0
+        Humanoid:SetStateEnabled("Seated", false)
+        if Character:FindFirstChild("Animate") then
+            Character:FindFirstChild("Animate").Disabled = true
+        end
+
+        -- Velocity Ayarları
+        local BV = Instance.new("BodyVelocity")
+        BV.Parent = RootPart
+        BV.Velocity = Vector3.new(9e9, 9e9, 9e9)
+        BV.MaxForce = Vector3.new(5/0, 5/0, 1/0)
+
+        -- Fling Başlatma
+        if TargetRoot then
+            ForceBasePart(TargetRoot)
+        else
+            ForceBasePart(TargetHead)
+        end
+
+        -- Cleanup
+        BV:Destroy()
+        Humanoid:ChangeState("GettingUp")
+        Humanoid:SetStateEnabled("Seated", true)
+        workspace.CurrentCamera.CameraSubject = Character
+        workspace.FallenPartsDestroyHeight = OldFPDH
+        
+        if Character:FindFirstChild("Animate") then
+            Character:FindFirstChild("Animate").Disabled = false
+        end
+
+        -- Velocity Reset
+        for _, v in pairs(Character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Velocity = Vector3.zero
+                v.RotVelocity = Vector3.zero
+                v.AssemblyAngularVelocity = Vector3.zero
+                v.AssemblyLinearVelocity = Vector3.zero
+            end
+        end
+
+        -- Pozisyon Reset
+        Character:SetPrimaryPartCFrame(OldPos)
+    end
+end
+
+-- GUI Elemanları
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0.2, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Ultra skid flinger"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local TargetBox = Instance.new("TextBox")
+TargetBox.Size = UDim2.new(0.8, 0, 0.2, 0)
+TargetBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+TargetBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TargetBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetBox.PlaceholderText = "target name/DisplayName (all/random)"
+TargetBox.TextScaled = true
+TargetBox.Font = Enum.Font.GothamSemibold
+TargetBox.Parent = MainFrame
+
+local FlingButton = Instance.new("TextButton")
+FlingButton.Size = UDim2.new(0.8, 0, 0.2, 0)
+FlingButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+FlingButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+FlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlingButton.Text = "FLING!"
+FlingButton.TextScaled = true
+FlingButton.Font = Enum.Font.GothamBold
+FlingButton.Parent = MainFrame
+
+-- En Yakın Oyuncu Butonu
+local NearestButton = Instance.new("TextButton")
+NearestButton.Size = UDim2.new(0.38, 0, 0.15, 0)
+NearestButton.Position = UDim2.new(0.1, 0, 0.85, 0)
+NearestButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+NearestButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NearestButton.Text = "random"
+NearestButton.TextScaled = true
+NearestButton.Font = Enum.Font.GothamBold
+NearestButton.Parent = MainFrame
+
+-- Tüm Oyuncular Butonu
+local AllButton = Instance.new("TextButton")
+AllButton.Size = UDim2.new(0.38, 0, 0.15, 0)
+AllButton.Position = UDim2.new(0.52, 0, 0.85, 0)
+AllButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+AllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AllButton.Text = "all"
+AllButton.TextScaled = true
+AllButton.Font = Enum.Font.GothamBold
+AllButton.Parent = MainFrame
+
+-- Button Events
+FlingButton.MouseButton1Click:Connect(function()
+    local target = GetPlayer(TargetBox.Text)
+    if target then
+        if target == "all" then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    Fling(player)
+                end
+            end
+        else
+            Fling(target)
+        end
+    end
+end)
+
+NearestButton.MouseButton1Click:Connect(function()
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local dist = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if dist < minDist then
+                minDist = dist
+                nearest = player
+            end
+        end
+    end
+    
+    if nearest then
+        Fling(nearest)
+    end
+end)
+
+AllButton.MouseButton1Click:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            Fling(player)
+        end
+    end
+end)
+
+-- Sürükleme Özelliği
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch and dragging then
+        update(input)
+    end
+end)

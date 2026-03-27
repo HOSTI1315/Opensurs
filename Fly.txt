@@ -1,0 +1,166 @@
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local enabled = false
+local currentSpeed = 20000
+local itemID = "Grapple Hook"
+local useItemRE = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+local args = {1.9832406361897787}
+
+local character, humanoid, hrp
+local bodyPosition
+local speedConnection, fakeUseLoop, equipLoop
+
+local function createStatusText()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "SpeedHackStatus"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    local textLabel = Instance.new("TextLabel", screenGui)
+    textLabel.Size = UDim2.new(0, 200, 0, 30)
+    textLabel.Position = UDim2.new(0.5, -100, 0, 10)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Text = "Speed key: F"
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 14
+    return textLabel
+end
+
+local statusText = createStatusText()
+
+local function updateCharacter()
+    character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    humanoid = character:WaitForChild("Humanoid", 5)
+    hrp = character:WaitForChild("HumanoidRootPart", 5)
+end
+
+local function startFly()
+    if bodyPosition then
+        bodyPosition:Destroy()
+        bodyPosition = nil
+    end
+    bodyPosition = Instance.new("BodyPosition")
+    bodyPosition.MaxForce = Vector3.new(1e4, 1e4, 1e4)
+    bodyPosition.Position = hrp.Position
+    bodyPosition.Parent = hrp
+
+    if speedConnection then speedConnection:Disconnect() end
+    speedConnection = RunService.Heartbeat:Connect(function(step)
+        if not enabled or not hrp then return end
+        local camLookVector = Camera.CFrame.LookVector
+        local moveDir = Vector3.new(0, 0, 0)
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            moveDir = moveDir + camLookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            moveDir = moveDir - camLookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            moveDir = moveDir + (Camera.CFrame.RightVector * -1)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            moveDir = moveDir + Camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            moveDir = moveDir + Vector3.new(0, 1, 0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            moveDir = moveDir + Vector3.new(0, -1, 0)
+        end
+        if moveDir.Magnitude > 0 then
+            moveDir = moveDir.Unit
+            local targetPos = hrp.Position + moveDir * currentSpeed * step
+            bodyPosition.Position = targetPos
+        end
+    end)
+end
+
+local function stopFly()
+    if speedConnection then speedConnection:Disconnect() end
+    if bodyPosition then
+        bodyPosition:Destroy()
+        bodyPosition = nil
+    end
+end
+
+local function ensureGrapple()
+    if not character then return end
+    if not character:FindFirstChild(itemID) and not LocalPlayer.Backpack:FindFirstChild(itemID) then
+        pcall(function()
+            game:GetService("ReplicatedStorage").Packages.Net["RF/CoinsShopService/RequestBuy"]:InvokeServer(itemID)
+        end)
+    end
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    local tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if tool and tool.Parent ~= character then
+        tool.Parent = character
+    end
+end
+
+local function fakeUse()
+    if not character then return end
+    local tool = character:FindFirstChild(itemID)
+    if tool then
+        pcall(function() useItemRE:FireServer(unpack(args)) end)
+    end
+end
+
+local function startFakeUseLoop()
+    if fakeUseLoop then fakeUseLoop:Disconnect() end
+    fakeUseLoop = RunService.RenderStepped:Connect(function()
+        if enabled then
+            fakeUse()
+        end
+    end)
+end
+
+local function startEquipLoop()
+    if equipLoop then equipLoop:Disconnect() end
+    equipLoop = RunService.Heartbeat:Connect(function()
+        if enabled then
+            ensureGrapple()
+        end
+    end)
+end
+
+local function cleanup()
+    enabled = false
+    if speedConnection then speedConnection:Disconnect() end
+    if fakeUseLoop then fakeUseLoop:Disconnect() end
+    if equipLoop then equipLoop:Disconnect() end
+    if bodyPosition then
+        bodyPosition:Destroy()
+        bodyPosition = nil
+    end
+    if humanoid then humanoid.WalkSpeed = DEFAULT_SPEED end
+    if statusText then
+        statusText.Text = "Speed key: F"
+        statusText.TextColor3 = Color3.new(1,1,1)
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.F then
+        enabled = not enabled
+        if enabled then
+            updateCharacter()
+            startFly()
+            ensureGrapple()
+            startFakeUseLoop()
+            startEquipLoop()
+            if statusText then
+                statusText.Text = "Speed: Enabled"
+                statusText.TextColor3 = Color3.new(0,1,0)
+            end
+        else
+            cleanup()
+        end
+    end
+end)
+
+updateCharacter()

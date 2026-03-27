@@ -1,0 +1,168 @@
+-- Kapao Hub Universal Game Database
+local UniverseDatabase = {
+    [212154879] = { -- SwordBrust2
+        name = "SwordBrust2",
+        script = "https://raw.githubusercontent.com/Happi-Zy/BLUE-HEATER-2/refs/heads/main/SwordBrust%202",
+        version = "1.0.0",
+        description = "SwordBrust2"
+    },
+    
+    [6853277050] = { -- Dungeon Lootify (จากรหัสที่คุณได้มา)
+        name = "Dungeon Lootify",
+        script = "https://raw.githubusercontent.com/Happi-Zy/BLUE-HEATER-2/refs/heads/main/Dungeon%20Lootify",
+        version = "1.0.0",
+        description = "Dungeon Lootify"
+    },
+    
+    -- เพิ่มเกมอื่นๆ ได้ที่นี่
+    [8353962342] = {
+        name = "Build ur base ⚔️",
+        script = "https://raw.githubusercontent.com/Happi-Zy/BLUE-HEATER-2/refs/heads/main/Build%20a%20Base",
+        version = "1.0.0",
+        description = "Build ur base ⚔️"
+    }
+}
+
+-- Kapao Hub Loader System
+local KapaoLoader = {}
+
+function KapaoLoader:showNotification(title, text, duration)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = duration or 5
+    })
+end
+
+function KapaoLoader:getGameInfo()
+    local universeId = game.GameId
+    local placeId = game.PlaceId
+    local gameName = "Unknown Game"
+    
+    -- ลองดึงชื่อเกม
+    local success, productInfo = pcall(function()
+        return game:GetService("MarketplaceService"):GetProductInfo(placeId)
+    end)
+    
+    if success and productInfo then
+        gameName = productInfo.Name
+    end
+    
+    return {
+        universeId = universeId,
+        placeId = placeId,
+        name = gameName
+    }
+end
+
+function KapaoLoader:findSupportedGame()
+    local gameInfo = self:getGameInfo()
+    local gameData = UniverseDatabase[gameInfo.universeId]
+    
+    if gameData then
+        return gameData, gameInfo
+    end
+    
+    return nil, gameInfo
+end
+
+function KapaoLoader:loadScript(scriptUrl)
+    local success, error = pcall(function()
+        loadstring(game:HttpGet(scriptUrl))()
+    end)
+    
+    if not success then
+        self:showNotification(
+            "❌ Kapao Hub Error",
+            "Failed to load script:\n" .. tostring(error),
+            8
+        )
+        return false
+    end
+    
+    return true
+end
+
+function KapaoLoader:showSupportedGames()
+    local gamesList = "🎮 Supported Games:\n\n"
+    local count = 0
+    
+    for universeId, gameData in pairs(UniverseDatabase) do
+        count = count + 1
+        gamesList = gamesList .. "• " .. gameData.name .. "\n"
+    end
+    
+    gamesList = gamesList .. "\nTotal: " .. count .. " games"
+    
+    self:showNotification(
+        "☕ Kapao Hub",
+        gamesList,
+        12
+    )
+end
+
+function KapaoLoader:reportUnsupportedGame(gameInfo)
+    print("=== UNSUPPORTED GAME REPORT ===")
+    print("Game Name:", gameInfo.name)
+    print("UniverseId:", gameInfo.universeId)
+    print("PlaceId:", gameInfo.placeId)
+    print("Timestamp:", os.date("%Y-%m-%d %H:%M:%S"))
+    print("===============================")
+    
+    -- แสดงข้อมูลให้ผู้ใช้เห็น
+    self:showNotification(
+        "❌ Game Not Supported",
+        "Game: " .. gameInfo.name .. "\nUniverseId: " .. gameInfo.universeId .. "\nPlaceId: " .. gameInfo.placeId,
+        10
+    )
+end
+
+function KapaoLoader:init()
+    -- แสดง loading notification
+    self:showNotification(
+        "☕ Kapao Hub",
+        "Initializing Universal Loader...",
+        3
+    )
+    
+    wait(1)
+    
+    -- หาเกมที่รองรับ
+    local gameData, gameInfo = self:findSupportedGame()
+    
+    if gameData then
+        -- เจอเกมที่รองรับ
+        self:showNotification(
+            "🎮 Kapao Hub",
+            "Loading " .. gameData.name,
+            3
+        )
+        
+        wait(2)
+        
+        -- โหลด script
+        local loadSuccess = self:loadScript(gameData.script)
+        
+        if loadSuccess then
+            self:showNotification(
+                "✅ Kapao Hub",
+                gameData.name .. " loaded successfully!",
+                4
+            )
+        end
+    else
+        -- ไม่เจอเกมที่รองรับ
+        self:reportUnsupportedGame(gameInfo)
+        wait(2)
+        self:showSupportedGames()
+    end
+end
+
+-- Welcome Message
+print("=== KAPAO HUB UNIVERSAL LOADER ===")
+print("☕ Developed with Coffee ;w;")
+print("🎮 Checking game compatibility...")
+print("===================================")
+
+-- Execute Loader
+KapaoLoader:init()

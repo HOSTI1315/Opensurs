@@ -1,0 +1,198 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("My Singing Brainrot")
+r1_0:AddToggle({
+  text = "Collect Money",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_20)
+    -- line: [0, 0] id: 20
+    _G.Money = r0_20
+    print("Money: ", r0_20)
+    if r0_20 then
+      Money()
+    end
+  end,
+})
+function Money()
+  -- line: [0, 0] id: 17
+  spawn(function()
+    -- line: [0, 0] id: 18
+    _G.Money = true
+    while _G.Money do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 19
+        for r3_19, r4_19 in pairs(workspace.Main.Plots[game:GetService("Players").LocalPlayer.Values.Plot.Value.Name].Items:GetDescendants()) do
+          if r4_19.Name == "HITPART" then
+            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r4_19, 0)
+            wait()
+            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r4_19, 1)
+          end
+        end
+        wait(5)
+      end)
+    end
+  end)
+end
+local r2_0 = 0
+r1_0:AddBox({
+  text = "buy at this price or higher",
+  flag = "box",
+  value = "Set Price",
+  callback = function(r0_5)
+    -- line: [0, 0] id: 5
+    r2_0 = tonumber(tostring(r0_5):gsub("[^%d]", "")) or 0
+    print("Price Set To:", r2_0)
+    function Buy()
+      -- line: [0, 0] id: 6
+      spawn(function()
+        -- line: [0, 0] id: 7
+        local r1_7 = nil	-- notice: implicit variable refs by block#[0]
+        local r0_7 = nil	-- notice: implicit variable refs by block#[0]
+        function noclip()
+          -- line: [0, 0] id: 10
+          r1_7 = false
+          r0_7 = game:GetService("RunService").Stepped:Connect(function()
+            -- line: [0, 0] id: 11
+            if r1_7 == false and game.Players.LocalPlayer.Character ~= nil then
+              for r3_11, r4_11 in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if r4_11:IsA("BasePart") and r4_11.CanCollide and r4_11.Name ~= floatName then
+                  r4_11.CanCollide = false
+                end
+              end
+            end
+            wait(0.21)
+          end)
+        end
+        function clip()
+          -- line: [0, 0] id: 8
+          if r0_7 then
+            r0_7:Disconnect()
+          end
+          r1_7 = true
+        end
+        noclip()
+        _G.Buy = true
+        while _G.Buy do
+          wait()
+          pcall(function()
+            -- line: [0, 0] id: 9
+            local r2_9 = (game.Players.LocalPlayer.Character or r0_9.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+            local r3_9 = r2_9.CFrame
+            for r7_9, r8_9 in pairs(workspace.Main.Plots[r0_9.Values.Plot.Value.Name].Eggs:GetDescendants()) do
+              if r8_9:IsA("TextLabel") and r8_9.Name == "Cost" then
+                local r10_9 = tonumber(r8_9.Text:gsub("[^%d]", ""))
+                if r10_9 and r2_0 <= r10_9 then
+                  r2_9.CFrame = r8_9.Parent.Parent.Egg.CFrame
+                  wait(0.2)
+                  fireproximityprompt(r8_9.Parent.Parent.Egg.ProximityPrompt)
+                  wait(0.2)
+                  r2_9.CFrame = r3_9
+                  break
+                end
+              end
+            end
+          end)
+          wait(1)
+        end
+      end)
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Buy",
+  flag = "Auto Buy",
+  state = false,
+  callback = function(r0_16)
+    -- line: [0, 0] id: 16
+    _G.Buy = r0_16
+    print("Buy: ", r0_16)
+    if r0_16 then
+      Buy()
+    else
+      _G.Buy = false
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Place",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_4)
+    -- line: [0, 0] id: 4
+    _G.Place = r0_4
+    print("Place: ", r0_4)
+    if r0_4 then
+      Place()
+    end
+  end,
+})
+function Place()
+  -- line: [0, 0] id: 1
+  spawn(function()
+    -- line: [0, 0] id: 2
+    _G.Place = true
+    while _G.Place do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 3
+        if game:GetService("Players").LocalPlayer.PlayerGui.Display.Toolbar.Contents:FindFirstChild("2") then
+          for r3_3, r4_3 in pairs(game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()) do
+            r4_3:InvokeServer(unpack({
+              [1] = {
+                Id = game:GetService("Players").LocalPlayer.PlayerGui.Display.Toolbar.Contents["2"]:GetAttribute("ItemId"),
+                Pivot = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(-3.1415927410125732, 0, -3.1415927410125732) * CFrame.new(0, -3, 0),
+              },
+            }))
+          end
+        end
+        wait(1)
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Auto Hatch",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_15)
+    -- line: [0, 0] id: 15
+    _G.Hatch = r0_15
+    print("Hatch: ", r0_15)
+    if r0_15 then
+      Hatch()
+    end
+  end,
+})
+function Hatch()
+  -- line: [0, 0] id: 12
+  spawn(function()
+    -- line: [0, 0] id: 13
+    _G.Hatch = true
+    while _G.Hatch do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 14
+        for r3_14, r4_14 in pairs(workspace.Main.Plots[game:GetService("Players").LocalPlayer.Values.Plot.Value.Name].Items:GetDescendants()) do
+          if r4_14.Name == "Configuration" and string.find(r4_14.Parent.Name, "Egg") and r4_14:GetAttribute("timeRemaining") == 0 then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = r4_14.Parent.CENTER.CFrame
+            wait(0.2)
+            fireproximityprompt(r4_14.Parent.CENTER.Hatch)
+            wait(0.2)
+          end
+        end
+        wait(1)
+      end)
+    end
+  end)
+end
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()

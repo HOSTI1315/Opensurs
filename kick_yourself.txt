@@ -1,0 +1,110 @@
+-- Script for Delta Executor - Creates a draggable GUI with kick button
+
+local player = game.Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KickGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game.CoreGui
+
+-- Create main frame (draggable container)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 150, 0, 75)
+mainFrame.Position = UDim2.new(0.5, -75, 0.5, -37.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Add corner rounding to main frame
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
+
+-- Create title bar (for dragging)
+local titleBar = Instance.new("TextLabel")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 25)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+titleBar.BorderSizePixel = 0
+titleBar.Text = "Kick Menu"
+titleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleBar.TextSize = 12
+titleBar.Font = Enum.Font.SourceSansBold
+titleBar.Parent = mainFrame
+
+-- Add corner to title bar
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleBar
+
+-- Create the kick button inside the frame
+local kickButton = Instance.new("TextButton")
+kickButton.Name = "KickButton"
+kickButton.Size = UDim2.new(0, 120, 0, 35)
+kickButton.Position = UDim2.new(0.5, -60, 0, 35)
+kickButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+kickButton.Text = "Kick Me"
+kickButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+kickButton.TextSize = 14
+kickButton.Font = Enum.Font.SourceSansBold
+kickButton.BorderSizePixel = 0
+kickButton.Parent = mainFrame
+
+-- Add corner rounding to kick button
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 6)
+buttonCorner.Parent = kickButton
+
+-- Dragging variables
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+-- Function to update frame position
+local function update(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+-- Start dragging (only on title bar)
+titleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+-- Update dragging
+titleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- Function to kick the player
+local function kickPlayer()
+	player:Kick("You clicked the kick button!")
+end
+
+-- Connect the kick button click
+kickButton.MouseButton1Click:Connect(kickPlayer)
+
+print("Draggable kick GUI loaded! Drag from the title bar, click the button to kick yourself.")

@@ -1,0 +1,69 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local highlightEnabled = false
+
+-- Simpan semua highlight yang dibuat supaya bisa dimatikan
+local highlights = {}
+
+local function applyHighlight(character)
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    -- Kalau sudah ada highlight jangan buat lagi
+    if highlights[rootPart] then return end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "GreenHighlight"
+    highlight.Adornee = character
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)  -- hijau terang
+    highlight.OutlineColor = Color3.fromRGB(0, 150, 0) -- hijau gelap
+    highlight.Parent = rootPart
+
+    highlights[rootPart] = highlight
+end
+
+local function removeAllHighlights()
+    for rootPart, highlight in pairs(highlights) do
+        if highlight and highlight.Parent then
+            highlight:Destroy()
+        end
+    end
+    highlights = {}
+end
+
+local function updateHighlights()
+    if highlightEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                if player.Character then
+                    applyHighlight(player.Character)
+                end
+                -- Pastikan ketika karakter respawn tetap ada highlight
+                player.CharacterAdded:Connect(function(char)
+                    if highlightEnabled then
+                        applyHighlight(char)
+                    end
+                end)
+            end
+        end
+    else
+        removeAllHighlights()
+    end
+end
+
+-- Toggle dengan tombol H
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.H then
+        highlightEnabled = not highlightEnabled
+        if highlightEnabled then
+            print("Highlight ON")
+        else
+            print("Highlight OFF")
+        end
+        updateHighlights()
+    end
+end)

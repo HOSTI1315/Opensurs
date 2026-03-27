@@ -1,0 +1,191 @@
+-- discord.gg/69ms
+-- made by eko
+
+local getsenv = getsenv or false
+
+if (getsenv == false) then return LocalPlayer:Kick("Unsuported executor. Error: getsenv is not supported") end
+
+local Flags = getgenv().Flags
+local FilePath = getgenv().FilePath
+
+if type(Flags) ~= "table" then
+    error("Flags table not provided")
+end
+
+if typeof(FilePath) ~= "Instance" then
+    error("FilePath must be a valid Instance")
+end
+
+--local FilePath = FilePath -- IMPOTRANT!! Change it to your script path. Example: = game.Players.LocalPlayer.PlayerGui.UrScript
+
+local ok, err = pcall(function()
+    if not FilePath then
+        error("FilePath is nil")
+    end
+
+    if typeof(FilePath) ~= "Instance" then
+        error("FilePath is not an Instance")
+    end
+
+    FilePath:GetFullName()
+end)
+
+if not ok then
+    warn("Provide a valid script path in FilePath! (" .. tostring(err) .. ")")
+    return
+end
+
+-- local Flags = {
+--     ["only-functions"] = false, -- EXAMPLE OF FUNCTION'S: GetPrice.getprice = function GetPrice.getprice(...) function: 0x8d10f8aecc456641  ←
+--     ["only-values"] = false, -- EXAMPLE OF VALUE'S: CurrentKnives.6 = Butterfly Knife                                                       ↑
+--     ["no-functions"] = false, -- DO NOT WRITE →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→↑
+--     ["no-tables"] = false, -- EXAMPLE OF TABLE'S: CTLoadout.DesertEagle = table
+--     ["no-userdata"] = false, -- EXAMLE OF USERDATA: NO EXAMPLE
+--     ["no-upvalues"] = false, -- EXAMPLE OF UPVALUE'S: updatesilencer.Camera = <nil>
+--     ["no-writing"] = false, -- DO NOT WRITE DUMP TO FILE
+--     ["no-printing"] = false -- DO NOT PRINT DUMP TO CONSOLE F9
+-- }
+
+local output = {}
+local visited = {}
+
+local function w(str)
+    table.insert(output, str)
+end
+
+local function allowed(t)
+    if Flags["only-functions"] then
+        return t == "function"
+    end
+
+    if Flags["only-values"] then
+        return t ~= "function" and t ~= "table" and t ~= "userdata"
+    end
+
+    if t == "function" and Flags["no-functions"] then return false end
+    if t == "table" and Flags["no-tables"] then return false end
+    if t == "userdata" and Flags["no-userdata"] then return false end
+
+    return true
+end
+
+local function safe_tostring(val)
+    local ok, str = pcall(tostring, val)
+    if ok then
+        return str
+    else
+        return "<unprintable>"
+    end
+end
+
+local function dump_table(tbl, prefix)
+    if visited[tbl] then
+        w(prefix .. " = <visited>")
+        return
+    end
+    visited[tbl] = true
+
+    local functions, values, tables, userdata, upvalues = {}, {}, {}, {}, {}
+
+    for k,v in pairs(tbl) do
+        local key = prefix ~= "" and (prefix .. "." .. tostring(k)) or tostring(k)
+        local t = typeof(v)
+
+        if t == "table" then
+            if allowed(t) then
+                tables[key] = v
+            end
+            if not Flags["no-tables"] and not Flags["only-functions"] and not Flags["only-values"] then
+                dump_table(v, key)
+            end
+        elseif t == "function" then
+            if allowed(t) then
+                functions[key] = v
+                if not Flags["no-upvalues"] then
+                    local i = 1
+                    while true do
+                        local success, name, val = pcall(function()
+                            return debug.getupvalue(v, i)
+                        end)
+                        if not success or not name then break end
+
+                        local safeKey = safe_tostring(key)
+                        local safeName = safe_tostring(name)
+                        local safeVal = "<nil>"
+                        if val ~= nil then
+                            safeVal = safe_tostring(val)
+                        end
+
+                        table.insert(upvalues, safeKey .. "." .. safeName .. " = " .. safeVal)
+                        i = i + 1
+                    end
+                end
+            end
+        
+        elseif t == "userdata" then
+            if allowed(t) then
+                userdata[key] = v
+            end
+        else
+            if allowed(t) then
+                values[key] = v
+            end
+        end
+    end
+
+    if next(functions) then
+        w("-- FUNCTIONS --")
+        for k,v in pairs(functions) do
+            w(k .. " = function " .. k .. "(...) " .. safe_tostring(v))
+        end
+    end
+
+    if next(values) then
+        w("-- VALUES --")
+        for k,v in pairs(values) do
+            w(k .. " = " .. safe_tostring(v))
+        end
+    end
+
+    if next(tables) then
+        w("-- TABLES --")
+        for k,v in pairs(tables) do
+            w(k .. " = table")
+        end
+    end
+
+    if next(userdata) then
+        w("-- USERDATA --")
+        for k,v in pairs(userdata) do
+            w(k .. " = userdata " .. safe_tostring(v))
+        end
+    end
+
+    if next(upvalues) then
+        w("-- UPVALUES --")
+        for _,v in ipairs(upvalues) do
+            w(v)
+        end
+    end
+end
+
+local Env = getsenv(FilePath)
+
+print("" .. FilePath.Name .. " ENV DUMP START")
+dump_table(Env, "")
+print("" .. FilePath.Name .. " ENV DUMP END")
+
+local result = table.concat(output, "\n")
+
+if not Flags["no-printing"] then
+    print(result)
+else
+    print(FilePath.Name .. " has been successfully written!")
+end
+
+if not Flags["no-writing"] then
+    writefile(
+        FilePath.Name .. ".txt",
+        "-- " .. FilePath.Name .. " was dumped using 69ms dumper!\n\n" .. result
+    )
+end

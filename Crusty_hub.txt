@@ -1,0 +1,3110 @@
+local Library = loadstring(game:HttpGet("https://cdn.discordapp.com/attachments/1430779176385777787/1452495760368074895/Hnzkkhh.txt?ex=694a0597&is=6948b417&hm=2707438a2deed7a971586fb02872a84bdfa4436ee6a5aaa7323063ebbb287bff&"))()
+
+local Window = Library:CreateWindow({
+    Name = "Crusty Hub",
+    FolderName = "CrustyHub",
+    AutoSave = true,
+    PreventMultiple = true
+})
+
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local PlayerTab = Window:CreateTab("Player")
+local ESPSection = PlayerTab:CreateSection("ESP Features")
+
+-- Player ESP
+local playerESPEnabled = false
+local playerESPConnections = {}
+
+local function createPlayerESP(player)
+    if player == LocalPlayer then return end
+    
+    local function setupESP(character)
+        local hrp = character:WaitForChild("HumanoidRootPart", 5)
+        if not hrp then return end
+        
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "PlayerESP"
+        billboard.Adornee = hrp
+        billboard.Size = UDim2.new(0, 150, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = hrp
+        
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = player.DisplayName
+        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextScaled = true
+        nameLabel.Parent = billboard
+        
+        local distanceLabel = Instance.new("TextLabel")
+        distanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        distanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+        distanceLabel.BackgroundTransparency = 1
+        distanceLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        distanceLabel.TextStrokeTransparency = 0
+        distanceLabel.Font = Enum.Font.Gotham
+        distanceLabel.TextScaled = true
+        distanceLabel.Parent = billboard
+        
+        local connection = RunService.Heartbeat:Connect(function()
+            if playerESPEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                distanceLabel.Text = string.format("%.0f studs", distance)
+            end
+        end)
+        table.insert(playerESPConnections, connection)
+    end
+    
+    if player.Character then
+        setupESP(player.Character)
+    end
+    
+    local conn = player.CharacterAdded:Connect(function(character)
+        if playerESPEnabled then
+            setupESP(character)
+        end
+    end)
+    table.insert(playerESPConnections, conn)
+end
+
+local function removePlayerESP()
+    for _, connection in pairs(playerESPConnections) do
+        connection:Disconnect()
+    end
+    playerESPConnections = {}
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local esp = hrp:FindFirstChild("PlayerESP")
+                if esp then esp:Destroy() end
+            end
+        end
+    end
+end
+
+ESPSection:CreateToggle({
+    Name = "Player ESP",
+    Default = false,
+    Callback = function(Value)
+        playerESPEnabled = Value
+        if Value then
+            for _, player in pairs(Players:GetPlayers()) do
+                createPlayerESP(player)
+            end
+            
+            local conn = Players.PlayerAdded:Connect(function(player)
+                if playerESPEnabled then
+                    createPlayerESP(player)
+                end
+            end)
+            table.insert(playerESPConnections, conn)
+            
+            Window:Notify({Title = "Player ESP", Content = "Enabled", Duration = 2})
+        else
+            removePlayerESP()
+            Window:Notify({Title = "Player ESP", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Highest Value ESP
+local function parseGeneration(text)
+    if not text or text == "" then return 0 end
+    local firstValue = text:match("^%$([^%s]+)/s") or text:match("^%$([^/]+)/s")
+    if not firstValue then return 0 end
+    local cleanText = firstValue:gsub(" ", "")
+    local multiplier = 1
+    local value = cleanText
+    if cleanText:find("T") then
+        multiplier = 1000000000000
+        value = cleanText:gsub("T", "")
+    elseif cleanText:find("B") then
+        multiplier = 1000000000
+        value = cleanText:gsub("B", "")
+    elseif cleanText:find("M") then
+        multiplier = 1000000
+        value = cleanText:gsub("M", "")
+    elseif cleanText:find("K") then
+        multiplier = 1000
+        value = cleanText:gsub("K", "")
+    end
+    local numValue = tonumber(value)
+    return numValue and (numValue * multiplier) or 0
+end
+
+local function createESP(animalName, earningText, medal, targetPart)
+    for _, child in pairs(targetPart:GetChildren()) do
+        if child.Name == "HighestEarningESP" then
+            child:Destroy()
+        end
+    end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "HighestEarningESP"
+    billboard.Adornee = targetPart
+    billboard.Size = UDim2.new(0, 200, 0, 80)
+    billboard.StudsOffset = Vector3.new(0, 8, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = targetPart
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Parent = billboard
+    
+    local medalLabel = Instance.new("TextLabel")
+    medalLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    medalLabel.BackgroundTransparency = 1
+    medalLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    medalLabel.TextStrokeTransparency = 0
+    medalLabel.TextScaled = true
+    medalLabel.Text = medal
+    medalLabel.Font = Enum.Font.GothamBold
+    medalLabel.Parent = frame
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    nameLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextScaled = true
+    nameLabel.Text = animalName
+    nameLabel.Font = Enum.Font.Gotham
+    nameLabel.Parent = frame
+    
+    local earningLabel = Instance.new("TextLabel")
+    earningLabel.Size = UDim2.new(1, 0, 0.25, 0)
+    earningLabel.Position = UDim2.new(0, 0, 0.75, 0)
+    earningLabel.BackgroundTransparency = 1
+    earningLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    earningLabel.TextStrokeTransparency = 0
+    earningLabel.TextScaled = true
+    earningLabel.Text = earningText
+    earningLabel.Font = Enum.Font.Gotham
+    earningLabel.Parent = frame
+end
+
+local function clearAllESP()
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return end
+    for _, model in pairs(plots:GetDescendants()) do
+        if model:IsA("BillboardGui") and model.Name == "HighestEarningESP" then
+            model:Destroy()
+        end
+    end
+end
+
+local function scanAndCreateESP()
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return end
+    
+    local allEarnings = {}
+    clearAllESP()
+    
+    for _, model in pairs(plots:GetChildren()) do
+        if not model:IsA("Model") then continue end
+        local animalPodiums = model:FindFirstChild("AnimalPodiums")
+        if not animalPodiums then continue end
+        
+        for i = 1, 26 do
+            local podiumFolder = animalPodiums:FindFirstChild(tostring(i))
+            if podiumFolder then
+                local base = podiumFolder:FindFirstChild("Base")
+                if base then
+                    local spawn = base:FindFirstChild("Spawn")
+                    if spawn then
+                        local attachment = spawn:FindFirstChild("Attachment")
+                        if attachment then
+                            local animalOverhead = attachment:FindFirstChild("AnimalOverhead")
+                            if animalOverhead then
+                                local generationLabel = animalOverhead:FindFirstChild("Generation")
+                                local displayNameLabel = animalOverhead:FindFirstChild("DisplayName")
+                                
+                                if generationLabel then
+                                    local generationText = generationLabel.Text or ""
+                                    local animalName = displayNameLabel and displayNameLabel.Text or "Unknown"
+                                    
+                                    if generationText ~= "" then
+                                        local earningValue = parseGeneration(generationText)
+                                        if earningValue > 0 then
+                                            table.insert(allEarnings, {
+                                                animalName = animalName,
+                                                earningValue = earningValue,
+                                                earningText = generationText,
+                                                targetPart = base
+                                            })
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    table.sort(allEarnings, function(a, b) return a.earningValue > b.earningValue end)
+    
+    local medals = {utf8.char(0x1F947), utf8.char(0x1F948), utf8.char(0x1F949)}
+    for i = 1, math.min(3, #allEarnings) do
+        local data = allEarnings[i]
+        createESP(data.animalName, data.earningText, medals[i], data.targetPart)
+    end
+end
+
+ESPSection:CreateToggle({
+    Name = "Highest Value",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            _G.HighestValueAutoRefresh = true
+            spawn(function()
+                while _G.HighestValueAutoRefresh do
+                    scanAndCreateESP()
+                    wait(1)
+                end
+            end)
+            Window:Notify({Title = "Highest Value", Content = "Enabled", Duration = 2})
+        else
+            _G.HighestValueAutoRefresh = false
+            clearAllESP()
+            Window:Notify({Title = "Highest Value", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+local PlayerSection = PlayerTab:CreateSection("Player Features")
+
+-- Infinite Jump
+local infiniteJumpEnabled = false
+local infiniteJumpConnection = nil
+
+PlayerSection:CreateToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(Value)
+        infiniteJumpEnabled = Value
+        if Value then
+            if infiniteJumpConnection then
+                infiniteJumpConnection:Disconnect()
+            end
+            infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+                if infiniteJumpEnabled then
+                    local character = LocalPlayer.Character
+                    if character then
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end
+            end)
+            Window:Notify({Title = "Infinite Jump", Content = "Enabled", Duration = 2})
+        else
+            if infiniteJumpConnection then
+                infiniteJumpConnection:Disconnect()
+                infiniteJumpConnection = nil
+            end
+            Window:Notify({Title = "Infinite Jump", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Walk Fling
+local walkFlingConnection = nil
+
+PlayerSection:CreateToggle({
+    Name = "Walk Fling",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            walkFlingConnection = RunService.Heartbeat:Connect(function()
+                local character = LocalPlayer.Character
+                if character then
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoidRootPart and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+                        humanoidRootPart.Velocity = humanoid.MoveDirection * 100
+                    end
+                end
+            end)
+            Window:Notify({Title = "Walk Fling", Content = "Enabled", Duration = 2})
+        else
+            if walkFlingConnection then
+                walkFlingConnection:Disconnect()
+                walkFlingConnection = nil
+            end
+            Window:Notify({Title = "Walk Fling", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Platform
+local platformEnabled = false
+local platformPart = nil
+
+PlayerSection:CreateToggle({
+    Name = "Platform",
+    Default = false,
+    Callback = function(Value)
+        platformEnabled = Value
+        if Value then
+            local character = LocalPlayer.Character
+            if character then
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    platformPart = Instance.new("Part")
+                    platformPart.Size = Vector3.new(8, 0.5, 8)
+                    platformPart.Anchored = true
+                    platformPart.Transparency = 0.5
+                    platformPart.Material = Enum.Material.Neon
+                    platformPart.Color = Color3.fromRGB(110, 120, 250)
+                    platformPart.CanCollide = true
+                    platformPart.Parent = workspace
+                    
+                    RunService.Heartbeat:Connect(function()
+                        if platformEnabled and platformPart and humanoidRootPart then
+                            platformPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -3.5, 0)
+                        end
+                    end)
+                end
+            end
+            Window:Notify({Title = "Platform", Content = "Enabled", Duration = 2})
+        else
+            if platformPart then
+                platformPart:Destroy()
+                platformPart = nil
+            end
+            Window:Notify({Title = "Platform", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+
+-- ============================================
+-- SPECIAL TAB
+-- ============================================
+local SpecialTab = Window:CreateTab("Special")
+local SpecialSection = SpecialTab:CreateSection("Special Features")
+
+-- ReSpawn DeSync
+local function respawn(plr)
+    local rcdEnabled = false
+    if gethidden then
+        rcdEnabled = gethidden(workspace, 'RejectCharacterDeletions') ~= Enum.RejectCharacterDeletions.Disabled
+    end
+    if rcdEnabled and replicatesignal then
+        replicatesignal(plr.ConnectDiedSignalBackend)
+        task.wait(Players.RespawnTime - 0.1)
+        replicatesignal(plr.Kill)
+    else
+        local char = plr.Character
+        local hum = char:FindFirstChildWhichIsA('Humanoid')
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Dead)
+        end
+        char:ClearAllChildren()
+        local newChar = Instance.new('Model')
+        newChar.Parent = workspace
+        plr.Character = newChar
+        task.wait()
+        plr.Character = char
+        newChar:Destroy()
+    end
+end
+
+local function performDeSync()
+    task.spawn(function()
+        pcall(function()
+            if setfflag then
+                setfflag("NextGenReplicatorEnabledWrite4", "false")
+                task.wait(0.1)
+                setfflag("NextGenReplicatorEnabledWrite4", "true")
+            end
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 999999, 0)
+            end
+            task.wait(1)
+            LocalPlayer:LoadCharacter()
+        end)
+        repeat task.wait() until LocalPlayer.Character
+        local char = LocalPlayer.Character
+        repeat task.wait() until char:FindFirstChild("HumanoidRootPart")
+        task.spawn(function()
+            for i = 1, 6 do
+                pcall(function()
+                    local hum = char:FindFirstChildWhichIsA("Humanoid")
+                    if hum then
+                        hum.Health = 0
+                        hum:TakeDamage(hum.MaxHealth)
+                    end
+                end)
+                task.wait(0.1)
+            end
+        end)
+        task.spawn(function()
+            for i = 1, 5 do
+                pcall(function()
+                    if char:FindFirstChild("HumanoidRootPart") then
+                        local explosion = Instance.new("Explosion")
+                        explosion.Position = char.HumanoidRootPart.Position
+                        explosion.BlastRadius = 5
+                        explosion.BlastPressure = 500000
+                        explosion.Parent = workspace
+                    end
+                end)
+                task.wait(0.1)
+            end
+        end)
+        task.wait(0.8)
+        pcall(function()
+            respawn(LocalPlayer)
+        end)
+    end)
+end
+
+SpecialSection:CreateButton({
+    Name = "ReSpawn DeSync",
+    Callback = function()
+        performDeSync()
+        Window:Notify({Title = "ReSpawn DeSync", Content = "Executed!", Duration = 2})
+    end
+})
+SpecialSection:CreateButton({
+    Name = "Control Players UI",
+    Callback = function()
+        Window:Notify({Title = "Control Players", Content = "Loading...", Duration = 2})
+        loadstring(game:HttpGet("https://pastefy.app/CPvTIBvE/raw"))()
+    end
+})
+
+-- Paintball Spam
+local SPAM_ENABLED = false
+local spamThread = nil
+local heartbeatConnection = nil
+
+local function findNearestPlayer()
+    local nearestPlayer = nil
+    local nearestDistance = math.huge
+    local character = LocalPlayer.Character
+    if not character then return nil end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return nil end
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (p.Character.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestPlayer = p
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function spamPaintball()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
+    local useItemRemote = net:WaitForChild("RE/UseItem")
+    
+    heartbeatConnection = RunService.Heartbeat:Connect(function()
+        if SPAM_ENABLED then
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack then
+                local paintballGun = backpack:FindFirstChild("Paintball Gun")
+                if paintballGun then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid:EquipTool(paintballGun)
+                    end
+                end
+            end
+        end
+    end)
+    
+    while SPAM_ENABLED do
+        local nearestPlayer = findNearestPlayer()
+        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local coord = nearestPlayer.Character.HumanoidRootPart.Position
+            pcall(function()
+                useItemRemote:FireServer(coord)
+            end)
+        end
+        task.wait(1/500)
+    end
+end
+
+SpecialSection:CreateToggle({
+    Name = "Paintball Spam",
+    Default = false,
+    Callback = function(Value)
+        SPAM_ENABLED = Value
+        if Value then
+            if spamThread then
+                task.cancel(spamThread)
+            end
+            spamThread = task.spawn(spamPaintball)
+            Window:Notify({Title = "Paintball Spam", Content = "Enabled", Duration = 2})
+        else
+            if heartbeatConnection then
+                heartbeatConnection:Disconnect()
+                heartbeatConnection = nil
+            end
+            if spamThread then
+                task.cancel(spamThread)
+                spamThread = nil
+            end
+            Window:Notify({Title = "Paintball Spam", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Laser Spam UI
+local LaserSpamUIActive = false
+local LaserSpamScreenGui = nil
+
+SpecialSection:CreateToggle({
+    Name = "Laser Spam UI",
+    Default = false,
+    Callback = function(Value)
+        LaserSpamUIActive = Value
+        
+        if Value then
+            -- Position ayarları
+            local DEFAULT_POSITION = {
+                Frame = {X_Scale = 0.5, X_Offset = 5, Y_Scale = 0.5, Y_Offset = -30},
+                SelectFrame = {X_Scale = 0.5, X_Offset = -165, Y_Scale = 0.5, Y_Offset = -30}
+            }
+            
+            local currentPosition = {
+                Frame = DEFAULT_POSITION.Frame,
+                SelectFrame = DEFAULT_POSITION.SelectFrame
+            }
+            
+            -- Position kaydetme/yükleme fonksiyonları
+            local function savePosition()
+                local success, err = pcall(function()
+                    if not isfolder("CrustyHub") then
+                        makefolder("CrustyHub")
+                    end
+                    local json = game:GetService("HttpService"):JSONEncode(currentPosition)
+                    writefile("CrustyHub/LaserSpamPosition.json", json)
+                end)
+            end
+            
+            local function loadPosition()
+                local success, result = pcall(function()
+                    if isfolder("CrustyHub") and isfile("CrustyHub/LaserSpamPosition.json") then
+                        local json = readfile("CrustyHub/LaserSpamPosition.json")
+                        return game:GetService("HttpService"):JSONDecode(json)
+                    end
+                    return nil
+                end)
+                if success and result then
+                    currentPosition = result
+                    return true
+                end
+                return false
+            end
+            
+            loadPosition()
+            
+            -- Whitelist sistemi
+            local whitelistedPlayers = {}
+            
+            local function isWhitelisted(targetPlayer)
+                for _, whitelistedPlayer in pairs(whitelistedPlayers) do
+                    if whitelistedPlayer == targetPlayer then
+                        return true
+                    end
+                end
+                return false
+            end
+            
+            local function removeFromWhitelist(targetPlayer)
+                for i, whitelistedPlayer in pairs(whitelistedPlayers) do
+                    if whitelistedPlayer == targetPlayer then
+                        table.remove(whitelistedPlayers, i)
+                        return
+                    end
+                end
+            end
+            
+            -- UI Oluşturma
+            LaserSpamScreenGui = Instance.new("ScreenGui")
+            LaserSpamScreenGui.Name = "LaserSpamUI"
+            LaserSpamScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+            LaserSpamScreenGui.ResetOnSpawn = false
+            
+            -- Ana Frame
+            local Frame = Instance.new("Frame")
+            Frame.Size = UDim2.new(0, 160, 0, 60)
+            Frame.Position = UDim2.new(
+                currentPosition.Frame.X_Scale,
+                currentPosition.Frame.X_Offset,
+                currentPosition.Frame.Y_Scale,
+                currentPosition.Frame.Y_Offset
+            )
+            Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            Frame.BackgroundTransparency = 0.2
+            Frame.BorderSizePixel = 0
+            Frame.Active = true
+            Frame.Parent = LaserSpamScreenGui
+            
+            local UICorner = Instance.new("UICorner", Frame)
+            UICorner.CornerRadius = UDim.new(0, 10)
+            
+            local UIStroke = Instance.new("UIStroke", Frame)
+            UIStroke.Thickness = 2
+            UIStroke.Transparency = 0
+            UIStroke.Color = Color3.fromRGB(110, 120, 250)
+            
+            local LaserBtn = Instance.new("TextButton")
+            LaserBtn.Size = UDim2.new(0, 130, 0, 30)
+            LaserBtn.Position = UDim2.new(0.5, 0, 0, 22)
+            LaserBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+            LaserBtn.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+            LaserBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            LaserBtn.Font = Enum.Font.GothamBold
+            LaserBtn.Text = "Laser Spam: OFF"
+            LaserBtn.TextSize = 12
+            LaserBtn.Parent = Frame
+            Instance.new("UICorner", LaserBtn).CornerRadius = UDim.new(0, 8)
+            
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, 0, 0, 18)
+            Label.Position = UDim2.new(0, 0, 1, -18)
+            Label.BackgroundTransparency = 1
+            Label.TextColor3 = Color3.fromRGB(110, 120, 250)
+            Label.Text = "Made By Crusty Team"
+            Label.Font = Enum.Font.GothamBold
+            Label.TextSize = 10
+            Label.Parent = Frame
+            
+            -- Select Frame
+            local SelectFrame = Instance.new("Frame")
+            SelectFrame.Size = UDim2.new(0, 160, 0, 60)
+            SelectFrame.Position = UDim2.new(
+                currentPosition.SelectFrame.X_Scale,
+                currentPosition.SelectFrame.X_Offset,
+                currentPosition.SelectFrame.Y_Scale,
+                currentPosition.SelectFrame.Y_Offset
+            )
+            SelectFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            SelectFrame.BackgroundTransparency = 0.2
+            SelectFrame.BorderSizePixel = 0
+            SelectFrame.Active = true
+            SelectFrame.Parent = LaserSpamScreenGui
+            
+            local SelectUICorner = Instance.new("UICorner", SelectFrame)
+            SelectUICorner.CornerRadius = UDim.new(0, 10)
+            
+            local SelectUIStroke = Instance.new("UIStroke", SelectFrame)
+            SelectUIStroke.Thickness = 2
+            SelectUIStroke.Transparency = 0
+            SelectUIStroke.Color = Color3.fromRGB(110, 120, 250)
+            
+            local SelectBtn = Instance.new("TextButton")
+            SelectBtn.Size = UDim2.new(0, 130, 0, 30)
+            SelectBtn.Position = UDim2.new(0.5, 0, 0, 22)
+            SelectBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+            SelectBtn.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+            SelectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SelectBtn.Font = Enum.Font.GothamBold
+            SelectBtn.Text = "Select Player"
+            SelectBtn.TextSize = 12
+            SelectBtn.Parent = SelectFrame
+            Instance.new("UICorner", SelectBtn).CornerRadius = UDim.new(0, 8)
+            
+            local SelectLabel = Instance.new("TextLabel")
+            SelectLabel.Size = UDim2.new(1, 0, 0, 18)
+            SelectLabel.Position = UDim2.new(0, 0, 1, -18)
+            SelectLabel.BackgroundTransparency = 1
+            SelectLabel.TextColor3 = Color3.fromRGB(110, 120, 250)
+            SelectLabel.Text = "White List"
+            SelectLabel.Font = Enum.Font.GothamBold
+            SelectLabel.TextSize = 10
+            SelectLabel.Parent = SelectFrame
+            
+            -- Player List Frame
+            local PlayerListFrame = Instance.new("ScrollingFrame")
+            PlayerListFrame.Size = UDim2.new(0, 160, 0, 110)
+            PlayerListFrame.Position = UDim2.new(0, 0, 1, 5)
+            PlayerListFrame.AnchorPoint = Vector2.new(0, 0)
+            PlayerListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            PlayerListFrame.BackgroundTransparency = 0.2
+            PlayerListFrame.BorderSizePixel = 0
+            PlayerListFrame.ScrollBarThickness = 0
+            PlayerListFrame.ScrollBarImageTransparency = 1
+            PlayerListFrame.Visible = false
+            PlayerListFrame.Parent = SelectFrame
+            
+            local PlayerListUICorner = Instance.new("UICorner", PlayerListFrame)
+            PlayerListUICorner.CornerRadius = UDim.new(0, 10)
+            
+            local PlayerListUIStroke = Instance.new("UIStroke", PlayerListFrame)
+            PlayerListUIStroke.Thickness = 2
+            PlayerListUIStroke.Color = Color3.fromRGB(110, 120, 250)
+            
+            local UIListLayout = Instance.new("UIListLayout")
+            UIListLayout.SortOrder = Enum.SortOrder.Name
+            UIListLayout.Padding = UDim.new(0, 1)
+            UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            UIListLayout.Parent = PlayerListFrame
+            
+            -- Sürükleme Sistemi (Frame)
+            local dragging = false
+            local dragInput
+            local dragStart
+            local startPos
+            
+            local function updateFrame(input)
+                local delta = input.Position - dragStart
+                Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+            
+            Frame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = Frame.Position
+                    
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                            currentPosition.Frame = {
+                                X_Scale = Frame.Position.X.Scale,
+                                X_Offset = Frame.Position.X.Offset,
+                                Y_Scale = Frame.Position.Y.Scale,
+                                Y_Offset = Frame.Position.Y.Offset
+                            }
+                            savePosition()
+                        end
+                    end)
+                end
+            end)
+            
+            Frame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput = input
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput and dragging then
+                    updateFrame(input)
+                end
+            end)
+            
+            -- Sürükleme Sistemi (SelectFrame)
+            local dragging2 = false
+            local dragInput2
+            local dragStart2
+            local startPos2
+            
+            local function updateSelectFrame(input)
+                local delta = input.Position - dragStart2
+                SelectFrame.Position = UDim2.new(startPos2.X.Scale, startPos2.X.Offset + delta.X, startPos2.Y.Scale, startPos2.Y.Offset + delta.Y)
+            end
+            
+            SelectFrame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging2 = true
+                    dragStart2 = input.Position
+                    startPos2 = SelectFrame.Position
+                    
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging2 = false
+                            currentPosition.SelectFrame = {
+                                X_Scale = SelectFrame.Position.X.Scale,
+                                X_Offset = SelectFrame.Position.X.Offset,
+                                Y_Scale = SelectFrame.Position.Y.Scale,
+                                Y_Offset = SelectFrame.Position.Y.Offset
+                            }
+                            savePosition()
+                        end
+                    end)
+                end
+            end)
+            
+            SelectFrame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput2 = input
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput2 and dragging2 then
+                    updateSelectFrame(input)
+                end
+            end)
+            
+            -- Player List Güncelleme
+            local listOpen = false
+            
+            local function updatePlayerList()
+                for _, child in pairs(PlayerListFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    if otherPlayer ~= LocalPlayer then
+                        local PlayerBtn = Instance.new("TextButton")
+                        PlayerBtn.Size = UDim2.new(0.9, 0, 0, 20)
+                        PlayerBtn.Position = UDim2.new(0.5, 0, 0, 0)
+                        PlayerBtn.AnchorPoint = Vector2.new(0.5, 0)
+                        PlayerBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                        PlayerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        PlayerBtn.Font = Enum.Font.Gotham
+                        PlayerBtn.Text = otherPlayer.Name
+                        PlayerBtn.TextSize = 10
+                        PlayerBtn.TextXAlignment = Enum.TextXAlignment.Center
+                        PlayerBtn.TextYAlignment = Enum.TextYAlignment.Center
+                        PlayerBtn.Parent = PlayerListFrame
+                        
+                        local PlayerBtnCorner = Instance.new("UICorner", PlayerBtn)
+                        PlayerBtnCorner.CornerRadius = UDim.new(0, 6)
+                        
+                        if isWhitelisted(otherPlayer) then
+                            PlayerBtn.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+                        else
+                            PlayerBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                        end
+                        
+                        PlayerBtn.MouseButton1Click:Connect(function()
+                            if isWhitelisted(otherPlayer) then
+                                removeFromWhitelist(otherPlayer)
+                                PlayerBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                            else
+                                table.insert(whitelistedPlayers, otherPlayer)
+                                PlayerBtn.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+                            end
+                            
+                            if #whitelistedPlayers == 0 then
+                                SelectBtn.Text = "Select Player"
+                            elseif #whitelistedPlayers == 1 then
+                                SelectBtn.Text = whitelistedPlayers[1].Name
+                            else
+                                SelectBtn.Text = #whitelistedPlayers .. " Players"
+                            end
+                        end)
+                    end
+                end
+                
+                PlayerListFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 8)
+            end
+            
+            -- Select Button Animasyon
+            local selectActiveTween = nil
+            local selectActiveTextTween = nil
+            
+            local function playSelectButtonAnimation()
+                if selectActiveTween then
+                    selectActiveTween:Cancel()
+                    SelectBtn.Size = UDim2.new(0, 130, 0, 30)
+                end
+                if selectActiveTextTween then
+                    selectActiveTextTween:Cancel()
+                    SelectBtn.TextSize = 12
+                end
+
+                local tweenInfo = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local tweenUp = TweenService:Create(SelectBtn, tweenInfo, {Size = UDim2.new(0, 145, 0, 37)})
+                local tweenDown = TweenService:Create(SelectBtn, tweenInfo, {Size = UDim2.new(0, 130, 0, 30)})
+                local textTweenUp = TweenService:Create(SelectBtn, tweenInfo, {TextSize = 15})
+                local textTweenDown = TweenService:Create(SelectBtn, tweenInfo, {TextSize = 12})
+
+                selectActiveTween = tweenUp
+                selectActiveTextTween = textTweenUp
+                tweenUp:Play()
+                textTweenUp:Play()
+                tweenUp.Completed:Connect(function()
+                    selectActiveTween = tweenDown
+                    selectActiveTextTween = textTweenDown
+                    tweenDown:Play()
+                    textTweenDown:Play()
+                end)
+            end
+            
+            SelectBtn.MouseButton1Click:Connect(function()
+                playSelectButtonAnimation()
+                
+                if listOpen then
+                    PlayerListFrame.Visible = false
+                    listOpen = false
+                else
+                    updatePlayerList()
+                    PlayerListFrame.Visible = true
+                    listOpen = true
+                end
+            end)
+            
+            -- Player Events
+            Players.PlayerAdded:Connect(updatePlayerList)
+            Players.PlayerRemoving:Connect(function(leavingPlayer)
+                removeFromWhitelist(leavingPlayer)
+                
+                if #whitelistedPlayers == 0 then
+                    SelectBtn.Text = "Select Player"
+                elseif #whitelistedPlayers == 1 then
+                    SelectBtn.Text = whitelistedPlayers[1].Name
+                else
+                    SelectBtn.Text = #whitelistedPlayers .. " Players"
+                end
+            end)
+            
+            -- Laser Spam Sistemi
+            local laserSpamActive = false
+            local laserCapeConnection = nil
+            local MAX_DISTANCE = 75
+            
+            local function equipLaserCape()
+                local character = LocalPlayer.Character
+                if not character then return end
+                
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if not backpack then return end
+                
+                local laserCape = backpack:FindFirstChild("Laser Cape")
+                if laserCape and laserCape:IsA("Tool") then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid:EquipTool(laserCape)
+                    end
+                end
+            end
+            
+            local function unequipLaserCape()
+                local character = LocalPlayer.Character
+                if not character then return end
+                
+                local laserCape = character:FindFirstChild("Laser Cape")
+                if laserCape and laserCape:IsA("Tool") then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid:UnequipTools()
+                    end
+                end
+            end
+            
+            local function isPlayerRagdolled(targetPlayer)
+                if not targetPlayer or not targetPlayer.Character then return true end
+                
+                local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if not humanoid then return true end
+                
+                local state = humanoid:GetState()
+                if state == Enum.HumanoidStateType.Physics or 
+                   state == Enum.HumanoidStateType.Ragdoll or
+                   state == Enum.HumanoidStateType.FallingDown then
+                    return true
+                end
+                
+                if humanoid.PlatformStand or humanoid.Health <= 0 then
+                    return true
+                end
+                
+                return false
+            end
+            
+            local function findNearestPlayer()
+                local closestPlayer, closestDistance = nil, math.huge
+                local character = LocalPlayer.Character
+                if not character then return nil end
+                local myRootPart = character:FindFirstChild("HumanoidRootPart")
+                if not myRootPart then return nil end
+
+                for _, otherPlayer in ipairs(Players:GetPlayers()) do
+                    if otherPlayer ~= LocalPlayer and otherPlayer.Character then
+                        if not isWhitelisted(otherPlayer) then
+                            if not isPlayerRagdolled(otherPlayer) then
+                                local humanoidRootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if humanoidRootPart then
+                                    local distance = (humanoidRootPart.Position - myRootPart.Position).Magnitude
+                                    if distance <= MAX_DISTANCE and distance < closestDistance then
+                                        closestDistance = distance
+                                        closestPlayer = otherPlayer
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                return closestPlayer
+            end
+            
+            local function fireLaser(targetPlayer)
+                if not targetPlayer or not targetPlayer.Character then return end
+                if isWhitelisted(targetPlayer) then return end
+                if isPlayerRagdolled(targetPlayer) then return end
+                
+                local leftUpperArm = targetPlayer.Character:FindFirstChild("LeftUpperArm")
+                if not leftUpperArm then return end
+
+                local args = {Vector3.new(-410.65, -3.99, 84.01), leftUpperArm}
+                local useItem = ReplicatedStorage:FindFirstChild("RE/UseItem", true) or ReplicatedStorage:FindFirstChild("UseItem", true)
+
+                if useItem and useItem:IsA("RemoteEvent") then
+                    useItem:FireServer(unpack(args))
+                end
+            end
+            
+            local function startLaserSpam()
+                if laserSpamActive then return end
+                laserSpamActive = true
+                LaserBtn.Text = "Laser Spam: ON"
+                
+                equipLaserCape()
+
+                laserCapeConnection = RunService.Heartbeat:Connect(function()
+                    if laserSpamActive then
+                        local nearestPlayer = findNearestPlayer()
+                        if nearestPlayer then
+                            fireLaser(nearestPlayer)
+                        end
+                    end
+                end)
+            end
+            
+            local function stopLaserSpam()
+                if not laserSpamActive then return end
+                laserSpamActive = false
+                LaserBtn.Text = "Laser Spam: OFF"
+                
+                unequipLaserCape()
+
+                if laserCapeConnection then
+                    laserCapeConnection:Disconnect()
+                    laserCapeConnection = nil
+                end
+            end
+            
+            -- Laser Button Animasyon
+            local activeTween = nil
+            local activeTextTween = nil
+
+            LaserBtn.MouseButton1Click:Connect(function()
+                if laserSpamActive then
+                    stopLaserSpam()
+                else
+                    startLaserSpam()
+                end
+
+                if activeTween then
+                    activeTween:Cancel()
+                    LaserBtn.Size = UDim2.new(0, 130, 0, 30)
+                end
+                if activeTextTween then
+                    activeTextTween:Cancel()
+                    LaserBtn.TextSize = 12
+                end
+
+                local tweenInfo = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local tweenUp = TweenService:Create(LaserBtn, tweenInfo, {Size = UDim2.new(0, 145, 0, 37)})
+                local tweenDown = TweenService:Create(LaserBtn, tweenInfo, {Size = UDim2.new(0, 130, 0, 30)})
+                local textTweenUp = TweenService:Create(LaserBtn, tweenInfo, {TextSize = 15})
+                local textTweenDown = TweenService:Create(LaserBtn, tweenInfo, {TextSize = 12})
+
+                activeTween = tweenUp
+                activeTextTween = textTweenUp
+                tweenUp:Play()
+                textTweenUp:Play()
+                tweenUp.Completed:Connect(function()
+                    activeTween = tweenDown
+                    activeTextTween = textTweenDown
+                    tweenDown:Play()
+                    textTweenDown:Play()
+                end)
+            end)
+            
+            Window:Notify({Title = "Laser Spam UI", Content = "Enabled", Duration = 2})
+        else
+            -- UI'ı kapat
+            if LaserSpamScreenGui then
+                LaserSpamScreenGui:Destroy()
+                LaserSpamScreenGui = nil
+            end
+            Window:Notify({Title = "Laser Spam UI", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Quick Teleport Button
+local QuickTeleportActive = false
+local QuickTeleportScreenGui = nil
+
+SpecialSection:CreateToggle({
+    Name = "Quick Teleport Button",
+    Default = false,
+    Callback = function(Value)
+        QuickTeleportActive = Value
+        
+        if Value then
+            -- Position ayarları
+            local DEFAULT_POSITION = {
+                X_Scale = 0.5,
+                X_Offset = -60,
+                Y_Scale = 0.5,
+                Y_Offset = -20
+            }
+            
+            local currentPosition = DEFAULT_POSITION
+            
+            -- Position kaydetme/yükleme fonksiyonları
+            local function savePosition()
+                local success, err = pcall(function()
+                    if not isfolder("CrustyHub") then
+                        makefolder("CrustyHub")
+                    end
+                    local json = game:GetService("HttpService"):JSONEncode(currentPosition)
+                    writefile("CrustyHub/QuickTeleportPosition.json", json)
+                end)
+            end
+            
+            local function loadPosition()
+                local success, result = pcall(function()
+                    if isfolder("CrustyHub") and isfile("CrustyHub/QuickTeleportPosition.json") then
+                        local json = readfile("CrustyHub/QuickTeleportPosition.json")
+                        return game:GetService("HttpService"):JSONDecode(json)
+                    end
+                    return nil
+                end)
+                if success and result then
+                    currentPosition = result
+                    return true
+                end
+                return false
+            end
+            
+            loadPosition()
+            
+            -- UI Oluşturma
+            QuickTeleportScreenGui = Instance.new("ScreenGui")
+            QuickTeleportScreenGui.Name = "QuickTeleportUI"
+            QuickTeleportScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+            QuickTeleportScreenGui.ResetOnSpawn = false
+            QuickTeleportScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            
+            -- Ana Buton Frame
+            local ButtonFrame = Instance.new("Frame")
+            ButtonFrame.Name = "ButtonFrame"
+            ButtonFrame.Size = UDim2.new(0, 120, 0, 40)
+            ButtonFrame.Position = UDim2.new(
+                currentPosition.X_Scale,
+                currentPosition.X_Offset,
+                currentPosition.Y_Scale,
+                currentPosition.Y_Offset
+            )
+            ButtonFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            ButtonFrame.BorderSizePixel = 0
+            ButtonFrame.Active = true
+            ButtonFrame.Parent = QuickTeleportScreenGui
+            
+            local ButtonCorner = Instance.new("UICorner", ButtonFrame)
+            ButtonCorner.CornerRadius = UDim.new(0, 10)
+            
+            -- RGB Border Stroke
+            local ButtonStroke = Instance.new("UIStroke", ButtonFrame)
+            ButtonStroke.Thickness = 2
+            ButtonStroke.Color = Color3.fromRGB(255, 0, 0)
+            ButtonStroke.Transparency = 0
+            
+            -- RGB Animasyonu
+            local hue = 0
+            local rgbConnection = RunService.Heartbeat:Connect(function(dt)
+                if not QuickTeleportActive then
+                    if rgbConnection then
+                        rgbConnection:Disconnect()
+                        rgbConnection = nil
+                    end
+                    return
+                end
+                hue = (hue + dt * 0.5) % 1
+                ButtonStroke.Color = Color3.fromHSV(hue, 1, 1)
+            end)
+            
+            -- Use Cloner Butonu
+            local TeleportBtn = Instance.new("TextButton")
+            TeleportBtn.Name = "TeleportBtn"
+            TeleportBtn.Size = UDim2.new(1, -8, 1, -8)
+            TeleportBtn.Position = UDim2.new(0, 4, 0, 4)
+            TeleportBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            TeleportBtn.BorderSizePixel = 0
+            TeleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TeleportBtn.Font = Enum.Font.GothamBold
+            TeleportBtn.Text = "Use Cloner"
+            TeleportBtn.TextSize = 13
+            TeleportBtn.Parent = ButtonFrame
+            
+            local TeleportBtnCorner = Instance.new("UICorner", TeleportBtn)
+            TeleportBtnCorner.CornerRadius = UDim.new(0, 8)
+            
+            local TeleportBtnStroke = Instance.new("UIStroke", TeleportBtn)
+            TeleportBtnStroke.Thickness = 1
+            TeleportBtnStroke.Color = Color3.fromRGB(80, 80, 80)
+            TeleportBtnStroke.Transparency = 0
+            
+            -- Sürükleme Sistemi
+            local dragging = false
+            local dragInput
+            local dragStart
+            local startPos
+            
+            local function update(input)
+                local delta = input.Position - dragStart
+                ButtonFrame.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+            
+            ButtonFrame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = ButtonFrame.Position
+                    
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                            currentPosition = {
+                                X_Scale = ButtonFrame.Position.X.Scale,
+                                X_Offset = ButtonFrame.Position.X.Offset,
+                                Y_Scale = ButtonFrame.Position.Y.Scale,
+                                Y_Offset = ButtonFrame.Position.Y.Offset
+                            }
+                            savePosition()
+                        end
+                    end)
+                end
+            end)
+            
+            ButtonFrame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput = input
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput and dragging then
+                    update(input)
+                end
+            end)
+            
+            -- Teleport Fonksiyonu
+            local teleporting = false
+            
+            local function useClonerTeleport()
+                if teleporting then return end
+                teleporting = true
+                
+                TeleportBtn.Text = "Teleporting..."
+                TeleportBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                
+                task.spawn(function()
+                    pcall(function()
+                        -- Quantum Cloner'ı equip et
+                        local character = LocalPlayer.Character
+                        if character then
+                            local backpack = LocalPlayer:FindFirstChild("Backpack")
+                            if backpack then
+                                local quantumCloner = backpack:FindFirstChild("Quantum Cloner")
+                                if quantumCloner and quantumCloner:IsA("Tool") then
+                                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                                    if humanoid then
+                                        humanoid:EquipTool(quantumCloner)
+                                        task.wait(0.1)
+                                    end
+                                end
+                            end
+                        end
+                        
+                        -- UseItem'i ateşle
+                        local useItemRemote = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+                        useItemRemote:FireServer()
+                        
+                        task.wait(0.05)
+                        
+                        -- 7 defa OnTeleport ateşle
+                        local teleportRemote = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/QuantumCloner/OnTeleport")
+                        for i = 1, 7 do
+                            teleportRemote:FireServer()
+                            task.wait(0.05)
+                        end
+                    end)
+                    
+                    task.wait(0.5)
+                    teleporting = false
+                    TeleportBtn.Text = "Use Cloner"
+                    TeleportBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                end)
+            end
+            
+            -- Button Click Animasyonu
+            local activeTween = nil
+            
+            TeleportBtn.MouseButton1Click:Connect(function()
+                if activeTween then
+                    activeTween:Cancel()
+                    TeleportBtn.Size = UDim2.new(1, -8, 1, -8)
+                end
+                
+                local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local tweenUp = TweenService:Create(TeleportBtn, tweenInfo, {Size = UDim2.new(1, -4, 1, -4)})
+                local tweenDown = TweenService:Create(TeleportBtn, tweenInfo, {Size = UDim2.new(1, -8, 1, -8)})
+                
+                activeTween = tweenUp
+                tweenUp:Play()
+                tweenUp.Completed:Connect(function()
+                    activeTween = tweenDown
+                    tweenDown:Play()
+                    tweenDown.Completed:Connect(function()
+                        activeTween = nil
+                    end)
+                end)
+                
+                useClonerTeleport()
+            end)
+            
+            Window:Notify({Title = "Quick Teleport", Content = "Enabled", Duration = 2})
+        else
+            -- UI'ı kapat
+            if QuickTeleportScreenGui then
+                QuickTeleportScreenGui:Destroy()
+                QuickTeleportScreenGui = nil
+            end
+            Window:Notify({Title = "Quick Teleport", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+-- ============================================
+-- HELPERS TAB
+-- ============================================
+local HelpersTab = Window:CreateTab("Helpers")
+local HelpersSection = HelpersTab:CreateSection("Helper Features")
+
+-- Player Section'a ekle (Infinite Jump'tan sonra)
+
+-- Crusty Booster UI
+local BoosterUIActive = false
+local BoosterScreenGui = nil
+
+HelpersSection:CreateToggle({
+    Name = "Crusty Booster UI",
+    Default = false,
+    Callback = function(Value)
+        BoosterUIActive = Value
+        
+        if Value then
+            -- UI oluştur
+            BoosterScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+            BoosterScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            BoosterScreenGui.ResetOnSpawn = false
+            BoosterScreenGui.IgnoreGuiInset = true
+            
+            -- Ayarlar sistemi
+            local DEFAULT_SETTINGS = {
+                speedBoost = 27,
+                jumpBoost = 25,
+                gravity = 29.4,
+                isToggled = false,
+                position = {
+                    X_Scale = 0,
+                    X_Offset = 10,
+                    Y_Scale = 0,
+                    Y_Offset = 70
+                }
+            }
+            
+            local currentSettings = {
+                speedBoost = DEFAULT_SETTINGS.speedBoost,
+                jumpBoost = DEFAULT_SETTINGS.jumpBoost,
+                gravity = DEFAULT_SETTINGS.gravity,
+                isToggled = DEFAULT_SETTINGS.isToggled,
+                position = DEFAULT_SETTINGS.position
+            }
+            
+            local function saveSettings()
+                local success, err = pcall(function()
+                    if not isfolder("CrustyHub") then
+                        makefolder("CrustyHub")
+                    end
+                    local json = game:GetService("HttpService"):JSONEncode(currentSettings)
+                    writefile("CrustyHub/BoosterSettings.json", json)
+                end)
+            end
+            
+            local function loadSettings()
+                local success, result = pcall(function()
+                    if isfolder("CrustyHub") and isfile("CrustyHub/BoosterSettings.json") then
+                        local json = readfile("CrustyHub/BoosterSettings.json")
+                        return game:GetService("HttpService"):JSONDecode(json)
+                    end
+                    return nil
+                end)
+                if success and result then
+                    currentSettings.speedBoost = result.speedBoost or DEFAULT_SETTINGS.speedBoost
+                    currentSettings.jumpBoost = result.jumpBoost or DEFAULT_SETTINGS.jumpBoost
+                    currentSettings.gravity = result.gravity or DEFAULT_SETTINGS.gravity
+                    currentSettings.isToggled = result.isToggled or DEFAULT_SETTINGS.isToggled
+                    if result.position then
+                        currentSettings.position = result.position
+                    end
+                    return true
+                end
+                return false
+            end
+            
+            loadSettings()
+            
+            -- Ana Container
+            local MainContainer = Instance.new("Frame", BoosterScreenGui)
+            MainContainer.Name = "MainContainer"
+            MainContainer.Size = UDim2.new(0, 220, 0, 172)
+            MainContainer.Position = UDim2.new(
+                currentSettings.position.X_Scale,
+                currentSettings.position.X_Offset,
+                currentSettings.position.Y_Scale,
+                currentSettings.position.Y_Offset
+            )
+            MainContainer.BackgroundTransparency = 1
+            MainContainer.Active = true
+            
+            -- Üst Frame
+            local TopFrame = Instance.new("Frame", MainContainer)
+            TopFrame.Name = "TopFrame"
+            TopFrame.BorderSizePixel = 0
+            TopFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            TopFrame.Size = UDim2.new(0, 220, 0, 48)
+            TopFrame.Position = UDim2.new(0, 0, 0, 0)
+            TopFrame.BackgroundTransparency = 0
+            TopFrame.Active = true
+            
+            local TopCorner = Instance.new("UICorner", TopFrame)
+            TopCorner.CornerRadius = UDim.new(0, 15)
+            
+            local TopStroke = Instance.new("UIStroke", TopFrame)
+            TopStroke.Thickness = 2
+            TopStroke.Color = Color3.fromRGB(111, 121, 251)
+            
+            -- Alt Frame
+            local BottomFrame = Instance.new("Frame", MainContainer)
+            BottomFrame.Name = "BottomFrame"
+            BottomFrame.BorderSizePixel = 0
+            BottomFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            BottomFrame.Size = UDim2.new(0, 220, 0, 118)
+            BottomFrame.Position = UDim2.new(0, 0, 0, 54)
+            BottomFrame.BackgroundTransparency = 0
+            BottomFrame.ClipsDescendants = false
+            
+            local BottomCorner = Instance.new("UICorner", BottomFrame)
+            BottomCorner.CornerRadius = UDim.new(0, 15)
+            
+            local BottomStroke = Instance.new("UIStroke", BottomFrame)
+            BottomStroke.Thickness = 2
+            BottomStroke.Color = Color3.fromRGB(111, 121, 251)
+            
+            -- Speed TextBox
+            local SpeedTextBox = Instance.new("TextBox", BottomFrame)
+            SpeedTextBox.Name = "SpeedTextBox"
+            SpeedTextBox.ZIndex = 2
+            SpeedTextBox.BorderSizePixel = 0
+            SpeedTextBox.TextSize = 18
+            SpeedTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SpeedTextBox.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+            SpeedTextBox.Font = Enum.Font.BuilderSansMedium
+            SpeedTextBox.Size = UDim2.new(0, 74, 0, 26)
+            SpeedTextBox.Position = UDim2.new(0, 134, 0, 11)
+            SpeedTextBox.Text = tostring(currentSettings.speedBoost)
+            
+            local SpeedCorner = Instance.new("UICorner", SpeedTextBox)
+            SpeedCorner.CornerRadius = UDim.new(0, 7)
+            
+            -- Jump TextBox
+            local JumpTextBox = Instance.new("TextBox", BottomFrame)
+            JumpTextBox.Name = "JumpTextBox"
+            JumpTextBox.ZIndex = 2
+            JumpTextBox.BorderSizePixel = 0
+            JumpTextBox.TextSize = 18
+            JumpTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            JumpTextBox.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+            JumpTextBox.Font = Enum.Font.BuilderSansMedium
+            JumpTextBox.Size = UDim2.new(0, 74, 0, 26)
+            JumpTextBox.Position = UDim2.new(0, 134, 0, 46)
+            JumpTextBox.Text = tostring(currentSettings.jumpBoost)
+            
+            local JumpCorner = Instance.new("UICorner", JumpTextBox)
+            JumpCorner.CornerRadius = UDim.new(0, 7)
+            
+            -- Gravity TextBox
+            local GravityTextBox = Instance.new("TextBox", BottomFrame)
+            GravityTextBox.Name = "GravityTextBox"
+            GravityTextBox.ZIndex = 2
+            GravityTextBox.BorderSizePixel = 0
+            GravityTextBox.TextSize = 18
+            GravityTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            GravityTextBox.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+            GravityTextBox.Font = Enum.Font.BuilderSansMedium
+            GravityTextBox.Size = UDim2.new(0, 74, 0, 26)
+            GravityTextBox.Position = UDim2.new(0, 134, 0, 81)
+            GravityTextBox.Text = tostring(currentSettings.gravity)
+            
+            local GravityCorner = Instance.new("UICorner", GravityTextBox)
+            GravityCorner.CornerRadius = UDim.new(0, 7)
+            
+            -- Labels
+            local SpeedLabel = Instance.new("TextLabel", BottomFrame)
+            SpeedLabel.ZIndex = 2
+            SpeedLabel.BorderSizePixel = 0
+            SpeedLabel.TextSize = 16
+            SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+            SpeedLabel.BackgroundTransparency = 1
+            SpeedLabel.Font = Enum.Font.Arial
+            SpeedLabel.TextColor3 = Color3.fromRGB(199, 199, 199)
+            SpeedLabel.Size = UDim2.new(0, 140, 0, 38)
+            SpeedLabel.Text = "Speed Boost"
+            SpeedLabel.Position = UDim2.new(0, 12, 0, 6)
+            
+            local JumpLabel = Instance.new("TextLabel", BottomFrame)
+            JumpLabel.ZIndex = 2
+            JumpLabel.BorderSizePixel = 0
+            JumpLabel.TextSize = 16
+            JumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+            JumpLabel.BackgroundTransparency = 1
+            JumpLabel.Font = Enum.Font.Arial
+            JumpLabel.TextColor3 = Color3.fromRGB(199, 199, 199)
+            JumpLabel.Size = UDim2.new(0, 140, 0, 38)
+            JumpLabel.Text = "Jump Boost"
+            JumpLabel.Position = UDim2.new(0, 12, 0, 42)
+            
+            local GravityLabel = Instance.new("TextLabel", BottomFrame)
+            GravityLabel.ZIndex = 2
+            GravityLabel.BorderSizePixel = 0
+            GravityLabel.TextSize = 16
+            GravityLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GravityLabel.BackgroundTransparency = 1
+            GravityLabel.Font = Enum.Font.Arial
+            GravityLabel.TextColor3 = Color3.fromRGB(199, 199, 199)
+            GravityLabel.Size = UDim2.new(0, 140, 0, 42)
+            GravityLabel.Text = "Gravity"
+            GravityLabel.Position = UDim2.new(0, 12, 0, 73)
+            
+            -- Title
+            local TitleLabel = Instance.new("TextLabel", MainContainer)
+            TitleLabel.ZIndex = 2
+            TitleLabel.BorderSizePixel = 0
+            TitleLabel.TextSize = 18
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Font = Enum.Font.Arial
+            TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TitleLabel.Size = UDim2.new(0, 140, 0, 34)
+            TitleLabel.Text = "Crusty Booster"
+            TitleLabel.Position = UDim2.new(0, 36, 0, 7)
+            
+            local TitleStroke = Instance.new("UIStroke", TitleLabel)
+            TitleStroke.Thickness = 0.3
+            TitleStroke.Color = Color3.fromRGB(255, 255, 255)
+            
+            -- Arrow Button
+            local ArrowButton = Instance.new("TextButton", MainContainer)
+            ArrowButton.ZIndex = 3
+            ArrowButton.BorderSizePixel = 0
+            ArrowButton.BackgroundTransparency = 1
+            ArrowButton.Size = UDim2.new(0, 32, 0, 32)
+            ArrowButton.Position = UDim2.new(0, 5, 0, 6)
+            ArrowButton.Text = ""
+            
+            local ArrowText = Instance.new("TextLabel", ArrowButton)
+            ArrowText.ZIndex = 4
+            ArrowText.BorderSizePixel = 0
+            ArrowText.TextSize = 28
+            ArrowText.BackgroundTransparency = 1
+            ArrowText.Font = Enum.Font.Arial
+            ArrowText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ArrowText.Size = UDim2.new(1, 0, 1, 0)
+            ArrowText.Text = "»"
+            ArrowText.Rotation = 90
+            
+            -- Toggle Frame
+            local ToggleFrame = Instance.new("Frame", MainContainer)
+            ToggleFrame.ZIndex = 2
+            ToggleFrame.BorderSizePixel = 0
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            ToggleFrame.Size = UDim2.new(0, 48, 0, 24)
+            ToggleFrame.Position = UDim2.new(0, 160, 0, 11)
+            
+            local ToggleFrameCorner = Instance.new("UICorner", ToggleFrame)
+            ToggleFrameCorner.CornerRadius = UDim.new(0, 100)
+            
+            local ToggleFrameStroke = Instance.new("UIStroke", ToggleFrame)
+            ToggleFrameStroke.Thickness = 2
+            ToggleFrameStroke.Color = Color3.fromRGB(126, 136, 255)
+            
+            local ToggleButton = Instance.new("TextButton", ToggleFrame)
+            ToggleButton.ZIndex = 3
+            ToggleButton.BorderSizePixel = 0
+            ToggleButton.BackgroundTransparency = 1
+            ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+            ToggleButton.Text = ""
+            
+            local ToggleCircle = Instance.new("Frame", ToggleFrame)
+            ToggleCircle.ZIndex = 2
+            ToggleCircle.BorderSizePixel = 0
+            ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ToggleCircle.Size = UDim2.new(0, 20, 0, 20)
+            ToggleCircle.Position = UDim2.new(0, 2, 0, 2)
+            
+            local ToggleCircleCorner = Instance.new("UICorner", ToggleCircle)
+            ToggleCircleCorner.CornerRadius = UDim.new(0, 100)
+            
+            -- Değişkenler
+            local menuOpen = true
+            local toggleActive = currentSettings.isToggled
+            local speedMultiplier = currentSettings.speedBoost
+            local jumpPower = currentSettings.jumpBoost
+            local gravityValue = currentSettings.gravity
+            local gravityDefault = 196.2
+            local gravity_read_override = gravityDefault
+            local heartbeatConnection = nil
+            
+            -- Gravity hook
+            pcall(function()
+                local mt = getrawmetatable(workspace)
+                setreadonly(mt, false)
+                local old_index = mt.__index
+                mt.__index = function(tbl, key)
+                    if key ~= "Gravity" then
+                        return old_index(tbl, key)
+                    else
+                        return gravity_read_override
+                    end
+                end
+                setreadonly(mt, true)
+            end)
+            
+            -- Fonksiyonlar
+            local function enableSpeedBoost()
+                if heartbeatConnection then
+                    heartbeatConnection:Disconnect()
+                end
+                heartbeatConnection = RunService.Heartbeat:Connect(function()
+                    local char = LocalPlayer.Character
+                    if char then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if hrp and hum and hum.MoveDirection.Magnitude > 0 then
+                            hrp.Velocity = Vector3.new(
+                                hum.MoveDirection.X * speedMultiplier,
+                                hrp.Velocity.Y,
+                                hum.MoveDirection.Z * speedMultiplier
+                            )
+                        end
+                    end
+                end)
+            end
+            
+            local function disableSpeedBoost()
+                if heartbeatConnection then
+                    heartbeatConnection:Disconnect()
+                    heartbeatConnection = nil
+                end
+            end
+            
+            local function updateJumpPower()
+                local char = LocalPlayer.Character
+                if char then
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.UseJumpPower = true
+                        humanoid.JumpPower = toggleActive and jumpPower or 50
+                    end
+                end
+            end
+            
+            local function updateGravity()
+                gravity_read_override = toggleActive and gravityValue or gravityDefault
+                workspace.Gravity = gravity_read_override
+            end
+            
+            -- Başlangıç durumu
+            if toggleActive then
+                ToggleCircle.Position = UDim2.new(0, 26, 0, 2)
+                ToggleFrame.BackgroundColor3 = Color3.fromRGB(126, 136, 255)
+                enableSpeedBoost()
+                updateGravity()
+            end
+            
+            -- Character Added
+            LocalPlayer.CharacterAdded:Connect(function()
+                task.wait(0.5)
+                if toggleActive then
+                    updateJumpPower()
+                    enableSpeedBoost()
+                    updateGravity()
+                end
+            end)
+            
+            if LocalPlayer.Character then
+                task.wait(0.5)
+                if toggleActive then
+                    updateJumpPower()
+                end
+            end
+            
+            -- TextBox Events
+            SpeedTextBox.FocusLost:Connect(function()
+                local value = tonumber(SpeedTextBox.Text)
+                if value then
+                    speedMultiplier = value
+                    currentSettings.speedBoost = value
+                    saveSettings()
+                    if toggleActive then
+                        enableSpeedBoost()
+                    end
+                else
+                    SpeedTextBox.Text = tostring(speedMultiplier)
+                end
+            end)
+            
+            JumpTextBox.FocusLost:Connect(function()
+                local value = tonumber(JumpTextBox.Text)
+                if value then
+                    jumpPower = value
+                    currentSettings.jumpBoost = value
+                    saveSettings()
+                    if toggleActive then
+                        updateJumpPower()
+                    end
+                else
+                    JumpTextBox.Text = tostring(jumpPower)
+                end
+            end)
+            
+            GravityTextBox.FocusLost:Connect(function()
+                local value = tonumber(GravityTextBox.Text)
+                if value then
+                    gravityValue = value
+                    currentSettings.gravity = value
+                    saveSettings()
+                    if toggleActive then
+                        updateGravity()
+                    end
+                else
+                    GravityTextBox.Text = tostring(gravityValue)
+                end
+            end)
+            
+            -- Sürükleme
+            local dragging = false
+            local dragInput
+            local dragStart
+            local startPos
+            
+            local function update(input)
+                local delta = input.Position - dragStart
+                MainContainer.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+            
+            TopFrame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = MainContainer.Position
+                    
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                            currentSettings.position = {
+                                X_Scale = MainContainer.Position.X.Scale,
+                                X_Offset = MainContainer.Position.X.Offset,
+                                Y_Scale = MainContainer.Position.Y.Scale,
+                                Y_Offset = MainContainer.Position.Y.Offset
+                            }
+                            saveSettings()
+                        end
+                    end)
+                end
+            end)
+            
+            TopFrame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput = input
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput and dragging then
+                    update(input)
+                end
+            end)
+            
+            -- Arrow Button
+            ArrowButton.MouseButton1Click:Connect(function()
+                menuOpen = not menuOpen
+                BottomFrame.Visible = menuOpen
+                ArrowText.Rotation = menuOpen and 90 or 0
+                
+                if menuOpen then
+                    MainContainer.Size = UDim2.new(0, 220, 0, 172)
+                else
+                    MainContainer.Size = UDim2.new(0, 220, 0, 48)
+                end
+            end)
+            
+            -- Toggle Button
+            ToggleButton.MouseButton1Click:Connect(function()
+                toggleActive = not toggleActive
+                currentSettings.isToggled = toggleActive
+                saveSettings()
+                
+                local circleTween = TweenService:Create(ToggleCircle, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = toggleActive and UDim2.new(0, 26, 0, 2) or UDim2.new(0, 2, 0, 2)
+                })
+                
+                local frameTween = TweenService:Create(ToggleFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = toggleActive and Color3.fromRGB(126, 136, 255) or Color3.fromRGB(0, 0, 0)
+                })
+                
+                circleTween:Play()
+                frameTween:Play()
+                
+                if toggleActive then
+                    enableSpeedBoost()
+                    updateJumpPower()
+                    updateGravity()
+                else
+                    disableSpeedBoost()
+                    updateJumpPower()
+                    updateGravity()
+                end
+            end)
+            
+            Window:Notify({Title = "Crusty Booster UI", Content = "Enabled", Duration = 2})
+        else
+            -- UI'ı kapat
+            if BoosterScreenGui then
+                BoosterScreenGui:Destroy()
+                BoosterScreenGui = nil
+            end
+            Window:Notify({Title = "Crusty Booster UI", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Anti Ragdoll System
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local antiRagdollEnabled = false
+local characterConnection = nil
+local currentCharacter = nil
+local ragdollRemoteConnection = nil
+local moveConnection = nil
+local RAGDOLL_SPEED = 32
+
+-- Player Module için güvenli require
+local playerModule = nil
+local controls = nil
+
+pcall(function()
+    playerModule = require(LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule"))
+    controls = playerModule:GetControls()
+end)
+
+local function cleanupRagdoll()
+    if currentCharacter then
+        local root = currentCharacter:FindFirstChild("HumanoidRootPart")
+        if root then
+            local bodyPosition = root:FindFirstChild("RagdollAnchor")
+            if bodyPosition then
+                bodyPosition:Destroy()
+            end
+        end
+    end
+    
+    if moveConnection then
+        moveConnection:Disconnect()
+        moveConnection = nil
+    end
+end
+
+local function disconnectRemoteConnection()
+    if ragdollRemoteConnection then
+        ragdollRemoteConnection:Disconnect()
+        ragdollRemoteConnection = nil
+    end
+end
+
+local function setupAntiFlyRagdoll(char)
+    currentCharacter = char
+    cleanupRagdoll()
+    disconnectRemoteConnection()
+    
+    local humanoid = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    local head = char:WaitForChild("Head")
+    
+    local ragdollRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Ragdoll"):WaitForChild("Ragdoll")
+    
+    ragdollRemoteConnection = ragdollRemote.OnClientEvent:Connect(function(p1, p2)
+        if not antiRagdollEnabled then return end
+        
+        if p1 == "Make" or p2 == "manualM" then
+            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+            Camera.CameraSubject = head
+            root.CanCollide = false
+            
+            -- Controls varsa enable et
+            if controls then
+                pcall(function()
+                    controls:Enable()
+                end)
+            end
+            
+            cleanupRagdoll()
+            
+            local bodyPosition = Instance.new("BodyPosition")
+            bodyPosition.Name = "RagdollAnchor"
+            bodyPosition.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+            bodyPosition.P = 5000
+            bodyPosition.D = 1000
+            bodyPosition.Position = root.Position
+            bodyPosition.Parent = root
+            
+            moveConnection = RunService.RenderStepped:Connect(function()
+                if not antiRagdollEnabled or not bodyPosition or not bodyPosition.Parent then
+                    if moveConnection then
+                        moveConnection:Disconnect()
+                        moveConnection = nil
+                    end
+                    return
+                end
+                
+                local moveDir = humanoid.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    bodyPosition.Position = root.Position + moveDir.Unit * RAGDOLL_SPEED
+                else
+                    bodyPosition.Position = root.Position
+                end
+            end)
+        end
+        
+        if p1 == "Destroy" or p2 == "manualD" then
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            Camera.CameraSubject = humanoid
+            root.CanCollide = true
+            
+            -- Controls varsa enable et
+            if controls then
+                pcall(function()
+                    controls:Enable()
+                end)
+            end
+            
+            cleanupRagdoll()
+        end
+    end)
+end
+
+-- Anti Ragdoll Toggle
+HelpersSection:CreateToggle({
+    Name = "Anti Ragdoll",
+    Default = false,
+    Callback = function(Value)
+        antiRagdollEnabled = Value
+        if Value then
+            if LocalPlayer.Character then
+                setupAntiFlyRagdoll(LocalPlayer.Character)
+            end
+            characterConnection = LocalPlayer.CharacterAdded:Connect(setupAntiFlyRagdoll)
+            Window:Notify({Title = "Anti Ragdoll", Content = "Enabled", Duration = 2})
+        else
+            cleanupRagdoll()
+            disconnectRemoteConnection()
+            if characterConnection then
+                characterConnection:Disconnect()
+                characterConnection = nil
+            end
+            Window:Notify({Title = "Anti Ragdoll", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+-- Auto Destroy Sentries
+local sentryEnabled = false
+local sentryConn = nil
+
+local function startSentryWatch()
+    if sentryConn then sentryConn:Disconnect() end
+    
+    sentryConn = workspace.DescendantAdded:Connect(function(desc)
+        if not sentryEnabled then return end
+        if not desc:IsA("Model") and not desc:IsA("BasePart") then return end
+        if not string.find(desc.Name:lower(), "sentry") then return end
+        
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        
+        local hrp = char.HumanoidRootPart
+        
+        local playerOwnsSentry = false
+        for _, playerObj in pairs(Players:GetPlayers()) do
+            if playerObj.Character and desc:IsDescendantOf(playerObj.Character) then
+                if playerObj == LocalPlayer then
+                    playerOwnsSentry = true
+                end
+                break
+            end
+        end
+        
+        if playerOwnsSentry then return end
+        
+        task.wait(4.1)
+        
+        if not desc.Parent or not sentryEnabled then return end
+        
+        local backpack = LocalPlayer.Backpack
+        local batTool = backpack:FindFirstChild("Bat") or char:FindFirstChild("Bat")
+        
+        if not batTool then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Tool") and obj.Name == "Bat" and obj.Parent == workspace then
+                    batTool = obj
+                    obj.Parent = backpack
+                    break
+                end
+            end
+        end
+        
+        if not batTool then
+            return
+        end
+        
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if batTool.Parent == backpack and humanoid then
+            humanoid:EquipTool(batTool)
+            task.wait(0.25)
+        end
+        
+        local lookDir = hrp.CFrame.LookVector
+        local spawnOffset = lookDir * 3.5 + Vector3.new(0, 1.2, 0)
+        
+        if desc:IsA("Model") and desc.PrimaryPart then
+            desc:SetPrimaryPartCFrame(hrp.CFrame + spawnOffset)
+        elseif desc:IsA("BasePart") then
+            desc.CFrame = hrp.CFrame + spawnOffset
+        end
+        
+        if batTool.Parent == char and desc.Parent then
+            batTool:Activate()
+        end
+        
+        local maxHits = 5
+        local hitCount = 0
+        while batTool.Parent == char and desc.Parent and sentryEnabled and hitCount < maxHits do
+            task.wait(0.12)
+            if desc.Parent then
+                batTool:Activate()
+                hitCount += 1
+            else
+                break
+            end
+        end
+        
+        task.wait(0.1)
+        if batTool.Parent == char then
+            batTool.Parent = backpack
+        end
+    end)
+end
+
+local function stopSentryWatch()
+    sentryEnabled = false
+    if sentryConn then
+        sentryConn:Disconnect()
+        sentryConn = nil
+    end
+end
+
+HelpersSection:CreateToggle({
+    Name = "Auto Destroy Sentries",
+    Default = false,
+    Callback = function(Value)
+        sentryEnabled = Value
+        if Value then
+            startSentryWatch()
+            Window:Notify({Title = "Auto Destroy Sentries", Content = "Enabled", Duration = 2})
+        else
+            stopSentryWatch()
+            Window:Notify({Title = "Auto Destroy Sentries", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Tool Aimbot
+local toolSpammerEnabled = false
+local toolSpamConnection = nil
+
+HelpersSection:CreateToggle({
+    Name = "Tool Spammer",
+    Default = false,
+    Callback = function(Value)
+        toolSpammerEnabled = Value
+        if Value then
+            if toolSpamConnection then
+                toolSpamConnection:Disconnect()
+            end
+            toolSpamConnection = RunService.Heartbeat:Connect(function()
+                if not toolSpammerEnabled then return end
+                local character = LocalPlayer.Character
+                if not character then return end
+                local equippedTool = character:FindFirstChildOfClass("Tool")
+                if equippedTool then
+                    local toolName = equippedTool.Name
+                    if toolName == "Bat" or toolName:match("Slap$") then
+                        equippedTool:Activate()
+                    end
+                end
+            end)
+            Window:Notify({Title = "Tool Aimbot", Content = "Enabled", Duration = 2})
+        else
+            if toolSpamConnection then
+                toolSpamConnection:Disconnect()
+                toolSpamConnection = nil
+            end
+            Window:Notify({Title = "Tool Aimbot", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Anti-AFK
+
+
+-- Auto Steal Nearest
+local autoStealEnabled = false
+local ProximityPromptConnection = nil
+local ProximityPromptHiddenConnection = nil
+
+HelpersSection:CreateToggle({
+    Name = "Auto Steal Nearest",
+    Default = false,
+    Callback = function(state)
+        autoStealEnabled = state
+        if state then
+            local ProximityPromptService = game:GetService("ProximityPromptService")
+            
+            ProximityPromptConnection = ProximityPromptService.PromptShown:Connect(function(prompt)
+                if autoStealEnabled and prompt.ActionText == "Steal" then
+                    pcall(function()
+                        prompt:InputHoldBegin()
+                    end)
+                end
+            end)
+            
+            Window:Notify({Title = "Auto Steal", Content = "Enabled", Duration = 2})
+        else
+            if ProximityPromptConnection then
+                ProximityPromptConnection:Disconnect()
+                ProximityPromptConnection = nil
+            end
+            Window:Notify({Title = "Auto Steal", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Auto Buy Nearest
+local autoBuyEnabled = false
+local BuyPromptConnection = nil
+
+HelpersSection:CreateToggle({
+    Name = "Auto Buy Nearest",
+    Default = false,
+    Callback = function(state)
+        autoBuyEnabled = state
+        if state then
+            local ProximityPromptService = game:GetService("ProximityPromptService")
+            
+            BuyPromptConnection = ProximityPromptService.PromptShown:Connect(function(prompt)
+                if autoBuyEnabled and prompt.ActionText == "Purchase" then
+                    pcall(function()
+                        prompt:InputHoldBegin()
+                    end)
+                end
+            end)
+            
+            Window:Notify({Title = "Auto Buy", Content = "Enabled", Duration = 2})
+        else
+            if BuyPromptConnection then
+                BuyPromptConnection:Disconnect()
+                BuyPromptConnection = nil
+            end
+            Window:Notify({Title = "Auto Buy", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+local antiAFKConnection = nil
+
+HelpersSection:CreateToggle({
+    Name = "Anti-AFK",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local VirtualUser = game:GetService("VirtualUser")
+            antiAFKConnection = LocalPlayer.Idled:Connect(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+            Window:Notify({Title = "Anti-AFK", Content = "Enabled", Duration = 2})
+        else
+            if antiAFKConnection then
+                antiAFKConnection:Disconnect()
+                antiAFKConnection = nil
+            end
+            Window:Notify({Title = "Anti-AFK", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- ============================================
+-- PLAYER TAB
+-- ============================================
+
+-- ============================================
+-- ESP TAB
+-- ============================================
+
+-- ============================================
+-- UTILITIES TAB
+-- ============================================
+local UtilitiesTab = Window:CreateTab("Utilities")
+local UtilitiesSection = UtilitiesTab:CreateSection("Utility Features")
+
+-- Unwalk Animation (Tüm Animasyonlar)
+local unwalkAnimationEnabled = false
+local originalAnimations = {}
+local animationConnection = nil
+local characterAddedConnection = nil
+
+local function stopUnwalkAnimation()
+    if animationConnection then
+        animationConnection:Disconnect()
+        animationConnection = nil
+    end
+    
+    if characterAddedConnection then
+        characterAddedConnection:Disconnect()
+        characterAddedConnection = nil
+    end
+    
+    local character = LocalPlayer.Character
+    if character then
+        local animate = character:FindFirstChild("Animate")
+        if animate then
+            for animName, animId in pairs(originalAnimations) do
+                local animScript = animate:FindFirstChild(animName)
+                if animScript then
+                    local animValue = animScript:FindFirstChildOfClass("Animation")
+                    if animValue then
+                        animValue.AnimationId = animId
+                    end
+                end
+            end
+        end
+    end
+    originalAnimations = {}
+end
+
+local function startUnwalkAnimation()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local animate = character:WaitForChild("Animate", 5)
+    if not animate then return end
+    
+    local function replaceAnimation(animName)
+        local animScript = animate:FindFirstChild(animName)
+        if animScript then
+            local animValue = animScript:FindFirstChildOfClass("Animation")
+            if animValue then
+                if not originalAnimations[animName] then
+                    originalAnimations[animName] = animValue.AnimationId
+                end
+                
+                local idleAnim = animate:FindFirstChild("idle")
+                if idleAnim then
+                    local idleAnimation = idleAnim:FindFirstChildOfClass("Animation")
+                    if idleAnimation then
+                        animValue.AnimationId = idleAnimation.AnimationId
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Tüm animasyonları değiştir
+    replaceAnimation("walk")
+    replaceAnimation("run")
+    replaceAnimation("jump")
+    replaceAnimation("fall")
+    replaceAnimation("climb")
+    replaceAnimation("sit")
+    replaceAnimation("swimidle")
+    replaceAnimation("swim")
+    
+    animationConnection = character.ChildAdded:Connect(function(child)
+        if child.Name == "Animate" and unwalkAnimationEnabled then
+            task.wait(0.1)
+            replaceAnimation("walk")
+            replaceAnimation("run")
+            replaceAnimation("jump")
+            replaceAnimation("fall")
+            replaceAnimation("climb")
+            replaceAnimation("sit")
+            replaceAnimation("swimidle")
+            replaceAnimation("swim")
+        end
+    end)
+end
+
+UtilitiesSection:CreateToggle({
+    Name = "Unwalk Animation",
+    Default = false,
+    Callback = function(Value)
+        unwalkAnimationEnabled = Value
+        if Value then
+            startUnwalkAnimation()
+            characterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
+                if unwalkAnimationEnabled then
+                    task.wait(1)
+                    startUnwalkAnimation()
+                end
+            end)
+            Window:Notify({Title = "Unwalk Animation", Content = "Enabled", Duration = 2})
+        else
+            stopUnwalkAnimation()
+            Window:Notify({Title = "Unwalk Animation", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- Rainbow Base (isAnimal fonksiyonu eklenmiş)
+local rainbowBaseEnabled = false
+local rainbowBaseConnection = nil
+local rainbowBaseParts = {}
+local originalColors = {}
+local descendantAddedConnection = nil
+
+local function isAnimal(model)
+    return model:FindFirstChild("AnimationController") and model.AnimationController:IsA("AnimationController")
+end
+
+local function findOwnPlot()
+    local plotsFolder = workspace:WaitForChild("Plots", 5)
+    if not plotsFolder then return nil end
+    
+    for _, plot in pairs(plotsFolder:GetChildren()) do
+        local plotSign = plot:FindFirstChild("PlotSign")
+        if plotSign then
+            local surfaceGui = plotSign:FindFirstChildOfClass("SurfaceGui")
+            if surfaceGui then
+                local frame = surfaceGui:FindFirstChild("Frame")
+                if frame then
+                    local textLabel = frame:FindFirstChild("TextLabel")
+                    if textLabel then
+                        local text = textLabel.Text
+                        if text == "Empty" then
+                            continue
+                        end
+                        local baseOwnerName = text:match("(.+)'s Base")
+                        if baseOwnerName then
+                            if baseOwnerName == LocalPlayer.Name or baseOwnerName == LocalPlayer.DisplayName then
+                                return plot
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function collectParts(plot)
+    rainbowBaseParts = {}
+    originalColors = {}
+    
+    for _, obj in pairs(plot:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local parent = obj.Parent
+            local skipPart = false
+            
+            while parent and parent ~= plot do
+                if isAnimal(parent) then
+                    skipPart = true
+                    break
+                end
+                parent = parent.Parent
+            end
+            
+            if not skipPart then
+                table.insert(rainbowBaseParts, obj)
+                originalColors[obj] = obj.Color
+            end
+        end
+    end
+end
+
+UtilitiesSection:CreateToggle({
+    Name = "Rainbow Base",
+    Default = false,
+    Callback = function(Value)
+        rainbowBaseEnabled = Value
+        if Value then
+            local ownPlot = findOwnPlot()
+            if ownPlot then
+                collectParts(ownPlot)
+                
+                descendantAddedConnection = ownPlot.DescendantAdded:Connect(function(descendant)
+                    if rainbowBaseEnabled and descendant:IsA("BasePart") then
+                        local parent = descendant.Parent
+                        local skipPart = false
+                        
+                        while parent and parent ~= ownPlot do
+                            if isAnimal(parent) then
+                                skipPart = true
+                                break
+                            end
+                            parent = parent.Parent
+                        end
+                        
+                        if not skipPart then
+                            table.insert(rainbowBaseParts, descendant)
+                            originalColors[descendant] = descendant.Color
+                        end
+                    end
+                end)
+                
+                local hue = 0
+                rainbowBaseConnection = RunService.Heartbeat:Connect(function(dt)
+                    if not rainbowBaseEnabled then
+                        if rainbowBaseConnection then
+                            rainbowBaseConnection:Disconnect()
+                            rainbowBaseConnection = nil
+                        end
+                        if descendantAddedConnection then
+                            descendantAddedConnection:Disconnect()
+                            descendantAddedConnection = nil
+                        end
+                        return
+                    end
+                    
+                    hue = (hue + dt / 3) % 1
+                    for _, part in pairs(rainbowBaseParts) do
+                        if part and part.Parent then
+                            part.Color = Color3.fromHSV(hue, 1, 1)
+                        end
+                    end
+                end)
+                
+                Window:Notify({Title = "Rainbow Base", Content = "Enabled", Duration = 2})
+            else
+                Window:Notify({Title = "Rainbow Base", Content = "Plot not found!", Duration = 2})
+            end
+        else
+            rainbowBaseEnabled = false
+            
+            if rainbowBaseConnection then
+                rainbowBaseConnection:Disconnect()
+                rainbowBaseConnection = nil
+            end
+            
+            if descendantAddedConnection then
+                descendantAddedConnection:Disconnect()
+                descendantAddedConnection = nil
+            end
+            
+            for part, originalColor in pairs(originalColors) do
+                if part and part.Parent then
+                    part.Color = originalColor
+                end
+            end
+            
+            rainbowBaseParts = {}
+            originalColors = {}
+            
+            Window:Notify({Title = "Rainbow Base", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- FPS Booster
+UtilitiesSection:CreateToggle({
+    Name = "FPS Booster",
+    Default = false,
+    Callback = function(state)
+        if state then
+            local Lighting = game:GetService("Lighting")
+            local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
+            
+            getgenv().OriginalFPSSettings = {
+                WaterWaveSize = Terrain and Terrain.WaterWaveSize or 0,
+                WaterWaveSpeed = Terrain and Terrain.WaterWaveSpeed or 0,
+                GlobalShadows = Lighting.GlobalShadows,
+                FogEnd = Lighting.FogEnd,
+            }
+            
+            if Terrain then
+                Terrain.WaterWaveSize = 0
+                Terrain.WaterWaveSpeed = 0
+            end
+            
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            pcall(function() settings().Rendering.QualityLevel = 1 end)
+            
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CastShadow = false
+                    v.Material = "Plastic"
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                    v.Lifetime = NumberRange.new(0)
+                end
+            end
+            
+            Window:Notify({Title = "FPS Booster", Content = "Enabled", Duration = 2})
+        else
+            if getgenv().OriginalFPSSettings then
+                local Lighting = game:GetService("Lighting")
+                local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
+                local settings = getgenv().OriginalFPSSettings
+                
+                if Terrain then
+                    Terrain.WaterWaveSize = settings.WaterWaveSize
+                    Terrain.WaterWaveSpeed = settings.WaterWaveSpeed
+                end
+                
+                Lighting.GlobalShadows = settings.GlobalShadows
+                Lighting.FogEnd = settings.FogEnd
+                
+                getgenv().OriginalFPSSettings = nil
+            end
+            
+            Window:Notify({Title = "FPS Booster", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+-- Steal Mode
+local StealModeEnabled = false
+local StealModeConnections = {}
+local OriginalTransparencies = {}
+
+local function isAnimal(model)
+    return model:FindFirstChild("AnimationController") and model.AnimationController:IsA("AnimationController")
+end
+
+local function makeTransparent(obj)
+    if obj:IsA("BasePart") then
+        if obj.Transparency >= 1 then return end
+        if obj.Material == Enum.Material.SmoothPlastic or obj.Material == Enum.Material.Plastic then
+            if not OriginalTransparencies[obj] then
+                OriginalTransparencies[obj] = obj.Transparency
+            end
+            obj.Transparency = 0.95
+        end
+    end
+end
+
+local function processPlot(plotModel)
+    for _, directChild in pairs(plotModel:GetChildren()) do
+        if directChild.Name ~= "FriendPanel" and not isAnimal(directChild) then
+            for _, innerChild in pairs(directChild:GetChildren()) do
+                for _, descendant in pairs(innerChild:GetDescendants()) do
+                    makeTransparent(descendant)
+                end
+                makeTransparent(innerChild)
+            end
+        end
+    end
+end
+
+UtilitiesSection:CreateToggle({
+    Name = "Steal Mode",
+    Default = false,
+    Callback = function(Value)
+        StealModeEnabled = Value
+        if Value then
+            local Plots = workspace:FindFirstChild("Plots")
+            if not Plots then
+                Window:Notify({Title = "Steal Mode", Content = "Plots not found!", Duration = 3})
+                return
+            end
+            
+            -- Mevcut tüm plotları işle
+            for _, plotModel in pairs(Plots:GetChildren()) do
+                if plotModel:IsA("Model") then
+                    processPlot(plotModel)
+                end
+            end
+            
+            -- Yeni eklenen plotları izle
+            local plotAddedConnection = Plots.ChildAdded:Connect(function(plotModel)
+                if StealModeEnabled and plotModel:IsA("Model") then
+                    task.wait(0.1)
+                    processPlot(plotModel)
+                end
+            end)
+            table.insert(StealModeConnections, plotAddedConnection)
+            
+            -- Her plot içinde yeni eklenen objeleri izle
+            for _, plotModel in pairs(Plots:GetChildren()) do
+                if plotModel:IsA("Model") then
+                    local plotDescendantConnection = plotModel.DescendantAdded:Connect(function(descendant)
+                        if not StealModeEnabled then return end
+                        
+                        -- Parent kontrolü yap
+                        local parent = descendant.Parent
+                        while parent and parent ~= plotModel do
+                            if parent.Parent == plotModel and parent.Name ~= "FriendPanel" and not isAnimal(parent) then
+                                makeTransparent(descendant)
+                                break
+                            end
+                            parent = parent.Parent
+                        end
+                    end)
+                    table.insert(StealModeConnections, plotDescendantConnection)
+                end
+            end
+            
+            -- Yeni eklenen plotlar için de DescendantAdded bağlantısı kur
+            local newPlotTracking = Plots.ChildAdded:Connect(function(plotModel)
+                if StealModeEnabled and plotModel:IsA("Model") then
+                    local plotDescendantConnection = plotModel.DescendantAdded:Connect(function(descendant)
+                        if not StealModeEnabled then return end
+                        
+                        local parent = descendant.Parent
+                        while parent and parent ~= plotModel do
+                            if parent.Parent == plotModel and parent.Name ~= "FriendPanel" and not isAnimal(parent) then
+                                makeTransparent(descendant)
+                                break
+                            end
+                            parent = parent.Parent
+                        end
+                    end)
+                    table.insert(StealModeConnections, plotDescendantConnection)
+                end
+            end)
+            table.insert(StealModeConnections, newPlotTracking)
+            
+            Window:Notify({Title = "Steal Mode", Content = "Enabled!", Duration = 2})
+        else
+            -- Tüm bağlantıları kes
+            for _, connection in pairs(StealModeConnections) do
+                connection:Disconnect()
+            end
+            StealModeConnections = {}
+            
+            -- Orijinal transparency'leri geri yükle
+            for part, originalTransparency in pairs(OriginalTransparencies) do
+                if part and part.Parent then
+                    part.Transparency = originalTransparency
+                end
+            end
+            OriginalTransparencies = {}
+            
+            Window:Notify({Title = "Steal Mode", Content = "Disabled!", Duration = 2})
+        end
+    end
+})
+-- Auto Kick on Steal
+local autoKickConnection = nil
+
+UtilitiesSection:CreateToggle({
+    Name = "Auto Kick",
+    Default = false,
+    Callback = function(value)
+        if autoKickConnection then
+            autoKickConnection:Disconnect()
+            autoKickConnection = nil
+        end
+        
+        if value then
+            local function onDescendantAdded(descendant)
+                if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                    if descendant.Text and descendant.Text:find("You stole") then
+                        LocalPlayer:Kick("You Stole A Brainrot")
+                    end
+                end
+            end
+            
+            autoKickConnection = LocalPlayer.PlayerGui.DescendantAdded:Connect(onDescendantAdded)
+            Window:Notify({Title = "Auto Kick", Content = "Enabled", Duration = 2})
+        else
+            Window:Notify({Title = "Auto Kick", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+-- FOV Manager for Anti Bee Disco
+local FOV_MANAGER = {
+    activeCount = 0,
+    conn = nil,
+    forcedFOV = 70,
+}
+
+function FOV_MANAGER:Start()
+    if self.conn then return end
+    
+    self.conn = RunService.RenderStepped:Connect(function()
+        local cam = workspace.CurrentCamera
+        if cam and cam.FieldOfView ~= self.forcedFOV then
+            cam.FieldOfView = self.forcedFOV
+        end
+    end)
+end
+
+function FOV_MANAGER:Stop()
+    if self.conn then
+        self.conn:Disconnect()
+        self.conn = nil
+    end
+end
+
+function FOV_MANAGER:Push()
+    self.activeCount += 1
+    self:Start()
+end
+
+function FOV_MANAGER:Pop()
+    if self.activeCount > 0 then
+        self.activeCount -= 1
+    end
+    if self.activeCount == 0 then
+        self:Stop()
+    end
+end
+
+-- Anti Bee Disco System
+local ANTI_BEE_DISCO = {}
+local antiBeeDiscoRunning = false
+local antiBeeDiscoConnections = {}
+local originalMoveFunction = nil
+local controlsProtected = false
+
+local BAD_LIGHTING_NAMES = {
+    Blue = true,
+    DiscoEffect = true,
+    BeeBlur = true,
+    ColorCorrection = true,
+}
+
+local function antiBeeDiscoNuke(obj)
+    if not obj or not obj.Parent then return end
+    if BAD_LIGHTING_NAMES[obj.Name] then
+        pcall(function()
+            obj:Destroy()
+        end)
+    end
+end
+
+local function antiBeeDiscoDisconnectAll()
+    for _, conn in ipairs(antiBeeDiscoConnections) do
+        if typeof(conn) == "RBXScriptConnection" then
+            conn:Disconnect()
+        end
+    end
+    antiBeeDiscoConnections = {}
+end
+
+local function protectControls()
+    if controlsProtected then return end
+    
+    pcall(function()
+        local PlayerScripts = LocalPlayer.PlayerScripts
+        local PlayerModule = PlayerScripts:FindFirstChild("PlayerModule")
+        if not PlayerModule then return end
+        
+        local Controls = require(PlayerModule):GetControls()
+        if not Controls then return end
+        
+        if not originalMoveFunction then
+            originalMoveFunction = Controls.moveFunction
+        end
+        
+        local function protectedMoveFunction(self, moveVector, relativeToCamera)
+            if originalMoveFunction then
+                originalMoveFunction(self, moveVector, relativeToCamera)
+            end
+        end
+        
+        local controlCheckConn = RunService.Heartbeat:Connect(function()
+            if not antiBeeDiscoRunning then return end
+            
+            if Controls.moveFunction ~= protectedMoveFunction then
+                Controls.moveFunction = protectedMoveFunction
+            end
+        end)
+        
+        table.insert(antiBeeDiscoConnections, controlCheckConn)
+        
+        Controls.moveFunction = protectedMoveFunction
+        controlsProtected = true
+    end)
+end
+
+local function restoreControls()
+    if not controlsProtected then return end
+    
+    pcall(function()
+        local PlayerScripts = LocalPlayer.PlayerScripts
+        local PlayerModule = PlayerScripts:FindFirstChild("PlayerModule")
+        if not PlayerModule then return end
+        
+        local Controls = require(PlayerModule):GetControls()
+        if not Controls or not originalMoveFunction then return end
+        
+        Controls.moveFunction = originalMoveFunction
+        controlsProtected = false
+    end)
+end
+
+local function blockBuzzingSound()
+    pcall(function()
+        local PlayerScripts = LocalPlayer.PlayerScripts
+        local beeScript = PlayerScripts:FindFirstChild("Bee", true)
+        if beeScript then
+            local buzzing = beeScript:FindFirstChild("Buzzing")
+            if buzzing and buzzing:IsA("Sound") then
+                buzzing:Stop()
+                buzzing.Volume = 0
+            end
+        end
+    end)
+end
+
+function ANTI_BEE_DISCO.Enable()
+    if antiBeeDiscoRunning then return end
+    antiBeeDiscoRunning = true
+    
+    local Lighting = game:GetService("Lighting")
+    
+    for _, inst in ipairs(Lighting:GetDescendants()) do
+        antiBeeDiscoNuke(inst)
+    end
+    
+    table.insert(antiBeeDiscoConnections, Lighting.DescendantAdded:Connect(function(obj)
+        if not antiBeeDiscoRunning then return end
+        antiBeeDiscoNuke(obj)
+    end))
+    
+    protectControls()
+    
+    table.insert(antiBeeDiscoConnections, RunService.Heartbeat:Connect(function()
+        if not antiBeeDiscoRunning then return end
+        blockBuzzingSound()
+    end))
+    
+    FOV_MANAGER:Push()
+end
+
+function ANTI_BEE_DISCO.Disable()
+    if not antiBeeDiscoRunning then return end
+    antiBeeDiscoRunning = false
+    
+    restoreControls()
+    
+    antiBeeDiscoDisconnectAll()
+    
+    FOV_MANAGER:Pop()
+end
+
+-- Anti-Effects Toggle
+UtilitiesSection:CreateToggle({
+    Name = "Anti-Effects",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local Lighting = game:GetService("Lighting")
+            
+            for _, effect in pairs(Lighting:GetChildren()) do
+                if effect:IsA("PostEffect") then
+                    effect.Enabled = false
+                end
+            end
+            
+            antiEffectsConnection = Lighting.ChildAdded:Connect(function(child)
+                if child:IsA("PostEffect") then
+                    child.Enabled = false
+                end
+            end)
+            
+            ANTI_BEE_DISCO.Enable()
+            
+            Window:Notify({Title = "Anti-Effects", Content = "Enabled", Duration = 2})
+        else
+            if antiEffectsConnection then
+                antiEffectsConnection:Disconnect()
+                antiEffectsConnection = nil
+            end
+            
+            local Lighting = game:GetService("Lighting")
+            for _, effect in pairs(Lighting:GetChildren()) do
+                if effect:IsA("PostEffect") then
+                    effect.Enabled = true
+                end
+            end
+            
+            ANTI_BEE_DISCO.Disable()
+            
+            Window:Notify({Title = "Anti-Effects", Content = "Disabled", Duration = 2})
+        end
+    end
+})
+
+
+-- Night Mode
+local nightModeConnection = nil
+
+UtilitiesSection:CreateToggle({
+    Name = "Night Mode",
+    Default = false,
+    Callback = function(Value)
+        local Lighting = game:GetService("Lighting")
+        if Value then
+            getgenv().OriginalLighting = {
+                ClockTime = Lighting.ClockTime,
+                Brightness = Lighting.Brightness,
+                Ambient = Lighting.Ambient,
+                OutdoorAmbient = Lighting.OutdoorAmbient
+            }
+            
+            local function applyNightMode()
+                Lighting.ClockTime = 0
+                Lighting.Brightness = 1
+                Lighting.Ambient = Color3.fromRGB(50, 50, 75)
+                Lighting.OutdoorAmbient = Color3.fromRGB(50, 50, 75)
+            end
+            
+            applyNightMode()
+            
+            if nightModeConnection then
+                nightModeConnection:Disconnect()
+            end
+            
+            nightModeConnection = Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+                if Value then
+                    applyNightMode()
+                end
+            end)
+            
+            Window:Notify({Title = "Night Mode", Content = "Enabled!", Duration = 2})
+        else
+            if nightModeConnection then
+                nightModeConnection:Disconnect()
+                nightModeConnection = nil
+            end
+            
+            if getgenv().OriginalLighting then
+                Lighting.ClockTime = getgenv().OriginalLighting.ClockTime
+                Lighting.Brightness = getgenv().OriginalLighting.Brightness
+                Lighting.Ambient = getgenv().OriginalLighting.Ambient
+                Lighting.OutdoorAmbient = getgenv().OriginalLighting.OutdoorAmbient
+                getgenv().OriginalLighting = nil
+            end
+            
+            Window:Notify({Title = "Night Mode", Content = "Disabled!", Duration = 2})
+        end
+    end
+})
+-- ============================================
+-- MISC TAB
+-- ============================================
+local MiscTab = Window:CreateTab("Misc")
+local MiscSection = MiscTab:CreateSection("Miscellaneous")
+
+-- Server Hop
+MiscSection:CreateButton({
+    Name = "Server Hop",
+    Callback = function()
+        Window:Notify({Title = "Server Hop", Content = "Searching for new server...", Duration = 2})
+        
+        local TeleportService = game:GetService("TeleportService")
+        local HttpService = game:GetService("HttpService")
+        
+        local function serverHop()
+            local servers = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
+            for _, server in pairs(servers.data) do
+                if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                    return
+                end
+            end
+        end
+        
+        serverHop()
+    end
+})
+
+-- Rejoin Server
+MiscSection:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function()
+        Window:Notify({Title = "Rejoin", Content = "Rejoining server...", Duration = 2})
+        
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end
+})
+
+-- Copy Discord Link
+MiscSection:CreateButton({
+    Name = "Copy Discord Link",
+    Callback = function()
+        setclipboard("https://discord.gg/DBKxZQ8FmK")
+        Window:Notify({Title = "Discord", Content = "Link copied to clipboard!", Duration = 2, Type = "Success"})
+    end
+})
+
+-- Copy Website Link
+MiscSection:CreateButton({
+    Name = "Copy Website Link",
+    Callback = function()
+        setclipboard("https://crusty.dev.tc/")
+        Window:Notify({Title = "Website", Content = "Link copied to clipboard!", Duration = 2, Type = "Success"})
+    end
+})
+
+
+-- ============================================
+-- STARTUP NOTIFICATION
+-- ============================================
+Window:Notify({
+    Title = "Crusty Hub",
+    Content = "Loaded successfully!",
+    Duration = 3,
+    Type = "Success"
+})

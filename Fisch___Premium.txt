@@ -1,0 +1,744 @@
+-- Load WindUI
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Ambil nama player
+local player = game.Players.LocalPlayer
+local playerName = player.Name
+local playerDisplayName = player.DisplayName
+
+-- Buat Window versi baru
+local Window = WindUI:CreateWindow({
+    Title = "Nexa - Premium",
+    Icon = "rbxassetid://107488593993096",
+    Author = "Fisch Script | @ Han",
+    Folder = "Hanzo",
+    Size = UDim2.fromOffset(580, 490),
+    Transparent = true,
+    Theme = "Dark",
+    
+    HidePanelBackground = true,
+    NewElements = false,
+
+    User = {
+        Enabled = true,
+        Anonymous = false,           -- false biar muncul nama asli
+        Name = playerDisplayName,    -- Nama tampilan
+        UserName = "@" .. playerName, -- Username Roblox
+        Callback = function()
+            WindUI:Notify({
+                Title = "User Profile",
+                Content = "User profile clicked!",
+                Duration = 3
+            })
+        end
+    },
+    
+    Acrylic = false,
+    HideSearchBar = false,
+    SideBarWidth = 200,
+})
+
+Window:Tag({
+    Title = "v0.0.1",
+    Color = Color3.fromHex("#30ff6a")
+})
+
+Window:EditOpenButton({
+    Enabled = false
+})
+
+task.delay(6.5, function()
+    WindUI:Notify({
+        Title = "Bug Report",
+        Content = "If there are any errors, please let the developer know. Join Discord to report bugs.",
+        Icon = "cloud-alert",
+        Duration = 6
+    })
+end)
+
+task.delay(13, function()
+    WindUI:Notify({
+        Title = "Purchase",
+        Content = "If you want to buy this premium script key, join Discord to buy premium.",
+        Icon = "shopping-cart",
+        Duration = 6
+    })
+end)
+
+-- ✅ Tab dan UI
+local Tabs = {
+    Home = Window:Tab({ Title = "Home", Icon = "house"  }),
+    Farm = Window:Tab({ Title = "Farm", Icon = "fish"  }),
+    Shop = Window:Tab({ Title = "Shop", Icon = "shopping-cart"  }),
+    Teleport = Window:Tab({ Title = "Teleport", Icon = "map-pin"  }),
+}
+
+Tabs.Home:Section({ Title = "Update" })
+
+Tabs.Home:Paragraph({
+    Title = "Here's what's new:",
+    Desc = [[
+[/] Fixed Auto Sell
+    ]]
+})
+
+Tabs.Home:Section({ Title = "Server" })
+
+Tabs.Home:Paragraph({
+    Title = "Discord - Nexa | COMMUNITY",
+    Desc = "Indonesia 🇮🇩",
+    Image = "https://images-eds-ssl.xboxlive.com/image?url=4rt9.lXDC4H_93laV1_eHHFT949fUipzkiFOBH3fAiZZUCdYojwUyX2aTonS1aIwMrx6NUIsHfUHSLzjGJFxxsG72wAo9EWJR4yQWyJJaDaK1XdUso6cUMpI9hAdPUU_FNs11cY1X284vsHrnWtRw7oqRpN1m9YAg21d_aNKnIo-&format=source",
+    ImageSize = 20,
+    Color = "Grey",
+    Buttons = {
+        {
+            Title = "Copy Link",
+            Icon = "copy",
+            Variant = "Tertiary",
+            Callback = function()
+                setclipboard("discord.gg/ECxQFc97F5")
+                WindUI:Notify({
+                    Title = "Copied!",
+                    Content = "Discord link copied to clipboard",
+                    Duration = 2
+                })
+            end
+        }
+    }
+})
+
+Tabs.Farm:Section({ Title = "Fishing" })
+
+-- // Variable
+local AutoCast = false
+
+-- // Toggle WindUI
+Tabs.Farm:Toggle({
+    Title = "Auto Cast",
+    Value = false,
+    Callback = function(state)
+        AutoCast = state
+    end
+})
+
+-- // Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- // Get Rod Tool
+local function GetRodTool()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("Tool") and v.Name:match("Rod") then
+            return v
+        end
+    end
+    return nil
+end
+
+-- // Cast Function
+local function CastRod()
+    local tool = GetRodTool()
+    if not tool then return end
+    local events = tool:FindFirstChild("events")
+    if not events then return end
+    local cast = events:FindFirstChild("cast")
+    if not cast then return end
+    cast:FireServer(82.9, 1)
+end
+
+-- // Loop
+task.spawn(function()
+    while true do
+        task.wait(0.01)
+        if AutoCast then
+            pcall(CastRod)
+        end
+    end
+end)
+
+
+
+-- // Variable
+local AutoShake = false
+
+-- // Toggle WindUI
+Tabs.Farm:Toggle({
+    Title = "Auto Shake",
+    Value = false,
+    Callback = function(state)
+        AutoShake = state
+    end
+})
+
+-- // Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- // Shake Function
+local function DoShake()
+    local gui = LocalPlayer:WaitForChild("PlayerGui")
+    local shakeui = gui:FindFirstChild("shakeui")
+    if shakeui then
+        local safezone = shakeui:FindFirstChild("safezone")
+        if safezone then
+            local button = safezone:FindFirstChild("button")
+            if button and button:FindFirstChild("shake") then
+                button.shake:FireServer()
+            end
+        end
+    end
+end
+
+-- // Loop
+task.spawn(function()
+    while true do
+        task.wait(0.001)
+        if AutoShake then
+            pcall(DoShake)
+        end
+    end
+end)
+
+-- // Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- // Variables
+local AutoReel = false
+local args = {100, false}
+local reelEvent = ReplicatedStorage:WaitForChild("events"):WaitForChild("reelfinished")
+
+-- // WindUI Toggle
+Tabs.Farm:Toggle({ 
+    Title = "Auto Reel", 
+    Value = false,
+    Callback = function(state)
+        AutoReel = state
+    end
+})
+
+-- // Loop Auto Reel
+spawn(function()
+    while true do
+        if AutoReel then
+            reelEvent:FireServer(unpack(args))
+        end
+        wait(0.1) -- jeda antar cast, bisa diubah sesuai kebutuhan
+    end
+end)
+
+-- EQUIP ROD
+Tabs.Farm:Toggle({
+    Title = "Auto Equip Rod",
+    Value = false,
+    Callback = function(state)
+        if state then
+            -- Aktifkan auto equip
+            getgenv().AutoEquipRod = true
+            task.spawn(function()
+                while getgenv().AutoEquipRod and task.wait(1) do
+                    local player = game.Players.LocalPlayer
+                    local backpack = player:WaitForChild("Backpack")
+
+                    -- Cek apakah sudah pegang rod
+                    local hasRodEquipped = false
+                    if player.Character then
+                        for _, tool in ipairs(player.Character:GetChildren()) do
+                            if tool:IsA("Tool") and string.find(tool.Name, "Rod") then
+                                hasRodEquipped = true
+                                break
+                            end
+                        end
+                    end
+
+                    -- Kalau belum pegang, cek Backpack dan equip
+                    if not hasRodEquipped then
+                        for _, tool in ipairs(backpack:GetChildren()) do
+                            if tool:IsA("Tool") and string.find(tool.Name, "Rod") then
+                                player.Character.Humanoid:EquipTool(tool)
+                                break
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            -- Matikan auto equip
+            getgenv().AutoEquipRod = false
+        end
+    end
+})
+
+Tabs.Farm:Section({ Title = "Equipment Rod" })
+
+local equipRods = {
+    "Flimsy Rod","Fischer's Rod","Training Rod","Plastic Rod","Carbon Rod","Fast Rod","Lucky Rod","Long Rod","Stone Rod",
+    "Rose Rend","Scarlet Ravager","Experimental Rod","Magma Rod","Fungal Rod","Steady Rod","Fortune Rod","Rapid Rod","Magnet Rod","Nocturnal Rod",
+    "Precision Rod","Wildflower Rod","Reinforced Rod","Arctic Rod","Avalanche Rod","Phoenix Rod","Scurvy Rod","Midas Rod","Crystalized Rod","Depthseeker Rod",
+    "Aurora Rod","Mythical Rod","Kings Rod","Ice Warpers Rod","Brick Rod","Champions Rod","Friendly Rod","Carrot Rod","Wisdom Rod","Trident Rod",
+    "Summit Rod","Resourceful Rod","Volcanic Rod","Voyager Rod","Riptide Rod","Seasons Rod","Rainbow Cluster Rod","Great Dreamer Rod","Sunken Rod","Auric Rod",
+    "Rod Of The Depths","Rod Of The Exalted One","Destiny Rod","Abyssal Specter Rod","The Lost Rod","The Boom Ball","Frostbane Rod","Scarlet Spincaster Rod","Heaven's Rod","No-Life Rod",
+    "Zeus Rod","Tempest Rod","Kraken Rod","Poseidon Rod","Leviathan's Fang Rod","Challenger's Rod","Great Rod of Oscar","Luminescent Oath","Celestial Rod","Rod Of The Eternal King",
+    "Rod Of The Forgotten Fang","Duskwire","Evil Pitchfork","Cerulean Fang Rod","Wicked Fang Rod","Ethereal Prism Rod","Rod Of The Zenith","Seraphic Rod","Spiritbinder","Onirifalx",
+    "Ruinous Oath","Tryhard Rod","Haunted Rod","Relic Rod","Antler Rod","North-Star Rod","Candy Cane Rod","Krampus's Rod","Frost Warden Rod","Fischmas Rod",
+    "Frostfire Rod","Firework Rod","Shamrock Rod","Egg Rod","Brick Built Rod","Superstar Rod","Mission Specialist's Rod","Paleontologist's Rod","Fixer's Rod","Smurf Rod",
+    "Popsicle Rod","Tidal Wave Rod","Paper Fan Rod","Rod of the Cosmos","Buddy Bond Rod","Astral Rod","Event Horizon Rod","Rod Of Time","Patriot Rod","Fang of the Eclipse",
+    "Astralhook Rod","Fallen Snowblade","Wingripper","Sovereign Doombringer","Clickbait Caster","View Smasher","Fish Photographer","Paintbrush","nilCaster","Pen Rod"
+}
+
+-- Variabel untuk simpan rod yang dipilih
+local selectedRod = ""
+
+-- Dropdown untuk pilih rod
+Tabs.Farm:Dropdown({ 
+    Title = "Select Rod", 
+    Values = equipRods, 
+    SearchBarEnabled = true,
+    Value = "",
+    Callback = function(option) 
+        selectedRod = option
+        WindUI:Notify({
+            Title = "Rod Selected",
+            Content = "You selected: " .. option,
+            Duration = 4,
+        })
+    end
+})
+
+-- Tombol untuk equip rod yang dipilih
+Tabs.Farm:Button({
+    Title = "Equip Selected Rod",
+    Callback = function()
+        if selectedRod ~= "" then
+            local args = { selectedRod }
+            game:GetService("ReplicatedStorage"):WaitForChild("packages"):WaitForChild("Net"):WaitForChild("RE/Rod/Equip"):FireServer(unpack(args))
+
+            WindUI:Notify({
+                Title = "Rod Equipped",
+                Content = "Equipped: " .. selectedRod,
+                Duration = 5,
+            })
+        else
+            WindUI:Notify({
+                Title = "No Rod Selected",
+                Content = "Please select a rod first!",
+                Duration = 5,
+            })
+        end
+    end
+})
+
+Tabs.Farm:Section({ Title = "Equipment Bait" })
+
+local equipBait = {
+    "Bagel","Flakes","Gale Grub","Garbage","Insect","Lushrooms","Worm","Maggot","Shrimp","Coral","Ember Berries",
+    "Magnet","Minnow","Seaweed","Squid","Coal","Crystal Bananas","Lagoon Leech","Rapid Catcher","Super Flakes","Deep Coral",
+    "Fish Head","Instant Catcher","Mist Worms","Night Shrimp","Truffle Worm","Weird Algae","Whale Bait","Golden Shrimp Bait","Sapphire Krill",
+    "Shark Head","Luminous Larva","Kraken Tentacle","Golden Tentacle","Hangman's Hook","Colossal Ink Bait","Hourglass Bait","Snare","Moonhaze",
+    "Phantom Leech","Glass Beetle","Neuro Slug","Toxic Jelly Core","Nightmare Larva","Golden Worm","Peppermint Worm","Holly Berry","Stud Bait",
+    "Aurora Bait","Chocolate Fish","Lucky"
+}
+
+local selectedBait = equipBait[1] -- default ke "Bagel"
+
+Tabs.Farm:Dropdown({
+    Title = "Select Bait",
+    Values = equipBait,
+    SearchBarEnabled = true,
+    Value = selectedBait,
+    Callback = function(option)
+        selectedBait = option
+    end
+})
+
+Tabs.Farm:Button({
+    Title = "Equip Bait",
+    Callback = function()
+        local args = { selectedBait }
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("packages")
+            :WaitForChild("Net")
+            :WaitForChild("RE/Bait/Equip")
+            :FireServer(unpack(args))
+    end
+})
+
+Tabs.Farm:Section({ Title = "Equipment Bobber" })
+
+local equipBobber = {
+    "Frozen","Anchor","Cliff Peak","Coral Reef","Fake Pufferfish","Frozen Rubber Ducky","Infested","Mini Terrapin","Mushroom","Pirate Wheel",
+    "Skeleton","Ancient Book","Baby Anglerfish","Blue Moon","Chilled Spikes","Cryogenic Icicle","Frigid Crystal","Lava","Lava Spout","Quiet Crystal",
+    "Rubber Ducky","Sun","Tornado","Treasure Chest","Vertigo Rock","Bloxy Cola","Amber","Atlantis Guardian","Brine","Carrot Friend","Crystal Cluster",
+    "Harpoon","Nautilis Shell","Aurora","Ghostly Conch","Prismatic Gem","Founders Rainbow","Tryhard Bobber","Dusk Bobber","Spirit Bobber","Stock",
+    "Gem","Compass","Gold Coin","Whaley","Meteor Stone","Drifter's Tale","Sunken Ship","The Moby Bobber","Bloop Bobber","Lobster Pal","Fishing Net",
+    "Azure Flower","Cannon","Ember Cluster","Lighthouse","Lush Tree","Pine Tree","Spiritual Gem","Oceanic Tunnel","Treasure Whale","Cursed Dreamer",
+    "Skull","Crystallized Ball","Party Popper","Sunken Relic","Carbon","Blue Wiggly Worm","Green Wiggly Worm","Purple Wiggly Worm","Leaf","Heart",
+    "Cat","Cube","Huge","Wireframe","Star","Translucent","Income","LED","Lightning","Evil Ducky","Cheezburger","Chocolate Milk","Bloxiade",
+    "Glowfish Bobber","Roslit Bay Bobber","Diamond","Shaped","Eye","Coal"
+}
+
+local selectedBobber = equipBobber[1] -- default ke "Frozen"
+
+Tabs.Farm:Dropdown({
+    Title = "Select Bobber",
+    Values = equipBobber,
+    SearchBarEnabled = true,
+    Value = selectedBobber,
+    Callback = function(option)
+        selectedBobber = option
+    end
+})
+
+Tabs.Farm:Button({
+    Title = "Equip Bobber",
+    Callback = function()
+        local args = { selectedBobber }
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("packages")
+            :WaitForChild("Net")
+            :WaitForChild("RE/Bobber/Equip") -- biasanya path-nya ini, cek kalau beda
+            :FireServer(unpack(args))
+    end
+})
+
+Tabs.Farm:Section({ Title = "Sell" })
+
+-- // Variables
+local AutoSell = false
+local SellDelay = 5 -- default 5 seconds
+
+-- // Slider WindUI (delay)
+Tabs.Farm:Slider({
+    Title = "Sell Delay",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 100,
+        Default = 5,
+    },
+    Callback = function(value)
+        SellDelay = value
+    end
+})
+
+-- // Toggle WindUI
+Tabs.Farm:Toggle({
+    Title = "Enable Auto Sell",
+    Value = false,
+    Callback = function(state)
+        AutoSell = state
+    end
+})
+
+-- // Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Events = ReplicatedStorage:WaitForChild("events")
+local npcFolder = workspace:WaitForChild("world"):WaitForChild("npcs")
+
+-- // Helper: Wait until a Merchant NPC exists
+local function waitForMerchant()
+    local npc = nil
+    while not npc do
+        for _, v in ipairs(npcFolder:GetChildren()) do
+            if v:IsA("Model") and string.match(v.Name, "Merchant$") then
+                npc = v
+                break
+            end
+        end
+        if not npc then
+            npcFolder.ChildAdded:Wait() -- wait until merchant spawn
+        end
+    end
+    return npc
+end
+
+-- // Auto Sell Loop
+task.spawn(function()
+    while task.wait() do
+        if AutoSell then
+            -- Wait until merchant is available
+            local npc = waitForMerchant()
+            local idle = npc:FindFirstChild("description") and npc.description:FindFirstChild("idle")
+
+            if npc and idle then
+                local args = {
+                    {
+                        voice = 12,
+                        npc = npc,
+                        idle = idle
+                    }
+                }
+                Events:WaitForChild("SellAll"):InvokeServer(unpack(args))
+            end
+
+            task.wait(SellDelay)
+        end
+    end
+end)
+
+Tabs.Shop:Section({ Title = "Crate" })
+
+-- Variables
+local selectedCrate = "Bait Crate" -- default crate
+local crateAmount = 5 -- fixed amount
+local AutoBuy = false
+
+-- Dropdown to select crate
+Tabs.Shop:Dropdown({ 
+    Title = "Select Crate", 
+    Values = { "Bait Crate", "Quality Bait Crate" }, 
+    Value = selectedCrate, 
+    Callback = function(option) 
+        selectedCrate = option
+    end
+})
+
+-- Toggle Auto Buy
+Tabs.Shop:Toggle({
+    Title = "Auto Buy Crate",
+    Value = false,
+    Callback = function(state)
+        AutoBuy = state
+    end
+})
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local purchaseEvent = ReplicatedStorage:WaitForChild("events"):WaitForChild("purchase")
+
+-- Auto Buy loop
+spawn(function()
+    while true do
+        wait(0.01)
+        if AutoBuy then
+            local args = {
+                selectedCrate, -- crate from dropdown
+                "Fish",        -- currency
+                [4] = crateAmount -- fixed amount
+            }
+            purchaseEvent:FireServer(unpack(args))
+        end
+    end
+end)
+
+Tabs.Shop:Section({ Title = "Rod" })
+
+local purchase = game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("purchase")
+
+-- === List Semua Rod ===
+local availableRods = {
+   "Flimsy Rod","Training Rod","Plastic Rod","Carbon Rod","Fast Rod","Lucky Rod","Long Rod","Stone Rod","Steady Rod","Fortune Rod","Rapid Rod","Magnet Rod",
+   "Nocturnal Rod","Precision Rod","Wildflower Rod","Reinforced Rod","Arctic Rod","Avalanche Rod","Phoenix Rod","Scurvy Rod","Midas Rod","Crystalized Rod","Depthseeker Rod","Aurora Rod","Mythical Rod",
+   "Kings Rod","Ice Warpers Rod","Brick Rod","Champions Rod","Carrot Rod","Wisdom Rod","Trident Rod","Summit Rod","Resourceful Rod","Volcanic Rod","Voyager Rod","Riptide Rod","Seasons Rod","Rainbow Cluster Rod",
+   "Great Dreamer Rod","Destiny Rod","The Lost Rod","Frostbane Rod","Scarlet Spincaster Rod","Heaven's Rod","Zeus Rod","Tempest Rod","Kraken Rod","Poseidon Rod","Leviathan's Fang Rod","Challenger's Rod","Great Rod of Oscar",
+   "Luminescent Oath","Celestial Rod","Rod Of The Eternal King","Rod Of The Forgotten Fang","Evil Pitchfork","Cerulean Fang Rod","Wicked Fang Rod","Ethereal Prism Rod","Rod Of The Zenith","Spiritbinder","Ruinous Oath","Tryhard Rod"
+}
+
+-- === Variabel Pilihan User ===
+local chosenRods = {}
+
+-- === Dropdown: pilih rods (multi) ===
+Tabs.Shop:Dropdown({
+    Title = "Select Rods",
+    Values = availableRods,
+    SearchBarEnabled = true,
+    Value = {},
+    Multi = true,
+    AllowNone = true,
+    Callback = function(option)
+        chosenRods = option or {}
+    end
+})
+
+-- === Button: beli rods yang dipilih ===
+Tabs.Shop:Button({
+    Title = "Buy Selected Rods",
+    Callback = function()
+        if not chosenRods or #chosenRods == 0 then
+            WindUI:Notify({
+                Title = "Warning",
+                Content = "No rods selected. Choose at least one rod first.",
+                Duration = 4,
+            })
+            return
+        end
+
+        local category = "Rod"
+        local qty = 1
+        local delayBetween = 0.5
+
+        for _, rodName in ipairs(chosenRods) do
+            local args = { rodName, category }
+            args[4] = qty
+
+            pcall(function()
+                purchase:FireServer(unpack(args))
+            end)
+
+            task.wait(delayBetween)
+        end
+
+        WindUI:Notify({
+            Title = "Purchase",
+            Content = "Purchase completed for selected rods.",
+            Duration = 4,
+        })
+    end
+})
+
+Tabs.Teleport:Section({ Title = "Island" })
+
+-- List lokasi teleport (gunakan CFrame)
+local teleportLocations = {
+    ["Ancient Archives"] = CFrame.new(-3156.37451, -745.713989, 1683.13574, -0.860117316, 1.84150082e-08, -0.510096252, 2.10384705e-08, 1, 6.26265706e-10, 0.510096252, -1.01929825e-08, -0.860117316),
+    ["Ancient Isle"] = CFrame.new(6057.07422, 195.280151, 277.14859, 0.18684645, 2.1313635e-08, 0.982389152, -6.77808432e-08, 1, -8.78668072e-09, -0.982389152, -6.50338237e-08, 0.18684645),
+    ["Ancient Isle 1"] = CFrame.new(-3155.02222, -750.667847, 2193.13696, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    ["Ancient Isle 2"] = CFrame.new(5948.79053, 157.230042, 482.23584, 0.764405072, 0, 0.644736409, 0, 1, 0, -0.644736409, 0, 0.764405072),
+    ["Atlantis"] = CFrame.new(-4265.13086, -602.574585, 1830.80737, -0.998844504, 0, -0.0480674766, 0, 1, 0, 0.0480674766, 0, -0.998844504),
+    ["Blue Moon Pool"] = CFrame.new(2743.1582, 131.499985, 2514.72388, 0.249071687, 8.3022293e-08, 0.968485057, -6.24669099e-08, 1, -6.96588458e-08, -0.968485057, -3.1482192e-08, 0.249071687),
+    ["Carrot Garden"] = CFrame.new(3716.6062, -1130.4895, -1078.50793, 0.657635927, -0.000371464179, 0.753335834, -5.71158016e-05, 0.999999821, 0.000542952563, -0.753335953, -0.00040009254, 0.657635808),
+    ["Crystal Cove"] = CFrame.new(1350.14526, -604.872681, 2329.95679, -0.408572346, -2.40111309e-08, -0.912725925, 3.4419484e-08, 1, -4.17144292e-08, 0.912725925, -4.84586131e-08, -0.408572346),
+    ["Desolate Deep"] = CFrame.new(-1654.96729, -213.520996, -2845.95215, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    ["Forsaken Shores"] = CFrame.new(-2573.6189, 145.750015, 1587.65393, 0.356420547, -6.3444922e-08, -0.934325635, 3.09142578e-08, 1, -5.6111538e-08, 0.934325635, -8.88467877e-09, 0.356420547),
+    ["Grand Reef"] = CFrame.new(-3565.76709, 154.360611, 535.246521, -0.457844615, 0, -0.889032245, 0, 1, 0, 0.889032245, 0, -0.457844615),
+    ["Moosewood"] = CFrame.new(436.368713, 154, 247.310532, 0.12572813, 0, 0.992064714, 0, 1, 0, -0.992064714, 0, 0.12572813),
+    ["Mushgrove Swamp"] = CFrame.new(2662.08105, 397.321472, -728.827026, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    ["Northern Expedition"] = CFrame.new(19526.9629, 140.240601, 5292.56592, -0.457844615, 0, -0.889032245, 0, 1, 0, 0.889032245, 0, -0.457844615),
+    ["Podium 1"] = CFrame.new(-3463.94727, -2254.81885, 3832.91699, -0.431924105, 0, 0.901909947, 0, 1, 0, -0.901909947, 0, -0.431924105),
+    ["Podium 2"] = CFrame.new(-825.645203, -3269.98804, -709.761169, 0.781674981, 0, 0.623686016, 0, 1, 0, -0.623686016, 0, 0.781674981),
+    ["Podium 3"] = CFrame.new(-13488.2939, -11053.1875, 134.38797, -0.27474618, 0.0107955653, -0.96145618, -0.00500683859, 0.999907374, 0.0126580652, 0.961503744, 0.00829161145, -0.274666667),
+    ["Podium 4"] = CFrame.new(-4333.00537, -11185.5732, 3196.40845, 0, 0, -1, 0, 1, 0, 1, 0, 0),
+    ["Roslit Bay"] = CFrame.new(-1597.0321, 134.780853, 604.949524, 0.394952327, 8.52962927e-08, -0.918701589, -4.72752115e-10, 1, 9.26411516e-08, 0.918701589, -3.61545212e-08, 0.394952327),
+    ["Roslit Volcano"] = CFrame.new(-1888.52319, 163.847565, 329.238281, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    ["Snowcap Island"] = CFrame.new(2628.69263, 142.099411, 2510.4458, -0.159515828, 3.14032782e-08, 0.987195373, -1.86964317e-09, 1, -3.2127409e-08, -0.987195373, -6.96839075e-09, -0.159515828),
+    ["Statue of Sovereignty"] = CFrame.new(32.7750549, 144.493347, -1020.3197, -0.866953373, 2.6253506e-08, -0.498389244, 4.85347975e-08, 1, 3.1570807e-08, 0.498389244, -5.17150696e-08, -0.866953373),
+    ["Sunstone Island"] = CFrame.new(-1046.80713, 134.239044, -1142.7168, 0.129344821, 5.11642035e-08, -0.991599679, 3.86840648e-09, 1, 5.21022378e-08, 0.991599679, -1.05750653e-08, 0.129344821),
+    ["Terrapin Island"] = CFrame.new(-207.215851, 142.213226, 1953.05188, -0.414013892, -1.23624488e-07, 0.910270572, -8.38610177e-08, 1, 9.76668118e-08, -0.910270572, -3.59000545e-08, -0.414013892),
+    ["The Depths"] = CFrame.new(947.417114, -711.63031, 1259.66516, 0.259314388, -8.87096352e-09, 0.965792954, 2.04304911e-08, 1, 3.69959574e-09, -0.965792954, 1.87722655e-08, 0.259314388),
+    ["Vertigo"] = CFrame.new(-112.007278, -492.901093, 1040.32788, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    ["Volcanic Vents"] = CFrame.new(-3421.24292, -2261.84131, 3839.80054, -0.993602812, -8.73249064e-08, -0.11293108, -7.97883573e-08, 1, -7.1255561e-08, 0.11293108, -6.17891374e-08, -0.993602812)
+}
+
+local selectedLocation = nil
+
+-- Ambil keys dari teleportLocations sebagai values
+local locationNames = {}
+for name, _ in pairs(teleportLocations) do
+    table.insert(locationNames, name)
+end
+
+Tabs.Teleport:Dropdown({
+    Title = "Select Location",
+    Values = locationNames,
+    SearchBarEnabled = true,
+    Value = locationNames[1],
+    Callback = function(option)
+        selectedLocation = option
+    end
+})
+
+Tabs.Teleport:Button({
+    Title = "Teleport",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        if selectedLocation and teleportLocations[selectedLocation] then
+            character.HumanoidRootPart.CFrame = teleportLocations[selectedLocation]
+            WindUI:Notify({
+                Title = "Teleport",
+                Content = "Teleported to " .. selectedLocation,
+                Duration = 5,
+            })
+        else
+            WindUI:Notify({
+                Title = "Teleport",
+                Content = "Please select a valid location!",
+                Duration = 5,
+            })
+        end
+    end
+})
+
+local TweenService = game:GetService("TweenService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+local ImgBtn = Instance.new("ImageButton")
+ImgBtn.Parent = ScreenGui
+ImgBtn.Size = UDim2.new(0, 60, 0, 60)
+ImgBtn.Position = UDim2.new( 0, 100, 1, -300)
+ImgBtn.BackgroundTransparency = 1
+ImgBtn.Image = "rbxassetid://137184014634632" -- ganti dengan gambar planet
+
+-- Biar ujung tombol bulat/halus
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 15)
+UICorner.Parent = ImgBtn
+
+-- Toggle GUI dengan ImageButton
+local isOpen = false
+ImgBtn.MouseButton1Click:Connect(function()
+    -- ANIMASI KLIK (scale kecil dulu baru balik normal)
+    local shrink = TweenService:Create(ImgBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 50, 0, 50)
+    })
+    local grow = TweenService:Create(ImgBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 60, 0, 60)
+    })
+
+    shrink:Play()
+    shrink.Completed:Wait()
+    grow:Play()
+
+    -- Toggle Window
+    if isOpen then
+        Window:Close()
+    else
+        Window:Open()
+    end
+    isOpen = not isOpen
+end)
+
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    ImgBtn.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+ImgBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ImgBtn.Position
+
+        -- biar bisa lepas drag kalau jari/mouse diangkat
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+ImgBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)

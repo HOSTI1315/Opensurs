@@ -1,0 +1,668 @@
+local Library = {}
+Library.__index = Library
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local function makeDraggable(frame)
+    local dragging, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            local conn = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    conn:Disconnect()
+                end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+function Library.new(title, subtitle)
+    local self = setmetatable({}, Library)
+    self.ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    self.ScreenGui.Name = "Manus_UI_v2"
+    self.ScreenGui.ResetOnSpawn = false
+    self.OpenButton = Instance.new("TextButton", self.ScreenGui)
+self.OpenButton.Size = UDim2.new(0, 50, 0, 50)
+self.OpenButton.Position = UDim2.new(0, 20, 0.5, -25)
+self.OpenButton.Text = "BX"
+self.OpenButton.TextScaled = true
+self.OpenButton.Font = Enum.Font.GothamBold
+self.OpenButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+self.OpenButton.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
+self.OpenButton.BackgroundTransparency = 0.3
+Instance.new("UICorner", self.OpenButton).CornerRadius = UDim.new(1, 0)
+local openStroke = Instance.new("UIStroke", self.OpenButton)
+openStroke.Thickness = 2
+openStroke.Color = Color3.fromRGB(255, 0, 0)
+openStroke.Transparency = 0.15
+makeDraggable(self.OpenButton)
+    self.Window = Instance.new("Frame", self.ScreenGui)
+    self.Window.Size = UDim2.new(0, 200, 0, 130)
+    self.Window.Position = UDim2.new(0.5, -100, 0.5, -65)
+    self.Window.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    self.Window.BackgroundTransparency = 0.15
+    self.Window.BorderSizePixel = 0
+    self.Window.Visible = false
+    Instance.new("UICorner", self.Window).CornerRadius = UDim.new(0, 14)
+    local windowStroke = Instance.new("UIStroke", self.Window)
+    windowStroke.Thickness, windowStroke.Color, windowStroke.Transparency = 3, Color3.fromRGB(139, 0, 0), 0.15
+    makeDraggable(self.Window)
+    self.OpenButton.MouseButton1Click:Connect(function() self.Window.Visible = not self.Window.Visible end)
+    local titleLabel = Instance.new("TextLabel", self.Window)
+    titleLabel.Size, titleLabel.Text, titleLabel.TextColor3, titleLabel.Font, titleLabel.TextSize, titleLabel.BackgroundTransparency = UDim2.new(1, 0, 0, 22), title or "Manus UI", Color3.fromRGB(139, 0, 0), Enum.Font.SciFi, 15, 1
+    local subtitleLabel = Instance.new("TextLabel", self.Window)
+    subtitleLabel.Size, subtitleLabel.Position, subtitleLabel.Text, subtitleLabel.TextColor3, subtitleLabel.Font, subtitleLabel.TextSize, subtitleLabel.BackgroundTransparency, subtitleLabel.TextXAlignment = UDim2.new(1, 0, 0, 14), UDim2.new(0, 0, 0, 22), subtitle or "github.com/manus", Color3.fromRGB(255, 255, 255), Enum.Font.SciFi, 12, 1, Enum.TextXAlignment.Center
+    self.StatusLabel = Instance.new("TextLabel", self.Window)
+    self.StatusLabel.Size, self.StatusLabel.Position, self.StatusLabel.BackgroundTransparency, self.StatusLabel.Font, self.StatusLabel.TextSize, self.StatusLabel.TextTransparency = UDim2.new(1, -20, 0, 20), UDim2.new(0, 10, 1, -22), 1, Enum.Font.SciFi, 12, 1
+    return self
+end
+function Library:AddButton(properties)
+    local button = Instance.new("TextButton", self.Window)
+    button.Text = properties.Text or ""
+    button.Font = Enum.Font.SciFi
+    button.TextSize = properties.TextSize or 12
+    button.TextColor3 = properties.TextColor or Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = properties.BackgroundColor or Color3.fromRGB(0, 0, 0)
+    button.Position = properties.Position or UDim2.new()
+    button.Size = properties.Size or UDim2.new()
+    button.BorderSizePixel = 0
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+    if properties.Stroke then
+        local stroke = Instance.new("UIStroke", button)
+        stroke.Thickness = properties.Stroke.Thickness or 2
+        stroke.Color = properties.Stroke.Color or Color3.fromRGB(139, 0, 0)
+        stroke.Transparency = properties.Stroke.Transparency or 0.7
+    end
+    local active = false
+    button.MouseButton1Click:Connect(function()
+        active = not active
+        if properties.OnClick then
+            properties.OnClick(active, self.StatusLabel)
+        end
+    end)
+    return button
+end
+local ui = Library.new("Pvp Helper", "By BytoxHub")
+local function updateStatus(label, text, color)
+    if not label then return end
+    label.Text, label.TextColor3, label.TextTransparency = text, color, 0
+    task.delay(2, function() label.TextTransparency = 1 end)
+end
+local boostConnection, boostEquipLoop, boostUseLoop
+ui:AddButton({
+    Text = "BOOST", Position = UDim2.new(0.05, 0, 0, 38), Size = UDim2.new(0.44, 0, 0, 22), BackgroundColor = Color3.fromRGB(139, 0, 0),
+    OnClick = function(active, statusLabel)
+        updateStatus(statusLabel, active and "BOOST ON" or "BOOST OFF", active and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0))
+        if active then
+            local itemID, speed = "Grapple Hook", 150
+            pcall(function() ReplicatedStorage.Packages.Net["RF/CoinsShopService/RequestBuy"]:InvokeServer(itemID) end)
+            boostEquipLoop = RunService.Heartbeat:Connect(function()
+                local char = LocalPlayer.Character
+                if not char then return end
+                local tool = char:FindFirstChild(itemID) or LocalPlayer.Backpack:FindFirstChild(itemID)
+                if tool and tool.Parent ~= char then tool.Parent = char end
+            end)
+            boostUseLoop = RunService.RenderStepped:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(itemID) then
+                    pcall(function() ReplicatedStorage.Packages.Net["RE/UseItem"]:FireServer(1.9832406361897787) end)
+                end
+            end)
+            boostConnection = RunService.Heartbeat:Connect(function()
+                local char = LocalPlayer.Character
+                if char and char.Humanoid and char.HumanoidRootPart then
+                    local dir = char.Humanoid.MoveDirection.Unit
+                    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(dir.X * speed, char.HumanoidRootPart.AssemblyLinearVelocity.Y, dir.Z * speed)
+                end
+            end)
+        else
+            if boostConnection then boostConnection:Disconnect() end
+            if boostEquipLoop then boostEquipLoop:Disconnect() end
+            if boostUseLoop then boostUseLoop:Disconnect() end
+        end
+    end
+})
+local hitboxPart, hitboxConnection
+ui:AddButton({
+    Text = "HITBOX", Position = UDim2.new(0.51, 0, 0, 38), Size = UDim2.new(0.44, 0, 0, 22),
+    OnClick = function(active, statusLabel)
+        updateStatus(statusLabel, active and "HITBOX ON" or "HITBOX OFF", active and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0))
+        if active then
+            hitboxPart = Instance.new("Part", Workspace)
+            hitboxPart.Size, hitboxPart.Anchored, hitboxPart.CanCollide, hitboxPart.Transparency, hitboxPart.Color = Vector3.new(6, 7, 6), true, false, 0.5, Color3.fromRGB(255, 255, 255)
+            hitboxConnection = RunService.Heartbeat:Connect(function()
+                local closestPlayer, shortestDist = nil, math.huge
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character.PrimaryPart then
+                        local dist = (LocalPlayer.Character.PrimaryPart.Position - p.Character.PrimaryPart.Position).Magnitude
+                        if dist < shortestDist then shortestDist, closestPlayer = dist, p end
+                    end
+                end
+                if closestPlayer then hitboxPart.CFrame = closestPlayer.Character.PrimaryPart.CFrame end
+            end)
+        else
+            if hitboxPart then hitboxPart:Destroy() end
+            if hitboxConnection then hitboxConnection:Disconnect() end
+        end
+    end
+})
+local antiTrapLoop1, antiTrapLoop2
+ui:AddButton({
+    Text = "ANTI TRAP", Position = UDim2.new(0.05, 0, 0, 64), Size = UDim2.new(0.44, 0, 0, 22), BackgroundColor = Color3.fromRGB(18, 18, 22),
+    OnClick = function(active, statusLabel)
+        updateStatus(statusLabel, active and "ANTI TRAP ON" or "ANTI TRAP OFF", active and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0))
+        if active then
+            local blacklist = {"trap", "kill", "lava", "spike", "damage", "void", "web", "slinger"}
+            antiTrapLoop1 = task.spawn(function()
+                while active do
+                    for _, v in ipairs(Workspace:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            for _, word in ipairs(blacklist) do
+                                if v.Name:lower():find(word) then pcall(function() v:Destroy() end) break end
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+            antiTrapLoop2 = task.spawn(function()
+                while active do
+                    if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
+                        LocalPlayer.Character.PrimaryPart.Anchored = false
+                        LocalPlayer.Character.Humanoid.Sit = false
+                    end
+                    task.wait(0.5)
+                end
+            end)
+        else
+        end
+    end
+})
+local espPlayerConnection, espObjects = nil, {}
+ui:AddButton({
+    Text = "ESP PLAYER", Position = UDim2.new(0.51, 0, 0, 64), Size = UDim2.new(0.44, 0, 0, 22), BackgroundColor = Color3.fromRGB(139, 0, 0),
+    OnClick = function(active, statusLabel)
+        updateStatus(statusLabel, active and "ESP PLAYER ON" or "ESP PLAYER OFF", active and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0))
+        if active then
+            espPlayerConnection = RunService.RenderStepped:Connect(function()
+                local rainbow = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character.PrimaryPart then
+                        if not espObjects[p] then
+                            local box = Instance.new("BoxHandleAdornment", Workspace.CurrentCamera)
+                            box.Adornee, box.AlwaysOnTop, box.Size, box.Transparency = p.Character.PrimaryPart, true, Vector3.new(4, 6, 4), 0.5
+                            local bill = Instance.new("BillboardGui", Workspace.CurrentCamera)
+                            bill.Adornee, bill.AlwaysOnTop, bill.Size, bill.StudsOffset = p.Character.PrimaryPart, true, UDim2.new(0, 100, 0, 25), Vector3.new(0, 3, 0)
+                            local label = Instance.new("TextLabel", bill)
+                            label.Size, label.BackgroundTransparency, label.Font, label.Text, label.TextScaled = UDim2.new(1, 0, 1, 0), 1, Enum.Font.SciFi, p.Name, true
+                            espObjects[p] = {box = box, bill = bill, label = label}
+                        end
+                        espObjects[p].box.Color3 = rainbow
+                        espObjects[p].label.TextColor3 = rainbow
+                    else
+                        if espObjects[p] then
+                            espObjects[p].box:Destroy()
+                            espObjects[p].bill:Destroy()
+                            espObjects[p] = nil
+                        end
+                    end
+                end
+            end)
+        else
+            if espPlayerConnection then espPlayerConnection:Disconnect() end
+            for _, obj in pairs(espObjects) do obj.box:Destroy() obj.bill:Destroy() end
+            espObjects = {}
+        end
+    end
+})
+ui:AddButton({
+    Text = "Tele Menu", Position = UDim2.new(0.05, 0, 0, 92), Size = UDim2.new(0.9, 0, 0, 26), TextSize = 13,
+    Stroke = { Thickness = 2, Color = Color3.fromRGB(139, 0, 0), Transparency = 0.7 },
+    OnClick = function(_, statusLabel)
+        updateStatus(statusLabel, "Teleport Menu Clicked!", Color3.fromRGB(0, 255, 80))
+local Library = {}
+Library.__index = Library
+function Library.new(titleText, subtitleText)
+    local self = setmetatable({}, Library)
+    local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
+    local lp = Players.LocalPlayer
+    local pg = lp:WaitForChild("PlayerGui")
+    self.ScreenGui = Instance.new("ScreenGui", pg)
+    self.ScreenGui.Name = "ManusHub_V4"
+    self.ScreenGui.ResetOnSpawn = false
+    self.Window = Instance.new("Frame", self.ScreenGui)
+    self.Window.Name = "MainWindow"
+    self.Window.Size = UDim2.new(0, 220, 0, 260)
+    self.Window.Position = UDim2.new(0.5, -110, 0.5, -130)
+    self.Window.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    self.Window.BackgroundTransparency = 0.15
+    Instance.new("UICorner", self.Window).CornerRadius = UDim.new(0, 10)
+    local stroke = Instance.new("UIStroke", self.Window)
+    stroke.Thickness = 2.2
+    stroke.Color = Color3.fromRGB(139, 0, 0)
+    local title = Instance.new("TextLabel", self.Window)
+    title.Size = UDim2.new(1, -20, 0, 28)
+    title.Position = UDim2.new(0, 10, 0, 8)
+    title.Text = titleText or "ManusHub"
+    title.TextColor3 = Color3.fromRGB(139, 0, 0)
+    title.Font = Enum.Font.Code
+    title.TextSize = 18
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    local tiktok = Instance.new("TextLabel", self.Window)
+    tiktok.Size = UDim2.new(1, -20, 0, 16)
+    tiktok.Position = UDim2.new(0, 10, 0, 32)
+    tiktok.Text = subtitleText or "github.com/manus"
+    tiktok.TextColor3 = Color3.fromRGB(180, 180, 180)
+    tiktok.Font = Enum.Font.Code
+    tiktok.TextSize = 13
+    tiktok.BackgroundTransparency = 1
+    tiktok.TextXAlignment = Enum.TextXAlignment.Left
+    local closeBtn = Instance.new("TextButton", self.Window)
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.Position = UDim2.new(1, -34, 0, 6)
+    closeBtn.Text = "×"
+    closeBtn.TextSize = 18
+    closeBtn.Font = Enum.Font.Code
+    closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+    local closeStroke = Instance.new("UIStroke", closeBtn)
+    closeStroke.Color = Color3.fromRGB(139, 0, 0)
+    closeStroke.Thickness = 1.6
+    closeBtn.MouseButton1Click:Connect(function()
+        self.ScreenGui:Destroy()
+    end)
+    self.ButtonList = Instance.new("Frame", self.Window)
+    self.ButtonList.Size = UDim2.new(1, 0, 1, -70)
+    self.ButtonList.Position = UDim2.new(0, 0, 0, 60)
+    self.ButtonList.BackgroundTransparency = 1
+    local layout = Instance.new("UIListLayout", self.ButtonList)
+    layout.Padding = UDim.new(0, 6)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    local dragging, dragStart, startPos
+    self.Window.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = self.Window.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    self.Window.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            self.Window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    return self
+end
+function Library:AddButton(name, key, onClick)
+    local frame = Instance.new("Frame", self.ButtonList)
+    frame.Name = name .. "_Frame"
+    frame.Size = UDim2.new(0.9, 0, 0, 32)
+    frame.BackgroundTransparency = 1
+    local btn = Instance.new("TextButton", frame)
+    btn.Name = name .. "_Button"
+    btn.Size = UDim2.new(1, -38, 1, 0)
+    btn.Position = UDim2.new(0, 0, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    btn.BackgroundTransparency = 0.55
+    btn.Text = ""
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local bottom = Instance.new("Frame", btn)
+    bottom.Size = UDim2.new(1, 0, 0, 2)
+    bottom.Position = UDim2.new(0, 0, 1, -2)
+    bottom.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
+    local lbl = Instance.new("TextLabel", btn)
+    lbl.Size = UDim2.new(1, -10, 1, 0)
+    lbl.Position = UDim2.new(0, 6, 0, 0)
+    lbl.Text = name
+    lbl.Font = Enum.Font.Code
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 15
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    local kf = Instance.new("Frame", frame)
+    kf.Size = UDim2.new(0, 32, 1, 0)
+    kf.Position = UDim2.new(1, -32, 0, 0)
+    kf.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
+    Instance.new("UICorner", kf).CornerRadius = UDim.new(0, 5)
+    local ks = Instance.new("UIStroke", kf)
+    ks.Color = Color3.fromRGB(139, 0, 0)
+    ks.Thickness = 1.6
+    local kl = Instance.new("TextLabel", kf)
+    kl.Size = UDim2.new(1, 0, 1, 0)
+    kl.Text = key
+    kl.TextColor3 = Color3.fromRGB(200, 200, 200)
+    kl.Font = Enum.Font.Code
+    kl.TextSize = 13
+    kl.BackgroundTransparency = 1
+    if onClick and typeof(onClick) == "function" then
+        btn.MouseButton1Click:Connect(onClick)
+    end
+    return btn
+end
+local ui = Library.new("BytoxHub", "Tik: Bytox2Hhb")
+ui:AddButton("AUTO FISH", "F", function()
+    print("FLY button was clicked!")
+    getgenv().SELL_ONLY = {
+        ['Trippi Troppi'] = true,
+        ['Trulimero Trulicina'] = true,
+        ['Bananita Dolphinita'] = true,
+        ['Blueberrinni Octopusini'] = true,
+        ['Tralalero Tralala'] = true,
+        ['Orcalero Orcala'] = true,
+        ['Tralalita Tralala'] = true,
+        ['Trippi Troppi Troppa Trippa'] = true,
+        ['Crabbo Limonetta'] = true,
+        ['Los Orcalitos'] = true,
+        ['Orcalita Orcala'] = true,
+        ['Squalanana'] = true,
+        ['Belula Beluga'] = true,
+        ['Tentacolo Tecnico'] = true,
+        ['Extinct Tralalero'] = true,
+        ['Las Tralaleritos'] = true,
+        ['Zombie Tralala'] = true,
+        ['Boatito Auratito'] = true,
+        ['Las Tralaleritas'] = false,
+        ['Los Tralaleritos'] = false,
+        ['Graipuss Medussi'] = false,
+        ['Orcaledon'] = false,
+        ['Captain Moby'] = false,
+        ['Los primos'] = false,
+        ['Tralelodon'] = false,
+        ['Eviledon'] = false
+    }
+loadstring(game:HttpGet('https://pastefy.app/qsemwQSj/raw', true))()
+end)
+ui:AddButton("DESYNC", "Z", function()
+    print("DESYNC button was clicked!")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local function equipQuantumClonerAndFire()
+    pcall(function()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local backpack = LocalPlayer:WaitForChild("Backpack")
+        local humanoid = character:WaitForChild("Humanoid")
+        if setfflag then
+            setfflag("PhysicsSenderMaxBandwidthBps", "0.35")
+            setfflag("WorldStepsOffsetAdjustRate", "-9999999999")
+        end
+        local tool = backpack:FindFirstChild("Quantum Cloner") or character:FindFirstChild("Quantum Cloner")
+        if not tool then return end
+        tool.Parent = character
+        humanoid:EquipTool(tool)
+        task.wait(0.5)
+        local packages = ReplicatedStorage:WaitForChild("Packages")
+        local netFolder = packages:WaitForChild("Net")
+        netFolder:WaitForChild("RE/UseItem"):FireServer()
+        task.wait(0.5)
+        netFolder:WaitForChild("RE/QuantumCloner/OnTeleport"):FireServer()
+        task.wait(2)
+        if setfflag then
+            setfflag("WorldStepsOffsetAdjustRate", "-1")
+        end
+    end)
+end
+task.spawn(equipQuantumClonerAndFire)
+end)
+local infJumpActive = false
+local jumpConnection = nil
+local stateConnection = nil
+ui:AddButton("INF JUMP", "X", function()
+    infJumpActive = not infJumpActive
+    if infJumpActive then
+        local Players = game:GetService("Players")
+        local UserInputService = game:GetService("UserInputService")
+        local LocalPlayer = Players.LocalPlayer
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local canDoubleJump = true
+        local jumpCount = 0
+        local jumpPower = 100
+        stateConnection = humanoid.StateChanged:Connect(function(_, newState)
+            if newState == Enum.HumanoidStateType.Landed then
+                jumpCount = 0
+                canDoubleJump = true
+            end
+        end)
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if jumpCount == 0 then
+                jumpCount = 1
+            elseif jumpCount == 1 and canDoubleJump then
+                hrp.Velocity = Vector3.new(hrp.Velocity.X, jumpPower, hrp.Velocity.Z)
+                jumpCount = 2
+            end
+        end)
+    else
+        if jumpConnection then
+            jumpConnection:Disconnect()
+            jumpConnection = nil
+        end
+        if stateConnection then
+            stateConnection:Disconnect()
+            stateConnection = nil
+        end
+    end
+end)
+ui:AddButton("ESP BEST", "C", function()
+    print("STEAL FLOOR button was clicked!")
+    local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+    local LocalPlayer = Players.LocalPlayer
+    local ESP_FOLDER = Instance.new("Folder")
+    ESP_FOLDER.Name = "ESP"
+    ESP_FOLDER.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    local LINE_FOLDER = Instance.new("Folder")
+    LINE_FOLDER.Name = "ESP_Lines"
+    LINE_FOLDER.Parent = Workspace
+    local currentESP
+    local currentBeam
+    local currentPetInfo
+    local a0, a1
+    local function parseMoneyPerSec(text)
+        text = text:match("^%s*(.-)%s*$")
+        local number, suffix = text:match("%$([%d%.]+)%s*([kKmMbB]?)%s*/?s?")
+        number = tonumber(number) or 0
+        if suffix then
+            suffix = suffix:lower()
+            if suffix == "k" then number = number * 1000
+            elseif suffix == "m" then number = number * 1_000_000
+            elseif suffix == "b" then number = number * 1_000_000_000 end
+        end
+        return number
+    end
+    local function createESP(petName, infoText, mutationText, targetPart)
+        if currentESP then currentESP:Destroy() end
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(0, 150, 0, 50)
+        billboard.AlwaysOnTop = true
+        billboard.Adornee = targetPart
+        billboard.Parent = ESP_FOLDER
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextScaled = false
+        textLabel.TextSize = 10
+        textLabel.RichText = true
+        textLabel.Text = string.format(
+            '<font color="rgb(255,0,0)">%s</font>\n<font color="rgb(0,255,0)">%s</font>\n<font color="rgb(255,255,0)">%s</font>',
+            petName, infoText, mutationText or ""
+        )
+        textLabel.Parent = billboard
+        currentESP = billboard
+    end
+    local function createBeam(targetPart)
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") or not targetPart then return end
+        if currentBeam then
+            currentBeam:Destroy()
+            if a0 then a0:Destroy() end
+            if a1 then a1:Destroy() end
+        end
+        a0 = Instance.new("Attachment")
+        a0.Parent = char.HumanoidRootPart
+        a1 = Instance.new("Attachment")
+        a1.Parent = targetPart
+        local beam = Instance.new("Beam")
+        beam.Attachment0 = a0
+        beam.Attachment1 = a1
+        beam.Width0 = 0.35
+        beam.Width1 = 0.35
+        beam.FaceCamera = true
+        beam.LightInfluence = 0
+        beam.Parent = LINE_FOLDER
+        currentBeam = beam
+        task.spawn(function()
+            while beam.Parent do
+                local color = Color3.fromHSV((tick() % 5) / 5, 1, 1)
+                beam.Color = ColorSequence.new(color)
+                task.wait(0.05)
+            end
+        end)
+    end
+    local function findBestPet()
+        local PlotsFolder = Workspace:FindFirstChild("Plots")
+        if not PlotsFolder then return end
+        local bestValue = -1
+        local bestPet = nil
+        for _, plot in ipairs(PlotsFolder:GetChildren()) do
+            local podiums = plot:FindFirstChild("AnimalPodiums")
+            if podiums then
+                for _, podium in ipairs(podiums:GetChildren()) do
+                    local spawnPart = podium:FindFirstChild("Base") and podium.Base:FindFirstChild("Spawn")
+                    if spawnPart then
+                        local attachment = spawnPart:FindFirstChild("Attachment")
+                        local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
+                        if overhead then
+                            local nameLabel = overhead:FindFirstChild("DisplayName")
+                            local genLabel = overhead:FindFirstChild("Generation")
+                            local mutationLabel = overhead:FindFirstChild("Mutation")
+                            if genLabel then
+                                local petName = nameLabel and nameLabel.Text or "Unknown"
+                                local genText = genLabel.Text
+                                local mutationText = mutationLabel and mutationLabel.Text or ""
+                                local mps = parseMoneyPerSec(genText)
+                                local genNumber = tonumber(genText:match("%d+")) or 0
+                                local value = mps > 0 and mps or genNumber
+                                if value > bestValue then
+                                    bestValue = value
+                                    bestPet = {name = petName, info = genText, mutation = mutationText, part = spawnPart, value = value}
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        return bestPet
+    end
+    local function updateESP()
+        local pet = findBestPet()
+        if pet then
+            local needUpdate = false
+            if not currentESP then
+                needUpdate = true
+            elseif currentPetInfo then
+                if pet.value > currentPetInfo.value or pet.mutation ~= currentPetInfo.mutation then
+                    needUpdate = true
+                end
+            end
+            if needUpdate then
+                currentPetInfo = pet
+                createESP(pet.name, pet.info, pet.mutation, pet.part)
+                createBeam(pet.part)
+            end
+        else
+            if currentESP then
+                currentESP:Destroy()
+                currentESP = nil
+                currentPetInfo = nil
+            end
+            if currentBeam then
+                currentBeam:Destroy()
+                currentBeam = nil
+            end
+        end
+    end
+    task.spawn(function()
+        while task.wait(0.3) do
+            updateESP()
+        end
+    end)
+end)
+local stealModeActive = false
+local modifiedParts = {}
+local descendantConnection = nil
+local function restoreAllModifiedParts()
+    if descendantConnection then
+        descendantConnection:Disconnect()
+        descendantConnection = nil
+    end
+    for part, originalValue in pairs(modifiedParts) do
+        if part and part.Parent then
+            pcall(function()
+                part.LocalTransparencyModifier = originalValue
+            end)
+        end
+    end
+    modifiedParts = {}
+end
+ui:AddButton("STEAL MODE", "V", function()
+    stealModeActive = not stealModeActive
+    if stealModeActive then
+        local workspace = game:GetService("Workspace")
+        local targets = {"base", "basepart", "yourbase"}
+        local transparencyModifier = 0.5
+        local function nameMatches(name)
+            local lowerName = name:lower()
+            for _, target in ipairs(targets) do
+                if lowerName:find(target, 1, true) then
+                    return true
+                end
+            end
+            return false
+        end
+        local function tryModifyPart(part)
+            if part:IsA("BasePart") and nameMatches(part.Name) then
+                pcall(function()
+                    if modifiedParts[part] == nil then
+                        modifiedParts[part] = part.LocalTransparencyModifier
+                    end
+                    part.LocalTransparencyModifier = transparencyModifier
+                end)
+            end
+        end
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            tryModifyPart(descendant)
+        end
+        descendantConnection = workspace.DescendantAdded:Connect(tryModifyPart)
+    else
+        restoreAllModifiedParts()
+    end
+end)
+    end
+})

@@ -1,0 +1,237 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Get services
+local TweenService = game:GetService("TweenService")  -- Animation service
+local LocalPlayer = game:GetService("Players").LocalPlayer  -- Your player
+
+-- Get character info
+local Character_2 = LocalPlayer.Character  -- Your character
+if not Character_2 then return end  -- Stop if no character
+Character_2:WaitForChild("Humanoid")  -- Wait for humanoid
+local HumanoidRootPart = Character_2:WaitForChild("HumanoidRootPart")  -- Root part
+local CFrame = HumanoidRootPart.CFrame  -- Current position
+
+-- Create main GUI
+local ScreenGui_2 = Instance.new("ScreenGui")  -- Main GUI
+ScreenGui_2.Name = "CombinedCleanUI"  -- Name it
+ScreenGui_2.Parent = game.CoreGui  -- Add to CoreGui
+
+-- FRAME 1: Go To Base
+local Frame_2 = Instance.new("Frame")  -- First window
+Frame_2.Size = UDim2.new(0, 245, 0, 55)  -- Size: 245x55
+Frame_2.Position = UDim2.new(0.5, -122, 0.13, 0)  -- Position (top)
+Frame_2.BackgroundColor3 = Color3.fromRGB(18, 18, 18)  -- Dark gray
+Frame_2.BackgroundTransparency = 0.05  -- Slightly transparent
+Frame_2.BorderSizePixel = 0  -- No border
+Frame_2.Active = true  -- Can click
+Frame_2.Draggable = true  -- Can move
+Frame_2.Parent = ScreenGui_2  -- Add to GUI
+
+-- Round corners
+local UICorner = Instance.new("UICorner")  -- Corner rounder
+UICorner.CornerRadius = UDim.new(0, 16)  -- Roundness: 16
+UICorner.Parent = Frame_2  -- Add to frame
+
+-- Add border outline
+local UIStroke = Instance.new("UIStroke")  -- Border
+UIStroke.Thickness = 1.2  -- Line thickness
+UIStroke.Color = Color3.fromRGB(40, 40, 40)  -- Dark border
+UIStroke.Transparency = 0.35  -- Slightly transparent
+UIStroke.Parent = Frame_2  -- Add to frame
+
+-- Title label
+local TextLabel_2 = Instance.new("TextLabel")  -- Title
+TextLabel_2.Size = UDim2.new(0.65, 0, 1, 0)  -- 65% width, full height
+TextLabel_2.Position = UDim2.new(0.05, 0, 0, 0)  -- Left side
+TextLabel_2.BackgroundTransparency = 1  -- No background
+TextLabel_2.Text = "Go To Base"  -- Text
+TextLabel_2.TextColor3 = Color3.fromRGB(235, 235, 235)  -- Light gray
+TextLabel_2.Font = Enum.Font.GothamBlack  -- Bold font
+TextLabel_2.TextSize = 21  -- Text size
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left  -- Left align
+TextLabel_2.Parent = Frame_2  -- Add to frame
+
+-- Go button
+local TextButton_2 = Instance.new("TextButton")  -- Button
+TextButton_2.Size = UDim2.new(0.25, 0, 0.65, 0)  -- 25% width, 65% height
+TextButton_2.Position = UDim2.new(0.72, 0, 0.18, 0)  -- Right side
+TextButton_2.BackgroundColor3 = Color3.fromRGB(0, 110, 255)  -- Blue
+TextButton_2.Text = "Go"  -- Button text
+TextButton_2.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White
+TextButton_2.Font = Enum.Font.GothamMedium  -- Font
+TextButton_2.TextSize = 18  -- Text size
+TextButton_2.AutoButtonColor = false  -- No auto color
+TextButton_2.Parent = Frame_2  -- Add to frame
+
+-- Round button corners
+local UICorner_2 = Instance.new("UICorner")  -- Corner rounder
+UICorner_2.CornerRadius = UDim.new(0, 10)  -- Roundness: 10
+UICorner_2.Parent = TextButton_2  -- Add to button
+
+-- Button border
+local UIStroke_2 = Instance.new("UIStroke")  -- Button border
+UIStroke_2.Color = Color3.fromRGB(0, 140, 255)  -- Light blue
+UIStroke_2.Thickness = 2  -- Thick border
+UIStroke_2.Transparency = 1  -- Start hidden
+UIStroke_2.Parent = TextButton_2  -- Add to button
+
+-- Button hover effect
+local Connection
+Connection = TextButton_2.MouseEnter:Connect(function()
+    -- Show border on hover
+    local tween = TweenService:Create(UIStroke_2, TweenInfo.new(0.22, Enum.EasingStyle.Sine), {
+        Transparency = 0.55,  -- Show border
+    })
+    tween:Play()  -- Play animation
+end)
+
+-- Button leave effect
+local Connection_2
+Connection_2 = TextButton_2.MouseLeave:Connect(function()
+    -- Hide border
+    local tween = TweenService:Create(UIStroke_2, TweenInfo.new(0.22, Enum.EasingStyle.Sine), {
+        Transparency = 1,  -- Hide border
+    })
+    tween:Play()  -- Play animation
+end)
+
+-- Go button click
+local Connection_3
+Connection_3 = TextButton_2.MouseButton1Click:Connect(function()
+    -- Button press animation
+    local pressTween = TweenService:Create(TextButton_2, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {
+        Position = UDim2.new(0.73, 0, 0.2, 0),  -- Move slightly
+        Size = UDim2.new(0.24, 0, 0.6, 0),  -- Shrink slightly
+    })
+    
+    local releaseTween = TweenService:Create(TextButton_2, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {
+        Position = UDim2.new(0.71, 0, 0.18, 0),  -- Return position
+        Size = UDim2.new(0.25, 0, 0.65, 0),  -- Return size
+    })
+    
+    pressTween:Play()  -- Press animation
+    pressTween.Completed:Wait()  -- Wait for completion
+    releaseTween:Play()  -- Release animation
+    
+    -- Teleport logic
+    local Character_4 = LocalPlayer.Character  -- Your character
+    if not Character_4 then return end  -- Stop if no character
+    Character_4:WaitForChild("Humanoid")  -- Wait for humanoid
+    
+    -- Create pathfinding
+    local Path_2 = game:GetService("PathfindingService"):CreatePath({
+        AgentCanJump = true,  -- Can jump
+        WaypointSpacing = 6,  -- Waypoint distance
+        AgentHeight = 5,  -- Agent height
+        AgentRadius = 2,  -- Agent size
+    })
+    
+    -- Calculate path to base (24 studs behind current position)
+    Path_2:ComputeAsync(Character_4:WaitForChild("HumanoidRootPart").Position, CFrame * CFrame.new(0, 0, -24).Position)
+    
+    -- Check if path is valid
+    if Path_2.Status == Enum.PathStatus.Success then
+        -- Path found - teleport would happen here
+    end
+end)
+
+-- FRAME 2: Kick Me
+local Frame_3 = Instance.new("Frame")  -- Second window
+Frame_3.Size = UDim2.new(0, 245, 0, 55)  -- Size: 245x55
+Frame_3.Position = UDim2.new(0.5, -122, 0.22, 0)  -- Position (below first)
+Frame_3.BackgroundColor3 = Color3.fromRGB(18, 18, 18)  -- Dark gray
+Frame_3.BackgroundTransparency = 0.05  -- Slightly transparent
+Frame_3.BorderSizePixel = 0  -- No border
+Frame_3.Active = true  -- Can click
+Frame_3.Draggable = true  -- Can move
+Frame_3.Parent = ScreenGui_2  -- Add to GUI
+
+-- Round corners
+local UICorner_3 = Instance.new("UICorner")  -- Corner rounder
+UICorner_3.CornerRadius = UDim.new(0, 16)  -- Roundness: 16
+UICorner_3.Parent = Frame_3  -- Add to frame
+
+-- Add border
+local UIStroke_3 = Instance.new("UIStroke")  -- Border
+UIStroke_3.Thickness = 1.2  -- Line thickness
+UIStroke_3.Color = Color3.fromRGB(40, 40, 40)  -- Dark border
+UIStroke_3.Transparency = 0.35  -- Slightly transparent
+UIStroke_3.Parent = Frame_3  -- Add to frame
+
+-- Title label
+local TextLabel_4 = Instance.new("TextLabel")  -- Title
+TextLabel_4.Size = UDim2.new(0.65, 0, 1, 0)  -- 65% width, full height
+TextLabel_4.Position = UDim2.new(0.05, 0, 0, 0)  -- Left side
+TextLabel_4.BackgroundTransparency = 1  -- No background
+TextLabel_4.Text = "Kick Me"  -- Text
+TextLabel_4.TextColor3 = Color3.fromRGB(235, 235, 235)  -- Light gray
+TextLabel_4.Font = Enum.Font.GothamBlack  -- Bold font
+TextLabel_4.TextSize = 21  -- Text size
+TextLabel_4.TextXAlignment = Enum.TextXAlignment.Left  -- Left align
+TextLabel_4.Parent = Frame_3  -- Add to frame
+
+-- Kick button
+local TextButton_4 = Instance.new("TextButton")  -- Button
+TextButton_4.Size = UDim2.new(0.25, 0, 0.65, 0)  -- 25% width, 65% height
+TextButton_4.Position = UDim2.new(0.72, 0, 0.18, 0)  -- Right side
+TextButton_4.BackgroundColor3 = Color3.fromRGB(255, 50, 50)  -- Red
+TextButton_4.Text = "Kick"  -- Button text
+TextButton_4.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White
+TextButton_4.Font = Enum.Font.GothamMedium  -- Font
+TextButton_4.TextSize = 18  -- Text size
+TextButton_4.AutoButtonColor = false  -- No auto color
+TextButton_4.Parent = Frame_3  -- Add to frame
+
+-- Round button corners
+local UICorner_4 = Instance.new("UICorner")  -- Corner rounder
+UICorner_4.CornerRadius = UDim.new(0, 10)  -- Roundness: 10
+UICorner_4.Parent = TextButton_4  -- Add to button
+
+-- Button border
+local UIStroke_4 = Instance.new("UIStroke")  -- Button border
+UIStroke_4.Color = Color3.fromRGB(255, 80, 80)  -- Light red
+UIStroke_4.Thickness = 2  -- Thick border
+UIStroke_4.Transparency = 1  -- Start hidden
+UIStroke_4.Parent = TextButton_4  -- Add to button
+
+-- Button hover effect
+local Connection_4
+Connection_4 = TextButton_4.MouseEnter:Connect(function()
+    -- Show border on hover
+    local tween = TweenService:Create(UIStroke_4, TweenInfo.new(0.22, Enum.EasingStyle.Sine), {
+        Transparency = 0.55,  -- Show border
+    })
+    tween:Play()  -- Play animation
+end)
+
+-- Button leave effect
+local Connection_5
+Connection_5 = TextButton_4.MouseLeave:Connect(function()
+    -- Hide border
+    local tween = TweenService:Create(UIStroke_4, TweenInfo.new(0.22, Enum.EasingStyle.Sine), {
+        Transparency = 1,  -- Hide border
+    })
+    tween:Play()  -- Play animation
+end)
+
+-- Kick button click
+local Connection_6
+Connection_6 = TextButton_4.MouseButton1Click:Connect(function()
+    -- Button press animation
+    local pressTween = TweenService:Create(TextButton_4, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {
+        Position = UDim2.new(0.73, 0, 0.2, 0),  -- Move slightly
+        Size = UDim2.new(0.24, 0, 0.6, 0),  -- Shrink slightly
+    })
+    
+    local releaseTween = TweenService:Create(TextButton_4, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {
+        Position = UDim2.new(0.71, 0, 0.18, 0),  -- Return position
+        Size = UDim2.new(0.25, 0, 0.65, 0),  -- Return size
+    })
+    
+    pressTween:Play()  -- Press animation
+    pressTween.Completed:Wait()  -- Wait for completion
+    releaseTween:Play()  -- Release animation
+    
+    -- Kick player
+    LocalPlayer:Kick("You kicked yourself.")  -- Kick with message
+end)

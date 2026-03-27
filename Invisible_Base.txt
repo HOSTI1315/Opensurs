@@ -1,0 +1,38 @@
+local plotsFolder = workspace:WaitForChild("Plots")
+
+local GHOST_TRANSPARENCY = 0.7
+local GHOST_COLOR = Color3.fromRGB(0, 255, 255)
+
+local function makeGhost(obj)
+    if obj:IsA("BasePart") then
+        obj.Transparency = GHOST_TRANSPARENCY
+        obj.Color = GHOST_COLOR
+        obj.LocalTransparencyModifier = GHOST_TRANSPARENCY
+        obj.CanCollide = true
+    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+        obj.Transparency = GHOST_TRANSPARENCY
+    elseif obj:IsA("SurfaceGui") or obj:IsA("BillboardGui") then
+        obj.Enabled = false
+    end
+end
+
+local function processDecorations(decorations)
+    for _, obj in ipairs(decorations:GetDescendants()) do
+        makeGhost(obj)
+    end
+end
+
+local function processPlot(plot)
+    local decorations = plot:FindFirstChild("Decorations")
+    if decorations then
+        processDecorations(decorations)
+    end
+end
+
+for _, plot in ipairs(plotsFolder:GetChildren()) do
+    processPlot(plot)
+end
+
+plotsFolder.ChildAdded:Connect(function(newPlot)
+    processPlot(newPlot)
+end)

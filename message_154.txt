@@ -1,0 +1,3119 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+
+-- More open source scripts at https://xan.bar
+
+-- This WILL NOT WORK ON LOW UNC EXECUTORS LIKE XENO
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Stats = game:GetService("Stats")
+
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local Config = {
+    ESP_Enabled = true,
+    ESP_Box = true,
+    ESP_BoxStyle = "Full",
+    ESP_BoxFill = false,
+    ESP_Name = true,
+    ESP_Distance = true,
+    ESP_Tracer = false,
+    ESP_TracerOrigin = "Bottom",
+    ESP_Snapline = false,
+    ESP_LookDirection = false,
+    ESP_Velocity = false,
+    ESP_Offscreen = true,
+    ESP_DeadCheck = true,
+    ESP_MaxDist = 1500,
+    ESP_Chams = false,
+    ESP_ChamsStyle = "Solid",
+    ESP_Heatmap = false,
+    ESP_TeamCheck = true,
+    ESP_Rainbow = false,
+    ESP_CustomColor = Color3.fromRGB(220, 60, 60),  
+    
+    RADAR_Enabled = true,
+    RADAR_Size = 130,
+    RADAR_Range = 200,
+    RADAR_Edit = false,
+    
+    AIM_Enabled = false,
+    AIM_Key = Enum.UserInputType.MouseButton2,
+    AIM_FOV = 250,
+    AIM_Smooth = 0.12,
+    AIM_ShowFOV = true,
+    AIM_TargetPart = "Auto",
+    AIM_TeamCheck = true,
+    AIM_ProximityPriority = 0.3,
+    AIM_StickyFactor = 1.2,  
+    
+    MISC_NoRecoil = false,
+    MISC_NoSway = false,
+    MISC_NoSpread = false,
+    MISC_NoCamShake = false,
+    MISC_Noclip = false,
+    MISC_MenuColor = Color3.fromRGB(220, 60, 60),
+    MISC_FullBright = false,
+    
+    MENU_Open = true,
+    MENU_Tab = 1,
+    KEY_Menu = Enum.KeyCode.Insert,
+    KEY_Panic = Enum.KeyCode.Home
+}
+
+local Tuning = {
+    CacheRate = 1.5,
+    
+    BoxRatio = 0.55,
+    NameOffset = 16,
+    DistOffset = 4,
+    CornerLen = 8,
+    
+    OffscreenEdge = 45,
+    OffscreenSize = 10,
+    
+    RadarDotSize = 4,
+    RadarArrowSize = 7,
+    
+    HeatmapNear = 20,
+    HeatmapFar = 100,
+    
+    PreviewBoxW = 90,
+    PreviewBoxH = 150
+}
+
+local Palette = {
+    Enemy = Color3.fromRGB(220, 60, 60),
+    Dead = Color3.fromRGB(90, 90, 95),
+    Friendly = Color3.fromRGB(100, 160, 255),
+    Tracer = Color3.fromRGB(255, 120, 80),
+    Snapline = Color3.fromRGB(180, 180, 220),
+    LookDirection = Color3.fromRGB(255, 220, 80),
+    Velocity = Color3.fromRGB(0, 220, 255),
+    Offscreen = Color3.fromRGB(255, 200, 80),
+    HeatNear = Color3.fromRGB(255, 40, 40),
+    HeatFar = Color3.fromRGB(40, 40, 255),
+    
+    RadarBg = Color3.fromRGB(15, 15, 18),
+    RadarBorder = Color3.fromRGB(220, 60, 60),
+    RadarGrid = Color3.fromRGB(35, 35, 40),
+    RadarYou = Color3.fromRGB(80, 255, 120),
+    
+    MenuBg = Color3.fromRGB(14, 14, 18),
+    MenuPanel = Color3.fromRGB(20, 20, 26),
+    MenuBorder = Color3.fromRGB(40, 40, 50),
+    MenuAccent = Color3.fromRGB(220, 60, 60),
+    MenuAccentDim = Color3.fromRGB(160, 45, 45),
+    MenuText = Color3.fromRGB(220, 220, 225),
+    MenuTextDim = Color3.fromRGB(110, 110, 120),
+    MenuOn = Color3.fromRGB(80, 220, 100),
+    MenuOff = Color3.fromRGB(55, 55, 65),
+    MenuTab = Color3.fromRGB(18, 18, 22),
+    MenuTabActive = Color3.fromRGB(220, 60, 60),
+    MenuScrollbar = Color3.fromRGB(220, 60, 60),
+    
+    PreviewBg = Color3.fromRGB(18, 18, 22),
+    PreviewBorder = Color3.fromRGB(220, 60, 60)
+}
+
+local State = {
+    Unloaded = false,
+    LastCache = 0,
+    Aiming = false,
+    AimTarget = nil,
+    RainbowHue = 0,  
+    ColorPickerOpen = false,
+    RadarPos = nil,
+    RadarDragging = false,
+    RadarDragOffset = Vector2.zero
+}
+
+local Cache = {
+    Soldiers = {},
+    Chams = {}
+}
+
+
+local DeathTracker = {
+    -- [model] = { lastPos, lastMoveTime, wasActive, peakY, isDead, frozenTime, knownWeapons }
+}
+
+
+local WeaponPatterns = {
+    "upper_receiver", "lower_receiver", "receiver", "barrel", 
+    "magazine", "handguard", "stock", "slide", "pump", "grip",
+    "mp5", "m4", "glock", "awm", "vector", "asval", "ebr", "m500", "pp2000", "fix"
+}
+
+
+local function IsWeaponModel(obj)
+    if not obj:IsA("Model") then return false, nil end
+    if obj.Name == "soldier_model" then return false, nil end
+    if obj.Name:find("friendly_marker") then return false, nil end
+    
+    local weaponPos = nil
+    local isWeapon = false
+    
+    local objNameLower = obj.Name:lower()
+    for _, pattern in ipairs(WeaponPatterns) do
+        if objNameLower:find(pattern, 1, true) then
+            isWeapon = true
+            break
+        end
+    end
+    
+    
+    if not isWeapon then
+        for _, child in ipairs(obj:GetChildren()) do
+            local childNameLower = child.Name:lower()
+            for _, pattern in ipairs(WeaponPatterns) do
+                if childNameLower:find(pattern, 1, true) then
+                    isWeapon = true
+                    if child:IsA("BasePart") then
+                        weaponPos = child.Position
+                    elseif child:IsA("Model") then
+                        local part = child:FindFirstChildWhichIsA("BasePart", true)
+                        if part then weaponPos = part.Position end
+                    end
+                    break
+                end
+            end
+            if isWeapon then break end
+        end
+    end
+    
+    
+    if isWeapon and not weaponPos then
+        if obj.PrimaryPart then
+            weaponPos = obj.PrimaryPart.Position
+        else
+            local part = obj:FindFirstChildWhichIsA("BasePart", true)
+            if part then weaponPos = part.Position end
+        end
+    end
+    
+    return isWeapon, weaponPos
+end
+
+
+local function GetWeaponsNearby(position, radius)
+    local weapons = {}
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        local isWeapon, weaponPos = IsWeaponModel(obj)
+        if isWeapon and weaponPos then
+            local dist = (weaponPos - position).Magnitude
+            if dist < radius then
+                weapons[obj] = true
+            end
+        end
+    end
+    return weapons
+end
+
+
+local function HasNewWeaponNearby(position, knownWeapons, radius)
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        local isWeapon, weaponPos = IsWeaponModel(obj)
+        if isWeapon and weaponPos then
+            local dist = (weaponPos - position).Magnitude
+            if dist < radius and not knownWeapons[obj] then
+                return true  
+            end
+        end
+    end
+    return false
+end
+
+local function IsModelDead(model)
+    local root = model:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    local pos = root.Position
+    local now = tick()
+    
+    if not DeathTracker[model] then
+        DeathTracker[model] = {
+            lastPos = pos,
+            lastMoveTime = now,
+            wasActive = false,
+            isDead = false,
+            frozenTime = 0,
+            knownWeapons = GetWeaponsNearby(pos, 10),
+            lastWeaponCheck = now
+        }
+        return false
+    end
+    
+    local data = DeathTracker[model]
+    local delta = (pos - data.lastPos)
+    local horizontalDelta = Vector3.new(delta.X, 0, delta.Z).Magnitude
+    local verticalDelta = math.abs(delta.Y)
+    
+    local isMoving = horizontalDelta > 0.08 or verticalDelta > 0.15
+    
+    if isMoving then
+        data.lastMoveTime = now
+        data.wasActive = true
+        data.frozenTime = 0
+        data.knownWeapons = GetWeaponsNearby(pos, 10)
+        data.lastWeaponCheck = now
+        
+        if data.isDead then
+            data.isDead = false
+        end
+    else
+        data.frozenTime = now - data.lastMoveTime
+    end
+    
+    if not data.isDead and data.wasActive then
+        if data.frozenTime > 0.1 and data.frozenTime < 3.0 then
+            if now - data.lastWeaponCheck > 0.05 then
+                data.lastWeaponCheck = now
+                if HasNewWeaponNearby(pos, data.knownWeapons, 6) then
+                    data.isDead = true
+                end
+            end
+        end
+    end
+    
+    data.lastPos = pos
+    
+    return data.isDead
+end
+
+local function CleanupDeathTracker()
+    for model, _ in pairs(DeathTracker) do
+        if not model or not model.Parent then
+            DeathTracker[model] = nil
+        end
+    end
+end
+
+local OriginalLighting = {
+    Brightness = Lighting.Brightness,
+    Ambient = Lighting.Ambient,
+    FogEnd = Lighting.FogEnd
+}
+
+local Connections = {}
+
+local function IsFriendly(model)
+    return model:FindFirstChild("friendly_marker") ~= nil
+end
+
+local function IsLocalPlayer(model)
+    
+    local myChar = LocalPlayer.Character
+    if not myChar then return false end
+    
+   
+    if model == myChar then return true end
+    
+    
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    local modelRoot = model:FindFirstChild("HumanoidRootPart")
+    if myRoot and modelRoot then
+        local dist = (myRoot.Position - modelRoot.Position).Magnitude
+        if dist < 1 then return true end
+    end
+    
+    return false
+end
+
+local function IsEnemy(model)
+    if not model:IsA("Model") then return false end
+    if model.Name ~= "soldier_model" then return false end
+    if IsLocalPlayer(model) then return false end  
+    if Config.ESP_TeamCheck and IsFriendly(model) then return false end
+    return true
+end
+
+local function GetRoot(model)
+    return model:FindFirstChild("HumanoidRootPart")
+end
+
+local function GetHead(model)
+    return model:FindFirstChild("TPVBodyVanillaHead") or model:FindFirstChild("Head")
+end
+
+local function GetDistance(pos)
+    local char = LocalPlayer.Character
+    if not char then return math.huge end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return math.huge end
+    return (pos - root.Position).Magnitude
+end
+
+local function WorldToScreen(pos)
+    local cam = Workspace.CurrentCamera
+    if not cam then return Vector2.zero, false, 0 end
+    local vp, onScreen = cam:WorldToViewportPoint(pos)
+    return Vector2.new(vp.X, vp.Y), onScreen and vp.Z > 0, vp.Z
+end
+
+local function LerpColor(a, b, t)
+    return Color3.new(
+        a.R + (b.R - a.R) * t,
+        a.G + (b.G - a.G) * t,
+        a.B + (b.B - a.B) * t
+    )
+end
+
+local function GetHeatmapColor(dist)
+    local t = math.clamp((dist - Tuning.HeatmapNear) / (Tuning.HeatmapFar - Tuning.HeatmapNear), 0, 1)
+    return LerpColor(Palette.HeatNear, Palette.HeatFar, t)
+end
+
+
+local function HSVtoRGB(h, s, v)
+    local r, g, b
+    local i = math.floor(h * 6)
+    local f = h * 6 - i
+    local p = v * (1 - s)
+    local q = v * (1 - f * s)
+    local t = v * (1 - (1 - f) * s)
+    i = i % 6
+    if i == 0 then r, g, b = v, t, p
+    elseif i == 1 then r, g, b = q, v, p
+    elseif i == 2 then r, g, b = p, v, t
+    elseif i == 3 then r, g, b = p, q, v
+    elseif i == 4 then r, g, b = t, p, v
+    elseif i == 5 then r, g, b = v, p, q
+    end
+    return Color3.new(r, g, b)
+end
+
+
+local function RGBtoHSV(color)
+    local r, g, b = color.R, color.G, color.B
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h, s, v = 0, 0, max
+    local d = max - min
+    s = max == 0 and 0 or d / max
+    if max ~= min then
+        if max == r then h = (g - b) / d + (g < b and 6 or 0)
+        elseif max == g then h = (b - r) / d + 2
+        elseif max == b then h = (r - g) / d + 4
+        end
+        h = h / 6
+    end
+    return h, s, v
+end
+
+
+local function GetEspColor()
+    if Config.ESP_Rainbow then
+        return HSVtoRGB(State.RainbowHue, 1, 1)
+    end
+    return Config.ESP_CustomColor
+end
+
+local ESP = {
+    cache = {},
+    lastCleanup = 0,
+    posCache = {},
+    lastPosUpdate = 0,
+    velocityData = {}
+}
+
+function ESP.Create()
+    local box = {}
+    for i = 1, 4 do
+        box[i] = Drawing.new("Line")
+        box[i].Thickness = 1
+        box[i].Visible = false
+    end
+    
+    local corners = {}
+    for i = 1, 8 do
+        corners[i] = Drawing.new("Line")
+        corners[i].Thickness = 1
+        corners[i].Visible = false
+    end
+    
+    
+    local deadX = {}
+    for i = 1, 2 do
+        deadX[i] = Drawing.new("Line")
+        deadX[i].Thickness = 2
+        deadX[i].Color = Color3.fromRGB(90, 90, 95)
+        deadX[i].Visible = false
+    end
+    
+    local boxFill = Drawing.new("Square")
+    boxFill.Filled = true
+    boxFill.Visible = false
+    boxFill.Transparency = 0.15
+    
+    local snapline = Drawing.new("Line")
+    snapline.Thickness = 1
+    snapline.Visible = false
+    
+    local lookLine = Drawing.new("Line")
+    lookLine.Thickness = 2
+    lookLine.Visible = false
+    
+    return {
+        Box = box,
+        BoxFill = boxFill,
+        Corners = corners,
+        Name = Drawing.new("Text"),
+        Dist = Drawing.new("Text"),
+        Tracer = Drawing.new("Line"),
+        Snapline = snapline,
+        LookLine = lookLine,
+        Offscreen = Drawing.new("Triangle"),
+        DeadX = deadX,
+        VelLine = Drawing.new("Line"),
+        VelArrow = Drawing.new("Triangle")
+    }
+end
+
+function ESP.Setup(esp)
+    esp.Name.Size = 13
+    esp.Name.Font = Drawing.Fonts.Monospace
+    esp.Name.Center = true
+    esp.Name.Outline = true
+    esp.Name.Visible = false
+    
+    esp.Dist.Size = 11
+    esp.Dist.Font = Drawing.Fonts.Monospace
+    esp.Dist.Center = true
+    esp.Dist.Outline = true
+    esp.Dist.Color = Color3.fromRGB(170, 170, 170)
+    esp.Dist.Visible = false
+    
+    esp.Tracer.Thickness = 1
+    esp.Tracer.Visible = false
+    
+    esp.BoxFill.Filled = true
+    esp.BoxFill.Transparency = 0.15
+    esp.BoxFill.Visible = false
+    
+    esp.Snapline.Thickness = 1
+    esp.Snapline.Color = Palette.Snapline
+    esp.Snapline.Transparency = 0.5
+    esp.Snapline.Visible = false
+    
+    esp.LookLine.Thickness = 2
+    esp.LookLine.Color = Palette.LookDirection
+    esp.LookLine.Visible = false
+    
+    esp.Offscreen.Filled = true
+    esp.Offscreen.Visible = false
+    
+    esp.VelLine.Thickness = 2
+    esp.VelLine.Color = Palette.Velocity
+    esp.VelLine.Visible = false
+    
+    esp.VelArrow.Filled = true
+    esp.VelArrow.Color = Palette.Velocity
+    esp.VelArrow.Visible = false
+end
+
+function ESP.Hide(esp)
+    if not esp then return end
+    for _, l in ipairs(esp.Box) do l.Visible = false end
+    if esp.BoxFill then esp.BoxFill.Visible = false end
+    for _, l in ipairs(esp.Corners) do l.Visible = false end
+    esp.Name.Visible = false
+    esp.Dist.Visible = false
+    esp.Tracer.Visible = false
+    if esp.Snapline then esp.Snapline.Visible = false end
+    if esp.LookLine then esp.LookLine.Visible = false end
+    esp.Offscreen.Visible = false
+    if esp.DeadX then
+        for _, l in ipairs(esp.DeadX) do l.Visible = false end
+    end
+    if esp.VelLine then esp.VelLine.Visible = false end
+    if esp.VelArrow then esp.VelArrow.Visible = false end
+end
+
+function ESP.Destroy(esp)
+    if not esp then return end
+    pcall(function()
+        for _, l in ipairs(esp.Box) do l:Remove() end
+        if esp.BoxFill then esp.BoxFill:Remove() end
+        for _, l in ipairs(esp.Corners) do l:Remove() end
+        esp.Name:Remove()
+        esp.Dist:Remove()
+        esp.Tracer:Remove()
+        if esp.Snapline then esp.Snapline:Remove() end
+        if esp.LookLine then esp.LookLine:Remove() end
+        esp.Offscreen:Remove()
+        if esp.DeadX then
+            for _, l in ipairs(esp.DeadX) do l:Remove() end
+        end
+        if esp.VelLine then esp.VelLine:Remove() end
+        if esp.VelArrow then esp.VelArrow:Remove() end
+    end)
+end
+
+function ESP.Render(esp, model, cam, screenSize, screenCenter)
+    if not esp or not model then return end
+    if not cam then return end
+    
+    local root = model:FindFirstChild("HumanoidRootPart")
+    if not root or not root.Parent then
+        ESP.Hide(esp)
+        return
+    end
+    
+    local isDead = Config.ESP_DeadCheck and IsModelDead(model) or false
+    
+ 
+    local rootPos = root.Position
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local dist = myRoot and (rootPos - myRoot.Position).Magnitude or 0
+    
+    if dist > Config.ESP_MaxDist then
+        ESP.Hide(esp)
+        return
+    end
+    
+    
+    local rs = cam:WorldToViewportPoint(rootPos)
+    
+   
+    if esp.DeadX then
+        for _, l in ipairs(esp.DeadX) do l.Visible = false end
+    end
+    
+    if rs.Z <= 0 then
+        ESP.Hide(esp)
+        if Config.ESP_Offscreen and not isDead then
+            local dx = rs.X - screenCenter.X
+            local dy = rs.Y - screenCenter.Y
+            local angle = math.atan2(dy, dx)
+            local edge = Tuning.OffscreenEdge
+            local cosA, sinA = math.cos(angle), math.sin(angle)
+            local ax = math.clamp(screenCenter.X + cosA * (screenSize.X/2 - edge), edge, screenSize.X - edge)
+            local ay = math.clamp(screenCenter.Y + sinA * (screenSize.Y/2 - edge), edge, screenSize.Y - edge)
+            local pos = Vector2.new(ax, ay)
+            local sz = Tuning.OffscreenSize
+            esp.Offscreen.PointA = pos + Vector2.new(cosA * sz, sinA * sz)
+            esp.Offscreen.PointB = pos + Vector2.new(-cosA * sz/2 + sinA * sz/2, -sinA * sz/2 - cosA * sz/2)
+            esp.Offscreen.PointC = pos + Vector2.new(-cosA * sz/2 - sinA * sz/2, -sinA * sz/2 + cosA * sz/2)
+            esp.Offscreen.Color = Palette.Offscreen
+            esp.Offscreen.Visible = true
+        end
+        return
+    end
+    
+    local onScreen = rs.X > -100 and rs.X < screenSize.X + 100 and rs.Y > -100 and rs.Y < screenSize.Y + 100
+    
+    if not onScreen then
+        ESP.Hide(esp)
+        return
+    end
+    
+   
+    local baseSize = 1200 / math.max(rs.Z, 1)
+    local boxHeight = math.clamp(baseSize, 25, screenSize.Y * 0.8)
+    local boxWidth = boxHeight * Tuning.BoxRatio
+    boxWidth = math.clamp(boxWidth, 15, screenSize.X * 0.5)
+    
+    local cx = rs.X
+    local cy = rs.Y
+    local boxTop = cy - boxHeight * 0.55
+    local boxBottom = cy + boxHeight * 0.45
+    
+   
+    local baseCol = isDead and Palette.Dead or (Config.ESP_Heatmap and GetHeatmapColor(dist) or GetEspColor())
+    
+    esp.Offscreen.Visible = false
+    
+   
+    if isDead then
+        
+        for _, l in ipairs(esp.Box) do l.Visible = false end
+        for _, l in ipairs(esp.Corners) do l.Visible = false end
+        
+        
+        if esp.DeadX then
+            local xSize = math.min(boxWidth, boxHeight) * 0.4
+            local xcx, xcy = cx, cy
+            
+            esp.DeadX[1].From = Vector2.new(xcx - xSize, xcy - xSize)
+            esp.DeadX[1].To = Vector2.new(xcx + xSize, xcy + xSize)
+            esp.DeadX[1].Color = Palette.Dead
+            esp.DeadX[1].Visible = true
+            
+            esp.DeadX[2].From = Vector2.new(xcx + xSize, xcy - xSize)
+            esp.DeadX[2].To = Vector2.new(xcx - xSize, xcy + xSize)
+            esp.DeadX[2].Color = Palette.Dead
+            esp.DeadX[2].Visible = true
+        end
+        
+        
+        esp.Name.Text = "DEAD"
+        esp.Name.Position = Vector2.new(cx, cy - boxHeight * 0.3 - 14)
+        esp.Name.Color = Palette.Dead
+        esp.Name.Visible = true
+        
+        
+        esp.Dist.Visible = false
+        esp.Tracer.Visible = false
+        return
+    end
+    
+   
+    if Config.ESP_Box then
+        if Config.ESP_BoxStyle == "Full" then
+            for _, l in ipairs(esp.Corners) do l.Visible = false end
+            esp.Box[1].From = Vector2.new(cx - boxWidth/2, boxTop)
+            esp.Box[1].To = Vector2.new(cx + boxWidth/2, boxTop)
+            esp.Box[2].From = Vector2.new(cx + boxWidth/2, boxTop)
+            esp.Box[2].To = Vector2.new(cx + boxWidth/2, boxBottom)
+            esp.Box[3].From = Vector2.new(cx + boxWidth/2, boxBottom)
+            esp.Box[3].To = Vector2.new(cx - boxWidth/2, boxBottom)
+            esp.Box[4].From = Vector2.new(cx - boxWidth/2, boxBottom)
+            esp.Box[4].To = Vector2.new(cx - boxWidth/2, boxTop)
+            for _, l in ipairs(esp.Box) do
+                l.Color = baseCol
+                l.Visible = true
+            end
+        else
+            for _, l in ipairs(esp.Box) do l.Visible = false end
+            local x1, y1 = cx - boxWidth/2, boxTop
+            local x2, y2 = cx + boxWidth/2, boxBottom
+            local cl = Tuning.CornerLen
+            
+            esp.Corners[1].From = Vector2.new(x1, y1)
+            esp.Corners[1].To = Vector2.new(x1 + cl, y1)
+            esp.Corners[2].From = Vector2.new(x1, y1)
+            esp.Corners[2].To = Vector2.new(x1, y1 + cl)
+            esp.Corners[3].From = Vector2.new(x2, y1)
+            esp.Corners[3].To = Vector2.new(x2 - cl, y1)
+            esp.Corners[4].From = Vector2.new(x2, y1)
+            esp.Corners[4].To = Vector2.new(x2, y1 + cl)
+            esp.Corners[5].From = Vector2.new(x1, y2)
+            esp.Corners[5].To = Vector2.new(x1 + cl, y2)
+            esp.Corners[6].From = Vector2.new(x1, y2)
+            esp.Corners[6].To = Vector2.new(x1, y2 - cl)
+            esp.Corners[7].From = Vector2.new(x2, y2)
+            esp.Corners[7].To = Vector2.new(x2 - cl, y2)
+            esp.Corners[8].From = Vector2.new(x2, y2)
+            esp.Corners[8].To = Vector2.new(x2, y2 - cl)
+            
+            for _, l in ipairs(esp.Corners) do
+                l.Color = baseCol
+                l.Visible = true
+            end
+        end
+    else
+        for _, l in ipairs(esp.Box) do l.Visible = false end
+        for _, l in ipairs(esp.Corners) do l.Visible = false end
+    end
+    
+    if Config.ESP_Name then
+        esp.Name.Text = "ENEMY"
+        esp.Name.Position = Vector2.new(cx, boxTop - Tuning.NameOffset)
+        esp.Name.Color = baseCol
+        esp.Name.Visible = true
+    else
+        esp.Name.Visible = false
+    end
+    
+    if Config.ESP_Distance then
+        esp.Dist.Text = math.floor(dist) .. "m"
+        esp.Dist.Position = Vector2.new(cx, boxBottom + Tuning.DistOffset)
+        esp.Dist.Visible = true
+    else
+        esp.Dist.Visible = false
+    end
+    
+    if Config.ESP_Tracer then
+        local origin
+        if Config.ESP_TracerOrigin == "Bottom" then
+            origin = Vector2.new(screenCenter.X, screenSize.Y)
+        elseif Config.ESP_TracerOrigin == "Top" then
+            origin = Vector2.new(screenCenter.X, 0)
+        else
+            origin = screenCenter
+        end
+        esp.Tracer.From = origin
+        esp.Tracer.To = Vector2.new(cx, boxBottom)
+        esp.Tracer.Color = Palette.Tracer
+        esp.Tracer.Visible = true
+    else
+        esp.Tracer.Visible = false
+    end
+    
+    if Config.ESP_Snapline and esp.Snapline then
+        esp.Snapline.From = Vector2.new(screenCenter.X, screenSize.Y)
+        esp.Snapline.To = Vector2.new(cx, boxBottom)
+        esp.Snapline.Color = Palette.Snapline
+        esp.Snapline.Transparency = 0.5
+        esp.Snapline.Visible = true
+    else
+        if esp.Snapline then esp.Snapline.Visible = false end
+    end
+    
+    if Config.ESP_LookDirection and esp.LookLine then
+        local torso = model:FindFirstChild("TPVBodyVanillaTorsoFront")
+        if torso then
+            local lookDir = torso.CFrame.LookVector
+            local lookEndPos = rootPos + lookDir * 10
+            local lookScreen, lookOn = cam:WorldToViewportPoint(lookEndPos)
+            if lookOn and lookScreen.Z > 0 then
+                esp.LookLine.From = Vector2.new(cx, cy)
+                esp.LookLine.To = Vector2.new(lookScreen.X, lookScreen.Y)
+                esp.LookLine.Color = Palette.LookDirection
+                esp.LookLine.Visible = true
+            else
+                esp.LookLine.Visible = false
+            end
+        else
+            esp.LookLine.Visible = false
+        end
+    else
+        if esp.LookLine then esp.LookLine.Visible = false end
+    end
+    
+    if Config.ESP_BoxFill and esp.BoxFill then
+        esp.BoxFill.Position = Vector2.new(cx - boxWidth/2, boxTop)
+        esp.BoxFill.Size = Vector2.new(boxWidth, boxBottom - boxTop)
+        esp.BoxFill.Color = baseCol
+        esp.BoxFill.Transparency = 0.15
+        esp.BoxFill.Visible = true
+    else
+        if esp.BoxFill then esp.BoxFill.Visible = false end
+    end
+    
+    local vd = ESP.velocityData[model]
+    if not vd then
+        vd = {pos = rootPos, vel = Vector3.zero, time = tick()}
+        ESP.velocityData[model] = vd
+    end
+    local now = tick()
+    local dt = now - vd.time
+    if dt > 0.03 then
+        local rawVel = (rootPos - vd.pos) / dt
+        vd.vel = vd.vel * 0.7 + rawVel * 0.3
+        vd.pos = rootPos
+        vd.time = now
+    end
+    
+    if Config.ESP_Velocity and esp.VelLine and esp.VelArrow then
+        local velFlat = Vector3.new(vd.vel.X, 0, vd.vel.Z)
+        local velMag = velFlat.Magnitude
+        if velMag > 2 then
+            local futurePos = rootPos + velFlat.Unit * math.clamp(velMag * 0.4, 5, 20)
+            local futureScreen, futureOn = cam:WorldToViewportPoint(futurePos)
+            if futureOn and futureScreen.Z > 0 then
+                esp.VelLine.From = Vector2.new(rs.X, rs.Y)
+                esp.VelLine.To = Vector2.new(futureScreen.X, futureScreen.Y)
+                esp.VelLine.Visible = true
+                local dx, dy = futureScreen.X - rs.X, futureScreen.Y - rs.Y
+                local len = math.sqrt(dx*dx + dy*dy)
+                if len > 5 then
+                    local fx, fy = dx/len, dy/len
+                    esp.VelArrow.PointA = Vector2.new(futureScreen.X, futureScreen.Y)
+                    esp.VelArrow.PointB = Vector2.new(futureScreen.X - fx*10 + fy*5, futureScreen.Y - fy*10 - fx*5)
+                    esp.VelArrow.PointC = Vector2.new(futureScreen.X - fx*10 - fy*5, futureScreen.Y - fy*10 + fx*5)
+                    esp.VelArrow.Visible = true
+                else
+                    esp.VelArrow.Visible = false
+                end
+            else
+                esp.VelLine.Visible = false
+                esp.VelArrow.Visible = false
+            end
+        else
+            esp.VelLine.Visible = false
+            esp.VelArrow.Visible = false
+        end
+    else
+        if esp.VelLine then esp.VelLine.Visible = false end
+        if esp.VelArrow then esp.VelArrow.Visible = false end
+    end
+end
+
+function ESP.Cleanup()
+    local toRemove = {}
+    for model, esp in pairs(ESP.cache) do
+        if not model or not model.Parent or not model:FindFirstChild("HumanoidRootPart") then
+            ESP.Hide(esp)
+            ESP.Destroy(esp)
+            toRemove[#toRemove + 1] = model
+        end
+    end
+    for _, model in ipairs(toRemove) do
+        ESP.cache[model] = nil
+        ESP.posCache[model] = nil
+        ESP.velocityData[model] = nil
+        DeathTracker[model] = nil  
+    end
+    
+    
+    CleanupDeathTracker()
+end
+
+function ESP.HideAll()
+    for _, esp in pairs(ESP.cache) do
+        ESP.Hide(esp)
+    end
+end
+
+function ESP.CachePositions()
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local myPos = myRoot and myRoot.Position or Vector3.zero
+    
+    ESP.posCache = {}
+    
+    local models = Workspace:GetChildren()
+    for i = 1, #models do
+        local model = models[i]
+        if model and model:IsA("Model") and model.Name == "soldier_model" then
+            
+            if IsLocalPlayer(model) then continue end
+            
+            local root = model:FindFirstChild("HumanoidRootPart")
+            if root then
+                local pos = root.Position
+                local dist = (pos - myPos).Magnitude
+                ESP.posCache[model] = {
+                    pos = pos,
+                    dist = dist
+                }
+            end
+        end
+    end
+end
+
+function ESP.Step(cam, screenSize, screenCenter)
+    if State.Unloaded then return end
+    
+    if not Config.ESP_Enabled then
+        ESP.HideAll()
+        return
+    end
+    
+    local now = tick()
+    
+    if now - ESP.lastCleanup > 0.5 then
+        ESP.lastCleanup = now
+        ESP.Cleanup()
+    end
+    
+    if now - ESP.lastPosUpdate > 0.033 then
+        ESP.lastPosUpdate = now
+        ESP.CachePositions()
+    end
+    
+    local validModels = {}
+    
+    for model, posData in pairs(ESP.posCache) do
+        if model and model.Parent then
+            local root = model:FindFirstChild("HumanoidRootPart")
+            if root then
+                if Config.ESP_TeamCheck and model:FindFirstChild("friendly_marker") then
+                    if ESP.cache[model] then
+                        ESP.Hide(ESP.cache[model])
+                    end
+                else
+                    validModels[model] = true
+                    
+                    if not ESP.cache[model] then
+                        ESP.cache[model] = ESP.Create()
+                        ESP.Setup(ESP.cache[model])
+                    end
+                    
+                    ESP.Render(ESP.cache[model], model, cam, screenSize, screenCenter)
+                end
+            end
+        end
+    end
+    
+    for model, esp in pairs(ESP.cache) do
+        if not validModels[model] then
+            ESP.Hide(esp)
+        end
+    end
+end
+
+local Chams = {
+    objects = {}
+}
+
+function Chams.Create(model)
+    if Chams.objects[model] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "_FrontlinesChams"
+    highlight.Adornee = model
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = model
+    
+    Chams.objects[model] = highlight
+end
+
+function Chams.Update(model, dist)
+    local highlight = Chams.objects[model]
+    if not highlight then return end
+    
+   
+    local isDead = Config.ESP_DeadCheck and IsModelDead(model) or false
+    
+    if isDead then
+        highlight.FillColor = Palette.Dead
+        highlight.OutlineColor = Palette.Dead
+        highlight.FillTransparency = 0.7
+        highlight.OutlineTransparency = 0.5
+    elseif Config.ESP_ChamsStyle == "Outline" then
+        highlight.FillColor = GetEspColor()
+        highlight.OutlineColor = GetEspColor()
+        highlight.FillTransparency = 1
+        highlight.OutlineTransparency = 0
+    elseif Config.ESP_ChamsStyle == "Heatmap" or Config.ESP_Heatmap then
+        local col = GetHeatmapColor(dist)
+        highlight.FillColor = col
+        highlight.OutlineColor = col
+        highlight.FillTransparency = 0.4
+        highlight.OutlineTransparency = 0.2
+    else
+        highlight.FillColor = GetEspColor()
+        highlight.OutlineColor = Color3.new(1, 1, 1)
+        highlight.FillTransparency = 0.6
+        highlight.OutlineTransparency = 0
+    end
+    highlight.Enabled = true
+end
+
+function Chams.Remove(model)
+    local highlight = Chams.objects[model]
+    if highlight then
+        highlight:Destroy()
+        Chams.objects[model] = nil
+    end
+    
+    local existing = model:FindFirstChild("_FrontlinesChams")
+    if existing then existing:Destroy() end
+end
+
+function Chams.ClearAll()
+    for model, _ in pairs(Chams.objects) do
+        Chams.Remove(model)
+    end
+    Chams.objects = {}
+end
+
+function Chams.Step()
+    if State.Unloaded or not Config.ESP_Enabled or not Config.ESP_Chams then
+        Chams.ClearAll()
+        return
+    end
+    
+    local validModels = {}
+    
+    for model, posData in pairs(ESP.posCache) do
+        if model and model.Parent then
+            if Config.ESP_TeamCheck and model:FindFirstChild("friendly_marker") then
+                if Chams.objects[model] then
+                    Chams.Remove(model)
+                end
+            else
+                validModels[model] = true
+                
+                if not Chams.objects[model] then
+                    Chams.Create(model)
+                end
+                Chams.Update(model, posData.dist)
+            end
+        end
+    end
+    
+    for model, _ in pairs(Chams.objects) do
+        if not validModels[model] then
+            Chams.Remove(model)
+        end
+    end
+end
+
+local Radar = {
+    bg = Drawing.new("Square"),
+    border = Drawing.new("Square"),
+    cross1 = Drawing.new("Line"),
+    cross2 = Drawing.new("Line"),
+    center = Drawing.new("Triangle"),
+    dots = {},
+    deadDots = {}  
+}
+
+do
+    Radar.bg.Filled = true
+    Radar.bg.Color = Palette.RadarBg
+    Radar.bg.Transparency = 0.92
+    
+    Radar.border.Filled = false
+    Radar.border.Color = Palette.RadarBorder
+    Radar.border.Thickness = 1
+    
+    Radar.cross1.Color = Palette.RadarGrid
+    Radar.cross1.Thickness = 1
+    
+    Radar.cross2.Color = Palette.RadarGrid
+    Radar.cross2.Thickness = 1
+    
+    Radar.center.Filled = true
+    Radar.center.Color = Palette.RadarYou
+    
+    for i = 1, 50 do
+        local d = Drawing.new("Triangle")
+        d.Filled = true
+        d.Visible = false
+        Radar.dots[i] = d
+    end
+    
+    
+    for i = 1, 20 do
+        local c = Drawing.new("Circle")
+        c.Filled = true
+        c.Color = Palette.Dead
+        c.Radius = 3
+        c.Visible = false
+        Radar.deadDots[i] = c
+    end
+end
+
+function Radar.HideAll()
+    Radar.bg.Visible = false
+    Radar.border.Visible = false
+    Radar.cross1.Visible = false
+    Radar.cross2.Visible = false
+    Radar.center.Visible = false
+    for _, d in ipairs(Radar.dots) do d.Visible = false end
+    for _, c in ipairs(Radar.deadDots) do c.Visible = false end
+end
+
+function Radar.Step(cam)
+    if State.Unloaded or not Config.RADAR_Enabled then
+        Radar.HideAll()
+        return
+    end
+    
+    local size = Config.RADAR_Size
+    
+    if not State.RadarPos then
+        State.RadarPos = Vector2.new(cam.ViewportSize.X - size - 15, 15)
+    end
+    
+    if Config.RADAR_Edit then
+        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            local mouse = UserInputService:GetMouseLocation()
+            if not State.RadarDragging then
+                if mouse.X >= State.RadarPos.X and mouse.X <= State.RadarPos.X + size and
+                   mouse.Y >= State.RadarPos.Y and mouse.Y <= State.RadarPos.Y + size then
+                    State.RadarDragging = true
+                    State.RadarDragOffset = mouse - State.RadarPos
+                end
+            else
+                State.RadarPos = mouse - State.RadarDragOffset
+            end
+        else
+            State.RadarDragging = false
+        end
+        Radar.border.Color = Color3.new(1, 1, 1) 
+    else
+        Radar.border.Color = Palette.RadarBorder
+    end
+    
+    local pos = State.RadarPos
+    local center = pos + Vector2.new(size/2, size/2)
+    
+    Radar.bg.Position = pos
+    Radar.bg.Size = Vector2.new(size, size)
+    Radar.bg.Visible = true
+    
+    Radar.border.Position = pos
+    Radar.border.Size = Vector2.new(size, size)
+    Radar.border.Visible = true
+    
+    Radar.cross1.From = Vector2.new(center.X, pos.Y + 8)
+    Radar.cross1.To = Vector2.new(center.X, pos.Y + size - 8)
+    Radar.cross1.Visible = true
+    
+    Radar.cross2.From = Vector2.new(pos.X + 8, center.Y)
+    Radar.cross2.To = Vector2.new(pos.X + size - 8, center.Y)
+    Radar.cross2.Visible = true
+    
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local myLook = cam.CFrame.LookVector
+    
+    if not myRoot then
+        Radar.center.Visible = false
+        for _, d in ipairs(Radar.dots) do d.Visible = false end
+        for _, c in ipairs(Radar.deadDots) do c.Visible = false end
+        return
+    end
+    
+    local myAngle = math.atan2(-myLook.X, -myLook.Z)
+    local cosA, sinA = math.cos(myAngle), math.sin(myAngle)
+    local scale = (size/2 - 8) / Config.RADAR_Range
+    local aliveIdx = 1
+    local deadIdx = 1
+    
+    for _, model in ipairs(Workspace:GetChildren()) do
+        if IsEnemy(model) then
+            local root = GetRoot(model)
+            if root then
+                local rx = root.Position.X - myRoot.Position.X
+                local rz = root.Position.Z - myRoot.Position.Z
+                local dist2D = math.sqrt(rx^2 + rz^2)
+                
+                if dist2D < Config.RADAR_Range then
+                    local rotX = rx * cosA - rz * sinA
+                    local rotZ = rx * sinA + rz * cosA
+                    local radarX, radarY = rotX * scale, rotZ * scale
+                    local maxD = size/2 - 6
+                    local rDist = math.sqrt(radarX^2 + radarY^2)
+                    if rDist > maxD then
+                        radarX, radarY = radarX/rDist * maxD, radarY/rDist * maxD
+                    end
+                    
+                    local dotPos = center + Vector2.new(radarX, radarY)
+                    local isDead = Config.ESP_DeadCheck and IsModelDead(model) or false
+                    
+                    if isDead then
+                       
+                        if deadIdx <= #Radar.deadDots then
+                            local deadDot = Radar.deadDots[deadIdx]
+                            deadDot.Position = dotPos
+                            deadDot.Radius = 3
+                            deadDot.Color = Palette.Dead
+                            deadDot.Visible = true
+                            deadIdx = deadIdx + 1
+                        end
+                    else
+                        
+                        if aliveIdx <= #Radar.dots then
+                            local dot = Radar.dots[aliveIdx]
+                            local head = GetHead(model)
+                            local eAngle = 0
+                            if head then
+                                eAngle = math.atan2(-head.CFrame.LookVector.X, -head.CFrame.LookVector.Z) - myAngle
+                            end
+                            local eFwd = Vector2.new(-math.sin(eAngle), -math.cos(eAngle))
+                            local eRight = Vector2.new(-eFwd.Y, eFwd.X)
+                            local ds = Tuning.RadarDotSize
+                            dot.PointA = dotPos + eFwd * ds
+                            dot.PointB = dotPos - eFwd * ds/2 + eRight * ds/2
+                            dot.PointC = dotPos - eFwd * ds/2 - eRight * ds/2
+                            dot.Color = GetEspColor()
+                            dot.Visible = true
+                            aliveIdx = aliveIdx + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    for i = aliveIdx, #Radar.dots do Radar.dots[i].Visible = false end
+    for i = deadIdx, #Radar.deadDots do Radar.deadDots[i].Visible = false end
+    
+    local as = Tuning.RadarArrowSize
+    Radar.center.PointA = center + Vector2.new(0, -as)
+    Radar.center.PointB = center + Vector2.new(-as/2, as/2)
+    Radar.center.PointC = center + Vector2.new(as/2, as/2)
+    Radar.center.Visible = true
+end
+
+local Aimbot = {
+    fov = Drawing.new("Circle")
+}
+
+Aimbot.fov.Thickness = 1
+Aimbot.fov.NumSides = 60
+Aimbot.fov.Filled = false
+Aimbot.fov.Transparency = 0.7
+
+
+Aimbot.currentTargetModel = nil
+Aimbot.lastTargetTime = 0
+Aimbot.lastTargetDist = 100
+
+function Aimbot.GetTarget(cam)
+    local bestTarget = nil
+    local bestScore = math.huge
+    local bestModel = nil
+    local bestDist = 100
+    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+    
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local myPos = myRoot and myRoot.Position or cam.CFrame.Position
+    
+    local models = Workspace:GetChildren()
+    for i = 1, #models do
+        local model = models[i]
+        if model:IsA("Model") and model.Name == "soldier_model" then
+         
+            if IsLocalPlayer(model) then continue end
+            if Config.AIM_TeamCheck and model:FindFirstChild("friendly_marker") then continue end
+            if Config.ESP_DeadCheck and IsModelDead(model) then continue end  
+            
+            local hrp = model:FindFirstChild("HumanoidRootPart")
+            if not hrp then continue end
+            
+            local worldDist = (hrp.Position - myPos).Magnitude
+            
+            local partsToCheck = {}
+            local distanceOffset = Vector3.new(0, 0, 0)
+            
+            if Config.AIM_TargetPart == "Auto" then
+                partsToCheck = {
+                    {part = model:FindFirstChild("HumanoidRootPart"), offset = Vector3.new(0, 2.5, 0)},
+                    {part = model:FindFirstChild("TPVBodyVanillaHead"), offset = Vector3.new(0, 0, 0)},
+                    {part = model:FindFirstChild("TPVAccessoryJaw"), offset = Vector3.new(0, 0, 0)},
+                    {part = model:FindFirstChild("TPVBodyVanillaTorsoBack"), offset = Vector3.new(0, 0, 0)},
+                    {part = model:FindFirstChild("TPVBodyVanillaTorsoFront"), offset = Vector3.new(0, 0, 0)}
+                }
+            elseif Config.AIM_TargetPart == "Head" then
+                if worldDist < 5 then
+                    distanceOffset = Vector3.new(0, -3.5, 0)
+                elseif worldDist < 8 then
+                    distanceOffset = Vector3.new(0, -2.8, 0)
+                elseif worldDist < 12 then
+                    distanceOffset = Vector3.new(0, -2.0, 0)
+                elseif worldDist < 18 then
+                    distanceOffset = Vector3.new(0, -1.2, 0)
+                elseif worldDist < 25 then
+                    distanceOffset = Vector3.new(0, -0.6, 0)
+                elseif worldDist < 40 then
+                    distanceOffset = Vector3.new(0, -0.2, 0)
+                else
+                    distanceOffset = Vector3.new(0, 0.1, 0)
+                end
+                partsToCheck = {
+                    {part = model:FindFirstChild("TPVBodyVanillaHead"), offset = distanceOffset},
+                    {part = model:FindFirstChild("TPVAccessoryJaw"), offset = distanceOffset},
+                    {part = model:FindFirstChild("Head"), offset = distanceOffset}
+                }
+            elseif Config.AIM_TargetPart == "Torso" then
+                if worldDist < 8 then
+                    distanceOffset = Vector3.new(0, -1.5, 0)
+                elseif worldDist < 15 then
+                    distanceOffset = Vector3.new(0, -0.8, 0)
+                elseif worldDist < 25 then
+                    distanceOffset = Vector3.new(0, -0.3, 0)
+                end
+                partsToCheck = {
+                    {part = model:FindFirstChild("TPVBodyVanillaTorsoFront"), offset = distanceOffset},
+                    {part = model:FindFirstChild("TPVBodyVanillaTorsoBack"), offset = distanceOffset},
+                    {part = model:FindFirstChild("UpperTorso"), offset = distanceOffset}
+                }
+            else
+                if worldDist < 10 then
+                    distanceOffset = Vector3.new(0, 1.5, 0)
+                else
+                    distanceOffset = Vector3.new(0, 2.5, 0)
+                end
+                partsToCheck = {
+                    {part = model:FindFirstChild("HumanoidRootPart"), offset = distanceOffset}
+                }
+            end
+            
+            for _, info in ipairs(partsToCheck) do
+                local part = info.part
+                if part then
+                    local offset = info.offset or Vector3.zero
+                    local targetPos = part.Position + offset
+                    local screenPos, onScreen = cam:WorldToViewportPoint(targetPos)
+                    
+                    if onScreen and screenPos.Z > 0 then
+                        local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                        
+                        if screenDist <= Config.AIM_FOV then
+                            local score
+                            
+                            if Config.AIM_TargetPart == "Auto" then
+                                local normalizedScreen = screenDist / Config.AIM_FOV
+                                local normalizedWorld = math.clamp(worldDist / 200, 0, 1)
+                                local proxWeight = Config.AIM_ProximityPriority * 0.5
+                                score = (1 - proxWeight) * normalizedScreen + proxWeight * normalizedWorld
+                                
+                                if model == Aimbot.currentTargetModel then
+                                    local stickyBonus = (Config.AIM_StickyFactor - 1) * 0.5 + 1
+                                    score = score / stickyBonus
+                                end
+                            else
+                                local normalizedScreen = screenDist / Config.AIM_FOV
+                                local normalizedWorld = math.clamp(worldDist / 150, 0, 1)
+                                local proxWeight = Config.AIM_ProximityPriority
+                                score = (1 - proxWeight) * normalizedScreen + proxWeight * normalizedWorld
+                                
+                                if model == Aimbot.currentTargetModel then
+                                    score = score / Config.AIM_StickyFactor
+                                end
+                            end
+                            
+                            if score < bestScore then
+                                bestScore = score
+                                bestTarget = targetPos
+                                bestModel = model
+                                bestDist = worldDist
+                            end
+                        end
+                    end
+                    
+                    if Config.AIM_TargetPart ~= "Auto" then
+                        break
+                    end
+                end
+            end
+        end
+    end
+    
+    if bestModel then
+        Aimbot.currentTargetModel = bestModel
+        Aimbot.lastTargetTime = tick()
+        Aimbot.lastTargetDist = bestDist
+    elseif tick() - Aimbot.lastTargetTime > 0.5 then
+        Aimbot.currentTargetModel = nil
+        Aimbot.lastTargetDist = 100
+    end
+    
+    return bestTarget
+end
+
+function Aimbot.Step(cam, screenCenter)
+    if State.Unloaded then
+        if Aimbot.fov then Aimbot.fov.Visible = false end
+        return
+    end
+    
+    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+    
+    local isAiming = State.Aiming
+    if Config.AIM_Key == Enum.UserInputType.MouseButton2 then
+        pcall(function()
+            isAiming = isAiming or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+        end)
+    elseif Config.AIM_Key == Enum.UserInputType.MouseButton1 then
+        pcall(function()
+            isAiming = isAiming or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+        end)
+    elseif Config.AIM_Key == Enum.UserInputType.MouseButton3 then
+        pcall(function()
+            isAiming = isAiming or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton3)
+        end)
+    end
+    
+    if Config.AIM_Enabled and Config.AIM_ShowFOV then
+        Aimbot.fov.Position = screenCenter
+        Aimbot.fov.Radius = Config.AIM_FOV
+        Aimbot.fov.Color = isAiming and Palette.MenuOn or Color3.fromRGB(255, 255, 255)
+        Aimbot.fov.Visible = true
+    else
+        Aimbot.fov.Visible = false
+    end
+    
+    if not Config.AIM_Enabled or not isAiming then return end
+    
+    local targetPos = Aimbot.GetTarget(cam)
+    if not targetPos then return end
+    
+    local screenPos = cam:WorldToViewportPoint(targetPos)
+    local delta = Vector2.new(screenPos.X - mousePos.X, screenPos.Y - mousePos.Y)
+    local deltaMag = delta.Magnitude
+    
+    if Config.AIM_TargetPart == "Auto" then
+        if deltaMag < 2 then return end
+        pcall(function()
+            if mousemoverel then
+                mousemoverel(delta.X * Config.AIM_Smooth, delta.Y * Config.AIM_Smooth)
+            end
+        end)
+    else
+        local deadzone = 3
+        if Aimbot.lastTargetDist < 15 then
+            deadzone = 8  
+        elseif Aimbot.lastTargetDist < 30 then
+            deadzone = 5
+        end
+        
+        if deltaMag < deadzone then return end
+        
+        local smooth = Config.AIM_Smooth
+        
+        if Aimbot.lastTargetDist < 8 then
+            smooth = smooth * 0.3  
+        elseif Aimbot.lastTargetDist < 15 then
+            smooth = smooth * 0.5  
+        elseif Aimbot.lastTargetDist < 25 then
+            smooth = smooth * 0.7  
+        end
+        
+        smooth = math.clamp(smooth, 0.02, 0.5)
+        
+        local adjustedDelta = deltaMag - deadzone
+        if adjustedDelta > 0 then
+            local normalizedDelta = delta / deltaMag
+            local moveX = normalizedDelta.X * adjustedDelta * smooth
+            local moveY = normalizedDelta.Y * adjustedDelta * smooth
+            
+            if Aimbot.lastTargetDist < 10 then
+                moveX = math.clamp(moveX, -15, 15)
+                moveY = math.clamp(moveY, -15, 15)
+            end
+            
+            pcall(function()
+                if mousemoverel then
+                    mousemoverel(moveX, moveY)
+                end
+            end)
+        end
+    end
+end
+
+local Tabs = {
+    {name = "ESP"},
+    {name = "AIM"},
+    {name = "MISC"}
+}
+
+local MenuItems = {
+    {tab = 1, name = "VISUALS", type = "label"},
+    {tab = 1, name = "Enable ESP", key = "ESP_Enabled", type = "toggle"},
+    {tab = 1, name = "Box ESP", key = "ESP_Box", type = "toggle"},
+    {tab = 1, name = "Box Style", key = "ESP_BoxStyle", type = "dropdown", options = {"Full", "Corner"}},
+    {tab = 1, name = "Box Fill", key = "ESP_BoxFill", type = "toggle"},
+    {tab = 1, name = "Name", key = "ESP_Name", type = "toggle"},
+    {tab = 1, name = "Distance", key = "ESP_Distance", type = "toggle"},
+    {tab = 1, name = "Tracer", key = "ESP_Tracer", type = "toggle"},
+    {tab = 1, name = "Tracer Origin", key = "ESP_TracerOrigin", type = "dropdown", options = {"Bottom", "Center", "Top"}},
+    {tab = 1, name = "Snapline", key = "ESP_Snapline", type = "toggle"},
+    {tab = 1, name = "Look Direction", key = "ESP_LookDirection", type = "toggle"},
+    {tab = 1, name = "Velocity", key = "ESP_Velocity", type = "toggle"},
+    {tab = 1, name = "Dead Check", key = "ESP_DeadCheck", type = "toggle"},
+    {tab = 1, name = "Offscreen", key = "ESP_Offscreen", type = "toggle"},
+    {tab = 1, name = "Max Distance", key = "ESP_MaxDist", type = "slider", min = 500, max = 3000, step = 100},
+    {tab = 1, name = "CHAMS", type = "label"},
+    {tab = 1, name = "Enable Chams", key = "ESP_Chams", type = "toggle"},
+    {tab = 1, name = "Chams Style", key = "ESP_ChamsStyle", type = "dropdown", options = {"Solid", "Outline", "Heatmap"}},
+    {tab = 1, name = "Heatmap Mode", key = "ESP_Heatmap", type = "toggle"},
+    {tab = 1, name = "COLORS", type = "label"},
+    {tab = 1, name = "Rainbow Mode", key = "ESP_Rainbow", type = "toggle"},
+    {tab = 1, name = "ESP Color", key = "ESP_CustomColor", type = "color"},
+    {tab = 1, name = "Team Check", key = "ESP_TeamCheck", type = "toggle"},
+    {tab = 1, name = "RADAR", type = "label"},
+    {tab = 1, name = "Enable Radar", key = "RADAR_Enabled", type = "toggle"},
+    {tab = 1, name = "Radar Size", key = "RADAR_Size", type = "slider", min = 80, max = 180, step = 10},
+    {tab = 1, name = "Radar Range", key = "RADAR_Range", type = "slider", min = 100, max = 400, step = 25},
+    {tab = 1, name = "Move Radar", key = "RADAR_Edit", type = "toggle"},
+    
+    {tab = 2, name = "AIMBOT", type = "label"},
+    {tab = 2, name = "Enable Aimbot", key = "AIM_Enabled", type = "toggle"},
+    {tab = 2, name = "Show FOV", key = "AIM_ShowFOV", type = "toggle"},
+    {tab = 2, name = "FOV Size", key = "AIM_FOV", type = "slider", min = 50, max = 500, step = 25},
+    {tab = 2, name = "Smoothness", key = "AIM_Smooth", type = "slider", min = 0.05, max = 0.5, step = 0.01},
+    {tab = 2, name = "Target Part", key = "AIM_TargetPart", type = "dropdown", options = {"Auto", "Head", "Torso", "Root"}},
+    {tab = 2, name = "Team Check", key = "AIM_TeamCheck", type = "toggle"},
+    {tab = 2, name = "TARGETING", type = "label"},
+    {tab = 2, name = "Proximity Priority", key = "AIM_ProximityPriority", type = "slider", min = 0, max = 1, step = 0.1},
+    {tab = 2, name = "Target Stickiness", key = "AIM_StickyFactor", type = "slider", min = 1, max = 2, step = 0.1},
+    
+    {tab = 3, name = "GUN MODS", type = "label"},
+    {tab = 3, name = "No Recoil", key = "MISC_NoRecoil", type = "toggle"},
+    {tab = 3, name = "No Sway", key = "MISC_NoSway", type = "toggle"},
+    {tab = 3, name = "No Spread", key = "MISC_NoSpread", type = "toggle"},
+    {tab = 3, name = "No Cam Shake", key = "MISC_NoCamShake", type = "toggle"},
+    {tab = 3, name = "MOVEMENT", type = "label"},
+    {tab = 3, name = "Ghost Mode", key = "MISC_Noclip", type = "toggle"},
+    {tab = 3, name = "VISUAL", type = "label"},
+    {tab = 3, name = "Menu Color", key = "MISC_MenuColor", type = "color"},
+    {tab = 3, name = "Full Bright", key = "MISC_FullBright", type = "toggle"},
+    {tab = 3, name = "HOTKEYS", type = "label"},
+    {tab = 3, name = "Menu Key", key = "KEY_Menu", type = "keybind"},
+    {tab = 3, name = "Panic Key", key = "KEY_Panic", type = "keybind"}
+}
+
+local GUI = {
+    Drawings = {},
+    Visible = true,
+    Position = nil,
+    Dragging = false,
+    DragOffset = Vector2.zero,
+    TabHover = {},
+    ItemHover = {},
+    SelectedItem = 1,
+    ScrollOffset = 0,
+    MaxScroll = 0,
+    ScrollbarDragging = false,
+    EditingKeybind = nil,
+    AnimProgress = 1,
+    ContentBounds = {},
+    ScrollbarBounds = {},
+    ItemPositions = {},
+    
+    
+    ColorPickerHue = 0,
+    ColorPickerSat = 1,
+    ColorPickerVal = 1,
+    ColorPickerDragging = nil, 
+    ColorPickerPos = nil,
+    ColorPickerDragOffset = Vector2.zero,
+    EditingColorKey = nil,
+    
+    Preview = {
+        Box = {},
+        Corners = {},
+        Name = nil,
+        Dist = nil,
+        Tracer = nil,
+        Figure = {}
+    }
+}
+
+local KeyNames = {
+    [Enum.KeyCode.Q] = "Q", [Enum.KeyCode.W] = "W", [Enum.KeyCode.E] = "E", [Enum.KeyCode.R] = "R",
+    [Enum.KeyCode.T] = "T", [Enum.KeyCode.Y] = "Y", [Enum.KeyCode.U] = "U", [Enum.KeyCode.I] = "I",
+    [Enum.KeyCode.O] = "O", [Enum.KeyCode.P] = "P", [Enum.KeyCode.A] = "A", [Enum.KeyCode.S] = "S",
+    [Enum.KeyCode.D] = "D", [Enum.KeyCode.F] = "F", [Enum.KeyCode.G] = "G", [Enum.KeyCode.H] = "H",
+    [Enum.KeyCode.J] = "J", [Enum.KeyCode.K] = "K", [Enum.KeyCode.L] = "L", [Enum.KeyCode.Z] = "Z",
+    [Enum.KeyCode.X] = "X", [Enum.KeyCode.C] = "C", [Enum.KeyCode.V] = "V", [Enum.KeyCode.B] = "B",
+    [Enum.KeyCode.N] = "N", [Enum.KeyCode.M] = "M",
+    [Enum.KeyCode.Insert] = "INS", [Enum.KeyCode.Home] = "HOME", [Enum.KeyCode.End] = "END",
+    [Enum.KeyCode.Delete] = "DEL", [Enum.KeyCode.F1] = "F1", [Enum.KeyCode.F2] = "F2",
+    [Enum.KeyCode.F3] = "F3", [Enum.KeyCode.F4] = "F4", [Enum.KeyCode.F5] = "F5"
+}
+
+local function GetKeyName(keyCode)
+    return KeyNames[keyCode] or tostring(keyCode):gsub("Enum.KeyCode.", "")
+end
+
+function GUI.Create()
+    GUI.Drawings.Bg = Drawing.new("Square")
+    GUI.Drawings.Bg.Filled = true
+    GUI.Drawings.Bg.Color = Palette.MenuBg
+    
+    GUI.Drawings.Border = Drawing.new("Square")
+    GUI.Drawings.Border.Filled = false
+    GUI.Drawings.Border.Color = Palette.MenuBorder
+    GUI.Drawings.Border.Thickness = 1
+    
+    GUI.Drawings.TitleBar = Drawing.new("Square")
+    GUI.Drawings.TitleBar.Filled = true
+    GUI.Drawings.TitleBar.Color = Palette.MenuTab
+    
+    GUI.Drawings.Title = Drawing.new("Text")
+    GUI.Drawings.Title.Size = 16
+    GUI.Drawings.Title.Font = Drawing.Fonts.Monospace
+    GUI.Drawings.Title.Color = Palette.MenuAccent
+    GUI.Drawings.Title.Outline = true
+    GUI.Drawings.Title.Text = "FRONTLINES"
+    
+    GUI.Drawings.Subtitle = Drawing.new("Text")
+    GUI.Drawings.Subtitle.Size = 12
+    GUI.Drawings.Subtitle.Font = Drawing.Fonts.UI
+    GUI.Drawings.Subtitle.Color = Palette.MenuTextDim
+    GUI.Drawings.Subtitle.Outline = true
+    
+    GUI.Drawings.Tabs = {}
+    for i = 1, #Tabs do
+        GUI.Drawings.Tabs[i] = {
+            Bg = Drawing.new("Square"),
+            Label = Drawing.new("Text"),
+            Indicator = Drawing.new("Square")
+        }
+        GUI.Drawings.Tabs[i].Bg.Filled = true
+        GUI.Drawings.Tabs[i].Label.Size = 15
+        GUI.Drawings.Tabs[i].Label.Font = Drawing.Fonts.UI
+        GUI.Drawings.Tabs[i].Label.Center = true
+        GUI.Drawings.Tabs[i].Label.Outline = true
+        GUI.Drawings.Tabs[i].Indicator.Filled = true
+        GUI.Drawings.Tabs[i].Indicator.Color = Palette.MenuAccent
+    end
+    
+    GUI.Drawings.Items = {}
+    for i = 1, 20 do
+        GUI.Drawings.Items[i] = {
+            Bg = Drawing.new("Square"),
+            Label = Drawing.new("Text"),
+            Value = Drawing.new("Text"),
+            Toggle = Drawing.new("Square"),
+            ToggleKnob = Drawing.new("Square"),
+            SliderBg = Drawing.new("Square"),
+            SliderFill = Drawing.new("Square")
+        }
+        local item = GUI.Drawings.Items[i]
+        item.Bg.Filled = true
+        item.Label.Size = 15
+        item.Label.Font = Drawing.Fonts.UI
+        item.Label.Outline = true
+        item.Value.Size = 14
+        item.Value.Font = Drawing.Fonts.UI
+        item.Value.Outline = true
+        item.Toggle.Filled = true
+        item.ToggleKnob.Filled = true
+        item.ToggleKnob.Color = Color3.new(1, 1, 1)
+        item.SliderBg.Filled = true
+        item.SliderBg.Color = Palette.MenuOff
+        item.SliderFill.Filled = true
+        item.SliderFill.Color = Palette.MenuAccent
+    end
+    
+    GUI.Drawings.ScrollbarBg = Drawing.new("Square")
+    GUI.Drawings.ScrollbarBg.Filled = true
+    GUI.Drawings.ScrollbarBg.Color = Color3.fromRGB(25, 25, 30)
+    
+    GUI.Drawings.ScrollbarThumb = Drawing.new("Square")
+    GUI.Drawings.ScrollbarThumb.Filled = true
+    GUI.Drawings.ScrollbarThumb.Color = Palette.MenuScrollbar
+    
+    GUI.Drawings.PreviewBg = Drawing.new("Square")
+    GUI.Drawings.PreviewBg.Filled = true
+    GUI.Drawings.PreviewBg.Color = Palette.PreviewBg
+    
+    GUI.Drawings.PreviewBorder = Drawing.new("Square")
+    GUI.Drawings.PreviewBorder.Filled = false
+    GUI.Drawings.PreviewBorder.Color = Palette.PreviewBorder
+    GUI.Drawings.PreviewBorder.Thickness = 1
+    
+    GUI.Drawings.PreviewTitle = Drawing.new("Text")
+    GUI.Drawings.PreviewTitle.Size = 12
+    GUI.Drawings.PreviewTitle.Font = Drawing.Fonts.UI
+    GUI.Drawings.PreviewTitle.Color = Palette.MenuTextDim
+    GUI.Drawings.PreviewTitle.Center = true
+    GUI.Drawings.PreviewTitle.Outline = true
+    GUI.Drawings.PreviewTitle.Text = "ESP PREVIEW"
+    
+    for i = 1, 4 do
+        GUI.Preview.Box[i] = Drawing.new("Line")
+        GUI.Preview.Box[i].Thickness = 1
+    end
+    
+    for i = 1, 8 do
+        GUI.Preview.Corners[i] = Drawing.new("Line")
+        GUI.Preview.Corners[i].Thickness = 1
+    end
+    
+    GUI.Preview.Name = Drawing.new("Text")
+    GUI.Preview.Name.Size = 13
+    GUI.Preview.Name.Font = Drawing.Fonts.Monospace
+    GUI.Preview.Name.Center = true
+    GUI.Preview.Name.Outline = true
+    GUI.Preview.Name.Text = "ENEMY"
+    
+    GUI.Preview.Dist = Drawing.new("Text")
+    GUI.Preview.Dist.Size = 11
+    GUI.Preview.Dist.Font = Drawing.Fonts.Monospace
+    GUI.Preview.Dist.Center = true
+    GUI.Preview.Dist.Outline = true
+    GUI.Preview.Dist.Color = Color3.fromRGB(170, 170, 170)
+    GUI.Preview.Dist.Text = "50m"  
+    
+    GUI.Preview.Tracer = Drawing.new("Line")
+    GUI.Preview.Tracer.Thickness = 1
+    GUI.Preview.Tracer.Color = Palette.Tracer
+    
+    GUI.Preview.Snapline = Drawing.new("Line")
+    GUI.Preview.Snapline.Thickness = 1
+    GUI.Preview.Snapline.Color = Palette.Snapline
+    GUI.Preview.Snapline.Transparency = 0.5
+    
+    GUI.Preview.LookLine = Drawing.new("Line")
+    GUI.Preview.LookLine.Thickness = 2
+    GUI.Preview.LookLine.Color = Palette.LookDirection
+    
+    GUI.Preview.BoxFill = Drawing.new("Square")
+    GUI.Preview.BoxFill.Filled = true
+    GUI.Preview.BoxFill.Transparency = 0.15
+    
+    GUI.Preview.VelLine = Drawing.new("Line")
+    GUI.Preview.VelLine.Thickness = 2
+    GUI.Preview.VelLine.Color = Palette.Velocity
+    
+    GUI.Preview.VelArrow = Drawing.new("Triangle")
+    GUI.Preview.VelArrow.Filled = true
+    GUI.Preview.VelArrow.Color = Palette.Velocity
+    
+    GUI.Preview.Figure = {}
+    GUI.Preview.Figure.Head = Drawing.new("Circle")
+    GUI.Preview.Figure.Head.Filled = true
+    GUI.Preview.Figure.Head.Color = Color3.fromRGB(60, 60, 65)
+    GUI.Preview.Figure.Head.NumSides = 20
+    
+    GUI.Preview.Figure.Torso = Drawing.new("Square")
+    GUI.Preview.Figure.Torso.Filled = true
+    GUI.Preview.Figure.Torso.Color = Color3.fromRGB(50, 50, 55)
+    
+    GUI.Preview.Figure.ArmL = Drawing.new("Square")
+    GUI.Preview.Figure.ArmL.Filled = true
+    GUI.Preview.Figure.ArmL.Color = Color3.fromRGB(50, 50, 55)
+    
+    GUI.Preview.Figure.ArmR = Drawing.new("Square")
+    GUI.Preview.Figure.ArmR.Filled = true
+    GUI.Preview.Figure.ArmR.Color = Color3.fromRGB(50, 50, 55)
+    
+    GUI.Preview.Figure.LegL = Drawing.new("Square")
+    GUI.Preview.Figure.LegL.Filled = true
+    GUI.Preview.Figure.LegL.Color = Color3.fromRGB(45, 45, 50)
+    
+    GUI.Preview.Figure.LegR = Drawing.new("Square")
+    GUI.Preview.Figure.LegR.Filled = true
+    GUI.Preview.Figure.LegR.Color = Color3.fromRGB(45, 45, 50)
+    
+    GUI.Drawings.Footer = Drawing.new("Text")
+    GUI.Drawings.Footer.Size = 13
+    GUI.Drawings.Footer.Font = Drawing.Fonts.UI
+    GUI.Drawings.Footer.Color = Palette.MenuTextDim
+    GUI.Drawings.Footer.Outline = true
+    
+    GUI.Drawings.Credit = Drawing.new("Text")
+    GUI.Drawings.Credit.Size = 12
+    GUI.Drawings.Credit.Font = Drawing.Fonts.UI
+    GUI.Drawings.Credit.Color = Color3.fromRGB(120, 120, 130)
+    GUI.Drawings.Credit.Outline = true
+    GUI.Drawings.Credit.Text = "made by leet"
+    
+    GUI.Drawings.ColorPicker = {
+        Bg = Drawing.new("Square"),
+        Border = Drawing.new("Square"),
+        TitleBar = Drawing.new("Square"),
+        Title = Drawing.new("Text"),
+        HueBar = Drawing.new("Square"),
+        HueSelector = Drawing.new("Square"),
+        SatValBox = Drawing.new("Square"),
+        Selector = Drawing.new("Circle"),
+        Preview = Drawing.new("Square"),
+        PreviewBorder = Drawing.new("Square"),
+        CloseBtn = Drawing.new("Square"),
+        CloseTxt = Drawing.new("Text")
+    }
+    local cp = GUI.Drawings.ColorPicker
+    cp.Bg.Filled = true
+    cp.Bg.Color = Palette.MenuBg
+    cp.Border.Filled = false
+    cp.Border.Color = Palette.MenuAccent
+    cp.Border.Thickness = 1
+    cp.TitleBar.Filled = true
+    cp.TitleBar.Color = Palette.MenuTab
+    cp.Title.Size = 12
+    cp.Title.Font = Drawing.Fonts.UI
+    cp.Title.Color = Palette.MenuText
+    cp.Title.Center = true
+    cp.Title.Outline = true
+    cp.Title.Text = "SELECT COLOR"
+    cp.HueBar.Filled = true
+    cp.HueSelector.Filled = true
+    cp.HueSelector.Color = Color3.new(1, 1, 1)
+    cp.SatValBox.Filled = true
+    cp.Selector.Filled = true
+    cp.Selector.Color = Color3.new(1, 1, 1)
+    cp.Selector.NumSides = 16
+    cp.Selector.Radius = 5
+    cp.Preview.Filled = true
+    cp.PreviewBorder.Filled = false
+    cp.PreviewBorder.Color = Palette.MenuBorder
+    cp.PreviewBorder.Thickness = 1
+    cp.CloseBtn.Filled = true
+    cp.CloseBtn.Color = Palette.MenuAccent
+    cp.CloseTxt.Size = 11
+    cp.CloseTxt.Font = Drawing.Fonts.UI
+    cp.CloseTxt.Color = Color3.new(1, 1, 1)
+    cp.CloseTxt.Center = true
+    cp.CloseTxt.Text = "DONE"
+end
+
+function GUI.Hide()
+    for name, drawing in pairs(GUI.Drawings) do
+        if type(drawing) == "table" then
+            for _, subDrawing in pairs(drawing) do
+                if type(subDrawing) == "table" then
+                    for _, d in pairs(subDrawing) do
+                        if d.Visible ~= nil then d.Visible = false end
+                    end
+                elseif subDrawing.Visible ~= nil then
+                    subDrawing.Visible = false
+                end
+            end
+        elseif drawing.Visible ~= nil then
+            drawing.Visible = false
+        end
+    end
+    
+    for _, l in ipairs(GUI.Preview.Box) do l.Visible = false end
+    for _, l in ipairs(GUI.Preview.Corners) do l.Visible = false end
+    if GUI.Preview.BoxFill then GUI.Preview.BoxFill.Visible = false end
+    if GUI.Preview.Name then GUI.Preview.Name.Visible = false end
+    if GUI.Preview.Dist then GUI.Preview.Dist.Visible = false end
+    if GUI.Preview.Tracer then GUI.Preview.Tracer.Visible = false end
+    if GUI.Preview.Snapline then GUI.Preview.Snapline.Visible = false end
+    if GUI.Preview.LookLine then GUI.Preview.LookLine.Visible = false end
+    if GUI.Preview.VelLine then GUI.Preview.VelLine.Visible = false end
+    if GUI.Preview.VelArrow then GUI.Preview.VelArrow.Visible = false end
+    
+    if GUI.Preview.Figure then
+        for _, part in pairs(GUI.Preview.Figure) do
+            if part and part.Visible ~= nil then part.Visible = false end
+        end
+    end
+end
+
+function GUI.RenderPreview(x, y, w, h)
+    local pw, ph = Tuning.PreviewBoxW, Tuning.PreviewBoxH
+    local cx = x + w/2
+    local cy = y + h/2 + 10
+    local boxTop = cy - ph/2
+    local boxBottom = cy + ph/2
+    local boxLeft = cx - pw/2
+    local boxRight = cx + pw/2
+    
+   
+    local animCycle = tick() % 3
+    local animDist
+    if animCycle < 1.5 then
+        animDist = 20 + (animCycle / 1.5) * 80  
+    else
+        animDist = 100 - ((animCycle - 1.5) / 1.5) * 80  
+    end
+    animDist = math.floor(animDist)
+    
+    
+    local espColor, figFillColor, figOutlineColor
+    local useHeatmap = Config.ESP_Heatmap or (Config.ESP_Chams and Config.ESP_ChamsStyle == "Heatmap")
+    local useOutline = Config.ESP_Chams and Config.ESP_ChamsStyle == "Outline"
+    
+    if useHeatmap then
+        
+        espColor = GetHeatmapColor(animDist)
+        figFillColor = espColor
+        figOutlineColor = Color3.fromRGB(
+            math.min(255, espColor.R * 255 + 40),
+            math.min(255, espColor.G * 255 + 40),
+            math.min(255, espColor.B * 255 + 40)
+        )
+    elseif useOutline then
+        espColor = GetEspColor()
+        figFillColor = Color3.fromRGB(60, 60, 65)
+        figOutlineColor = GetEspColor()
+    elseif Config.ESP_Chams then
+        espColor = GetEspColor()
+        figFillColor = GetEspColor()
+        figOutlineColor = Color3.fromRGB(255, 120, 120)  
+    else
+        espColor = GetEspColor()
+        figFillColor = Color3.fromRGB(60, 60, 65)  
+        figOutlineColor = Color3.fromRGB(80, 80, 85)  
+    end
+    
+   
+    local fig = GUI.Preview.Figure
+    local headRadius = 10
+    local headY = cy - ph * 0.32
+    
+    fig.Head.Position = Vector2.new(cx, headY)
+    fig.Head.Radius = headRadius
+    fig.Head.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(60, 60, 65)
+    fig.Head.Filled = not useOutline
+    fig.Head.Thickness = useOutline and 2 or 1
+    fig.Head.Visible = true
+    
+    local torsoW, torsoH = 24, 40
+    local torsoTop = headY + headRadius + 2
+    fig.Torso.Position = Vector2.new(cx - torsoW/2, torsoTop)
+    fig.Torso.Size = Vector2.new(torsoW, torsoH)
+    fig.Torso.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(50, 50, 55)
+    fig.Torso.Filled = not useOutline
+    fig.Torso.Thickness = useOutline and 2 or 1
+    fig.Torso.Visible = true
+    
+    local armW, armH = 8, 38
+    fig.ArmL.Position = Vector2.new(cx - torsoW/2 - armW - 2, torsoTop + 2)
+    fig.ArmL.Size = Vector2.new(armW, armH)
+    fig.ArmL.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(50, 50, 55)
+    fig.ArmL.Filled = not useOutline
+    fig.ArmL.Thickness = useOutline and 2 or 1
+    fig.ArmL.Visible = true
+    
+    fig.ArmR.Position = Vector2.new(cx + torsoW/2 + 2, torsoTop + 2)
+    fig.ArmR.Size = Vector2.new(armW, armH)
+    fig.ArmR.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(50, 50, 55)
+    fig.ArmR.Filled = not useOutline
+    fig.ArmR.Thickness = useOutline and 2 or 1
+    fig.ArmR.Visible = true
+    
+    local legW, legH = 10, 45
+    local legTop = torsoTop + torsoH + 2
+    fig.LegL.Position = Vector2.new(cx - legW - 2, legTop)
+    fig.LegL.Size = Vector2.new(legW, legH)
+    fig.LegL.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(45, 45, 50)
+    fig.LegL.Filled = not useOutline
+    fig.LegL.Thickness = useOutline and 2 or 1
+    fig.LegL.Visible = true
+    
+    fig.LegR.Position = Vector2.new(cx + 2, legTop)
+    fig.LegR.Size = Vector2.new(legW, legH)
+    fig.LegR.Color = Config.ESP_Chams and (useOutline and figOutlineColor or figFillColor) or Color3.fromRGB(45, 45, 50)
+    fig.LegR.Filled = not useOutline
+    fig.LegR.Thickness = useOutline and 2 or 1
+    fig.LegR.Visible = true
+    
+    if Config.ESP_Box then
+        if Config.ESP_BoxStyle == "Full" then
+            for _, l in ipairs(GUI.Preview.Corners) do l.Visible = false end
+            GUI.Preview.Box[1].From = Vector2.new(boxLeft, boxTop)
+            GUI.Preview.Box[1].To = Vector2.new(boxRight, boxTop)
+            GUI.Preview.Box[2].From = Vector2.new(boxRight, boxTop)
+            GUI.Preview.Box[2].To = Vector2.new(boxRight, boxBottom)
+            GUI.Preview.Box[3].From = Vector2.new(boxRight, boxBottom)
+            GUI.Preview.Box[3].To = Vector2.new(boxLeft, boxBottom)
+            GUI.Preview.Box[4].From = Vector2.new(boxLeft, boxBottom)
+            GUI.Preview.Box[4].To = Vector2.new(boxLeft, boxTop)
+            for _, l in ipairs(GUI.Preview.Box) do
+                l.Color = espColor
+                l.Visible = true
+            end
+        else
+            for _, l in ipairs(GUI.Preview.Box) do l.Visible = false end
+            local cl = 12
+            GUI.Preview.Corners[1].From = Vector2.new(boxLeft, boxTop)
+            GUI.Preview.Corners[1].To = Vector2.new(boxLeft + cl, boxTop)
+            GUI.Preview.Corners[2].From = Vector2.new(boxLeft, boxTop)
+            GUI.Preview.Corners[2].To = Vector2.new(boxLeft, boxTop + cl)
+            GUI.Preview.Corners[3].From = Vector2.new(boxRight, boxTop)
+            GUI.Preview.Corners[3].To = Vector2.new(boxRight - cl, boxTop)
+            GUI.Preview.Corners[4].From = Vector2.new(boxRight, boxTop)
+            GUI.Preview.Corners[4].To = Vector2.new(boxRight, boxTop + cl)
+            GUI.Preview.Corners[5].From = Vector2.new(boxLeft, boxBottom)
+            GUI.Preview.Corners[5].To = Vector2.new(boxLeft + cl, boxBottom)
+            GUI.Preview.Corners[6].From = Vector2.new(boxLeft, boxBottom)
+            GUI.Preview.Corners[6].To = Vector2.new(boxLeft, boxBottom - cl)
+            GUI.Preview.Corners[7].From = Vector2.new(boxRight, boxBottom)
+            GUI.Preview.Corners[7].To = Vector2.new(boxRight - cl, boxBottom)
+            GUI.Preview.Corners[8].From = Vector2.new(boxRight, boxBottom)
+            GUI.Preview.Corners[8].To = Vector2.new(boxRight, boxBottom - cl)
+            for _, l in ipairs(GUI.Preview.Corners) do
+                l.Color = espColor
+                l.Visible = true
+            end
+        end
+    else
+        for _, l in ipairs(GUI.Preview.Box) do l.Visible = false end
+        for _, l in ipairs(GUI.Preview.Corners) do l.Visible = false end
+    end
+    
+    if Config.ESP_BoxFill and GUI.Preview.BoxFill then
+        GUI.Preview.BoxFill.Position = Vector2.new(boxLeft, boxTop)
+        GUI.Preview.BoxFill.Size = Vector2.new(pw, ph)
+        GUI.Preview.BoxFill.Color = espColor
+        GUI.Preview.BoxFill.Transparency = 0.15
+        GUI.Preview.BoxFill.Visible = true
+    else
+        if GUI.Preview.BoxFill then GUI.Preview.BoxFill.Visible = false end
+    end
+    
+    if Config.ESP_Name then
+        GUI.Preview.Name.Position = Vector2.new(cx, boxTop - 16)
+        GUI.Preview.Name.Color = espColor
+        GUI.Preview.Name.Visible = true
+    else
+        GUI.Preview.Name.Visible = false
+    end
+    
+    if Config.ESP_Distance then
+        GUI.Preview.Dist.Position = Vector2.new(cx, boxBottom + 4)
+        GUI.Preview.Dist.Text = animDist .. "m"
+        GUI.Preview.Dist.Visible = true
+    else
+        GUI.Preview.Dist.Visible = false
+    end
+    
+    if Config.ESP_Tracer then
+        local fromY, toY
+        toY = boxBottom
+        if Config.ESP_TracerOrigin == "Bottom" then
+            fromY = y + h - 5
+        elseif Config.ESP_TracerOrigin == "Top" then
+            fromY = y + 5
+        else
+            fromY = y + h/2
+        end
+        GUI.Preview.Tracer.From = Vector2.new(cx, fromY)
+        GUI.Preview.Tracer.To = Vector2.new(cx, toY)
+        GUI.Preview.Tracer.Color = Palette.Tracer
+        GUI.Preview.Tracer.Visible = true
+    else
+        GUI.Preview.Tracer.Visible = false
+    end
+    
+    if Config.ESP_Snapline and GUI.Preview.Snapline then
+        GUI.Preview.Snapline.From = Vector2.new(cx, y + h - 5)
+        GUI.Preview.Snapline.To = Vector2.new(cx, boxBottom)
+        GUI.Preview.Snapline.Color = Palette.Snapline
+        GUI.Preview.Snapline.Transparency = 0.5
+        GUI.Preview.Snapline.Visible = true
+    else
+        if GUI.Preview.Snapline then GUI.Preview.Snapline.Visible = false end
+    end
+    
+    if Config.ESP_LookDirection and GUI.Preview.LookLine then
+        local lookEndX = cx + 35
+        local lookEndY = cy - 5
+        GUI.Preview.LookLine.From = Vector2.new(cx, cy)
+        GUI.Preview.LookLine.To = Vector2.new(lookEndX, lookEndY)
+        GUI.Preview.LookLine.Color = Palette.LookDirection
+        GUI.Preview.LookLine.Visible = true
+    else
+        if GUI.Preview.LookLine then GUI.Preview.LookLine.Visible = false end
+    end
+    
+    if Config.ESP_Velocity and GUI.Preview.VelLine and GUI.Preview.VelArrow then
+        local velStartX = cx + pw/2 - 15
+        local velStartY = cy
+        local velEndX = velStartX + 28
+        local velEndY = cy - 10
+        GUI.Preview.VelLine.From = Vector2.new(velStartX, velStartY)
+        GUI.Preview.VelLine.To = Vector2.new(velEndX, velEndY)
+        GUI.Preview.VelLine.Color = Palette.Velocity
+        GUI.Preview.VelLine.Thickness = 2
+        GUI.Preview.VelLine.Visible = true
+        local dx, dy = velEndX - velStartX, velEndY - velStartY
+        local len = math.sqrt(dx*dx + dy*dy)
+        local fx, fy = dx/len, dy/len
+        local arrowSize = 12
+        GUI.Preview.VelArrow.PointA = Vector2.new(velEndX + fx*2, velEndY + fy*2)
+        GUI.Preview.VelArrow.PointB = Vector2.new(velEndX - fx*arrowSize + fy*arrowSize/2, velEndY - fy*arrowSize - fx*arrowSize/2)
+        GUI.Preview.VelArrow.PointC = Vector2.new(velEndX - fx*arrowSize - fy*arrowSize/2, velEndY - fy*arrowSize + fx*arrowSize/2)
+        GUI.Preview.VelArrow.Color = Palette.Velocity
+        GUI.Preview.VelArrow.Visible = true
+    else
+        if GUI.Preview.VelLine then GUI.Preview.VelLine.Visible = false end
+        if GUI.Preview.VelArrow then GUI.Preview.VelArrow.Visible = false end
+    end
+    
+    if Config.ESP_Offscreen then
+        
+        local arrowX = boxRight + 15
+        local arrowY = cy
+        local arrowSize = 8
+     
+    end
+end
+
+function GUI.Render()
+    if State.Unloaded or not Config.MENU_Open then
+        GUI.Hide()
+        return
+    end
+    
+    local cam = Workspace.CurrentCamera
+    if not cam then return end
+    
+    local screenSize = cam.ViewportSize
+    local menuW, menuH = 320, 400
+    local previewW, previewH = 160, 240
+    local titleH = 24
+    local tabH = 28
+    local footerH = 24
+    local scrollbarW = 5
+    
+    if not GUI.Position then
+        GUI.Position = Vector2.new(20, screenSize.Y/2 - menuH/2)
+    end
+    
+    if GUI.Dragging then
+        local mouse = UserInputService:GetMouseLocation()
+        GUI.Position = mouse - GUI.DragOffset
+        GUI.Position = Vector2.new(
+            math.clamp(GUI.Position.X, 0, screenSize.X - menuW),
+            math.clamp(GUI.Position.Y, 0, screenSize.Y - menuH)
+        )
+    end
+    
+    local x, y = GUI.Position.X, GUI.Position.Y
+    
+    GUI.Drawings.Bg.Position = Vector2.new(x, y)
+    GUI.Drawings.Bg.Size = Vector2.new(menuW, menuH)
+    GUI.Drawings.Bg.Transparency = 0.96
+    GUI.Drawings.Bg.Visible = true
+    
+    GUI.Drawings.Border.Position = Vector2.new(x, y)
+    GUI.Drawings.Border.Size = Vector2.new(menuW, menuH)
+    GUI.Drawings.Border.Visible = true
+    
+    GUI.Drawings.TitleBar.Position = Vector2.new(x, y)
+    GUI.Drawings.TitleBar.Size = Vector2.new(menuW, titleH)
+    GUI.Drawings.TitleBar.Visible = true
+    
+    GUI.Drawings.Title.Position = Vector2.new(x + 10, y + 5)
+    GUI.Drawings.Title.Color = Palette.MenuAccent
+    GUI.Drawings.Title.Visible = true
+    
+    local menuKey = GetKeyName(Config.KEY_Menu)
+    local panicKey = GetKeyName(Config.KEY_Panic)
+    GUI.Drawings.Subtitle.Text = "[" .. menuKey .. "] menu  [" .. panicKey .. "] panic"
+    GUI.Drawings.Subtitle.Position = Vector2.new(x + 105, y + 6)
+    GUI.Drawings.Subtitle.Visible = true
+    
+    local tabY = y + titleH
+    local tabWidth = menuW / #Tabs
+    
+    for i, tab in ipairs(Tabs) do
+        local tabX = x + (i - 1) * tabWidth
+        local isSelected = (i == Config.MENU_Tab)
+        
+        GUI.Drawings.Tabs[i].Bg.Position = Vector2.new(tabX, tabY)
+        GUI.Drawings.Tabs[i].Bg.Size = Vector2.new(tabWidth, tabH)
+        GUI.Drawings.Tabs[i].Bg.Color = isSelected and Palette.MenuTabActive or Palette.MenuTab
+        GUI.Drawings.Tabs[i].Bg.Transparency = isSelected and 0.3 or 0.7
+        GUI.Drawings.Tabs[i].Bg.Visible = true
+        
+        GUI.Drawings.Tabs[i].Label.Position = Vector2.new(tabX + tabWidth/2, tabY + 8)
+        GUI.Drawings.Tabs[i].Label.Text = tab.name
+        GUI.Drawings.Tabs[i].Label.Color = isSelected and Color3.new(1, 1, 1) or Palette.MenuTextDim
+        GUI.Drawings.Tabs[i].Label.Visible = true
+        
+        if isSelected then
+            GUI.Drawings.Tabs[i].Indicator.Position = Vector2.new(tabX, tabY + tabH - 2)
+            GUI.Drawings.Tabs[i].Indicator.Size = Vector2.new(tabWidth, 2)
+            GUI.Drawings.Tabs[i].Indicator.Visible = true
+        else
+            GUI.Drawings.Tabs[i].Indicator.Visible = false
+        end
+    end
+    
+    local contentY = y + titleH + tabH + 6
+    local contentH = menuH - titleH - tabH - footerH - 12
+    local itemH = 26
+    local itemSpacing = 2
+    
+    GUI.ContentBounds = {x = x + 8, y = contentY, w = menuW - 16 - scrollbarW - 4, h = contentH}
+    
+    local tabItemCount = 0
+    for _, item in ipairs(MenuItems) do
+        if item.tab == Config.MENU_Tab then tabItemCount = tabItemCount + 1 end
+    end
+    local totalContentH = tabItemCount * (itemH + itemSpacing)
+    GUI.MaxScroll = math.max(0, totalContentH - contentH)
+    GUI.ScrollOffset = math.clamp(GUI.ScrollOffset, 0, GUI.MaxScroll)
+    
+    local scrollbarX = x + menuW - scrollbarW - 6
+    local scrollbarY = contentY
+    local scrollbarH = contentH
+    
+    GUI.Drawings.ScrollbarBg.Position = Vector2.new(scrollbarX, scrollbarY)
+    GUI.Drawings.ScrollbarBg.Size = Vector2.new(scrollbarW, scrollbarH)
+    GUI.Drawings.ScrollbarBg.Transparency = 0.7
+    GUI.Drawings.ScrollbarBg.Visible = true
+    
+    GUI.ScrollbarBounds = {x = scrollbarX, y = scrollbarY, w = scrollbarW, h = scrollbarH}
+    
+    if GUI.MaxScroll > 0 then
+        local thumbH = math.max(25, scrollbarH * (contentH / totalContentH))
+        local thumbY = scrollbarY + (GUI.ScrollOffset / GUI.MaxScroll) * (scrollbarH - thumbH)
+        GUI.Drawings.ScrollbarThumb.Position = Vector2.new(scrollbarX, thumbY)
+        GUI.Drawings.ScrollbarThumb.Size = Vector2.new(scrollbarW, thumbH)
+        GUI.Drawings.ScrollbarThumb.Color = Palette.MenuScrollbar
+        GUI.Drawings.ScrollbarThumb.Visible = true
+        GUI.ScrollbarBounds.thumbH = thumbH
+    else
+        GUI.Drawings.ScrollbarThumb.Visible = false
+        GUI.ScrollbarBounds.thumbH = 0
+    end
+    
+    GUI.ItemPositions = {}
+    local itemIdx = 0
+    local currentTabItemIdx = 0
+    
+    for _, menuItem in ipairs(MenuItems) do
+        if menuItem.tab == Config.MENU_Tab then
+            currentTabItemIdx = currentTabItemIdx + 1
+            
+            local rawY = contentY + (currentTabItemIdx - 1) * (itemH + itemSpacing) - GUI.ScrollOffset
+            local isVisible = rawY >= contentY - 2 and rawY <= contentY + contentH - itemH + 5
+            
+            if isVisible then
+                itemIdx = itemIdx + 1
+                if itemIdx > 20 then break end
+                
+                local itemY = rawY
+                local item = GUI.Drawings.Items[itemIdx]
+                
+                GUI.ItemPositions[itemIdx] = {x = x + 8, y = itemY, w = menuW - 16 - scrollbarW - 4, h = itemH, idx = currentTabItemIdx}
+                
+                item.Bg.Position = Vector2.new(x + 8, itemY)
+                item.Bg.Size = Vector2.new(menuW - 16 - scrollbarW - 4, itemH - 2)
+                item.Bg.Color = Palette.MenuPanel
+                item.Bg.Transparency = 0.9
+                item.Bg.Visible = true
+                
+                item.Label.Position = Vector2.new(x + 14, itemY + 5)
+                item.Label.Text = menuItem.name
+                item.Label.Visible = true
+                
+                if menuItem.type == "label" then
+                    item.Label.Color = Palette.MenuAccent
+                    item.Bg.Color = Palette.MenuBg
+                    item.Value.Visible = false
+                    item.Toggle.Visible = false
+                    item.ToggleKnob.Visible = false
+                    item.SliderBg.Visible = false
+                    item.SliderFill.Visible = false
+                elseif menuItem.type == "toggle" then
+                    item.Label.Color = Palette.MenuText
+                    local isOn = Config[menuItem.key]
+                    local toggleX = x + menuW - 50 - scrollbarW - 4
+                    local toggleY = itemY + 5
+                    
+                    item.Toggle.Position = Vector2.new(toggleX, toggleY)
+                    item.Toggle.Size = Vector2.new(28, 14)
+                    item.Toggle.Color = isOn and Palette.MenuOn or Palette.MenuOff
+                    item.Toggle.Filled = true
+                    item.Toggle.Visible = true
+                    
+                    local knobX = isOn and (toggleX + 28 - 12) or (toggleX + 2)
+                    item.ToggleKnob.Position = Vector2.new(knobX, toggleY + 2)
+                    item.ToggleKnob.Size = Vector2.new(10, 10)
+                    item.ToggleKnob.Color = Color3.new(1, 1, 1)  
+                    item.ToggleKnob.Filled = true
+                    item.ToggleKnob.Visible = true
+                    
+                    item.Value.Visible = false
+                    item.SliderBg.Visible = false
+                    item.SliderFill.Visible = false
+                elseif menuItem.type == "slider" then
+                    item.Label.Color = Palette.MenuText
+                    local val = Config[menuItem.key]
+                    local pct = (val - menuItem.min) / (menuItem.max - menuItem.min)
+                    local valText = menuItem.step < 1 and string.format("%.2f", val) or tostring(math.floor(val))
+                    
+                    item.Value.Position = Vector2.new(x + menuW - 50 - scrollbarW, itemY + 5)
+                    item.Value.Text = valText
+                    item.Value.Color = Palette.MenuTextDim
+                    item.Value.Visible = true
+                    
+                    local sliderW = menuW - 75 - scrollbarW
+                    item.SliderBg.Position = Vector2.new(x + 14, itemY + itemH - 6)
+                    item.SliderBg.Size = Vector2.new(sliderW, 3)
+                    item.SliderBg.Color = Palette.MenuOff
+                    item.SliderBg.Filled = true
+                    item.SliderBg.Visible = true
+                    
+                    item.SliderFill.Position = Vector2.new(x + 14, itemY + itemH - 6)
+                    item.SliderFill.Size = Vector2.new(sliderW * pct, 3)
+                    item.SliderFill.Color = Palette.MenuAccent
+                    item.SliderFill.Filled = true
+                    item.SliderFill.Visible = true
+                    
+                    item.Toggle.Visible = false
+                    item.ToggleKnob.Visible = false
+                elseif menuItem.type == "dropdown" then
+                    item.Label.Color = Palette.MenuText
+                    local currentVal = Config[menuItem.key]
+                    
+                    item.Value.Position = Vector2.new(x + menuW - 75 - scrollbarW, itemY + 5)
+                    item.Value.Text = "[" .. tostring(currentVal) .. "]"
+                    item.Value.Color = Palette.MenuAccent
+                    item.Value.Visible = true
+                    
+                    item.Toggle.Visible = false
+                    item.ToggleKnob.Visible = false
+                    item.SliderBg.Visible = false
+                    item.SliderFill.Visible = false
+                elseif menuItem.type == "keybind" then
+                    item.Label.Color = Palette.MenuText
+                    local keyCode = Config[menuItem.key]
+                    local keyText = GUI.EditingKeybind == menuItem.key and "[...]" or ("[" .. GetKeyName(keyCode) .. "]")
+                    
+                    item.Value.Position = Vector2.new(x + menuW - 60 - scrollbarW, itemY + 5)
+                    item.Value.Text = keyText
+                    item.Value.Color = GUI.EditingKeybind == menuItem.key and Palette.MenuAccent or Palette.MenuText
+                    item.Value.Visible = true
+                    
+                    item.Toggle.Visible = false
+                    item.ToggleKnob.Visible = false
+                    item.SliderBg.Visible = false
+                    item.SliderFill.Visible = false
+                elseif menuItem.type == "color" then
+                    item.Label.Color = Palette.MenuText
+                    local col = Config[menuItem.key] or Color3.fromRGB(220, 60, 60)
+                    
+                    
+                    local swatchX = x + menuW - 50 - scrollbarW - 4
+                    local swatchY = itemY + 4
+                    
+                    
+                    item.SliderBg.Position = Vector2.new(swatchX - 1, swatchY - 1)
+                    item.SliderBg.Size = Vector2.new(34, 18)
+                    item.SliderBg.Color = State.ColorPickerOpen and Palette.MenuAccent or Palette.MenuBorder
+                    item.SliderBg.Filled = true
+                    item.SliderBg.Visible = true
+                    
+                   
+                    item.SliderFill.Position = Vector2.new(swatchX, swatchY)
+                    item.SliderFill.Size = Vector2.new(32, 16)
+                    item.SliderFill.Color = col
+                    item.SliderFill.Filled = true
+                    item.SliderFill.Visible = true
+                    
+                    item.Value.Visible = false
+                    item.Toggle.Visible = false
+                    item.ToggleKnob.Visible = false
+                end
+            end
+        end
+    end
+    
+    for i = itemIdx + 1, 20 do
+        local item = GUI.Drawings.Items[i]
+        item.Bg.Visible = false
+        item.Label.Visible = false
+        item.Value.Visible = false
+        item.Toggle.Visible = false
+        item.ToggleKnob.Visible = false
+        item.SliderBg.Visible = false
+        item.SliderFill.Visible = false
+    end
+    
+    if Config.MENU_Tab == 1 then
+        local previewX = x + menuW + 10
+        local previewY = y
+        
+        GUI.Drawings.PreviewBg.Position = Vector2.new(previewX, previewY)
+        GUI.Drawings.PreviewBg.Size = Vector2.new(previewW, previewH)
+        GUI.Drawings.PreviewBg.Transparency = 0.96
+        GUI.Drawings.PreviewBg.Visible = true
+        
+        GUI.Drawings.PreviewBorder.Position = Vector2.new(previewX, previewY)
+        GUI.Drawings.PreviewBorder.Size = Vector2.new(previewW, previewH)
+        GUI.Drawings.PreviewBorder.Color = Palette.PreviewBorder
+        GUI.Drawings.PreviewBorder.Visible = true
+        
+        GUI.Drawings.PreviewTitle.Position = Vector2.new(previewX + previewW/2, previewY + 8)
+        GUI.Drawings.PreviewTitle.Visible = true
+        
+        GUI.RenderPreview(previewX, previewY + 20, previewW, previewH - 20)
+    else
+        GUI.Drawings.PreviewBg.Visible = false
+        GUI.Drawings.PreviewBorder.Visible = false
+        GUI.Drawings.PreviewTitle.Visible = false
+        for _, l in ipairs(GUI.Preview.Box) do l.Visible = false end
+        for _, l in ipairs(GUI.Preview.Corners) do l.Visible = false end
+        if GUI.Preview.BoxFill then GUI.Preview.BoxFill.Visible = false end
+        GUI.Preview.Name.Visible = false
+        GUI.Preview.Dist.Visible = false
+        GUI.Preview.Tracer.Visible = false
+        if GUI.Preview.Snapline then GUI.Preview.Snapline.Visible = false end
+        if GUI.Preview.LookLine then GUI.Preview.LookLine.Visible = false end
+        if GUI.Preview.VelLine then GUI.Preview.VelLine.Visible = false end
+        if GUI.Preview.VelArrow then GUI.Preview.VelArrow.Visible = false end
+        for _, part in pairs(GUI.Preview.Figure) do
+            if part and part.Visible ~= nil then part.Visible = false end
+        end
+    end
+    
+    local ping = 0
+    pcall(function()
+        ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+    end)
+    GUI.Drawings.Footer.Text = "Ping: " .. ping .. "ms"
+    GUI.Drawings.Footer.Position = Vector2.new(x + 10, y + menuH - footerH + 5)
+    GUI.Drawings.Footer.Visible = true
+    
+    GUI.Drawings.Credit.Position = Vector2.new(x + menuW - 85, y + menuH - footerH + 6)
+    GUI.Drawings.Credit.Visible = true
+    
+   
+    if State.ColorPickerOpen and GUI.Drawings.ColorPicker then
+        local cp = GUI.Drawings.ColorPicker
+        local cpW, cpH = 180, 220
+        local titleH = 24
+        
+     
+        if not GUI.ColorPickerPos then
+            GUI.ColorPickerPos = Vector2.new(x + menuW + 10, y + menuH/2 - cpH/2)
+        end
+        local cpX, cpY = GUI.ColorPickerPos.X, GUI.ColorPickerPos.Y
+        
+       
+        cp.Bg.Position = Vector2.new(cpX, cpY)
+        cp.Bg.Size = Vector2.new(cpW, cpH)
+        cp.Bg.Visible = true
+        
+        cp.Border.Position = Vector2.new(cpX, cpY)
+        cp.Border.Size = Vector2.new(cpW, cpH)
+        cp.Border.Visible = true
+        
+       
+        cp.TitleBar.Position = Vector2.new(cpX, cpY)
+        cp.TitleBar.Size = Vector2.new(cpW, titleH)
+        cp.TitleBar.Visible = true
+        
+        cp.Title.Position = Vector2.new(cpX + cpW/2, cpY + 6)
+        cp.Title.Visible = true
+        
+        
+        local satValX, satValY = cpX + 10, cpY + titleH + 8
+        local satValW, satValH = cpW - 40, 100
+        
+        cp.SatValBox.Position = Vector2.new(satValX, satValY)
+        cp.SatValBox.Size = Vector2.new(satValW, satValH)
+        cp.SatValBox.Color = HSVtoRGB(GUI.ColorPickerHue, 1, 1)
+        cp.SatValBox.Visible = true
+        
+        
+        local selX = satValX + GUI.ColorPickerSat * satValW
+        local selY = satValY + (1 - GUI.ColorPickerVal) * satValH
+        cp.Selector.Position = Vector2.new(selX, selY)
+        cp.Selector.Visible = true
+        
+       
+        local hueX, hueY = cpX + cpW - 25, cpY + titleH + 8
+        local hueW, hueH = 15, 100
+        
+        cp.HueBar.Position = Vector2.new(hueX, hueY)
+        cp.HueBar.Size = Vector2.new(hueW, hueH)
+        cp.HueBar.Color = HSVtoRGB(GUI.ColorPickerHue, 1, 1)
+        cp.HueBar.Visible = true
+        
+      
+        local hueSelectorY = hueY + GUI.ColorPickerHue * hueH
+        cp.HueSelector.Position = Vector2.new(hueX - 2, hueSelectorY - 2)
+        cp.HueSelector.Size = Vector2.new(hueW + 4, 4)
+        cp.HueSelector.Visible = true
+        
+        
+        local previewY = cpY + titleH + satValH + 18
+        local currentColor = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+        
+        cp.Preview.Position = Vector2.new(cpX + 10, previewY)
+        cp.Preview.Size = Vector2.new(cpW - 20, 25)
+        cp.Preview.Color = currentColor
+        cp.Preview.Visible = true
+        
+        cp.PreviewBorder.Position = Vector2.new(cpX + 10, previewY)
+        cp.PreviewBorder.Size = Vector2.new(cpW - 20, 25)
+        cp.PreviewBorder.Visible = true
+        
+        
+        local btnY = cpY + cpH - 28
+        cp.CloseBtn.Position = Vector2.new(cpX + 10, btnY)
+        cp.CloseBtn.Size = Vector2.new(cpW - 20, 20)
+        cp.CloseBtn.Visible = true
+        
+        cp.CloseTxt.Position = Vector2.new(cpX + cpW/2, btnY + 4)
+        cp.CloseTxt.Visible = true
+        
+        
+        GUI.ColorPickerBounds = {
+            x = cpX, y = cpY, w = cpW, h = cpH,
+            titleBar = {x = cpX, y = cpY, w = cpW, h = titleH},
+            satVal = {x = satValX, y = satValY, w = satValW, h = satValH},
+            hue = {x = hueX, y = hueY, w = hueW, h = hueH},
+            closeBtn = {x = cpX + 10, y = btnY, w = cpW - 20, h = 20}
+        }
+    else
+        
+        if GUI.Drawings.ColorPicker then
+            local cp = GUI.Drawings.ColorPicker
+            cp.Bg.Visible = false
+            cp.Border.Visible = false
+            cp.TitleBar.Visible = false
+            cp.Title.Visible = false
+            cp.SatValBox.Visible = false
+            cp.Selector.Visible = false
+            cp.HueBar.Visible = false
+            cp.HueSelector.Visible = false
+            cp.Preview.Visible = false
+            cp.PreviewBorder.Visible = false
+            cp.CloseBtn.Visible = false
+            cp.CloseTxt.Visible = false
+        end
+    end
+end
+
+local Unload
+
+local function HandleInput(input, gameProcessed)
+    if State.Unloaded then return end
+    
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Config.KEY_Panic then
+            if Unload then
+                Unload()
+            end
+            return
+        end
+    end
+    
+    if GUI.EditingKeybind and input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode ~= Enum.KeyCode.Escape then
+            Config[GUI.EditingKeybind] = input.KeyCode
+        end
+        GUI.EditingKeybind = nil
+        return
+    end
+    
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Config.KEY_Menu and not gameProcessed then
+            Config.MENU_Open = not Config.MENU_Open
+            GUI.ScrollOffset = 0
+            return
+        end
+    end
+    
+    if input.UserInputType == Config.AIM_Key then
+        State.Aiming = true
+    end
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and Config.MENU_Open then
+        local mouse = UserInputService:GetMouseLocation()
+        local menuW, menuH = 320, 400
+        local titleH = 24
+        local tabH = 28
+        local footerH = 24
+        local scrollbarW = 5
+        local x, y = GUI.Position.X, GUI.Position.Y
+        
+        
+        if State.ColorPickerOpen and GUI.ColorPickerBounds then
+            local cpb = GUI.ColorPickerBounds
+            local inPicker = mouse.X >= cpb.x and mouse.X <= cpb.x + cpb.w and
+                            mouse.Y >= cpb.y and mouse.Y <= cpb.y + cpb.h
+            
+            if inPicker then
+                
+                local tb = cpb.titleBar
+                if tb and mouse.X >= tb.x and mouse.X <= tb.x + tb.w and
+                   mouse.Y >= tb.y and mouse.Y <= tb.y + tb.h then
+                    GUI.ColorPickerDragging = "move"
+                    GUI.ColorPickerDragOffset = mouse - GUI.ColorPickerPos
+                    return
+                end
+                
+                
+                local btn = cpb.closeBtn
+                if mouse.X >= btn.x and mouse.X <= btn.x + btn.w and
+                   mouse.Y >= btn.y and mouse.Y <= btn.y + btn.h then
+                   
+                    local col = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                    if GUI.EditingColorKey then
+                        Config[GUI.EditingColorKey] = col
+                        if GUI.EditingColorKey == "MISC_MenuColor" then
+                            Palette.MenuAccent = col
+                            Palette.RadarBorder = col
+                            Palette.PreviewBorder = col
+                            Palette.MenuScrollbar = col
+                            Palette.MenuTabActive = col
+                        end
+                    end
+                    State.ColorPickerOpen = false
+                    GUI.ColorPickerDragging = nil
+                    GUI.ColorPickerPos = nil
+                    GUI.EditingColorKey = nil
+                    return
+                end
+                
+                
+                local sv = cpb.satVal
+                if mouse.X >= sv.x and mouse.X <= sv.x + sv.w and
+                   mouse.Y >= sv.y and mouse.Y <= sv.y + sv.h then
+                    GUI.ColorPickerDragging = "satval"
+                    GUI.ColorPickerSat = math.clamp((mouse.X - sv.x) / sv.w, 0, 1)
+                    GUI.ColorPickerVal = math.clamp(1 - (mouse.Y - sv.y) / sv.h, 0, 1)
+                    local col = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                    if GUI.EditingColorKey then
+                        Config[GUI.EditingColorKey] = col
+                        if GUI.EditingColorKey == "MISC_MenuColor" then
+                            Palette.MenuAccent = col
+                            Palette.RadarBorder = col
+                            Palette.PreviewBorder = col
+                            Palette.MenuScrollbar = col
+                            Palette.MenuTabActive = col
+                        end
+                    end
+                    return
+                end
+                
+               
+                local hb = cpb.hue
+                if mouse.X >= hb.x and mouse.X <= hb.x + hb.w and
+                   mouse.Y >= hb.y and mouse.Y <= hb.y + hb.h then
+                    GUI.ColorPickerDragging = "hue"
+                    GUI.ColorPickerHue = math.clamp((mouse.Y - hb.y) / hb.h, 0, 1)
+                    Config.ESP_CustomColor = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                    return
+                end
+                
+                return 
+            else
+               
+                Config.ESP_CustomColor = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                State.ColorPickerOpen = false
+                GUI.ColorPickerDragging = nil
+                GUI.ColorPickerPos = nil
+            end
+        end
+        
+        if mouse.X >= x and mouse.X <= x + menuW and mouse.Y >= y and mouse.Y <= y + titleH then
+            GUI.Dragging = true
+            GUI.DragOffset = mouse - GUI.Position
+            return
+        end
+        
+        local sb = GUI.ScrollbarBounds
+        if sb and sb.x and sb.thumbH and sb.thumbH > 0 and
+           mouse.X >= sb.x and mouse.X <= sb.x + sb.w + 4 and
+           mouse.Y >= sb.y and mouse.Y <= sb.y + sb.h then
+            GUI.ScrollbarDragging = true
+            local scrollbarTrack = sb.h - sb.thumbH
+            if scrollbarTrack > 0 then
+                local relY = math.clamp(mouse.Y - sb.y - sb.thumbH/2, 0, scrollbarTrack)
+                GUI.ScrollOffset = (relY / scrollbarTrack) * GUI.MaxScroll
+            end
+            return
+        end
+        
+        local tabWidth = menuW / #Tabs
+        for i = 1, #Tabs do
+            local tabX = x + (i - 1) * tabWidth
+            if mouse.X >= tabX and mouse.X <= tabX + tabWidth and
+               mouse.Y >= y + titleH and mouse.Y <= y + titleH + tabH then
+                Config.MENU_Tab = i
+                GUI.ScrollOffset = 0
+                return
+            end
+        end
+        
+        local contentY = y + titleH + tabH + 6
+        local contentH = menuH - titleH - tabH - footerH - 12
+        local itemH = 26
+        local itemSpacing = 2
+        local currentTabItemIdx = 0
+        
+        for _, menuItem in ipairs(MenuItems) do
+            if menuItem.tab == Config.MENU_Tab then
+                currentTabItemIdx = currentTabItemIdx + 1
+                local rawY = contentY + (currentTabItemIdx - 1) * (itemH + itemSpacing) - GUI.ScrollOffset
+                
+                if rawY >= contentY - 2 and rawY <= contentY + contentH - itemH + 5 then
+                    if mouse.X >= x + 8 and mouse.X <= x + menuW - scrollbarW - 12 and
+                       mouse.Y >= rawY and mouse.Y <= rawY + itemH then
+                        
+                        if menuItem.type == "toggle" then
+                            Config[menuItem.key] = not Config[menuItem.key]
+                            if menuItem.key == "MISC_NoRecoil" or menuItem.key == "MISC_NoSway" or 
+                               menuItem.key == "MISC_NoSpread" or menuItem.key == "MISC_NoCamShake" then
+                                ToggleGunMods()
+                            end
+                        elseif menuItem.type == "color" then
+                            State.ColorPickerOpen = true
+                            GUI.EditingColorKey = menuItem.key
+                            local h, s, v = RGBtoHSV(Config[menuItem.key])
+                            GUI.ColorPickerHue = h
+                            GUI.ColorPickerSat = s
+                            GUI.ColorPickerVal = v
+                            return
+                        elseif menuItem.type == "dropdown" then
+                            local opts = menuItem.options
+                            local current = Config[menuItem.key]
+                            local idx = 1
+                            for i, opt in ipairs(opts) do
+                                if opt == current then idx = i break end
+                            end
+                            idx = idx + 1
+                            if idx > #opts then idx = 1 end
+                            Config[menuItem.key] = opts[idx]
+                        elseif menuItem.type == "slider" then
+                            local sliderX = x + 14
+                            local sliderW = menuW - 75 - scrollbarW
+                            local pct = math.clamp((mouse.X - sliderX) / sliderW, 0, 1)
+                            local val = menuItem.min + pct * (menuItem.max - menuItem.min)
+                            val = math.floor(val / menuItem.step + 0.5) * menuItem.step
+                            Config[menuItem.key] = math.clamp(val, menuItem.min, menuItem.max)
+                        elseif menuItem.type == "keybind" then
+                            GUI.EditingKeybind = menuItem.key
+                        end
+                        return
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function HandleInputEnd(input)
+    if State.Unloaded then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        GUI.Dragging = false
+        GUI.ScrollbarDragging = false
+        GUI.ColorPickerDragging = nil
+    end
+    
+    if input.UserInputType == Config.AIM_Key then
+        State.Aiming = false
+    end
+end
+
+local function HandleInputChanged(input)
+    if State.Unloaded then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseWheel and Config.MENU_Open then
+        local mouse = UserInputService:GetMouseLocation()
+        local x, y = GUI.Position.X, GUI.Position.Y
+        local w, h = 320, 400
+        
+        if mouse.X >= x and mouse.X <= x + w and mouse.Y >= y and mouse.Y <= y + h then
+            local scrollAmount = -input.Position.Z * 40
+            GUI.ScrollOffset = math.clamp(GUI.ScrollOffset + scrollAmount, 0, GUI.MaxScroll)
+        end
+    end
+    
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mouse = UserInputService:GetMouseLocation()
+        
+        
+        if GUI.ScrollbarDragging then
+            local sb = GUI.ScrollbarBounds
+            if sb and sb.thumbH and sb.thumbH > 0 then
+                local scrollbarTrack = sb.h - sb.thumbH
+                if scrollbarTrack > 0 then
+                    local relY = math.clamp(mouse.Y - sb.y - sb.thumbH/2, 0, scrollbarTrack)
+                    GUI.ScrollOffset = (relY / scrollbarTrack) * GUI.MaxScroll
+                end
+            end
+        end
+        
+       
+        if GUI.ColorPickerDragging and GUI.ColorPickerBounds then
+            local cpb = GUI.ColorPickerBounds
+            
+            if GUI.ColorPickerDragging == "move" then
+                
+                if GUI.ColorPickerDragOffset then
+                    GUI.ColorPickerPos = mouse - GUI.ColorPickerDragOffset
+                end
+            elseif GUI.ColorPickerDragging == "satval" then
+                local sv = cpb.satVal
+                GUI.ColorPickerSat = math.clamp((mouse.X - sv.x) / sv.w, 0, 1)
+                GUI.ColorPickerVal = math.clamp(1 - (mouse.Y - sv.y) / sv.h, 0, 1)
+                local col = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                if GUI.EditingColorKey then
+                    Config[GUI.EditingColorKey] = col
+                    if GUI.EditingColorKey == "MISC_MenuColor" then
+                        Palette.MenuAccent = col
+                        Palette.RadarBorder = col
+                        Palette.PreviewBorder = col
+                    end
+                end
+            elseif GUI.ColorPickerDragging == "hue" then
+                local hb = cpb.hue
+                GUI.ColorPickerHue = math.clamp((mouse.Y - hb.y) / hb.h, 0, 1)
+                local col = HSVtoRGB(GUI.ColorPickerHue, GUI.ColorPickerSat, GUI.ColorPickerVal)
+                if GUI.EditingColorKey then
+                    Config[GUI.EditingColorKey] = col
+                    if GUI.EditingColorKey == "MISC_MenuColor" then
+                        Palette.MenuAccent = col
+                        Palette.RadarBorder = col
+                        Palette.PreviewBorder = col
+                    end
+                end
+            end
+        end
+    end
+end
+
+local GunModConnection = nil
+
+local function ApplyGunModsFrame()
+    if Config.MISC_NoRecoil or Config.MISC_NoSway or Config.MISC_NoSpread or Config.MISC_NoCamShake then
+        for _, v in pairs(getgc(true)) do
+            if type(v) == "table" then
+                if Config.MISC_NoRecoil and rawget(v, "recoil") then v.recoil = 0 end
+                if Config.MISC_NoSway and rawget(v, "sway") then v.sway = 0 end
+                if Config.MISC_NoSpread and rawget(v, "spread") then v.spread = 0 end
+                if Config.MISC_NoCamShake and rawget(v, "shake") then v.shake = 0 end
+            end
+        end
+    end
+end
+
+local function ToggleGunMods()
+    local anyEnabled = Config.MISC_NoRecoil or Config.MISC_NoSway or Config.MISC_NoSpread or Config.MISC_NoCamShake
+    if anyEnabled then
+        if not GunModConnection then
+            GunModConnection = RunService.RenderStepped:Connect(ApplyGunModsFrame)
+        end
+    else
+        if GunModConnection then
+            GunModConnection:Disconnect()
+            GunModConnection = nil
+        end
+    end
+end
+
+local Noclip = {
+    Initialized = false,
+    SpawnConnection = nil
+}
+
+-- Noclip code credited to /u/transdimensional on scriptblox.com
+
+function Noclip.DisableCollision(model)
+    for _, part in pairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+function Noclip.Init()
+    if Noclip.Initialized then return end
+    Noclip.Initialized = true
+    
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name:find("soldier") then
+            Noclip.DisableCollision(obj)
+        end
+    end
+    
+    Noclip.SpawnConnection = Workspace.DescendantAdded:Connect(function(obj)
+        if not Config.MISC_Noclip then return end
+        task.wait(0.3)
+        if obj.Name:find("soldier") then
+            repeat task.wait() until obj:FindFirstChild("HumanoidRootPart")
+            Noclip.DisableCollision(obj)
+        end
+    end)
+    Connections.Noclip = Noclip.SpawnConnection
+end
+
+function Noclip.Step()
+    if not Config.MISC_Noclip then return end
+    if not Noclip.Initialized then
+        Noclip.Init()
+    end
+end
+
+--[[
+    OPTIONAL: Alternative noclip implementation using interval based scanning. Differs from transdimensionals take
+    If you prefer this approach over the original, replace the Noclip table and functions above with this:
+    
+    local Noclip = {
+        Handled = {},
+        ScanTick = 0,
+        SpawnWatcher = nil
+    }
+
+    function Noclip.Strip(model)
+        if Noclip.Handled[model] then return end
+        local children = model:GetDescendants()
+        for idx = 1, #children do
+            local obj = children[idx]
+            if obj:IsA("BasePart") then
+                obj.CanCollide = false
+            end
+        end
+        Noclip.Handled[model] = true
+    end
+
+    function Noclip.Sweep()
+        local objects = Workspace:GetDescendants()
+        for idx = 1, #objects do
+            local obj = objects[idx]
+            if obj:IsA("Model") and obj.Name:match("soldier") then
+                if obj:FindFirstChild("HumanoidRootPart") and not Noclip.Handled[obj] then
+                    Noclip.Strip(obj)
+                end
+            end
+        end
+    end
+
+    function Noclip.OnSpawn(obj)
+        if not Config.MISC_Noclip then return end
+        if not obj:IsA("Model") then return end
+        if not obj.Name:match("soldier") then return end
+        task.defer(function()
+            local hrp = obj:WaitForChild("HumanoidRootPart", 3)
+            if hrp and Config.MISC_Noclip then
+                Noclip.Strip(obj)
+            end
+        end)
+    end
+
+    function Noclip.Step()
+        if not Config.MISC_Noclip then return end
+        local now = tick()
+        if now - Noclip.ScanTick < 0.4 then return end
+        Noclip.ScanTick = now
+        Noclip.Sweep()
+        if not Noclip.SpawnWatcher then
+            Noclip.SpawnWatcher = Workspace.DescendantAdded:Connect(Noclip.OnSpawn)
+            Connections.Noclip = Noclip.SpawnWatcher
+        end
+    end
+    
+    And update unload cleanup to:
+    if Noclip.SpawnWatcher then
+        pcall(function() Noclip.SpawnWatcher:Disconnect() end)
+        Noclip.SpawnWatcher = nil
+    end
+    Noclip.Handled = {}
+]]
+
+local function ApplyMiscSettings()
+    if Config.MISC_FullBright then
+        Lighting.Brightness = 2
+        Lighting.Ambient = Color3.new(1, 1, 1)
+    else
+        Lighting.Brightness = OriginalLighting.Brightness
+        Lighting.Ambient = OriginalLighting.Ambient
+    end
+end
+
+local function MainLoop()
+    if State.Unloaded then 
+        if Connections.Render then
+            pcall(function() Connections.Render:Disconnect() end)
+            Connections.Render = nil
+        end
+        return 
+    end
+    
+
+    if Config.ESP_Rainbow then
+        State.RainbowHue = (State.RainbowHue + 0.002) % 1
+    end
+    
+    local cam = Workspace.CurrentCamera
+    if not cam then return end
+    
+    local screenSize = cam.ViewportSize
+    local screenCenter = Vector2.new(screenSize.X/2, screenSize.Y/2)
+    
+    pcall(ApplyMiscSettings)
+    pcall(Noclip.Step)
+    
+    pcall(function() ESP.Step(cam, screenSize, screenCenter) end)
+    pcall(function() Chams.Step() end)
+    pcall(function() Radar.Step(cam) end)
+    pcall(function() Aimbot.Step(cam, screenCenter) end)
+    pcall(function() GUI.Render() end)
+end
+
+Unload = function()
+    if State.Unloaded then return end
+    State.Unloaded = true
+    Config.MENU_Open = false
+    
+    if GunModConnection then
+        pcall(function() GunModConnection:Disconnect() end)
+        GunModConnection = nil
+    end
+    
+    if Noclip.SpawnConnection then
+        pcall(function() Noclip.SpawnConnection:Disconnect() end)
+        Noclip.SpawnConnection = nil
+    end
+    Noclip.Initialized = false
+    
+    for name, conn in pairs(Connections) do
+        pcall(function() 
+            if conn and conn.Disconnect then
+                conn:Disconnect() 
+            end
+        end)
+        Connections[name] = nil
+    end
+    
+    for model, esp in pairs(ESP.cache) do 
+        pcall(function() ESP.Hide(esp) end)
+        pcall(function() ESP.Destroy(esp) end)
+    end
+    ESP.cache = {}
+    
+    pcall(function() Chams.ClearAll() end)
+    
+    pcall(function()
+        if Radar.bg then Radar.bg:Remove() end
+        if Radar.border then Radar.border:Remove() end
+        if Radar.cross1 then Radar.cross1:Remove() end
+        if Radar.cross2 then Radar.cross2:Remove() end
+        if Radar.center then Radar.center:Remove() end
+        if Radar.dots then
+            for _, d in ipairs(Radar.dots) do 
+                if d then d:Remove() end
+            end
+        end
+    end)
+    
+    pcall(function() 
+        if Aimbot.fov then Aimbot.fov:Remove() end
+    end)
+    
+    pcall(function()
+        for name, drawing in pairs(GUI.Drawings) do
+            if type(drawing) == "table" then
+                for _, subDrawing in pairs(drawing) do
+                    if type(subDrawing) == "table" then
+                        for _, d in pairs(subDrawing) do
+                            if d and d.Remove then d:Remove() end
+                        end
+                    elseif subDrawing and subDrawing.Remove then
+                        subDrawing:Remove()
+                    end
+                end
+            elseif drawing and drawing.Remove then
+                drawing:Remove()
+            end
+        end
+    end)
+    
+    pcall(function()
+        if GUI.Preview.Box then
+            for _, l in ipairs(GUI.Preview.Box) do if l then l:Remove() end end
+        end
+        if GUI.Preview.Corners then
+            for _, l in ipairs(GUI.Preview.Corners) do if l then l:Remove() end end
+        end
+        if GUI.Preview.BoxFill then GUI.Preview.BoxFill:Remove() end
+        if GUI.Preview.Name then GUI.Preview.Name:Remove() end
+        if GUI.Preview.Dist then GUI.Preview.Dist:Remove() end
+        if GUI.Preview.Tracer then GUI.Preview.Tracer:Remove() end
+        if GUI.Preview.Snapline then GUI.Preview.Snapline:Remove() end
+        if GUI.Preview.LookLine then GUI.Preview.LookLine:Remove() end
+        if GUI.Preview.VelLine then GUI.Preview.VelLine:Remove() end
+        if GUI.Preview.VelArrow then GUI.Preview.VelArrow:Remove() end
+        if GUI.Preview.Figure then
+            for _, part in pairs(GUI.Preview.Figure) do 
+                if part and part.Remove then part:Remove() end
+            end
+        end
+    end)
+    
+    pcall(function()
+        Lighting.Brightness = OriginalLighting.Brightness
+        Lighting.Ambient = OriginalLighting.Ambient
+        Lighting.FogEnd = OriginalLighting.FogEnd
+    end)
+end
+
+local function Init()
+    GUI.Create()
+    
+    Connections.Input = UserInputService.InputBegan:Connect(HandleInput)
+    Connections.InputEnd = UserInputService.InputEnded:Connect(HandleInputEnd)
+    Connections.InputChanged = UserInputService.InputChanged:Connect(HandleInputChanged)
+    Connections.Render = RunService.RenderStepped:Connect(MainLoop)
+    
+    Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
+       
+    end)
+end
+
+Init()
+

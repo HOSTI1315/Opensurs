@@ -1,0 +1,184 @@
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- turn off Roblox default notifications
+LocalPlayer.PlayerGui.Notifications.Normal.Visible = false
+
+-- feature states
+local AutoFarm = false
+local AutoStar = false
+local AutoSword = false
+local AutoFruit = false
+local AutoDragon = false
+local AutoSaiyan = false
+local AutoRank = false
+local AutoHaki = false
+local AutoPirate = false
+local AutoReiatsu = false
+local AutoSpirit = false
+local AutoZanpakuto = false
+local AutoCurse = false
+local AutoCurseProgress = false
+local AutoDemonArts = false
+local Star = 1
+
+local Stars = {}
+for i = 1,20 do
+    table.insert(Stars,i)
+end
+
+-- load Syde UI
+local syde = loadstring(game:HttpGet("https://raw.githubusercontent.com/essencejs/syde/refs/heads/main/source", true))()
+
+syde:Load({
+    Logo = '7488932274',
+    Name = 'Lumixhub AutoFarm v1',
+    Status = 'Stable',
+    Accent = Color3.fromRGB(251, 144, 255),
+    AutoLoad = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = 'LumixDev',
+        FileName = "config"
+    }
+})
+
+local Window = syde:Init({
+    Title = 'LumixDev autofarm',
+    SubText = 'AutoFarm Features'
+})
+
+-- tabs
+local AutoFarmTab = Window:InitTab('Auto Farm')
+local AutoUpgradeTab = Window:InitTab('Auto Upgrade')
+local AutoRollTab = Window:InitTab('Auto Roll')
+
+-- AutoFarm
+AutoFarmTab:Toggle({
+    Title = 'Auto Farm',
+    Value = false,
+    CallBack = function(val)
+        AutoFarm = val
+        syde:Notify({
+            Title = 'Auto Farm',
+            Content = val and 'Enabled' or 'Disabled',
+            Duration = 2
+        })
+    end,
+})
+
+-- Auto Upgrade
+AutoUpgradeTab:Toggle({
+    Title = 'Auto Rank Up',
+    Value = false,
+    CallBack = function(val) AutoRank = val end,
+})
+AutoUpgradeTab:Toggle({
+    Title = 'Auto Upgrade Haki',
+    Value = false,
+    CallBack = function(val) AutoHaki = val end,
+})
+AutoUpgradeTab:Toggle({
+    Title = 'Auto Upgrade Spiritual',
+    Value = false,
+    CallBack = function(val) AutoSpirit = val end,
+})
+AutoUpgradeTab:Toggle({
+    Title = 'Auto Upgrade Curse',
+    Value = false,
+    CallBack = function(val) AutoCurseProgress = val end,
+})
+
+-- Auto Roll
+AutoRollTab:Toggle({
+    Title = 'Auto Star',
+    Value = false,
+    CallBack = function(val) AutoStar = val end,
+})
+AutoRollTab:Dropdown({
+    Title = 'Star',
+    Options = Stars,
+    PlaceHolder = 'Select star...',
+    CallBack = function(val) Star = val end,
+})
+AutoRollTab:Toggle({ Title = 'Auto Roll Dragon Race', Value = false, CallBack = function(val) AutoDragon = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Saiyan Evo', Value = false, CallBack = function(val) AutoSaiyan = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Sword', Value = false, CallBack = function(val) AutoSword = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Fruit', Value = false, CallBack = function(val) AutoFruit = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Pirate Crew', Value = false, CallBack = function(val) AutoPirate = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Reiatsu Color', Value = false, CallBack = function(val) AutoReiatsu = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Zanpakuto', Value = false, CallBack = function(val) AutoZanpakuto = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Curse', Value = false, CallBack = function(val) AutoCurse = val end })
+AutoRollTab:Toggle({ Title = 'Auto Roll Demon Arts', Value = false, CallBack = function(val) AutoDemonArts = val end })
+
+-- main loop
+RunService.RenderStepped:Connect(function()
+    Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    if Character and AutoFarm then
+        local Closest
+        local ClosestMag = 30
+        for _,Enemy in workspace.Debris.Monsters:GetChildren() do
+            if Enemy:FindFirstChild("HumanoidRootPart") and (Character.HumanoidRootPart.Position - Enemy.HumanoidRootPart.Position).Magnitude < ClosestMag and Enemy:GetAttribute("Health") and Enemy:FindFirstChild("Humanoid") then
+                ClosestMag = (Character.HumanoidRootPart.Position - Enemy.HumanoidRootPart.Position).Magnitude
+                Closest = Enemy
+            end
+        end
+        if Closest then
+            ReplicatedStorage.Events.To_Server:FireServer({Id = Closest.name,Action = "_Mouse_Click"})
+        else
+            ReplicatedStorage.Events.To_Server:FireServer({Action = "_Mouse_Click"})
+        end
+    end
+
+    if AutoStar then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 15,Action = "_Stars",Name = "Star_"..Star})
+    end
+    if AutoSword then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Swords"})
+    end
+    if AutoFruit then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Demon_Fruits"})
+    end
+    if AutoDragon then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Dragon_Race"})
+    end
+    if AutoSaiyan then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Saiyan_Evolution"})
+    end
+    if AutoRank then
+        ReplicatedStorage.Events.To_Server:FireServer({Upgrading_Name = "Rank",Action = "_Upgrades",Upgrade_Name = "Rank_Up"})
+    end
+    if AutoHaki then
+        ReplicatedStorage.Events.To_Server:FireServer({Upgrading_Name = "Haki_Upgrade",Action = "_Upgrades",Upgrade_Name = "Haki_Upgrade"})
+    end
+    if AutoPirate then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Pirate_Crew"})
+    end
+    if AutoReiatsu then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Reiatsu_Color"})
+    end
+    if AutoSpirit then
+        ReplicatedStorage.Events.To_Server:FireServer({Upgrading_Name = "Spiritual_Pressure",Action = "_Upgrades",Upgrade_Name = "Spiritual_Pressure"})
+    end
+    if AutoZanpakuto then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Zanpakuto"})
+    end
+    if AutoCurse then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Curses"})
+    end
+    if AutoCurseProgress then
+        ReplicatedStorage.Events.To_Server:FireServer({Upgrading_Name = "Curse",Action = "_Upgrades",Upgrade_Name = "Cursed_Progression"})
+    end
+    if AutoDemonArts then
+        ReplicatedStorage.Events.To_Server:FireServer({Open_Amount = 1,Action = "_Gacha_Activate",Name = "Demon_Arts"})
+    end
+end)
+
+syde:Notify({
+    Title = 'LumixHub AutoFarm',
+    Content = 'LumixHub loaded enjoy the script',
+    Duration = 5
+})

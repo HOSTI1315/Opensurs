@@ -1,0 +1,399 @@
+local HttpService = game:GetService("HttpService")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local GameId = tostring(game.GameId)
+
+local API_BASE = "https://api.kodamo.net/api"
+local SCRIPT_ID = "245a2377-f038-4288-bb84-e31618286f1a"
+local KEY = "c4ce76cd36f2afee4dcee7e87576e5fa"
+local LICENSE_TOKEN = "e29ddfdd0cfffb139bf0944192ab75ff"
+
+local COLORS = {
+    Purple      = Color3.fromRGB(138, 43, 226),
+    Green       = Color3.fromRGB(0, 255, 127),
+    Gold        = Color3.fromRGB(255, 215, 0),
+    Pink        = Color3.fromRGB(255, 50, 120),
+    Cyan        = Color3.fromRGB(0, 255, 255),
+    Blue        = Color3.fromRGB(96, 165, 250),
+    TextWhite   = Color3.fromRGB(245, 245, 255),
+    TextGray    = Color3.fromRGB(140, 140, 170),
+    DarkBg      = Color3.fromRGB(15, 15, 22),
+    ContainerBg = Color3.fromRGB(21, 21, 31),
+    HeaderBg    = Color3.fromRGB(10, 10, 15),
+    Black       = Color3.fromRGB(0, 0, 0),
+    Red         = Color3.fromRGB(239, 68, 68),
+    DarkText    = Color3.fromRGB(10, 10, 15),
+}
+
+local function Notify(text)
+    StarterGui:SetCore("SendNotification", {
+        Text = text,
+        Title = "ProjectX",
+        Duration = 2,
+    })
+end
+
+local function ApiGet(endpoint)
+    local raw = game:HttpGet(API_BASE .. endpoint)
+    return HttpService:JSONDecode(raw)
+end
+
+Notify("Loading...")
+Notify("Checking game support...")
+
+local verifyData = ApiGet("/scripts/verify/" .. SCRIPT_ID .. "?gameId=" .. GameId)
+if not verifyData.supported then
+    Notify("Game not supported!")
+    return
+end
+
+Notify("Validating key...")
+
+local encodedKey = HttpService:UrlEncode(KEY)
+local keyValid = ApiGet("/keys/validate/" .. encodedKey)
+if not keyValid.valid then
+    Notify("Invalid key!")
+    return
+end
+
+local versionData = ApiGet("/keys/" .. encodedKey .. "/versions?gameId=" .. GameId)
+local versions = versionData.versions
+
+if not versions or #versions == 0 then
+    Notify("No versions available!")
+    return
+end
+
+local selectedVersion = nil
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KodamoVersionSelector"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999
+screenGui.IgnoreGuiInset = true
+
+local backdrop = Instance.new("Frame")
+backdrop.Name = "Backdrop"
+backdrop.Size = UDim2.new(1, 0, 1, 0)
+backdrop.BackgroundColor3 = COLORS.Black
+backdrop.BackgroundTransparency = 1
+backdrop.BorderSizePixel = 0
+backdrop.Parent = screenGui
+
+local container = Instance.new("Frame")
+container.Name = "Container"
+container.Size = UDim2.new(0, 440, 0, 0)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.BackgroundColor3 = COLORS.ContainerBg
+container.BackgroundTransparency = 1
+container.BorderSizePixel = 0
+container.ClipsDescendants = true
+container.Active = true
+container.Parent = screenGui
+
+local containerCorner = Instance.new("UICorner")
+containerCorner.CornerRadius = UDim.new(0, 16)
+containerCorner.Parent = container
+
+local containerStroke = Instance.new("UIStroke")
+containerStroke.Color = COLORS.Purple
+containerStroke.Thickness = 1.5
+containerStroke.Transparency = 1
+containerStroke.Parent = container
+
+local glowImage = Instance.new("ImageLabel")
+glowImage.Size = UDim2.new(1, 50, 1, 50)
+glowImage.Position = UDim2.new(0.5, 0, 0.5, 5)
+glowImage.AnchorPoint = Vector2.new(0.5, 0.5)
+glowImage.BackgroundTransparency = 1
+glowImage.Image = "rbxassetid://6014261993"
+glowImage.ImageColor3 = COLORS.Purple
+glowImage.ImageTransparency = 0.85
+glowImage.ScaleType = Enum.ScaleType.Slice
+glowImage.SliceCenter = Rect.new(49, 49, 450, 450)
+glowImage.ZIndex = -1
+glowImage.Parent = container
+
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 64)
+header.BackgroundColor3 = COLORS.HeaderBg
+header.BackgroundTransparency = 0.5
+header.BorderSizePixel = 0
+header.Parent = container
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 16)
+headerCorner.Parent = header
+
+local headerBottomFill = Instance.new("Frame")
+headerBottomFill.Size = UDim2.new(1, 0, 0, 16)
+headerBottomFill.Position = UDim2.new(0, 0, 1, -16)
+headerBottomFill.BackgroundColor3 = header.BackgroundColor3
+headerBottomFill.BackgroundTransparency = header.BackgroundTransparency
+headerBottomFill.BorderSizePixel = 0
+headerBottomFill.Parent = header
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -80, 0, 24)
+titleLabel.Position = UDim2.new(0, 24, 0, 12)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "ProjectX"
+titleLabel.TextColor3 = COLORS.Cyan
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 20
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = header
+
+local subtitleLabel = Instance.new("TextLabel")
+subtitleLabel.Size = UDim2.new(0, 250, 0, 18)
+subtitleLabel.Position = UDim2.new(0, 24, 0, 38)
+subtitleLabel.BackgroundTransparency = 1
+subtitleLabel.Text = "Select Version"
+subtitleLabel.TextColor3 = COLORS.TextGray
+subtitleLabel.Font = Enum.Font.Gotham
+subtitleLabel.TextSize = 14
+subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+subtitleLabel.Parent = header
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 36, 0, 36)
+closeButton.Position = UDim2.new(1, -50, 0, 14)
+closeButton.BackgroundColor3 = COLORS.DarkBg
+closeButton.BorderSizePixel = 0
+closeButton.Text = "X"
+closeButton.TextColor3 = COLORS.TextGray
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 16
+closeButton.AutoButtonColor = false
+closeButton.Parent = header
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeButton
+
+closeButton.MouseEnter:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), { BackgroundColor3 = COLORS.Red }):Play()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), { TextColor3 = COLORS.TextWhite }):Play()
+end)
+
+closeButton.MouseLeave:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), { BackgroundColor3 = COLORS.DarkBg }):Play()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), { TextColor3 = COLORS.TextGray }):Play()
+end)
+
+local scrollList = Instance.new("ScrollingFrame")
+scrollList.Name = "List"
+scrollList.Size = UDim2.new(1, -32, 1, -78)
+scrollList.Position = UDim2.new(0, 16, 0, 70)
+scrollList.BackgroundTransparency = 1
+scrollList.BorderSizePixel = 0
+scrollList.ScrollBarThickness = 5
+scrollList.ScrollBarImageColor3 = COLORS.Purple
+scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scrollList.Parent = container
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 10)
+listLayout.Parent = scrollList
+
+local listPadding = Instance.new("UIPadding")
+listPadding.PaddingBottom = UDim.new(0, 16)
+listPadding.Parent = scrollList
+
+for index, versionInfo in ipairs(versions) do
+    local tierLevel = versionInfo.tierLevel
+
+    local versionButton = Instance.new("TextButton")
+    versionButton.Name = "Version_" .. index
+    versionButton.Size = UDim2.new(1, -4, 0, 72)
+    versionButton.BackgroundColor3 = COLORS.DarkBg
+    versionButton.BorderSizePixel = 0
+    versionButton.Text = ""
+    versionButton.AutoButtonColor = false
+    versionButton.LayoutOrder = index
+    versionButton.Parent = scrollList
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 12)
+    btnCorner.Parent = versionButton
+
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = COLORS.Purple
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.7
+    btnStroke.Parent = versionButton
+
+    local accentBar = Instance.new("Frame")
+    accentBar.Size = UDim2.new(0, 5, 0.55, 0)
+    accentBar.Position = UDim2.new(0, 14, 0.225, 0)
+    accentBar.BackgroundColor3 = COLORS.Green
+    accentBar.BorderSizePixel = 0
+    accentBar.Parent = versionButton
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0, 3)
+    barCorner.Parent = accentBar
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, -120, 0, 24)
+    nameLabel.Position = UDim2.new(0, 30, 0, 12)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = versionInfo.name
+    nameLabel.TextColor3 = COLORS.TextWhite
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 17
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    nameLabel.Parent = versionButton
+
+    local tierLabel = Instance.new("TextLabel")
+    tierLabel.Size = UDim2.new(1, -120, 0, 18)
+    tierLabel.Position = UDim2.new(0, 30, 0, 38)
+    tierLabel.BackgroundTransparency = 1
+    tierLabel.Text = versionInfo.tierName .. " - Level " .. tierLevel
+    tierLabel.TextColor3 = COLORS.TextGray
+    tierLabel.Font = Enum.Font.Gotham
+    tierLabel.TextSize = 13
+    tierLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tierLabel.Parent = versionButton
+
+    local levelBadge = Instance.new("Frame")
+    levelBadge.Size = UDim2.new(0, 74, 0, 30)
+    levelBadge.Position = UDim2.new(1, -88, 0.5, -15)
+    levelBadge.BackgroundColor3 = COLORS.Green
+    levelBadge.BackgroundTransparency = 0.85
+    levelBadge.BorderSizePixel = 0
+    levelBadge.Parent = versionButton
+
+    local badgeCorner = Instance.new("UICorner")
+    badgeCorner.CornerRadius = UDim.new(0, 8)
+    badgeCorner.Parent = levelBadge
+
+    local badgeStroke = Instance.new("UIStroke")
+    badgeStroke.Color = COLORS.Green
+    badgeStroke.Thickness = 1
+    badgeStroke.Transparency = 0.5
+    badgeStroke.Parent = levelBadge
+
+    local levelText = Instance.new("TextLabel")
+    levelText.Size = UDim2.new(1, 0, 1, 0)
+    levelText.BackgroundTransparency = 1
+    levelText.Text = "LVL " .. tierLevel
+    levelText.TextColor3 = COLORS.Green
+    levelText.Font = Enum.Font.GothamBold
+    levelText.TextSize = 13
+    levelText.Parent = levelBadge
+
+    versionButton.MouseEnter:Connect(function()
+        TweenService:Create(btnStroke, TweenInfo.new(0.2), { Color = COLORS.Green, Transparency = 0 }):Play()
+        local hoverR = math.min(255, (COLORS.DarkBg.R * 255) + 8)
+        local hoverG = math.min(255, (COLORS.DarkBg.G * 255) + 8)
+        local hoverB = math.min(255, (COLORS.DarkBg.B * 255) + 12)
+        TweenService:Create(versionButton, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(hoverR, hoverG, hoverB) }):Play()
+    end)
+
+    versionButton.MouseLeave:Connect(function()
+        TweenService:Create(btnStroke, TweenInfo.new(0.2), { Color = COLORS.Purple, Transparency = 0.7 }):Play()
+        TweenService:Create(versionButton, TweenInfo.new(0.2), { BackgroundColor3 = COLORS.DarkBg }):Play()
+    end)
+
+    versionButton.MouseButton1Click:Connect(function()
+        TweenService:Create(btnStroke, TweenInfo.new(0.1), { Color = COLORS.Green, Transparency = 0 }):Play()
+        TweenService:Create(versionButton, TweenInfo.new(0.1), { BackgroundColor3 = COLORS.Green }):Play()
+        TweenService:Create(nameLabel, TweenInfo.new(0.1), { TextColor3 = COLORS.DarkText }):Play()
+        task.wait(0.15)
+        selectedVersion = versionInfo
+    end)
+end
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = container.Position
+    end
+end)
+
+header.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        container.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    local closeTween = TweenService:Create(container, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 440, 0, 0),
+    })
+    closeTween:Play()
+    TweenService:Create(backdrop, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+    task.wait(0.25)
+    screenGui:Destroy()
+end)
+
+backdrop.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        closeButton.MouseButton1Click:Fire()
+    end
+end)
+
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+TweenService:Create(backdrop, TweenInfo.new(0.3), { BackgroundTransparency = 0.4 }):Play()
+TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0,
+    Size = UDim2.new(0, 440, 0, 516),
+}):Play()
+TweenService:Create(containerStroke, TweenInfo.new(0.35), { Transparency = 0.3 }):Play()
+
+while not selectedVersion do
+    task.wait(0.1)
+end
+
+TweenService:Create(container, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    BackgroundTransparency = 1,
+    Size = UDim2.new(0, 440, 0, 0),
+}):Play()
+TweenService:Create(backdrop, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+task.wait(0.25)
+screenGui:Destroy()
+
+local revalidate = ApiGet("/keys/validate/" .. encodedKey)
+if not revalidate.valid then
+    Notify("Key expired!")
+    return
+end
+
+Notify("Loading script...")
+
+local scriptUrl = game:HttpGet(
+    API_BASE .. "/keys/" .. encodedKey
+    .. "/script?gameId=" .. GameId
+    .. "&versionId=" .. HttpService:UrlEncode(selectedVersion.id)
+    .. "&lt=" .. HttpService:UrlEncode(LICENSE_TOKEN)
+)
+
+local scriptSource = game:HttpGet(scriptUrl)
+
+Notify("Script loaded!")
+loadstring(scriptSource)()

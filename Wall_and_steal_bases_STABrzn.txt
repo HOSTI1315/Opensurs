@@ -1,0 +1,200 @@
+-- FLOAT AND WALL MADE BY @rzn
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local floatEnabled = false
+local wallhackEnabled = false
+local platform
+local originalTransparency = {}
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "FloatWallhackGui"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 0)
+frame.Position = UDim2.new(0.7, -100, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+frame.BackgroundTransparency = 0.2
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -10, 0, 30)
+title.Position = UDim2.new(0,5,0,0)
+title.BackgroundTransparency = 1
+title.Text = "FLOAT RZNNQ"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.Arcade
+title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+
+local minBtn = Instance.new("TextButton", frame)
+minBtn.Size = UDim2.new(0,30,0,30)
+minBtn.Position = UDim2.new(1,-35,0,0)
+minBtn.Text = "–"
+minBtn.BackgroundColor3 = Color3.fromRGB(100,100,100)
+minBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minBtn.Font = Enum.Font.SourceSansBold
+minBtn.TextSize = 24
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0,6)
+
+local container = Instance.new("Frame", frame)
+container.Size = UDim2.new(1,0,1,-30)
+container.Position = UDim2.new(0,0,0,30)
+container.BackgroundTransparency = 1
+local list = Instance.new("UIListLayout", container)
+list.Padding = UDim.new(0,8)
+list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+list.VerticalAlignment = Enum.VerticalAlignment.Top
+
+local minimized = true
+local originalHeight = 0
+local function updateMinimized()
+    if minimized then
+        frame.Size = UDim2.new(frame.Size.X.Scale, frame.Size.X.Offset, 0, 30)
+        container.Visible = false
+    else
+        frame.Size = UDim2.new(frame.Size.X.Scale, frame.Size.X.Offset, 0, originalHeight)
+        container.Visible = true
+    end
+end
+
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    updateMinimized()
+end)
+
+local function createBtn(text)
+    local b = Instance.new("TextButton", container)
+    b.Size = UDim2.new(0,180,0,36)
+    b.BackgroundColor3 = Color3.fromRGB(150,30,30)
+    b.BackgroundTransparency = 0.3
+    b.TextColor3 = Color3.fromRGB(255,255,255)
+    b.Text = text
+    b.Font = Enum.Font.Arcade
+    b.TextSize = 18
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+    return b
+end
+
+local floatBtn = createBtn("Activar Float")
+local wallBtn = createBtn("Activar Wallhack")
+
+local function toggleFloat()
+    floatEnabled = not floatEnabled
+    if floatEnabled then
+        floatBtn.Text = "Desactivar Float"
+        floatBtn.BackgroundColor3 = Color3.fromRGB(220,80,80)
+        platform = Instance.new("Part")
+        platform.Size = Vector3.new(6,1,6)
+        platform.Anchored = true
+        platform.CanCollide = true
+        platform.Transparency = 1
+        platform.Parent = workspace
+        task.spawn(function()
+            while floatEnabled and platform do
+                if hrp then platform.Position = hrp.Position - Vector3.new(0,3,0) end
+                task.wait(0.05)
+            end
+        end)
+    else
+        floatBtn.Text = "Activar Float"
+        floatBtn.BackgroundColor3 = Color3.fromRGB(50,120,220)
+        if platform then platform:Destroy() platform=nil end
+    end
+end
+
+local function isPlayerBase(obj)
+    if not obj:IsA("BasePart") then return false end
+    local nameLower = obj.Name:lower()
+    local parentName = obj.Parent and obj.Parent.Name:lower() or ""
+    -- Solo permitir wallhack en partes que contengan "base" en su nombre o en su carpeta
+    return nameLower:find("base") or parentName:find("base")
+end
+
+local function enableWallhack()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Anchored and obj.CanCollide and isPlayerBase(obj) then
+            originalTransparency[obj] = obj.LocalTransparencyModifier
+            obj.LocalTransparencyModifier = 0.8
+        end
+    end
+end
+
+local function disableWallhack()
+    for part, trans in pairs(originalTransparency) do
+        if part and part:IsA("BasePart") then
+            part.LocalTransparencyModifier = trans
+        end
+    end
+    originalTransparency = {}
+end
+
+local function toggleWallhack()
+    wallhackEnabled = not wallhackEnabled
+    if wallhackEnabled then
+        wallBtn.Text = "Desactivar Wallhack"
+        wallBtn.BackgroundColor3 = Color3.fromRGB(220,80,80)
+        enableWallhack()
+    else
+        wallBtn.Text = "Activar Wallhack"
+        wallBtn.BackgroundColor3 = Color3.fromRGB(120,50,200)
+        disableWallhack()
+    end
+end
+
+workspace.DescendantAdded:Connect(function(obj)
+    if wallhackEnabled and obj:IsA("BasePart") and obj.Anchored and obj.CanCollide and isPlayerBase(obj) then
+        obj.LocalTransparencyModifier = 0.7
+    end
+end)
+
+floatBtn.MouseButton1Click:Connect(toggleFloat)
+wallBtn.MouseButton1Click:Connect(toggleWallhack)
+
+toggleWallhack()
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    hrp = char:WaitForChild("HumanoidRootPart")
+    if wallhackEnabled then toggleWallhack() end
+end)
+
+frame.Size = UDim2.new(0, 220, 0, 30 + container.UIListLayout.AbsoluteContentSize.Y + 10)
+originalHeight = frame.Size.Y.Offset
+
+updateMinimized()
+
+local dragging, dragInput, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    dragInput = input
+end)
+UIS.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    hrp = char:WaitForChild("HumanoidRootPart")
+end)

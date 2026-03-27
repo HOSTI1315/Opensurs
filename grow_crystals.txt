@@ -1,0 +1,260 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "MetroHub: Grow Crystals" .. Fluent.Version,
+    SubTitle = "by Solrate",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+})
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "" })
+}
+
+local Options = Fluent.Options
+
+do
+
+
+
+local Toggle = Tabs.Main:AddToggle("auto_fire_plot_prompts", {
+    Title = "Auto Collect Crystals",
+    Default = false
+})
+
+-- Function to fire proximity prompts within 50 studs of the player
+local function fireNearbyPrompts()
+    local player = game.Players.LocalPlayer
+    local rootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    local origin = rootPart.Position
+
+    for i = 1, 6 do
+        local plot = workspace.Plots:FindFirstChild(tostring(i))
+        if plot and plot:FindFirstChild("Items") then
+            for _, model in ipairs(plot.Items:GetChildren()) do
+                if model:IsA("Model") then
+                    for _, descendant in ipairs(model:GetDescendants()) do
+                        if descendant:IsA("ProximityPrompt") and descendant.Parent and descendant.Parent:IsA("BasePart") then
+                            local dist = (descendant.Parent.Position - origin).Magnitude
+                            if dist <= 50 then
+                                fireproximityprompt(descendant)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Toggle handler
+Toggle:OnChanged(function()
+    if Options.auto_fire_plot_prompts.Value then
+        task.spawn(function()
+            while Options.auto_fire_plot_prompts.Value do
+                fireNearbyPrompts()
+                task.wait(1.5)
+            end
+        end)
+    end
+end)
+
+
+
+
+local Toggle = Tabs.Main:AddToggle("auto_sell_inventory", {
+    Title = "Auto Sell All Crystals",
+    Default = false
+})
+
+-- Input field to control sell interval (in seconds)
+local Input = Tabs.Main:AddInput("sell_interval", {
+    Title = "Sell Interval",
+    Default = "3",
+    Placeholder = "Enter seconds",
+    Numeric = true,       -- Only allows numbers
+    Finished = false,     -- Triggers on every change
+    Callback = function(Value)
+        print("Sell interval set to:", Value)
+    end
+})
+
+Input:OnChanged(function()
+    print("Sell interval updated:", Input.Value)
+end)
+
+-- Function to invoke SellInventory
+local function sellInventory()
+    local success, err = pcall(function()
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("Packages")
+            :WaitForChild("Knit")
+            :WaitForChild("Services")
+            :WaitForChild("CashService")
+            :WaitForChild("RF")
+            :WaitForChild("SellInventory")
+            :InvokeServer()
+    end)
+
+    if not success then
+        warn("Failed to invoke SellInventory:", err)
+    end
+end
+
+-- Toggle logic
+Toggle:OnChanged(function()
+    if Options.auto_sell_inventory.Value then
+        task.spawn(function()
+            while Options.auto_sell_inventory.Value do
+                local interval = tonumber(Options.sell_interval.Value) or 4
+                sellInventory()
+                task.wait(interval)
+            end
+        end)
+    end
+end)
+
+
+
+
+local Toggle = Tabs.Main:AddToggle("auto_buy_materials", {
+    Title = "Auto Buy Crystals",
+    Default = false
+})
+
+-- Dropdown for selecting materials
+local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
+    Title = "Select Crystals to Buy",
+    Description = "",
+    Values = {
+        "Pyrocite", "Draconyx", "Echo Shard", "Soul Gem", "Aether Glass", "Fluxite",
+        "Blightcore", "Umbra Quartz", "Nebulite", "Voltine", "Lunacite", "Chronite",
+        "Oblivionite", "Nullflare", "Eternite", "Scornite"
+    },
+    Multi = true,
+    Default = {""},
+})
+
+-- Toggle logic
+Toggle:OnChanged(function()
+    if Options.auto_buy_materials.Value then
+        task.spawn(function()
+            while Options.auto_buy_materials.Value do
+                local selectedMaterials = {}
+                for material, selected in pairs(Options.MultiDropdown.Value) do
+                    if selected then
+                        table.insert(selectedMaterials, material)
+                    end
+                end
+
+                for _, material in ipairs(selectedMaterials) do
+                    pcall(function()
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("Packages")
+                            :WaitForChild("Knit")
+                            :WaitForChild("Services")
+                            :WaitForChild("MaterialShopService")
+                            :WaitForChild("RF")
+                            :WaitForChild("BuyMaterial")
+                            :InvokeServer(material)
+                    end)
+                    task.wait(0.3)
+                end
+
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+
+
+
+local Toggle = Tabs.Main:AddToggle("auto_place_item", {
+    Title = "Auto Place Crystals",
+    Default = false
+})
+
+Toggle:OnChanged(function()
+    if Options.auto_place_item.Value then
+        task.spawn(function()
+            while Options.auto_place_item.Value do
+                local character = game.Players.LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local position = character.HumanoidRootPart.Position
+
+                    for i = 1, 6 do
+                        local plot = workspace:FindFirstChild("Plots") and workspace.Plots:FindFirstChild(tostring(i))
+                        if plot and plot:FindFirstChild("Placements") and plot.Placements:FindFirstChild("6") then
+                            local args = {
+                                plot.Placements["6"],
+                                position
+                            }
+
+                            pcall(function()
+                                game:GetService("ReplicatedStorage")
+                                    .Packages.Knit.Services.PlotService.RE.PlaceItem
+                                    :FireServer(unpack(args))
+                            end)
+                        end
+                    end
+                end
+                task.wait(1.1)
+            end
+        end)
+    end
+end)
+
+
+
+
+
+
+
+
+-- Addons:
+-- SaveManager (Allows you to have a configuration system)
+-- InterfaceManager (Allows you to have a interface managment system)
+
+-- Hand the library over to our managers
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Ignore keys that are used by ThemeManager.
+-- (we dont want configs to save themes, do we?)
+SaveManager:IgnoreThemeSettings()
+
+-- You can add indexes of elements the save manager should ignore
+SaveManager:SetIgnoreIndexes({})
+
+-- use case for doing it this way:
+-- a script hub could have themes in a global folder
+-- and game configs in a separate folder per game
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+-- You can use the SaveManager:LoadAutoloadConfig() to load a config
+-- which has been marked to be one that auto loads!
+SaveManager:LoadAutoloadConfig()
+end

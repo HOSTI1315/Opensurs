@@ -1,0 +1,381 @@
+-- Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ========================================
+-- MAIN GUI SETUP
+-- ========================================
+local NovaHub = Instance.new("ScreenGui")
+NovaHub.Parent = LocalPlayer:WaitForChild("PlayerGui")
+NovaHub.ResetOnSpawn = true
+NovaHub.Name = "NovaHub"
+NovaHub.IgnoreGuiInset = true
+NovaHub.Enabled = true
+
+-- ========================================
+-- MAIN FRAME
+-- ========================================
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = NovaHub
+MainFrame.BackgroundColor3 = Color3.fromRGB(58, 58, 58)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Size = UDim2.new(0.438, 0, 0.372, 0)
+MainFrame.Visible = true
+
+local MainFrameCorner = Instance.new("UICorner")
+MainFrameCorner.Parent = MainFrame
+MainFrameCorner.CornerRadius = UDim.new(0, 8)
+
+local MainFrameStroke = Instance.new("UIStroke")
+MainFrameStroke.Parent = MainFrame
+MainFrameStroke.Color = Color3.fromRGB(2, 2, 2)
+MainFrameStroke.Thickness = 2.5
+MainFrameStroke.Transparency = 0
+
+-- ========================================
+-- MINIMIZE BUTTON (FLOATING)
+-- ========================================
+local MinimizeButton = Instance.new("ImageButton")
+MinimizeButton.Parent = NovaHub
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.Position = UDim2.new(0.925, 0, 0.493, 0)
+MinimizeButton.Size = UDim2.new(0.059, 0, 0.052, 0)
+MinimizeButton.Image = "rbxassetid://132503320965065"
+
+local MinimizeButtonCorner = Instance.new("UICorner")
+MinimizeButtonCorner.Parent = MinimizeButton
+MinimizeButtonCorner.CornerRadius = UDim.new(1, 0)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
+
+-- ========================================
+-- TITLE LABEL
+-- ========================================
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0.012, 0, 0, 0)
+TitleLabel.Size = UDim2.new(0.964, 0, 0.159, 0)
+TitleLabel.Font = Enum.Font.FredokaOne
+TitleLabel.TextScaled = true
+TitleLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+TitleLabel.TextStrokeTransparency = 0
+TitleLabel.Text = "NOVA HUB"
+
+local TitleStroke = Instance.new("UIStroke")
+TitleStroke.Parent = TitleLabel
+TitleStroke.Color = Color3.fromRGB(0, 0, 0)
+TitleStroke.Thickness = 2
+
+-- ========================================
+-- CLOSE & MINIMIZE BUTTONS (TOP RIGHT)
+-- ========================================
+local CloseButton = Instance.new("TextButton")
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(75, 75, 75)
+CloseButton.Position = UDim2.new(0.875, 0, 0, 0)
+CloseButton.Size = UDim2.new(0.125, 0, 0.159, 0)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextScaled = true
+CloseButton.Font = Enum.Font.FredokaOne
+CloseButton.TextStrokeTransparency = 0
+
+local CloseButtonCorner = Instance.new("UICorner")
+CloseButtonCorner.Parent = CloseButton
+CloseButtonCorner.CornerRadius = UDim.new(0, 8)
+
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame:Destroy()
+    MinimizeButton:Destroy()
+end)
+
+local MinimizeTopButton = Instance.new("TextButton")
+MinimizeTopButton.Parent = MainFrame
+MinimizeTopButton.BackgroundColor3 = Color3.fromRGB(75, 75, 75)
+MinimizeTopButton.Position = UDim2.new(0.736, 0, 0, 0)
+MinimizeTopButton.Size = UDim2.new(0.125, 0, 0.159, 0)
+MinimizeTopButton.Text = "-"
+MinimizeTopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeTopButton.TextScaled = true
+MinimizeTopButton.Font = Enum.Font.FredokaOne
+MinimizeTopButton.TextStrokeTransparency = 0
+
+local MinimizeTopCorner = Instance.new("UICorner")
+MinimizeTopCorner.Parent = MinimizeTopButton
+MinimizeTopCorner.CornerRadius = UDim.new(0, 8)
+
+MinimizeTopButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
+
+-- ========================================
+-- PROFILE PICTURE & USERNAME
+-- ========================================
+local ProfileImage = Instance.new("ImageLabel")
+ProfileImage.Parent = MainFrame
+ProfileImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ProfileImage.Position = UDim2.new(0, 0, 0.85, 0)
+ProfileImage.Size = UDim2.new(0.131, 0, 0.15, 0)
+
+local success, UserThumbnail = pcall(function()
+    return Players:GetUserThumbnailAsync(
+        LocalPlayer.UserId,
+        Enum.ThumbnailType.HeadShot,
+        Enum.ThumbnailSize.Size420x420
+    )
+end)
+
+ProfileImage.Image = success and UserThumbnail or ""
+
+local ProfileCorner = Instance.new("UICorner")
+ProfileCorner.Parent = ProfileImage
+ProfileCorner.CornerRadius = UDim.new(1, 0)
+
+local LogoImage = Instance.new("ImageLabel")
+LogoImage.Parent = MainFrame
+LogoImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+LogoImage.Position = UDim2.new(0.131, 0, 0, 0)
+LogoImage.Size = UDim2.new(0.14, 0, 0.159, 0)
+LogoImage.Image = "rbxassetid://132503320965065"
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.Parent = LogoImage
+LogoCorner.CornerRadius = UDim.new(1, 0)
+
+local UsernameLabel = Instance.new("TextLabel")
+UsernameLabel.Parent = MainFrame
+UsernameLabel.BackgroundTransparency = 1
+UsernameLabel.Position = UDim2.new(0.097, 0, 0.911, 0)
+UsernameLabel.Size = UDim2.new(0.308, 0, 0.089, 0)
+UsernameLabel.Font = Enum.Font.FredokaOne
+UsernameLabel.TextScaled = true
+UsernameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+UsernameLabel.TextStrokeTransparency = 0
+UsernameLabel.Text = "@iRdrLFs"
+
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Parent = MainFrame
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Position = UDim2.new(0.596, 0, 0.953, 0)
+DiscordLabel.Size = UDim2.new(0.368, 0, 0.047, 0)
+DiscordLabel.Font = Enum.Font.FredokaOne
+DiscordLabel.TextScaled = true
+DiscordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordLabel.TextStrokeTransparency = 0
+DiscordLabel.Text = "https://discord.gg/qsFC4vrZek"
+
+-- ========================================
+-- TABS CONTAINER
+-- ========================================
+local TabsFolder = Instance.new("Folder")
+TabsFolder.Parent = MainFrame
+TabsFolder.Name = "Tabs"
+
+-- ========================================
+-- TAB BUTTONS (LEFT SIDE)
+-- ========================================
+local TabButtonsFrame = Instance.new("ScrollingFrame")
+TabButtonsFrame.Parent = TabsFolder
+TabButtonsFrame.BackgroundTransparency = 1
+TabButtonsFrame.Position = UDim2.new(0, 0, 0.159, 0)
+TabButtonsFrame.Size = UDim2.new(0.271, 0, 0.626, 0)
+TabButtonsFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+TabButtonsFrame.ScrollBarThickness = 10
+TabButtonsFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
+TabButtonsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local TabButtonsLayout = Instance.new("UIListLayout")
+TabButtonsLayout.Parent = TabButtonsFrame
+TabButtonsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabButtonsLayout.Padding = UDim.new(0.02, 0)
+
+-- Main Tab Button
+local MainTabButton = Instance.new("TextButton")
+MainTabButton.Parent = TabButtonsFrame
+MainTabButton.BackgroundColor3 = Color3.fromRGB(125, 125, 125)
+MainTabButton.Size = UDim2.new(0, 70, 0, 29)
+MainTabButton.Font = Enum.Font.FredokaOne
+MainTabButton.TextScaled = true
+MainTabButton.Text = "Main"
+MainTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainTabButton.TextStrokeTransparency = 0
+
+local MainTabCorner = Instance.new("UICorner")
+MainTabCorner.Parent = MainTabButton
+MainTabCorner.CornerRadius = UDim.new(0, 5)
+
+-- ESP Tab Button
+local ESPTabButton = Instance.new("TextButton")
+ESPTabButton.Parent = TabButtonsFrame
+ESPTabButton.BackgroundColor3 = Color3.fromRGB(125, 125, 125)
+ESPTabButton.Size = UDim2.new(0, 70, 0, 29)
+ESPTabButton.Font = Enum.Font.FredokaOne
+ESPTabButton.TextScaled = true
+ESPTabButton.Text = "ESP"
+ESPTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPTabButton.TextStrokeTransparency = 0
+
+local ESPTabCorner = Instance.new("UICorner")
+ESPTabCorner.Parent = ESPTabButton
+ESPTabCorner.CornerRadius = UDim.new(0, 5)
+
+-- Helper Tab Button
+local HelperTabButton = Instance.new("TextButton")
+HelperTabButton.Parent = TabButtonsFrame
+HelperTabButton.BackgroundColor3 = Color3.fromRGB(125, 125, 125)
+HelperTabButton.Size = UDim2.new(0, 70, 0, 29)
+HelperTabButton.Font = Enum.Font.FredokaOne
+HelperTabButton.TextScaled = true
+HelperTabButton.Text = "Helper"
+HelperTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HelperTabButton.TextStrokeTransparency = 0
+
+local HelperTabCorner = Instance.new("UICorner")
+HelperTabCorner.Parent = HelperTabButton
+HelperTabCorner.CornerRadius = UDim.new(0, 5)
+
+-- ========================================
+-- HELPER FUNCTION: CREATE TAB CONTENT
+-- ========================================
+local function createTabContent()
+    local content = Instance.new("Frame")
+    content.Parent = TabsFolder
+    content.BackgroundColor3 = Color3.fromRGB(59, 59, 59)
+    content.Size = UDim2.new(0.672, 0, 0.743, 0)
+    content.Position = UDim2.new(0.295, 0, 0.168, 0)
+    content.Visible = false
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = content
+    corner.CornerRadius = UDim.new(0, 8)
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Parent = content
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness = 2
+    
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = content
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0.065, 0)
+    
+    return content
+end
+
+-- ========================================
+-- HELPER FUNCTION: CREATE TOGGLE
+-- ========================================
+local function createToggle(parent, labelText, callback)
+    local container = Instance.new("Frame")
+    container.Parent = parent
+    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(1, 0, 0.132, 0)
+    
+    local label = Instance.new("TextLabel")
+    label.Parent = container
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.new(0.045, 0, 0.082, 0)
+    label.Size = UDim2.new(0.502, 0, 1.048, 0)
+    label.Font = Enum.Font.FredokaOne
+    label.TextScaled = true
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeTransparency = 0
+    label.Text = labelText
+    
+    local button = Instance.new("TextButton")
+    button.Parent = container
+    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    button.Position = UDim2.new(0.579, 0, 0.082, 0)
+    button.Size = UDim2.new(0.339, 0, 1.048, 0)
+    button.Font = Enum.Font.FredokaOne
+    button.TextScaled = true
+    button.Text = "OFF"
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextStrokeTransparency = 0
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = button
+    corner.CornerRadius = UDim.new(0, 8)
+    
+    local isEnabled = false
+    button.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        button.Text = isEnabled and "ON" or "OFF"
+        button.BackgroundColor3 = isEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        
+        if callback then
+            callback(isEnabled)
+        end
+    end)
+    
+    return container
+end
+
+-- ========================================
+-- CREATE TAB CONTENTS
+-- ========================================
+local MainTabContent = createTabContent()
+MainTabContent.Visible = true
+
+local ESPTabContent = createTabContent()
+local HelperTabContent = createTabContent()
+
+-- ========================================
+-- MAIN TAB FEATURES
+-- ========================================
+createToggle(MainTabContent, "Auto Kick")
+createToggle(MainTabContent, "Anti Ragdoll")
+createToggle(MainTabContent, "Anti Sentry")
+createToggle(MainTabContent, "Desync", function(enabled)
+    if enabled then
+        task.spawn(function()
+            setfflag("LargeReplicatorWrite5", "false")
+            setfflag("LargeReplicatorEnabled9", "false")
+            setfflag("AngularVelociryLimit", "180")
+            -- Additional flags omitted for brevity
+        end)
+    end
+end)
+
+-- ========================================
+-- ESP TAB FEATURES
+-- ========================================
+createToggle(ESPTabContent, "BestBrainrot")
+createToggle(ESPTabContent, "PlayerEsp")
+createToggle(ESPTabContent, "Timer")
+createToggle(ESPTabContent, "WallHack")
+
+-- ========================================
+-- HELPER TAB FEATURES
+-- ========================================
+createToggle(HelperTabContent, "Allow/Disallow")
+createToggle(HelperTabContent, "BatDestroyer")
+createToggle(HelperTabContent, "Speed")
+
+-- ========================================
+-- TAB SWITCHING LOGIC
+-- ========================================
+MainTabButton.MouseButton1Click:Connect(function()
+    MainTabContent.Visible = true
+    ESPTabContent.Visible = false
+    HelperTabContent.Visible = false
+end)
+
+ESPTabButton.MouseButton1Click:Connect(function()
+    MainTabContent.Visible = false
+    ESPTabContent.Visible = true
+    HelperTabContent.Visible = false
+end)
+
+HelperTabButton.MouseButton1Click:Connect(function()
+    MainTabContent.Visible = false
+    ESPTabContent.Visible = false
+    HelperTabContent.Visible = true
+end)

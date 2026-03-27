@@ -1,0 +1,254 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local camera = workspace.CurrentCamera
+local localPlayer = Players.LocalPlayer
+
+-- ===== Переменные =====
+local Rake = nil
+local HighlightRake = nil
+local LineToRake = nil
+local RakeESPEnabled = false
+local scrapIndex = 1
+local LocationsESPDone = false
+local FullBrightEnabled = false
+local brightnessValue = 10
+
+-- ===== FullBright =====
+local function applyFullBright()
+	if not FullBrightEnabled then return end
+	pcall(function()
+		Lighting.Ambient = Color3.new(1, 1, 1)
+		Lighting.Brightness = brightnessValue
+		Lighting.ClockTime = 12
+		Lighting.FogEnd = 1000000
+		Lighting.GlobalShadows = false
+	end)
+end
+
+RunService.RenderStepped:Connect(applyFullBright)
+
+-- ===== Rake =====
+local function findRake()
+	Rake = workspace:FindFirstChild("Rake")
+end
+
+local function createRakeHighlight()
+	if HighlightRake then HighlightRake:Destroy() end
+	if Rake and RakeESPEnabled then
+		HighlightRake = Instance.new("Highlight")
+		HighlightRake.Adornee = Rake
+		HighlightRake.FillColor = Color3.new(1, 0, 0)
+		HighlightRake.OutlineColor = Color3.new(1, 1, 1)
+		HighlightRake.FillTransparency = 0.5
+		HighlightRake.OutlineTransparency = 0
+		HighlightRake.Parent = Rake
+	end
+end
+
+local function createLineToRake()
+	if LineToRake then LineToRake:Remove() end
+	if RakeESPEnabled and Rake then
+		LineToRake = Drawing.new("Line")
+		LineToRake.Color = Color3.fromRGB(255, 0, 0)
+		LineToRake.Thickness = 1
+		LineToRake.Transparency = 1
+		LineToRake.Visible = false
+	end
+end
+
+RunService.RenderStepped:Connect(function()
+	if RakeESPEnabled and Rake and Rake:FindFirstChild("HumanoidRootPart") and LineToRake then
+		local pos, onScreen = camera:WorldToViewportPoint(Rake.HumanoidRootPart.Position)
+		if onScreen then
+			LineToRake.From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+			LineToRake.To = Vector2.new(pos.X, pos.Y)
+			LineToRake.Visible = true
+		else
+			LineToRake.Visible = false
+		end
+	elseif LineToRake then
+		LineToRake.Visible = false
+	end
+end)
+
+task.spawn(function()
+	while true do
+		findRake()
+		if RakeESPEnabled then
+			createRakeHighlight()
+			if not LineToRake then createLineToRake() end
+		end
+		task.wait(5)
+	end
+end)
+
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "ESP_GUI"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 140, 0, 135)
+Frame.Position = UDim2.new(0, 120, 0, 100)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Visible = true
+
+-- Rake ESP
+local RakeButton = Instance.new("TextButton", Frame)
+RakeButton.Size = UDim2.new(1, 0, 0, 25)
+RakeButton.Position = UDim2.new(0, 0, 0, 0)
+RakeButton.Text = "Rake ESP: OFF"
+RakeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+RakeButton.TextColor3 = Color3.new(1, 1, 1)
+RakeButton.Font = Enum.Font.SourceSansBold
+RakeButton.TextSize = 16
+
+RakeButton.MouseButton1Click:Connect(function()
+	RakeESPEnabled = not RakeESPEnabled
+	RakeButton.Text = RakeESPEnabled and "Rake ESP: ON" or "Rake ESP: OFF"
+	if not RakeESPEnabled then
+		if HighlightRake then HighlightRake:Destroy() HighlightRake = nil end
+		if LineToRake then LineToRake:Remove() LineToRake = nil end
+	end
+end)
+
+-- Teleport Scrap
+local ScrapButton = Instance.new("TextButton", Frame)
+ScrapButton.Size = UDim2.new(1, 0, 0, 25)
+ScrapButton.Position = UDim2.new(0, 0, 0, 30)
+ScrapButton.Text = "Teleport Scrap"
+ScrapButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ScrapButton.TextColor3 = Color3.new(1, 1, 1)
+ScrapButton.Font = Enum.Font.SourceSansBold
+ScrapButton.TextSize = 16
+
+ScrapButton.MouseButton1Click:Connect(function()
+	local scraps = {}
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("Model") and v.Name:match("^Scrap%d+$") then
+			table.insert(scraps, v)
+		end
+	end
+	if #scraps == 0 then
+		warn("❌ Scrap-модели не найдены.")
+		return
+	end
+	if scrapIndex > #scraps then scrapIndex = 1 end
+	local target = scraps[scrapIndex]
+	local char = localPlayer.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local part = target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart")
+		if part then
+			char.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 5, 0)
+		end
+	end
+	scrapIndex += 1
+end)
+
+-- Locations ESP
+local LocationsButton = Instance.new("TextButton", Frame)
+LocationsButton.Size = UDim2.new(1, 0, 0, 25)
+LocationsButton.Position = UDim2.new(0, 0, 0, 60)
+LocationsButton.Text = "Locations ESP"
+LocationsButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+LocationsButton.TextColor3 = Color3.new(1, 1, 1)
+LocationsButton.Font = Enum.Font.SourceSansBold
+LocationsButton.TextSize = 16
+
+LocationsButton.MouseButton1Click:Connect(function()
+	if LocationsESPDone then return end
+	LocationsESPDone = true
+
+	local folder = workspace:FindFirstChild("Filter")
+	if not folder then
+		warn("❌ Folder 'Filter' not found in Workspace.")
+		return
+	end
+	local locationPoints = folder:FindFirstChild("LocationPoints")
+	if not locationPoints then
+		warn("❌ LocationPoints not found in Workspace.Filter")
+		return
+	end
+
+	local function createESP(targetPart, labelText)
+		if not targetPart or targetPart:FindFirstChild("ESP_Label") then return end
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "ESP_Label"
+		billboard.Adornee = targetPart
+		billboard.Size = UDim2.new(0, 100, 0, 40)
+		billboard.StudsOffset = Vector3.new(0, 3, 0)
+		billboard.AlwaysOnTop = true
+
+		local label = Instance.new("TextLabel")
+		label.Parent = billboard
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Text = labelText
+		label.TextColor3 = Color3.fromRGB(0, 255, 255)
+		label.TextStrokeTransparency = 0.2
+		label.TextScaled = true
+		label.Font = Enum.Font.SourceSansBold
+
+		billboard.Parent = targetPart
+	end
+
+	for _, obj in pairs(locationPoints:GetChildren()) do
+		if obj:IsA("BasePart") then
+			createESP(obj, obj.Name)
+		elseif obj:IsA("Model") then
+			local part = obj:FindFirstChildWhichIsA("BasePart", true)
+			if part then
+				createESP(part, obj.Name)
+			end
+		end
+	end
+end)
+
+-- FullBright toggle button
+local fbButton = Instance.new("TextButton", ScreenGui)
+fbButton.Size = UDim2.new(0, 60, 0, 25)
+fbButton.Position = UDim2.new(0, 35, 0, 5)
+fbButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+fbButton.TextColor3 = Color3.new(1, 1, 1)
+fbButton.Text = "FB: OFF"
+fbButton.Font = Enum.Font.SourceSansBold
+fbButton.TextSize = 14
+
+fbButton.MouseButton1Click:Connect(function()
+	FullBrightEnabled = not FullBrightEnabled
+	fbButton.Text = FullBrightEnabled and "FB: ON" or "FB: OFF"
+end)
+
+-- Brightness input
+local brightnessInput = Instance.new("TextBox", ScreenGui)
+brightnessInput.Size = UDim2.new(0, 40, 0, 25)
+brightnessInput.Position = UDim2.new(0, 100, 0, 5)
+brightnessInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+brightnessInput.TextColor3 = Color3.new(1, 1, 1)
+brightnessInput.PlaceholderText = "10"
+brightnessInput.Font = Enum.Font.SourceSansBold
+brightnessInput.TextSize = 14
+brightnessInput.ClearTextOnFocus = false
+brightnessInput.Text = tostring(brightnessValue)
+
+brightnessInput.FocusLost:Connect(function()
+	local val = tonumber(brightnessInput.Text)
+	if val then
+		brightnessValue = val
+	else
+		brightnessInput.Text = tostring(brightnessValue)
+	end
+end)
+
+-- Toggle main GUI
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 25, 0, 25)
+ToggleButton.Position = UDim2.new(0, 5, 0, 5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+ToggleButton.Text = ""
+ToggleButton.BorderSizePixel = 0
+
+ToggleButton.MouseButton1Click:Connect(function()
+	Frame.Visible = not Frame.Visible
+end)

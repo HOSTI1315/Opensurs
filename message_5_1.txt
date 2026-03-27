@@ -1,0 +1,430 @@
+-- // WindUI
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- */ Using Nebula Icons /* --
+do
+    local NebulaIcons = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/nebula-icon-library-loader"))()
+    
+    -- Adding icons (e.g. Fluency)
+    WindUI.Creator.AddIcons("fluency",    NebulaIcons.Fluency)
+    --               ^ Icon name          ^ Table of Icons
+    
+    -- You can also add nebula icons
+    WindUI.Creator.AddIcons("nebula",    NebulaIcons.nebulaIcons)
+end
+
+-- // Window Config
+local Window = WindUI:CreateWindow({
+    Title = "Lunar | Plants Vs Brainrots",
+    Author = "Plants Vs Brainrots | Dev Version",
+    Icon = "nebula:nebula",
+    Size = UDim2.fromOffset(580, 420),
+    Transparent = true,
+    Theme = "Violet",
+    BackgroundImageTransparency = 0.6,
+    HasOutline = false,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    User = {
+        Enabled = false,
+        Anonymous = false
+    },
+
+    OpenButton = {
+        Title = "Open Lunar UI", -- can be changed
+        CornerRadius = UDim.new(1,0), -- fully rounded
+        StrokeThickness = 3, -- removing outline
+        Enabled = true, -- enable or disable openbutton
+        Draggable = true,
+        OnlyMobile = false,
+        
+        Color = ColorSequence.new( -- gradient
+            Color3.fromHex("#7B00FF"), 
+            Color3.fromHex("#6f00ff")
+        )
+    }
+})
+
+
+-- Toggle for the ui
+Window:SetToggleKey(Enum.KeyCode.V)
+
+-- // Tabs
+local Tabs = {
+    Combat = Window:Tab({ Title = "Farming", Icon = "crown" }),
+    Collect = Window:Tab({Title = "Auto Collect", Icon = "dollar-sign"}),
+}
+
+Window:SelectTab(1)
+
+-- // Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
+local lcl = player
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- // Anti-AFK
+task.spawn(function()
+    player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+-- // Remotes
+local combatEvent = game:GetService("ReplicatedStorage").Remotes.AttacksServer.WeaponAttack
+local equipBestRemote = game:GetService("ReplicatedStorage").Remotes.EquipBestBrainrots
+
+-- // Variables
+local Cooldowns = { LastAttack = 0, AttackCooldown = 0.15 }
+local Connections = {}
+local following = false
+local teleporting = false
+local CurrentStickyTarget = nil
+
+-- Plot Utils
+local PlotUtils = {
+    CachedPlot = nil,
+
+    GetPlot = function(self)
+        if (self.CachedPlot) then return self.CachedPlot end
+        for i,v in pairs(Workspace.Plots:GetChildren()) do
+            if (v:GetAttribute("Owner") == lcl.Name) then
+                self.CachedPlot = v
+                return v
+            end
+        end
+    end,
+
+    IsWithinPlot = function(self, entity)
+        local plot = self:GetPlot()
+        if not plot then return false end
+        local plotname = plot.Name
+        local entityplot = entity:GetAttribute("Plot")
+
+        entityplot = tonumber(entityplot)
+        plotname = tonumber(plotname)
+
+        if (entityplot == plotname) then
+            return true
+        end
+
+        return false
+    end,
+
+    GetClosestChild = function(self, folder)
+        if (rootPart == nil) then return nil end
+        local closestentity = nil
+        local closestdist = math.huge
+        for i,v in pairs(folder:GetChildren()) do
+            if (self:IsWithinPlot(v) == false) then continue end
+            local hitbox = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Hitbox") or v.PrimaryPart
+            if not hitbox then continue end
+            local dist = (hitbox.Position - rootPart.Position).Magnitude
+            if (dist < closestdist) then
+                closestdist = dist
+                closestentity = v
+            end
+        end
+
+        return closestentity
+    end,
+
+    GetClosestMissionChild = function(self, folder)
+        if (rootPart == nil) then return nil end
+        local closestentity = nil
+        local closestdist = math.huge
+        for i,v in pairs(folder:GetChildren()) do
+            if (self:IsWithinPlot(v) == false) then continue end
+            local hitbox = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Hitbox") or v.PrimaryPart
+            if not hitbox then continue end
+            local dist = (hitbox.Position - rootPart.Position).Magnitude
+            if (dist < closestdist) then
+                closestdist = dist
+                closestentity = v
+            end
+        end
+
+        return closestentity
+    end,
+}
+
+-- // Utils
+local Utils = {
+    GetClosestChild = function(self, folder)
+        if (rootPart == nil) then return nil end
+        local closestentity = nil
+        local closestdist = math.huge
+        for i,v in pairs(folder:GetChildren()) do
+            if v:IsA("Model") then
+                local hitbox = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Hitbox")
+                if hitbox and hitbox:IsA("BasePart") then
+                    local dist = (hitbox.Position - rootPart.Position).Magnitude
+                    if dist < closestdist then
+                        closestdist = dist
+                        closestentity = v
+                    end
+                end
+            end
+        end
+
+        return closestentity
+    end,
+
+    ReturnTool = function(self)
+        local tool = nil
+        for i,v in pairs(lcl.Backpack:GetChildren()) do
+            if (v:IsA("Tool") and string.find(v.Name, "Bat")) and v:FindFirstChild("Grip") then
+                tool = v
+                break
+            end
+        end
+
+        if (tool) then
+            return tool
+        end
+
+        return nil
+    end,
+
+    EquipTool = function(self, boolean)
+        local tool = self:ReturnTool()
+        if (not tool) then return end
+
+        if (boolean == false) then
+            local equippedTool = lcl.Character:FindFirstChildOfClass("Tool")
+            if (equippedTool and string.find(equippedTool.Name, "Bat")) then
+                humanoid:UnequipTools()
+                return
+            end
+        elseif (boolean == true and not lcl.Character:FindFirstChildOfClass("Tool")) then
+            humanoid:EquipTool(tool)
+            return
+        end
+    end,
+
+    ForceUnequip = function(self)
+        task.spawn(function()
+            repeat
+                local equippedTool = lcl.Character:FindFirstChildOfClass("Tool")
+                if equippedTool and string.find(equippedTool.Name, "Bat") then
+                    humanoid:UnequipTools()
+                else
+                    break
+                end
+                task.wait(0.1)
+            until not lcl.Character:FindFirstChildOfClass("Tool") or not string.find(lcl.Character:FindFirstChildOfClass("Tool").Name, "Bat")
+        end)
+    end,
+
+    Contains = function(self, tbl, val)
+        for i,v in pairs(tbl) do
+            if (v == val) then
+                return true
+            end
+        end
+
+        return false
+    end,
+}
+
+-- // STICKY TELEPORT (zero delay, sticks perfectly)
+local function StickyTeleportToBrainrot(brainrot)
+    local hitbox = brainrot and (brainrot:FindFirstChild("HumanoidRootPart") or brainrot:FindFirstChild("Hitbox") or brainrot.PrimaryPart)
+    if hitbox and hitbox:IsA("BasePart") then
+        rootPart.CFrame = CFrame.new(hitbox.Position)
+        return true
+    end
+    return false
+end
+
+-- // Get nearest brainrot
+local function GetNearestBrainrot()
+    local normal = PlotUtils:GetClosestChild(Workspace.ScriptedMap.Brainrots)
+    if normal then return normal end
+    return PlotUtils:GetClosestChild(Workspace.ScriptedMap.MissionBrainrots)
+end
+
+local function AttackEntity()
+    -- First try NormalBrainrots
+    local target = PlotUtils:GetClosestChild(Workspace.ScriptedMap.Brainrots)
+    if target then
+        Utils:EquipTool(true)
+        local args = {
+            {
+                NormalBrainrots = {target.Name},
+                MissionBrainrots = {}
+            }
+        }
+        combatEvent:FireServer(unpack(args))
+        return
+    end
+
+    -- Mission Brainrots (new system)
+    local missionTarget = PlotUtils:GetClosestMissionChild(Workspace.ScriptedMap.MissionBrainrots)
+    if missionTarget then
+        local id = missionTarget:GetAttribute("ID")
+        if id then
+            Utils:EquipTool(true)
+            local args = {
+                {
+                    NormalBrainrots = {},
+                    MissionBrainrots = {id}
+                }
+            }
+            combatEvent:FireServer(unpack(args))
+        end
+    end
+end
+
+-- // Combat UI
+local Combat = Tabs.Combat:Section({ Title = "Farming" , Icon = "swords", })
+
+-- AUTO ATTACK TOGGLE (USING YOUR WORKING LOGIC)
+Combat:Toggle({
+    Title = "Auto Attack",
+    Flag = "AutoAttack",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            if not Connections.AutoAttack then
+                Connections.AutoAttack = RunService.Heartbeat:Connect(function()
+                    local currentTime = tick()
+                    if (Cooldowns.LastAttack == nil or currentTime - Cooldowns.LastAttack >= Cooldowns.AttackCooldown) then
+                        Cooldowns.AttackCooldown = math.random(0.15, 0.23)
+                        Cooldowns.LastAttack = currentTime
+                        AttackEntity()
+                    end
+                end)
+            end
+        else
+            if Connections.AutoAttack then
+                Connections.AutoAttack:Disconnect()
+                Connections.AutoAttack = nil
+            end
+            Utils:ForceUnequip()
+        end
+    end,
+})
+
+Combat:Toggle({
+    Title = "Follow Brainrot",
+    Flag = "FollowBrainrot",
+    Default = false,
+    Callback = function(v)
+        following = v
+        if v then
+            task.spawn(function()
+                while following do
+                    task.wait(0.1)
+                    if not following then break end
+                    local ent = PlotUtils:GetClosestChild(Workspace.ScriptedMap.Brainrots)
+                    if not ent then ent = PlotUtils:GetClosestChild(Workspace.ScriptedMap.MissionBrainrots) end
+                    if ent then
+                        local hitbox = ent:FindFirstChild("HumanoidRootPart") or ent:FindFirstChild("Hitbox") or ent.PrimaryPart
+                        if hitbox then humanoid:MoveTo(hitbox.Position) end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+-- TELEPORT TO BRAINROT (ZERO DELAY + STICKY)
+Combat:Toggle({
+    Title = "Teleport to Brainrot",
+    Flag = "TeleportBrainrot",
+    Default = false,
+    Callback = function(v)
+        teleporting = v
+        CurrentStickyTarget = nil
+        if v then
+            task.spawn(function()
+                while teleporting do
+                    if not character or not rootPart or humanoid.Health <= 0 then
+                        CurrentStickyTarget = nil
+                        task.wait(0.1)
+                        continue
+                    end
+
+                    -- Refresh target if invalid
+                    if not CurrentStickyTarget or not CurrentStickyTarget.Parent or not PlotUtils:IsWithinPlot(CurrentStickyTarget) then
+                        CurrentStickyTarget = GetNearestBrainrot()
+                    end
+
+                    -- Stick every frame
+                    if CurrentStickyTarget then
+                        StickyTeleportToBrainrot(CurrentStickyTarget)
+                    end
+                    task.wait()  -- Zero delay
+                end
+            end)
+        else
+            CurrentStickyTarget = nil
+        end
+    end,
+})
+
+
+Combat:Button({
+    Title = "Equip Best Brainrots",
+    Callback = function() equipBestRemote:FireServer() end
+})
+
+
+-- Auto Equip Best
+local Collect = Tabs.Collect:Section({Title = "Auto Equip", Icon = "star"})
+
+Collect:Slider({
+    Title = "Auto Equip Delay (sec)",
+    Description = "Set delay time between equipping best brainrots",
+    Value = {Min = 5, Max = 60, Default = 10},
+    Step = 1,
+    Callback = function(val)
+        if type(val) == "number" then
+            AutoEquipDelay = val
+        elseif type(val) == "table" and val.Value then
+            AutoEquipDelay = val.Value
+        end
+    end
+})
+
+Collect:Toggle({
+    Title = "Auto Equip Best Brainrots",
+    Description = "Automatically equips the best brainrots",
+    Default = false,
+    Callback = function(state)
+        AutoEquipBest = state
+
+        -- stop previous loop if running
+        if AutoEquipLoop then
+            task.cancel(AutoEquipLoop)
+            AutoEquipLoop = nil
+        end
+
+        if state then
+            AutoEquipLoop = task.spawn(function()
+                while AutoEquipBest do
+                    pcall(function()
+                        local equipRemote = game.ReplicatedStorage
+                            :WaitForChild("Remotes")
+                            :WaitForChild("EquipBestBrainrots")
+                        if equipRemote then
+                            equipRemote:FireServer()
+                        end
+                    end)
+
+                    local delay = tonumber(AutoEquipDelay) or 10
+                    if delay < 0.1 then delay = 0.1 end
+                    task.wait(delay)
+                end
+            end)
+        end
+    end
+})

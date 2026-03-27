@@ -1,0 +1,762 @@
+local Library = loadstring(game:HttpGet("https://github.com/1dontgiveaf/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/1dontgiveaf/Fluent/main/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/1dontgiveaf/Fluent/main/Addons/InterfaceManager.lua"))()
+
+local Window = Library:CreateWindow({
+	Title = "Grow a Garden GUI",
+	SubTitle = "- LegendHandles",
+	TabWidth = 120,
+	Size = UDim2.fromOffset(450, 350),
+	Acrylic = true,
+	Theme = "Darker",
+	MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Autofarm = Window:AddTab({Title = "Autofarm", Icon = "settings-2"}),
+    Misc = Window:AddTab({Title = "Misc", Icon = "settings-2"}),
+    Credit = Window:AddTab({Title = "Credit", Icon = "mail"})
+}
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+local remote = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Plant_RE")
+local autoHarvest, autoPlant, autoBuySeeds, autoSell = false, false, false, false
+local walkSpeed = 30
+
+local function getOwnedPlot()
+	for _, plot in pairs(workspace.Farm:GetChildren()) do
+		local imp = plot:FindFirstChild("Important") or plot:FindFirstChild("Importanert")
+		if imp then
+			local data = imp:FindFirstChild("Data")
+			if data and data:FindFirstChild("Owner") and data.Owner.Value == player.Name then
+				return plot
+			end
+		end
+	end
+	return nil
+end
+
+local function getCFrameFromModel(model)
+	if model.PrimaryPart then
+		return model.PrimaryPart.CFrame
+	else
+		for _, part in ipairs(model:GetDescendants()) do
+			if part:IsA("BasePart") then
+				return part.CFrame
+			end
+		end
+	end
+	return nil
+end
+
+local function getRandomPlantCFrame()
+	local plot = getOwnedPlot()
+	if plot then
+		local imp = plot:FindFirstChild("Important")
+		local farm = imp and imp:FindFirstChild("Plants_Physical")
+		if farm then
+			local plants = farm:GetChildren()
+			if #plants > 0 then
+				local randomPlant = plants[math.random(1, #plants)]
+
+				if randomPlant:IsA("Model") and randomPlant.PrimaryPart then
+					return randomPlant.PrimaryPart.CFrame
+				end
+
+				local part = randomPlant:FindFirstChild("1")
+				if part and part:IsA("BasePart") then
+					return part.CFrame
+				end
+
+				for _, child in ipairs(randomPlant:GetDescendants()) do
+					if child:IsA("BasePart") then
+						return child.CFrame
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function autoBuySeedsFunction()
+	local shopUI = player:WaitForChild("PlayerGui"):WaitForChild("Seed_Shop")
+	local scroll = shopUI.Frame.ScrollingFrame
+	for _, item in pairs(scroll:GetChildren()) do
+		local stock = item:FindFirstChild("Stock")
+		if stock and stock:IsA("NumberValue") and stock.Value > 0 then
+			ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("BuySeedStock"):FireServer(item.Name)
+		end
+	end
+end
+
+local function findSeedTool()
+	for _, item in ipairs(player.Character:GetChildren()) do
+		if item:IsA("Tool") and item.Name:find("Seed") then
+			local crop = item.Name:match("^(.-) Seed")
+			return item, crop
+		end
+	end
+	for _, item in ipairs(backpack:GetChildren()) do
+		if item:IsA("Tool") and item.Name:find("Seed") then
+			local crop = item.Name:match("^(.-) Seed")
+			return item, crop
+		end
+	end
+	return nil, nil
+end
+
+local function harvestRandomPlant()
+	local cf = getRandomPlantCFrame()
+	if cf then
+		local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.CFrame = cf + CFrame.new(0, 5, 0)
+			for _, prompt in ipairs((cf and (getOwnedPlot().Important.Plants_Physical:GetDescendants() or {})) ) do
+				if prompt:IsA("ProximityPrompt") then
+					fireproximityprompt(prompt, 1, true)
+				end
+			end
+		end
+	end
+end
+
+local originalSellCFrame = nil
+local sellLoopActive = false
+
+task.spawn(function()
+	while task.wait(0.05) do
+		if autoHarvest then
+			local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local cf = getRandomPlantCFrame()
+				if cf then
+					hrp.CFrame = cf * CFrame.new(0, 5, 0)
+					wait(0.05)
+					for _, prompt in ipairs(getOwnedPlot().Important.Plants_Physical:GetDescendants()) do
+						if prompt:IsA("ProximityPrompt") then
+							fireproximityprompt(prompt, 1, true)
+						end
+					end
+				end
+			end
+		end
+	end
+end)
+
+
+local originalSellCFrame = nil
+local wasAutoSelling = false
+
+task.spawn(function()
+	while task.wait() do
+		if autoSell then
+			local shopStand = workspace.NPCS["Sell Stands"]["Shop Stand"]
+			if shopStand then
+				local character = player.Character or player.CharacterAdded:Wait()
+				local root = character:WaitForChild("HumanoidRootPart")
+				
+				if not wasAutoSelling then
+					originalSellCFrame = root.CFrame
+					wasAutoSelling = true
+				end
+
+				task.wait(0.5)
+				root.CFrame = shopStand.CFrame * CFrame.new(0, 0, 3)
+				task.wait(0.5)
+				game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Sell_Inventory"):FireServer()
+				task.wait(0.5)
+				root.CFrame = CFrame.new(27.028656, 4.61500359, -81.4960098, 0.801240802, -3.3885601e-09, -0.598342061, -3.22234683e-10, 1, -6.09475403e-09, 0.598342061, 5.07617193e-09, 0.801240802)
+			end
+		elseif wasAutoSelling then
+			local character = player.Character or player.CharacterAdded:Wait()
+			local root = character:WaitForChild("HumanoidRootPart")
+			if originalSellCFrame then
+				root.CFrame = originalSellCFrame
+			end
+			originalSellCFrame = nil
+			wasAutoSelling = false
+		end
+	end
+end)
+
+
+task.spawn(function()
+	while task.wait(0.1) do
+		if autoBuySeeds then
+			autoBuySeedsFunction()
+		end
+	end
+end)
+
+task.spawn(function()
+	while task.wait(0.1) do
+		if autoPlant then
+			local plot = getOwnedPlot()
+			if plot then
+				local imp = plot:FindFirstChild("Important")
+				local locs = imp and imp:FindFirstChild("Plant_Locations")
+				local targetPos
+				if locs and #locs:GetChildren() > 0 then
+					local boundaries = locs:GetChildren()
+					local sel = boundaries[math.random(1, #boundaries)]
+					if sel:IsA("BasePart") then
+						local size = sel.Size
+						local center = sel.Position
+						local randomX = center.X + (math.random() - 0.5) * size.X
+						local randomZ = center.Z + (math.random() - 0.5) * size.Z
+						targetPos = Vector3.new(randomX, center.Y, randomZ)
+					elseif sel:IsA("Model") then
+						local cf = getCFrameFromModel(sel)
+						if cf then
+							targetPos = cf.Position
+						end
+					end
+				end
+				targetPos = targetPos or (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position) or Vector3.new(0, 0, 0)
+				local tool, seedType = findSeedTool()
+				if tool and seedType then
+					if tool.Parent == backpack then
+						player.Character:WaitForChild("Humanoid"):EquipTool(tool)
+						repeat task.wait() until tool.Parent == player.Character
+					end
+					remote:FireServer(targetPos, seedType)
+					local character = player.Character or player.CharacterAdded:Wait()
+					local hrp = character:WaitForChild("HumanoidRootPart")
+					hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+				end
+			end
+		end
+	end
+end)
+
+task.spawn(function()
+	while task.wait(0.1) do
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = walkSpeed
+		end
+	end
+end)
+
+
+
+   Tabs.Autofarm:AddButton({
+    Title = "Open Trade Macro GUI",
+    Description = "Opens UI",
+    Callback = function()
+    loadstring(game:HttpGet("https://pastefy.app/wtpgnhU4/raw"))()
+
+    end})
+    
+       Tabs.Autofarm:AddButton({
+    Title = "Open Auto Buy GUI",
+    Description = "Opens UI",
+    Callback = function()
+    loadstring(game:HttpGet("https://pastefy.app/wtpgnhU4/raw"))()
+loadstring(game:HttpGet("https://pastebin.com/raw/xk2v7wJ6"))()
+    end})
+   Tabs.Autofarm:AddButton({
+    Title = "Dupe Inventory",
+    Description = "Dupes Your Inventory",
+    Callback = function()
+local player = game.Players.LocalPlayer
+
+local function createDupeGui()
+    local DupeGui = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local DupeButton = Instance.new("TextButton")
+    local UICorner = Instance.new("UICorner")
+    local UIStroke = Instance.new("UIStroke")
+    local UIScale = Instance.new("UIScale")
+    local shadow = Instance.new("Frame")
+
+    DupeGui.Name = "DupeGui"
+    DupeGui.ResetOnSpawn = false
+    DupeGui.Parent = player:WaitForChild("PlayerGui")
+    DupeGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- Main frame (glassmorphism style)
+    main.Name = "main"
+    main.Parent = DupeGui
+    main.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    main.BackgroundTransparency = 0.2
+    main.AnchorPoint = Vector2.new(0, 0)
+    main.Position = UDim2.new(0, 20, 0, 20)
+    main.Size = UDim2.new(0, 280, 0, 130)
+    main.Active = true
+    main.Draggable = true
+
+    UIStroke.Parent = main
+    UIStroke.Thickness = 2
+    UIStroke.Color = Color3.fromRGB(120, 0, 255)
+    UIStroke.Transparency = 0.2
+
+    UIScale.Parent = main
+    UIScale.Scale = 1
+
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.7
+    shadow.Position = UDim2.new(0, 4, 0, 4)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    -- Button
+    DupeButton.Name = "DupeButton"
+    DupeButton.Parent = main
+    DupeButton.BackgroundColor3 = Color3.fromRGB(120, 0, 255)
+    DupeButton.Position = UDim2.new(0.08, 0, 0.4, 0)
+    DupeButton.Size = UDim2.new(0.85, 0, 0.42, 0)
+    DupeButton.Font = Enum.Font.GothamSemibold
+    DupeButton.Text = "Dupe Inventory"
+    DupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DupeButton.TextSize = 22
+    DupeButton.TextStrokeTransparency = 0.5
+
+    UICorner.CornerRadius = UDim.new(0.15, 0)
+    UICorner.Parent = DupeButton
+
+    local ButtonGlow = Instance.new("UIStroke")
+    ButtonGlow.Parent = DupeButton
+    ButtonGlow.Thickness = 2
+    ButtonGlow.Color = Color3.fromRGB(190, 110, 255)
+    ButtonGlow.Transparency = 0.15
+
+    -- Hover effect
+    DupeButton.MouseEnter:Connect(function()
+        DupeButton.BackgroundColor3 = Color3.fromRGB(140, 30, 255)
+    end)
+    DupeButton.MouseLeave:Connect(function()
+        DupeButton.BackgroundColor3 = Color3.fromRGB(120, 0, 255)
+    end)
+
+    -- On click: duplicate tools (except Shovel)
+    DupeButton.MouseButton1Click:Connect(function()
+        local backpack = player:WaitForChild("Backpack")
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name ~= "Shovel [Destroy Plants]" then
+                local clone = tool:Clone()
+                clone.Parent = backpack
+                print("Duplicated tool:", tool.Name)
+            end
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(function()
+    player:WaitForChild("PlayerGui")
+    createDupeGui()
+end)
+
+createDupeGui()
+
+
+end})
+   Tabs.Autofarm:AddButton({
+    Title = "Old Server Finder",
+    Description = "Finds Candy Blossom",
+    Callback = function()
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local localPlayer = Players.LocalPlayer
+local placeId = game.PlaceId
+local currentJobId = game.JobId
+
+local function getAvailableServer()
+	local cursor = nil
+
+	while true do
+		local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+		if cursor then url = url .. "&cursor=" .. cursor end
+
+		local success, data = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet(url))
+		end)
+
+		if success and data and data.data then
+			for _, server in ipairs(data.data) do
+				if server.id ~= currentJobId and server.playing < server.maxPlayers - 1 and not server.privateServerId then
+					return server
+				end
+			end
+			cursor = data.nextPageCursor
+			if not cursor then break end
+		else
+			break
+		end
+	end
+
+	return nil
+end
+
+local function teleportLoop()
+	while true do
+		local server = getAvailableServer()
+		if server then
+			local success, err = pcall(function()
+				TeleportService:TeleportToPlaceInstance(placeId, server.id, localPlayer)
+			end)
+			if success then
+				print("Teleport success!")
+				return
+			else
+				warn("Teleport failed, retrying... (" .. tostring(err) .. ")")
+			end
+		else
+			warn("No valid server found, retrying...")
+		end
+		wait(2)
+	end
+end
+
+teleportLoop()
+
+    end
+})
+
+
+Tabs.Autofarm:AddToggle("Harvest", {
+	Title = "Auto Buy 1st Egg (Left)",
+	Default = false,
+	Callback = function(Value)
+ a = Value
+        while a do task.wait()
+        pcall(function()
+
+-- Script generated by SimpleSpy - credits to exx#9394
+
+local args = {
+    [1] = 2
+}
+
+game:GetService("ReplicatedStorage").GameEvents.BuyPetEgg:FireServer(unpack(args))
+
+
+  end)
+             end
+	end
+})
+
+
+Tabs.Autofarm:AddToggle("Harvest", {
+	Title = "Auto Buy 2nd Egg (Middle)",
+	Default = false,
+	Callback = function(Value)
+ a = Value
+        while a do task.wait()
+        pcall(function()
+
+local args = {
+    [1] = 1
+}
+
+game:GetService("ReplicatedStorage").GameEvents.BuyPetEgg:FireServer(unpack(args))
+
+  end)
+             end
+	end
+})
+
+Tabs.Autofarm:AddToggle("Harvest", {
+	Title = "Auto Buy 3rd Egg (Right)",
+	Default = false,
+	Callback = function(Value)
+ a = Value
+        while a do task.wait()
+        pcall(function()
+
+local args = {
+    [1] = 3
+}
+
+game:GetService("ReplicatedStorage").GameEvents.BuyPetEgg:FireServer(unpack(args))
+
+  end)
+             end
+	end
+})
+
+Tabs.Autofarm:AddToggle("BuySeeds", {
+	Title = "Auto Quest Giver",
+	Default = false,
+	Callback = function(state)
+    if state then
+game:GetService("Players").LocalPlayer.PlayerGui.DailyQuests_UI.Enabled = true
+else
+game:GetService("Players").LocalPlayer.PlayerGui.DailyQuests_UI.Enabled = false
+end
+end})
+
+
+Tabs.Autofarm:AddToggle("Harvest", {
+	Title = "Dupe Spam Submit [OLD SERVER]",
+	Default = false,
+	Callback = function(Value)
+ a = Value
+        while a do task.wait()
+        pcall(function()
+	local args = {
+    [1] = "SubmitHeldPlant"
+}
+
+game:GetService("ReplicatedStorage").GameEvents.SeedPackGiverEvent:FireServer(unpack(args))
+
+  end)
+             end
+	end
+})
+
+
+Tabs.Autofarm:AddToggle("Harvest", {
+	Title = "Auto Harvest & Teleport",
+	Default = false,
+	Callback = function(state)
+		autoHarvest = state
+	end
+})
+Tabs.Autofarm:AddToggle("Plant", {
+	Title = "Auto Planting v1",
+	Default = false,
+	Callback = function(state)
+		autoPlant = state
+	end
+})
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local buying = false
+local selectedSeed = nil
+
+local seedNames = {
+    "Apple", "Bamboo", "Banana", "Blue Lollipop", "Blueberry", "Cactus",
+    "Candy Blossom", "Candy Sunflower", "Carrot", "Cherry Blossom", "Chocolate Carrot", "Coconut",
+    "Corn", "Crocus", "Cursed Fruit", "Daffodil", "Dragon Fruit", "Easter Egg", "Eggplant", "Grape",
+    "Lemon", "Mango", "Mega Mushroom", "Orange Tulip", "Papaya", "Passionfruit", "Peach", "Pear",
+    "Pineapple", "Pink Tulip", "Pumpkin", "Purple Cabbage", "Raspberry", "Red Lollipop",
+    "Soul Fruit", "Strawberry", "Super", "Tomato", "Watermelon"
+}
+
+-- Create dropdown
+local BuyDropdown = Tabs.Autofarm:AddDropdown("AutoBuyDropdown", {
+    Title = "Select Auto Buy",
+    Values = seedNames,
+    Multi = false,
+    Default = 1,
+})
+
+-- Create toggle
+local BuyToggle = Tabs.Autofarm:AddToggle("AutoBuyToggle", {
+    Title = "Auto Buy Enable",
+    Default = false,
+})
+
+-- Dropdown changes selected seed
+BuyDropdown:OnChanged(function(value)
+    selectedSeed = value
+    print("Selected seed:", value)
+end)
+
+-- Toggle to start/stop auto-buy
+BuyToggle:OnChanged(function(value)
+    buying = value
+    if not value then
+        print("Auto Buy stopped")
+    end
+end)
+
+-- Loop to auto-buy
+task.spawn(function()
+    while true do
+        task.wait() -- fast interval
+        if buying and selectedSeed then
+            ReplicatedStorage.GameEvents.BuySeedStock:FireServer(selectedSeed)
+        end
+    end
+end)
+
+Tabs.Autofarm:AddToggle("Sell", {
+	Title = "Auto Selling",
+	Default = false,
+	Callback = function(state)
+		autoSell = state
+	end
+})
+
+ local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local planting = false
+local selectedPlant = nil
+
+local plantNames = {
+    "Apple", "Bamboo", "Banana", "Blue Lollipop", "Blueberry", "Cactus",
+    "Candy Blossom", "Candy Sunflower", "Carrot", "Cherry Blossom", "Chocolate Carrot", "Coconut",
+    "Corn", "Crocus", "Cursed Fruit", "Daffodil", "Dragon Fruit", "Easter Egg", "Eggplant", "Grape",
+    "Lemon", "Mango", "Mega Mushroom", "Orange Tulip", "Papaya", "Passionfruit", "Peach", "Pear",
+    "Pineapple", "Pink Tulip", "Pumpkin", "Purple Cabbage", "Raspberry", "Red Lollipop",
+    "Soul Fruit", "Strawberry", "Super", "Tomato", "Watermelon"
+}
+
+-- Create dropdown
+local Dropdown = Tabs.Autofarm:AddDropdown("Dropdown", {
+    Title = "Select Plant v2",
+    Values = plantNames,
+    Multi = false,
+    Default = 1,
+})
+
+-- Create toggle to stop/start
+local Toggle = Tabs.Autofarm:AddToggle("AutoPlantToggle", {
+    Title = "Auto Plant v2 Enable",
+    Default = false,
+})
+
+-- Toggle logic
+Toggle:OnChanged(function(value)
+    planting = value
+    if not value then
+        print("Auto Plant stopped")
+    end
+end)
+
+-- Start planting when dropdown changes
+Dropdown:OnChanged(function(Value)
+    print("Selected:", Value)
+    selectedPlant = Value
+end)
+
+-- Loop that plants quickly while toggle is on
+task.spawn(function()
+    while true do
+        task.wait() -- adjust speed here
+        if planting and selectedPlant then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                ReplicatedStorage.GameEvents.Plant_RE:FireServer(root.Position, selectedPlant)
+            end
+        end
+    end
+end)
+
+Tabs.Autofarm:AddToggle("BuySeeds", {
+	Title = "Auto Open Shop UI",
+	Default = false,
+	Callback = function(state)
+    if state then
+game:GetService("Players").LocalPlayer.PlayerGui.Seed_Shop.Enabled = true
+else
+game:GetService("Players").LocalPlayer.PlayerGui.Seed_Shop.Enabled = false
+end
+end})
+
+
+Tabs.Misc:AddToggle("Jump", {
+	Title = "Infinite Jump",
+	Default = false,
+	Callback = function(state)
+	if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+	end
+})
+
+Tabs.Misc:AddSlider("Slider", {
+        Title = "Walkspeed",
+        Description = "Walkspeed",
+        Default = 16,
+        Min = 16,
+        Max = 200,
+        Rounding = 1,
+        Callback = function(s)
+         
+   getgenv().WalkSpeedValue = (s); --set your desired walkspeed here
+
+local Player = game:service'Players'.LocalPlayer;
+
+Player.Character.Humanoid:GetPropertyChangedSignal'WalkSpeed':Connect(function()
+
+Player.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue;
+
+end)
+
+
+Player.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue;
+        end
+    })
+
+    
+Tabs.Misc:AddToggle("idk", {
+	Title = "Noclip",
+	Default = false,
+	Callback = function()
+ local Noclip = nil
+local Clip = nil
+
+function noclip()
+	Clip = false
+	local function Nocl()
+		if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+					v.CanCollide = false
+				end
+			end
+		end
+		wait(0.21) -- basic optimization
+	end
+	Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+	if Noclip then Noclip:Disconnect() end
+	Clip = true
+end
+
+noclip()
+	end
+})
+Tabs.Credit:AddParagraph({
+    Title = "Credits",
+    Content = "Legend Hub"
+})
+
+
+Window:SelectTab(1)
+Library:Notify({
+	Title = "Loaded",
+	Content = "Garden script loaded successfully.",
+	Duration = 5
+})

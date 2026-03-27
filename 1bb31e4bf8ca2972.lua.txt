@@ -1,0 +1,516 @@
+-- ts file was generated at discord.gg/25ms
+
+
+local vu1 = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+local v2 = vu1
+vu1.AddTheme(v2, {
+    Name = "My Theme",
+    Accent = Color3.fromHex("#18181b"),
+    Dialog = Color3.fromHex("#161616"),
+    Outline = Color3.fromHex("#FFFFFF"),
+    Text = Color3.fromHex("#FFFFFF"),
+    Placeholder = Color3.fromHex("#7a7a7a"),
+    Background = Color3.fromHex("#101010"),
+    Button = Color3.fromHex("#52525b"),
+    Icon = Color3.fromHex("#a1a1aa")
+})
+local v3 = vu1
+vu1.SetTheme(v3, "My Theme")
+local v4 = vu1
+local v5 = vu1.CreateWindow(v4, {
+    Title = "Mystrix Hub",
+    Icon = "app-window-mac",
+    Author = "By Ummarxfarooq"
+})
+v5:Tag({
+    Title = "1.0",
+    Color = Color3.fromHex("#ff0000"),
+    TextColor = Color3.fromHex("#ffffff"),
+    Radius = 8
+})
+local v6 = v5:Section({
+    Title = "Main",
+    Icon = "tool-case",
+    Opened = true
+})
+local v7 = v5:Section({
+    Title = "Community",
+    Icon = "users",
+    Opened = true
+})
+local v8 = v6:Tab({
+    Title = "Auto Farm",
+    Icon = "fish"
+})
+local v9 = v6:Tab({
+    Title = "Teleports",
+    Icon = "map-pin"
+})
+local v10 = v6:Tab({
+    Title = "Performance",
+    Icon = "cpu"
+})
+v7:Tab({
+    Title = "Discord",
+    Icon = "link"
+}):Button({
+    Title = "Join Our Discord",
+    Desc = "Click to copy the invite link to clipboard.",
+    Icon = "link",
+    Callback = function()
+        local v11 = "https://discord.gg/XV66VWqAaN"
+        if setclipboard then
+            setclipboard(v11)
+            vu1:Notify({
+                Title = "Discord Invite Copied",
+                Desc = "Link copied to clipboard! Paste in Discord to join.",
+                Duration = 5
+            })
+        else
+            vu1:Notify({
+                Title = "Clipboard Unsupported",
+                Desc = "Your executor doesn\226\128\153t support clipboard functions.",
+                Duration = 5
+            })
+        end
+    end
+})
+local vu12 = game:GetService("Players")
+local v13 = game:GetService("ReplicatedStorage")
+local vu14 = game:GetService("VirtualUser")
+local vu15 = game:GetService("RunService")
+local vu16 = game:GetService("Lighting")
+local vu17 = vu12.LocalPlayer
+local vu18 = v13.Packages._Index and v13.Packages._Index["sleitnick_net@0.2.0"]
+if vu18 then
+    vu18 = v13.Packages._Index["sleitnick_net@0.2.0"].net
+end
+local vu19
+if vu18 then
+    vu19 = vu18["RF/ChargeFishingRod"]
+else
+    vu19 = vu18
+end
+local vu20
+if vu18 then
+    vu20 = vu18["RF/RequestFishingMinigameStarted"]
+else
+    vu20 = vu18
+end
+local vu21
+if vu18 then
+    vu21 = vu18["RE/FishingCompleted"]
+else
+    vu21 = vu18
+end
+local vu22
+if vu18 then
+    vu22 = vu18["RE/ClaimNotification"]
+else
+    vu22 = vu18
+end
+local vu23
+if vu18 then
+    vu23 = vu18["RE/FishingStopped"]
+else
+    vu23 = vu18
+end
+if vu18 then
+    vu18 = vu18["RF/SellAllItems"]
+end
+local vu24 = false
+local vu25 = false
+local vu26 = false
+local vu27 = false
+local vu28 = nil
+local vu29 = nil
+local vu30 = {}
+local vu31 = - 1.233184814453125
+local vu32 = 0.9950508920792316
+local function vu33()
+    if vu22 and type(vu22.FireServer) == "function" then
+        vu22:FireServer("Fishes")
+    end
+end
+local function vu37()
+    if vu24 then
+        if vu19 and (vu20 and vu21) then
+            local vu34 = workspace.GetServerTimeNow and workspace:GetServerTimeNow() or tick()
+            pcall(function()
+                vu19:InvokeServer(vu34)
+            end)
+            task.wait(0.1)
+            pcall(function()
+                vu20:InvokeServer(vu31, vu32)
+            end)
+            local vu35 = vu15.Heartbeat:Connect(function()
+                pcall(function()
+                    vu21:FireServer()
+                end)
+            end)
+            local vu36 = nil
+            if vu23 then
+                local _ = vu23.OnClientEvent:Connect(function()
+                    if vu35 then
+                        vu35:Disconnect()
+                    end
+                    if vu36 then
+                        vu36:Disconnect()
+                    end
+                    vu33()
+                    task.wait(1)
+                    if vu24 then
+                        vu37()
+                    end
+                end)
+            end
+        end
+    else
+        return
+    end
+end
+task.spawn(function()
+    while task.wait(1) do
+        if vu25 and vu18 then
+            pcall(function()
+                vu18:InvokeServer()
+            end)
+        end
+    end
+end)
+v8:Toggle({
+    Title = "Auto Fishing",
+    Desc = "Automatically fishes perfectly.",
+    Icon = "fish",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(p38)
+        vu24 = p38
+        if p38 then
+            vu37()
+        end
+    end
+})
+v8:Toggle({
+    Title = "Auto Sell",
+    Desc = "Automatically sells caught fish.",
+    Icon = "dollar-sign",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(p39)
+        vu25 = p39
+    end
+})
+v8:Toggle({
+    Title = "Anti AFK",
+    Desc = "Prevents Roblox AFK kick.",
+    Icon = "moon",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(p40)
+        vu26 = p40
+        if p40 then
+            if vu28 then
+                vu28:Disconnect()
+            end
+            vu28 = vu17.Idled:Connect(function()
+                vu14:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu14:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+        elseif vu28 then
+            vu28:Disconnect()
+            vu28 = nil
+        end
+    end
+})
+local function vu47(p41, pu42)
+    if p41 then
+        local v43, v44, v45 = ipairs(p41:GetDescendants())
+        while true do
+            local vu46
+            v45, vu46 = v43(v44, v45)
+            if v45 == nil then
+                break
+            end
+            if vu46:IsA("BasePart") then
+                pcall(function()
+                    vu46.LocalTransparencyModifier = pu42 and 0 or 1
+                    vu46.CanCollide = pu42
+                end)
+            elseif vu46:IsA("Decal") then
+                pcall(function()
+                    vu46.Transparency = pu42 and 0 or 1
+                end)
+            end
+        end
+    end
+end
+local function vu53()
+    local v48 = vu12
+    local v49, v50, v51 = ipairs(v48:GetPlayers())
+    while true do
+        local v52
+        v51, v52 = v49(v50, v51)
+        if v51 == nil then
+            break
+        end
+        if v52 ~= vu17 and v52.Character then
+            vu47(v52.Character, false)
+        end
+    end
+end
+local function vu59()
+    local v54 = vu12
+    local v55, v56, v57 = ipairs(v54:GetPlayers())
+    while true do
+        local v58
+        v57, v58 = v55(v56, v57)
+        if v57 == nil then
+            break
+        end
+        if v58 ~= vu17 and v58.Character then
+            vu47(v58.Character, true)
+        end
+    end
+end
+local function vu68()
+    if not vu27 then
+        vu27 = true
+        vu53()
+        vu29 = vu12.PlayerAdded:Connect(function(p60)
+            vu30[p60] = p60.CharacterAdded:Connect(function(p61)
+                task.wait(0.5)
+                vu47(p61, false)
+            end)
+            if p60.Character then
+                task.wait(0.1)
+                vu47(p60.Character, false)
+            end
+        end)
+        local v62 = vu12
+        local v63, v64, v65 = ipairs(v62:GetPlayers())
+        while true do
+            local v66
+            v65, v66 = v63(v64, v65)
+            if v65 == nil then
+                break
+            end
+            if v66 ~= vu17 and not vu30[v66] then
+                vu30[v66] = v66.CharacterAdded:Connect(function(p67)
+                    task.wait(0.5)
+                    vu47(p67, false)
+                end)
+            end
+        end
+    end
+end
+local function vu73()
+    if vu27 then
+        vu27 = false
+        vu59()
+        if vu29 then
+            vu29:Disconnect()
+            vu29 = nil
+        end
+        local v69, v70, v71 = pairs(vu30)
+        while true do
+            local v72
+            v71, v72 = v69(v70, v71)
+            if v71 == nil then
+                break
+            end
+            if v72 then
+                v72:Disconnect()
+            end
+            vu30[v71] = nil
+        end
+    end
+end
+v10:Toggle({
+    Title = "Hide Players",
+    Desc = "Hide other players when enabled.",
+    Icon = "eye-off",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(p74)
+        if p74 then
+            vu68()
+        else
+            vu73()
+        end
+    end
+})
+v10:Toggle({
+    Title = "Disable Shadows",
+    Desc = "Disable global shadows for better performance (applies when toggled).",
+    Icon = "sun",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(pu75)
+        pcall(function()
+            vu16.GlobalShadows = not pu75
+        end)
+    end
+})
+v10:Toggle({
+    Title = "Disable Water Reflections",
+    Desc = "Disable reflections for better performance (applies when toggled).",
+    Icon = "waves",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(pu76)
+        pcall(function()
+            vu16.EnvironmentSpecularScale = pu76 and 0 or 1
+        end)
+    end
+})
+v10:Toggle({
+    Title = "Disable Particles",
+    Desc = "Disable particles, trails, beams for better performance (applies when toggled).",
+    Icon = "sparkles",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(pu77)
+        local v78, v79, v80 = ipairs(workspace:GetDescendants())
+        while true do
+            local vu81
+            v80, vu81 = v78(v79, v80)
+            if v80 == nil then
+                break
+            end
+            if vu81:IsA("ParticleEmitter") or (vu81:IsA("Trail") or vu81:IsA("Beam")) then
+                pcall(function()
+                    vu81.Enabled = not pu77
+                end)
+            end
+        end
+    end
+})
+v10:Toggle({
+    Title = "Disable Terrain Decoration",
+    Desc = "Disable terrain decorations for better performance (applies when toggled).",
+    Icon = "leaf",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(pu82)
+        local vu83 = workspace:FindFirstChildOfClass("Terrain")
+        if vu83 then
+            pcall(function()
+                vu83.Decoration = not pu82
+            end)
+        end
+    end
+})
+local vu84 = {
+    ["Fisherman Island"] = CFrame.new(45.2788086, 252.562927, 2987.10913),
+    ["Coral Reefs"] = CFrame.new(- 3025.44604, 58.21521, 2110.72192),
+    ["Crystal Island"] = CFrame.new(860.734863, 29.4218597, 4911.59277),
+    ["Esoteric Depths"] = CFrame.new(3108.01123, - 1303.79224, 1424.69116),
+    ["Esoteric Island"] = CFrame.new(2061.67554, 23.559082, 1359.32153),
+    ["Fisherman Island Old"] = CFrame.new(- 125.094879, 15.5606079, 2809.89185),
+    Kohana = CFrame.new(- 586.182068, 18.236021, 594.774902),
+    ["Lost Isle"] = CFrame.new(- 3599.31006, - 165.454437, - 1362.18982),
+    ["Tropical Grove"] = CFrame.new(- 2195.14697, 1.76647949, 3709.00708),
+    ["Winter Fest"] = CFrame.new(1679.77942, 8.78112793, 3393.71387),
+    ["Ancient Jungle"] = CFrame.new(1499.51746, 14.281868, - 409.530273)
+}
+local v85, v86, v87 = pairs(vu84)
+local v88 = vu1
+local v89 = {}
+while true do
+    v87 = v85(v86, v87)
+    if v87 == nil then
+        break
+    end
+    table.insert(v89, v87)
+end
+table.sort(v89)
+v9:Dropdown({
+    Title = "Teleport to Island",
+    Values = v89,
+    Value = v89[1] or "Fisherman Island",
+    Callback = function(p90)
+        local v91 = vu84[p90]
+        if v91 then
+            local v92 = vu17.Character
+            if v92 and v92:FindFirstChild("HumanoidRootPart") then
+                v92:PivotTo(v91)
+            end
+        end
+    end
+})
+local vu93 = {
+    Alex = CFrame.new(48.0930824, 17.4960938, 2877.13379),
+    ["Alien Merchant"] = CFrame.new(- 132.127686, 2.71751165, 2757.46191),
+    ["Aura Kid"] = CFrame.new(71.0932083, 18.5335236, 2830.35889),
+    ["Billy Bob"] = CFrame.new(79.8430176, 18.659088, 2876.63379),
+    ["Boat Expert"] = CFrame.new(33.3180008, 9.8, 2783.00903),
+    Jim = CFrame.new(84.895195, 9.824893, 2797.39233),
+    Joe = CFrame.new(144.043442, 20.4837284, 2862.38379),
+    Ron = CFrame.new(- 51.7067909, 17.3335247, 2859.55884),
+    Scientist = CFrame.new(- 8.03684139, 14.6696262, 2885.70532),
+    Scott = CFrame.new(- 17.1273079, 9.53158569, 2703.35889),
+    Seth = CFrame.new(111.59314, 17.4086304, 2877.13379),
+    ["Silly Fisherman"] = CFrame.new(101.947266, 9.53157139, 2690.21948),
+    ["Temple Guardian"] = CFrame.new(1491.47729, 127.625061, - 593.159485),
+    ["Tour Guide"] = CFrame.new(1238.88989, 7.82286787, - 238.185654)
+}
+local v94, v95, v96 = pairs(vu93)
+local v97 = {}
+while true do
+    v96 = v94(v95, v96)
+    if v96 == nil then
+        break
+    end
+    table.insert(v97, v96)
+end
+table.sort(v97)
+v9:Dropdown({
+    Title = "Teleport to NPC",
+    Values = v97,
+    Value = v97[1] or "Alex",
+    Callback = function(p98)
+        local v99 = vu93[p98]
+        if v99 then
+            local v100 = vu17.Character
+            if v100 and v100:FindFirstChild("HumanoidRootPart") then
+                v100:PivotTo(v99)
+            end
+        end
+    end
+})
+local vu101 = {
+    ["Luck Machine"] = CFrame.new(13.3431435, 22.5339203, 2846.63379),
+    ["Spin Wheel"] = CFrame.new(- 151.139404, 22.0784302, 2824.63379),
+    ["Weather Machine"] = CFrame.new(- 1488.85706, 22.25, 1875.94202)
+}
+local v102, v103, v104 = pairs(vu101)
+local v105 = {}
+while true do
+    v104 = v102(v103, v104)
+    if v104 == nil then
+        break
+    end
+    table.insert(v105, v104)
+end
+table.sort(v105)
+v9:Dropdown({
+    Title = "Teleport to Machine",
+    Values = v105,
+    Value = v105[1] or "Luck Machine",
+    Callback = function(p106)
+        local v107 = vu101[p106]
+        if v107 then
+            local v108 = vu17.Character
+            if v108 and v108:FindFirstChild("HumanoidRootPart") then
+                v108:PivotTo(v107)
+            end
+        end
+    end
+})
+v88:Notify({
+    Title = "Script Loaded",
+    Desc = "Mystrix Hub ready \226\128\148 all features active. Performance toggles only apply when you turn them on.",
+    Duration = 5
+})

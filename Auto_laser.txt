@@ -1,0 +1,135 @@
+--Code by @rznnq
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local HRP = char:WaitForChild("HumanoidRootPart")
+local backpack = player:WaitForChild("Backpack")
+local Event = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+
+local autoLaserEnabled = false
+local delayBetweenShots = 0.6
+local range = 100
+
+local function getNearestPlayer(maxRange)
+    maxRange = maxRange or math.huge
+    if not player.Character then return nil end
+    local myPos = HRP.Position
+    local nearest = nil
+    local shortest = maxRange
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = pl.Character.HumanoidRootPart
+            local dist = (hrp.Position - myPos).Magnitude
+            if dist < shortest then
+                shortest = dist
+                nearest = pl
+            end
+        end
+    end
+    return nearest
+end
+
+local function hasTool(toolName)
+    return backpack:FindFirstChild(toolName) ~= nil
+end
+
+local function equipTool(toolName)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool.Parent = char
+        return true
+    end
+    return false
+end
+
+local function equipOnlyTool(toolName)
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = backpack
+        end
+    end
+    if hasTool(toolName) then
+        equipTool(toolName)
+        return true
+    else
+        return false
+    end
+end
+
+local function useLaserCape(targetPart)
+    if not targetPart then return end
+    local args = {targetPart.Position, targetPart}
+    pcall(function()
+        Event:FireServer(unpack(args))
+    end)
+end
+
+local screen = Instance.new("ScreenGui")
+screen.Name = "idk"
+screen.ResetOnSpawn = false
+screen.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0, 240, 0, 120)
+frame.Position = UDim2.new(0.7, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.BackgroundTransparency = 0.15
+frame.BorderColor3 = Color3.fromRGB(255, 210, 0)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+
+local uicorner = Instance.new("UICorner", frame)
+uicorner.CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,28)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text = "rzn prueba"
+title.TextColor3 = Color3.fromRGB(255, 210, 0)
+title.Font = Enum.Font.Arcade
+title.TextScaled = true
+
+local autoLaserBtn = Instance.new("TextButton", frame)
+autoLaserBtn.Size = UDim2.new(0,200,0,36)
+autoLaserBtn.Position = UDim2.new(0,20,0,50)
+autoLaserBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+autoLaserBtn.BorderSizePixel = 0
+autoLaserBtn.TextColor3 = Color3.fromRGB(255,255,255)
+autoLaserBtn.Font = Enum.Font.Arcade
+autoLaserBtn.TextSize = 18
+autoLaserBtn.Text = "AUTO LASER: OFF"
+
+local btnCorner = Instance.new("UICorner", autoLaserBtn)
+btnCorner.CornerRadius = UDim.new(0,8)
+
+autoLaserBtn.MouseEnter:Connect(function()
+    autoLaserBtn.BackgroundTransparency = 0.3
+end)
+autoLaserBtn.MouseLeave:Connect(function()
+    autoLaserBtn.BackgroundTransparency = 0
+end)
+
+autoLaserBtn.MouseButton1Click:Connect(function()
+    autoLaserEnabled = not autoLaserEnabled
+    autoLaserBtn.Text = "AUTO LASER: " .. (autoLaserEnabled and "ON" or "OFF")
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(delayBetweenShots)
+        if autoLaserEnabled then
+            local target = getNearestPlayer(range)
+            if target and target.Character then
+                if equipOnlyTool("Laser Cape") then
+                    local hand = target.Character:FindFirstChild("RightHand") or target.Character:FindFirstChild("LeftHand")
+                    if hand then
+                        useLaserCape(hand)
+                    end
+                end
+            end
+        end
+    end
+end)

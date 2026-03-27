@@ -1,0 +1,107 @@
+local localPlayer = game:GetService('Players').LocalPlayer
+local localHumanoid = (localPlayer.Character or localPlayer.CharacterAdded:Wait()):WaitForChild('Humanoid')
+
+local idolAnimationIds = {
+    'rbxassetid://103661896146234',
+    'rbxassetid://123467781413827',
+    'rbxassetid://81293956936185',
+    'rbxassetid://92878431977076',
+    'rbxassetid://73680041416077',
+}
+
+local iteratorFunc, iteratorTable, iteratorIndex = ipairs(idolAnimationIds)
+local loadedAnimations = {}
+local blockedAnimationIds = {
+    ['rbxassetid://15428596914'] = true,
+    ['rbxassetid://15428598126'] = true,
+    ['rbxassetid://15428599352'] = true,
+    ['rbxassetid://17052435815'] = true,
+    ['rbxassetid://17052538064'] = true,
+    ['rbxassetid://17052734846'] = true,
+    ['rbxassetid://17052798330'] = true,
+}
+local lastPlayedAnimationId = nil
+
+while true do
+    local animationId
+
+    iteratorIndex, animationId = iteratorFunc(iteratorTable, iteratorIndex)
+
+    if iteratorIndex == nil then
+        break
+    end
+
+    local animation = Instance.new('Animation')
+    animation.AnimationId = animationId
+
+    local animationTrack = localHumanoid:LoadAnimation(animation)
+    animationTrack.Priority = Enum.AnimationPriority.Action
+    loadedAnimations[animationId] = animationTrack
+end
+
+localHumanoid.AnimationPlayed:Connect(function(playedTrack)
+    if blockedAnimationIds[playedTrack.Animation.AnimationId] then
+        task.defer(function()
+            playedTrack:Stop()
+        end)
+
+        local availableIds = {}
+        for index, id in ipairs(idolAnimationIds) do
+            if id ~= lastPlayedAnimationId then
+                table.insert(availableIds, id)
+            end
+        end
+
+        if #availableIds == 0 then
+            availableIds = idolAnimationIds
+        end
+
+        local selectedId = availableIds[math.random(1, #availableIds)]
+        lastPlayedAnimationId = selectedId
+
+        for _, track in pairs(loadedAnimations) do
+            if track.IsPlaying then
+                track:Stop()
+            end
+        end
+
+        loadedAnimations[selectedId]:Play()
+    end
+end)
+
+local playersService = game:GetService('Players')
+local runService = game:GetService('RunService')
+local localPlayer2 = playersService.LocalPlayer
+
+local blockedAnimationsExtended = {
+    ['rbxassetid://15428596914'] = true,
+    ['rbxassetid://15428598126'] = true,
+    ['rbxassetid://15428599352'] = true,
+    ['rbxassetid://17052435815'] = true,
+    ['rbxassetid://17052538064'] = true,
+    ['rbxassetid://17052734846'] = true,
+    ['rbxassetid://17052798330'] = true,
+    ['rbxassetid://9579763957'] = true,
+}
+
+local function stopBlockedAnimations()
+    local character = localPlayer2.Character
+
+    if character then
+        local humanoid = character:FindFirstChildOfClass('Humanoid')
+
+        if humanoid then
+            for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                local animation = track.Animation
+
+                if animation and blockedAnimationsExtended[animation.AnimationId] then
+                    track:Stop()
+                    animation:Destroy()
+                end
+            end
+        end
+    end
+end
+
+runService.RenderStepped:Connect(stopBlockedAnimations)
+print('see the magic')

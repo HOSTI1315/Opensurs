@@ -1,0 +1,276 @@
+-- Serviços
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- RedzMagnus V5
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/wx-sources/FireLibrary/refs/heads/main/Redzhubui%20(1).txt"))()
+
+-- Cria a janela
+local Window = redzlib:MakeWindow({
+Title = "🔥 FIRE HUB - STEAL A BRAINROT 2025",
+SubTitle = "by Wx + Frost",
+SaveFolder = "base_manager"
+})
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+-- Configurações
+local altura = 20  -- Quanto vai subir/baixar
+local tempo = 2    -- Duração do tween
+local tweenInfo = TweenInfo.new(
+    tempo,
+    Enum.EasingStyle.Linear,
+    Enum.EasingDirection.Out
+)
+
+local player = Players.LocalPlayer
+
+-- Função de mover Ground
+local function moverGround(part, yOffset)
+    local destino = {CFrame = part.CFrame * CFrame.new(0, yOffset, 0)}
+    local tween = TweenService:Create(part, tweenInfo, destino)
+    tween:Play()
+end
+
+-- Espera o workspace carregar
+task.wait(3)
+
+-- Encontrar todos os Grounds
+local grounds = {}
+for _, part in ipairs(workspace:GetDescendants()) do
+    if part:IsA("BasePart") and part.Name == "Ground" then
+        table.insert(grounds, part)
+    end
+end
+
+-- ===== Funções Up/Down acionadas pelos botões =====
+local function subirGrounds()
+    for _, ground in ipairs(grounds) do
+        moverGround(ground, altura)
+    end
+end
+
+local function descerGrounds()
+    for _, ground in ipairs(grounds) do
+        moverGround(ground, -altura)
+    end
+end
+
+-- ===== UI: Aba Desync =====
+local TabDesync = Window:MakeTab({
+    Title = "Desync",
+    Icon = "wifi"
+})
+
+TabDesync:AddSection("Desync")
+
+TabDesync:AddButton({
+    Name = "Desync (Up)",
+    Callback = function()
+        subirGrounds()
+    end
+})
+
+TabDesync:AddButton({
+    Name = "Desync (Down)",
+    Callback = function()
+        descerGrounds()
+    end
+    })
+-- Tabs
+local TabBases = Window:MakeTab({Title = "Scripts das bases", Icon = "cherry"})
+
+
+
+-- Seção Scripts
+TabBases:AddSection("Scripts")
+
+-- Coordenadas das bases
+local Bases = {
+["Selecionar base 1"] = Vector3.new(-331, -4, -99),
+["Selecionar base 2"] = Vector3.new(-485, -4, 221),
+["Selecionar base 3"] = Vector3.new(-332, -4, 222),
+["Selecionar base 4"] = Vector3.new(-492, -4, 6),
+["Selecionar base 5"] = Vector3.new(-493, -4, -99),
+["Selecionar base 6"] = Vector3.new(-328, -4, -101),
+["Selecionar base 7"] = Vector3.new(-328, -4, 113),
+["Selecionar base 8"] = Vector3.new(-489, -4, 113)
+}
+
+-- Variáveis
+local selectedBase = nil
+local loopTeleport = false
+local loopTeleportDetected = false
+local userBase = nil
+local buttonsCreated = false
+local cameraLoop = false
+local rotationAngle = 0
+local rotationSpeed = math.rad(30) -- 30° por segundo
+
+-- Função TweenTeleport
+local function TweenTeleport(position)
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+local HRP = LocalPlayer.Character.HumanoidRootPart
+local tweenSpeed = (position == userBase) and 0.5 or 2
+local tween = TweenService:Create(HRP, TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(position)})
+tween:Play()
+end
+end
+
+-- Função DetectClosestBase
+local function DetectClosestBase()
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+local HRP = LocalPlayer.Character.HumanoidRootPart
+local closestDistance = math.huge
+local closestBase = nil
+for name, pos in pairs(Bases) do
+local dist = (HRP.Position - pos).Magnitude
+if dist < closestDistance then
+closestDistance = dist
+closestBase = pos
+end
+end
+return closestBase
+end
+end
+
+-- Função ShowNotification
+local function ShowNotification(text)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")  
+Frame.Parent = ScreenGui  
+Frame.Size = UDim2.new(0.4,0,0.08,0)  
+Frame.Position = UDim2.new(0.3,0,0.1,0)  
+Frame.BackgroundTransparency = 0.5  
+Frame.BackgroundColor3 = Color3.fromRGB(0,0,0)  
+Frame.BorderSizePixel = 2  
+
+local UIStroke = Instance.new("UIStroke")  
+UIStroke.Parent = Frame  
+UIStroke.Color = Color3.new(0,0,0)  
+UIStroke.Thickness = 2  
+
+local Label = Instance.new("TextLabel")  
+Label.Parent = Frame  
+Label.Size = UDim2.new(1,0,1,0)  
+Label.BackgroundTransparency = 1  
+Label.Text = text  
+Label.TextColor3 = Color3.new(1,1,1)  
+Label.TextScaled = true  
+Label.Font = Enum.Font.BuilderSansBold  
+
+task.wait(2)  
+ScreenGui:Destroy()
+
+end
+
+-- Atualização da câmera com giro automático
+RunService.RenderStepped:Connect(function(deltaTime)
+if cameraLoop and selectedBase then
+rotationAngle = rotationAngle + rotationSpeed * deltaTime
+local offset = Vector3.new(0, 10, 20)
+local rotatedOffset = CFrame.Angles(0, rotationAngle, 0) * CFrame.new(offset)
+Camera.CameraType = Enum.CameraType.Scriptable
+Camera.CFrame = CFrame.new(selectedBase + rotatedOffset.Position, selectedBase)
+end
+end)
+
+-- Dropdown para selecionar base
+TabBases:AddDropdown({
+Name = "Selecionar Base",
+Options = {"Selecionar base 1", "Selecionar base 2", "Selecionar base 3", "Selecionar base 4", "Selecionar base 5", "Selecionar base 6", "Selecionar base 7", "Selecionar base 8"},
+Callback = function(Value)
+selectedBase = Bases[Value]
+end
+})
+
+-- Toggle para ver base
+TabBases:AddToggle({
+Name = "Ver base selecionada",
+Default = false,
+Callback = function(Value)
+cameraLoop = Value
+if not Value then
+Camera.CameraType = Enum.CameraType.Custom
+end
+end
+})
+
+-- Botão Teleportar pra base
+TabBases:AddButton({
+Name = "Teleportar pra base",
+Callback = function()
+if selectedBase then
+TweenTeleport(selectedBase)
+end
+end
+})
+
+
+-- Seção "Sua base"
+TabBases:AddSection("Sua base")
+
+TabBases:AddButton({
+Name = "Detectar sua base",
+Callback = function()
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+LocalPlayer.Character.Humanoid.Health = 0
+LocalPlayer.CharacterAdded:Wait()
+task.wait(1)
+userBase = DetectClosestBase()
+
+if userBase and not buttonsCreated then  
+            buttonsCreated = true  
+            TabBases:AddButton({  
+                Name = "Teleportar pra sua base",  
+                Callback = function()  
+                    TweenTeleport(userBase)  
+                end  
+            })  
+        end  
+    end  
+end
+
+})
+
+
+
+-- ===== Nova Tabela: Itens do jogo =====
+TabBases:AddSection("Auto click")
+
+-- Variáveis Auto Click
+local autoClickEnabled = false
+
+-- Toggle Auto hit jogadores
+TabBases:AddToggle({
+Name = "Auto hit jogadores",
+Default = false,
+Callback = function(Value)
+autoClickEnabled = Value
+end
+})
+
+-- Função que realiza cliques automáticos
+task.spawn(function()
+while true do
+if autoClickEnabled then
+local VirtualUser = game:GetService("VirtualUser")
+VirtualUser:ClickButton1(Vector2.new(0,0))
+wait(0.25)
+VirtualUser:ClickButton1(Vector2.new(0,0))
+wait(0.25)
+else
+wait(0.1)
+end
+end
+end)
+
+

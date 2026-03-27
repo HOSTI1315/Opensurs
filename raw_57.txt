@@ -1,0 +1,748 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IAmJamal10/Library/refs/heads/main/New"))()
+
+local Window = Library.CreateLib("All Star Tower Defense X | Legend HandlesYT", "GrapeTheme")
+
+local Tab = Window:NewTab("Main-Features")
+
+
+local Tab3 = Window:NewTab("Free-Emotes")
+local Tab2 = Window:NewTab("Misc-Features")
+
+
+local Tab1 = Window:NewTab("Settings")
+
+local Section = Tab:NewSection("Main-Features")
+
+local Section11 = Tab3:NewSection("Free-Emotes")
+local Section1 = Tab2:NewSection("Misc-Features")
+
+local CredSection = Tab1:NewSection("Credits")
+
+
+local autoUpgrade = false
+
+Section:NewToggle("Auto Upgrade Units", "Auto Upgrade", function(Value)
+    autoUpgrade = Value
+end)
+
+-- Run loop
+task.spawn(function()
+    while true do
+        if autoUpgrade then
+            local unitFolder = workspace:FindFirstChild("UnitFolder")
+            if unitFolder then
+                for _, unit in ipairs(unitFolder:GetChildren()) do
+                    local args = {
+                        { Type = "GameStuff" },
+                        { "Upgrade", unit }
+                    }
+
+                    -- Safely call upgrade
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer(unpack(args))
+                    end)
+                end
+            end
+        end
+        task.wait(1) -- Adjust delay if needed
+    end
+end)
+
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local autoPlace = false
+
+Section:NewToggle("Auto Place", "Place the troops you wanna auto place down first", function(Value)
+	autoPlace = Value
+
+	if Value then
+		startMovement()
+	else
+		stopMovement()
+	end
+end)
+
+-- Movement variables
+local movementConnection
+local centerPosition
+local elapsedTime = 0
+local radius = 15 -- small circle radius
+local angularSpeed = math.pi / 4 -- radians per second (adjust speed)
+
+-- Recent spawn positions to avoid repeat spawns
+local recentSpawns = {}
+local MAX_RECENT = 5
+local MIN_DISTANCE = 3 -- studs
+
+local function distance(a, b)
+	return (a - b).Magnitude
+end
+
+-- Start moving player in a small circle around initial position
+function startMovement()
+	local player = game.Players.LocalPlayer
+	local character = player.Character or player.CharacterAdded:Wait()
+	local root = character:WaitForChild("HumanoidRootPart")
+	centerPosition = root.Position
+	elapsedTime = 0
+
+	movementConnection = RunService.Heartbeat:Connect(function(dt)
+		elapsedTime = elapsedTime + dt
+		local angle = elapsedTime * angularSpeed
+
+		local offsetX = math.cos(angle) * radius
+		local offsetZ = math.sin(angle) * radius
+		local newPos = Vector3.new(centerPosition.X + offsetX, root.Position.Y, centerPosition.Z + offsetZ)
+
+		root.CFrame = CFrame.new(newPos, newPos + root.CFrame.LookVector)
+	end)
+end
+
+-- Stop player movement
+function stopMovement()
+	if movementConnection then
+		movementConnection:Disconnect()
+		movementConnection = nil
+	end
+end
+
+-- Main auto place coroutine
+task.spawn(function()
+	local lastPlayerPos = nil
+
+	while true do
+		if autoPlace then
+			local player = game.Players.LocalPlayer
+			local character = player.Character or player.CharacterAdded:Wait()
+			local root = character:WaitForChild("HumanoidRootPart")
+			local currentPos = root.Position
+
+			-- Reset recent spawns if player moved >1 stud
+			if lastPlayerPos and (currentPos - lastPlayerPos).Magnitude > 1 then
+				recentSpawns = {}
+			end
+			lastPlayerPos = currentPos
+
+			local unitFolder = workspace:FindFirstChild("UnitFolder")
+			if unitFolder then
+				local foundModel = false
+				for _, unit in ipairs(unitFolder:GetChildren()) do
+					if unit:IsA("Model") then
+						foundModel = true
+						local unitName = unit.Name
+
+						local playerCFrame = root.CFrame
+						local groundY = 3.75 -- fixed working ground height
+
+						local spawnPosition
+						local tries = 0
+						repeat
+							local offsetX = (math.random(0,1) == 0 and -1 or 1) * math.random(3,5)
+							local candidatePos = Vector3.new(playerCFrame.Position.X + offsetX, groundY, playerCFrame.Position.Z)
+
+							-- Check if candidatePos is too close to recent spawns
+							local tooClose = false
+							for _, recentPos in ipairs(recentSpawns) do
+								if distance(candidatePos, recentPos) < MIN_DISTANCE then
+									tooClose = true
+									break
+								end
+							end
+
+							if not tooClose then
+								spawnPosition = candidatePos
+							end
+
+							tries = tries + 1
+						until spawnPosition or tries >= 10
+
+						-- If no good spot found, just use last candidate
+						if not spawnPosition then
+							spawnPosition = Vector3.new(playerCFrame.Position.X + ((math.random(0,1) == 0 and -1 or 1) * math.random(3,5)), groundY, playerCFrame.Position.Z)
+						end
+
+						table.insert(recentSpawns, spawnPosition)
+						if #recentSpawns > MAX_RECENT then
+							table.remove(recentSpawns, 1)
+						end
+
+						local spawnCFrame = CFrame.new(spawnPosition)
+
+						local args = {
+							"GameStuff",
+							{
+								"Summon",
+								unitName,
+								spawnCFrame
+							}
+						}
+
+						pcall(function()
+							game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SetEvent"):FireServer(unpack(args))
+						end)
+
+						task.wait(0.5)
+					end
+				end
+
+				if not foundModel then
+					StarterGui:SetCore("SendNotification", {
+						Title = "Auto Place";
+						Text = "Place the troops you want to auto place first!";
+						Duration = 5;
+					})
+				end
+			else
+				StarterGui:SetCore("SendNotification", {
+					Title = "Auto Place";
+					Text = "UnitFolder not found in Workspace!";
+					Duration = 5;
+				})
+			end
+		end
+		task.wait(1)
+	end
+end)
+Section:NewSlider("Auto Place Radius", "Radius", 50, 5, function(s)
+radius = s
+end)
+
+Section:NewSlider("Auto Place Speed", "How fast the player circles", 7, 1, function(s)
+	angularSpeed = s * (math.pi / 4) -- scale speed sensibly
+end)
+
+Section:NewButton("Sell All Units", "Sells All", function()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+
+local unitFolder = workspace:WaitForChild("UnitFolder")
+
+for _, unit in pairs(unitFolder:GetChildren()) do
+	if unit:IsA("Model") then
+		local args = {
+			{ Type = "GameStuff" },
+			{ "Sell", unit }
+		}
+		GetFunction:InvokeServer(unpack(args))
+	end
+end
+
+end)
+
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+
+local autoNext = false
+local autoNextConnection
+
+Section:NewToggle("Auto Next", "Auto Next", function(state)
+	autoNext = state
+
+	if autoNext then
+		autoNextConnection = RunService.Heartbeat:Connect(function()
+			local args = {
+				{
+					Type = "Game",
+					Index = "Level",
+					Mode = "Reward"
+				}
+			}
+			GetFunction:InvokeServer(unpack(args))
+		end)
+	else
+		if autoNextConnection then
+			autoNextConnection:Disconnect()
+			autoNextConnection = nil
+		end
+	end
+end)
+
+local autoReplay = false
+
+Section:NewToggle("Auto Replay", "Automatically replay the game", function(Value)
+    autoReplay = Value
+end)
+
+task.spawn(function()
+    while true do
+        if autoReplay then
+            local args = {
+                {
+                    Type = "Game",
+                    Index = "Replay",
+                    Mode = "Reward"
+                }
+            }
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer(unpack(args))
+            end)
+            wait(5)  -- wait 5 seconds between replays (adjust as needed)
+        else
+            wait(1)
+        end
+    end
+end)
+
+
+
+local autoStart = false
+
+Section:NewToggle("Auto Start", "Automatically start the game", function(Value)
+    autoStart = Value
+end)
+
+task.spawn(function()
+    while true do
+        if autoStart then
+            local args = { "StartVoteYes" }
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer(unpack(args))
+            end)
+            wait(5) -- wait 5 seconds between attempts (adjust as needed)
+        else
+            wait(1)
+        end
+    end
+end)
+
+Section:NewButton("2x Game Speed", "2x Game Speed", function()
+local args = {
+	{
+		Index = 2,
+		Type = "Speed"
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer(unpack(args))
+end)
+
+
+Section11:NewToggle("Free Dances Moomoo", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "140390442359102" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+
+
+
+
+Section11:NewToggle("Free Dances TheAskr", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "119891658707826" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+
+
+Section11:NewToggle("Free Dances ZIO Pose", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "94818094807306" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+Section11:NewToggle("Free Dances Ninja Star", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "137423080018972" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+
+
+
+
+Section11:NewToggle("Free Dances Popcorn", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "90386534595301" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+
+
+
+Section11:NewToggle("Free Dances Chainsaw Dance", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "17698596202" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+
+
+
+Section11:NewToggle("Free Dances Brazillian Ruffy", "Free Emotes Everyone Can See", function(state)
+if state then
+  Player = "LocalPlayer" --- you can still put any player name here
+
+
+AnimationId = "104310396766999" --- add ID's from the bottom[/size]
+local Anim = Instance.new("Animation") --- Creates animation[/size]
+Anim.AnimationId = "rbxassetid://"..AnimationId ---- inserts the ID[/size]
+local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim) --- makes the animation a function[/size]
+k:Play() --Play the animation ----- Runs the animation.[/size]
+k:AdjustSpeed(1) 
+
+
+else
+
+h = game.Players.LocalPlayer.Character.Humanoid
+tracks = h:GetPlayingAnimationTracks()
+for _,x in pairs(tracks)
+do x:Stop()
+end
+
+end
+end)
+Section1:NewToggle("CFrame Speed (Move When Down)", "CFrame Speed Toggle", function(Value)
+    getgenv().CFrameSpeedEnabled = Value  -- This stores the toggle state (true/false)
+    if CFrameSpeedEnabled then
+        startCFrameSpeed() -- Starts moving when the toggle is enabled
+    else
+        stopCFrameSpeed() -- Stops moving when the toggle is disabled
+    end
+end)
+
+repeat
+    wait()
+until game:IsLoaded()
+
+local Players = game:service('Players')
+local LocalPlayer = Players.LocalPlayer
+repeat
+    wait()
+until LocalPlayer.Character
+
+local UserInputService = game:service('UserInputService')
+local RunService = game:service('RunService')
+
+getgenv().Multiplier = 0.5
+local movementConnection = nil  -- Used to store the movement loop connection
+
+-- Function to start CFrame movement
+function startCFrameSpeed()
+    if movementConnection == nil then
+        movementConnection = RunService.Stepped:Connect(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+        end)
+    end
+end
+
+-- Function to stop CFrame movement
+function stopCFrameSpeed()
+    if movementConnection then
+        movementConnection:Disconnect()
+        movementConnection = nil
+    end
+end
+
+-- Key bindings for increasing and decreasing speed multiplier
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftBracket then
+        Multiplier = Multiplier + 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.LeftBracket) do
+            wait()
+            Multiplier = Multiplier + 0.01
+            print(Multiplier)
+        end
+    elseif input.KeyCode == Enum.KeyCode.RightBracket then
+        Multiplier = Multiplier - 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.RightBracket) do
+            wait()
+            Multiplier = Multiplier - 0.01
+            print(Multiplier)
+        end
+    end
+end)
+
+-- Slider for adjusting speed multiplier
+Section1:NewSlider("CFrame Speed", "Speed", 20, 0, function(s)
+    getgenv().Multiplier = s
+end)
+
+
+Section1:NewButton("Boost FPS", "FPS Booster", function()
+        for _,v in pairs(workspace:GetDescendants()) do
+if v.ClassName == "Part"
+or v.ClassName == "SpawnLocation"
+or v.ClassName == "WedgePart"
+or v.ClassName == "Terrain"
+or v.ClassName == "MeshPart" then
+v.Material = "Plastic"
+end
+end
+end)
+
+Section1:NewToggle("Infinite Jump", "Infinite Jump", function(state)
+if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+            end)
+
+Section1:NewToggle("Noclip", "Noclip", function()
+ local Noclip = nil
+local Clip = nil
+
+function noclip()
+	Clip = false
+	local function Nocl()
+		if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+					v.CanCollide = false
+				end
+			end
+		end
+		wait(0.21) -- basic optimization
+	end
+	Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+	if Noclip then Noclip:Disconnect() end
+	Clip = true
+end
+
+noclip()
+end)
+
+
+
+CredSection:NewLabel("Made By Legend HandlesYT")
+
+
+CredSection:NewKeybind("Toggle UI", "Toggle The UI", Enum.KeyCode.L, function()
+	Library:ToggleUI()
+end)
+
+CredSection:NewButton("Mobile Keyboard", "Mobile Players", function(state)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", true))()
+end)
+wait(0.1)
+local player = game.Players.LocalPlayer
+
+local function createTutorialGui()
+    -- Create the GUI
+    local Turtorial = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local JoinButton = Instance.new("TextButton")
+    local UICorner_Join = Instance.new("UICorner")
+    local shadow = Instance.new("Frame")
+
+    Turtorial.Name = "Turtorial"
+    Turtorial.Parent = player:WaitForChild("PlayerGui")
+    Turtorial.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    main.Name = "main"
+    main.Parent = Turtorial
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.AnchorPoint = Vector2.new(0, 0)
+
+    -- Function to position the GUI just below the top-left corner of the screen
+    local function setPositionBelowTopLeft()
+        local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+        main.Position = UDim2.new(0, 10, 0, 10)  -- Just below the top-left with a slight offset
+        main.Size = UDim2.new(0.15, 0, 0.10, 0)  -- Standard size for both devices
+    end
+
+    setPositionBelowTopLeft()
+
+    main.Active = true
+    main.Draggable = true
+
+    -- Shadow effect for main frame
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    JoinButton.Name = "JoinButton"
+    JoinButton.Parent = main
+    JoinButton.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+    -- Adjust button size based on device type
+    if game:GetService("UserInputService").TouchEnabled then
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    else
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    end
+
+    JoinButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+    JoinButton.Font = Enum.Font.Highway
+    JoinButton.Text = "Toggle Gui"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = 25
+    JoinButton.TextStrokeTransparency = 0.7
+    JoinButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    UICorner_Join.CornerRadius = UDim.new(0.15, 0)
+    UICorner_Join.Parent = JoinButton
+
+    -- Toggle the visibility of ScreenGuis
+    JoinButton.MouseButton1Down:Connect(function()
+        local CoreGui = game:GetService("CoreGui")
+        local function containsNumber(name)
+            return name:match("%d") ~= nil
+        end
+
+        local function toggleScreenGuisWithNumbers()
+            for _, gui in ipairs(CoreGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and containsNumber(gui.Name) and gui.Name ~= "Turtorial" then
+                    gui.Enabled = not gui.Enabled
+                    print((gui.Enabled and "Enabled" or "Disabled") .. " ScreenGui:", gui.Name)
+                end
+            end
+        end
+
+        toggleScreenGuisWithNumbers()
+
+        CoreGui.ChildAdded:Connect(function(child)
+            if child:IsA("ScreenGui") then
+                task.wait(0.1)
+                if containsNumber(child.Name) and child.Name ~= "Turtorial" then
+                    child.Enabled = false
+                    print("Disabled new ScreenGui:", child.Name)
+                end
+            end
+        end)
+    end)
+end
+
+-- Connect to CharacterAdded to ensure GUI is created again after respawn
+player.CharacterAdded:Connect(function()
+    -- Wait for the PlayerGui to load in case it's reset
+    player:WaitForChild("PlayerGui")
+    -- Create the GUI again after respawn
+    createTutorialGui()
+end)
+
+-- Initial creation of the GUI when the player first joins
+createTutorialGui()

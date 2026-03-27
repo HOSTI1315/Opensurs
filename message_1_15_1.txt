@@ -1,0 +1,1413 @@
+-- Constants
+local IN_STACK = 0
+local IS_COPIED = 1
+
+-- Debugging related variables
+local is_real_vm = false
+local VM_ITERATION = 0
+
+-- remove pcall spam
+local string_rep = string.rep
+string.rep = function() end
+
+-- anti beautify bypass
+local _pcall = pcall
+pcall = function(func, ...)
+	local ret = {_pcall(func, ...)}
+	if not ret[1] and type(ret[2]) == "string" then
+		ret[2] = (ret[2]):gsub(":(%d+)([:\r\n])", ":1:")
+	end
+	return unpack(ret)
+end
+
+-- Dumping of functions!
+local function dump_func(func, no_unluac)
+	if type(func) ~= "function" then
+		return
+	end
+	local func_id = tostring(func):match("function: (.+)")
+
+    local bytecode = string.dump(func)
+    local filename = func_id .. ".luac"
+	local file_location = "temp/" .. filename
+
+    local file = assert(io.open(file_location, "wb"))
+    file:write(bytecode)
+    file:close()
+	--print(filename)
+	if not no_unluac then
+		os.execute("unluac " .. file_location)
+	end
+	return filename
+end
+
+local function find_name(value, level)
+    level = (level or 2)  -- 2 => caller of the function that calls find_name
+
+    for i = 1, math.huge do
+        local name, v = debug.getlocal(level, i)
+        if not name then break end
+        if v == value and name ~= "(*temporary)" then return name, "local" end
+    end
+
+    local info = debug.getinfo(level, "f")
+    if info and info.func then
+        local func = info.func
+        for i = 1, math.huge do
+            local name, v = debug.getupvalue(func, i)
+            if not name then break end
+            if v == value then return name, "upvalue" end
+        end
+    end
+
+    for k, v in pairs(_G) do
+        if v == value then return k, "global" end
+    end
+    for k, v in pairs(string) do
+        if v == value then return k, "string" end
+    end
+    for k, v in pairs(debug) do
+        if v == value then return k, "debug" end
+    end
+    for k, v in pairs(math) do
+        if v == value then return k, "math" end
+    end
+    for k, v in pairs(table) do
+        if v == value then return k, "table" end
+    end
+
+    return nil
+end
+
+local function get_var_name(x, stack_level)
+    local name, kind = find_name(x, stack_level or 3) -- 3 => skip one more stack level if wrapper
+    if name then
+        return name, kind
+    else
+        return "Unknown name (" .. type(x) .. ")"
+    end
+end
+
+local function custom_tostring(value, indent)
+    indent = (indent or 1)
+    local type = type(value)
+    local str = ""
+
+    if type == "nil" then
+        str = "nil"
+    elseif type == "boolean" then
+        str = value and "true" or "false"
+    elseif type == "number" then
+        str = string.format("%g", value)
+    elseif type == "string" then
+        str = '"' .. value:gsub('"', '\\"') .. '"'
+    elseif type == "table" then
+		if #value >= 20 then
+			str = "LONG_TABLE_HERE!" .. #value
+		else
+			str = "{\n"
+			for k, v in pairs(value) do
+				str = str .. string_rep("   ", indent)
+				str = str .. "[" .. custom_tostring(k, indent + 1) .. "] = " .. custom_tostring(v, indent + 1) .. "\n"
+			end
+			str = str .. string_rep("   ", indent - 1)
+			str = str .. "}"
+		end
+    elseif type == "function" then
+        str = get_var_name(value, 3 + indent) -- for base padding
+    else
+        str = "<" .. type .. ">"
+    end
+    return str
+end
+
+local function print_tbl(tbl, indent)
+	indent = indent or ""
+	for k, v in pairs(tbl) do
+		if type(v) == "function" then
+			print(indent .. k, get_var_name(v))
+		else
+			print(indent .. k, v)
+		end
+		if (type(v) == "table") then
+			if (k == "loaded") or k == "_G" then return end
+			print_tbl(v, indent .. "	")
+		end
+	end
+end
+
+
+-- LPH Code
+return ({
+	nil_self_index = function(...)
+		(...)[...] = nil
+	end,
+	control_flow_tbl = {
+		46502,
+		2729594565,  -- needed
+		3995115981,
+		557601710, -- causes crash segmentation fault if not correct!
+		3447339945,
+		658548139, -- needed
+		2985864354,
+		247869824, -- needed
+		3511565302
+	},
+	main = (function(Self)
+		local _bit = (Self.bit or bit32);
+		local XOR = _bit and _bit.bxor;
+
+		local h_funcs = {}
+		h_funcs["DIP_BLOB_IDX"] = 1
+		h_funcs["is_constant_cached"] = nil
+		h_funcs["string.match"] = Self.string_match;
+		h_funcs["empty_tbl"] = {}
+		h_funcs["get_self_index"] = function(...)
+			return (...)[...]
+		end;
+		h_funcs["safe_tbl_unpack"] = function(tbl, start, finish)
+			finish = finish or 1;
+			start = (start or # tbl)
+
+			return unpack(tbl, finish, start)
+		end;
+
+		h_funcs["gen_empty_tbl"] = (function(last_idx)
+			return {
+				h_funcs["safe_tbl_unpack"](h_funcs["empty_tbl"], last_idx, 1)
+			}
+		end)
+
+		h_funcs["temp_Instructions_register_data"] = nil;
+
+		h_funcs["constant_multiplier"] = 4.294967296E9; -- static
+		h_funcs["format_blob"] = (function(blob)
+			blob = string.gsub(blob, 'z', '!!!!!')
+
+			return string.gsub(blob, '.....', setmetatable({}, {
+				__index = function(tbl, key)
+					local a, b, c, d, e = string.byte(key, 1, 5)
+					local floating_key = ((e - 33) + (d - 33) * 85 + (c - 33) * 7225 + (b - 33) * 614125 + (a - 33) * 52200625)
+					a = floating_key % 256;
+
+					floating_key = floating_key / 256;
+					floating_key = (floating_key - floating_key % 1)
+					b = (floating_key % 256)
+
+					floating_key = (floating_key / 256)
+					floating_key = (floating_key - floating_key % 1)
+					c = (floating_key % 256)
+
+					floating_key = (floating_key / 256)
+					floating_key = (floating_key - floating_key % 1)
+
+					d = (floating_key % 256)
+					floating_key = (floating_key / 256)
+					floating_key = floating_key - floating_key % 1;
+
+					local decoded_byte = (string.char(d) .. string.char(c) .. string.char(b) .. string.char(a))
+					tbl[key] = decoded_byte;
+					return decoded_byte
+				end
+			}))
+		end)(string.sub([=[LPH}S-&cD!bYWf!ERhRCtJnu?X[JUfE,)U<r`4#!.^3R5hH3H?Yj<+!CYQ@9$.D>z!!(.Kz!!!#O!H$HiG1ZgafE"e#!G^6f<S.=ffE":j#]t!&F_tT!EnCD$fE+]JfE"=k!?fMiz!!!#O!b#3R#ljr*zfEZJ/FCo*%G#nYD!!!#WDa;GLz!!!#O!H(s=z!'*;Gz!!"i@fE#+q!6PBDz!!(XPGLuq1fEQS>@ps1ifE#(+!8%<pfEHA*@VfW.E$014FEMVA+EM+9An>k'-t[U>@ruF'DC@+i/h%o`ATW'8DBL6H-n[,).3N2>A1SjEATVd#FCB9"@VfU(HQZN:-$(89+?^i"/hS8p/0K9^?XIMbA7^!.4WnBKFCo*%Fsnak/hSS%+FP[f+P6j)?Y!kofE>Z/FCj)*;qM+hfE$*H!_lcuz!!$t'fEH,#FCT":"CGMIES(J-DfT]'F<(D7"*.slfEPi(DI[*sfE"t(!IEB!:"TMD=P*jc?YOCgAU%8Vz!!kjB!HQfnB%R,/fE#@3#@_UiCh7$m<r`4#!!"]u5hH9RD..NrBNG06zn3P\-:=oSEfEQD=EbTE(fE+`KfEc)3DI[d&Df42.=B>J&zn3>%sz!!!"#z!!)LRfEH%hC3FOJ$tj-nD.RftFCAWpA_7$/fE#L)"98E%zaqk$Xz!8-oY$6UH6+<VdL+>#0L>7(][+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL/jL^20.JM*/hSb//hS7h+<VdL/hSb-/1N;$,:+[%5V<Bd+<VdL+<VdL+<VdL+<VdL+<VdL-n6>^+=o/o,:+W_-9sg]5UId*-nd5,0.84s,9nKZ,9nTb0.JG&/1r%f+<VdX0/"_#/d`^D+<VdL+<VdL+<VdL+<VdL+>52e/gWbJ5X7S"5X6VH+<W9b-9sg]-71&d-71uC5X7S"-6jog/1rP-/hSb//h//45X6_M+<W3[/d`^D+<VdL+<VdL+<VdL+<VdV0-Dko5X7S"5X7Ra+<W'Y/0H&X.OZVj5X7S"5UId*.P*1p+<VdL+<VdL+<VdL/hAJ#,:+`f5X6YG+<W-b$6UH6+<VdL+<VdL+<VdL+<rE[00hcf5X7Ra+=\]d+=nid0.ne/,:+Z`5X7R]-mh2E5X7S"5X7S"5X6PD/1rP-/hS\.-9sg]5X7S"5U[a-,mkb;+<VdL+<VdL+<VdL+<r!O,="LZ5X6eP5U@O*,:+rq-nHu%0.JM+0.JM*/2&D$5X7S"5X7S"5X7S",sX^\5X7S"5X6PH,="LZ5X7R]/g)GI+<VdL+<VdL+<VdL+<W<[+=9?=5X7S"5X6_D5U.C$-712h5X7S",;1B/5X7Rf,pb/p,sX^\5X7S",qhMK-7CDf+=o&p/hSb!+=\[&5X6P:.LI:@+<VdL+<VdL+<VmO+>,!+5X7S"5X7S"5X6kK-m_,D5X7RZ/g)8Z+=nj)5U/NZ-7U,j-9sg]5X6YI/gEVH5X6tL5X6VD5X7R]-nd,"-7g8m/.*LB+<VdL+<VdT0-DA[-pT++-7(!(5X6YL/0HK/,:GfB5X6kC+<VdL+<VdO5X6tR-9rn#00hcf5X6kH,:,T?5X7R_+<VdL+=]WA5X7R]/0uSp+>+!D+<VdL+<Vd[+<Vm^/0dDF5UI^(0/"P85X6tF,sX^\-9sg]-nZVb+<W3^5X6_M.PE7o+=09<.NfiV,sX^\5X7R\+<VdL+<VdT5X6YE.P<>+,pk5O+<VdL+<VdL+>5B$5X6YI+<W'Z5X6PF+<Vd[5VF62.OIDG5X6P@5X6V?,q(/f5UIs'00hcf5X7R]/g)B(5X6P@5X7R],pbfA5X7S"-7geu.R5X3$6UH6+<VdL+=/<d-9rdu/g`hK5U.C)5X7S",pklB5UJ-:+<VdX0.85%.P)\b/h\P:5X7S"5X7S"5V+B3-n[/!5X6PD-9sg]-mL,m/hSb--6k!*0+&gE+<VdL+<Woq/g_nf/g`hK5UIs'+<Vd[-9sg]5X7S"5X7S"5X7S"5UJ`],;1Gk5X7S"5X7S"5X6YI+<W't5X7S"5X7S"5X7Rf/3lHc5X6PH-7T?F+<VdL+<VdR-7gGh+>+uj+<VdL00hcf-nZVb/1<bK5X7R]0.8J,0/"Ou+>5',5X7S"5X7S"5X7S"5X6_?+=nj)5X7S"5X7R]/0H?+5UIs65U\8m+<VdL+<VdL/gVtl5U[a.5X7S"-m1!)5X7S"5VF6&+<VdV,sX^\5X7S"-8$i7-6Oia/0HPl5X7S"5X6P:/gDhl-8-np5X7S".NfiV.R66G0.J:u$6UH6+<VdL+<W9`0.nJ75X7S"5X6kC+<W-\5X6VJ/1*VI-7CDf+<VdX-m_,)-9sg]5X7S"5X6_M.P)\b00hcf5X7S"5X6YI+<VdL+<Vsq5X7Re/d`^D+<VdL+<Wp!+>+s*5X7S"5X7R_+<VdL+<VdZ+<VdT5X7S"5X7S"-m0WT+<VdL/h/7q-9sg]5X7S"5X7S"5UIm1+<W9i/h0+4+<Vd[5X6V</h[PS+<VdL+<VdL+@%D!/g`hK5X7S"-8$D`+<VdL+<VdL+<VdZ0.&qL5UnB55X7S"5X7R]/0HJn.P*1p+<VdZ/1N%p-nZf25U.Bt5Umm!/3lHH+=n`E+<VdL+<VdL+<VdL-7g8m5X7S"5X6eA+<VdL+<VdL+<VdL+<VdL+<VdZ,="LZ5X7S"5UnB45X7S"5U\0K5X7S"5UIU),q(Ag+<VdL+>,!+,p4``$6UH6+<VdL+<VdL+<Vd[+=]WA5X7RZ+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdQ5UJ*7,75P9+<VdL+<VdL+<VdL-n$2j-9sg]5Umm!+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL,=!S./0bKE+<VdL+<VdL+<VdL+<W9`/g)\l5X7Rc+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+=KK%/hA4S+<VdL+<VdL+<VdL+<VdL+<Vm]+>+s*5Umm05X6tF+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<W=&-8$ht$6UH6+<VdL+<VdL+<VdL+<VdL+>,;i+<s,t/g)H*-7g\m/0H&X+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<Vd[5X6kQ0+&gE+<VdL+<VdL+<VdL+<VdL+<VdL.OZD^,=!P-+>+cb5X7S"5UA'7+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL00hcR/h.2N+<VdL+<VdL+<VdL+<VdL+<VdL+<Vd[0-DA`5UJ$).R66a5X7S"5U[a'5UA'9+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<s-:/0H>J+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VmY+>,!+5U.m(-pU$_5UJ*55X7S"5X7S",q^;i0.n@i+<VdL+<VdL+<VdL+<VdL.P<>".P<&55V+$2$6UH6+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+@%D!/gWbJ5U@s(/2&+u5X7S"5X7S"5X6kQ,sX^\5X6V</g`hK5Umm$5UJ*9-9s%3.Ng$&5UJ*+.LI:@+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+>4i[.OIDG5X6VH+<VdV-mh2E5X6YK+<s-:5X7Ra+<s-:5U@O$5X6eA/1r%f+>5uF5X6eA-jh(>+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<Vdl,;()k,="LZ5X7R]-nHtn+<VdL+<VdL+<VdL+<VdL+<VdL+>,2p-m^3*5X7S"-8$o!$6UH6+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<W!Z/g)8Z/h\M95X7S"5X7S"5X7S"5X7S"5X7S"5X7S"5X7S"5X7S"5U\6--n#EF+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+<VdL+=n`j.P;hd+<VdL+>,8t/1`>'/1`>)/hSb!+<VdL+<VdL+=o/j$47mu+<VdL+<Xrq/M.;:+<VdL+<VdLfE#R9!H?ZlGh<%0fEcS;F*)G:DJ.T+FEqh:De@W&ES(:bfEbhk@rH6p@<>QNz!!!#O#'Fg&@:O**!d.Vt##'/[@;oo4%!-!%D.RftFCAWpA_7#ofEuG5@:XG$EbTE(fE-4uaoqbFz!8%<K<r`4#!+7&;5hH*H<r`4#!!!!j5Z[pcz!'o0;8D!r4fE,Mab-_3Lz!*9.#z+@+Q[9\9D<=P*XAfE#[<HWb90EZe%u@3B-!G%ku8DJ`s&F<G+4ATJu3Dfd+CF`;;<Ec`F?Ddd0!DfQt:Ddd0tFE2)5B.P0IBOu3qAoD^$+F.mJ+CT;%+E_R1@VfTuFDi:EF(HIfF`Lo0BI@jD-VR?-?VXC(<DZ^^9N=M[-Qm87@rcK?fE,/W<r`4#!!!!15hH9]@<Z?qFP$Ua<r`4#!!!!a5Z[pcz0L==p?XIks@b:]ZfEGVhD09[I"CGMPFP$t.?Ys@r@<>peCh:a[z!!!#A!<<*"z<r`4#DOc%*6.cQ+-m`CS.9ehB$=1e?Yt\O(s8W+#!!'fW.O=1C<r`4#!!)eT5hH,j5?@gbz0L47oATDg0EnCCIfEQ&-F(KB6<r`4#!!!!q5Z[pc!!"2PLI''h>//_is8W,O$=@.XATqj+A7^#<!F"+[Eaa05ATZ(!XM`ops8W,O"D;du@b:lnF)to5FP$b9@ps1ifEGVhD/Wrd!!&\%P9]!OfE$%pz!!)N'fEQ59D.7's<r`4#0Gsk06.cB_ASbpfFP$_.Bl7H_!!!"lKVQRRb+SDfK)blNs&T1#!!!#sT0V$4?XIbjG?4bEzTL%3;?XInnF*)G:DJ.T+?XI;OCi!/Qz!&-dm"DqRhBNG06_#OH7ha,lsF*1qnzJG-rIfEZ&#FCo*%G#nYDz5=!j(FEqh:fE>\t@<,ELz!,t6V"E%dqFB8GBz2*fdp8V)!d"VDKZaTD\M.47!?"#U'9/M0=I'a7hG%6Y%%"ebrE%0Zo?'b(=O*<kp8/L:SI#;$)_0deh1/OMB1"^D3G4UOU]i!:nl"U,YF"V2t4%4*VY'a7hG,rH#m"b6n2/Hl:n/W^>l!&YJp>Ql-2$3^SV-Ue3+#;%e:"VrsI/OK[F/NQ<(kQ`[s"U,Z!J-@e1"U/6\"U-h4o`O:YSIR4Xz!!F;W+W6<_!sJkU"=F?VaTNu6I4[3s*<f\r'a7ij"U,JA"T^!)!<iX3"bcsd/d2E$8.BtN(PMl)"^H`^"U,JA"T^!1!<iX3"cWNl/d2E,&p8US1'IhY-O%$]2'iD0d/k\D%0^!j!>PcCK`M>\&WHf+"^D4j!=^Xb"aroF"i1<hN=X8EN<(1+nH2c;"U3Q]-O"&j/d2DY86lZ.>\+'B>Qk9;-Ns[<!@MF^"VGST"^D4J%5%ef>t@t$/M[J54==,<"^G=:"^G=:"VG;L"^D4B%5%ef<CgC)"^D37!@MF^"^GUB"VGST"^D4J%5%ef>t@t$/M[J5!@LkV"^G=:"^G=:"VG;L"^D37rrFJN"U.d]"n2XH4Tu!o4Tu!$70W/`/Hl:Y-NsN.6j:[52'iD0T`QTa"U/.R"U,JA"doE>%0c5(/JSEm>SRDG&KM&E">'d+%7DcO"][D`L^#Fo"m>t=70W/`/HqaI2+.U)%4)/]i;k<S'a7ij"U,JA"W&Ni"U.d-"ge:XFVP'bFThp\Gm/=%"U2gF-WL>+"ta*akQ*8H"n2XH"n)Il7!3o013Ea(>]g2R&UbAt>Qk93-[c.%&JkV!&-W6=!@J$S"]>L-oDp=f'a7ij"U,JiI=2QQF9OT,"g7qS"U,'-%1NJG'bpmW'a4aQ*<cUO"W\%)%0Znu&c_n3!!!"gaTD\M)(,Rk&LXt"r>1/.8Hf7u-NsYW=VV)D9GI^78H]"n!!!!%"dK+>!MKP&ao_eNT`ukj%0]uW,o&0U"c*77"U3!R-RC'50-s=e>9tRq$j?g>""-58GVC]Q"VrC9,r,W-!@KH>"^D3O2$tWm,n1#(71'2%T`Z[B!C[/O"XQkM"XR.U"[sFa"U-bS4U$'a"U-JZ/Hpq50I8S.%4sF`1,T5s!AF[7/IDXbW<O^r/L</(*<f[O*An0-,s;S="d]6;/Hl;X"Vim%,m=Gf/KG"""U+oS"W]H-"XQ;="XQSE"XQkM"U2.8-QNBc!\bW('f$d5fE3fJ%2CW%"gJ7Z"XQ;="XQSE,u#[*<<\0]0I9_!**i`(">F+e,od(W,q]?)2+Tk6\-";d"YEdZ"lTP29iXmn77Bp[2$F.!4U$'a"U-JZ/KG"""U3!L-T)&2(-Mi2""c)."Vq7FrrFJf"df<E*=W`=*<j4]0HCT;1*$P&!\bW('f#prS,t&A-"RDeAIU6q70P:I"Z8h6"aD^)"j$fn/KG"""W]H-"XQ;="XQSE2$F.!"U.[L"XS9u"XSR("`584"[rSI"U-bS4U$'a"U-JZ"U/uq)@Zj0'a4b@*<hf50EhUj-X?lZ&HsIl$3__m$=sAE"9g)g$3^Tt!@J$k2$sL54UM?=71'2E9aV%M<=/mU>m^`=CaU5,VueXn%2CW="ipg#*=W`="U0he-S6>B>Ql-*$3__=$7-ue6NmWH-NsZ*="PEr>Ql-*$3^U*"",Z(Qio*#"b6V-/N"7u"U,&E*<d96,mBY>0HDGS1+F:J3$f:C>Qk;/![eut'f$d582)%n'f$d5a9=7<%2CW%"nVgC"XR.U"XRF]"XR^e>m1B7"U2gI-QNB;"#(`)'f$d5J-RbK%2CW="c*15*=W`="U2gF-Ns\7""0'4SH6tM!"],1!!!!"!hdX;'a4aj*<cUH,mBY>0F]<K1'Ig^-RAq@0GPlS1*%AE%0Zn9-NsYo3X#Zl-g_,_&?R!L"onW'!!!"Sao_eNnHC9D"mH1<"U3ig-iF7?(W@(/#[M!gi!!Zq.DQ*mAL7Qaq#`!X?"GA8"Gd4e44jWp>rr2nklN5_!F97`^]^SC>s"DScj<u>"U39S-hmb)#[KO=$=sAiW!cmB-3XRh"".Bq#@.]@"^O7;"D%`c&7&iohuRBm.I[LHAL7QaT`HOn#A"&fhud7r-HHAc#@0EY"df?s4"-a)>rr2naTNtVYQS5nci\e&>s"thAHaLd"Xb[B\-$"ukQB`G>s$sL^]@_&p]8G<>rr2nHmeCjAHaNU#@1mfJ-`Xj>s$C:i!NaO"U0Y^-b'4h"Y#fC?"G?jTEAI]ciLoe>rr2nHm`mc#[KNB"4.0V4.$/\$=,`l!f.+f3s>db-\qoH!aRn_#/C=H44"1f$XGj0$"X8hJ-9.h-BJ8t#[KOE!bDNai!E\#-Kk_H"XsTYf`EOW!LO1!44"&=$!fWK"2G7L3s>ec!@PA]AHaN]#@1mfJ-YQG>s",OAHaLd"\0rM!Jh(g3uF=j>s"tkAHaOH"C5Rc"U45n-_LX)"C4*n!iQ3,4,=."!aRn/"R#nm3s>eK![l%o?"G@u!n[Q[3s>e!/-Q2i-]eOD"Y&@6?"G@U!G)E`\-H;N-3XR^!@LkN"Y*d]"]^WdTE\[`O92Wg>s%fb\-6/"80D2""U/EaYQnHF-D1\?#[KNT!G)Eo"U1\&-a3g5"^O4R"_@id^]n(U-3XS>!@QM'?"G@]!Up.r40SbT$!fX6$"X8h"U/]i%KHJ/!!!#(aTD\M+X\!>^]R45'dX2="i(-j"U.1>"U,'4ciad].1HaU!_^lC'a6#i"V2ud!C[/O&krNh"U.IF2$K?P/L:Q((.'SV3/R_o"ZQiP"ZQYh9IC!<<=/n0"U,&5!@J%F<=2_0"VDUU<=f<;#q+gFSJ'Hc)[-C=-NsYW'ak!Az`lS;d"o/0H"U4Ds-h%<l%2sMJ"t^;g"c3:."XP`-"U-J=M#iD:%1WOFOTHm6>oa7U9be!=4Uh`%"Z.Si%4u$Pn-2#m9bfNp:%/?](`i)M>lY$3:FA"//RgU,"uR5<n-2;]"[sF="Z6_r"U->&+Uo/n"U/ln*@3j9"[+.="U/fl08KfA%L!"P-PZdg.NJ]^">(o'L^#F7"T]tS"[=@<"Z.SI,rJ$n2'iS5"ePfC"VhIR"U/]iS,nEM'b1BN#q)hY]`e!<([qV\%3"^?2&.$J2(_)t"hXj`%KHJ/!!!'`"e<[:"U,bk"U,Jch$/iASJs9e"T]t["U/-G%F>,0"U,>i"U,&E!rr<$!!!6*N<+$)I0Ce#aTD\M@4)3^=XO@V;('$^jU\a%;^E.^>V.6*>W"*P0EhU\-TqY&#;$**,q]?1"UPVQ"^D37=XOXf"^D37%3l;s"^Dc_"^D37!@Jm&"^E?""^EW2i!1qn"n2aK*@1kU"U-8$'f?/"*<cUH,mB)//M..Y$7u]="To2C"^DK?"^MB6z!3=3D"U-n6"U-V./I_k="U0GX-NsY_%1NIE<>>],">'c\3@?is"ZQYp"U-1e"\od9"\o4)"\&q)p]E)O"XbZ<"U,bi"n2XH"VDJ;"U,;^"U.CD"W%n""U-/!bmK^VKa8Frz!"*9@@9o-!9eeLcT`L7t!sJjj"t'QXM$>>5,m@NW>m1B8"ebuF4XC8:"[*"m"U0G[-VYlj>Qmh*"U,(O""+6U,UXns!<kCc"W&Ni"a)j0AVC-l"U0$M"\j+H"U-G)"]^6W$3^TU=*74@>Qn,U$3b:#!=Au6!@J$SF]W]["^D4JI0p,]F=.4qF]W]["^D4"I0p-(K`MMa"a*mh9a+c*9mm?P?%i:d"U0$MF\N$E"^QN`"U1M!-QS!I>t62s#%^:nL^%]d"U+oSF\N$E"VlFm"W`9t$3^TU=*74@>Ql-r$3`SH!=Au6F]W]["^D3oI0p-HK`MMa"lo\34bs;B7n%%o2['BL"".(p"^D42"U,&51abFK"ZHSg/14FD"^D42"U,&5/120g##.T.49[YI"Z.V"*q]oc)_a-("ZHSgYlQ3U9dMCq"[tsV70Qp"%93`="^rcA/HoA_%7LUUn,uHU"U+oS2=L`K2*E5h6:Ea8>YR?b>QkR:$8(`M>t6dA"D'Fo"cNI0>n);i0S0=:"ZT4&"ToLp!<kCc"^`W?,m@NW4Ttum"f)/H%0Znb'a4bG"UuIZ"U,Jc/VF0/2['A1-RB4P#VZts"Vr*n"^D37!@J$[,ml45J-[hL"U,Y^"U,Ja%=eI5/KG"""U+oS"V!<r4UloI0HD_c/d2E;!@J$S0.1$O"^D4:"U,&5B."8kz!eCB?!M[[<"U.1>"U-n6"U-V.,n1#_,m=Ga/I_kg"YC09"W[b!%0Znu%0Zo?'a4b@*<cUO"U,tqr><KYeJDTtz!!>UmaT8<]!sJj*-NsZF-NtM:1G'&d!AF[/*E+O)"^D37!@J$s2$sKj/MR\d'b(<M/NOUM"Y(N%L^$Km*>K"i"W\-X"W&Ni"XP]'"XQ4K'tkBR#W;qgz!1_.5"U,Jc"U,2["U+oS"U,'41(=CH'a4b7%0ZnuV%V#d]bW^4z!!*Y!aTDtU"Y'ZZ%3l#["Vn-Lr>^Ln3X#Zl-Na>Kz\&e^m"U-Bt!<jJT"U->&/M6Gr"skiI#k.sK,oS?]/Reke5pmE:"=5oO-1D*C,pa")*Uj1`2&5T`2)Qs;2.A0,">*+I"Wo)q"YDbe"c*@7"U00!/HtVH/Hl:a-bTP/]ae*q=Tp_f"\C'n,qU2a"YC8h"Xtf6n,t$p,pi$b"skQI6S0l!#R(B"-NsZq-Ns[7!@J$S/NO.;z#QtGC&Kql,*S/I;"U39j-Ns[q(an,@"c*@7jT5V4#;,<E"n2XH"U-%s"U,'-"k<\1!X]+e!X/`2"W&Nii>gYT7/[0="^D60!X/`2"d'HG"]`MC$3e*EblS6k!X/`1blS?)"&&G5blYic5m7G&&grbIjT=NF2XLPLn,t<HnK$Ee6j9[oh#[oeh#[``"U1k=-NsYW;R%>2!U'^g"U3R#-O&0/[/qTW"Y;#)"U.f[!X8&r/`d$[fE!\n![ZJ"0]`At!pp%Sq%O"o!Y>M=OT?g5"U.f[![S"TR0a&Q!Y>M=aU'<u"U.f8!L3`j31U-T"]_B$%=e[VEifEI32H_Z".]NL"f29s!t#4V!j)P3"U2:9/GU0[!sMK^![[=:0EhWX!@Qt1-.i5P"U0Ga-fkCUn,Y3H"jmu2eHPmSPl`l*&bQ^C*X_!1-1Cph"U2FS-bTVi"3:L9`<3LMfE"Xi"185-9*GJj-\quG"4[K#eH<2]W!,hM#0d8#"""2*!n@A["hb#o!t#4&"6BUl"U3EY<s=9ZeH6-^"Z[s\"185598Eec"4[K#eH<2]a9G9@"`,OiSHIsU$3^U`"'5X0M&7TD`<4ou$3ct&jT>hn"k<]V"bd$.!t#4V"5O%d"U.RI`<-S%"A?uA"c*=6[0%]Y69V^Y[0%D^!tC=o9>puBJ,r:H"YhA."U.d-jT21[$3f5eXTJn6[/mZ;$G?NNL^-QV"`,P,V#r;%\HE)4!tYV>_&Xm,"U.f[!Y)(59*GL\![-S+"U,JA"T^"7$CCpT"'Pkn"!%FHPlm!H$3^S6-O#b;%0?]u"3glSPlh2G"tcAJ"m>t=V#pnj">'eF)jLLnjT;=\"ZHSgVZS:M"dp/Sbl\E*!DCB6blb?U1'Iil#:B\W!f[9h"cWTf"U,(W(FQTmN<>gZ4p>N2!t#3k"2t?L]`SEA"LS?F"4[E-O9^aI[0%AU"0_s:"%S^\[0*f=)?mMNN<9Lk"b@R>"n_nm!t#5)!j)P3"dK1t!t(S$,m=AS"i1?i"^RAq$3c+cSHB4q!tDI=9*GKE-]J33"][79",-h(K`d;:Pl``6!f[;I!\so_9IH)-"U,L'"-!DJ!\sr@!M'<""U1+k-O#2+SHB4q!sRTd/Hr6XXTJoq"!n*Q"hau&!t#28<%!q5"U,[o#)r_M"""2*!L3`o"U.jQblS?)"&$l?mfCB/+U&#m-O!Mh!X]+E!mLcR`<$2H"9erk-NsZV-VCcK"ZQ[n"0DY4"U3Qn-NsYW;?[6_'IV-,m/bH56Nt^9m/[RM!Up6:!_3F=!o3kamfDVVh#Ruh"doTCeH3Dc"W?b0L]Z*.3<]SV"=FAT!o3nb"l04`"U,'t&1>Euh#c[>'F!S"`<$CG'sJ%a!]^Df\HsY>![S"Th#cC6"W?D'---*@m/eU'!ANmBjT=NF#H7q3jT6"T![[=:0EhWJ#:Gc<N<=k:%J9d^"-ipC"U3!K-bTTkkQ=K:'"nCT"$m(o+X[Fn[0$a>XTQ6=$FKs>"U"u44=::9_u_=>%cmcJ!^Qtn=XWS<---*@m/lANjT7g:![XcK0^Sr'!p'JNm/eTd!AFZ\!@Qt1jT=fN@dO4Ca8n!V!p'LN!b/A?jT=NF2?a8#-Ns[l![e/R!f[9h"cWTf"U,(O!@J&E'\rg:"U-h4r;nh[>Qt'-"U,&5aUfg'V#n=4$3dg>`<-GN"jI-#+h[s]:B^n*;O%:-!lY3MblWP$"ZHSgaUKU$f*Atk,R"@Q"=K02fE-^,8d,AA-O!M0!t#3c"-irqN<9=f"9erc-Ns\<$n(-<"jdK+m/dI\">'f$!SmfF@Z:Hn3!G9DPlh?sjT:tT$C(\s"U#!g".]N$"U/ln"U2"1<s?PEXTJn6V$"+-$3^TY-Ns[U"'5ZF!j)P3"e>b'!t#4."2+dD"U.RIV#pl)"9laGXTJn6PlnDr$3ct&]`STF"]QiQo`Crl$Cq8&"U#!g"/Q),"bd&\!t#28<$qj7"2+dD"U2"1=5<o]L^#F7"bZq)"g%ic!t#3k!sJi3"o/6JjT6b'">Bu_q$e\TN<63a$3^U@""_h/V#pls"U,'-"U1_)/>WFP*>>7O%=eIPV#pl1'*Y36V#q&."]QiQ"kNc&N<:I1!sJkE$7CN0r;nZG"m#cE!t#5)!L3`o"n_qf!t#28!@J&)"/Q),N<:I1!sOAZN<9LkK`dSB$Cq8.YQdas"8r;R#"o+'F=.6o!lY3J"iUNH"U,('%k$H?]ESNu"U2@;-O!l5![S!Ri;tAIh#\<D"m#dP!XeT%'a7h_m/e"T"m#d`!XaV`*<f[gr;m]dJI;Y;!Y>M==XOC/!X/`2jT40=$KV<u"^D37CaTC?!o3nb"k<\9!Xe;r%=eIP"U3]`=!H/r"ZQ\9!o3nb"U/-Y"U4?"-iF*0"^D60!X/`2"lTe9`<,f@jT5Fl"Q]^H!ZD7(!lY3J"U+oS"U39Y-\M[-r;mN6"fVMMm/eT4"Yf<FjT=NF#JUKIjT5ts"`YpW!p'LF!^l>V-27Tsm/lANjT7dQ"T^"<![XK@0]`At!pp%um/eTd!ANU:jT=fN@KcpO-NsYW;V_BXn,t?)![Ynl0^Sofn,Y3H"`u*q"b?t-jT>5^"ZHSgW<jpU"e5lH]`J?@&Hr?W!\Ed@[/pM-eH#gW<S[ZZL^#Hm!=c7<9C2``L^#I(!=eN%9Dnl#p]aAKr;lit%0Zol![jfF"U.oY!QYJA!B\@'=JZ$["U4]'-VY&C#>9RT<<XgW%H%=]AIZuj9*GJr-Og4_.P2*C9/R.i90EaZ"\V8ni!)gX"^EEt%F>/L20F$NI1=g49*GJB-T,IH%;cQQ!D>:eD%-XP6mmZh%HmpfN<'K=!DA[Y"U.o1#_2uA!B\@.kQ[:Q4,=4,#*f3NO:$L>PlWt;!=dBZ9/W7@SH00'"cNL1K`V\h98ruV"]^fh"U.n0SH8sSQj]_l"Y!?O!X1OeV#n%+$3a/;!X])7X90h-[/mZ9%D;cO\,f5[]`GeI%0Zn9-cH)q5YEuR!Q>'KblJ8]9/XrpblJ7W"l'2-:oFPo!BYf=XT8SS[/g_u!_W\#Ca\TOjT=NF#LNPUjT5ts"_f@O![Ynl0^Sr'!p'JNm/eT4#Vb?AjT=fN@dO4CTE6eN"\^<"!X8&r/`d$[n,Y61![UYsm/lANjT7g:![ZJ"0]`At!pp%u"U/]i"U4&k-^=am",-gdN<A&H"ZHSgT*Zmi!X4Aa/Hl<M$R`\!"bd$i"U3*Z-bK`h]`J`K"a;<tpB.5o,R"@)$Rb$;f`D=9"U2OH-O';Hh#\l+"h+O\"oetT![IpQg^Y\8d/r,*7-+L3!pp%um/eT4"Yf$>jT=fN@dO4Cp]N;<!p'LF!^i=^jT=NF2XLPLn,t<H"\^<2![UYsm/lANjT7g:![XcK0EhVj-hRNEkQrgEh#\lT"U3EX&d8Hp!\=KY3@DcI"kX,5"f2:F!XdHZ"U.m0D;>7#"hb!!!Xe;r"n2XH"U/Eaj8mL,"]#<J%c%14"U4o,-^=c3!qcU(PQD$e!Y>M=g^GRk#mK\t&-W78%4A7["Vh[SjT;gl$3^U@"$-VK%]'7Q"U4o0-bp#L!p'JAm/dI\">'eQ%,CtQjT6b'">Bu_^BZ+iKF?T;,m=Im"t'SV!jr(:"gnC8"U,&i-fkCU:bW%VbQ9/W)heES"^n/EeHU^8597-5*A4`$Zjd0t"U-%s"m#cm!XcUB%=eRS`<$L9"\T"&4=::9Zihb,"mlB1!ZL_5`<,E.@eBeQ"n_p6m/j3hK`_>J!iQ6]!s%]iQiiTU!0mYG"-!CMJ-Co7N<:)Y"+UQ?!s"#WPlm9R6Nr_W`<$AM"k3Z&"]a@[$3er]jT5eF!X/`1jT5n,!_W\#!@Qt1^B*-l+U&%#!@J&+#aGK<"U3KZ-O&T4r;m<09n`ZV"n_qV!t$(I!Z`o.%L)e4&-W6-"t-,G[/pLkC:sZP319le!X1Oe"T^!q!Y'Y\9*GLL!Zo)W"k<Yc"U2O>-Nu*h!X]+]!qcU%m/dFp"SDg*J,r;r&+p"k!^Qtn^B#_V$3dO6&-W5u%4=:=z"'#Mi!NsNH"U-V."U->&71FJq"U.=U*CW+#7>V$S+U&$P-Nsq_+rpgj<@%eP9EbS?&g[_N">)2/"^EnoTER#4"U.R'"YE8&"n2XH"Xt`c"U,\i"U,'-,o$Sg"XO<U"U,&E"XbTB"U-_1jTbt.%N#NQz!sOqjK`SU'!sJk-!@J$ST`HN@]`P;N3s>eM!@Jls"^Dc_%5JY%YQ?L!%0]uO*=Xb="c*77*=W0W'cd`='a9s-0EhU\-QNX">SS7g1)0s00HC=a"Y^Z3%5JY5"^DcW"W7II3@>7>"]Z9@J-RbK%0]uO*=Xb="c*15"U-8$"U,W%(%;>@7h$1J:^%:C$3^Sa-NsJM!!!!"&XpfD"UtVZ"W[b',m=HW"W\UJ"U,,YKaX^hbmZ--z!!4/Yd)c@n"d&j6"U0_a-]K#"(mPgJ/YEH-"%i_#0dd,.4ZYHV#!Dqi"[+n(L^$!B4bs;*(^1'r-RFQQ4]mOB"[*D#"n;U@4U%Jd/O]j<$8!hU"[W@r)(,SF2-);b"s6G@"gJ(U2%9^o"Vj0-70Vl[/N!\8(,[u="9o#59ID\$n,t=+"c*43,p`^]-+F((!"C5#6S/`N>Qkj"$3^TW-Og4_>R^i?&JYHQ>SRDG&KM&E">(o/"^D3G/IDXbKE3G("Z[qfn,tlS4bs;*(d0MU2['@T-S5Mk">(VtL^#F7"VE+.L^#+s"U-h4/^Obd2*F+l"pQqJ4YJ,&$:Pe#*CW=Y76N:-"[+mRz!!OeT2/,qQaTD\MnH1-B"mH+:"XOlj"U,2["b?b%6mW$+">)27"W90$p]E)O"XbZD%Boje,qg8^"U3id-OiL-%6a1`9h,Xe9as8T#$"/&<E0Js>u_>.'jWR@>ub3"?!RnN%=eI59k@Tc"U4,k-RB4P"#)#s*?bRinH('A,o'Ga"W&Ni"U.d-/JSTr"YV5,'dY@6,o$aj"YV6'"U,ZA,ukX"<E3?W/QEdP#:3@h<NlX,7g0&>-WLlb>QkjJ$3a.8$3^T<-^Y!9<>l$@,mjeZ!@J%=2'iD0ZiMNX'dX1j"W&NiB-ei-"U.d-"U,VUL^)`;8d,A\-Nt52$699R"=4L*0I=a?*?bRi+X[^&"Y(5rL^$Km"U/-7"\^9I"c!.,,p`^]O9['`)_J8t/Ou01/M.kE"XtfF'a7hG'eKbM"n2XH4U(<X/Hl;W-Nu(J$7u^C">D\:n-1HJ"T]u6'a5ID"n2XH"f)2W7,8(7&A8Ac%fcS0!!!Pe3l<Enj5<-I3,''1$d_+SSY_.iXNWmc8<Ekh"3Nj(qh57NMq:2=Z6N%,&C`rDBDdEO#fu->G99UG@,!e9W?KA1YER"HQ-+.a/7<[CXfe?Y1l]7AVL+^NmK#IPz!.[PS<r`4#!!!!9^fLL9z._o*cz!!'ge##SnKpHuSpz!!"^gfF9V`fQ;`TTe$&jH1\!"F9&5\!sJiO*<cTa*<cTY*K:ts#,N=P"U,&E"U+oI*<cTW0H_At*<cU80F/[\"W[bT&/ZEL"U,oD"U,'4-k->ZV$R;b_uU#F%5A"i-QN?o0-(0!zzz!!!"Z!!!!,!!!!3!!!!"z!<<*"]=], 5))
+
+		h_funcs["pre_calculated_xor_tbl"] = setmetatable({
+			[0] = {
+				[0] = 0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15
+			},
+			{
+				[0] = 1,
+				0,
+				3,
+				2,
+				5,
+				4,
+				7,
+				6,
+				9,
+				8,
+				11,
+				10,
+				13,
+				12,
+				15,
+				14
+			},
+			{
+				[0] = 2,
+				3,
+				0,
+				1,
+				6,
+				7,
+				4,
+				5,
+				10,
+				11,
+				8,
+				9,
+				14,
+				15,
+				12,
+				13
+			},
+			{
+				[0] = 3,
+				2,
+				1,
+				0,
+				7,
+				6,
+				5,
+				4,
+				11,
+				10,
+				9,
+				8,
+				15,
+				14,
+				13,
+				12
+			},
+			{
+				[0] = 4,
+				5,
+				6,
+				7,
+				0,
+				1,
+				2,
+				3,
+				12,
+				13,
+				14,
+				15,
+				8,
+				9,
+				10,
+				11
+			},
+			{
+				[0] = 5,
+				4,
+				7,
+				6,
+				1,
+				0,
+				3,
+				2,
+				13,
+				12,
+				15,
+				14,
+				9,
+				8,
+				11,
+				10
+			},
+			{
+				[0] = 6,
+				7,
+				4,
+				5,
+				2,
+				3,
+				0,
+				1,
+				14,
+				15,
+				12,
+				13,
+				10,
+				11,
+				8,
+				9
+			},
+			{
+				[0] = 7,
+				6,
+				5,
+				4,
+				3,
+				2,
+				1,
+				0,
+				15,
+				14,
+				13,
+				12,
+				11,
+				10,
+				9,
+				8
+			},
+			{
+				[0] = 8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7
+			},
+			{
+				[0] = 9,
+				8,
+				11,
+				10,
+				13,
+				12,
+				15,
+				14,
+				1,
+				0,
+				3,
+				2,
+				5,
+				4,
+				7,
+				6
+			},
+			{
+				[0] = 10,
+				11,
+				8,
+				9,
+				14,
+				15,
+				12,
+				13,
+				2,
+				3,
+				0,
+				1,
+				6,
+				7,
+				4,
+				5
+			},
+			{
+				[0] = 11,
+				10,
+				9,
+				8,
+				15,
+				14,
+				13,
+				12,
+				3,
+				2,
+				1,
+				0,
+				7,
+				6,
+				5,
+				4
+			},
+			{
+				[0] = 12,
+				13,
+				14,
+				15,
+				8,
+				9,
+				10,
+				11,
+				4,
+				5,
+				6,
+				7,
+				0,
+				1,
+				2,
+				3
+			},
+			{
+				[0] = 13,
+				12,
+				15,
+				14,
+				9,
+				8,
+				11,
+				10,
+				5,
+				4,
+				7,
+				6,
+				1,
+				0,
+				3,
+				2
+			},
+			{
+				[0] = 14,
+				15,
+				12,
+				13,
+				10,
+				11,
+				8,
+				9,
+				6,
+				7,
+				4,
+				5,
+				2,
+				3,
+				0,
+				1
+			},
+			{
+				[0] = 15,
+				14,
+				13,
+				12,
+				11,
+				10,
+				9,
+				8,
+				7,
+				6,
+				5,
+				4,
+				3,
+				2,
+				1,
+				0
+			}
+		}, {
+			["__index"] = function(tbl, key)
+				local p = setmetatable({
+					[0] = key,
+					[key] = 0
+				}, h_funcs["meta_tbl_generate_xor"](key))
+				tbl[key] = p
+
+				return unpack({p})
+			end
+		})
+		h_funcs["meta_tbl_generate_xor"] = (function(a)
+			return {
+				["__index"] = function(tbl, b)
+					local a_reamining, xor_result, multiplier, b_reamining;
+					a_reamining = a
+					xor_result = 0
+					multiplier = 1
+					b_reamining = b;
+					while a_reamining > 0 and b_reamining > 0 do
+						local a_digit = (a_reamining % 16)
+						local b_digit = (b_reamining % 16)
+						xor_result = xor_result + h_funcs["pre_calculated_xor_tbl"][a_digit][b_digit] * multiplier;
+						a_reamining = ((a_reamining - a_digit) / 16)
+						b_reamining = ((b_reamining - b_digit) / 16)
+						multiplier = multiplier * 16
+					end;
+
+					local res = (xor_result + (a_reamining + b_reamining) * multiplier)
+					tbl[b] = res
+					h_funcs["pre_calculated_xor_tbl"][b][a] = (res)
+
+					return unpack({res})
+				end
+			}
+		end)
+
+		h_funcs["upvalues"] = {}
+		h_funcs["bit.lshift"] = (_bit and _bit.lshift);
+		h_funcs["vm_metadata"] = {} -- maybe alternative stack???
+		h_funcs["XOR"] = XOR or function(a, b)
+			return h_funcs["pre_calculated_xor_tbl"][a % h_funcs["constant_multiplier"]][b % h_funcs["constant_multiplier"]]
+		end;
+
+		h_funcs["bit.rshift"]= (_bit and _bit.rshift)
+		h_funcs["bit.rshift"]= h_funcs["bit.rshift"]or function(a, b)
+ 			if b >= 32 then
+				return 0
+			end;
+			if b < 0 then
+				return h_funcs["bit.lshift"](a, - b)
+			end;
+
+			local res = (a % h_funcs["constant_multiplier"] / h_funcs["2_power_tbl_calculated"][b])
+			return res - res % 1
+		end;
+
+		h_funcs["MAX_INT"] = 2.147483648E9
+		h_funcs["2_power_tbl_calculated"] = {
+			[0] = 1,
+			2,
+			4,
+			8,
+			16,
+			32,
+			64,
+			128,
+			256,
+			512,
+			1024,
+			2048,
+			4096,
+			8192,
+			16384,
+			32768,
+			65536,
+			131072,
+			262144,
+			524288,
+			1048576,
+			2097152,
+			4194304,
+			8388608,
+			16777216,
+			33554432,
+			67108864,
+			134217728,
+			268435456,
+			536870912,
+			1073741824,
+			2147483648,
+			4294967296
+		}
+
+		h_funcs["extract_bits"] = function(value, width, offset)
+			local res = ((value / h_funcs["2_power_tbl_calculated"][offset]) % h_funcs["2_power_tbl_calculated"][width])
+			--[[res = res - res % 1; return res]]
+			return math.floor(res)
+		end;
+
+		h_funcs["gBits8"] = (function()
+			local a = string.byte(h_funcs["format_blob"], h_funcs["DIP_BLOB_IDX"], h_funcs["DIP_BLOB_IDX"])
+			h_funcs["DIP_BLOB_IDX"] = (h_funcs["DIP_BLOB_IDX"] + 1)
+			return a
+		end)
+
+		h_funcs["gBits32"] = function()
+			local a, b, c, d = string.byte(h_funcs["format_blob"], h_funcs["DIP_BLOB_IDX"], h_funcs["DIP_BLOB_IDX"] + 3)
+			h_funcs["DIP_BLOB_IDX"] = (h_funcs["DIP_BLOB_IDX"] + 4)
+
+			return d * 16777216 + c * 65536 + b * 256 + a
+		end;
+
+		h_funcs["gInt"] = function()
+			local low = h_funcs["gBits32"]()
+			local high = h_funcs["gBits32"]()
+
+			if high >= h_funcs["MAX_INT"] then
+				high = high - h_funcs["constant_multiplier"]
+			end
+
+			local result = high * h_funcs["constant_multiplier"] + low
+			return unpack({unpack({ result }) })
+		end
+
+		h_funcs["gFloat"] = function()
+			local Left, Right, Sign, Mantissa, Exponent, IsNormal;
+			Left, Right = h_funcs["gBits32"](), h_funcs["gBits32"]()
+
+			if Left == 0 and Right == 0 then
+				return unpack({0})
+			end
+
+			Sign, Mantissa, Exponent = (-1) ^ h_funcs["extract_bits"](Right, 1, 31), h_funcs["extract_bits"](Right, 20, 0) * 4294967296 + Left, h_funcs["extract_bits"](Right, 11, 20)
+			IsNormal = 1
+
+			-- some case checks removed here, not used im this code.
+
+			return Sign * (2 ^ (Exponent - 1023)) * (Mantissa / (2 ^ 52) + IsNormal)
+		end;
+
+		h_funcs["gVarInt"] = function()
+			local value, multiplier = 0, 1;
+			repeat
+				local byte_value = string.byte(h_funcs["format_blob"], h_funcs["DIP_BLOB_IDX"], h_funcs["DIP_BLOB_IDX"])
+				value = (value + ((byte_value > 127 and byte_value - 128 or byte_value) * multiplier))
+				multiplier = (multiplier * 128)
+				h_funcs["DIP_BLOB_IDX"] = h_funcs["DIP_BLOB_IDX"] + 1
+			until byte_value < 128;
+
+			return unpack({value})
+		end;
+
+		h_funcs["temp_cached_constants"] = nil;
+		h_funcs["unpack_gVarInt"] = function()
+			return unpack({h_funcs["gVarInt"]()})
+		end
+
+		h_funcs["gString"] = function()
+			local str_len = h_funcs["gVarInt"]()
+			h_funcs["DIP_BLOB_IDX"] = h_funcs["DIP_BLOB_IDX"] + str_len
+			return string.sub(h_funcs["format_blob"], h_funcs["DIP_BLOB_IDX"] - str_len, h_funcs["DIP_BLOB_IDX"] - 1)
+		end;
+
+		h_funcs["generate_tbl"] = function(...)
+			local count = select('#', ...)
+			if count == 0 then
+				return count, h_funcs["empty_tbl"]
+			end;
+			return count, {
+				...
+			}
+		end;
+
+		h_funcs["temp_cached_decoded_instructions"] = nil;
+		h_funcs["VM"] = (function(EXECUTION_DATA, enclosing_func_upvalues)
+			local Stk_size 							= EXECUTION_DATA[6]
+			local line_debugging_data 				= EXECUTION_DATA[11]
+			local Insts 							= EXECUTION_DATA[3]
+			local REG_B 							= EXECUTION_DATA[4]
+			local REG_A 							= EXECUTION_DATA[5]
+			local decrypted_constants 				= EXECUTION_DATA[8]
+			local constants 						= EXECUTION_DATA[9]
+			local function_prototypes 				= EXECUTION_DATA[7]
+			local REG_C								= EXECUTION_DATA[10]
+
+			local call_vm = function(...)
+				VM_ITERATION = VM_ITERATION + 1
+				local Stk = h_funcs["gen_empty_tbl"](Stk_size)
+				local Top = 1
+				local VIP = 1
+				local shared_upvalues = nil
+				local UNK_TBL_IDX, some_global_maybe_TOP_like, UNK_TBL = nil, nil, nil -- Still UNK?
+				local n_args, args = h_funcs["generate_tbl"](...)
+				local processed_args= 0
+				local arg_idx = 1
+				local vm_env = getfenv()
+
+				local success, err_and_is_closure, closure_index, ARGS_FLAG = _pcall(function()
+					repeat
+						local Enum = Insts[VIP]
+							if Enum == 44 then
+								-- OP_NIL
+								Stk[REG_B[VIP]] = nil
+							elseif Enum == 42 then
+								-- LOAD_ARGS
+								for idx = 1, REG_C[VIP] --[[PCount]], 1 do
+									Stk[idx] = args[idx]
+								end
+							elseif Enum == 46 then
+								-- OP_CALL
+								local A, B, C = REG_A[VIP], REG_B[VIP], REG_C[VIP]
+
+								if B ~= 0 then
+									Top = (A + B - 1)
+								end;
+
+								local limit, results;
+								if B ~= 1 then
+									limit, results = h_funcs["generate_tbl"](Stk[A](h_funcs["safe_tbl_unpack"](Stk, Top, A + 1)))
+								else
+									limit, results = h_funcs["generate_tbl"](Stk[A]())
+								end;
+
+								if C ~= 1 then
+									if C == 0 then
+										limit = limit + A - 1;
+										Top = limit
+									else
+										limit = A + C - 2;
+										Top = limit + 1
+									end;
+									local jdx = 0
+									for idx = A, limit do
+										jdx = jdx + 1;
+										Stk[idx] = results[jdx]
+									end
+								else
+									Top = A - 1
+								end
+							elseif Enum == 45 then
+								-- LOAD_DECRYPTED_STRING
+								Stk[REG_C[VIP]] = decrypted_constants[VIP]
+							elseif Enum == 47 then
+								-- OP_MUL
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] * Stk[REG_A[VIP]]
+							elseif Enum == 48 then
+								-- UNK_LOAD
+								Stk[REG_C[VIP]] = enclosing_func_upvalues[REG_A[VIP]][decrypted_constants[VIP]]
+							elseif Enum == 36 then
+								-- UNK
+								local B = REG_B[VIP]
+								local next_tbl_idx, value = next(UNK_TBL, UNK_TBL_IDX)
+								if next_tbl_idx then
+									Stk[B + 1] = next_tbl_idx
+									Stk[B + 2] = value;
+									VIP = REG_A[VIP]
+									UNK_TBL_IDX = next_tbl_idx
+								end
+							elseif Enum == 38 then
+								-- OP_SETUPVAL
+								Stk[REG_A[VIP]][function_prototypes[VIP]] = Stk[REG_B[VIP]]
+							elseif Enum == 37 then
+								-- UNK_JMP
+								local F = (false)
+								some_global_maybe_TOP_like = (some_global_maybe_TOP_like + UNK_TBL_IDX)
+								if UNK_TBL_IDX <= 0 then
+									F = some_global_maybe_TOP_like >= UNK_TBL
+								else
+									F = some_global_maybe_TOP_like <= UNK_TBL
+								end;
+								if not (F) then
+								else
+									Stk[REG_B[VIP] + 3] = some_global_maybe_TOP_like
+									VIP = REG_A[VIP]
+								end
+							elseif Enum == 39 then
+								-- OP_JMP
+								VIP = REG_B[VIP]
+							elseif Enum == 41 then
+								-- OP_GETGLOBAL
+								Stk[REG_A[VIP]] = vm_env[function_prototypes[VIP]]
+							elseif Enum == 33 then
+								-- NOT_EQ
+								if Stk[REG_B[VIP]] ~= Stk[REG_C[VIP]] then
+									VIP = REG_A[VIP]
+								end
+							elseif Enum == 35 then
+								-- OP_SELF
+								local upval = enclosing_func_upvalues[REG_A[VIP]]
+								upval[2][upval[1]] = Stk[REG_B[VIP]]
+							elseif Enum == 34 then
+								-- LOAD_ARGS
+								processed_args = REG_A[VIP]
+								for idx = 1, processed_args do
+									Stk[idx] = args[idx]
+								end;
+								arg_idx = (processed_args + 1)
+							elseif Enum == 32 then
+								-- OP_GETUPVAL
+								local upval = enclosing_func_upvalues[REG_A[VIP]];
+								Stk[REG_B[VIP]] = upval[2][upval[1]]
+							elseif Enum == 30 then
+								-- LOAD_STK
+								Stk[REG_B[VIP]] = Stk
+							elseif Enum == 29 then
+								-- OP_JMP
+								VIP = REG_B[VIP] -- ironbrew JMP
+							elseif Enum == 28 then
+								-- OP_CONCAT
+								Stk[REG_A[VIP]] = (Stk[REG_C[VIP]] .. Stk[REG_B[VIP]])
+							elseif Enum == 27 then
+								-- OP_MUL
+								Stk[REG_B[VIP]] = function_prototypes[VIP] * Stk[REG_A[VIP]]
+							elseif Enum == 25 then
+								-- OP_LEN
+								Stk[REG_C[VIP]] = #Stk[REG_A[VIP]]
+							elseif Enum == 26 then
+								-- OP_MOD
+								Stk[REG_A[VIP]] = Stk[REG_B[VIP]] % function_prototypes[VIP]
+							elseif Enum == 24 then
+								-- OP_DIV
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] / constants[VIP]
+							elseif Enum == 17 then
+								-- OP_CALL
+								Top = REG_C[VIP]
+								Stk[Top] = Stk[Top]()
+							elseif Enum == 16 then
+								-- IS_NOT_TRUE
+								if not (not Stk[REG_B[VIP]]) then
+								else
+									VIP = REG_C[VIP]
+								end
+							elseif Enum == 15 then
+								-- LOAD_REG_C
+								Stk[REG_C[VIP]] = REG_C
+							elseif Enum == 14 then
+								-- OP_LT
+								if not (constants[VIP] < Stk[REG_B[VIP]]) then
+									VIP = REG_C[VIP]
+								end
+							elseif Enum == 13 then
+								-- OP_GETTABLE
+								Stk[REG_A[VIP]] = Stk[REG_C[VIP]][Stk[REG_B[VIP]]]
+							elseif Enum == 12 then
+								-- OP_POW
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] ^ Stk[REG_A[VIP]]
+							elseif Enum == 20 then
+								-- XOR
+								Stk[REG_B[VIP]] = (h_funcs["XOR"](Stk[REG_C[VIP]], Stk[REG_A[VIP]]))
+							elseif Enum == 19 then
+								-- SET_METADATA
+								h_funcs["vm_metadata"][REG_B[VIP]] = Stk[REG_C[VIP]]
+							elseif Enum == 18 then
+								-- LOAD_TBL
+								local B, A = REG_B[VIP], REG_A[VIP]
+								local tbl = Stk[B]
+								for Idx = 1, Top - B do
+									tbl[A + Idx] = Stk[B + Idx]
+								end
+							elseif Enum == 22 then
+								-- OP_CALL
+								local C = REG_C[VIP]
+								Stk[C] = Stk[C](Stk[C + 1], Stk[C + 2])
+								Top = (C)
+							elseif Enum == 21 then
+								-- OP_RETURN
+								return
+							elseif Enum == 0 then
+								-- OP_MUL
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] * constants[VIP]
+							elseif Enum == 1 then
+								-- OP_LE
+								if not (decrypted_constants[VIP] <= Stk[REG_A[VIP]]) then
+									VIP = REG_C[VIP]
+								end
+							elseif Enum == 2 then
+								-- LOAD_METADATA
+								Stk[REG_A[VIP]] = h_funcs["vm_metadata"][REG_B[VIP]]
+							elseif Enum == 5 then
+								-- CALL_TOP
+								Top = REG_A[VIP]
+								Stk[Top]()
+								Top = Top - 1
+							elseif Enum == 4 then
+								-- OP_CALL
+								local C = (REG_C[VIP]);
+								Stk[C] = Stk[C](Stk[C + 1])
+								Top = C
+							elseif Enum == 3 then
+								-- OP_CALL
+								local C = REG_C[VIP]
+								Top = (C + REG_A[VIP] - 1);
+								Stk[C](h_funcs["safe_tbl_unpack"](Stk, Top, C + 1))
+								Top = (C - 1)
+							elseif Enum == 7 then
+								-- OP_EQ
+								Stk[REG_A[VIP]] = (Stk[REG_B[VIP]] == Stk[REG_C[VIP]])
+							elseif Enum == 8 then
+								-- OP_MOD
+								Stk[REG_C[VIP]] = Stk[REG_B[VIP]] % Stk[REG_A[VIP]]
+							elseif Enum == 10 then
+								-- OP_MOV
+								Stk[REG_B[VIP]] = Stk[REG_A[VIP]]
+							elseif Enum == 11 then
+								-- UNK_LOAD
+								local C, B = REG_C[VIP], Stk[REG_B[VIP]]
+								Stk[C + 1] = B;
+								Stk[C] = B[constants[VIP]]
+							elseif Enum == 89 then
+								--OP_NOP
+							elseif Enum == 90 then
+								-- OP_MOD
+								Stk[REG_B[VIP]] = (function_prototypes[VIP] % constants[VIP])
+							elseif Enum == 91 then
+								-- OP_DIV
+								Stk[REG_A[VIP]] = (Stk[REG_B[VIP]] / Stk[REG_C[VIP]])
+							elseif Enum == 86 then
+								-- OP_UNM
+								Stk[REG_A[VIP]] = -Stk[REG_B[VIP]]
+							elseif Enum == 87 then
+								-- OP_CALL
+								local B = (REG_B[VIP]);
+								Stk[B](Stk[B + 1], Stk[B + 2])
+								Top = B - 1
+							elseif Enum == 94 then
+								-- UNK_LOAD_CHAR
+								Stk[REG_A[VIP]] = enclosing_func_upvalues[REG_C[VIP]][Stk[REG_B[VIP]]]
+							elseif Enum == 92 then
+								-- UNK_LOAD_FUNCTION
+								Stk[REG_C[VIP]] = enclosing_func_upvalues[REG_A[VIP]]
+							elseif Enum == 98 then
+								-- OP_SUB
+								Stk[REG_C[VIP]] = Stk[REG_A[VIP]] - Stk[REG_B[VIP]]
+							elseif Enum == 79 then
+								-- UNK_JMP
+								Top = REG_A[VIP]
+								some_global_maybe_TOP_like = Stk[Top]
+								UNK_TBL = Stk[Top + 1]
+								UNK_TBL_IDX = Stk[Top + 2]
+								VIP = REG_C[VIP]
+							elseif Enum == 74 then
+								-- NOT_EQ
+								if Stk[REG_C[VIP]] ~= constants[VIP] then
+									VIP = REG_B[VIP]
+								end
+							elseif Enum == 76 then
+								-- PREPARE_ARGS_FOR_CLOSURE
+								local number_of_args_to_process, processed_arg_functions_idx = n_args - processed_args - 1, 0;
+								if number_of_args_to_process < 0 then
+									number_of_args_to_process = -1
+								end;
+								local C = REG_C[VIP]
+								for idx = C, C + number_of_args_to_process do
+									Stk[idx] = args[arg_idx + processed_arg_functions_idx]
+									processed_arg_functions_idx = processed_arg_functions_idx + 1
+								end
+								Top = C + number_of_args_to_process
+							elseif Enum == 75 then
+								-- DECRYPT
+								Stk[REG_C[VIP]] = Stk[REG_A[VIP]][decrypted_constants[VIP]]
+							elseif Enum == 80 then
+								-- OP_SETUPVAL
+								enclosing_func_upvalues[REG_B[VIP]][Stk[REG_A[VIP]]] = Stk[REG_C[VIP]]
+							elseif Enum == 83 then
+								-- OP_GETUPVAL
+								local Upvals = enclosing_func_upvalues[REG_C[VIP]];
+								Upvals[2][Upvals[1]][Stk[REG_B[VIP]]] = Stk[REG_A[VIP]]
+							elseif Enum == 84 then
+								-- OP_GETGLOBAL
+								Stk[REG_A[VIP]] = vm_env[function_prototypes[VIP]]
+							elseif Enum == 85 then
+								-- OP_NEWTABLE
+								Stk[REG_C[VIP]] = {}
+							elseif Enum == 51 then
+								-- OP_GETUPVAL
+								local Upvals = (enclosing_func_upvalues[REG_C[VIP]]);
+								Stk[REG_B[VIP]] = Upvals[2][Upvals[1]][Stk[REG_A[VIP]]]
+							elseif Enum == 50 then
+								-- OP_SETTABLE
+								Stk[REG_B[VIP]][Stk[REG_C[VIP]]] = Stk[REG_A[VIP]]
+							elseif Enum == 49 then
+								-- OP_CALL, calls --print("Hello World!")
+								local B = REG_B[VIP];
+								Stk[B](Stk[B + 1])
+								Top = B - 1
+							elseif Enum == 53 then
+								-- OP_SUB
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] - constants[VIP]
+							elseif Enum == 54 then
+								-- OP_ADD
+								Stk[REG_B[VIP]] = function_prototypes[VIP] + Stk[REG_A[VIP]]
+							elseif Enum == 52 then
+								-- LOAD_LAST_ARG
+								Stk[REG_A[VIP]] = args[arg_idx]
+							elseif Enum == 59 then
+								-- LOAD_DESERIALIZE_K
+								Stk[REG_B[VIP]][function_prototypes[VIP]] = constants[VIP]
+							elseif Enum == 60 then
+								-- EXECUTE_CLOSURE
+								local B = REG_B[VIP]
+								Top = B + 1
+								return true, B, 2
+							elseif Enum == 58 then
+								-- OP_RETURN
+								local B = REG_B[VIP]
+								return false, B, B
+							elseif Enum == 55 then
+								-- IS_TRUE
+								if Stk[REG_C[VIP]] then
+									VIP = (REG_A[VIP])
+								end
+							elseif Enum == 57 then
+								-- OP_LT
+								if not (Stk[REG_B[VIP]] < constants[VIP]) then
+									VIP = REG_C[VIP]
+								end
+							elseif Enum == 56 then
+								-- OP_CLOSURE
+								local closure_prototype = function_prototypes[VIP]
+								local closure_upvalue_data = closure_prototype[2]
+								local n_upvalues = #closure_upvalue_data;
+								local Upvalues = n_upvalues > 0 and {}
+								local new_closure_vm = h_funcs["VM"](closure_prototype, Upvalues);
+								setfenv(new_closure_vm, vm_env);
+
+								Stk[REG_A[VIP]] = new_closure_vm
+
+								if Upvalues then
+									for idx = 1, n_upvalues do
+										local upvalue = closure_upvalue_data[idx]
+										local upvalue_type = upvalue[2]
+										local upvalue_idx = upvalue[1]
+
+										if upvalue_type == IN_STACK then
+											if not shared_upvalues then
+												shared_upvalues = {} -- global variable for shared variables, this works like a cache
+											end;
+											local shared_upvalue = shared_upvalues[upvalue_idx]
+											if not shared_upvalue then
+												shared_upvalue = ({
+													[1] = upvalue_idx,
+													[2] = Stk
+												});
+												shared_upvalues[upvalue_idx] = shared_upvalue
+											end
+											Upvalues[idx - 1] = shared_upvalue
+										elseif upvalue_type == IS_COPIED then
+											Upvalues[idx - 1] = Stk[upvalue_idx]
+										else
+											-- UPVALUE FROM ENCLOSING FUNCTION!
+											Upvalues[idx - 1] = enclosing_func_upvalues[upvalue_idx]
+										end
+									end
+								end
+							elseif Enum == 69 then
+								-- LOAD_INSTS
+								Stk[REG_C[VIP]] = Insts
+							elseif Enum == 68 then
+								-- UNK_JMP
+								local B = REG_B[VIP]
+								UNK_TBL_IDX = Stk[B + 2] + 0
+								UNK_TBL = Stk[B + 1] + 0;
+								some_global_maybe_TOP_like = Stk[B] - UNK_TBL_IDX
+								VIP = REG_A[VIP]
+							elseif Enum == 67 then
+								-- OP_ADD
+								Stk[REG_B[VIP]] = Stk[REG_A[VIP]] + Stk[REG_C[VIP]]
+							elseif Enum == 71 then
+								-- OP_ADD
+								Stk[REG_B[VIP]] = Stk[REG_C[VIP]] + constants[VIP]
+							elseif Enum == 73 then
+								-- OP_RETURN
+								return false, REG_C[VIP], Top
+							elseif Enum == 72 then
+								-- OP_CALL
+								local B = (REG_B[VIP]);
+								Stk[B] = Stk[B](h_funcs["safe_tbl_unpack"](Stk, Top, B + 1))
+								Top = B
+							elseif Enum == 64 then
+								-- OP_LT
+								Stk[REG_C[VIP]] = Stk[REG_A[VIP]] < Stk[REG_B[VIP]]
+							elseif Enum == 66 then
+								-- OP_CALL
+								local C = REG_C[VIP]
+								Top = C + REG_A[VIP] - 1
+								Stk[C] = Stk[C](h_funcs["safe_tbl_unpack"](Stk, Top, C + 1))
+								Top = C
+							elseif Enum == 65 then
+								-- OP_EQ
+								if Stk[REG_B[VIP]] == Stk[REG_A[VIP]] then
+									VIP = REG_C[VIP]
+								end
+							elseif Enum == 62 then
+								-- XOR
+								Stk[REG_C[VIP]] = h_funcs["XOR"](Stk[REG_A[VIP]], decrypted_constants[VIP])
+							elseif Enum == 63 then
+								-- OP_RETURN
+								local B = REG_B[VIP]
+								return false, B, B + REG_A[VIP] - 2
+							elseif Enum == 61 then
+								return true, REG_C[VIP], 0
+							end
+
+							VIP = VIP + 1
+					until false
+				end)
+
+				if not (success) then
+					-- Error handling
+					if shared_upvalues then
+						for upval_idx, upval_data, t in next, shared_upvalues do
+							if upval_idx >= 1 then
+								(upval_data)[2] = (upval_data);
+								(upval_data)[3] = (Stk[upval_idx]);
+								(upval_data)[1] = 3
+								shared_upvalues[upval_idx] = nil
+							end
+						end
+					end;
+					if type(err_and_is_closure) ~= 'string' then
+						error(err_and_is_closure, 0)
+					else
+						if not (string.match(err_and_is_closure, ":(%d+)[:\r\n]")) then
+							error(err_and_is_closure, 0)
+						else
+							error('Luraph Script:' .. (line_debugging_data[VIP] or '(internal)') .. ': ' .. tostring(err_and_is_closure), 0)
+						end
+					end
+				else
+					if err_and_is_closure then
+						-- Dispatch of closure handeling
+						local NO_ARGS = 1
+						if ARGS_FLAG ~= NO_ARGS then
+							return Stk[closure_index](h_funcs["safe_tbl_unpack"](Stk, Top, closure_index + 1))
+						else
+							return Stk[closure_index]()
+						end
+					else
+						-- Return handeling
+						if (closure_index) then
+							return h_funcs["safe_tbl_unpack"](Stk, ARGS_FLAG, closure_index)
+						end
+					end
+				end
+			end;
+			return call_vm
+		end)
+
+		h_funcs["get_next_func_instructions"] = (function()
+			local n_possible_instructions = h_funcs["gVarInt"]()
+			local output = {
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil
+			}
+			local idx = 1
+			local decoded_Instructions = h_funcs["gen_empty_tbl"](n_possible_instructions)
+
+			for i = 1, n_possible_instructions, 1 do
+				local Instruction = h_funcs["gVarInt"]()
+
+				if h_funcs["temp_cached_decoded_instructions"][Instruction] then
+					decoded_Instructions[i] = (h_funcs["temp_cached_decoded_instructions"][Instruction])
+				else
+					local base_part = (Instruction / 4)
+					local decoded_data = ({
+						[1] = math.floor(base_part),
+						[2] = Instruction % 4
+					})
+					h_funcs["temp_cached_decoded_instructions"][Instruction] = decoded_data
+					decoded_Instructions[i] = decoded_data
+				end
+			end
+
+			local n_Instructions = h_funcs["gVarInt"]() - 58516
+
+			output[2] = decoded_Instructions
+			output[3] = h_funcs["gen_empty_tbl"](n_Instructions)
+			output[4] = h_funcs["gen_empty_tbl"](n_Instructions)
+			output[5] = h_funcs["gen_empty_tbl"](n_Instructions)
+			output[7]  = h_funcs["gen_empty_tbl"](n_Instructions)
+			output[8] = h_funcs["gen_empty_tbl"](n_Instructions);
+			output[9] = h_funcs["gen_empty_tbl"](n_Instructions)
+			output[10] = h_funcs["gen_empty_tbl"](n_Instructions)
+
+			local line_debugging_data = {}
+			for Ins_idx = 1, n_Instructions do
+				local raw_reg_C_data = h_funcs["unpack_gVarInt"]()
+				local operand_C_mode = raw_reg_C_data % 8;
+				local raw_reg_A_data = h_funcs["unpack_gVarInt"]()
+				local operand_A_mode = raw_reg_A_data % 8;
+				local raw_reg_B_data = h_funcs["unpack_gVarInt"]()
+				local REG_A = ((raw_reg_A_data - operand_A_mode) / 8)
+				local Instruction_Enum = h_funcs["unpack_gVarInt"]()
+				local REG_C = ((raw_reg_C_data - operand_C_mode) / 8)
+				local operand_b_mode = raw_reg_B_data % 8;
+				local REG_B = ((raw_reg_B_data - operand_b_mode) / 8)
+
+				output[10][Ins_idx] = REG_C
+				output[4][Ins_idx] = REG_B
+				output[5][Ins_idx] = REG_A
+				output[3][Ins_idx] = Instruction_Enum
+
+				local IS_CONSTANT = 0
+				local IS_REGISTER_INDEX = 7
+				local IS_RELATIVE_FORWARD = 1
+				local IS_RELATIVE_BACKWARDS = 4
+				local IS_CLOSURE_DATA = 2 -- only C register
+
+				if operand_b_mode == IS_CONSTANT then
+					if not (h_funcs["is_constant_cached"]) then
+						output[8][Ins_idx] = h_funcs["temp_cached_constants"][REG_B]
+					else
+						local constant = h_funcs["temp_cached_constants"][REG_B]
+						local n_constant = #constant
+						constant[n_constant + 1] = output
+						constant[n_constant + 2] = Ins_idx
+						constant[n_constant + 3] = 8
+					end
+				elseif operand_b_mode == IS_REGISTER_INDEX then
+					output[4][Ins_idx] = REG_B
+				else
+					if operand_b_mode == IS_RELATIVE_FORWARD then
+						(output[4])[Ins_idx] = Ins_idx + REG_B
+					else
+						if operand_b_mode == IS_RELATIVE_BACKWARDS then
+							output[4][Ins_idx] = Ins_idx - REG_B
+						end
+					end
+				end
+
+				if operand_C_mode == IS_CONSTANT then
+					if h_funcs["is_constant_cached"] then
+						local constant = h_funcs["temp_cached_constants"][REG_C]
+						local n_constant = #constant
+						constant[n_constant + 1] = output
+						constant[n_constant + 2] = Ins_idx
+						constant[n_constant + 3] = 7;
+					else
+						output[7][Ins_idx] = h_funcs["temp_cached_constants"][REG_C]
+					end
+				elseif operand_C_mode == IS_REGISTER_INDEX then
+					output[10][Ins_idx] = REG_C
+				elseif operand_C_mode == IS_RELATIVE_FORWARD then
+					output[10][Ins_idx] = Ins_idx + REG_C
+				elseif operand_C_mode == IS_RELATIVE_BACKWARDS then
+					(output[10])[Ins_idx] = (Ins_idx - REG_C)
+				else
+					if operand_C_mode == IS_CLOSURE_DATA then
+						local offset = #(h_funcs["temp_Instructions_register_data"])
+						h_funcs["temp_Instructions_register_data"][offset + 1] = output[7]
+						h_funcs["temp_Instructions_register_data"][offset + 2] = Ins_idx
+						h_funcs["temp_Instructions_register_data"][offset + 3] = REG_C
+					end
+				end;
+
+				if operand_A_mode == IS_CONSTANT then
+					if not (h_funcs["is_constant_cached"]) then
+						output[9][Ins_idx] = h_funcs["temp_cached_constants"][REG_A]
+					else
+						local constant = h_funcs["temp_cached_constants"][REG_A]
+						local n_constant = #constant
+						constant[n_constant + 1] = output
+						constant[n_constant + 2] = Ins_idx
+						constant[n_constant + 3] = 9
+					end
+				elseif operand_A_mode == IS_REGISTER_INDEX then
+					output[5][Ins_idx] = REG_A
+				elseif operand_A_mode == IS_RELATIVE_FORWARD then
+					output[5][Ins_idx] = (Ins_idx + REG_A)
+				else
+					if operand_A_mode == IS_RELATIVE_BACKWARDS then
+						output[5][Ins_idx] = Ins_idx - REG_A
+					end
+				end
+			end;
+
+			-- stk_size
+			output[6] = h_funcs["gVarInt"]()
+
+			-- not important?
+			output[11] = line_debugging_data
+			for line = 1, h_funcs["gBits32"]() do
+				local a = h_funcs["gBits32"]()
+				local b = (a / 2)
+
+				if a % 2 == 0 then
+					line_debugging_data[idx] = b - b % 1
+				else
+					idx = h_funcs["gBits32"]()
+					local line_number = h_funcs["gBits32"]()
+					for i = b - b % 1, idx do
+						line_debugging_data[i] = line_number
+					end
+				end
+
+				idx = idx + 1;
+			end
+			output[1] = h_funcs["gVarInt"]() -- UNK??
+
+			return unpack({output})
+		end)
+
+		for idx = 0, 15 do
+			setmetatable(h_funcs["pre_calculated_xor_tbl"][idx], h_funcs["meta_tbl_generate_xor"](idx))
+		end;
+
+		local Deserialize = (function()
+			h_funcs["temp_cached_decoded_instructions"] = {}
+
+			local n_constants = h_funcs["gVarInt"]() - 231
+			h_funcs["temp_cached_constants"] = h_funcs["gen_empty_tbl"](n_constants)
+
+			local is_constant_cached = h_funcs["gBits8"]() ~= 0
+			h_funcs["is_constant_cached"] = is_constant_cached
+
+			for idx = 1, n_constants do
+				local data;
+				local type = h_funcs["gBits8"]()
+				local IS_FLOAT = (type == 87)
+				local IS_BOOL = (type < 87)
+				local IS_STRING = (type == 216)
+
+				if IS_FLOAT then
+					data = h_funcs["gFloat"]()
+				elseif IS_BOOL then
+					data = (h_funcs["gBits8"]() == 1)
+				elseif IS_STRING then
+					data = h_funcs["gString"]()
+				else
+					data = h_funcs["gInt"]()
+				end;
+
+				if data == "__tostring" then data = "" end -- Bypass
+
+				if is_constant_cached then
+					h_funcs["temp_cached_constants"][idx] = ({
+						[0] = data
+					})
+				else
+					h_funcs["temp_cached_constants"][idx] = data
+				end
+			end
+
+			local n_prototypes = h_funcs["gVarInt"]() - 14954
+			local Prototypes = h_funcs["gen_empty_tbl"](n_prototypes)
+			h_funcs["temp_Instructions_register_data"] = h_funcs["gen_empty_tbl"](n_prototypes * 3) -- *3 because REG A, B and C
+
+			for idx = 1, n_prototypes do
+				Prototypes[idx] = h_funcs["get_next_func_instructions"]()
+			end
+
+			for idx = 1, #h_funcs["temp_Instructions_register_data"], 3 do
+				h_funcs["temp_Instructions_register_data"][idx][h_funcs["temp_Instructions_register_data"][idx + 1]] = Prototypes[h_funcs["temp_Instructions_register_data"][idx + 2]]
+			end;
+
+			if is_constant_cached then
+				h_funcs["vm_metadata"][3] = h_funcs["temp_cached_constants"]
+				h_funcs["vm_metadata"][1] = Prototypes;
+			end
+
+			local entry_prototype_idx = h_funcs["gVarInt"]()
+			local res = Prototypes[entry_prototype_idx]
+
+			h_funcs["temp_cached_constants"] = nil;
+			h_funcs["temp_Instructions_register_data"] = nil
+			h_funcs["temp_cached_decoded_instructions"] = nil;
+
+			return unpack({res})
+		end)
+
+		local execute_first_arg = (function(...)
+			return (...)()
+		end)
+
+		local deserializing_vm_execution_data = Deserialize()
+
+		local deserialized_execution_data = h_funcs["VM"](
+			deserializing_vm_execution_data,
+			h_funcs["upvalues"]
+		)(
+			Deserialize,
+			Self.nil_self_index,
+			h_funcs["get_self_index"],
+			execute_first_arg,
+			h_funcs["gFloat"],
+			h_funcs["gBits8"],
+			h_funcs["gBits32"],
+			Self.control_flow_tbl,
+			nil,
+			h_funcs["VM"]
+		)
+
+		is_real_vm = true
+		local real_ret =  unpack({
+			h_funcs["VM"](deserialized_execution_data, h_funcs["upvalues"])
+		})
+
+		return real_ret
+	end)
+}):main()(...);

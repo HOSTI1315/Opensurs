@@ -1,0 +1,121 @@
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew",true))()
+local tab = library:CreateWindow("Avatar Changer")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Users data
+local users = {
+    {UserId = 3034770787, UserName = "bashu2457"},
+    {UserId = 7958573339, UserName = "BLEXED_JoSH"},
+    {UserId = 5836338010, UserName = "DungonExplorer"},
+    {UserId = 5049088154, UserName = "LawSlept"},
+    {UserId = 7975642553, UserName = "ojasvibes"},
+    {UserId = 7321500029, UserName = "ashleyy1183"},
+    {UserId = 5526204224, UserName = "HaremWho"},
+    {UserId = 3966224025, UserName = "Lena_lost15h"},
+    {UserId = 5255034823, UserName = "Lea122146"},
+    {UserId = 1418068472, UserName = "Marthmaus"},
+    -- add more users here if u want
+}
+
+local function Morph(UserId, PlayerName)
+    local success, appearance = pcall(function()
+        return Players:GetCharacterAppearanceAsync(UserId)
+    end)
+    
+    if not success then
+        warn("Failed to fetch appearance for UserId: " .. UserId)
+        return
+    end
+    
+    local player = Players:FindFirstChild(PlayerName)
+    if not player or not player.Character then 
+        warn("Player or character not found: " .. PlayerName)
+        return 
+    end
+
+    local character = player.Character
+    
+    -- Clear existing appearance
+    for _, v in pairs(character:GetChildren()) do
+        if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("CharacterMesh") or v:IsA("BodyColors") then
+            v:Destroy()
+        end
+    end
+    
+    local head = character:FindFirstChild("Head")
+    if head and head:FindFirstChild("face") then
+        head.face:Destroy()
+    end
+
+    -- Apply new appearance
+    for _, v in pairs(appearance:GetChildren()) do
+        if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then
+            v:Clone().Parent = character
+        elseif v:IsA("Accessory") then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:AddAccessory(v:Clone())
+            end
+        elseif v:IsA("CharacterMesh") then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.RigType == Enum.HumanoidRigType.R15 then
+                v:Clone().Parent = character
+            end
+        elseif v.Name == "R15" then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.RigType == Enum.HumanoidRigType.R15 then
+                local mesh = v:FindFirstChildOfClass("CharacterMesh")
+                if mesh then
+                    mesh:Clone().Parent = character
+                end
+            end
+        end
+    end
+
+    -- Handle face
+    if head then
+        local face = appearance:FindFirstChild("face")
+        if face then
+            face:Clone().Parent = head
+        else
+            local newFace = Instance.new("Decal")
+            newFace.Face = Enum.NormalId.Front
+            newFace.Name = "face"
+            newFace.Texture = "rbxasset://textures/face.png"
+            newFace.Transparency = 0
+            newFace.Parent = head
+        end
+    end
+
+    -- Refresh character
+    local parent = character.Parent
+    character.Parent = nil
+    character.Parent = parent
+end
+
+-- Extract usernames for dropdown
+local userNames = {}
+for _, user in ipairs(users) do
+    table.insert(userNames, user.UserName)
+end
+
+-- Add dropdown for avatar selection
+tab:AddList({
+    text = "Select Avatar",
+    values = userNames,
+    callback = function(selectedUserName)
+        for _, user in ipairs(users) do
+            if user.UserName == selectedUserName then
+                Morph(user.UserId, LocalPlayer.Name)
+                break
+            end
+        end
+    end,
+    open = false,
+    flag = "avatar_selection"
+})
+
+library:Close()
+library:Init()

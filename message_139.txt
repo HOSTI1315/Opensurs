@@ -1,0 +1,1014 @@
+if getgenv() then end
+--[[                                 
+                    ▄▄                                     
+                    ██                                     
+                    ██        ██    ██   ▄█████▄     ██    
+                    ██        ██    ██   ▀ ▄▄▄██  ▄▄▄██▄▄▄ 
+                    ██        ██    ██  ▄██▀▀▀██  ▀▀▀██▀▀▀ 
+                    ██▄▄▄▄▄▄  ██▄▄▄███  ██▄▄▄███     ██    
+                    ▀▀▀▀▀▀▀▀   ▀▀▀▀ ▀▀   ▀▀▀▀ ▀▀           
+                    LuaPlus | Version 1.0.0 | By Derivative
+                    
+                    Derivative Team:
+                    Lead Development, @ily.neo
+                    Co-Lead Development, @s0ulz.ven
+                    
+                   #========================================#
+                   LuaPlus is a Roblox Library designed by the
+                   Derivative team with multi-purpose intentions.
+
+                   Lua+ Provides Executors with more UNC percentage,
+                   not via spoofing but actual redefinitions & functionality
+                   towards these luau / Unified Naming Convention functions.
+
+                   Lua+ also provides users with a free API system for their
+                   scripts & executors.
+
+
+future updates will roll out more Lua functions to improve UNC%
+]]
+local l={
+    [0]=[[
+
+#====================#==============================================================================#=================#
+|    Lua+ Credits    | 88                                   88888888ba   88                         |   Trusted Devs  |
+| • neo              | 88                                   88      "8b  88                         |=================|
+| github.com/ily-neo | 88                                   88      ,8P  88                         | ily.neo       |
+| @ily.neo  dc       | 88          88       88  ,adPPYYba,  88aaaaaa8P'  88  88       88  ,adPPYba, | s0ulz.ven     |
+| @vuinerablilty rbx | 88          88       88  ""     `Y8  88""""""'    88  88       88  I8[    "" | anthony       |
+| @ellbrannq     rbx | 88          88       88  ,adPPPPP88  88           88  88       88   `"Y8ba,  | fearless      |
+| @werdr3762     rbx | 88          "8a,   ,a88  88,    ,88  88           88  "8a,   ,a88  aa    ]8I | closet        |
+| @killa210      rbx | 88888888888  `"YbbdP'Y8  `"8bbdP"Y8  88           88   `"YbbdP'Y8  `"YbbdP"' | shadow62      |
+| @abyzms        rbx |==============================================================================| ezblade1x     |
+| • s0ulz            | Lua+ By the Derivative team. Head Development, @ily.neo | Other, @s0ulz.ven  | pswalloz      |
+| @imrockhard_123    |==============================================================================| hook.op       |
+| ^rbx               |                                 | This script uses Lua+ Version 1.0.0 Beta,  | queel         |
+| @s0ulz.ven     dc  | `7MN.   `7MF'                   | If you notice any issues, please contact   | traceflow     |
+|====================|   MMN.    M                     | neo on Discord (@ily.neo) so patches can   | glo           |
+| Lua+ is an API sys |   M YMb   M  .gP"Ya   ,pW"Wq.   | be implemented. If you'd like to support   | penthe._      |
+| designed for the   |   M  `MN. M ,M'   Yb 6W'   `Wb  | us you may use Lua+ on your own scripts    | stou          |
+| roblox exploit     |   M   `MM.M 8M"""""" 8M     M8  | or donate to us. Lua+ Github is located at | wx4m          |
+| community like the |   M     YMM YM.    , YA.   ,A9  | github.com/RobloxFramework/LuaPlus OR      | TimmyG6266    |
+| skids who use the  | .JML.    YM  `Mbmmd'  `Ybmd9'   | you can support neo at github.com/ily-neo  | x4hook        |
+| trash executors w/ |==============================================================================| pew           |
+| a low UNC%, which  | Lua+ is in it's first version. You may experience bugs, issues or maybe even | vxsty         |
+| Lua+ solves by     | incompatability.                                                             | hamud         |
+| re-defining funcs  | Increase Rates,         #==================================================# | geoality      |
+| which can increase | This chart displays     | Executor | Base UNC% | XX/83 | Lua+ UNC% | XX/83 | | harun         |
+| UNC% significantly.| Executors & their       |==========|===========|=======|===========|=======| | xyve          |
+| It's also packed w | base UNC% compared to   |==Solara==|====65%====|=55/83=|====75%====|=62/83=| |=================|
+| pre-made functions | the exec with Lua+ &    |===Xeno===|====83%====|=69/83=|====84%====|=70/83=| | Trusted Scripts |
+| to help exploit    | the UNC% after.         #==================================================# |=================|
+| devs who make the  |==============================================================================| /glo          |
+| shitty script hubs | Lua+ does not 100% replicate Unified Naming Convention Enviroments but it    | catbypasser   |
+| that only 3 people | attempts to replicate as accurate as possible, if you notice any issues with | usercreated   |
+| use. (alt,alt&alt) | it, please contact neo and report the issues to him.                         | fearlessbyp   |
+|====================|==============================================================================| eot           |
+| Lua+ as of v1.0.0  | LuaPlus currently supports these functions (replication):                    |=================|
+| does not support   |                                                                              |  Trusted Execs  |
+| or collaborate w/  | • WebSocket.connect : opens a websocket connection to the url that you have  |=================|
+| any scripts or hub |                       set it to → returns websocket object. Basically a live | Xeno          |
+|====================|                       server, no http delay & constant open pipe.            | Valex         |
+| If you are seeing  | • Debug             : (iscached)   → checks if that key got stored already   | Bunni.lol     |
+| this message after |                       (replace)    → swaps out the stored value              | Codex         |
+| executing a script |                       (invalidate) → removes it from the cache               | AWP           |
+| which does not     | • getgc             : pulls all garbage-collecter-tracked objects consisting | Wave          |
+| look understandable|                       of; functions,tables,userdata&threads that the lua VM  | Chocosploit   |
+| (obfuscated) then  |                       is currently holding.                                  | Volt          |
+| please be careful  | • checkcaller       : exploit called func → true                             | Potassium     |
+| for malware.       |                       roblox called func  → false                            | Sirhurt       |
+#====================#==============================================================================#=================#
+]],
+    [1]=[[test]]
+}
+
+local sh={}
+local LuaP,luaplus,lp,lplus=sh,sh,sh,sh
+local executorER={}
+
+local funcs={
+    getcallingscript=getcallingscript,
+    loadfile=loadfile,
+    clonefunction=clonefunction,
+    setreadonly=setreadonly,
+    getgenv=getgenv,
+    checkcaller=checkcaller,
+    identifyexecutor=identifyexecutor,
+    getconnections=getconnections,
+    WebSocket={},
+    getsenv=getsenv,
+    hookfunction=hookfunction,
+    getgc=getgc,
+    env,sandbox,clearc,
+    listfiles=listfiles,
+    cache={},
+    debug={}
+} funcs.cache._internal={}
+
+--# cache based #--
+funcs.cache._internal = setmetatable({}, {__mode="kv"})
+funcs.cache.iscached = function(obj)
+    if funcs.cache._internal[obj] == nil then
+        funcs.cache._internal[obj] = obj
+    end
+    return funcs.cache._internal[obj] ~= false
+end
+funcs.cache.replace = function(original, replacement)
+    funcs.cache._internal[original] = replacement
+end
+funcs.cache.get = function(k)
+    return funcs.cache._internal[k]
+end
+funcs.cache.invalidate = function(obj)
+    funcs.cache._internal[obj] = false
+    if typeof(obj) == "Instance" then
+        local clone = obj:Clone()
+        obj.Parent = nil
+        clone.Parent = obj.Parent
+        return clone
+    end
+end
+
+--# returns the script type which is being ran, eg LocalScript #--
+funcs.getcallingscript=(function()
+    return function()
+        local lvl=3
+        while true do
+            local info=debug.getinfo(lvl)
+            if not info then break end
+            local env=getfenv(info.func)
+            if env and env.script then
+                return env.script
+            end
+            lvl=lvl+1
+        end
+    end
+end)()
+
+--# filesystem funcs #--
+funcs.loadfile=(function()
+    local og=loadfile
+    return function(path)
+        if og and type(og)=="function" then
+            return og(path)
+        end
+        local success,src=pcall(readfile,path)
+        if not success then 
+            return nil
+        end
+        return loadstring(src)
+    end
+end)()
+
+
+--[[
+! Will work on later :/
+
+funcs.listfiles=(function()
+    local og=listfiles
+    return function(path)
+        if og and type(og)=="function" then
+            local ok,result=pcall(og,path)
+            if ok and result then return result end
+        end
+        path=path or ""
+        local files={}
+        local success=pcall(function())
+)
+--]]
+--# Closures funcs #--
+funcs.clonefunction = (function()
+    local og = clonefunction
+    return function(func)
+        if og then
+            local ok, result = pcall(og, func)
+            if ok then return result end
+        end
+        if type(func) ~= "function" then return func end
+        local clone = function(...)
+            return func(...)
+        end
+        return clone
+    end
+end)()
+
+funcs.checkcaller=(function()
+    return function()
+        for lvl=2,10 do
+            local info=debug.getinfo(lvl,"f")
+            if not info or not info.func then break end
+            local cf=info.func
+            if executorER[cf] then
+                return true
+            end
+            local success,env=pcall(function()return getfenv(cf)end)
+            if success and env and type(env)=="table" then
+                if executorER[env] then
+                    return true
+                end
+                local hs=pcall(function()
+                    local s=env.script
+                    if s and pcall(function()return s.ClassName end)then
+                        local cn=s.ClassName
+                        if cn=="LocalScript"or cn=="Script"or cn=="ModuleScript"then
+                            return true
+                        end
+                    end
+                    return false
+                end)
+                if hs then
+                    return false
+                end
+            end
+        end
+        return true
+    end
+end)()
+
+--# Miscellaneous #--
+funcs.identifyexecutor = (function()
+    local og = identifyexecutor
+    return function()
+        if og then
+            local ok, name, version = pcall(og)
+            if ok and name then
+                return name, version
+            end
+        end
+        return "Lua+", "v1.0.0"
+    end
+end)()
+
+--! HOOKFUNCTION NEEDS FIXING !--
+--^ hookfunc ^--
+funcs.hookfunction = (function()
+    if hookfunction and typeof(hookfunction) == "function" then
+        local ok = pcall(hookfunction, print, print)
+        if ok then return hookfunction end
+    end
+    local clone = clonefunction or function(f) return function(...) return f(...) end end
+    return function(original, replacement)
+        if typeof(original) ~= "function" or typeof(replacement) ~= "function" then
+            return original
+        end
+        local backup = clone(original)
+        if debug and debug.getupvalue and debug.setupvalue then
+            for i = 1, 9999 do
+                local n, v = debug.getupvalue(original, i)
+                if n == nil then break end
+                if rawequal(v, original) then
+                    debug.setupvalue(original, i, replacement)
+                end
+            end
+        end
+        if debug and debug.getinfo then
+            for lvl = 3, 30 do
+                local info = debug.getinfo(lvl, "f")
+                if not info or not info.func then break end
+                local i = 1
+                while true do
+                    local name, val = (debug.getlocal or function() return nil end)(lvl, i)
+                    if not name then break end
+                    if rawequal(val, original) then
+                        (debug.setlocal or function() end)(lvl, i, replacement)
+                    end
+                    i = i + 1
+                end
+            end
+        end
+        local envs = {_G}
+        local genv = (getgenv and getgenv()) or _G
+        if genv ~= _G then table.insert(envs, genv) end
+        for _, env in ipairs(envs) do
+            if typeof(env) == "table" then
+                for k, v in pairs(env) do
+                    if rawequal(v, original) then
+                        rawset(env, k, replacement)
+                    end
+                end
+            end
+        end
+        return backup
+    end
+end)()
+
+--^ getgc ^--
+funcs.getgc = (function()
+    local og = getgc
+    return function(include_tables)
+        if og then
+            local ok, result = pcall(og, include_tables)
+            if ok and result then return result end
+        end
+        local gc_objects = {}
+        local seen = {}
+        local function add_object(obj)
+            if seen[obj] then return end
+            seen[obj] = true
+            table.insert(gc_objects, obj)
+        end
+        local function scan_function(func, depth)
+            if depth > 6 then return end
+            add_object(func)
+            if debug and debug.getupvalue then
+                local i = 1
+                while i <= 200 do
+                    local name, value = debug.getupvalue(func, i)
+                    if not name then break end
+                    local vtype = type(value)
+                    if vtype == "function" then
+                        if not seen[value] then
+                            scan_function(value, depth + 1)
+                        end
+                    elseif vtype == "table" then
+                        if include_tables and not seen[value] then
+                            add_object(value)
+                        end
+                        pcall(function()
+                            for k, v in pairs(value) do
+                                if type(v) == "function" and not seen[v] then
+                                    scan_function(v, depth + 1)
+                                end
+                            end
+                        end)
+                    end
+                    i = i + 1
+                end
+            end
+        end
+        local function scan_table(tbl, depth)
+            if depth > 6 then return end
+            if seen[tbl] then return end
+            if include_tables then
+                add_object(tbl)
+            end
+            local success = pcall(function()
+                for k, v in pairs(tbl) do
+                    local vtype = type(v)
+                    if vtype == "function" and not seen[v] then
+                        scan_function(v, depth + 1)
+                    elseif vtype == "table" and not seen[v] then
+                        scan_table(v, depth + 1)
+                    end
+                    if type(k) == "function" and not seen[k] then
+                        scan_function(k, depth + 1)
+                    elseif type(k) == "table" and not seen[k] then
+                        scan_table(k, depth + 1)
+                    end
+                end
+            end)
+            if success then
+                local mt = getmetatable(tbl)
+                if mt and type(mt) == "table" and not seen[mt] then
+                    scan_table(mt, depth + 1)
+                end
+            end
+        end
+        scan_table(_G, 0)
+        local genv_func = rawget(_G, "getgenv") or getgenv
+        if genv_func then
+            local success, genv = pcall(genv_func)
+            if success and genv and genv ~= _G and type(genv) == "table" then
+                scan_table(genv, 0)
+            end
+        end
+        if debug and debug.getregistry then
+            local success, registry = pcall(debug.getregistry)
+            if success and registry and type(registry) == "table" then
+                scan_table(registry, 0)
+            end
+        end
+        if package and package.loaded then
+            for name, module in pairs(package.loaded) do
+                if type(module) == "table" then
+                    scan_table(module, 1)
+                elseif type(module) == "function" then
+                    scan_function(module, 1)
+                end
+            end
+        end
+        for k, v in pairs(_G) do
+            if type(v) == "function" and not seen[v] then
+                scan_function(v, 0)
+            elseif type(v) == "table" and not seen[v] then
+                scan_table(v, 1)
+            end
+        end
+        return gc_objects
+    end
+end)()
+
+--^ websocket ^--
+funcs.WebSocket.connect = (function()
+    return function(url)
+        local nativeWS = type(WebSocket) == "table" and type(WebSocket.connect) == "function" and WebSocket.connect
+        if nativeWS then
+            local ok, result = pcall(nativeWS, url)
+            if ok and result then return result end
+        end
+        local ws = {}
+        local isConnected = false
+        local callbacks = {OnMessage = nil,OnClose = nil,OnError = nil}
+        local httpUrl = url:gsub("^ws://", "http://"):gsub("^wss://", "https://")
+        ws.State = "Connecting"
+        ws.Send = function(self, data)
+            if not isConnected then
+                if callbacks.OnError then callbacks.OnError("WebSocket is not connected") end
+                return false
+            end
+            local success, response = pcall(function()
+                return game:HttpPost(httpUrl .. "/send", data)
+            end)
+            if not success then
+                if callbacks.OnError then callbacks.OnError("Failed to send: " .. tostring(response)) end
+                return false
+            end
+            return true
+        end
+        ws.Close = function(self)
+            isConnected = false
+            ws.State = "Closed"
+            pcall(function() game:HttpGet(httpUrl .. "/close") end)
+            if callbacks.OnClose then callbacks.OnClose() end
+        end
+        ws.OnMessage = setmetatable({}, {__newindex = function(t, k, v) if k == "Connect" then callbacks.OnMessage = v end end})
+        ws.OnClose = setmetatable({}, {__newindex = function(t, k, v) if k == "Connect" then callbacks.OnClose = v end end})
+        ws.OnError = setmetatable({}, {__newindex = function(t, k, v) if k == "Connect" then callbacks.OnError = v end end})
+        local function pollMessages()
+            while isConnected do
+                local success, response = pcall(function() return game:HttpGet(httpUrl .. "/poll") end)
+                if success and response and response ~= "" then
+                    if callbacks.OnMessage then callbacks.OnMessage(response) end
+                end
+                wait(0.1)
+            end
+        end
+        task.spawn(function()
+            local success, response = pcall(function() return game:HttpGet(httpUrl .. "/connect") end)
+            if success then
+                isConnected = true
+                ws.State = "Open"
+                task.spawn(pollMessages)
+            else
+                ws.State = "Closed"
+                if callbacks.OnError then callbacks.OnError("Connection failed: " .. tostring(response)) end
+            end
+        end)
+        return ws
+    end
+end)()
+
+--^ getsenv ^--
+funcs.getsenv = (function()
+    local og = getsenv
+    return function(script_instance)
+        if og then
+            local ok, result = pcall(og, script_instance)
+            if ok and result then return result end
+        end
+        if typeof(script_instance) ~= "Instance" then return nil end
+        if not (script_instance:IsA("LocalScript") or script_instance:IsA("ModuleScript") or script_instance:IsA("Script")) then
+            return nil
+        end
+        local function search_all_functions()
+            local all_funcs = {}
+            if getgc then
+                local gc_result = getgc(false)
+                for _, obj in ipairs(gc_result) do
+                    if type(obj) == "function" then
+                        table.insert(all_funcs, obj)
+                    end
+                end
+            end
+            local function scan_table(tbl, seen)
+                if not tbl or type(tbl) ~= "table" then return end
+                if seen[tbl] then return end
+                seen[tbl] = true
+                for k, v in pairs(tbl) do
+                    if type(v) == "function" then
+                        table.insert(all_funcs, v)
+                    elseif type(v) == "table" then
+                        pcall(scan_table, v, seen)
+                    end
+                end
+            end
+            scan_table(_G, {})
+            if getgenv then
+                pcall(function() scan_table(getgenv(), {}) end)
+            end
+            return all_funcs
+        end
+        local all_functions = search_all_functions()
+        for _, func in ipairs(all_functions) do
+            local success, env = pcall(getfenv, func)
+            if success and env and type(env) == "table" then
+                local has_script = pcall(function() return env.script == script_instance end)
+                if has_script then return env end
+            end
+        end
+        if script_instance:IsA("ModuleScript") then
+            local success, result = pcall(require, script_instance)
+            if success then return getfenv(2) end
+        end
+        for level = 1, 256 do
+            local success, info = pcall(debug.getinfo, level, "f")
+            if not success or not info then break end
+            if info.func then
+                local env_success, env = pcall(getfenv, info.func)
+                if env_success and env and type(env) == "table" then
+                    local script_match = pcall(function() return env.script == script_instance end)
+                    if script_match then return env end
+                end
+            end
+        end
+        return nil
+    end
+end)()
+
+--# Metatable funcs #--
+funcs.setreadonly = (function()
+    local og = setreadonly
+    return function(tbl, readonly)
+        if og then
+            local ok, result = pcall(og, tbl, readonly)
+            if ok then return result end
+        end
+        if type(tbl) ~= "table" then return tbl end
+        local mt = getmetatable(tbl)
+        if not mt then
+            mt = {}
+            setmetatable(tbl, mt)
+        end
+        if readonly then
+            mt.__newindex = function()
+                error("attempt to modify a readonly table", 2)
+            end
+            mt.__metatable = "The metatable is locked"
+        else
+            mt.__newindex = nil
+            mt.__metatable = nil
+        end
+        return tbl
+    end
+end)()
+
+funcs.getrawmetatable = (function()
+    local og = getrawmetatable
+    return function(obj)
+        if og then
+            local ok, result = pcall(og, obj)
+            if ok and result then return result end
+        end
+        local success, mt = pcall(getmetatable, obj)
+        if success then return mt end
+        return nil
+    end
+end)()
+
+funcs.setrawmetatable = (function()
+    local og = setrawmetatable
+    return function(obj, mt)
+        if og then
+            local ok = pcall(og, obj, mt)
+            if ok then return true end
+        end
+        local success = pcall(setmetatable, obj, mt)
+        return success
+    end
+end)()
+
+funcs.hookmetamethod = (function()
+    local og = hookmetamethod
+    return function(obj, method, hook)
+        if og then
+            local ok, result = pcall(og, obj, method, hook)
+            if ok then return result end
+        end
+        local mt = getmetatable(obj)
+        if not mt then return nil end
+        local original = mt[method]
+        if type(original) ~= "function" then return nil end
+        local backup = clonefunction and clonefunction(original) or original
+        mt[method] = hook
+        return backup
+    end
+end)()
+
+--^ getnamecallmethod ^--
+funcs.getnamecallmethod = (function()
+    local og = getnamecallmethod
+    return function()
+        if og then
+            local ok, result = pcall(og)
+            if ok and result then return result end
+        end
+        local FirstTest = (function()
+            local _, err = xpcall(function()
+                OverlapParams.new():__namecall()
+            end, function()
+                return debug.info(2, "f")
+            end)
+            return err
+        end)()
+        local SecondTest = (function()
+            local _, err = xpcall(function()
+                Color3.new():__namecall()
+            end, function()
+                return debug.info(2, "f")
+            end)
+            return err
+        end)()
+        local _, err = pcall(FirstTest)
+        local method = if type(err) == "string" then err:match("^(.+) is not a valid member of %w+$") else nil
+        if not method then
+            _, err = pcall(SecondTest)
+            method = if type(err) == "string" then err:match("^(.+) is not a valid member of %w+$") else nil
+        end
+        if not method or method == "__namecall" then
+            return nil
+        end
+        return method
+    end
+end)()
+
+--# Debug library extensions #--
+funcs.debug.getinfo = (function()
+    local og = debug.getinfo
+    return function(level, options)
+        if og then
+            local ok, result = pcall(og, level, options)
+            if ok and result then return result end
+        end
+        if type(level) == "function" then
+            return {func = level, source = "?", short_src = "?", what = "Lua"}
+        end
+        return {source = "?", short_src = "?", what = "Lua"}
+    end
+end)()
+
+funcs.debug.getupvalue = (function()
+    local og = debug.getupvalue
+    return function(func, index)
+        if og then
+            local ok, name, value = pcall(og, func, index)
+            if ok then return name, value end
+        end
+        return nil, nil
+    end
+end)()
+
+funcs.debug.getupvalues = (function()
+    local og = debug.getupvalues
+    return function(func)
+        if og then
+            local ok, result = pcall(og, func)
+            if ok and result then return result end
+        end
+        local upvalues = {}
+        local i = 1
+        while true do
+            local name, value = debug.getupvalue(func, i)
+            if not name then break end
+            upvalues[name] = value
+            i = i + 1
+        end
+        return upvalues
+    end
+end)()
+
+funcs.debug.setupvalue = (function()
+    local og = debug.setupvalue
+    return function(func, index, value)
+        if og then
+            local ok, result = pcall(og, func, index, value)
+            if ok then return result end
+        end
+        return nil
+    end
+end)()
+
+funcs.debug.getconstant = (function()
+    local og = debug.getconstant
+    return function(func, index)
+        if og then
+            local ok, result = pcall(og, func, index)
+            if ok then return result end
+        end
+        return nil
+    end
+end)()
+
+funcs.debug.getconstants = (function()
+    local og = debug.getconstants
+    return function(func)
+        if og then
+            local ok, result = pcall(og, func)
+            if ok and result then return result end
+        end
+        return {}
+    end
+end)()
+
+funcs.debug.setconstant = (function()
+    local og = debug.setconstant
+    return function(func, index, value)
+        if og then
+            local ok = pcall(og, func, index, value)
+            if ok then return true end
+        end
+        return false
+    end
+end)()
+
+funcs.debug.getproto = (function()
+    local og = debug.getproto
+    return function(func, index, activated)
+        if og then
+            local ok, result = pcall(og, func, index, activated)
+            if ok then return result end
+        end
+        return nil
+    end
+end)()
+
+funcs.debug.getprotos = (function()
+    local og = debug.getprotos
+    return function(func)
+        if og then
+            local ok, result = pcall(og, func)
+            if ok and result then return result end
+        end
+        return {}
+    end
+end)()
+
+funcs.debug.getstack = (function()
+    local og = debug.getstack
+    return function(level, index)
+        if og then
+            local ok, result = pcall(og, level, index)
+            if ok then return result end
+        end
+        return nil
+    end
+end)()
+
+funcs.debug.setstack = (function()
+    local og = debug.setstack
+    return function(level, index, value)
+        if og then
+            local ok = pcall(og, level, index, value)
+            if ok then return true end
+        end
+        return false
+    end
+end)()
+
+--# Closure funcs extensions #--
+funcs.getscriptclosure = (function()
+    local og = getscriptclosure
+    return function(script_instance)
+        if og then
+            local ok, result = pcall(og, script_instance)
+            if ok and result then return result end
+        end
+        if typeof(script_instance) ~= "Instance" then return nil end
+        if not script_instance:IsA("LocalScript") and not script_instance:IsA("ModuleScript") then
+            return nil
+        end
+        local env = getsenv(script_instance)
+        if not env then return nil end
+        for k, v in pairs(env) do
+            if type(v) == "function" then
+                return v
+            end
+        end
+        return nil
+    end
+end)()
+
+funcs.replaceclosure = (function()
+    local og = replaceclosure
+    return function(original, replacement)
+        if og then
+            local ok = pcall(og, original, replacement)
+            if ok then return true end
+        end
+        return hookfunction(original, replacement)
+    end
+end)()
+
+funcs.isexecutorclosure = (function()
+    local og = isexecutorclosure or is_synapse_function or is_protosmasher_closure or is_sirhurt_closure
+    return function(func)
+        if og then
+            local ok, result = pcall(og, func)
+            if ok then return result end
+        end
+        if type(func) ~= "function" then return false end
+        local env = getfenv(func)
+        return env == getgenv() or rawget(env, "__genv") ~= nil
+    end
+end)()
+
+--# Instance funcs #--
+funcs.getnilinstances = (function()
+    local og = getnilinstances
+    return function()
+        if og then
+            local ok, result = pcall(og)
+            if ok and result then return result end
+        end
+        local nilInstances = {}
+        if getgc then
+            local gc = getgc(true)
+            for _, obj in ipairs(gc) do
+                if typeof(obj) == "Instance" and obj.Parent == nil then
+                    table.insert(nilInstances, obj)
+                end
+            end
+        end
+        return nilInstances
+    end
+end)()
+
+funcs.getconnections = (function()
+    local og = getconnections
+    return function(signal)
+        if og then
+            local ok, result = pcall(og, signal)
+            if ok and result then return result end
+        end
+        return {}
+    end
+end)()
+
+funcs.getcallbackvalue = (function()
+    local og = getcallbackvalue
+    return function(obj, callback_name)
+        if og then
+            local ok, result = pcall(og, obj, callback_name)
+            if ok then return result end
+        end
+        return nil
+    end
+end)()
+
+--# Thread identity funcs #--
+funcs.getthreadidentity = (function()
+    local og = getthreadidentity or getidentity or getthreadcontext
+    return function()
+        if og then
+            local ok, result = pcall(og)
+            if ok then return result end
+        end
+        return 8
+    end
+end)()
+
+funcs.getidentity = funcs.getthreadidentity
+funcs.getthreadcontext = funcs.getthreadidentity
+
+funcs.setthreadidentity = (function()
+    local og = setthreadidentity or setidentity or setthreadcontext
+    return function(identity)
+        if og then
+            local ok = pcall(og, identity)
+            if ok then return true end
+        end
+        return false
+    end
+end)()
+
+funcs.setidentity = funcs.setthreadidentity
+funcs.setthreadcontext = funcs.setthreadidentity
+
+--# enviroments #--
+funcs.getgenv=(function()
+    local og=getgenv
+    return function()
+        if og then
+            return og()
+        end
+        local g=rawget(_G,"__genv")
+        if not g then
+            g={}
+            rawset(_G,"__genv",g)
+            setmetatable(g,{
+                __index=_G,
+                __newindex=function(t,k,v)
+                    rawset(t,k,v)
+                    rawset(_G,k,v)
+                end
+            })
+        end
+        return g
+    end
+end)()
+
+--~ lp funcs ~--
+funcs.env=function()
+    --& simple env sys, useless rn &--
+    local enviroment={print=print}
+    clearc()
+    warn(l[0])
+    local f=loadstring("return true")
+    setfenv(f,enviroment)
+end
+
+--^ sandbox to stop scripts from messing with globals ^--
+funcs.sandbox=function(src)
+    local env=setmetatable({print=print},{__index=_G})
+    local fn,err=loadstring(src)
+    if not fn then return nil, err end
+    setfenv(fn,env)
+    return fn()
+end
+
+--^ clear console ^--
+funcs.clearc=(function()
+    local og=clearc
+    return function()
+        if og then
+            local ok=pcall(og)
+            if ok then return end
+        end
+        print(string.rep("\n", 16348))
+    end
+end)()
+
+local function regER()
+    local genv=getgenv and getgenv()or getfenv(0)
+    executorER[genv]=true
+    for k,v in pairs(genv)do
+        if type(v)=="function"then
+            executorER[v]=true
+        end
+    end
+    local cef={"getgenv","getrenv","getgc","loadstring","hookfunction","hookmetamethod","getrawmetatable","setrawmetatable","isexecutorclosure","checkcaller","clonefunction","newcclosure","iscclosure","islclosure"}
+    for _,name in ipairs(cef)do
+        local func=genv[name]
+        if func and type(func)=="function"then
+            executorER[func]=true
+        end
+    end
+    local se=getfenv(1)
+    executorER[se]=true
+    for k,v in pairs(se)do
+        if type(v)=="function"then
+            executorER[v]=true
+        end
+    end
+    for k,v in pairs(funcs)do
+        if type(v)=="function"then
+            executorER[v]=true
+        end
+    end
+end
+
+--# initialize #--
+luaplus.init=function()
+    regER()
+    loadfile = funcs.loadfile
+    clonefunction = funcs.clonefunction
+    getcallingscript = funcs.getcallingscript
+    getgenv = funcs.getgenv
+    identifyexecutor = funcs.identifyexecutor
+    getgc = funcs.getgc
+    getsenv = funcs.getsenv
+    cache = funcs.cache
+    checkcaller = funcs.checkcaller
+    hookfunction = funcs.hookfunction
+    WebSocket = funcs.WebSocket
+    setreadonly = funcs.setreadonly
+    getrawmetatable = funcs.getrawmetatable
+    setrawmetatable = funcs.setrawmetatable
+    hookmetamethod = funcs.hookmetamethod
+    getnamecallmethod = funcs.getnamecallmethod
+    getscriptclosure = funcs.getscriptclosure
+    replaceclosure = funcs.replaceclosure
+    isexecutorclosure = funcs.isexecutorclosure
+    getnilinstances = funcs.getnilinstances
+    getconnections = funcs.getconnections
+    getcallbackvalue = funcs.getcallbackvalue
+    getthreadidentity = funcs.getthreadidentity
+    getidentity = funcs.getidentity
+    getthreadcontext = funcs.getthreadcontext
+    setthreadidentity = funcs.setthreadidentity
+    setidentity = funcs.setidentity
+    setthreadcontext = funcs.setthreadcontext
+    for k, v in pairs(funcs.debug) do
+        debug[k] = v
+    end
+
+    if setmetatable and setfenv then
+        env = funcs.env
+        sandbox = funcs.sandbox
+        clearc = funcs.clearc
+        clearc()
+        warn(l[0])
+    else
+        print(l[1])
+    end
+end
+lp.init()

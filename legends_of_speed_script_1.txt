@@ -1,0 +1,131 @@
+-- Set up global config with getgenv()
+getgenv().config = {
+    BlueOrb = true,        -- Blue Orb enabled
+    RedOrb = true,         -- Red Orb enabled
+    YellowOrb = true,      -- Yellow Orb enabled
+    OrangeOrb = true,      -- Orange Orb enabled
+    GemOrb = true,         -- Gem Orb enabled
+    AutoGoldenChest = true, -- Golden Chest enabled
+    AutoRebirth = true,    -- Auto Rebirth enabled
+    AutoClaimGifts = true, -- Auto Claim Gifts enabled
+    AutoSpin = true        -- Auto Spin enabled
+}
+
+-- Set the auto-farm interval (separate from config)
+local autoFarmInterval = 0.1  -- Time in seconds between each orb collection
+
+local player = game:GetService("Players").LocalPlayer
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Define the locations where orbs can be collected
+local locations = {"City", "Magma City", "Snow City"}
+
+-- Function to collect an orb by name and location
+local function collectOrb(orbName, orbLocation)
+    local args = {
+        [1] = "collectOrb",
+        [2] = orbName,
+        [3] = orbLocation  -- Adjusted location dynamically
+    }
+    
+    -- Fire the orbEvent to collect the specified orb
+    replicatedStorage:WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer(unpack(args))
+end
+
+-- Function to collect the Golden Chest
+local function collectGoldenChest()
+    local args = {
+        [1] = "Golden Chest"
+    }
+    
+    -- Fire the checkChestRemote event to collect the Golden Chest
+    replicatedStorage:WaitForChild("rEvents"):WaitForChild("checkChestRemote"):InvokeServer(unpack(args))
+end
+
+-- Function to trigger the rebirth request
+local function triggerRebirth()
+    local args = {
+        [1] = "rebirthRequest"
+    }
+    
+    -- Fire the rebirthEvent to request a rebirth
+    replicatedStorage:WaitForChild("rEvents"):WaitForChild("rebirthEvent"):FireServer(unpack(args))
+end
+
+-- Function to claim all gifts
+local function claimGifts()
+    for i = 1, 8 do  -- Loop through all 8 gifts
+        local args = {
+            [1] = "claimGift",
+            [2] = i
+        }
+        
+        -- Fire the freeGiftClaimRemote event to claim each gift
+        replicatedStorage:WaitForChild("rEvents"):WaitForChild("freeGiftClaimRemote"):InvokeServer(unpack(args))
+    end
+end
+
+-- Function to auto spin the Fortune Wheel
+local function autoSpin()
+    local args = {
+        [1] = "openFortuneWheel",
+        [2] = replicatedStorage:WaitForChild("fortuneWheelChances"):WaitForChild("Fortune Wheel")
+    }
+    
+    -- Fire the openFortuneWheelRemote event to spin the fortune wheel
+    replicatedStorage:WaitForChild("rEvents"):WaitForChild("openFortuneWheelRemote"):InvokeServer(unpack(args))
+end
+
+-- Start auto-farming using task.spawn to run the loop asynchronously
+task.spawn(function()
+    while true do
+        -- If AutoGoldenChest is enabled, collect the Golden Chest
+        if getgenv().config.AutoGoldenChest then
+            collectGoldenChest()  -- Collect the Golden Chest
+        end
+
+        -- If AutoRebirth is enabled, trigger the rebirth
+        if getgenv().config.AutoRebirth then
+            triggerRebirth()  -- Trigger the rebirth request
+        end
+
+        -- If AutoClaimGifts is enabled, claim the gifts
+        if getgenv().config.AutoClaimGifts then
+            claimGifts()  -- Claim all 8 gifts
+        end
+
+        -- If AutoSpin is enabled, spin the Fortune Wheel
+        if getgenv().config.AutoSpin then
+            autoSpin()  -- Auto spin the Fortune Wheel
+        end
+
+        -- Collect orbs in all enabled locations, but only for enabled orbs
+        for _, location in ipairs(locations) do
+            if getgenv().config.RedOrb then
+                collectOrb("Red Orb", location)
+            end
+            if getgenv().config.YellowOrb then
+                collectOrb("Yellow Orb", location)
+            end
+            if getgenv().config.OrangeOrb then
+                collectOrb("Orange Orb", location)
+            end
+            if getgenv().config.GemOrb then
+                collectOrb("Gem", location)
+            end
+            if getgenv().config.BlueOrb then
+                collectOrb("Blue Orb", location)
+            end
+        end
+
+        -- Wait before collecting the next orb or chest
+        wait(autoFarmInterval)
+    end
+end)
+
+-- To stop the auto-farm, you can manually break the loop or set a condition.
+-- Example: Manually stopping the loop after 10 seconds:
+task.spawn(function()
+    wait(10)  -- Wait for 10 seconds
+    -- Insert your stopping condition here if needed
+end)

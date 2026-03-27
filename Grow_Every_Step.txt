@@ -1,0 +1,81 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create UI
+local UtilityGUI = Instance.new("ScreenGui")
+UtilityGUI.Name = "UtilityGUI"
+UtilityGUI.ResetOnSpawn = false
+UtilityGUI.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 140, 0, 100)
+MainFrame.Position = UDim2.new(0, 100, 0, 100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = UtilityGUI
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 8)
+FrameCorner.Parent = MainFrame
+
+-- Inf Size Button
+local InfSizeButton = Instance.new("TextButton")
+InfSizeButton.Size = UDim2.new(1, -10, 0, 40)
+InfSizeButton.Position = UDim2.new(0, 5, 0, 5)
+InfSizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+InfSizeButton.Text = "Inf size: OFF"
+InfSizeButton.TextColor3 = Color3.new(1, 1, 1)
+InfSizeButton.Font = Enum.Font.GothamBold
+InfSizeButton.TextSize = 14
+InfSizeButton.Parent = MainFrame
+
+local InfSizeCorner = Instance.new("UICorner")
+InfSizeCorner.CornerRadius = UDim.new(0, 6)
+InfSizeCorner.Parent = InfSizeButton
+
+-- Auto Win Button
+local AutoWinButton = Instance.new("TextButton")
+AutoWinButton.Size = UDim2.new(1, -10, 0, 40)
+AutoWinButton.Position = UDim2.new(0, 5, 0, 55)
+AutoWinButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+AutoWinButton.Text = "Auto Win: OFF"
+AutoWinButton.TextColor3 = Color3.new(1, 1, 1)
+AutoWinButton.Font = Enum.Font.GothamBold
+AutoWinButton.TextSize = 14
+AutoWinButton.Parent = MainFrame
+
+local AutoWinCorner = Instance.new("UICorner")
+AutoWinCorner.CornerRadius = UDim.new(0, 6)
+AutoWinCorner.Parent = AutoWinButton
+
+-- Inf Size Logic
+InfSizeButton.MouseButton1Click:Connect(function()
+    InfSizeButton.Text = "Inf size: ON"
+    InfSizeButton.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+
+    RunService.Heartbeat:Connect(function()
+        local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+        local IncreaseSize = Remotes:WaitForChild("IncreaseSize")
+        IncreaseSize:FireServer()
+    end)
+end)
+
+-- Auto Win Logic
+AutoWinButton.MouseButton1Click:Connect(function()
+    AutoWinButton.Text = "Auto Win: ON"
+    AutoWinButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+
+    RunService.Heartbeat:Connect(function()
+        local HumanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if HumanoidRootPart then
+            LocalPlayer.Character:MoveTo(Vector3.new(359, 620, 508))
+        end
+    end)
+end)

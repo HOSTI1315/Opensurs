@@ -1,0 +1,99 @@
+-- SOURCE BY UNC (MY SOM BTW)
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local backpack = player:WaitForChild("Backpack")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "EquipCloakGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 80)
+mainFrame.Position = UDim2.new(0.5, -100, 0.5, -40)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 10)
+frameCorner.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+titleLabel.Text = "SCRIPT HAVEN | INVISIBLE CLONER\nSrc by UNC :3"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 12
+titleLabel.BorderSizePixel = 0
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleLabel
+
+local activateButton = Instance.new("TextButton")
+activateButton.Size = UDim2.new(1, -20, 0, 45)
+activateButton.Position = UDim2.new(0, 10, 0, 30)
+activateButton.BackgroundColor3 = Color3.fromRGB(100, 50, 200)
+activateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+activateButton.Text = "Activate Combo"
+activateButton.Font = Enum.Font.GothamBold
+activateButton.TextSize = 16
+activateButton.BorderSizePixel = 0
+activateButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = activateButton
+
+activateButton.MouseButton1Click:Connect(function()
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    local invisibilityCloak = backpack:FindFirstChild("Invisibility Cloak")
+    local quantumCloner = backpack:FindFirstChild("Quantum Cloner")
+
+    if invisibilityCloak and quantumCloner then
+    
+        humanoid:UnequipTools()
+        task.wait(0.05)
+        humanoid:EquipTool(invisibilityCloak)
+        task.wait(0.05)
+        invisibilityCloak:Activate()
+
+        activateButton.Text = "Activated!"
+        activateButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        
+        task.wait(1)
+
+        humanoid:EquipTool(quantumCloner)
+        activateButton.Text = "Switched to Cloner!"
+        quantumCloner:Activate()
+        
+        activateButton.Text = "Cloner Activated!"
+        
+        task.wait(0.3)
+        activateButton.Text = "Activate Combo"
+        activateButton.BackgroundColor3 = Color3.fromRGB(100, 50, 200)
+    else
+        activateButton.Text = "Missing Tools!"
+        activateButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        task.wait(1)
+        activateButton.Text = "Activate Combo"
+        activateButton.BackgroundColor3 = Color3.fromRGB(100, 50, 200)
+    end
+end)
+
+activateButton.MouseEnter:Connect(function()
+    activateButton.BackgroundColor3 = Color3.fromRGB(80, 40, 180)
+end)
+
+activateButton.MouseLeave:Connect(function()
+    activateButton.BackgroundColor3 = Color3.fromRGB(100, 50, 200)
+end)

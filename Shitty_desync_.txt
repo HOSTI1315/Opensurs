@@ -1,0 +1,270 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+
+local desyncSequence = {}
+local desyncBox = nil
+local isRunning = false
+local isVisible = false
+
+local function runDesyncSequence()
+	desyncSequence.isStopped = false
+	desyncSequence.teleportIndices = {2, 4}
+	local char = Player.Character or Player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	desyncSequence.randomTp = function()
+		local max = 20
+		hrp.CFrame = hrp.CFrame * CFrame.new(math.random(-max, max), 0, math.random(-max, max))
+	end
+
+	desyncSequence.sequence = {
+		{flag = "WorldStepsOffsetAdjustRate", value = "-1", delay = 0},
+		{flag = "WorldStepsOffsetAdjustRate", value = "60", delay = 12.57},
+		{flag = "WorldStepsOffsetAdjustRate", value = "-9999999999", delay = 52.14},
+		{flag = "WorldStepsOffsetAdjustRate", value = "-9999999999", delay = 66.15},
+		{flag = "WorldStepsOffsetAdjustRate", value = "-1", delay = 1447.19},
+	}
+
+	task.spawn(function()
+		for i, entry in ipairs(desyncSequence.sequence) do
+			if desyncSequence.isStopped then break end
+			if entry.delay > 0 then task.wait(entry.delay / 1000) end
+			if desyncSequence.isStopped then break end
+			setfflag(entry.flag, entry.value)
+			if table.find(desyncSequence.teleportIndices, i) then
+				desyncSequence.randomTp()
+			end
+		end
+	end)
+end
+
+local function createDesyncBox()
+	if desyncBox then desyncBox:Destroy() end
+	local char = Player.Character or Player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	desyncBox = Instance.new("Part")
+	desyncBox.Name = "DesyncBox"
+	desyncBox.Size = Vector3.new(5, 5, 5)
+	desyncBox.CFrame = hrp.CFrame
+	desyncBox.Anchored = true
+	desyncBox.CanCollide = false
+	desyncBox.Transparency = 0.7
+	desyncBox.Color = Color3.fromRGB(0, 170, 255)
+	desyncBox.Material = Enum.Material.ForceField
+	desyncBox.Parent = workspace
+	local selection = Instance.new("SelectionBox")
+	selection.Adornee = desyncBox
+	selection.LineThickness = 0.1
+	selection.Color3 = Color3.fromRGB(0, 170, 255)
+	selection.Transparency = 0
+	selection.Parent = desyncBox
+end
+
+local function resetCharacter()
+	if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+		Player.Character.Humanoid.Health = 0
+	end
+	setfflag("WorldStepsOffsetAdjustRate", "60")
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DevHubDesync"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999999
+ScreenGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 170)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -85)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 14)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.6
+UIStroke.Parent = MainFrame
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 42)
+TitleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 14)
+TitleCorner.Parent = TitleBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Size = UDim2.new(1, -70, 1, 0)
+TitleLabel.Position = UDim2.new(0, 16, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "DevHub Desync"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -24, 1, -64)
+ContentFrame.Position = UDim2.new(0, 12, 0, 52)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "Status"
+StatusLabel.Size = UDim2.new(1, 0, 0.35, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "OFFLINE"
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.TextSize = 15
+StatusLabel.TextWrapped = true
+StatusLabel.Parent = ContentFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(1, 0, 0.45, 0)
+ToggleButton.Position = UDim2.new(0, 0, 0.45, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Text = "OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+ToggleButton.Parent = ContentFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleButton
+
+local NotifyFrame = Instance.new("Frame")
+NotifyFrame.Name = "Notification"
+NotifyFrame.Size = UDim2.new(0, 300, 0, 60)
+NotifyFrame.Position = UDim2.new(0.5, -150, 0, -100)
+NotifyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+NotifyFrame.BorderSizePixel = 0
+NotifyFrame.Visible = false
+NotifyFrame.Parent = ScreenGui
+
+local NotifyCorner = Instance.new("UICorner")
+NotifyCorner.CornerRadius = UDim.new(0, 12)
+NotifyCorner.Parent = NotifyFrame
+
+local NotifyStroke = Instance.new("UIStroke")
+NotifyStroke.Color = Color3.fromRGB(0, 200, 100)
+NotifyStroke.Thickness = 2
+NotifyStroke.Parent = NotifyFrame
+
+local NotifyLabel = Instance.new("TextLabel")
+NotifyLabel.Size = UDim2.new(1, 0, 1, 0)
+NotifyLabel.BackgroundTransparency = 1
+NotifyLabel.Font = Enum.Font.GothamBold
+NotifyLabel.Text = "Desync starting in 12s"
+NotifyLabel.TextColor3 = Color3.fromRGB(0, 255, 130)
+NotifyLabel.TextSize = 16
+NotifyLabel.TextWrapped = true
+NotifyLabel.Parent = NotifyFrame
+
+local DHButton = Instance.new("TextButton")
+DHButton.Name = "DHButton"
+DHButton.Size = UDim2.new(0, 75, 0, 75)
+DHButton.Position = UDim2.new(0, 10, 0, 10)
+DHButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+DHButton.BorderSizePixel = 0
+DHButton.Font = Enum.Font.GothamBold
+DHButton.Text = "🔥"
+DHButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DHButton.TextSize = 20
+DHButton.Parent = ScreenGui
+
+local DHCorner = Instance.new("UICorner")
+DHCorner.CornerRadius = UDim.new(0, 12)
+DHCorner.Parent = DHButton
+
+local DHStroke = Instance.new("UIStroke")
+DHStroke.Color = Color3.fromRGB(0, 170, 255)
+DHStroke.Thickness = 2
+DHStroke.Transparency = 0.6
+DHStroke.Parent = DHButton
+
+local function showNotification(text, duration)
+	duration = duration or 5
+	NotifyLabel.Text = text
+	NotifyFrame.Visible = true
+	NotifyFrame.Position = UDim2.new(0.5, -150, 0, -100)
+	TweenService:Create(NotifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
+	task.delay(duration, function()
+		if NotifyFrame and NotifyFrame.Parent then
+			TweenService:Create(NotifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, -100)}):Play()
+			task.wait(0.5)
+			NotifyFrame.Visible = false
+		end
+	end)
+end
+
+DHButton.MouseButton1Click:Connect(function()
+	isVisible = not isVisible
+	MainFrame.Visible = isVisible
+	DHButton.Text = isVisible and "DH" or "DH"
+	TweenService:Create(DHButton, TweenInfo.new(0.2), {Size = UDim2.new(0, isVisible and 50 or 45, 0, isVisible and 50 or 45)}):Play()
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+	if isRunning then
+		isRunning = false
+		desyncSequence.isStopped = true
+		StatusLabel.Text = "OFFLINE"
+		StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		ToggleButton.Text = "OFF"
+		TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		if desyncBox then desyncBox:Destroy() desyncBox = nil end
+		resetCharacter()
+	else
+		isRunning = true
+		StatusLabel.Text = "INITIALIZING..."
+		StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+		ToggleButton.Text = "ON"
+		TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 200, 100)}):Play()
+		showNotification("Desync starting in 12s", 5)
+		createDesyncBox()
+		runDesyncSequence()
+		task.delay(12.57, function()
+			if isRunning and StatusLabel then
+				StatusLabel.Text = "DESYNC ACTIVE"
+				StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+			end
+		end)
+	end
+end)
+
+local function updateSize()
+	local size = Camera.ViewportSize
+	if size.X < 600 then
+		MainFrame.Size = UDim2.new(0, 300, 0, 180)
+		MainFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
+	else
+		MainFrame.Size = UDim2.new(0, 280, 0, 170)
+		MainFrame.Position = UDim2.new(0.5, -140, 0.5, -85)
+	end
+end
+
+RunService.Heartbeat:Connect(updateSize)
+updateSize()

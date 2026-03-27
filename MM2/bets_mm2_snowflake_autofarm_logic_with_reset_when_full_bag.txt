@@ -1,0 +1,110 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+Player = game.Players.LocalPlayer
+Players = game.Players
+CoreGui = game.CoreGui
+RunService = game:GetService("RunService")
+TweenService = game:GetService("TweenService")
+CoinCollectedEvent = game.ReplicatedStorage.Remotes.Gameplay.CoinCollected
+RoundStartEvent = game.ReplicatedStorage.Remotes.Gameplay.RoundStart
+RoundEndEvent = game.ReplicatedStorage.Remotes.Gameplay.RoundEndFade
+ResetWhenFullBag = false
+AutofarmIN = false
+function returncoincontaier()
+	for _, v in workspace:GetChildren() do
+		if v:FindFirstChild("CoinContainer") and v:IsA("Model") then
+			return v:FindFirstChild("CoinContainer")
+		end
+	end
+	return false
+end
+CurrentCoinType = "SnowToken"
+CoinCollectedEvent.OnClientEvent:Connect(function(cointype, current, max)
+	AutofarmIN = true
+	collected += 1
+	if cointype == CurrentCoinType and tonumber(current) == tonumber(max) then
+		AutofarmIN = false
+		if ResetWhenFullBag then
+			Player.Character.Humanoid.Health = 0
+		end
+	end
+end)
+
+function PcallTP(Position1,Position2,Position3)
+	if Player.Character then
+		if Player.Character:FindFirstChild("HumanoidRootPart") then
+			Player.Character.HumanoidRootPart.Position = CFrame.new(Position1,Position2,Position3)
+		end
+	end
+end
+function rareegg(container)
+	if container ~= false then
+		for _, v in pairs(container:GetChildren()) do
+			if v:FindFirstChild("ParticleEmitter") then
+				if game.Players.LocalPlayer.Character then
+					game.Players.LocalPlayer.Character:MoveTo(v.Position)
+				end
+			end
+		end
+	end
+end
+function FindNearestCoin(container)
+	local coin = nil
+	local magn = math.huge
+	for _, v in pairs(container:GetChildren()) do
+		if v:FindFirstChild("CoinVisual") then
+			if v:GetAttribute("CoinID") == CurrentCoinType and v:FindFirstChild("TouchInterest") and v:FindFirstChild("CoinVisual").ClassName == "MeshPart" then
+				if Player.Character then
+					if Player.Character:FindFirstChild("HumanoidRootPart") then
+						if math.abs((Player.Character.Head.Position - v.Position).Magnitude) < magn then
+							coin = v
+							magn = math.abs((Player.Character.Head.Position - v.Position).Magnitude)
+						end
+					end
+				end
+			end
+		end
+	end
+	local gg = {coin, magn}
+	return gg
+end
+autofarmspeed = 25
+spawn(function()
+	while task.wait() do
+		if Autofarmrare then
+			rareegg(returncoincontaier())
+		end
+		if AutofarmStarted and AutofarmIN and Player.Character and returncoincontaier() then
+			if FindNearestCoin(returncoincontaier())[1] ~= nil then
+				local dds = FindNearestCoin(returncoincontaier())
+				local dds1 = tostring(dds[1].Position)
+				local strg = TweenService:Create(Player.Character.Head, TweenInfo.new(dds[2] / autofarmspeed, Enum.EasingStyle.Linear), {CFrame = CFrame.new(dds[1].Position)})
+				strg:Play()
+				while dds[1]:FindFirstChild("TouchInterest") do
+					task.wait()
+				end
+				strg:Cancel()
+			end
+		else
+			task.wait()
+		end
+	end
+end)
+local bb = game:GetService("VirtualUser") -- Anti AFK
+game:service "Players".LocalPlayer.Idled:connect(
+    function()
+        game:GetService("VirtualUser"):CaptureController()
+        game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+    end
+)
+RoundStartEvent.OnClientEvent:Connect(function()
+	AutofarmIN = true
+end)
+RoundEndEvent.OnClientEvent:Connect(function()
+	AutofarmIN = false
+end)
+
+ResetWhenFullBag = true
+dsaidyuasudya = true
+AutofarmStarted = true

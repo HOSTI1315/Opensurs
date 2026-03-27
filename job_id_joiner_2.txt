@@ -1,0 +1,420 @@
+-- TITANZ JOBID JOINER
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local Settings = {
+    ToggleKey = Enum.KeyCode.J,
+    DefaultAttempts = 2000,
+    DefaultDelay = 0.01,
+    MinJobIdLength = 10, -- to not break when fake jobid or sum idk
+    MainBackground = Color3.fromRGB(0, 0, 0),
+    MainTransparency = 0.2,
+    AccentColor = Color3.fromRGB(180, 0, 255),
+    ButtonBackground = Color3.fromRGB(15, 0, 15),
+    InputBackground = Color3.fromRGB(20, 0, 20),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    PlaceholderColor = Color3.fromRGB(150, 100, 150),
+    GradientStart = Color3.fromRGB(200, 100, 255),
+    GradientEnd = Color3.fromRGB(255, 220, 255),
+    StatusNormal = Color3.fromRGB(200, 100, 255),
+    StatusError = Color3.fromRGB(255, 100, 100),
+    StatusWarning = Color3.fromRGB(255, 200, 100),
+    StatusSuccess = Color3.fromRGB(100, 255, 150),
+    MainWidth = 480,
+    MainHeight = 50,
+    ButtonWidth = 70,
+    ButtonHeight = 36,
+    JobIdBoxWidth = 210,
+    SmallBoxWidth = 60,
+    CornerRadius = 8,
+    SmallCornerRadius = 6,
+    StrokeThickness = 2,
+}
+
+local State = {
+    uiVisible = false,
+    isJoining = false,
+    shouldCancel = false,
+    lastError = nil,
+}
+-- majestic ahh gui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "JobIdJoinerGui"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, Settings.MainWidth, 0, Settings.MainHeight)
+mainFrame.Position = UDim2.new(0.5, 0, 0.67, -15)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Settings.MainBackground
+mainFrame.BackgroundTransparency = Settings.MainTransparency
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, Settings.CornerRadius)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Settings.AccentColor
+mainStroke.Thickness = Settings.StrokeThickness
+mainStroke.Transparency = 0.5
+mainStroke.Parent = mainFrame
+
+local joinButton = Instance.new("TextButton")
+joinButton.Name = "JoinButton"
+joinButton.Size = UDim2.new(0, Settings.ButtonWidth, 0, Settings.ButtonHeight)
+joinButton.Position = UDim2.new(0, 7, 0.5, 0)
+joinButton.AnchorPoint = Vector2.new(0, 0.5)
+joinButton.BackgroundColor3 = Settings.ButtonBackground
+joinButton.BackgroundTransparency = 0.15
+joinButton.BorderSizePixel = 0
+joinButton.Text = "Join"
+joinButton.Font = Enum.Font.GothamBold
+joinButton.TextSize = 16
+joinButton.TextColor3 = Color3.fromRGB(230, 175, 255)
+joinButton.AutoButtonColor = false
+joinButton.Parent = mainFrame
+
+local joinCorner = Instance.new("UICorner")
+joinCorner.CornerRadius = UDim.new(0, Settings.SmallCornerRadius)
+joinCorner.Parent = joinButton
+
+local joinGradient = Instance.new("UIGradient")
+joinGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Settings.GradientStart),
+    ColorSequenceKeypoint.new(1, Settings.GradientEnd)
+}
+joinGradient.Parent = joinButton
+
+local joinStroke = Instance.new("UIStroke")
+joinStroke.Color = Settings.AccentColor
+joinStroke.Thickness = 1.5
+joinStroke.Transparency = 0.5
+joinStroke.Parent = joinButton
+
+local jobIdBox = Instance.new("TextBox")
+jobIdBox.Name = "JobIdBox"
+jobIdBox.Size = UDim2.new(0, Settings.JobIdBoxWidth, 0, Settings.ButtonHeight)
+jobIdBox.Position = UDim2.new(0, 85, 0.5, 0)
+jobIdBox.AnchorPoint = Vector2.new(0, 0.5)
+jobIdBox.BackgroundColor3 = Settings.InputBackground
+jobIdBox.BackgroundTransparency = 0.1
+jobIdBox.BorderSizePixel = 0
+jobIdBox.Text = ""
+jobIdBox.PlaceholderText = "made by titanz - put jobid here"
+jobIdBox.PlaceholderColor3 = Settings.PlaceholderColor
+jobIdBox.Font = Enum.Font.Gotham
+jobIdBox.TextSize = 14
+jobIdBox.TextColor3 = Settings.TextColor
+jobIdBox.ClearTextOnFocus = false
+jobIdBox.Parent = mainFrame
+
+local jobIdCorner = Instance.new("UICorner")
+jobIdCorner.CornerRadius = UDim.new(0, Settings.SmallCornerRadius)
+jobIdCorner.Parent = jobIdBox
+
+local jobIdStroke = Instance.new("UIStroke")
+jobIdStroke.Color = Color3.fromRGB(100, 0, 100)
+jobIdStroke.Thickness = 1
+jobIdStroke.Transparency = 0.5
+jobIdStroke.Parent = jobIdBox
+
+local attemptsBox = Instance.new("TextBox")
+attemptsBox.Name = "AttemptsBox"
+attemptsBox.Size = UDim2.new(0, Settings.SmallBoxWidth, 0, Settings.ButtonHeight)
+attemptsBox.Position = UDim2.new(0, 303, 0.5, 0)
+attemptsBox.AnchorPoint = Vector2.new(0, 0.5)
+attemptsBox.BackgroundColor3 = Settings.InputBackground
+attemptsBox.BackgroundTransparency = 0.1
+attemptsBox.BorderSizePixel = 0
+attemptsBox.Text = "2000"
+attemptsBox.PlaceholderText = "2000"
+attemptsBox.PlaceholderColor3 = Settings.PlaceholderColor
+attemptsBox.Font = Enum.Font.GothamBold
+attemptsBox.TextSize = 14
+attemptsBox.TextColor3 = Settings.TextColor
+attemptsBox.ClearTextOnFocus = false
+attemptsBox.Parent = mainFrame
+
+local attemptsCorner = Instance.new("UICorner")
+attemptsCorner.CornerRadius = UDim.new(0, Settings.SmallCornerRadius)
+attemptsCorner.Parent = attemptsBox
+
+local attemptsStroke = Instance.new("UIStroke")
+attemptsStroke.Color = Color3.fromRGB(100, 0, 100)
+attemptsStroke.Thickness = 1
+attemptsStroke.Transparency = 0.5
+attemptsStroke.Parent = attemptsBox
+
+local delayBox = Instance.new("TextBox")
+delayBox.Name = "DelayBox"
+delayBox.Size = UDim2.new(0, Settings.SmallBoxWidth, 0, Settings.ButtonHeight)
+delayBox.Position = UDim2.new(0, 371, 0.5, 0)
+delayBox.AnchorPoint = Vector2.new(0, 0.5)
+delayBox.BackgroundColor3 = Settings.InputBackground
+delayBox.BackgroundTransparency = 0.1
+delayBox.BorderSizePixel = 0
+delayBox.Text = "0.01"
+delayBox.PlaceholderText = "0.01"
+delayBox.PlaceholderColor3 = Settings.PlaceholderColor
+delayBox.Font = Enum.Font.GothamBold
+delayBox.TextSize = 14
+delayBox.TextColor3 = Settings.TextColor
+delayBox.ClearTextOnFocus = false
+delayBox.Parent = mainFrame
+
+local delayCorner = Instance.new("UICorner")
+delayCorner.CornerRadius = UDim.new(0, Settings.SmallCornerRadius)
+delayCorner.Parent = delayBox
+
+local delayStroke = Instance.new("UIStroke")
+delayStroke.Color = Color3.fromRGB(100, 0, 100)
+delayStroke.Thickness = 1
+delayStroke.Transparency = 0.5
+delayStroke.Parent = delayBox
+
+local attemptsLabel = Instance.new("TextLabel")
+attemptsLabel.Name = "AttemptsLabel"
+attemptsLabel.Size = UDim2.new(0, Settings.SmallBoxWidth, 0, 12)
+attemptsLabel.Position = UDim2.new(0, 303, 0, 2)
+attemptsLabel.BackgroundTransparency = 1
+attemptsLabel.Text = "Attempts"
+attemptsLabel.Font = Enum.Font.Gotham
+attemptsLabel.TextSize = 10
+attemptsLabel.TextColor3 = Settings.PlaceholderColor
+attemptsLabel.Parent = mainFrame
+
+local delayLabel = Instance.new("TextLabel")
+delayLabel.Name = "DelayLabel"
+delayLabel.Size = UDim2.new(0, Settings.SmallBoxWidth, 0, 12)
+delayLabel.Position = UDim2.new(0, 371, 0, 2)
+delayLabel.BackgroundTransparency = 1
+delayLabel.Text = "Delay (s)"
+delayLabel.Font = Enum.Font.Gotham
+delayLabel.TextSize = 10
+delayLabel.TextColor3 = Settings.PlaceholderColor
+delayLabel.Parent = mainFrame
+
+local cancelButton = Instance.new("TextButton")
+cancelButton.Name = "CancelButton"
+cancelButton.Size = UDim2.new(0, Settings.SmallBoxWidth, 0, Settings.ButtonHeight)
+cancelButton.Position = UDim2.new(0, 439, 0.5, 0)
+cancelButton.AnchorPoint = Vector2.new(0, 0.5)
+cancelButton.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+cancelButton.BackgroundTransparency = 0.15
+cancelButton.BorderSizePixel = 0
+cancelButton.Text = "Stop"
+cancelButton.Font = Enum.Font.GothamBold
+cancelButton.TextSize = 14
+cancelButton.TextColor3 = Color3.fromRGB(255, 150, 150)
+cancelButton.AutoButtonColor = false
+cancelButton.Visible = false
+cancelButton.Parent = mainFrame
+
+local cancelCorner = Instance.new("UICorner")
+cancelCorner.CornerRadius = UDim.new(0, Settings.SmallCornerRadius)
+cancelCorner.Parent = cancelButton
+
+local cancelStroke = Instance.new("UIStroke")
+cancelStroke.Color = Color3.fromRGB(255, 50, 50)
+cancelStroke.Thickness = 1.5
+cancelStroke.Transparency = 0.5
+cancelStroke.Parent = cancelButton
+
+local attemptStatusLabel = Instance.new("TextLabel")
+attemptStatusLabel.Name = "AttemptStatusLabel"
+attemptStatusLabel.Size = UDim2.new(0, Settings.MainWidth, 0, 20)
+attemptStatusLabel.Position = UDim2.new(0.5, 0, 0, Settings.MainHeight + 5)
+attemptStatusLabel.AnchorPoint = Vector2.new(0.5, 0)
+attemptStatusLabel.BackgroundTransparency = 1
+attemptStatusLabel.Text = ""
+attemptStatusLabel.Font = Enum.Font.GothamBold
+attemptStatusLabel.TextSize = 14
+attemptStatusLabel.TextColor3 = Settings.StatusNormal
+attemptStatusLabel.TextStrokeTransparency = 0.5
+attemptStatusLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+attemptStatusLabel.RichText = true
+attemptStatusLabel.Visible = false
+attemptStatusLabel.Parent = mainFrame
+
+local function parseError(errorResult)
+    local errorStr = tostring(errorResult)
+    
+    if errorStr:find("GameFull") or errorStr:find("game full") or errorStr:find("Full") then
+        return "Game Full"
+    elseif errorStr:find("GameEnded") or errorStr:find("game ended") then
+        return "Game Ended"
+    elseif errorStr:find("Flooded") or errorStr:find("flooded") then
+        return "Flooded, idk"
+    elseif errorStr:find("IsTeleporting") or errorStr:find("teleporting") then
+        return "Already Teleporting"
+    elseif errorStr:find("Unauthorized") or errorStr:find("unauthorized") then
+        return "Unauthorized, ps probably"
+    elseif errorStr:find("not part of the universe") then
+        return "Invalid Server"
+    elseif errorStr:find("failure") or errorStr:find("Failure") then
+        return "Teleport Failure"
+    elseif errorStr:find("timeout") or errorStr:find("Timeout") then
+        return "Timeout"
+    else
+        local short = errorStr:sub(1, 25)
+        if #errorStr > 25 then short = short .. "..." end
+        return short
+    end
+end
+
+local function updateAttemptStatus(attemptNum, totalAttempts, errorText)
+    local text = string.format("Attempt %d/%d", attemptNum, totalAttempts)
+    if errorText and errorText ~= "" then
+        text = text .. string.format('  <font color="rgb(255,100,100)">%s</font>', errorText)
+    end
+    attemptStatusLabel.Text = text
+    attemptStatusLabel.Visible = true
+end
+
+local function showStatusMessage(text, color)
+    attemptStatusLabel.Text = text
+    attemptStatusLabel.TextColor3 = color or Settings.StatusNormal
+    attemptStatusLabel.Visible = true
+end
+
+local function hideAttemptStatus()
+    attemptStatusLabel.Visible = false
+    attemptStatusLabel.Text = ""
+end
+
+local function setJoiningState(joining)
+    State.isJoining = joining
+    joinButton.Text = joining and "..." or "Join"
+    cancelButton.Visible = joining
+    if not joining then
+        State.lastError = nil
+    end
+end
+
+local function attemptJoin()
+    if State.isJoining then return end
+    
+    local jobId = jobIdBox.Text
+    local attempts = tonumber(attemptsBox.Text) or Settings.DefaultAttempts
+    local delay = tonumber(delayBox.Text) or Settings.DefaultDelay
+    
+    if jobId == "" or #jobId < Settings.MinJobIdLength then
+        showStatusMessage("Invalid JobId", Settings.StatusError)
+        task.delay(2, function()
+            if attemptStatusLabel.Text == "Invalid JobId" then
+                hideAttemptStatus()
+            end
+        end)
+        return
+    end
+    
+    attempts = math.max(1, math.min(attempts, 10000))
+    delay = math.max(0, math.min(delay, 10))
+    
+    State.shouldCancel = false
+    State.lastError = nil
+    setJoiningState(true)
+    hideAttemptStatus()
+    
+    task.spawn(function()
+        for i = 1, attempts do
+            if State.shouldCancel then
+                updateAttemptStatus(i, attempts, "Cancelled")
+                break
+            end
+            
+            updateAttemptStatus(i, attempts, State.lastError)
+            
+            local success, result = pcall(function()
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, player)
+            end)
+            
+            if not success then
+                local parsedError = parseError(result)
+                State.lastError = parsedError
+                updateAttemptStatus(i, attempts, parsedError)
+                
+                if parsedError == "Game Ended" then
+                    updateAttemptStatus(i, attempts, "Game Ended - Stopped")
+                    break
+                end
+            end
+            
+            if i < attempts and not State.shouldCancel then
+                task.wait(delay)
+            end
+        end
+        
+        if not State.shouldCancel and attemptStatusLabel.Text:find("Attempt") then
+            local finalText = string.format("Failed %d/%d", attempts, attempts)
+            if State.lastError then
+                finalText = finalText .. string.format('  <font color="rgb(255,100,100)">%s</font>', State.lastError)
+            end
+            attemptStatusLabel.Text = finalText
+        end
+        
+        task.delay(5, function()
+            if not State.isJoining then
+                hideAttemptStatus()
+            end
+        end)
+        
+        setJoiningState(false)
+    end)
+end
+
+local function cancelJoin()
+    if State.isJoining then
+        State.shouldCancel = true
+    end
+end
+
+joinButton.Activated:Connect(attemptJoin)
+cancelButton.Activated:Connect(cancelJoin)
+
+jobIdBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        attemptJoin()
+    end
+end)
+
+TeleportService.TeleportInitFailed:Connect(function(teleportPlayer, teleportResult, errorMessage)
+    if teleportPlayer == player and State.isJoining then
+        local parsedError = parseError(teleportResult)
+        State.lastError = parsedError
+        
+        if parsedError == "Game Ended" then
+            State.shouldCancel = true
+        end
+    end
+end)
+
+local function toggleUI()
+    State.uiVisible = not State.uiVisible
+    mainFrame.Visible = State.uiVisible
+    
+    if not State.uiVisible then
+        hideAttemptStatus()
+        if State.isJoining then
+            cancelJoin()
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Settings.ToggleKey then
+        toggleUI()
+    end
+end)

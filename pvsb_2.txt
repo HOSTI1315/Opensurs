@@ -1,0 +1,1306 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/khoavipok/New-update-/refs/heads/main/Update%20notice"))()
+
+local Version = "1.6.41"
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/download/" .. Version .. "/main.lua"))()
+
+WindUI:SetNotificationLower(true)
+
+-- Tạo cửa sổ
+local Window = WindUI:CreateWindow({
+    Title = "Khanhly HUB X Plants Vs Brainrots",
+    Icon = "rbxassetid://111450164466537", -- icon lucide
+    Author = "Khanhly",
+    Size = UDim2.fromOffset(600, 300),
+    Theme = "Dark",
+    Resizable = true,
+
+    -- 🔥 Ảnh nền của bạn
+    Background = "rbxassetid://74892959476466", -- 96368639036805 hình lền
+    BackgroundTransparency = 0.07, -- 0 = rõ, 1 = tàng hình
+})
+
+Window:EditOpenButton({
+    Title = "khanhly Hub",
+    Icon = "rbxassetid://111450164466537",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new( -- gradient
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
+
+-- Tab chính
+local DsTab = Window:Tab({
+    Title = "Discord",
+    Icon = "user",
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = DsTab:Section({
+    Title = "copy link discord",
+    Icon = "heart",
+    Opened = true
+})
+
+DsTab:Button({
+    Title = "Copy Link Discord Khanhly",
+    Desc = "Sao chép link Discord vào clipboard",
+    Callback = function()
+        setclipboard("https://discord.com/invite/shkGwKQMaM")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "✅ Đã sao chép!",
+            Text = "Link Discord Khanhly đã được copy vào clipboard.",
+            Duration = 5
+        })
+    end,
+})
+
+
+-- Tab chính
+local MainTab = Window:Tab({
+    Title = "Main",
+    Icon = "sword",
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = MainTab:Section({
+    Title = "Auto Farm",
+    Icon = "sword",
+    Opened = true
+})
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local autoClick = false
+local ClickDelay = 0.01 -- tốc độ click (0.01 = rất nhanh)
+
+MainTab:Toggle({
+    Title = "Auto attack",
+    Desc = "farm attack",
+    Default = false,
+    Callback = function(state)
+        autoClick = state
+        print("Auto Click: " .. tostring(state))
+
+        -- nếu bật thì bắt đầu click
+        task.spawn(function()
+            while autoClick do
+                -- chuột trái
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                task.wait(ClickDelay)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+
+                -- chuột phải
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
+                task.wait(ClickDelay)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
+
+                task.wait(ClickDelay)
+            end
+        end)
+    end,
+})
+
+
+MainTab:Toggle({
+    Title = "Auto Tp Brainrot",
+    Desc = "tp farm",
+    Default = false,
+    Callback = function(state)
+        print("Auto Follow: " .. tostring(state))
+
+        if state then
+            -- 🧠 Khi bật
+            getgenv().AutoFollowBrainrot = true
+
+            task.spawn(function()
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local hrp = character:WaitForChild("HumanoidRootPart")
+
+                local brainrotsFolder = workspace:WaitForChild("ScriptedMap"):WaitForChild("Brainrots")
+                local followSpeed = 50 -- ⚡ tốc độ di chuyển (studs/giây)
+
+                local function clearConstraints()
+                    for _, v in pairs(hrp:GetChildren()) do
+                        if v:IsA("AlignPosition") or v:IsA("Attachment") or v:IsA("WeldConstraint") then
+                            v:Destroy()
+                        end
+                    end
+                end
+
+                local function attachTo(part)
+                    clearConstraints()
+                    local attach1 = Instance.new("Attachment", hrp)
+                    local attach2 = Instance.new("Attachment", part)
+
+                    local align = Instance.new("AlignPosition")
+                    align.Attachment0 = attach1
+                    align.Attachment1 = attach2
+                    align.RigidityEnabled = false
+                    align.MaxForce = 1e9
+                    align.Responsiveness = followSpeed
+                    align.Parent = hrp
+                end
+
+                while getgenv().AutoFollowBrainrot do
+                    local targetBrainrot, targetPart
+                    for _, obj in ipairs(brainrotsFolder:GetChildren()) do
+                        local p = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart")
+                        if p then
+                            targetBrainrot = obj
+                            targetPart = p
+                            break
+                        end
+                    end
+
+                    if targetPart then
+                        attachTo(targetPart)
+                        repeat task.wait(0.1)
+                        until not getgenv().AutoFollowBrainrot or not targetBrainrot or not targetBrainrot.Parent
+                        clearConstraints()
+                    else
+                        repeat task.wait(0.5)
+                        until not getgenv().AutoFollowBrainrot or #brainrotsFolder:GetChildren() > 0
+                    end
+                    task.wait(0.2)
+                end
+
+                clearConstraints()
+                print("[🛑] Đã dừng Auto Follow Brainrot")
+            end)
+        else
+            -- 🧠 Khi tắt
+            getgenv().AutoFollowBrainrot = false
+        end
+    end,
+})
+
+local Section = MainTab:Section({
+    Title = "Auto Farm coins + auto sell",
+    Opened = true
+})
+
+-- ⚙️ Lấy thông tin nhân vật
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local plotFolder = workspace:WaitForChild("Plots")
+local plot = plotFolder:WaitForChild("1") -- nếu muốn đổi plot khác, sửa ở đây
+local plantsFolder = plot:WaitForChild("Plants")
+
+-- ⚙️ Hàm TP mượt
+local function smoothTP(pos)
+	hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
+end
+
+-- ⚙️ Hàm gửi thông báo Roblox (trong suốt)
+local function notify(title, text, duration)
+	game.StarterGui:SetCore("SendNotification", {
+		Title = title,
+		Text = text,
+		Duration = duration or 1.5
+	})
+end
+
+-- 🌿 Hàm Auto TP (loop 1→17, quay lại 1 khi hết)
+local function autoTPPlants()
+	while task.wait(0.5) and getgenv()._AutoTPPlants do
+		for i = 1, 17 do
+			if not getgenv()._AutoTPPlants then break end
+
+			local name = tostring(i)
+			local plant = plantsFolder:FindFirstChild(name)
+
+			if plant then
+				local part = plant:IsA("BasePart") and plant or plant:FindFirstChildWhichIsA("BasePart")
+				if part then
+					smoothTP(part.Position)
+					print("[💰] TP đến coins số:", name)
+					notify("💰 Auto TP coins", "Đang TP đến cây số " .. name, 1.2)
+				else
+					warn("[⚠️] Cây " .. name .. " không có BasePart để TP")
+				end
+			else
+				print("[❌] Không tìm thấy coins số:", name)
+			end
+
+			task.wait(0.4) -- delay mỗi lần TP
+		end
+
+		-- Sau khi xong 1→17, quay lại 1
+		if getgenv()._AutoTPPlants then
+			local first = plantsFolder:FindFirstChild("1")
+			if first then
+				local part = first:IsA("BasePart") and first or first:FindFirstChildWhichIsA("BasePart")
+				if part then
+					smoothTP(part.Position)
+					print("[🔁] Quay lại cây số 1...")
+					notify("🔁 Auto TP coins", "Quay lại cây số 1", 1.3)
+				end
+			end
+		end
+	end
+
+	print("[⛔] Đã dừng Auto TP coind.")
+	notify("⛔ Auto TP coins", "Đã dừng hoạt động", 2)
+end
+
+-- 🟢 Toggle điều khiển trong WindUI
+MainTab:Toggle({
+	Title = "Auto TP coins",
+	Desc = "Auto TP each coins",
+	Default = false,
+	Callback = function(state)
+		getgenv()._AutoTPPlants = state
+
+		if state then
+			print("[🟢] Bật Auto TP coins")
+			notify("🟢 Auto TP coins", "Đang bật chế độ Auto TP coins", 2)
+			task.spawn(autoTPPlants)
+		else
+			print("[🔴] Tắt Auto TP coins")
+			notify("🔴 Auto TP coins", "Đã tắt chế độ Auto TP coins", 2)
+		end
+	end,
+})
+
+local StarterGui = game:GetService("StarterGui")
+local Remotes = game:GetService("ReplicatedStorage").Remotes
+
+-- Hàm hiện thông báo trong suốt (giống Roblox gốc)
+local function Notify(title, text, time)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = time or 2
+        })
+    end)
+end
+
+-- 🔹 TOGGLE 1: AUTO EQUIP
+MainTab:Toggle({
+    Title = "Auto receive coins",
+    Desc = "Tự động gọi EquipBestBrainrots mỗi 2 giây",
+    Default = false,
+    Callback = function(state)
+        _G.AutoEquip = state
+
+        Notify("Auto Equip", state and "🟢 Đã bật auto equip!" or "🔴 Đã tắt auto equip!", 2)
+
+        task.spawn(function()
+            while _G.AutoEquip do
+                pcall(function()
+                    Remotes.EquipBestBrainrots:FireServer()
+                end)
+                Notify("Auto Equip", "✅ received coins!!", 2)
+                task.wait(2)
+            end
+        end)
+    end,
+})
+
+-- 🔹 TOGGLE 2: AUTO SELL
+MainTab:Toggle({
+    Title = "Auto Sell Items",
+    Desc = "Tự động gọi ItemSell mỗi 2 giây",
+    Default = false,
+    Callback = function(state)
+        _G.AutoSell = state
+
+        Notify("Auto Sell", state and "✅ Đã On auto sell!" or "❌ Đã off auto sell!", 2)
+
+        task.spawn(function()
+        while _G.AutoSell do
+            pcall(function()
+                Remotes.ItemSell:FireServer()
+            end)
+            Notify("Auto Sell", "💰 ItemSell ", 2)
+            task.wait(2)
+        end
+        end)
+    end,
+})
+
+
+local SpTab = Window:Tab({
+    Title = "shop buy",
+    Icon = "star",
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = SpTab:Section({
+    Title = "Auto buy seeds",
+    Icon = "lucide:star",
+    Opened = true
+})
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remote = ReplicatedStorage.Remotes.BuyItem
+
+-- ⚙️ Cấu hình spam
+local baseDelay = 0.5 -- delay giữa mỗi lần mua (có thể giảm xuống 0.3 nếu ổn định)
+
+-- ⚙️ Danh sách seeds
+local seeds = {
+    "Mango Seed",
+    "King Limone Seed",
+    "Starfruit Seed",
+    "Shroombino Seed",
+    "Tomatrio Seed",
+    "Mr Carrot Seed",
+    "Carnivorous Plant Seed",
+    "Cocotank Seed",
+    "Watermelon Seed",
+    "Eggplant Seed",
+    "Dragon Frult Seed",
+    "Sunflower Seed",
+    "Pumpkin Seed",
+    "Strawberry Seed",
+    "Cactus Seed",
+}
+
+-- ⚙️ Lưu trạng thái toggle
+local activeToggles = {}
+
+-- ⚙️ Hàm auto riêng từng seed (chạy song song)
+local function autoBuySeed(seedName)
+    task.spawn(function()
+        while activeToggles[seedName] do
+            pcall(function()
+                Remote:FireServer(seedName)
+            end)
+            -- ⏳ Delay có thêm random để tránh xung đột server
+            task.wait(baseDelay + math.random() * 0.2)
+        end
+    end)
+end
+
+-- ⚙️ Tạo toggle cho từng seed
+for _, seedName in ipairs(seeds) do
+    activeToggles[seedName] = false
+
+    SpTab:Toggle({
+        Title = seedName,
+        Desc = "Tự động mua " .. seedName,
+        Default = false,
+        Callback = function(state)
+            activeToggles[seedName] = state
+
+            -- Thông báo Roblox
+            pcall(function()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Auto Buy " .. seedName,
+                    Text = state and "ON ✅" or "OFF ❌",
+                    Duration = 2
+                })
+            end)
+
+            -- Nếu bật → chạy luồng riêng
+            if state then
+                autoBuySeed(seedName)
+            end
+        end
+    })
+end
+
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = SpTab:Section({
+    Title = "Auto buy gear",
+    Icon = "star",
+    Opened = true
+})
+
+-- Giả sử bạn đã có SpTab từ WindUI
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remote = ReplicatedStorage.Remotes.BuyGear
+
+-- Hàm tạo toggle riêng cho từng Gear
+local function createGearToggle(tab, gearName)
+    local active = false
+
+    tab:Toggle({
+        Title = gearName,
+        Desc = "Tự động mua " .. gearName,
+        Default = false,
+        Callback = function(state)
+            active = state
+
+            -- Thông báo bật/tắt
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Auto Buy " .. gearName,
+                Text = state and "Đã bật" or "Đã tắt",
+                Duration = 2
+            })
+
+            -- Nếu bật → bắt đầu spam mua
+            if state then
+                task.spawn(function()
+                    while active do
+                        Remote:FireServer(gearName)
+                        task.wait(0.2) -- tốc độ spam (giảm số nhỏ để mua nhanh hơn)
+                    end
+                end)
+            end
+        end
+    })
+end
+
+-- Danh sách Gear
+local gears = {
+    "Water Bucket",
+    "Frost Grenade",
+    "Banana Gun",
+    "Frost Blower",
+    "Carrot Launcher"
+}
+
+-- Tạo toggle riêng cho từng Gear
+for _, gear in ipairs(gears) do
+    createGearToggle(SpTab, gear)
+end
+
+local BgTab = Window:Tab({
+    Title = "Event",
+    Icon = "zap",
+})
+
+local Section = BgTab:Section({
+    Title = "Event",
+    Icon = "star",
+    Opened = true
+})
+
+BgTab:Button({
+    Title = "TP event portal",
+    Desc = "tp portal",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
+        -- Teleport
+        hrp.CFrame = CFrame.new(Vector3.new(-175.4, 11.6, 987.8))
+
+        -- Thông báo Roblox trong suốt
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Teleport Thành công ✅",
+            Text = "🕑 loading.....",
+            Duration = 4
+        })
+    end,
+})
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BuyPortalRemote = ReplicatedStorage.Remotes.BuyPortal
+
+local active = false
+
+BgTab:Toggle({
+    Title = "Auto Buy Portal",
+    Desc = "Mua Portal liên tục",
+    Default = false,
+    Callback = function(state)
+        active = state
+
+        -- Thông báo bật/tắt
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Auto Buy Portal",
+            Text = state and "Đã bật" or "Đã tắt",
+            Duration = 2
+        })
+
+        -- Nếu bật thì loop liên tục
+        if state then
+            task.spawn(function()
+                while active do
+                    BuyPortalRemote:FireServer()
+                    task.wait(0.2) -- tốc độ mua
+                end
+            end)
+        end
+    end
+})
+
+
+-- Toggle auto EventPlatforms
+BgTab:Toggle({
+    Title = "Auto Event shiny card pack",
+    Desc = "auto farm pranium",
+    Default = false,
+    Callback = function(state)
+        local StarterGui = game:GetService("StarterGui")
+        local function Notify(title, text)
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 3, -- thời gian hiển thị
+            })
+        end
+
+        Notify("Auto EventPlatforms", state and "✅ ON" or "🛑 OFF")
+
+        if not state then
+            _G.EventAuto = false
+            return
+        end
+
+        _G.EventAuto = true
+
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local root = char:WaitForChild("HumanoidRootPart")
+        local plot = workspace.Plots["1"].EventPlatforms
+
+        -- Tọa độ chính xác
+        local platformPositions = {
+            ["-4"] = Vector3.new(-221.7, 14.4, 993.8),
+            ["-3"] = Vector3.new(-222.8, 14.4, 983.8),
+            ["-2"] = Vector3.new(-222.4, 14.4, 974.6),
+            ["-1"] = Vector3.new(-221.8, 14.4, 963.5),
+        }
+
+        -- Hàm tìm tool trùng tên pet
+        local function findToolByPetName(petName)
+            local backpack = player:WaitForChild("Backpack")
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if string.find(tool.Name, petName) then
+                    return tool
+                end
+            end
+            return nil
+        end
+
+        -- Hàm teleport
+        local function teleportToPlatformID(id)
+            local pos = platformPositions[id]
+            if pos then
+                root.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
+                Notify("TP Thành công", "Đến Platform " .. id)
+            end
+        end
+
+        -- Hàm kích hoạt ProximityPrompt
+        local function triggerPrompt(prompt)
+            if fireproximityprompt then
+                fireproximityprompt(prompt)
+            else
+                Notify("⚠️ error", "Executor không hỗ trợ fireproximityprompt")
+            end
+        end
+
+        -- Vòng lặp chính auto
+        task.spawn(function()
+            while _G.EventAuto do
+                for id, pos in pairs(platformPositions) do
+                    if not _G.EventAuto then break end
+
+                    local platform = plot:FindFirstChild(id)
+                    if platform then
+                        local visual = platform:FindFirstChild("VisualFolder")
+                        if visual then
+                            for _, pet in ipairs(visual:GetChildren()) do
+                                local petName = pet.Name
+                                local tool = findToolByPetName(petName)
+                                if tool then
+                                    Notify("⚡ brainrotsTìm Thấy", tool.Name)
+                                    tool.Parent = char
+                                    task.wait(0.5)
+                                    teleportToPlatformID(id)
+
+                                    -- tìm Prompt để kích hoạt
+                                    local hitbox = platform:FindFirstChild("Hitbox")
+                                    if hitbox then
+                                        local prompt = hitbox:FindFirstChildOfClass("ProximityPrompt")
+                                        if prompt then
+                                            task.wait(0.3)
+                                            triggerPrompt(prompt)
+                                            Notify("⚙️ Đang Kích Hoạt", "Platform " .. id)
+                                        end
+                                    end
+                                else
+                                    Notify("❓Thiếu Brainrots", petName)
+                                end
+                            end
+                        end
+                    end
+                    task.wait(2)
+                end
+            end
+            Notify("🛑 Dừng Auto", "Auto EventPlatforms đã tắt")
+        end)
+    end,
+})
+
+
+local RS = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local Remote = RS.Remotes.MissionServicesRemotes.RequestStartInvasion
+
+BgTab:Toggle({
+    Title = "Auto Event assault brainrots",
+    Desc = "Auto assault brainrots",
+    Default = false,
+    Callback = function(state)
+        print("Auto Invasion:", state)
+
+        -- Thông báo Roblox trong suốt
+        StarterGui:SetCore("SendNotification", {
+            Title = "⚔️ Auto Invasion",
+            Text = state and "Đã bật tự động kích hoạt!" or "Đã tắt tự động kích hoạt!",
+            Duration = 3 -- thời gian hiển thị (giây)
+        })
+
+        if state then
+            _G.AutoInvasion = true
+            task.spawn(function()
+                while _G.AutoInvasion do
+                    Remote:FireServer()
+                    task.wait(5) -- lặp lại mỗi 5 giây (có thể chỉnh)
+                end
+            end)
+        else
+            _G.AutoInvasion = false
+        end
+    end,
+})
+
+local Section = BgTab:Section({
+    Title = "auto Halloween",
+    Icon = "skull",
+    Opened = true
+})
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+-- 🧩 Hàm thông báo Roblox trong suốt
+local function Notify(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 3,
+    })
+end
+
+-- 🎃 TOGGLE 1: Candy Brainrot Crate
+BgTab:Toggle({
+    Title = "Candy Brainrot Crate 🍬50",
+    Desc = "Tự động mua Candy Brainrot Crate liên tục",
+    Default = false,
+    Callback = function(state)
+        _G.AutoCandyCrate = state
+        Notify("Auto Candy Brainrot Crate", state and "Đã bật" or "Đã tắt")
+
+        if state then
+            task.spawn(function()
+                while _G.AutoCandyCrate do
+                    local args = { [1] = "Candy Brainrot Crate" }
+                    ReplicatedStorage.Remotes.BuyCrate:FireServer(unpack(args))
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+-- 🃏 TOGGLE 2: Halloween Card Pack
+BgTab:Toggle({
+    Title = "Halloween Card Pack 🍬150",
+    Desc = "Tự động mua Card Pack Halloween liên tục",
+    Default = false,
+    Callback = function(state)
+        _G.AutoCardPack = state
+        Notify("Auto Buy Card Pack", state and "Đã bật" or "Đã tắt")
+
+        if state then
+            task.spawn(function()
+                while _G.AutoCardPack do
+                    local args = { [1] = "Halloween" }
+                    ReplicatedStorage.Remotes.BuyCardPack:FireServer(unpack(args))
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+-- 👻 TOGGLE 3: Candy Spooky Crate
+BgTab:Toggle({
+    Title = "Candy Spooky Crate 🍬100",
+    Desc = "Tự động mua Candy Spooky Crate liên tục",
+    Default = false,
+    Callback = function(state)
+        _G.AutoSpookyCrate = state
+        Notify("Auto Spooky Crate", state and "Đã bật" or "Đã tắt")
+
+        if state then
+            task.spawn(function()
+                while _G.AutoSpookyCrate do
+                    local args = { [1] = "Candy Spooky Crate" }
+                    ReplicatedStorage.Remotes.BuyCrate:FireServer(unpack(args))
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+
+local Section = BgTab:Section({
+    Title = "Bug lag",
+    Icon = "star",
+    Opened = true
+})
+
+-- Giả sử bạn đã có BgTab ở trên rồi
+-- BgTab:Toggle(...) sẽ tạo toggle điều khiển auto equip
+
+local player = game:GetService("Players").LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local connection -- giữ kết nối để ngắt khi tắt toggle
+local running = false
+
+BgTab:Toggle({
+    Title = "Auto bug Lag⚠️",
+    Desc = "Tự động cầm tất cả tool trong Backpack",
+    Default = false,
+    Callback = function(state)
+        print("Toggle: " .. tostring(state))
+        running = state
+
+        if state then
+            -- Khi bật toggle
+            local function equipAll()
+                for _, tool in ipairs(backpack:GetChildren()) do
+                    if not running then return end
+                    if tool:IsA("Tool") then
+                        tool.Parent = player.Character
+                        task.wait(0.2)
+                    end
+                end
+            end
+
+            -- Gọi lúc đầu
+            equipAll()
+
+            -- Theo dõi khi có tool mới
+            connection = backpack.ChildAdded:Connect(function(tool)
+                if not running then return end
+                if tool:IsA("Tool") then
+                    task.wait(0.2)
+                    tool.Parent = player.Character
+                end
+            end)
+        else
+            -- Khi tắt toggle
+            running = false
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+        end
+    end,
+})
+
+-- Tab chính
+local FlTab = Window:Tab({
+    Title = "Visual",
+    Icon = "brain",
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = FlTab:Section({
+    Title = "character function",
+    Icon = "brain",
+    Opened = true
+})
+
+
+-------------------------------------------------
+--// Thông báo kiểu Roblox
+-------------------------------------------------
+local function TransparentNotify(text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "esp Player loading 🕑.....",
+        Text = text,
+        Duration = 2
+    })
+end
+
+-------------------------------------------------
+--// ESP (Highlight + Tên + Khoảng cách)
+-------------------------------------------------
+local espEnabled = false
+local espObjects = {}
+
+local function createESP(player)
+    if player == game.Players.LocalPlayer then return end
+    if not player.Character then return end
+
+    -- Highlight
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = player.Character
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = Color3.fromRGB(255, 50, 50)
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = player.Character
+
+    -- Billboard hiển thị tên + khoảng cách
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "NameESP"
+    billboard.Adornee = player.Character:FindFirstChild("Head") or player.Character:FindFirstChildWhichIsA("BasePart")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255, 100, 100)
+    text.TextStrokeTransparency = 0
+    text.Font = Enum.Font.GothamBold
+    text.TextScaled = true
+    text.Parent = billboard
+
+    billboard.Parent = player.Character
+
+    espObjects[player] = { highlight = highlight, billboard = billboard, text = text }
+
+    -- Cập nhật khoảng cách liên tục
+    task.spawn(function()
+        while espEnabled and player and player.Character and espObjects[player] do
+            local root = player.Character:FindFirstChild("HumanoidRootPart")
+            local localRoot = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if root and localRoot then
+                local distance = (root.Position - localRoot.Position).Magnitude
+                espObjects[player].text.Text = string.format("%s - %.0fm", player.DisplayName, distance)
+            end
+            task.wait(0.2)
+        end
+    end)
+end
+
+local function removeESP(player)
+    if espObjects[player] then
+        for _, v in pairs(espObjects[player]) do
+            if typeof(v) == "Instance" then
+                v:Destroy()
+            end
+        end
+        espObjects[player] = nil
+    end
+end
+
+-------------------------------------------------
+--// Toggle chính
+-------------------------------------------------
+FlTab:Toggle({
+    Title = "ESP Player",
+    Desc = "Hiển thị tên + khoảng cách (m)",
+    Default = false,
+    Callback = function(state)
+        espEnabled = state
+        TransparentNotify(state and "Đã bật ESP!" or "Đã tắt ESP!")
+
+        if espEnabled then
+            -- Thêm cho người chơi hiện có
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p.Character then
+                    createESP(p)
+                end
+            end
+
+            -- Khi người chơi mới vào
+            game.Players.PlayerAdded:Connect(function(p)
+                p.CharacterAdded:Connect(function()
+                    if espEnabled then
+                        createESP(p)
+                    end
+                end)
+            end)
+
+            -- Khi người chơi rời
+            game.Players.PlayerRemoving:Connect(function(p)
+                removeESP(p)
+            end)
+        else
+            -- Tắt ESP
+            for _, data in pairs(espObjects) do
+                for _, v in pairs(data) do
+                    if typeof(v) == "Instance" then
+                        v:Destroy()
+                    end
+                end
+            end
+            espObjects = {}
+        end
+    end,
+})
+
+
+-------------------------------------------------
+--// Thông báo trong suốt (giống Roblox)
+-------------------------------------------------
+local function TransparentNotify(text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Khanhly HUB",
+        Text = text,
+        Duration = 2
+    })
+end
+
+-------------------------------------------------
+--// Infinite Jump
+-------------------------------------------------
+local infiniteJumpEnabled = false
+
+FlTab:Toggle({
+    Title = "Infinite Jump",
+    Desc = "Bật/Tắt nhảy vô hạn",
+    Default = false,
+    Callback = function(state)
+        infiniteJumpEnabled = state
+        TransparentNotify(state and "Đã bật Infinite Jump!" or "Đã tắt Infinite Jump!")
+    end,
+})
+
+-- Xử lý nhảy vô hạn
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        local player = game:GetService("Players").LocalPlayer
+        local char = player.Character
+        if char and char:FindFirstChildOfClass("Humanoid") then
+            char:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+        end
+    end
+end)
+
+-------------------------------------------------
+--// Noclip
+-------------------------------------------------
+local noclipEnabled = false
+
+FlTab:Toggle({
+    Title = "Noclip",
+    Desc = "Đi xuyên vật thể",
+    Default = false,
+    Callback = function(state)
+        noclipEnabled = state
+        TransparentNotify(state and "Đã bật Noclip!" or "Đã tắt Noclip!")
+    end,
+})
+
+-- Xử lý noclip
+game:GetService("RunService").Stepped:Connect(function()
+    if noclipEnabled then
+        local char = game:GetService("Players").LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-------------------------------------------------
+--// Speed Slider (hỗ trợ kéo)
+-------------------------------------------------
+local player = game:GetService("Players").LocalPlayer
+local speed = 16
+
+local Slider = FlTab:Slider({
+    Title = "Speed",
+    Desc = "Điều chỉnh tốc độ di chuyển",
+    Step = 1,
+    Value = {
+        Min = 16,
+        Max = 200,
+        Default = 16,
+    },
+    Callback = function(value)
+        speed = value
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = speed
+        end
+        TransparentNotify("Tốc độ hiện tại: " .. speed)
+    end
+})
+
+-- Giữ lại speed sau khi respawn
+player.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    hum.WalkSpeed = speed
+end)
+
+-- Tab chính
+local StTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings",
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = StTab:Section({
+    Title = "anti lag + anti Afk",
+    Icon = "brain",
+    Opened = true
+})
+
+
+local AntiLagLevel = "Normal"
+
+-- 🎚️ Dropdown chọn chế độ
+StTab:Dropdown({
+    Title = "Anti-Lag Mode",
+    Desc = "Chọn mức giảm lag",
+    Values = { "Normal", "Low", "Super Low", "Wireframe" },
+    Value = "Normal",
+    Callback = function(selected)
+        AntiLagLevel = selected
+
+        -- 🔄 Khôi phục mặc định
+        if AntiLagLevel == "Normal" then
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            game.Lighting.GlobalShadows = true
+            game.Lighting.FogEnd = 1000
+            game.Lighting.Brightness = 2
+            game.Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+
+            WindUI:Notify({
+                Title = "Anti-Lag Mode",
+                Content = "Đã khôi phục chế độ Normal.",
+                Duration = 3,
+                Type = "info"
+            })
+            return
+        end
+
+        -- ⚙️ Cấu hình giảm lag
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        game.Lighting.GlobalShadows = false
+        game.Lighting.FogEnd = 9999
+        game.Lighting.Brightness = 1
+        game.Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+
+        local function optimize(v)
+            -- 🔥 Tắt hiệu ứng
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") 
+            or v:IsA("Fire") or v:IsA("Sparkles") or v:IsA("Beam") then
+                v.Enabled = false
+            end
+
+            -- 🧱 Giảm chi tiết vật thể
+            if v:IsA("MeshPart") or v:IsA("Part") then
+                v.Material = Enum.Material.SmoothPlastic
+                v.CastShadow = false
+                v.Color = Color3.fromRGB(60, 60, 60)
+
+                if AntiLagLevel == "Wireframe" then
+                    v.Transparency = 0.3
+                else
+                    v.Transparency = 0
+                end
+
+                if v:IsA("MeshPart") then
+                    v.TextureID = ""
+                end
+            end
+
+            -- 👕 Xóa quần áo
+            if v:IsA("Shirt") or v:IsA("Pants") then
+                v:Destroy()
+            end
+            if v:IsA("BodyColors") then
+                for _, colorName in ipairs({
+                    "HeadColor", "LeftArmColor", "RightArmColor",
+                    "LeftLegColor", "RightLegColor", "TorsoColor"
+                }) do
+                    v[colorName] = BrickColor.new("Dark stone grey")
+                end
+            end
+
+            -- 🪖 Super Low & Wireframe: xoá thêm phụ kiện
+            if AntiLagLevel == "Super Low" or AntiLagLevel == "Wireframe" then
+                if v:IsA("Accessory") or v:IsA("Hat") or v:IsA("Decal") then
+                    v:Destroy()
+                end
+            end
+        end
+
+        -- 🌍 Quét map và nhân vật
+        for _, v in pairs(workspace:GetDescendants()) do
+            optimize(v)
+        end
+        workspace.DescendantAdded:Connect(optimize)
+
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character then
+                for _, part in pairs(p.Character:GetDescendants()) do
+                    optimize(part)
+                end
+            end
+        end
+
+        -- 🔔 Thông báo WindUI
+        WindUI:Notify({
+            Title = "Anti-Lag Mode",
+            Content = "Đã bật chế độ: " .. AntiLagLevel,
+            Duration = 3,
+            Type = "success"
+        })
+    end,
+})
+
+
+
+
+-- 🧩 Script Anti AFK (WindUI version)
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+
+local player = Players.LocalPlayer
+local antiAfkConnection
+local notifyLoop -- vòng lặp thông báo
+
+-- 🧷 Toggle WindUI
+StTab:Toggle({
+    Title = "Anti AFK",
+    Desc = "Tự động tránh kick AFK",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            -- 🔛 Bật Anti AFK
+            antiAfkConnection = player.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0, 0))
+                task.wait(0.5)
+                VirtualUser:Button2Up(Vector2.new(0, 0))
+            end)
+
+            -- 🔔 Thông báo bật
+            WindUI:Notify({
+                Title = "Anti AFK",
+                Content = "Đã bật thành công!",
+                Duration = 4,
+                Type = "success"
+            })
+
+            -- ⏰ Thông báo mỗi 20 phút
+            notifyLoop = task.spawn(function()
+                while task.wait(1200) do
+                    WindUI:Notify({
+                        Title = "Anti AFK",
+                        Content = "Vẫn đang hoạt động!",
+                        Duration = 4,
+                        Type = "info"
+                    })
+                end
+            end)
+        else
+            -- 🔴 Tắt Anti AFK
+            if antiAfkConnection then
+                antiAfkConnection:Disconnect()
+                antiAfkConnection = nil
+            end
+
+            -- 🛑 Dừng vòng lặp
+            if notifyLoop then
+                task.cancel(notifyLoop)
+                notifyLoop = nil
+            end
+
+            -- 🔔 Thông báo tắt
+            WindUI:Notify({
+                Title = "Anti AFK",
+                Content = "Đã tắt!",
+                Duration = 4,
+                Type = "error"
+            })
+        end
+    end,
+})
+
+-- Giả sử bạn đang trong 1 Tab nào đó
+local Section = StTab:Section({
+    Title = "Hop Sever",
+    Icon = "brain",
+    Opened = true
+})
+
+
+-- 🌐 Dịch vụ Roblox
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+-- 🔁 Hàm Server Hop
+local function serverHop()
+    local gameId = game.PlaceId
+    local currentJobId = game.JobId
+    local servers = {}
+
+    -- 🧭 Lấy danh sách server
+    local success, result = pcall(function()
+        return game:HttpGet("https://games.roblox.com/v1/games/" .. gameId .. "/servers/Public?sortOrder=Asc&limit=100")
+    end)
+
+    if not success then
+        WindUI:Notify({
+            Title = "Server Hop",
+            Content = "⚠️ Không lấy được danh sách server.",
+            Duration = 4,
+            Type = "error"
+        })
+        return
+    end
+
+    local data = HttpService:JSONDecode(result)
+    for _, server in pairs(data.data) do
+        if server.id ~= currentJobId and server.playing < server.maxPlayers then
+            table.insert(servers, server.id)
+        end
+    end
+
+    -- 🔀 Chuyển server
+    if #servers > 0 then
+        local randomServer = servers[math.random(1, #servers)]
+
+        WindUI:Notify({
+            Title = "Server Hop",
+            Content = "🔁 Đang chuyển sang server mới...",
+            Duration = 3,
+            Type = "info"
+        })
+
+        task.wait(1)
+        TeleportService:TeleportToPlaceInstance(gameId, randomServer, Players.LocalPlayer)
+    else
+        WindUI:Notify({
+            Title = "Server Hop",
+            Content = "❌ Không tìm thấy server phù hợp.",
+            Duration = 4,
+            Type = "warning"
+        })
+    end
+end
+
+-- 🔘 Nút WindUI
+StTab:Button({
+    Title = "Server Hop",
+    Desc = "Chuyển sang server ngẫu nhiên khác",
+    Callback = function()
+        serverHop()
+    end,
+})

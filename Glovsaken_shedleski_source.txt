@@ -1,0 +1,209 @@
+-- Services declaration
+-- leakk by kittygd 
+local playersService = game:GetService("Players")
+local lightingService = game:GetService("Lighting")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local materialService = game:GetService("MaterialService")
+local workspaceService = game:GetService("Workspace")
+local statsService = game:GetService("Stats")
+local debrisService = game:GetService("Debris")
+local textChatService = game:GetService("TextChatService")
+
+
+-- Client references
+local clientPlayer = playersService.LocalPlayer
+local PlayerGui = clientPlayer:WaitForChild("PlayerGui", 10)
+
+
+-- Load WindUI library
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+
+-- Create main window
+local Window = WindUI:CreateWindow({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    Author = "By GlovDev",
+    Folder = "GlovSakenScript",
+    Size = UDim2.fromOffset(350, 300),
+    Transparent = false,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+
+-- Window toggle key
+Window:SetToggleKey(Enum.KeyCode.K)
+
+
+-- Window text font
+WindUI:SetFont("rbxasset://fonts/families/AccanthisADFStd.json")
+
+
+-- Mobile open button configuration
+Window:EditOpenButton({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 0,
+    Color = ColorSequence.new(
+        Color3.fromHex("000000"), 
+        Color3.fromHex("000000")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+
+----------------------------------------------------------------
+-- Sentinel Tab
+----------------------------------------------------------------
+local SentinelTab = Window:Tab({
+    Title = "Sentinel",
+    Icon = "shield",
+})
+
+
+----------------------------------------------------------------
+-- Shedletsky Section
+----------------------------------------------------------------
+local ShedletskySection = SentinelTab:Section({
+    Title = "Shedletsky",
+    Opened = true,
+})
+
+
+-- Variables
+local shedletskyAutoSlashEnabled = false
+local shedletskyAutoSlashRadius = 10
+local shedletskyAutoSlashRadiusSq = shedletskyAutoSlashRadius * shedletskyAutoSlashRadius
+local shedletskySetSlashTime = 1
+local shedletskyKillerNames = {"Slasher", "c00lkidd", "JohnDoe", "1x1x1x1", "Noli", "Sixer", "Nosferatu"}
+local shedletskyKillersFolder = workspaceService:FindFirstChild("Players") and workspaceService.Players:FindFirstChild("Killers")
+local shedletskyLastActivationTime = 0
+local shedletskySlashCooldown = 0.7
+local shedletskyKillerDetectionTimes = {}
+
+
+-- RemoteEvent
+local shedletskyRemoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+
+
+-- Fire slash
+local function shedletskyFireRemoteSlash()
+    shedletskyRemoteEvent:FireServer("UseActorAbility", { buffer.fromstring("\"Slash\"") })
+end
+
+
+-- Distance check
+local function shedletskyIsInRange(hrp, targetHrp)
+    if not hrp or not targetHrp then return false end
+    return (hrp.Position - targetHrp.Position).Magnitude^2 <= shedletskyAutoSlashRadiusSq
+end
+
+
+-- Auto slash loop
+runService.Heartbeat:Connect(function()
+    if not shedletskyAutoSlashEnabled then
+        shedletskyKillerDetectionTimes = {}
+        return
+    end
+
+
+    local now = tick()
+    if now < shedletskyLastActivationTime + shedletskySlashCooldown then return end
+
+
+    local char = playersService.LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp or not shedletskyKillersFolder then return end
+
+
+    for _, name in ipairs(shedletskyKillerNames) do
+        local killer = shedletskyKillersFolder:FindFirstChild(name)
+        local khrp = killer and killer:FindFirstChild("HumanoidRootPart")
+        if khrp and shedletskyIsInRange(hrp, khrp) then
+            local firstSeen = shedletskyKillerDetectionTimes[name] or now
+            if now >= firstSeen + shedletskySetSlashTime then
+                shedletskyFireRemoteSlash()
+                shedletskyLastActivationTime = now
+                shedletskyKillerDetectionTimes[name] = now
+                break
+            else
+                shedletskyKillerDetectionTimes[name] = firstSeen
+            end
+        else
+            shedletskyKillerDetectionTimes[name] = nil
+        end
+    end
+end)
+
+
+-- UI Controls
+ShedletskySection:Toggle({
+    Title = "Auto Slash",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        shedletskyAutoSlashEnabled = state
+        if not state then
+            shedletskyKillerDetectionTimes = {}
+        end
+    end
+})
+
+
+ShedletskySection:Slider({
+    Title = "Auto Slash Radius",
+    Step = 1,
+    Value = { Min = 1, Max = 20, Default = 10 },
+    Callback = function(value)
+        shedletskyAutoSlashRadius = value
+        shedletskyAutoSlashRadiusSq = value * value
+    end
+})
+
+
+ShedletskySection:Slider({
+    Title = "Set Slash Time",
+    Step = 0.5,
+    Value = { Min = 0, Max = 5, Default = 1 },
+    Callback = function(value)
+        shedletskySetSlashTime = value
+    end
+})
+
+
+----------------------------------------------------------------
+-- Interface Tab
+----------------------------------------------------------------
+local InterfaceTab = Window:Tab({
+    Title = "Interface",
+    Icon = "scan",
+    Locked = false,
+})
+
+
+----------------------------------------------------------------
+-- UI Functions Section
+----------------------------------------------------------------
+local UIFunctionsSection = InterfaceTab:Section({ 
+    Title = "UI Functions",
+    Opened = true,
+})
+
+
+-- Close UI
+InterfaceTab:Button({
+    Title = "Close UI",
+    Locked = false,
+    Callback = function()
+        Window:Destroy()
+    end
+})

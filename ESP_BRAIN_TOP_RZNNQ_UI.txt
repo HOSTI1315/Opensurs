@@ -1,0 +1,136 @@
+--@rznnq ui 
+--ESP TOP BRAINROT-DISCORD @rznnq (working in STEAL A BRAINROT uwu)
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local Workspace=game:GetService("Workspace")
+local TweenService=game:GetService("TweenService")
+local lp=Players.LocalPlayer
+local cam=Workspace.CurrentCamera
+local cfg={UpdateInterval=1,TextColor=Color3.new(1,1,0),TextSize=18,MaxDist=1000,ShowDist=true}
+local curESP
+local bestAnim
+local lastUp=0
+local function parseVal(s)
+if not s or type(s)~="string"then return 0 end
+if not string.match(s,"%$.*[/%s]s$")then return 0 end
+local cl=s:gsub("%$",""):gsub("/s",""):gsub("/S",""):lower()
+local m={k=1e3,m=1e6,b=1e9,t=1e12,q=1e15}
+local n,su=cl:match("([%d%.]+)([kmbtq]?)")
+n=tonumber(n)or 0
+if su and m[su]then n=n*m[su]end
+return n
+end
+local function getDispName()
+return lp.DisplayName
+end
+local function isMyPlot(p)
+local s,sg=pcall(function()return p:FindFirstChild("PlotSign")end)
+if not s or not sg then return false end
+local s2,lb=pcall(function()return sg.SurfaceGui.Frame.TextLabel end)
+if not s2 or not lb then return false end
+local t=lb.Text or""
+local n=getDispName()
+return string.find(t:lower(),n:lower())~=nil
+end
+local function findAnims(p)
+local a={}
+local function srch(o)
+for _,c in pairs(o:GetChildren())do
+if c.Name=="AnimalPodiums"then
+for _,pd in pairs(c:GetChildren())do
+local s,d=pcall(function()
+local bs=pd:FindFirstChild("Base")
+local sp=bs and bs:FindFirstChild("Spawn")
+local at=sp and sp:FindFirstChild("Attachment")
+local oh=at and at:FindFirstChild("AnimalOverhead")
+local dp=oh and oh:FindFirstChild("DisplayName")
+local gn=oh and oh:FindFirstChild("Generation")
+if dp and gn then
+return{displayName=dp.Text,generation=gn.Text,position=sp.Position,object=sp}
+end
+end)
+if s and d then table.insert(a,d)end
+end
+else srch(c)end
+end
+end
+srch(p)
+return a
+end
+local function createESP(anim)
+local bg=Instance.new("BillboardGui")
+bg.Name="AnimalESP"
+bg.Size=UDim2.new(0,200,0,100)
+bg.StudsOffset=Vector3.new(0,3,0)
+bg.AlwaysOnTop=true
+bg.Parent=anim.object
+local f=Instance.new("Frame")
+f.Size=UDim2.new(1,0,1,0)
+f.BackgroundTransparency=0.3
+f.BackgroundColor3=Color3.new(0,0,0)
+f.BorderSizePixel=0
+f.Parent=bg
+local crn=Instance.new("UICorner")
+crn.CornerRadius=UDim.new(0,8)
+crn.Parent=f
+local nmLbl=Instance.new("TextLabel")
+nmLbl.Size=UDim2.new(1,0,0.5,0)
+nmLbl.BackgroundTransparency=1
+nmLbl.Text=anim.displayName
+nmLbl.TextColor3=cfg.TextColor
+nmLbl.TextScaled=true
+nmLbl.Font=Enum.Font.GothamBold
+nmLbl.Parent=f
+local gnLbl=Instance.new("TextLabel")
+gnLbl.Size=UDim2.new(1,0,0.5,0)
+gnLbl.Position=UDim2.new(0,0,0.5,0)
+gnLbl.BackgroundTransparency=1
+gnLbl.Text=anim.generation
+gnLbl.TextColor3=Color3.new(0,1,0)
+gnLbl.TextScaled=true
+gnLbl.Font=Enum.Font.Gotham
+gnLbl.Parent=f
+local tw=TweenService:Create(f,TweenInfo.new(2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{BackgroundColor3=Color3.new(0.2,0.2,0.2)})
+tw:Play()
+return bg
+end
+local function rmESP()
+if curESP then curESP:Destroy()curESP=nil end
+end
+local function findBest()
+local best=nil
+local high=0
+local nm=getDispName()
+local plts=Workspace:FindFirstChild("Plots")
+if not plts then return nil end
+for _,p in pairs(plts:GetChildren())do
+if not isMyPlot(p)then
+local anims=findAnims(p)
+for _,a in pairs(anims)do
+local v=parseVal(a.generation)
+if v>high then high=v best=a end
+end
+end
+end
+return best
+end
+local function upd()
+local n=tick()
+if n-lastUp<cfg.UpdateInterval then return end
+lastUp=n
+local b=findBest()
+if b then
+if not bestAnim or bestAnim.displayName~=b.displayName or bestAnim.generation~=b.generation then
+rmESP()
+curESP=createESP(b)
+bestAnim=b
+end
+else rmESP()bestAnim=nil end
+end
+local function main()
+upd()
+local cn=RunService.Heartbeat:Connect(upd)
+Players.PlayerRemoving:Connect(function(pl)if pl==lp then cn:Disconnect()rmESP()end end)
+end
+
+main()

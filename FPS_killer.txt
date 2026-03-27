@@ -1,0 +1,483 @@
+-- // MENU GUI
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.ResetOnSpawn = false
+
+-- Nome do Criador no topo da tela (fora do painel), com ciclo de cores
+local Creator = Instance.new("TextLabel", ScreenGui)
+Creator.Size = UDim2.new(1, 0, 0, 20)
+Creator.Position = UDim2.new(0, 0, 0, 0)  -- topo fixo
+Creator.BackgroundTransparency = 1
+Creator.Text = "CRIADOR: @luandeandradehoel  @vinizzdormiu"
+Creator.Font = Enum.Font.GothamBlack
+Creator.TextScaled = true
+Creator.TextColor3 = Color3.fromRGB(255, 0, 0) -- cor inicial, vai animar
+Creator.TextXAlignment = Enum.TextXAlignment.Center
+Creator.ZIndex = 10
+
+task.spawn(function()
+    while true do
+        for i = 0, 1, 0.01 do
+            Creator.TextColor3 = Color3.fromHSV(i, 1, 1)
+            task.wait(0.03)
+        end
+    end
+end)
+
+-- Texto SCRIPT PAGO pequeno, centralizado no meio da tela
+local Pago = Instance.new("TextLabel", ScreenGui)
+Pago.Size = UDim2.new(0, 280, 0, 18)
+Pago.Position = UDim2.new(0.5, -140, 0.5, -9) -- centro exato da tela
+Pago.BackgroundTransparency = 1
+Pago.Text = "SCRIPT PAGO APENAS EM: https:https://discord.gg/rAugnU5bgB"
+Pago.TextColor3 = Color3.fromRGB(255, 120, 120)
+Pago.Font = Enum.Font.GothamBold
+Pago.TextSize = 12
+Pago.TextXAlignment = Enum.TextXAlignment.Center
+Pago.TextYAlignment = Enum.TextYAlignment.Center
+Pago.ZIndex = 10
+
+-- Painel principal menor (mais compacto)
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 180, 0, 90)
+Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Name = "MainPanel"
+
+local UIStroke = Instance.new("UIStroke", Frame)
+UIStroke.Color = Color3.fromRGB(0, 0, 0)
+UIStroke.Thickness = 2
+
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 8)
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Text = "FPS DEVORE V1"
+Title.Size = UDim2.new(1, 0, 0, 20)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+
+-- Função para criar botões pequenos lado a lado
+local function MakeSmallButton(name, color, x)
+    local btn = Instance.new("TextButton", Frame)
+    btn.Size = UDim2.new(0, 80, 0, 25)
+    btn.Position = UDim2.new(x, 0, 0, 25)
+    btn.BackgroundColor3 = color
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    return btn
+end
+
+local COLOR_OFF = Color3.fromRGB(100, 100, 100)
+local COLOR_ON = Color3.fromRGB(40, 200, 60)
+
+-- Botões LAG e ESP lado a lado
+local ToggleLag = MakeSmallButton("LAG", COLOR_OFF, 0.01)       -- Esquerda
+local ToggleESP = MakeSmallButton("ESP", COLOR_OFF, 0.49)       -- Direita
+
+-- Botão CONFIG centralizado abaixo dos dois
+local ToggleConfig = MakeSmallButton("CONFIG", COLOR_OFF, 0.5)
+ToggleConfig.Position = UDim2.new(0.5, -40, 0, 55) -- centralizado e mais embaixo
+
+--------------------------------------------
+-- ITENS BLOQUEADOS
+--------------------------------------------
+local BLOCKED = {
+    ["BlackHole Bomb"] = true,
+    ["Ban Hammer"] = true,
+    ["Laser Gun"] = true,
+    ["Bat"] = true,
+    ["Coil Combo"] = true,
+    ["Taser Gun"] = true,
+    ["Speed Coil"] = true,
+    ["Trap"] = true,
+    ["Rage Table"] = true,
+    ["Gravity Coil"] = true,
+    ["Bee Launcher"] = true,
+    ["Attack Doge"] = true,
+    ["HeatseeKer"] = true,
+    ["Subspace Mine"] = true,
+    ["Gummy Bear"] = true,
+    ["BeeHive"] = true,
+    ["Megaphone"] = true,
+    ["Magnet"] = true,
+    ["Heart Balloon"] = true,
+    ["Paintball Gun"] = true,
+    ["Boogie Bomb"] = true,
+    ["Medusa's Head"] = true,
+    ["Invisibility Cloak"] = true,
+    ["Body Swap Potion"] = true,
+    ["Web Slinger"] = true,
+    ["Grapple Hook"] = true,
+    ["Quantum Cloner"] = true,
+    ["Laser Cape"] = true,
+    ["Rainbowrath Sword"] = true,
+    ["All Seeing Sentry"] = true,
+    ["Flying Carpet"] = true,
+    ["Lava Blaster"] = true,
+    ["Rainbow Huge Tree"] = true,
+    ["Small Tree"] = true,
+    ["Rainbow Medium Tree"] = true,
+    ["Medium Tree"] = true,
+    ["Rainbow Hammer"] = true,
+    ["Sweet Scythe"] = true,
+    ["Rainbow Small Tree"] = true,
+    ["Witch's Broom"] = true,
+    ["Lollipop"] = true,
+    ["Ying Yang Lamp"] = true,
+    ["Bloodmoon Hammer"] = true,
+    ["Candy Coil"] = true,
+}
+
+--------------------------------------------
+-- FUNÇÕES DE EQUIPAR E SPAM
+--------------------------------------------
+local enabledLag = false
+local enabledESP = false
+local lagThread = nil
+
+local function EquipAllTools()
+    local player = LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
+    local char = player.Character or player.CharacterAdded:Wait()
+
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and not BLOCKED[tool.Name] then
+            tool.Parent = char
+            task.wait(0.001)
+        end
+    end
+end
+
+local function SpamTools()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") and not BLOCKED[tool.Name] then
+            pcall(function()
+                tool:Activate()
+            end)
+        end
+    end
+end
+
+local function StartLag()
+    if lagThread then return end
+    lagThread = task.spawn(function()
+        local player = LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+
+        while enabledLag do
+            local startTime = tick()
+            local char = player.Character or player.CharacterAdded:Wait()
+
+            -- Equipar Quantum Cloner se não estiver equipado
+            local hasQuantum = false
+            for _, tool in ipairs(char:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Quantum Cloner" then
+                    hasQuantum = true
+                    break
+                end
+            end
+            if not hasQuantum then
+                for _, tool in ipairs(backpack:GetChildren()) do
+                    if tool:IsA("Tool") and tool.Name == "Quantum Cloner" then
+                        tool.Parent = char
+                        break
+                    end
+                end
+            end
+
+            -- Spam ativo 0.5s
+            while tick() - startTime < 0.5 and enabledLag do
+                EquipAllTools()
+                SpamTools()
+
+                -- Spam Quantum Cloner
+                for _, tool in ipairs(char:GetChildren()) do
+                    if tool:IsA("Tool") and tool.Name == "Quantum Cloner" then
+                        pcall(function()
+                            tool:Activate()
+                        end)
+                    end
+                end
+
+                -- Clique rápido simulando uso do Quantum Cloner
+                local mousePos = UserInputService:GetMouseLocation()
+                pcall(function()
+                    UserInputService:SendMouseButtonEvent(mousePos.X, mousePos.Y, true, true)
+                end)
+
+                task.wait(0.001)
+            end
+
+            -- Pausa 0.03s
+            task.wait(0.03)
+        end
+        lagThread = nil
+    end)
+end
+
+ToggleLag.MouseButton1Click:Connect(function()
+    enabledLag = not enabledLag
+    ToggleLag.BackgroundColor3 = enabledLag and COLOR_ON or COLOR_OFF
+    if enabledLag then
+        StartLag()
+    end
+end)
+
+--------------------------------------------
+-- ESP
+--------------------------------------------
+local espConnections = {}
+
+local function ApplyESP(plr)
+    if plr == LocalPlayer then return end
+    local char = plr.Character
+    if not char then return end
+
+    if char:FindFirstChild("NameBillboard") then
+        char.NameBillboard:Destroy()
+    end
+
+    if not char:FindFirstChild("Highlight") then
+        local hl = Instance.new("Highlight", char)
+        hl.FillTransparency = 1
+        hl.OutlineTransparency = 0
+        hl.OutlineColor = Color3.fromRGB(255, 0, 0)
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    else
+        char.Highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    end
+end
+
+local function RemoveESP(plr)
+    if plr.Character then
+        if plr.Character:FindFirstChild("Highlight") then
+            plr.Character.Highlight:Destroy()
+        end
+        if plr.Character:FindFirstChild("NameBillboard") then
+            plr.Character.NameBillboard:Destroy()
+        end
+    end
+end
+
+ToggleESP.MouseButton1Click:Connect(function()
+    enabledESP = not enabledESP
+    ToggleESP.BackgroundColor3 = enabledESP and COLOR_ON or COLOR_OFF
+
+    if enabledESP then
+        for _, plr in ipairs(Players:GetPlayers()) do
+            ApplyESP(plr)
+        end
+        espConnections[#espConnections+1] = Players.PlayerAdded:Connect(ApplyESP)
+    else
+        for _, plr in ipairs(Players:GetPlayers()) do
+            RemoveESP(plr)
+        end
+        for _, c in ipairs(espConnections) do
+            c:Disconnect()
+        end
+        espConnections = {}
+    end
+end)
+
+--------------------------------------------
+-- PAINEL CONFIGURAÇÃO
+--------------------------------------------
+
+local ConfigFrame = Instance.new("Frame", ScreenGui)
+ConfigFrame.Size = UDim2.new(0, 180, 0, 130) -- tamanho para comportar os botões extras
+ConfigFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+ConfigFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+ConfigFrame.Visible = false
+ConfigFrame.Active = true
+ConfigFrame.Draggable = true
+ConfigFrame.Name = "ConfigPanel"
+
+local configStroke = Instance.new("UIStroke", ConfigFrame)
+configStroke.Color = Color3.fromRGB(0, 0, 0)
+configStroke.Thickness = 2
+
+local configCorner = Instance.new("UICorner", ConfigFrame)
+configCorner.CornerRadius = UDim.new(0, 8)
+
+local configTitle = Instance.new("TextLabel", ConfigFrame)
+configTitle.Text = "CONFIGURAÇÕES"
+configTitle.Size = UDim2.new(1, 0, 0, 20)
+configTitle.BackgroundTransparency = 1
+configTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+configTitle.Font = Enum.Font.GothamBold
+configTitle.TextSize = 14
+
+-- Jump Power e Speed Setup
+local jumpPowerEnabled = false
+local speedEnabled = false
+
+local player = LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+local function updateHumanoid()
+    char = player.Character or player.CharacterAdded:Wait()
+    humanoid = char:WaitForChild("Humanoid")
+
+    -- Aplicar valores atuais
+    if speedEnabled and humanoid then
+        humanoid.WalkSpeed = 50
+    else
+        humanoid.WalkSpeed = 16
+    end
+
+    if jumpPowerEnabled and humanoid then
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = 60
+    else
+        if humanoid then
+            humanoid.UseJumpPower = false
+            humanoid.JumpPower = 50
+        end
+    end
+end
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    updateHumanoid()
+end)
+
+-- Botão Jump Power
+local jumpBtn = Instance.new("TextButton", ConfigFrame)
+jumpBtn.Size = UDim2.new(1, -10, 0, 25)
+jumpBtn.Position = UDim2.new(0, 5, 0, 40)
+jumpBtn.BackgroundColor3 = COLOR_OFF
+jumpBtn.Text = "Jump Power"
+jumpBtn.TextColor3 = Color3.new(1,1,1)
+jumpBtn.Font = Enum.Font.GothamBold
+jumpBtn.TextSize = 14
+jumpBtn.AutoButtonColor = false
+Instance.new("UICorner", jumpBtn).CornerRadius = UDim.new(0,8)
+
+jumpBtn.MouseButton1Click:Connect(function()
+    jumpPowerEnabled = not jumpPowerEnabled
+    jumpBtn.BackgroundColor3 = jumpPowerEnabled and COLOR_ON or COLOR_OFF
+
+    if jumpPowerEnabled then
+        if humanoid then
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = 60
+            humanoid.Jump = true
+        end
+    else
+        if humanoid then
+            humanoid.UseJumpPower = false
+            humanoid.JumpPower = 50
+        end
+    end
+end)
+
+-- Botão Speed
+local speedBtn = Instance.new("TextButton", ConfigFrame)
+speedBtn.Size = UDim2.new(1, -10, 0, 25)
+speedBtn.Position = UDim2.new(0, 5, 0, 75)
+speedBtn.BackgroundColor3 = COLOR_OFF
+speedBtn.Text = "Speed"
+speedBtn.TextColor3 = Color3.new(1,1,1)
+speedBtn.Font = Enum.Font.GothamBold
+speedBtn.TextSize = 14
+speedBtn.AutoButtonColor = false
+Instance.new("UICorner", speedBtn).CornerRadius = UDim.new(0,8)
+
+speedBtn.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    speedBtn.BackgroundColor3 = speedEnabled and COLOR_ON or COLOR_OFF
+
+    if speedEnabled then
+        if humanoid then
+            humanoid.WalkSpeed = 50
+        end
+    else
+        if humanoid then
+            humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+ToggleConfig.MouseButton1Click:Connect(function()
+    ConfigFrame.Visible = not ConfigFrame.Visible
+    ToggleConfig.BackgroundColor3 = ConfigFrame.Visible and COLOR_ON or COLOR_OFF
+end)
+
+--------------------------------------------
+-- REMOVER GRÁFICOS / TEXTURAS / SKINS
+--------------------------------------------
+task.spawn(function()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Texture") or v:IsA("Decal") then
+            v:Destroy()
+        end
+    end
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        plr.CharacterAdded:Connect(function(char)
+            task.wait(1)
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("Shirt") or p:IsA("Pants") or p:IsA("ShirtGraphic") then
+                    p:Destroy()
+                end
+                if p:IsA("Accessory") then
+                    p:Destroy()
+                end
+            end
+        end)
+    end
+end)
+
+--------------------------------------------
+-- REMOVER ACESSÓRIOS / ROUPAS AO SPAWN
+--------------------------------------------
+local player = LocalPlayer
+
+local function RemoveAccessories()
+    local char = player.Character or player.CharacterAdded:Wait()
+
+    for _, obj in ipairs(char:GetChildren()) do
+        if obj:IsA("Accessory") then
+            obj:Destroy()
+        end
+        if obj:IsA("Shirt") or obj:IsA("Pants") then
+            obj:Destroy()
+        end
+        if obj:IsA("ShirtGraphic") or obj:IsA("Decal") then
+            obj:Destroy()
+        end
+        if obj:IsA("BodyColors") then
+            obj.HeadColor = BrickColor.new("Institutional white")
+            obj.LeftArmColor = BrickColor.new("Institutional white")
+            obj.RightArmColor = BrickColor.new("Institutional white")
+            obj.LeftLegColor = BrickColor.new("Institutional white")
+            obj.RightLegColor = BrickColor.new("Institutional white")
+            obj.TorsoColor = BrickColor.new("Institutional white")
+        end
+    end
+end
+
+RemoveAccessories()
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.2)
+    RemoveAccessories()
+end)

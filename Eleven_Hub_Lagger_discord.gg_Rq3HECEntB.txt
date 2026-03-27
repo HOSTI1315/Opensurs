@@ -1,0 +1,134 @@
+-Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Backpack = Player:WaitForChild("Backpack")
+
+-- ==========================================
+-- BACKGROUND OPTIMIZATIONS (FPS BOOST)
+-- ==========================================
+Lighting.GlobalShadows = false
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+for _, v in ipairs(Lighting:GetChildren()) do
+    if v:IsA("PostEffect") then v.Enabled = false end
+end
+
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("ParticleEmitter") then v.Enabled = false end
+end
+
+local function cleanCharacter(char)
+    if char == Player.Character then return end
+    for _, a in ipairs(char:GetChildren()) do
+        if a:IsA("Accessory") then a:Destroy() end
+    end
+    char.ChildAdded:Connect(function(c)
+        if c:IsA("Accessory") then c:Destroy() end
+    end)
+end
+
+workspace.DescendantAdded:Connect(function(d)
+    if d:IsA("Humanoid") then
+        task.wait(0.1)
+        cleanCharacter(d.Parent)
+    end
+end)
+
+-- ==========================================
+-- ELEVEN HUB TINY BLUE GUI
+-- ==========================================
+local ElevenHub = Instance.new("ScreenGui")
+ElevenHub.Name = "ElevenHub_Lagger"
+ElevenHub.Parent = PlayerGui
+ElevenHub.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 110)
+MainFrame.Position = UDim2.new(0.5, -130, 0.5, -55)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 12, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true 
+MainFrame.Parent = ElevenHub
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 10)
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Thickness = 1
+MainStroke.Color = Color3.fromRGB(35, 40, 70)
+
+local Title = Instance.new("TextLabel")
+Title.Text = "Eleven Hub Lagger"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Position = UDim2.new(0, 12, 0, 12)
+Title.Size = UDim2.new(0.7, 0, 0, 20)
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+local StatusDot = Instance.new("Frame")
+StatusDot.Size = UDim2.new(0, 10, 0, 10)
+StatusDot.Position = UDim2.new(1, -22, 0, 15)
+StatusDot.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+StatusDot.BorderSizePixel = 0
+StatusDot.Parent = MainFrame
+Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+
+local ActionButton = Instance.new("TextButton")
+ActionButton.Text = "Start Lagging"
+ActionButton.Font = Enum.Font.GothamBold
+ActionButton.TextSize = 16
+ActionButton.TextColor3 = Color3.fromRGB(140, 150, 180)
+ActionButton.Size = UDim2.new(0.9, 0, 0, 40)
+ActionButton.Position = UDim2.new(0.05, 0, 0.5, -5)
+ActionButton.BackgroundColor3 = Color3.fromRGB(20, 22, 40)
+ActionButton.BorderSizePixel = 0
+ActionButton.AutoButtonColor = true
+ActionButton.Parent = MainFrame
+Instance.new("UICorner", ActionButton).CornerRadius = UDim.new(0, 6)
+
+-- ==========================================
+-- LAGGING LOGIC (FUNCTIONALITY)
+-- ==========================================
+ActionButton.MouseButton1Click:Connect(function()
+    local char = Player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local tool = Backpack:FindFirstChild("Quantum Cloner")
+
+    if not hum or not tool then
+        ActionButton.Text = "TOOL NOT FOUND"
+        task.wait(1)
+        ActionButton.Text = "Start Lagging"
+        return
+    end
+
+    -- Visual Feedback
+    ActionButton.Text = "WORKING..."
+    ActionButton.BackgroundColor3 = Color3.fromRGB(35, 45, 90)
+    ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    -- Execution
+    hum:EquipTool(tool)
+    task.wait(0.1)
+
+    for _, t in ipairs(Backpack:GetChildren()) do
+        if t:IsA("Tool") then t.Parent = char end
+    end
+
+    task.wait(0.1)
+    tool:Activate()
+
+    task.delay(0.6, function()
+        ActionButton.Text = "Start Lagging"
+        ActionButton.BackgroundColor3 = Color3.fromRGB(20, 22, 40)
+        ActionButton.TextColor3 = Color3.fromRGB(140, 150, 180)
+    end)
+end)

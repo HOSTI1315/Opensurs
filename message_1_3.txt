@@ -1,0 +1,2538 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local Animator = Humanoid:FindFirstChildOfClass("Animator")
+local Camera = workspace.CurrentCamera
+
+
+local VOID_Y = -100
+local baseplate = workspace:FindFirstChild("VoidSafePlate")
+if not baseplate then
+    baseplate = Instance.new("Part")
+    baseplate.Name = "VoidSafePlate"
+    baseplate.Size = Vector3.new(300, 1, 300)
+    baseplate.Position = Vector3.new(0, VOID_Y - 5, 0)
+    baseplate.Anchored = true
+    baseplate.CanCollide = true
+    baseplate.Transparency = 1
+    baseplate.Parent = workspace
+end
+
+
+local AutoWhirlwindDunk = false
+local AutoWallCombo = false
+local AntiInvisibility = false
+local EspDeathCounter = false
+local EspUltBar = false
+local EspEveryone = false
+local SpeedEnabled = false
+local FakeDownslam = false
+local SpeedValue = 9
+local JumpValue = 200
+local WallComboConnection1 = nil
+local WallComboConnection2 = nil
+local AntiAfkConnection = nil
+local InvisibilityCache = {}
+local EspData = {}
+local UltEspData = {}
+local DeathEspData = {}
+
+local TeleportPosition = Vector3.new(150, -495, 30)
+local AutoVoidEnabled = false
+local AutoRoastEnabled = false
+local IsVoiding = false
+local TpBackEnabled = false
+
+local WhirlwindAnimId = "rbxassetid://12296113986"
+
+local InvisAnimIds = {
+    ["136370737633649"] = true,
+    ["18182425133"] = true,
+    ["18236605028"] = true
+}
+
+local WallComboAnimIds = {
+    ["rbxassetid://17325537719"] = true,
+    ["rbxassetid://10469643643"] = true,
+    ["rbxassetid://13294471966"] = true,
+    ["rbxassetid://13295936866"] = true,
+    ["rbxassetid://13378708199"] = true,
+    ["rbxassetid://14136436157"] = true,
+    ["rbxassetid://15162694192"] = true,
+    ["rbxassetid://16552234590"] = true,
+    ["rbxassetid://17889290569"] = true
+}
+
+local RoastMessages = {
+    "Pathetic", "Nice try, loser", "Git gud", "You're a noob", "Did you even try?",
+    "Keep dying, it's amusing", "Too easy", "Better luck next time", "That was embarrassing",
+    "You're just feeding my kills", "Can't handle the pressure?", "You call that playing?",
+    "LOL, what a scrub", "Go cry to your mommy", "Just uninstall.", "I'm not even trying.",
+    "Get rekt, scrub", "You're a joke", "Just stop trying.", "Noob alert",
+    "Stay in the kiddie pool", "Did someone forget their skills?", "Do you need a tutorial?",
+    "You make this too easy.", "You're not even worth my time.", "I've seen toddlers play better.",
+    "You're a respawn machine", "You're like a training dummy.", "Did you pay to be this bad?",
+    "Even the NPCs play better than you.", "You must be allergic to victory.",
+    "Your gameplay is a tutorial on how not to play.", "I bet you're proud of that death streak.",
+    "You're the MVP of feeding kills.", "You're like a pinata... full of free kills.",
+    "You're like a legend... in dying.", "Do you think dying is a tactic?",
+    "What The Sigma.", "Ez Kill LOL", "hehe cry more"
+}
+
+local VoidAnimations = {
+    {id = "12273188754", timewait = 0.5},
+    {id = "12296113986", timewait = 0.5},
+    {id = "15145462680", timewait = 1.5},
+    {id = "16139108718", timewait = 0.1},
+    {id = "17889080495", timewait = 0},
+    {id = "14705929107", timewait = 1.3},
+    {id = "14701242661", timewait = 3},
+    {id = "14920779925", timewait = 0.2},
+    {id = "16062712948", timewait = 1}
+}
+
+local AutoBlockEnabled = false
+local AutoBlockIsBlocking = false
+local AutoBlockCloseRange = 14
+local AutoBlockLongRange = 35
+local M1AfterBlockEnabled = false
+
+local CloseRangeAnimations = {
+    "rbxassetid://16552234590", "rbxassetid://17889290569", "rbxassetid://17889461810",
+    "rbxassetid://17889458563", "rbxassetid://17889471098", "rbxassetid://16515448089",
+    "rbxassetid://16515520431", "rbxassetid://16515503507", "rbxassetid://15162694192",
+    "rbxassetid://15240176873", "rbxassetid://15240216931", "rbxassetid://15259161390",
+    "rbxassetid://14136436157", "rbxassetid://14001963401", "rbxassetid://13997092940",
+    "rbxassetid://14004222985", "rbxassetid://13378708199", "rbxassetid://13378751717",
+    "rbxassetid://13390230973", "rbxassetid://13295936866", "rbxassetid://13295919399",
+    "rbxassetid://13296577783", "rbxassetid://13491635433", "rbxassetid://13294471966",
+    "rbxassetid://13532604085", "rbxassetid://13532600125", "rbxassetid://13532562418",
+    "rbxassetid://10469643643", "rbxassetid://10469630950", "rbxassetid://10469639222",
+    "rbxassetid://10469493270", "rbxassetid://10479335397", "rbxassetid://17325537719",
+    "rbxassetid://17325522388", "rbxassetid://17325510002", "rbxassetid://17325513870",
+    "rbxassetid://13380255751", "rbxassetid://17857788598", "rbxassetid://17799224866",
+    "rbxassetid://10470104242", "rbxassetid://10503381238", "rbxassetid://18464351556",
+    "rbxassetid://10466974800", "rbxassetid://10468665991", "rbxassetid://12509505723",
+    "rbxassetid://18179181663", "rbxassetid://17857880283", "rbxassetid://12534735382",
+    "rbxassetid://12296882427", "rbxassetid://12272894215", "rbxassetid://15290930205",
+    "rbxassetid://16431491215", "rbxassetid://16515850153", "rbxassetid://16139402582",
+    "rbxassetid://13362587853", "rbxassetid://16139108718", "rbxassetid://14046756619",
+    "rbxassetid://134775406437626", "rbxassetid://104895379416342", "rbxassetid://100059874351664",
+    "rbxassetid://123005629431309", "rbxassetid://98542310119798", "rbxassetid://77509627104305",
+    "rbxassetid://113166426814229", "rbxassetid://13376869471", "rbxassetid://15295895753",
+    "rbxassetid://13370310513", "rbxassetid://125955606488863"
+}
+
+local LongRangeAnimations = {
+    "rbxassetid://10479335397", "rbxassetid://10468665991", "rbxassetid://12684185971",
+    "rbxassetid://12509505723", "rbxassetid://12684390285", "rbxassetid://17275150809",
+    "rbxassetid://131820095363270", "rbxassetid://13362587853", "rbxassetid://14046756619",
+    "rbxassetid://15295895753", "rbxassetid://15290930205", "rbxassetid://13380255751"
+}
+
+local CharacterGame = Character
+local HumanoidGame = Humanoid
+local AnimatorGame = Animator
+local LocalPlayerGame = LocalPlayer
+
+workspace.FallenPartsDestroyHeight = -math.huge
+
+
+local AkihaEnabled = false
+local BloodHeatActive = false
+local BloodHeatDeprecated = false
+local ComboHits = 0
+local ComboDamage = 0
+local LastHitTime = os.clock()
+local ComboTimeout = 5
+local EnemyHealth = nil
+local OldEnemyHealth = nil
+local CustomJumpEnabled = false
+local CustomAnimationsEnabled = false
+local LightningEffectsEnabled = false
+local CameraShakeEnabled = false
+local CustomLightingEnabled = false
+local BackgroundMusicEnabled = false
+
+
+local CameraShaker, CameraShakeInstance
+pcall(function()
+    CameraShaker = loadstring(game:HttpGet("https://raw.githubusercontent.com/Reapvitalized/AllAssetsForRecent/refs/heads/main/CameraShaker.lua"))()
+    CameraShakeInstance = loadstring(game:HttpGet("https://raw.githubusercontent.com/Reapvitalized/AllAssetsForRecent/refs/heads/main/CameraShakeInstance.lua"))()
+end)
+
+
+local LightningModule
+pcall(function()
+    local v = Instance.new('Folder')
+    v.Parent = ReplicatedStorage
+    v.Name = 'WR'
+    local r = Instance.new('Folder')
+    r.Parent = v
+    r.Name = 'RS'
+    local rs = Instance.new('Folder')
+    rs.Parent = r
+    rs.Name = 'Effects'
+    LightningModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/Reapvitalized/AllAssetsForRecent/refs/heads/main/LightningModule.lua"))()
+end)
+
+
+local GlobalCameraShaker
+if CameraShaker then
+    GlobalCameraShaker = CameraShaker.new(Enum.RenderPriority.Camera.Value + 1, function(ShakeCFrame)
+        workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * ShakeCFrame
+    end)
+    GlobalCameraShaker:Start()
+end
+
+
+local OriginalLighting = {}
+local SavedAtmospheres = {}
+local SavedBlooms = {}
+
+local function SaveOriginalLighting()
+    OriginalLighting.ClockTime = Lighting.ClockTime
+    OriginalLighting.Ambient = Lighting.Ambient
+    OriginalLighting.Brightness = Lighting.Brightness
+    OriginalLighting.ColorShift_Bottom = Lighting.ColorShift_Bottom
+    OriginalLighting.ColorShift_Top = Lighting.ColorShift_Top
+    OriginalLighting.EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale
+    OriginalLighting.EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale
+    OriginalLighting.GlobalShadows = Lighting.GlobalShadows
+    OriginalLighting.OutdoorAmbient = Lighting.OutdoorAmbient
+    OriginalLighting.ShadowSoftness = Lighting.ShadowSoftness
+    OriginalLighting.ExposureCompensation = Lighting.ExposureCompensation
+    
+    SavedAtmospheres = {}
+    SavedBlooms = {}
+    for _, child in ipairs(Lighting:GetChildren()) do
+        if child:IsA('Atmosphere') then
+            local clone = child:Clone()
+            clone.Parent = nil
+            table.insert(SavedAtmospheres, {original = child, clone = clone})
+        elseif child:IsA('BloomEffect') then
+            local clone = child:Clone()
+            clone.Parent = nil
+            table.insert(SavedBlooms, {original = child, clone = clone})
+        end
+    end
+end
+
+local function ApplyCustomLighting()
+    for _, child in ipairs(Lighting:GetChildren()) do
+        if child:IsA('Atmosphere') or child:IsA('BloomEffect') then
+            child.Enabled = false
+        end
+    end
+    
+    Lighting.ClockTime = 0
+    Lighting.Ambient = Color3.fromRGB(108, 124, 144)
+    Lighting.Brightness = 2.25
+    Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+    Lighting.ColorShift_Top = Color3.fromRGB(215, 190, 135)
+    Lighting.EnvironmentDiffuseScale = 0.2
+    Lighting.EnvironmentSpecularScale = 0.2
+    Lighting.GlobalShadows = true
+    Lighting.OutdoorAmbient = Color3.fromRGB(106, 106, 106)
+    Lighting.ShadowSoftness = 0.2
+    Lighting.ExposureCompensation = 0.2
+    
+    pcall(function()
+        sethiddenproperty(Lighting, "Technology", "ShadowMap")
+    end)
+    
+    local Atmosphere = Instance.new("Atmosphere", Lighting)
+    Atmosphere.Name = "AkihaAtmosphere"
+    Atmosphere.Density = 0.2
+    Atmosphere.Offset = 0.556
+    Atmosphere.Color = Color3.new(0.5, 0.343, 0.325)
+    Atmosphere.Glare = 0.36
+    Atmosphere.Haze = 1.72
+    Atmosphere.Decay = Color3.new(0, 0, 0)
+    
+    local Bloom = Instance.new("BloomEffect", Lighting)
+    Bloom.Name = "AkihaBloom"
+    Bloom.Threshold = 0.5
+    Bloom.Intensity = 0.3
+    Bloom.Size = 10
+end
+
+local function RestoreLighting()
+    pcall(function()
+        local akihaAtmos = Lighting:FindFirstChild("AkihaAtmosphere")
+        local akihaBloom = Lighting:FindFirstChild("AkihaBloom")
+        if akihaAtmos then akihaAtmos:Destroy() end
+        if akihaBloom then akihaBloom:Destroy() end
+    end)
+    
+    for prop, val in pairs(OriginalLighting) do
+        pcall(function() Lighting[prop] = val end)
+    end
+    
+    for _, child in ipairs(Lighting:GetChildren()) do
+        if child:IsA('Atmosphere') or child:IsA('BloomEffect') then
+            child.Enabled = true
+        end
+    end
+end
+
+SaveOriginalLighting()
+
+
+local JumpDebounce = false
+local IsGliding = false
+local CurrentBodyGyro = nil
+local JumpConnection = nil
+local OriginalGravity = workspace.Gravity
+
+local function CleanupJumpSystem()
+    if CurrentBodyGyro then
+        pcall(function() CurrentBodyGyro:Destroy() end)
+        CurrentBodyGyro = nil
+    end
+    IsGliding = false
+    JumpDebounce = false
+end
+
+local function SetupCustomJumpSystem(char)
+    if not CustomJumpEnabled then return end
+    if not char then return end
+    
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not hrp then return end
+    
+    OriginalGravity = workspace.Gravity
+    workspace.Gravity = 80
+    hum.JumpPower = 25
+    hum.JumpHeight = 7.2
+    
+    if JumpConnection then
+        pcall(function() JumpConnection:Disconnect() end)
+    end
+    
+    JumpConnection = UserInputService.JumpRequest:Connect(function()
+        if not CustomJumpEnabled then return end
+        if JumpDebounce then return end
+        
+        JumpDebounce = true
+        IsGliding = true
+        
+        local bodyGyro = Instance.new('BodyGyro', hrp)
+        bodyGyro.Name = 'AkihaJumpGyro'
+        bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10^15
+        bodyGyro.D = 4500
+        bodyGyro.P = 15500
+        CurrentBodyGyro = bodyGyro
+        
+        hum:ChangeState(Enum.HumanoidStateType.Flying)
+        bodyGyro.CFrame = hrp.CFrame * CFrame.Angles(math.rad(-45), 0, 0)
+        
+        local wasAutoRotate = hum.AutoRotate
+        hum.AutoRotate = false
+        
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://121032789756540"
+        local animTrack
+        pcall(function()
+            animTrack = hum:LoadAnimation(Anim)
+            animTrack:Play(0.3)
+            animTrack.Priority = Enum.AnimationPriority.Action
+            animTrack:AdjustSpeed(1)
+            animTrack.TimePosition = 5
+        end)
+        
+        task.spawn(function()
+            local startTime = tick()
+            while CurrentBodyGyro and CurrentBodyGyro.Parent == hrp and (tick() - startTime) < 8 do
+                bodyGyro.D = 1500 - math.sin((tick() - startTime) * 10) * 1500
+                task.wait(0.01)
+            end
+        end)
+        
+        task.delay(0.2, function()
+            JumpDebounce = false
+            if animTrack then
+                animTrack:AdjustSpeed(0.2)
+            end
+            
+            repeat task.wait() until not char or not char.Parent or hum.FloorMaterial ~= Enum.Material.Air or not CustomJumpEnabled
+            
+            CleanupJumpSystem()
+            hum.AutoRotate = wasAutoRotate
+            
+            if animTrack then
+                animTrack:Stop()
+            end
+            
+            local landAnim = Instance.new("Animation")
+            landAnim.AnimationId = "rbxassetid://18462892217"
+            pcall(function()
+                local landTrack = hum:LoadAnimation(landAnim)
+                landTrack:Play(0.1)
+                landTrack.Priority = Enum.AnimationPriority.Action
+                landTrack:AdjustSpeed(1.4)
+                task.wait(0.4)
+                landTrack:Stop(0.3)
+            end)
+        end)
+    end)
+    
+    return JumpConnection
+end
+
+local function DisableCustomJump()
+    if JumpConnection then
+        pcall(function() JumpConnection:Disconnect() end)
+        JumpConnection = nil
+    end
+    CleanupJumpSystem()
+    workspace.Gravity = OriginalGravity or 196.2
+end
+
+
+local MoveAnimIds = {
+    Move1Start = "rbxassetid://72533960079559",
+    Move1End = "rbxassetid://105405781808472",
+    Move1Second = "rbxassetid://102989537449083",
+    Move1Third = "rbxassetid://82365328621192",
+    Move2Start = "rbxassetid://105442749844047",
+    Move2End = "rbxassetid://131820095363270",
+    Move2Hit = "rbxassetid://94638356008696",
+}
+
+local function FindNearestEnemy()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    
+    local nearestEnemy = nil
+    local nearestDist = math.huge
+    
+    for _, part in ipairs(workspace.Live:GetChildren()) do
+        if part:IsA('Model') and part ~= char and part:FindFirstChild('HumanoidRootPart') then
+            local enemyHum = part:FindFirstChildOfClass("Humanoid")
+            if enemyHum and enemyHum.Health > 0 then
+                local dist = (part.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if dist < nearestDist and dist < 20 then
+                    nearestDist = dist
+                    nearestEnemy = part
+                end
+            end
+        end
+    end
+    
+    return nearestEnemy
+end
+
+local function DoHitEffect(doLightning, dir, amount)
+    DoCustomShake()
+    
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local target = EnemyTarget or FindNearestEnemy()
+    
+    if doLightning and target and target:FindFirstChild("HumanoidRootPart") then
+        CreateLightningEffect(hrp.Position, target.HumanoidRootPart.Position + Vector3.new(0, dir or 15, 0))
+    end
+    
+    local p = Instance.new('Part')
+    p.Parent = workspace:FindFirstChild("Thrown") or workspace
+    p.Material = Enum.Material.Neon
+    p.Size = Vector3.new(1, 1, 1)
+    p.Anchored = true
+    p.CanCollide = false
+    p.Color = Color3.new(1, 0, 0)
+    
+    local msh = Instance.new("SpecialMesh", p)
+    msh.MeshType = "Sphere"
+    msh.Scale = Vector3.new(1, 1, 15)
+    
+    if target and target:FindFirstChild("HumanoidRootPart") then
+        task.spawn(function()
+            for i = 1, 55 do
+                if not target or not target:FindFirstChild("HumanoidRootPart") then break end
+                p.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2 + i / 3)
+                task.wait(0.01)
+            end
+        end)
+    end
+    
+    game:GetService("Debris"):AddItem(p, 1)
+    TweenService:Create(msh, TweenInfo.new(0.3), { Scale = Vector3.new(0, 0, 15) }):Play()
+    
+    for i = 1, (amount or 5) do
+        local sp = Instance.new('Part')
+        sp.Parent = workspace:FindFirstChild("Thrown") or workspace
+        sp.Material = Enum.Material.Neon
+        sp.Size = Vector3.new(1, 1, 1)
+        sp.Anchored = true
+        sp.CanCollide = false
+        sp.Color = Color3.new(1, 0, 0)
+        
+        local sm = Instance.new("SpecialMesh", sp)
+        sm.MeshType = "Sphere"
+        sm.Scale = Vector3.new(3, 1, 3)
+        
+        if target and target:FindFirstChild("HumanoidRootPart") then
+            task.spawn(function()
+                for j = 1, 35 do
+                    if not target or not target:FindFirstChild("HumanoidRootPart") then break end
+                    sp.CFrame = target.HumanoidRootPart.CFrame * CFrame.Angles(math.random(-90, 90), math.random(-90, 90), math.random(-90, 90))
+                    task.wait(0.01)
+                end
+            end)
+        end
+        
+        game:GetService("Debris"):AddItem(sp, 1.5)
+        TweenService:Create(sm, TweenInfo.new(0.5), { Scale = Vector3.new(0, 5 + i * 4, 0) }):Play()
+    end
+end
+
+local function HandleMoveAnimation(animTrack, char)
+    if not CustomAnimationsEnabled then return end
+    local animId = animTrack.Animation.AnimationId
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not hrp then return end
+    
+    if not EnemyTarget or not EnemyTarget:FindFirstChild("HumanoidRootPart") then
+        EnemyTarget = FindNearestEnemy()
+    end
+    
+    if animId == MoveAnimIds.Move1Start then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://18462892217"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play(0.1)
+            k.Priority = Enum.AnimationPriority.Action2
+            k:AdjustSpeed(2)
+            DoHitEffect(true)
+            task.wait(0.5)
+            k:Stop()
+        end)
+        
+    elseif animId == MoveAnimIds.Move1End then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://14875678235"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play(0.1)
+            k.Priority = Enum.AnimationPriority.Action2
+            k:AdjustSpeed(1)
+            animTrack.Stopped:Wait()
+            k:Stop()
+            DoHitEffect(true)
+        end)
+        
+    elseif animId == MoveAnimIds.Move1Second then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://15134211820"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play(0.1)
+            k.Priority = Enum.AnimationPriority.Action3
+            k:AdjustSpeed(2)
+            animTrack.Stopped:Wait()
+            k:Stop(0.3)
+            DoHitEffect(true)
+        end)
+        
+    elseif animId == MoveAnimIds.Move1Third then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://89182028873490"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play(0.1)
+            k.Priority = Enum.AnimationPriority.Action3
+            k:AdjustSpeed(1)
+            k.TimePosition = 3.3
+            animTrack.Stopped:Wait()
+            k:Stop(0.3)
+            DoHitEffect()
+        end)
+        
+    elseif animId == MoveAnimIds.Move2Start then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://17860467628"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play(0.3)
+            k.Priority = Enum.AnimationPriority.Action2
+            k:AdjustSpeed(1)
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(3), { FieldOfView = 80 }):Play()
+            task.wait(1.2)
+            k:Stop()
+        end)
+        
+    elseif animId == MoveAnimIds.Move2End then
+        TweenService:Create(workspace.CurrentCamera, TweenInfo.new(3), { FieldOfView = 120 }):Play()
+        workspace.Gravity = 240
+        
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://17278415853"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play()
+            k.Priority = Enum.AnimationPriority.Action3
+            k:AdjustSpeed(0.8)
+            k.TimePosition = 2.2
+            task.wait(2)
+            k:AdjustSpeed(0.1)
+            k:Stop(0.3)
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(0.4), { FieldOfView = 70 }):Play()
+            workspace.Gravity = CustomJumpEnabled and 80 or OriginalGravity
+        end)
+        
+    elseif animId == MoveAnimIds.Move2Hit then
+        local Anim = Instance.new("Animation")
+        Anim.AnimationId = "rbxassetid://17278415853"
+        pcall(function()
+            local k = hum:LoadAnimation(Anim)
+            k:Play()
+            k.Priority = Enum.AnimationPriority.Action4
+            k:AdjustSpeed(1)
+            k.TimePosition = 2.2
+            task.wait(1.2)
+            workspace.Gravity = CustomJumpEnabled and 80 or OriginalGravity
+            DoHitEffect(true, -25, 1)
+            
+            local r = Instance.new('ColorCorrectionEffect', Lighting)
+            r.Brightness = 0.3
+            TweenService:Create(r, TweenInfo.new(1), { Brightness = 0 }):Play()
+            game:GetService("Debris"):AddItem(r, 1)
+            
+            local v = Instance.new("Highlight")
+            v.OutlineTransparency = 1
+            v.FillColor = Color3.new(1, 1, 1)
+            v.FillTransparency = 0
+            v.Parent = char
+            TweenService:Create(v, TweenInfo.new(0.3), { FillTransparency = 1, OutlineTransparency = 1 }):Play()
+            game:GetService("Debris"):AddItem(v, 0.3)
+            
+            workspace.CurrentCamera.FieldOfView = 120
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(0.3), { FieldOfView = 70 }):Play()
+            k:Stop(0.3)
+        end)
+    end
+end
+
+
+local BackgroundSound
+
+local function StartBackgroundMusic()
+    pcall(function()
+        if BackgroundSound then BackgroundSound:Destroy() end
+        BackgroundSound = Instance.new('Sound')
+        BackgroundSound.SoundId = "rbxassetid://9120060683"
+        BackgroundSound.Parent = game:GetService("SoundService")
+        BackgroundSound.Volume = 0.5
+        BackgroundSound.Looped = true
+        BackgroundSound.Name = 'AkihaVermillionBGM'
+        BackgroundSound:Play()
+    end)
+end
+
+local function StopBackgroundMusic()
+    pcall(function()
+        if BackgroundSound then
+            BackgroundSound:Stop()
+            BackgroundSound:Destroy()
+            BackgroundSound = nil
+        end
+    end)
+end
+
+
+local ComboGui, HitLabel, DamageLabel, BloodHeatLabel
+
+local function CreateComboGui()
+    pcall(function()
+        if game.CoreGui:FindFirstChild("ComboCounter") then
+            game.CoreGui:FindFirstChild("ComboCounter"):Destroy()
+        end
+    end)
+    
+    ComboGui = Instance.new("ScreenGui")
+    ComboGui.Name = "ComboCounter"
+    ComboGui.Parent = game.CoreGui
+    ComboGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    ComboGui.IgnoreGuiInset = true
+    ComboGui.ResetOnSpawn = false
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ComboGui
+    MainFrame.BackgroundTransparency = 1
+    MainFrame.Position = UDim2.new(0.93, 0, 0.4, 0)
+    MainFrame.Size = UDim2.new(0.3, 0, 0.1, 0)
+    
+    HitLabel = Instance.new("TextLabel")
+    HitLabel.Parent = MainFrame
+    HitLabel.Font = Enum.Font.Arcade
+    HitLabel.TextColor3 = Color3.new(1, 1, 1)
+    HitLabel.Position = UDim2.new(0, 0, 0, 0)
+    HitLabel.Size = UDim2.new(0.1, 0, 0.1, 0)
+    HitLabel.BackgroundTransparency = 1
+    HitLabel.TextSize = 35
+    HitLabel.Visible = false
+    HitLabel.Text = "0 Hits!"
+    
+    DamageLabel = Instance.new("TextLabel")
+    DamageLabel.Parent = MainFrame
+    DamageLabel.Font = Enum.Font.Arcade
+    DamageLabel.TextColor3 = Color3.new(1, 1, 1)
+    DamageLabel.Position = UDim2.new(-0.05, 0, 0.25, 0)
+    DamageLabel.Size = UDim2.new(0.1, 0, 0.1, 0)
+    DamageLabel.BackgroundTransparency = 1
+    DamageLabel.TextSize = 35
+    DamageLabel.Visible = false
+    DamageLabel.Text = "0 Damage!"
+    
+    BloodHeatLabel = Instance.new("TextLabel")
+    BloodHeatLabel.Parent = MainFrame
+    BloodHeatLabel.Font = Enum.Font.Arcade
+    BloodHeatLabel.Position = UDim2.new(-0.1, 0, 0.5, 0)
+    BloodHeatLabel.Size = UDim2.new(0.1, 0, 0.1, 0)
+    BloodHeatLabel.BackgroundTransparency = 1
+    BloodHeatLabel.Text = "BLOOD HEAT!!"
+    BloodHeatLabel.TextColor3 = Color3.new(1, 0, 0)
+    BloodHeatLabel.TextSize = 35
+    BloodHeatLabel.Visible = false
+end
+
+CreateComboGui()
+
+
+local function DoCustomShake()
+    if not CameraShakeEnabled or not GlobalCameraShaker or not CameraShakeInstance then return end
+    pcall(function()
+        local shake = CameraShakeInstance.new(4, 12, 0, 0.5)
+        shake.PositionInfluence = Vector3.new(0.5, 0.5, 0.5)
+        shake.RotationInfluence = Vector3.new(0, 0, 0)
+        GlobalCameraShaker:Shake(shake)
+    end)
+end
+
+
+local function CreateLightningEffect(startPos, endPos)
+    if not LightningEffectsEnabled or not LightningModule then return end
+    pcall(function()
+        for i = 1, 3 do
+            local bolt = LightningModule.new(
+                startPos + Vector3.new(math.random(-2, 2), math.random(-2, 6), math.random(-2, 2)),
+                endPos + Vector3.new(0, 15, 0),
+                { color = BrickColor.new("Really red") }
+            )
+            bolt:Draw(workspace)
+        end
+    end)
+end
+
+
+local function CreateBloodParticle(targetPart)
+    if not targetPart then return end
+    
+    local p = Instance.new('Part')
+    p.Parent = workspace:FindFirstChild("Thrown") or workspace
+    p.Material = Enum.Material.Neon
+    p.Size = Vector3.new(1, 1, 1)
+    p.Anchored = true
+    p.CanCollide = false
+    p.Transparency = 0
+    p.Color = Color3.new(1, 0, 0)
+    p.CFrame = targetPart.CFrame * CFrame.Angles(math.random(-90, 90), math.random(-90, 90), math.random(-90, 90))
+    
+    local msh = Instance.new("SpecialMesh", p)
+    msh.MeshType = "Sphere"
+    msh.Scale = Vector3.new(1, 5, 1)
+    
+    game:GetService("Debris"):AddItem(p, 1.5)
+    TweenService:Create(msh, TweenInfo.new(0.5), { Scale = Vector3.new(0, 15, 0) }):Play()
+    
+    local bld = Instance.new("ParticleEmitter", p)
+    bld.LightEmission = 1
+    bld.Brightness = 1
+    bld.Texture = "rbxassetid://10802450464"
+    bld.Rate = 0
+    bld.Lifetime = NumberRange.new(0.1, 0.2)
+    bld.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 8) })
+    bld.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+    bld.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.1, 0.2), NumberSequenceKeypoint.new(1, 1) })
+    bld.Speed = NumberRange.new(0.01)
+    bld.SpreadAngle = Vector2.new(360, 360)
+    bld.Rotation = NumberRange.new(-360, 360)
+    bld.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0), Color3.fromRGB(252, 0, 0))
+    bld:Emit(15)
+    
+    game:GetService("Debris"):AddItem(bld, 2)
+end
+
+
+local function IsPlayingEnemyAnimation(humanoid, animationList)
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        if track.Animation and table.find(animationList, track.Animation.AnimationId) then
+            return true
+        end
+    end
+    return false
+end
+
+local function StartAutoBlock()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Communicate") then
+        pcall(function()
+            char.Communicate:FireServer({ Goal = "KeyPress", Key = Enum.KeyCode.F })
+        end)
+    end
+end
+
+local function StopAutoBlock()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Communicate") then
+        pcall(function()
+            char.Communicate:FireServer({ Goal = "KeyRelease", Key = Enum.KeyCode.F })
+        end)
+    end
+end
+
+local function StartM1Attack()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Communicate") then
+        pcall(function()
+            char.Communicate:FireServer({ Goal = "LeftClick", Mobile = true })
+        end)
+    end
+end
+
+local function StopM1Attack()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Communicate") then
+        pcall(function()
+            char.Communicate:FireServer({ Goal = "LeftClickRelease", Mobile = true })
+        end)
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if not AutoBlockEnabled then
+        if AutoBlockIsBlocking then
+            StopAutoBlock()
+            AutoBlockIsBlocking = false
+        end
+        return
+    end
+    
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local myPosition = char.HumanoidRootPart.Position
+    local closeRangeTarget = nil
+    local closestCloseRange = math.huge
+    local longRangeTarget = nil
+    local closestLongRange = math.huge
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local targetChar = player.Character
+            if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+                local distance = (myPosition - targetChar.HumanoidRootPart.Position).Magnitude
+                
+                if distance < AutoBlockCloseRange and distance < closestCloseRange then
+                    closestCloseRange = distance
+                    closeRangeTarget = player
+                end
+                
+                if distance < AutoBlockLongRange and distance < closestLongRange then
+                    closestLongRange = distance
+                    longRangeTarget = player
+                end
+            end
+        end
+    end
+    
+    local shouldBlock = false
+    
+    if longRangeTarget then
+        local targetHum = longRangeTarget.Character:FindFirstChildOfClass("Humanoid")
+        if targetHum and IsPlayingEnemyAnimation(targetHum, LongRangeAnimations) then
+            shouldBlock = true
+        end
+    end
+    
+    if not shouldBlock and closeRangeTarget then
+        local targetHum = closeRangeTarget.Character:FindFirstChildOfClass("Humanoid")
+        if targetHum and IsPlayingEnemyAnimation(targetHum, CloseRangeAnimations) then
+            shouldBlock = true
+        end
+    end
+    
+    if shouldBlock then
+        if not AutoBlockIsBlocking then
+            AutoBlockIsBlocking = true
+            StartAutoBlock()
+        end
+    elseif AutoBlockIsBlocking then
+        AutoBlockIsBlocking = false
+        StopAutoBlock()
+        if M1AfterBlockEnabled then
+            StartM1Attack()
+            task.delay(0.11, StopM1Attack)
+        end
+    end
+end)
+
+
+local function SetClaw(cframe)
+    if not CustomAnimationsEnabled then return end
+    
+    local p = Instance.new('Part')
+    p.Parent = workspace:FindFirstChild("Thrown") or workspace
+    p.Material = Enum.Material.Neon
+    p.Size = Vector3.new(1, 1, 1)
+    p.Anchored = true
+    p.CanCollide = false
+    p.CFrame = cframe
+    p.Color = Color3.new(1, 0, 0)
+    
+    local v = Instance.new("Highlight")
+    v.OutlineTransparency = 1
+    v.FillColor = Color3.new(1, 0, 0)
+    v.FillTransparency = 0
+    v.Parent = p
+    
+    local msh = Instance.new("SpecialMesh", p)
+    msh.MeshType = "Sphere"
+    msh.Scale = Vector3.new(1, 1, 1)
+    
+    game:GetService("Debris"):AddItem(p, 1.5)
+    TweenService:Create(msh, TweenInfo.new(0.2), { Scale = Vector3.new(0, 7, 0) }):Play()
+    
+    local a = Instance.new("Attachment", p)
+    local bld = Instance.new("ParticleEmitter", a)
+    bld.LightEmission = 15
+    bld.Brightness = 15
+    bld.Orientation = Enum.ParticleOrientation.VelocityParallel
+    bld.Texture = "rbxassetid://6673021984"
+    bld.Rate = 0
+    bld.Lifetime = NumberRange.new(0.4)
+    bld.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 0) })
+    bld.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1) })
+    bld.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0), Color3.fromRGB(252, 0, 0))
+    bld.Speed = NumberRange.new(1)
+    bld.Rotation = NumberRange.new(90)
+    bld:Emit(1)
+    bld.LockedToPart = true
+end
+
+
+local function ActivateBloodHeat()
+    if BloodHeatActive then return end
+    BloodHeatActive = true
+    
+    if BloodHeatLabel then
+        BloodHeatLabel.Visible = true
+        BloodHeatLabel.TextSize = 155
+        BloodHeatLabel.TextColor3 = Color3.new(1, 0, 0)
+        TweenService:Create(BloodHeatLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
+            TextSize = 35,
+            TextColor3 = Color3.new(1, 0.7, 0.7)
+        }):Play()
+        
+        task.delay(0.2, function()
+            TweenService:Create(BloodHeatLabel, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+                TextColor3 = Color3.new(1, 0, 0)
+            }):Play()
+        end)
+    end
+    
+    pcall(function()
+        local char = LocalPlayer.Character
+        if char then
+            char:SetAttribute("UltimateName", "BLOOD HEAT")
+        end
+    end)
+    
+    pcall(function()
+        local s1 = Instance.new('Sound')
+        s1.SoundId = "rbxassetid://9166224293"
+        s1.Parent = game:GetService("SoundService")
+        s1.Volume = 0.5
+        s1:Play()
+        game:GetService("Debris"):AddItem(s1, 5)
+        
+        task.wait(0.8)
+        
+        local s2 = Instance.new('Sound')
+        s2.SoundId = "rbxassetid://9166224293"
+        s2.Parent = game:GetService("SoundService")
+        s2.Volume = 1
+        s2:Play()
+        game:GetService("Debris"):AddItem(s2, 5)
+    end)
+    
+    task.delay(37, function()
+        BloodHeatActive = false
+        if BloodHeatLabel then
+            BloodHeatLabel.Visible = false
+        end
+    end)
+end
+
+
+local function UpdateComboCounter(hits, damage)
+    if not HitLabel or not DamageLabel then return end
+    
+    HitLabel.Visible = true
+    DamageLabel.Visible = true
+    
+    HitLabel.Text = hits .. " Hits!"
+    DamageLabel.Text = math.floor(damage) .. " Damage!"
+    
+    HitLabel.TextSize = 155
+    HitLabel.TextColor3 = Color3.new(1, 1, 1 - hits / 35)
+    DamageLabel.TextSize = 155
+    DamageLabel.TextColor3 = Color3.new(1, 1 - damage / 100, 1 - damage / 100)
+    
+    TweenService:Create(HitLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { TextSize = 35 }):Play()
+    TweenService:Create(DamageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { TextSize = 35 }):Play()
+end
+
+local function ResetComboCounter()
+    ComboHits = 0
+    ComboDamage = 0
+    if HitLabel then HitLabel.Visible = false end
+    if DamageLabel then DamageLabel.Visible = false end
+end
+
+
+task.spawn(function()
+    while true do
+        if ComboHits > 0 and (os.clock() - LastHitTime >= ComboTimeout) then
+            ResetComboCounter()
+        end
+        task.wait(0.1)
+    end
+end)
+
+
+local EnemyTarget = nil
+
+local function SetupHitDetection(char)
+    if not char then return end
+    
+    local connection
+    connection = char:GetAttributeChangedSignal('LastDamageDone'):Connect(function()
+        if not AkihaEnabled then return end
+        
+        LastHitTime = os.clock()
+        
+        for _, part in ipairs(workspace.Live:GetChildren()) do
+            if part:IsA('Model') and part:FindFirstChild('HumanoidRootPart') then
+                pcall(function()
+                    local You = string.sub(tostring(char:GetAttribute('LastDamageDone') or ""), 1, 13)
+                    local Them = string.sub(tostring(part:GetAttribute('LastDamage') or ""), 1, 13)
+                    
+                    if You == Them then
+                        EnemyTarget = part
+                        local enemyHum = part:FindFirstChildOfClass("Humanoid")
+                        if enemyHum then
+                            local newHealth = enemyHum.Health
+                            
+                            if EnemyHealth and newHealth < EnemyHealth then
+                                local damageDone = EnemyHealth - newHealth
+                                ComboDamage = ComboDamage + damageDone
+                                ComboHits = ComboHits + 1
+                                UpdateComboCounter(ComboHits, ComboDamage)
+                                
+                                DoCustomShake()
+                                
+                                local enemyHrp = part:FindFirstChild("HumanoidRootPart")
+                                local myHrp = char:FindFirstChild("HumanoidRootPart")
+                                if enemyHrp and myHrp then
+                                    CreateBloodParticle(enemyHrp)
+                                    CreateLightningEffect(myHrp.Position, enemyHrp.Position)
+                                end
+                            end
+                            
+                            if newHealth <= 0 and not BloodHeatActive then
+                                ActivateBloodHeat()
+                                
+                                if AutoRoastEnabled then
+                                    local roastMsg = RoastMessages[math.random(1, #RoastMessages)]
+                                    pcall(function()
+                                        game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest"):FireServer(roastMsg, "All")
+                                    end)
+                                end
+                            end
+                            
+                            EnemyHealth = newHealth
+                        end
+                    end
+                end)
+            end
+        end
+        
+        for _, part in ipairs(workspace.Live:GetChildren()) do
+            if part:IsA('Model') and part:FindFirstChild('HumanoidRootPart') then
+                pcall(function()
+                    local You = string.sub(tostring(char:GetAttribute('LastDamageDone') or ""), 1, 13)
+                    local Them = string.sub(tostring(part:GetAttribute('LastDamage') or ""), 1, 13)
+                    if You == Them then
+                        local enemyHum = part:FindFirstChildOfClass("Humanoid")
+                        if enemyHum then
+                            OldEnemyHealth = enemyHum.Health
+                            EnemyHealth = enemyHum.Health
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+    
+    return connection
+end
+
+
+local M1AnimIds = {
+    ["rbxassetid://13532562418"] = true,
+    ["rbxassetid://13532600125"] = true,
+    ["rbxassetid://13532604085"] = true,
+}
+
+local function HandleM1Animation(animTrack, char)
+    if not CustomAnimationsEnabled then return end
+    local animId = animTrack.Animation.AnimationId
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    if animId == "rbxassetid://13532562418" then
+        task.delay(0.2, function()
+            SetClaw(hrp.CFrame * CFrame.new(-1, -0.5, -3.6) * CFrame.Angles(math.rad(65), 0, math.rad(35)))
+            SetClaw(hrp.CFrame * CFrame.new(-1, 0.5, -3.6) * CFrame.Angles(math.rad(65), 0, math.rad(35)))
+            SetClaw(hrp.CFrame * CFrame.new(-1, -1.5, -3.6) * CFrame.Angles(math.rad(65), 0, math.rad(35)))
+        end)
+    elseif animId == "rbxassetid://13532600125" then
+        task.delay(0.2, function()
+            SetClaw(hrp.CFrame * CFrame.new(0.7, 0.5, -3.6) * CFrame.Angles(math.rad(90), 0, math.rad(-35)))
+            SetClaw(hrp.CFrame * CFrame.new(0.7, 1.5, -3.6) * CFrame.Angles(math.rad(90), 0, math.rad(-35)))
+            SetClaw(hrp.CFrame * CFrame.new(0.7, -0.5, -3.6) * CFrame.Angles(math.rad(90), 0, math.rad(-35)))
+        end)
+    elseif animId == "rbxassetid://13532604085" then
+        task.delay(0.2, function()
+            SetClaw(hrp.CFrame * CFrame.new(2, -0.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(-15)))
+            SetClaw(hrp.CFrame * CFrame.new(2, 0.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(-15)))
+            SetClaw(hrp.CFrame * CFrame.new(2, -1.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(-15)))
+            SetClaw(hrp.CFrame * CFrame.new(-2, -0.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(15)))
+            SetClaw(hrp.CFrame * CFrame.new(-2, 0.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(15)))
+            SetClaw(hrp.CFrame * CFrame.new(-2, -1.5, -1) * CFrame.Angles(math.rad(99), 0, math.rad(15)))
+        end)
+    end
+end
+
+
+local AkihaConnections = {}
+
+local function CleanupAkihaConnections()
+    for _, conn in ipairs(AkihaConnections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    AkihaConnections = {}
+end
+
+local function SetupAkihaFeatures(char)
+    if not char then return end
+    CleanupAkihaConnections()
+    
+    local hum = char:WaitForChild("Humanoid")
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    
+    table.insert(AkihaConnections, SetupHitDetection(char))
+    
+    if CustomJumpEnabled then
+        local jumpConn = SetupCustomJumpSystem(char)
+        if jumpConn then
+            table.insert(AkihaConnections, jumpConn)
+        end
+        
+        table.insert(AkihaConnections, hum:GetPropertyChangedSignal('JumpPower'):Connect(function()
+            if CustomJumpEnabled and hum.JumpPower ~= 25 then
+                hum.JumpPower = 25
+            end
+        end))
+        
+        table.insert(AkihaConnections, hum:GetPropertyChangedSignal('PlatformStand'):Connect(function()
+            if hum.PlatformStand == true then
+                hum.PlatformStand = false
+            end
+        end))
+    end
+    
+    table.insert(AkihaConnections, hum.AnimationPlayed:Connect(function(animTrack)
+        if not CustomAnimationsEnabled then return end
+        local anim = animTrack.Animation
+        if not anim then return end
+        
+        if M1AnimIds[anim.AnimationId] then
+            HandleM1Animation(animTrack, char)
+        end
+        
+        for _, moveAnimId in pairs(MoveAnimIds) do
+            if anim.AnimationId == moveAnimId then
+                HandleMoveAnimation(animTrack, char)
+                break
+            end
+        end
+    end))
+end
+
+
+local AnimatorConnections = {}
+
+local function DisconnectAnimatorListeners()
+    for _, conn in ipairs(AnimatorConnections) do
+        if conn then pcall(function() conn:Disconnect() end) end
+    end
+    AnimatorConnections = {}
+end
+
+local function AttachAnimatorListeners(animator)
+    if not animator then return end
+    DisconnectAnimatorListeners()
+    
+    table.insert(AnimatorConnections, animator.AnimationPlayed:Connect(function(animTrack)
+        if not AutoVoidEnabled or IsVoiding then return end
+        local animation = animTrack.Animation
+        if not animation then return end
+        for _, animData in ipairs(VoidAnimations) do
+            local animId = animation.AnimationId:gsub("rbxassetid://", "")
+            if animId == animData.id then
+                IsVoiding = true
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                if not char or not char.Parent or not hum or hum.Health <= 0 or not rootPart then
+                    IsVoiding = false
+                    return
+                end
+                local oldCFrame = rootPart.CFrame
+                task.wait(animData.timewait)
+                char = LocalPlayer.Character
+                hum = char and char:FindFirstChildOfClass("Humanoid")
+                rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                if char and char.Parent and AutoVoidEnabled and hum and hum.Health > 0 and rootPart then
+                    rootPart.CFrame = CFrame.new(TeleportPosition)
+                    animTrack.Stopped:Wait()
+                    if TpBackEnabled then
+                        char = LocalPlayer.Character
+                        hum = char and char:FindFirstChildOfClass("Humanoid")
+                        rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                        if char and char.Parent and AutoVoidEnabled and hum and hum.Health > 0 and rootPart then
+                            rootPart.CFrame = oldCFrame
+                        end
+                    end
+                end
+                IsVoiding = false
+                break
+            end
+        end
+    end))
+    
+    table.insert(AnimatorConnections, animator.AnimationPlayed:Connect(function(animTrack)
+        if AutoWhirlwindDunk and animTrack.Animation then
+            local animId = animTrack.Animation.AnimationId
+            if animId == WhirlwindAnimId or animId == "rbxassetid://12296113986" then
+                task.wait(1.2)
+                local char = LocalPlayer.Character
+                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local pos = rootPart.Position
+                    rootPart.CFrame = CFrame.new(pos.X, pos.Y + 100, pos.Z)
+                end
+            end
+        end
+    end))
+end
+
+
+local function OnCharacterAdded(newCharacter)
+    Character = newCharacter
+    CharacterGame = newCharacter
+    Humanoid = Character:WaitForChild("Humanoid")
+    HumanoidGame = Humanoid
+    
+    local function WaitForAnimator()
+        Animator = Humanoid:WaitForChild("Animator", 5)
+        if not Animator then
+            Animator = Humanoid:FindFirstChildOfClass("Animator")
+        end
+        AnimatorGame = Animator
+        if Animator then
+            AttachAnimatorListeners(Animator)
+        end
+    end
+    
+    task.spawn(WaitForAnimator)
+end
+
+LocalPlayer.CharacterAdded:Connect(OnCharacterAdded)
+
+if Character and Humanoid then
+    local animator = Humanoid:FindFirstChildOfClass("Animator") or Humanoid:WaitForChild("Animator", 5)
+    if animator then
+        Animator = animator
+        AnimatorGame = animator
+        AttachAnimatorListeners(animator)
+    end
+end
+
+
+local TeleportPositions = {
+    Map = Vector3.new(150, 505, 30),
+    Pixel = Vector3.new(30000000, 30000000, 30000000),
+    Void = Vector3.new(150, -495, 30),
+    Darkness = Vector3.new(0, 900000000002, 0),
+    Mountain = Vector3.new(155.577392578125, 628.742431640625, -447.93841552734375),
+    Counter = Vector3.new(-68, 29, 20346),
+    AtomicBase = Vector3.new(1063, 30, 23006),
+    AtomicBaseUp = Vector3.new(1063, 405, 23006),
+    AtomicSlash = Vector3.new(1063, 131, 23006),
+    Prison = Vector3.new(438, 439, -376),
+}
+
+
+local Purple = Color3.fromHex("#7775F2")
+local Yellow = Color3.fromHex("#ECA201")
+local Green = Color3.fromHex("#10C550")
+local Grey = Color3.fromHex("#83889E")
+local Blue = Color3.fromHex("#257AF7")
+local Red = Color3.fromHex("#EF4F1D")
+local Cyan = Color3.fromHex("#00BFFF")
+
+
+local Window = WindUI:CreateWindow({
+    Title = "RINGTA SCRIPTS",
+    Folder = "RINGTA",
+    Icon = "star",
+    NewElements = true,
+    HideSearchBar = false,
+    
+    OpenButton = {
+        Title = "Open RINGTA",
+        CornerRadius = UDim.new(0, 6),
+        StrokeThickness = 2,
+        Enabled = true,
+        Draggable = true,
+        OnlyMobile = false,
+        Color = ColorSequence.new(
+            Color3.fromRGB(200, 0, 255),
+            Color3.fromRGB(0, 200, 255)
+        )
+    },
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Default",
+    },
+})
+
+
+local HttpService = game:GetService("HttpService")
+
+local DiscordTab = Window:Tab({
+    Title = "Home",
+    Icon = "star",
+    IconColor = Purple,
+    IconShape = "Square",
+})
+
+local DiscordResponse = nil
+pcall(function()
+    DiscordResponse = HttpService:JSONDecode(WindUI.Creator.Request({
+        Url = "https://discord.com/api/v10/invites/ringta?with_counts=true&with_expiration=true",
+        Method = "GET",
+        Headers = {
+            ["User-Agent"] = "RobloxBot/1.0",
+            ["Accept"] = "application/json"
+        }
+    }).Body)
+end)
+
+if DiscordResponse and DiscordResponse.guild then
+    DiscordTab:Paragraph({
+        Title = DiscordResponse.guild.name,
+        Desc = 
+            '<font color="#52525b">•</font> Members: ' .. tostring(DiscordResponse.approximate_member_count) .. 
+            '\n<font color="#16a34a">•</font> Online: ' .. tostring(DiscordResponse.approximate_presence_count),
+        Thumbnail = "rbxassetid://131915027058214",
+        ImageSize = 34,
+        Buttons = {
+            {
+                Title = "Discord",
+                Icon = "message-circle",
+                Callback = function()
+                    setclipboard("discord.gg/ringta")
+                    WindUI:Notify({
+                        Title = "Invite Copied",
+                        Content = "Discord Invite has been copied to your clipboard!",
+                        Icon = "square-arrow-out-up-right",
+                        Duration = 10
+                    })
+                end,
+            },
+            {
+                Title = "Youtube",
+                Icon = "youtube",
+                Callback = function()
+                    setclipboard("https://www.youtube.com/@RINGTASCRIPTS")
+                    WindUI:Notify({
+                        Title = "Link Copied",
+                        Content = "Youtube Link has been copied to your clipboard!",
+                        Icon = "square-arrow-out-up-right",
+                        Duration = 10
+                    })
+                end,
+            }
+        }
+    })
+else
+    DiscordTab:Paragraph({
+        Title = "RINGTA SCRIPTS",
+        Desc = "Join our Discord: discord.gg/ringta\nSubscribe on YouTube: @RINGTASCRIPTS",
+        Buttons = {
+            {
+                Title = "Discord",
+                Icon = "message-circle",
+                Callback = function()
+                    setclipboard("discord.gg/ringta")
+                    WindUI:Notify({
+                        Title = "Invite Copied",
+                        Content = "Discord Invite copied!",
+                        Duration = 5
+                    })
+                end,
+            },
+            {
+                Title = "Youtube",
+                Icon = "youtube",
+                Callback = function()
+                    setclipboard("https://www.youtube.com/@RINGTASCRIPTS")
+                    WindUI:Notify({
+                        Title = "Link Copied",
+                        Content = "Youtube Link copied!",
+                        Duration = 5
+                    })
+                end,
+            }
+        }
+    })
+end
+
+DiscordTab:Space()
+
+DiscordTab:Section({
+    Title = "Welcome to RINGTA SCRIPTS!",
+    TextSize = 18,
+    FontWeight = Enum.FontWeight.SemiBold,
+})
+
+DiscordTab:Space()
+
+DiscordTab:Section({
+    Title = "Features: Auto Void, ESP, Speed, Movement hacks, and more!\nPress V to toggle speed. Use the tabs to access all features.",
+    TextSize = 14,
+    TextTransparency = 0.35,
+    FontWeight = Enum.FontWeight.Medium,
+})
+
+
+local CombatSection = Window:Section({
+    Title = "Combat",
+})
+
+local MovementSection = Window:Section({
+    Title = "Movement",
+})
+
+local VisualSection = Window:Section({
+    Title = "Visuals",
+})
+
+local UtilitySection = Window:Section({
+    Title = "Utility",
+})
+
+
+local function SendQInput()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+end
+
+local function HandleWallComboAnimation(animTrack, character)
+    if AutoWallCombo and animTrack.Animation then
+        local rootPart = WallComboAnimIds[animTrack.Animation.AnimationId] and character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local savedCFrame = rootPart.CFrame
+            local startTime = tick()
+            local connection
+            connection = RunService.Heartbeat:Connect(function()
+                if AutoWallCombo and tick() - startTime < 0.3 then
+                    if rootPart and rootPart.Parent then
+                        rootPart.CFrame = savedCFrame * CFrame.Angles(math.rad(-25), 0, 0)
+                    end
+                else
+                    if rootPart and rootPart.Parent then
+                        rootPart.CFrame = savedCFrame
+                    end
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end
+end
+
+local function SetupWallCombo(character)
+    if WallComboConnection1 then WallComboConnection1:Disconnect() end
+    if WallComboConnection2 then WallComboConnection2:Disconnect() end
+    WallComboConnection1 = character.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("ObjectValue") and descendant.Name:lower() == "wallcombo" and AutoWallCombo then
+            local startTime = tick()
+            repeat
+                SendQInput()
+                task.wait()
+            until not descendant.Parent or descendant.Parent ~= character or tick() - startTime >= (descendant:GetAttribute("DeleteMe") or 0.6)
+        end
+    end)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        WallComboConnection2 = humanoid.AnimationPlayed:Connect(function(animTrack)
+            HandleWallComboAnimation(animTrack, character)
+        end)
+    end
+end
+
+
+RunService.RenderStepped:Connect(function()
+    if AntiInvisibility then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid = humanoid:FindFirstChildOfClass("Animator")
+                end
+                if humanoid then
+                    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                        local animId = track.Animation
+                        if animId then
+                            animId = track.Animation.AnimationId:gsub("rbxassetid://", "")
+                        end
+                        if animId and InvisAnimIds[animId] then
+                            track:Stop()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
+local function CreateUltEsp(player, character)
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local head = character:FindFirstChild("Head")
+    if not humanoid or not head then return end
+    if UltEspData[player] then UltEspData[player][1]() end
+    local espText = Drawing.new("Text")
+    espText.Visible = false
+    espText.Center = true
+    espText.Outline = true
+    espText.Font = Drawing.Fonts.UI
+    espText.Size = 14
+    espText.Color = Color3.fromRGB(255, 255, 0)
+    local function GetUltText()
+        local liveChar = workspace.Live:FindFirstChild(player.Name)
+        if liveChar then
+            local ultBar = liveChar:GetAttribute("UltimateBar") or 0
+            return string.format("[ULT: %.0f%%]", ultBar * 100)
+        end
+        return "[ULT: 0%]"
+    end
+    local connections = {}
+    local function Cleanup()
+        espText:Remove()
+        for _, conn in ipairs(connections) do conn:Disconnect() end
+        UltEspData[player] = nil
+    end
+    table.insert(connections, character.AncestryChanged:Connect(function(_, parent)
+        if not parent then Cleanup() end
+    end))
+    table.insert(connections, humanoid.Died:Connect(Cleanup))
+    table.insert(connections, RunService.RenderStepped:Connect(function()
+        if EspUltBar and head and head.Parent then
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+            if onScreen then
+                espText.Position = Vector2.new(screenPos.X, screenPos.Y - 42)
+                espText.Text = GetUltText()
+                espText.Visible = true
+            else
+                espText.Visible = false
+            end
+        else
+            espText.Visible = false
+        end
+    end))
+    UltEspData[player] = {Cleanup}
+end
+
+local function ClearAllUltEsp()
+    for _, data in pairs(UltEspData) do if data[1] then data[1]() end end
+    UltEspData = {}
+end
+
+local function SetupUltEspForPlayer(player)
+    if player ~= LocalPlayer then
+        if player.Character then CreateUltEsp(player, player.Character) end
+        player.CharacterAdded:Connect(function(char) CreateUltEsp(player, char) end)
+    end
+end
+
+local function CreateDeathEsp(player, character)
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local head = character:FindFirstChild("Head")
+    if not humanoid or not head then return end
+    if DeathEspData[player] then DeathEspData[player][1]() end
+    local espText = Drawing.new("Text")
+    espText.Visible = false
+    espText.Center = true
+    espText.Outline = true
+    espText.Font = Drawing.Fonts.UI
+    espText.Size = 14
+    espText.Color = Color3.fromRGB(255, 0, 0)
+    local function GetDeathText()
+        local liveChar = workspace.Live:FindFirstChild(player.Name)
+        if liveChar then
+            local deaths = liveChar:GetAttribute("Deaths") or 0
+            return string.format("[Deaths: %d]", deaths)
+        end
+        return "[Deaths: 0]"
+    end
+    local connections = {}
+    local function Cleanup()
+        espText:Remove()
+        for _, conn in ipairs(connections) do conn:Disconnect() end
+        DeathEspData[player] = nil
+    end
+    table.insert(connections, character.AncestryChanged:Connect(function(_, parent)
+        if not parent then Cleanup() end
+    end))
+    table.insert(connections, humanoid.Died:Connect(Cleanup))
+    table.insert(connections, RunService.RenderStepped:Connect(function()
+        if EspDeathCounter and head and head.Parent then
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+            if onScreen then
+                espText.Position = Vector2.new(screenPos.X, screenPos.Y - 57)
+                espText.Text = GetDeathText()
+                espText.Visible = true
+            else
+                espText.Visible = false
+            end
+        else
+            espText.Visible = false
+        end
+    end))
+    DeathEspData[player] = {Cleanup}
+end
+
+local function ClearAllDeathEsp()
+    for _, data in pairs(DeathEspData) do if data[1] then data[1]() end end
+    DeathEspData = {}
+end
+
+local function SetupDeathEspForPlayer(player)
+    if player ~= LocalPlayer then
+        if player.Character then CreateDeathEsp(player, player.Character) end
+        player.CharacterAdded:Connect(function(char) CreateDeathEsp(player, char) end)
+    end
+end
+
+local function CreatePlayerEsp(player, character)
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local head = character:FindFirstChild("Head")
+    if not humanoid or not head then return end
+    if EspData[player] then EspData[player][1]() end
+    local espText = Drawing.new("Text")
+    espText.Visible = false
+    espText.Center = true
+    espText.Outline = true
+    espText.Font = Drawing.Fonts.UI
+    espText.Size = 14
+    espText.Color = Color3.fromRGB(255, 255, 255)
+    local function GetEspText()
+        local ping = math.floor(player:GetAttribute("Ping") or 0)
+        local platform = player:GetAttribute("Mobile") and "Mobile" or "PC"
+        local streak = workspace.Live:FindFirstChild(player.Name) and (workspace.Live[player.Name]:GetAttribute("CurrentStreak") or 0) or 0
+        return "[ " .. player.Name .. " | Ping: " .. tostring(ping) .. " | " .. platform .. " | Streak: " .. tostring(streak) .. " ]"
+    end
+    local connections = {}
+    local function Cleanup()
+        espText:Remove()
+        for _, conn in ipairs(connections) do conn:Disconnect() end
+        EspData[player] = nil
+    end
+    table.insert(connections, character.AncestryChanged:Connect(function(_, parent)
+        if not parent then Cleanup() end
+    end))
+    table.insert(connections, humanoid.Died:Connect(Cleanup))
+    table.insert(connections, RunService.RenderStepped:Connect(function()
+        if EspEveryone and head and head.Parent then
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+            if onScreen then
+                espText.Position = Vector2.new(screenPos.X, screenPos.Y - 27)
+                espText.Text = GetEspText()
+                espText.Visible = true
+            else
+                espText.Visible = false
+            end
+        else
+            Cleanup()
+        end
+    end))
+    EspData[player] = {Cleanup}
+end
+
+local function ClearAllEsp()
+    for _, data in pairs(EspData) do if data[1] then data[1]() end end
+    EspData = {}
+end
+
+local function SetupEspForPlayer(player)
+    if player ~= LocalPlayer then
+        if player.Character then CreatePlayerEsp(player, player.Character) end
+        player.CharacterAdded:Connect(function(char) CreatePlayerEsp(player, char) end)
+    end
+end
+
+
+local espEnabled = false
+local chamsEnabled = false
+local rainbowCycleSpeed = 1
+local espInstances = {}
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+    local char = player.Character
+    if not char then return end
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESP"
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Adornee = char:FindFirstChild("Head")
+    billboard.Parent = char:FindFirstChild("Head")
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextSize = 14
+    nameLabel.Parent = billboard
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    healthLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = ""
+    healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    healthLabel.TextSize = 14
+    healthLabel.Parent = billboard
+    return {billboard = billboard, healthLabel = healthLabel, chams = {}}
+end
+
+local function removeESP(player)
+    if espInstances[player] then
+        if espInstances[player].billboard then espInstances[player].billboard:Destroy() end
+        for _, cham in pairs(espInstances[player].chams or {}) do cham:Destroy() end
+        espInstances[player] = nil
+    end
+end
+
+local function updateESP()
+    for player, data in pairs(espInstances) do
+        local char = player.Character
+        if char and data.healthLabel then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then data.healthLabel.Text = tostring(math.floor(humanoid.Health)) end
+        end
+    end
+end
+
+local function updateRainbowChams()
+    local hue = (tick() * rainbowCycleSpeed) % 1
+    local color = Color3.fromHSV(hue, 1, 1)
+    for _, data in pairs(espInstances) do
+        for _, cham in pairs(data.chams or {}) do
+            cham.FillColor = color
+            cham.OutlineColor = color
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if chamsEnabled then updateRainbowChams() end
+end)
+
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if input.KeyCode == Enum.KeyCode.V and not processed then
+        SpeedEnabled = not SpeedEnabled
+        if SpeedEnabled then
+            getgenv().WalkspeedBypass = true
+            task.spawn(function()
+                while getgenv().WalkspeedBypass and Character and Character.Parent do
+                    local hum = Character:FindFirstChildOfClass("Humanoid")
+                    if hum and hum.MoveDirection.Magnitude > 0 then
+                        Character:TranslateBy(hum.MoveDirection * SpeedValue * RunService.Heartbeat:Wait() * 7)
+                    else
+                        task.wait()
+                    end
+                end
+            end)
+        else
+            getgenv().WalkspeedBypass = false
+        end
+        WindUI:Notify({
+            Title = "Speed",
+            Content = SpeedEnabled and "Enabled" or "Disabled",
+            Duration = 2
+        })
+    end
+end)
+
+
+
+
+do
+    local MainTab = CombatSection:Tab({
+        Title = "Main",
+        Icon = "zap",
+        IconColor = Yellow,
+        IconShape = "Square",
+    })
+    
+    local ComboSection = MainTab:Section({
+        Title = "Combo Features",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    ComboSection:Toggle({
+        Title = "Auto Whirlwind Dunk",
+        Desc = "Auto boost after whirlwind",
+        Value = false,
+        Callback = function(state)
+            AutoWhirlwindDunk = state
+        end
+    })
+    
+    ComboSection:Space()
+    
+    ComboSection:Toggle({
+        Title = "Auto Wall Combo",
+        Desc = "Auto Q press on wall combo",
+        Value = false,
+        Callback = function(state)
+            AutoWallCombo = state
+            if state and LocalPlayer.Character then
+                SetupWallCombo(LocalPlayer.Character)
+            end
+        end
+    })
+    
+    ComboSection:Space()
+    
+    ComboSection:Toggle({
+        Title = "Anti Invisibility",
+        Desc = "Stop enemy invis animations",
+        Value = false,
+        Callback = function(state)
+            AntiInvisibility = state
+        end
+    })
+    
+    ComboSection:Space()
+    
+    ComboSection:Toggle({
+        Title = "Auto Roast",
+        Desc = "Send roast message on kill",
+        Value = false,
+        Callback = function(state)
+            AutoRoastEnabled = state
+            if state and not AkihaEnabled then
+                SetupAkihaFeatures(LocalPlayer.Character)
+            end
+        end
+    })
+    
+    ComboSection:Space()
+    
+    ComboSection:Toggle({
+        Title = "Auto Block",
+        Desc = "Automatically block enemy attacks",
+        Value = false,
+        Callback = function(state)
+            AutoBlockEnabled = state
+            if not state and AutoBlockIsBlocking then
+                StopAutoBlock()
+                AutoBlockIsBlocking = false
+            end
+        end
+    })
+    
+    ComboSection:Space()
+    
+    ComboSection:Toggle({
+        Title = "M1 After Block",
+        Desc = "Auto attack after blocking",
+        Value = false,
+        Callback = function(state)
+            M1AfterBlockEnabled = state
+        end
+    })
+    
+    
+    local AkihaSection = MainTab:Section({
+        Title = "Akiha Vermillion Mode",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    AkihaSection:Toggle({
+        Title = "Enable Akiha Mode",
+        Desc = "Master toggle for all Akiha features",
+        Value = false,
+        Callback = function(state)
+            AkihaEnabled = state
+            if state then
+                SetupAkihaFeatures(LocalPlayer.Character)
+                WindUI:Notify({
+                    Title = "Akiha Vermillion",
+                    Content = "Blood Heat mode activated!",
+                    Icon = "flame",
+                    Duration = 3
+                })
+            else
+                CleanupAkihaConnections()
+                ResetComboCounter()
+            end
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Custom Lighting",
+        Desc = "Dark atmosphere with red tones",
+        Value = false,
+        Callback = function(state)
+            CustomLightingEnabled = state
+            if state then
+                ApplyCustomLighting()
+            else
+                RestoreLighting()
+            end
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Camera Shake",
+        Desc = "Screen shake on hits",
+        Value = false,
+        Callback = function(state)
+            CameraShakeEnabled = state
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Lightning Effects",
+        Desc = "Red lightning bolts on hits",
+        Value = false,
+        Callback = function(state)
+            LightningEffectsEnabled = state
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Custom Claw Animations",
+        Desc = "Claw slash effects on M1",
+        Value = false,
+        Callback = function(state)
+            CustomAnimationsEnabled = state
+            if state and not AkihaEnabled then
+                SetupAkihaFeatures(LocalPlayer.Character)
+            end
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Custom Jump",
+        Desc = "Flying/gliding jump system",
+        Value = false,
+        Callback = function(state)
+            CustomJumpEnabled = state
+            if state then
+                SetupCustomJumpSystem(LocalPlayer.Character)
+            else
+                DisableCustomJump()
+            end
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Toggle({
+        Title = "Background Music",
+        Desc = "Akiha Vermillion BGM",
+        Value = false,
+        Callback = function(state)
+            BackgroundMusicEnabled = state
+            if state then
+                StartBackgroundMusic()
+            else
+                StopBackgroundMusic()
+            end
+        end
+    })
+    
+    AkihaSection:Space()
+    
+    AkihaSection:Button({
+        Title = "Trigger Blood Heat",
+        Desc = "Manually activate Blood Heat mode",
+        Color = Color3.fromHex("#ff3030"),
+        Icon = "",
+        Justify = "Center",
+        Callback = function()
+            ActivateBloodHeat()
+        end
+    })
+end
+
+-- */  MOVEMENT TAB  /* --
+do
+    local MovementTab = MovementSection:Tab({
+        Title = "Movement",
+        Icon = "rocket",
+        IconColor = Blue,
+        IconShape = "Square",
+    })
+    
+    local SpeedSection = MovementTab:Section({
+        Title = "Speed & Jump",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    SpeedSection:Toggle({
+        Title = "Speed Boost",
+        Desc = "Press V to toggle (Hotkey)",
+        Value = false,
+        Callback = function(state)
+            SpeedEnabled = state
+            getgenv().WalkspeedBypass = state
+            if state then
+                task.spawn(function()
+                    while getgenv().WalkspeedBypass and Character and Character.Parent do
+                        local hum = Character:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.MoveDirection.Magnitude > 0 then
+                            Character:TranslateBy(hum.MoveDirection * SpeedValue * RunService.Heartbeat:Wait() * 7)
+                        else
+                            task.wait()
+                        end
+                    end
+                end)
+            end
+        end
+    })
+    
+    SpeedSection:Space()
+    
+    SpeedSection:Slider({
+        Title = "Speed Value",
+        IsTooltip = true,
+        Step = 1,
+        Value = {
+            Min = 1,
+            Max = 50,
+            Default = 9,
+        },
+        Callback = function(value)
+            SpeedValue = value
+        end
+    })
+    
+    SpeedSection:Space()
+    
+    SpeedSection:Toggle({
+        Title = "Jump Boost",
+        Value = false,
+        Callback = function(state)
+            getgenv().JumpPowerBypass = state
+            if state then
+                task.spawn(function()
+                    while getgenv().JumpPowerBypass do
+                        if HumanoidGame and HumanoidGame:GetState() == Enum.HumanoidStateType.Jumping then
+                            CharacterGame.HumanoidRootPart.CFrame = CharacterGame.HumanoidRootPart.CFrame * CFrame.new(0, JumpValue, 0)
+                        end
+                        task.wait()
+                    end
+                end)
+            end
+        end
+    })
+    
+    SpeedSection:Space()
+    
+    SpeedSection:Slider({
+        Title = "Jump Value",
+        IsTooltip = true,
+        Step = 10,
+        Value = {
+            Min = 10,
+            Max = 1000,
+            Default = 200,
+        },
+        Callback = function(value)
+            JumpValue = value
+        end
+    })
+    
+    MovementTab:Space()
+    
+    local OtherMovementSection = MovementTab:Section({
+        Title = "Other Movement",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    OtherMovementSection:Toggle({
+        Title = "No Stun",
+        Desc = "Keep walkspeed at 25",
+        Value = false,
+        Callback = function(state)
+            getgenv().AutoNoSlow = state
+            task.spawn(function()
+                local connection
+                connection = RunService.RenderStepped:Connect(function()
+                    if getgenv().AutoNoSlow ~= true then
+                        connection:Disconnect()
+                    else
+                        pcall(function()
+                            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 25
+                        end)
+                    end
+                end)
+            end)
+        end
+    })
+    
+    OtherMovementSection:Space()
+    
+    local noclipEnabled = false
+    local noclipConnection = nil
+    
+    OtherMovementSection:Toggle({
+        Title = "Noclip",
+        Value = false,
+        Callback = function(state)
+            noclipEnabled = state
+            if state then
+                noclipConnection = RunService.Stepped:Connect(function()
+                    local char = LocalPlayer.Character
+                    if char then
+                        for _, part in pairs(char:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end)
+            else
+                if noclipConnection then
+                    noclipConnection:Disconnect()
+                    noclipConnection = nil
+                end
+            end
+        end
+    })
+    
+    OtherMovementSection:Space()
+    
+    OtherMovementSection:Toggle({
+        Title = "Auto Void",
+        Desc = "Teleport to void during combos",
+        Value = false,
+        Callback = function(state)
+            AutoVoidEnabled = state
+            if state then
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local animator = hum and hum:FindFirstChildOfClass("Animator")
+                if animator then
+                    AttachAnimatorListeners(animator)
+                end
+            end
+        end
+    })
+    
+    OtherMovementSection:Space()
+    
+    OtherMovementSection:Toggle({
+        Title = "Tp Back After Void",
+        Desc = "Return to position after void",
+        Value = false,
+        Callback = function(state)
+            TpBackEnabled = state
+        end
+    })
+    
+    OtherMovementSection:Space()
+    
+    OtherMovementSection:Toggle({
+        Title = "Fake Downslam",
+        Desc = "Fake downslam animation",
+        Value = false,
+        Callback = function(state)
+            FakeDownslam = state
+        end
+    })
+end
+
+
+do
+    local EspTab = VisualSection:Tab({
+        Title = "ESP",
+        Icon = "eye",
+        IconColor = Cyan,
+        IconShape = "Square",
+    })
+    
+    local EspSection = EspTab:Section({
+        Title = "Player ESP",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    EspSection:Toggle({
+        Title = "ESP Everyone",
+        Desc = "Show name, ping, platform, streak",
+        Value = false,
+        Callback = function(state)
+            EspEveryone = state
+            if state then
+                for _, player in pairs(Players:GetPlayers()) do
+                    SetupEspForPlayer(player)
+                end
+            else
+                ClearAllEsp()
+            end
+        end
+    })
+    
+    EspSection:Space()
+    
+    EspSection:Toggle({
+        Title = "ESP Ult Bar",
+        Desc = "Show ultimate charge",
+        Value = false,
+        Callback = function(state)
+            EspUltBar = state
+            if state then
+                for _, player in pairs(Players:GetPlayers()) do
+                    SetupUltEspForPlayer(player)
+                end
+            else
+                ClearAllUltEsp()
+            end
+        end
+    })
+    
+    EspSection:Space()
+    
+    EspSection:Toggle({
+        Title = "ESP Death Counter",
+        Desc = "Show player deaths",
+        Value = false,
+        Callback = function(state)
+            EspDeathCounter = state
+            if state then
+                for _, player in pairs(Players:GetPlayers()) do
+                    SetupDeathEspForPlayer(player)
+                end
+            else
+                ClearAllDeathEsp()
+            end
+        end
+    })
+    
+    EspTab:Space()
+    
+    local ChamsSection = EspTab:Section({
+        Title = "Chams & Highlights",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    ChamsSection:Toggle({
+        Title = "ESP (Username + Health)",
+        Value = false,
+        Callback = function(state)
+            espEnabled = state
+            if state then
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        espInstances[player] = createESP(player)
+                    end
+                end
+                Players.PlayerAdded:Connect(function(player)
+                    if espEnabled and player ~= LocalPlayer then
+                        player.CharacterAdded:Connect(function()
+                            espInstances[player] = createESP(player)
+                        end)
+                    end
+                end)
+                RunService.RenderStepped:Connect(updateESP)
+            else
+                for player in pairs(espInstances) do
+                    removeESP(player)
+                end
+            end
+        end
+    })
+    
+    ChamsSection:Space()
+    
+    ChamsSection:Toggle({
+        Title = "Rainbow Chams",
+        Value = false,
+        Callback = function(state)
+            chamsEnabled = state
+            if state then
+                for player in pairs(espInstances) do
+                    local char = player.Character
+                    if char then
+                        espInstances[player].chams = {}
+                        for _, part in pairs(char:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                local highlight = Instance.new("Highlight")
+                                highlight.FillTransparency = 0.5
+                                highlight.OutlineTransparency = 0
+                                highlight.Parent = part
+                                table.insert(espInstances[player].chams, highlight)
+                            end
+                        end
+                    end
+                end
+            else
+                for player in pairs(espInstances) do
+                    for _, cham in pairs(espInstances[player].chams or {}) do
+                        cham:Destroy()
+                    end
+                    espInstances[player].chams = {}
+                end
+            end
+        end
+    })
+    
+    ChamsSection:Space()
+    
+    ChamsSection:Slider({
+        Title = "Rainbow Speed",
+        IsTooltip = true,
+        Step = 0.1,
+        Value = {
+            Min = 0.1,
+            Max = 5,
+            Default = 1,
+        },
+        Callback = function(value)
+            rainbowCycleSpeed = value
+        end
+    })
+end
+
+do
+    local UtilTab = UtilitySection:Tab({
+        Title = "Utility",
+        Icon = "wrench",
+        IconColor = Grey,
+        IconShape = "Square",
+    })
+    
+    local AntiSection = UtilTab:Section({
+        Title = "Anti Features",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    AntiSection:Toggle({
+        Title = "Anti AFK",
+        Desc = "Prevent AFK kick",
+        Value = false,
+        Callback = function(state)
+            if state then
+                AntiAfkConnection = LocalPlayer.Idled:Connect(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.zero)
+                end)
+            else
+                if AntiAfkConnection then
+                    AntiAfkConnection:Disconnect()
+                    AntiAfkConnection = nil
+                end
+            end
+        end
+    })
+    
+    UtilTab:Space()
+    
+    local TpSection = UtilTab:Section({
+        Title = "Teleport",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    local targetPlayerName = ""
+    
+    TpSection:Input({
+        Title = "Player Name",
+        Placeholder = "Enter player name...",
+        Callback = function(value)
+            targetPlayerName = value
+        end
+    })
+    
+    TpSection:Space()
+    
+    TpSection:Button({
+        Title = "Teleport to Player",
+        Color = Blue,
+        Icon = "",
+        Justify = "Center",
+        Callback = function()
+            local targetPlayer = Players:FindFirstChild(targetPlayerName)
+            if targetPlayer and targetPlayer.Character then
+                local targetHrp = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp and targetHrp then
+                    hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 3)
+                    WindUI:Notify({
+                        Title = "Teleported",
+                        Content = "Teleported to " .. targetPlayerName,
+                        Duration = 2
+                    })
+                end
+            else
+                WindUI:Notify({
+                    Title = "Error",
+                    Content = "Player not found",
+                    Duration = 2
+                })
+            end
+        end
+    })
+    
+    UtilTab:Space()
+    
+    local MiscSection = UtilTab:Section({
+        Title = "Misc",
+        Box = true,
+        BoxBorder = true,
+        Opened = true,
+    })
+    
+    MiscSection:Button({
+        Title = "Copy Discord Invite",
+        Color = Purple,
+        Icon = "",
+        Justify = "Center",
+        Callback = function()
+            if setclipboard then
+                setclipboard("discord.gg/ringta")
+                WindUI:Notify({
+                    Title = "Copied",
+                    Content = "Discord invite copied!",
+                    Duration = 2
+                })
+            end
+        end
+    })
+    
+    MiscSection:Space()
+    
+    MiscSection:Button({
+        Title = "Rejoin Server",
+        Color = Green,
+        Icon = "",
+        Justify = "Center",
+        Callback = function()
+            local TeleportService = game:GetService("TeleportService")
+            TeleportService:Teleport(game.PlaceId)
+        end
+    })
+    
+    MiscSection:Space()
+    
+    MiscSection:Button({
+        Title = "Destroy UI",
+        Color = Red,
+        Icon = "",
+        Justify = "Center",
+        Callback = function()
+            Window:Destroy()
+        end
+    })
+end
+
+
+WindUI:Notify({
+    Title = "RINGTA SCRIPTS",
+    Content = "Script loaded successfully! Press V for speed toggle.",
+    Icon = "star",
+    Duration = 5
+})
+ 

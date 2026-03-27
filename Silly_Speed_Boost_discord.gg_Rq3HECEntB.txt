@@ -1,0 +1,143 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Get environment and services
+local Env = getfenv()  -- Get current environment
+local RunService_2 = game:GetService("RunService")  -- Game loop service
+local LocalPlayer = game:GetService("Players").LocalPlayer  -- Your player
+
+-- Function to start velocity movement
+Env.StartVelocityMove = function(speedValue)
+    local speed = speedValue[1]  -- Get speed value
+    if not speed then return end  -- Stop if no speed
+    
+    -- Create movement loop
+    local Connection_3
+    Connection_3 = RunService_2.Heartbeat:Connect(function(DeltaTime)
+        local Character_2 = LocalPlayer.Character  -- Your character
+        if not Character_2 then return end  -- Stop if no character
+        
+        local HumanoidRootPart = Character_2:FindFirstChild("HumanoidRootPart")  -- Root part
+        local Humanoid_3 = Character_2:FindFirstChildOfClass("Humanoid")  -- Humanoid
+        
+        if not HumanoidRootPart then return end  -- Stop if no root part
+        if not Humanoid_3 then return end  -- Stop if no humanoid
+        
+        -- Calculate movement direction
+        local MoveDirection = Humanoid_3.MoveDirection  -- Current movement
+        local horizontalMove = Vector3.new(MoveDirection.X, 0, MoveDirection.Z) * speed  -- Apply speed
+        
+        -- Apply velocity smoothing
+        local currentVelocity = HumanoidRootPart.Velocity  -- Current velocity
+        HumanoidRootPart.Velocity = currentVelocity:Lerp(
+            Vector3.new(horizontalMove.X, HumanoidRootPart.Velocity.Y, horizontalMove.Z),  -- Target velocity
+            0.45  -- Smoothing factor
+        )
+    end)
+end
+
+-- Function to stop velocity movement
+Env.StopVelocityMove = function()
+    if Connection_3 then
+        Connection_3:Disconnect()  -- Stop movement loop
+    end
+end
+
+-- Create GUI
+local ScreenGui_2 = Instance.new("ScreenGui")  -- Main GUI
+ScreenGui_2.Name = "TigyVelocityToggle"  -- Name it
+ScreenGui_2.ResetOnSpawn = false  -- Don't reset on respawn
+ScreenGui_2.Parent = LocalPlayer:WaitForChild("PlayerGui")  -- Add to player GUI
+
+-- Toggle button
+local TextButton_2 = Instance.new("TextButton")  -- Main button
+TextButton_2.Size = UDim2.new(0, 130, 0, 50)  -- Size: 130x50
+TextButton_2.Position = UDim2.new(0.05, 0, 0.8, 0)  -- Bottom left position
+TextButton_2.BackgroundColor3 = Color3.fromRGB(70, 120, 255)  -- Blue
+TextButton_2.Text = "Enable Move"  -- Button text
+TextButton_2.Font = Enum.Font.GothamBold  -- Bold font
+TextButton_2.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+TextButton_2.TextScaled = true  -- Scale text to fit
+TextButton_2.AutoButtonColor = false  -- No auto color
+TextButton_2.Parent = ScreenGui_2  -- Add to GUI
+
+-- Round button corners
+local UICorner = Instance.new("UICorner")  -- Corner rounder
+UICorner.CornerRadius = UDim.new(0, 10)  -- Roundness: 10
+UICorner.Parent = TextButton_2  -- Add to button
+
+-- Button border
+local UIStroke = Instance.new("UIStroke")  -- Border
+UIStroke.Thickness = 2  -- Line thickness
+UIStroke.Color = Color3.fromRGB(100, 150, 255)  -- Light blue
+UIStroke.Parent = TextButton_2  -- Add to button
+
+-- Speed input box
+local TextBox = Instance.new("TextBox")  -- Speed input
+TextBox.Size = UDim2.new(0, 60, 0, 50)  -- Size: 60x50
+TextBox.Position = UDim2.new(0.05, 140, 0.8, 0)  -- Next to button
+TextBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)  -- Dark gray
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+TextBox.PlaceholderText = "25"  -- Hint text
+TextBox.Text = ""  -- Start empty
+TextBox.Font = Enum.Font.GothamBold  -- Bold font
+TextBox.TextScaled = true  -- Scale text to fit
+TextBox.ClearTextOnFocus = false  -- Keep text when clicked
+TextBox.Parent = ScreenGui_2  -- Add to GUI
+
+-- Round input corners
+local UICorner_2 = Instance.new("UICorner")  -- Corner rounder
+UICorner_2.CornerRadius = UDim.new(0, 10)  -- Roundness: 10
+UICorner_2.Parent = TextBox  -- Add to input
+
+-- Input border
+local UIStroke_2 = Instance.new("UIStroke")  -- Border
+UIStroke_2.Thickness = 2  -- Line thickness
+UIStroke_2.Color = Color3.fromRGB(70, 70, 70)  -- Gray
+UIStroke_2.Parent = TextBox  -- Add to input
+
+-- Button click handler
+local Connection
+Connection = TextButton_2.MouseButton1Click:Connect(function()
+    -- Toggle button state
+    TextButton_2.Text = "Disable Move"  -- Change text
+    TextButton_2.BackgroundColor3 = Color3.fromRGB(255, 70, 70)  -- Red
+    UIStroke.Color = Color3.fromRGB(255, 100, 100)  -- Red border
+    
+    -- Get speed value
+    local speedValue = tonumber(TextBox.Text)  -- Convert to number
+    if not speedValue then return end  -- Stop if not a number
+    
+    -- Start movement loop
+    local Connection_4
+    Connection_4 = RunService_2.Heartbeat:Connect(function(DeltaTime)
+        local Character_3 = LocalPlayer.Character  -- Your character
+        if not Character_3 then return end  -- Stop if no character
+        
+        local HumanoidRootPart_2 = Character_3:FindFirstChild("HumanoidRootPart")  -- Root part
+        local Humanoid_4 = Character_3:FindFirstChildOfClass("Humanoid")  -- Humanoid
+        
+        if not HumanoidRootPart_2 then return end  -- Stop if no root part
+        if not Humanoid_4 then return end  -- Stop if no humanoid
+        
+        -- Calculate movement
+        local MoveDirection_2 = Humanoid_4.MoveDirection  -- Movement direction
+        local horizontalMove = Vector3.new(MoveDirection_2.X, 0, MoveDirection_2.Z) * speedValue  -- Apply speed
+        
+        -- Smooth velocity
+        local currentVelocity = HumanoidRootPart_2.Velocity  -- Current velocity
+        HumanoidRootPart_2.Velocity = currentVelocity:Lerp(
+            Vector3.new(horizontalMove.X, HumanoidRootPart_2.Velocity.Y, horizontalMove.Z),  -- Target
+            0.45  -- Smoothing
+        )
+    end)
+end)
+
+-- Input box focus lost handler
+local Connection_2
+Connection_2 = TextBox.FocusLost:Connect(function(EnterPressed)
+    local speedValue = tonumber(TextBox.Text)  -- Convert text to number
+    if not speedValue then  -- If not a number
+        TextBox.Text = ""  -- Clear text
+        TextBox.PlaceholderText = "Enter number"  -- Update hint
+    end
+end)

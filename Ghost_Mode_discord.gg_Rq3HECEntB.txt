@@ -1,0 +1,203 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Get player and services
+local LocalPlayer = game["Players"].LocalPlayer  -- Your player
+local RunService_2 = game:GetService("RunService")  -- Game loop service
+game:GetService("UserInputService")  -- Input service
+
+-- Create main GUI
+local ScreenGui_2 = Instance.new("ScreenGui")  -- Create GUI
+ScreenGui_2["Name"] = "GhostModeV6"  -- Name it
+ScreenGui_2["ResetOnSpawn"] = false  -- Don't reset
+ScreenGui_2["Parent"] = game.CoreGui  -- Add to CoreGui
+
+-- Create main window
+local Frame_2 = Instance.new("Frame")  -- Window frame
+Frame_2["Size"] = UDim2.new(0, 250, 0, 120)  -- Size: 250x120
+Frame_2["Position"] = UDim2.new(0, 20, 0, 20)  -- Position
+Frame_2.BackgroundColor3 = Color3.fromRGB(15, 15, 15)  -- Dark gray
+Frame_2.BorderSizePixel = 0  -- No border
+Frame_2["Active"] = true  -- Can click
+Frame_2.Draggable = true  -- Can move
+Frame_2.Parent = ScreenGui_2  -- Add to GUI
+
+-- Round corners
+local UICorner = Instance.new("UICorner")  -- Corner rounder
+UICorner.Parent = Frame_2  -- Add to frame
+UICorner.CornerRadius = UDim.new(0, 12)  -- Roundness: 12
+
+-- Title text
+local TextLabel_2 = Instance.new("TextLabel")  -- Title
+TextLabel_2.Parent = Frame_2  -- Add to frame
+TextLabel_2.Size = UDim2.new(1, -60, 0, 35)  -- Size
+TextLabel_2.Position = UDim2.new(0, 10, 0, 5)  -- Position
+TextLabel_2.BackgroundTransparency = 1  -- No background
+TextLabel_2.Text = "GHOST MODE"  -- Text
+TextLabel_2.TextColor3 = Color3.fromRGB(0, 255, 255)  -- Cyan
+TextLabel_2.Font = Enum.Font.GothamBlack  -- Bold font
+TextLabel_2.TextSize = 18  -- Text size
+
+-- Minimize button
+local TextButton_2 = Instance.new("TextButton")  -- Min button
+TextButton_2.Parent = Frame_2  -- Add to frame
+TextButton_2.Size = UDim2.new(0, 30, 0, 30)  -- Size: 30x30
+TextButton_2.Position = UDim2.new(1, -40, 0, 5)  -- Top right
+TextButton_2.BackgroundColor3 = Color3.fromRGB(255, 50, 50)  -- Red
+TextButton_2.Text = "−"  -- Minus symbol
+TextButton_2.TextColor3 = Color3.new(1, 1, 1)  -- White
+TextButton_2.Font = Enum.Font.GothamBold  -- Bold font
+TextButton_2.TextSize = 20  -- Text size
+
+-- Round button corners
+local UICorner_2 = Instance.new("UICorner")  -- Corner rounder
+UICorner_2.Parent = TextButton_2  -- Add to button
+UICorner_2.CornerRadius = UDim.new(0, 8)  -- Roundness: 8
+
+-- Status text
+local TextLabel_4 = Instance.new("TextLabel")  -- Status label
+TextLabel_4.Parent = Frame_2  -- Add to frame
+TextLabel_4.Size = UDim2.new(1, -20, 0, 40)  -- Size
+TextLabel_4.Position = UDim2.new(0, 10, 0, 45)  -- Position
+TextLabel_4.BackgroundTransparency = 1  -- No background
+TextLabel_4.Text = "Status: OFF"  -- Default status
+TextLabel_4.TextColor3 = Color3.fromRGB(255, 100, 100)  -- Red
+TextLabel_4.Font = Enum.Font.GothamBold  -- Bold font
+TextLabel_4.TextSize = 20  -- Text size
+
+-- Enable button
+local TextButton_4 = Instance.new("TextButton")  -- Toggle button
+TextButton_4.Parent = Frame_2  -- Add to frame
+TextButton_4.Size = UDim2.new(1, -20, 0, 45)  -- Size
+TextButton_4.Position = UDim2.new(0, 10, 1, -55)  -- Bottom
+TextButton_4.BackgroundColor3 = Color3.fromRGB(0, 200, 0)  -- Green
+TextButton_4.Text = "ENABLE GHOST MODE"  -- Button text
+TextButton_4.TextColor3 = Color3.new(1, 1, 1)  -- White
+TextButton_4.Font = Enum.Font.GothamBold  -- Bold font
+TextButton_4.TextSize = 18  -- Text size
+
+-- Round button corners
+local UICorner_3 = Instance.new("UICorner")  -- Corner rounder
+UICorner_3.Parent = TextButton_4  -- Add to button
+UICorner_3.CornerRadius = UDim.new(0, 10)  -- Roundness: 10
+
+-- Minimize button click
+local Connection
+Connection = TextButton_2.MouseButton1Click:Connect(function()
+    Frame_2.Size = UDim2.new(0, 250, 0, 50)  -- Shrink window
+    TextLabel_2.Text = "GHOST MODE [−]"  -- Update title
+    TextLabel_4.Visible = false  -- Hide status
+    TextButton_4.Visible = false  -- Hide button
+    TextButton_2.Text = "+"  -- Change to plus
+end)
+
+-- Enable Ghost Mode button click
+local Connection_2
+Connection_2 = TextButton_4.MouseButton1Click:Connect(function()
+    -- Update UI
+    TextLabel_4.Text = "Status: ON"  -- Change status
+    TextLabel_4.TextColor3 = Color3.fromRGB(0, 255, 100)  -- Green
+    TextButton_4.Text = "DISABLE GHOST MODE"  -- Change button text
+    TextButton_4.BackgroundColor3 = Color3.fromRGB(200, 0, 0)  -- Red
+    
+    -- Get character
+    local Character_3 = LocalPlayer.Character  -- Your character
+    if not Character_3 then return end  -- Stop if no character
+    
+    -- Get humanoid
+    local Humanoid_2 = Character_3:WaitForChild("Humanoid", 5)  -- Wait for humanoid
+    if not Humanoid_2 then return end  -- Stop if no humanoid
+    
+    -- Set movement speeds
+    Humanoid_2.WalkSpeed = 16  -- Normal walk speed
+    Humanoid_2.JumpPower = 50  -- Normal jump power
+    
+    -- Get animation controller
+    local Animate_2 = Character_3:WaitForChild("Animate", 5)  -- Animation script
+    if not Animate_2 then return end  -- Stop if no animations
+    
+    -- Clear all animations except idle
+    for i, v in pairs(Animate_2:GetChildren()) do
+        if v.Name ~= "idle" then  -- Skip idle
+            if v:IsA("Folder") then  -- Animation folders
+                for i_2, v_2 in pairs(v:GetChildren()) do
+                    if v_2:IsA("StringValue") then  -- Animation IDs
+                        v_2.Value = ""  -- Clear animation
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Set idle animation
+    local Idle_3 = Animate_2:FindFirstChild("idle")  -- Find idle folder
+    if Idle_3 then
+        for i_3, v_3 in pairs(Idle_3:GetChildren()) do
+            if v_3:IsA("StringValue") then  -- Idle animation
+                v_3.Value = "rbxassetid://507766388"  -- Ghost animation ID
+            end
+        end
+    end
+    
+    -- Load ghost animation
+    local Animation_2 = Instance.new("Animation")  -- Create animation
+    Animation_2.AnimationId = "rbxassetid://507766388"  -- Animation ID
+    
+    local LoadAnimation_2 = Humanoid_2:LoadAnimation(Animation_2)  -- Load animation
+    LoadAnimation_2.Looped = true  -- Loop animation
+    LoadAnimation_2.Priority = Enum.AnimationPriority.Core  -- High priority
+    LoadAnimation_2:AdjustWeight(10)  -- Strong influence
+    LoadAnimation_2:Play()  -- Start animation
+    
+    -- Keep ghost animation playing
+    local Connection_4
+    Connection_4 = RunService_2.Heartbeat:Connect(function(DeltaTime)
+        for i_4, v_4 in pairs(Humanoid_2:GetPlayingAnimationTracks()) do
+            if v_4 ~= LoadAnimation_2 then  -- Not ghost animation
+                v_4:Stop(0)  -- Stop other animations
+            end
+        end
+        LoadAnimation_2:AdjustWeight(10)  -- Maintain influence
+    end)
+    
+    -- Keep animations cleared
+    local Connection_5
+    Connection_5 = RunService_2.Heartbeat:Connect(function()
+        if Animate_2.Parent then  -- If animations exist
+            -- Clear all animations except idle
+            for i_5, v_5 in pairs(Animate_2:GetChildren()) do
+                if v_5.Name ~= "idle" then  -- Skip idle
+                    if v_5:IsA("Folder") then  -- Animation folders
+                        for i_6, v_6 in pairs(v_5:GetChildren()) do
+                            if v_6:IsA("StringValue") then  -- Animation IDs
+                                v_6.Value = ""  -- Clear animation
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+-- Handle character respawn
+local Connection_3
+Connection_3 = LocalPlayer.CharacterAdded:Connect(function(Character_4)
+    wait(1.5)  -- Wait for character to load
+    
+    local Character_5 = Character_4  -- New character
+    if not Character_5 then return end  -- Stop if no character
+    
+    -- Get humanoid
+    local Humanoid_3 = Character_5:WaitForChild("Humanoid", 5)  -- Wait for humanoid
+    if not Humanoid_3 then return end  -- Stop if no humanoid
+    
+    -- Reset movement speeds
+    Humanoid_3.WalkSpeed = 16  -- Normal walk
+    Humanoid_3.JumpPower = 50  -- Normal jump
+    
+    -- Get animations
+    local Animate_3 = Character_5:WaitForChild("Animate", 5)  -- Animation script
+    if Animate_3 then
+        -- Animation reset code would go here
+    end
+end)

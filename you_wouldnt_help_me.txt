@@ -1,0 +1,479 @@
+--[[
+Thats A Lesson For You
+https://discord.gg/skibidihubtop
+
+grok deobf tool super pro lol
+
+]]
+
+
+
+
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Codesaken V1.6",
+    LoadingTitle = "loading Codesaken V1.6",
+    LoadingSubtitle = "by vlana0108 in dc",
+    ConfigurationSaving = {Enabled = true, FileName = "CustomUI"},
+    Discord = {Enabled = true, Invite = "66DM9SsSk", RememberJoins = true},
+    KeySystem = true,
+    KeySettings = {
+        Title = "Codesaken Key System",
+        Subtitle = "Enter the key",
+        Note = "Join the Discord server for the key: https://discord.gg/66DM9SsSk",
+        FileName = "CodesakenKey",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"U4reAIdi0t"}
+    },
+    Theme = "Amethyst"
+})
+
+local Tab1 = Window:CreateTab("Veeronica", 83277671478725)
+local Tab2 = Window:CreateTab("Guest 1337", 76739398129971 - 5801052)
+local Tab3 = Window:CreateTab("Elliot", 82364506988831 - 130494682)
+local Tab4 = Window:CreateTab("Chance", 96522474394555)
+local Tab5 = Window:CreateTab("Infinite Stamina", 75247866304093 - 215765384)
+local Tab6 = Window:CreateTab("Auto Gen", 124294693630461 - (1098 + 425))
+local Tab7 = Window:CreateTab("Misc Tab", 6828438020 - 194833607)
+local Tab8 = Window:CreateTab("Credits Tab", 118206294850329 - 813397315)
+
+local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local RSvc = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+do
+    local behavior = RS:WaitForChild("Assets"):WaitForChild("Survivors"):WaitForChild("Veeronica"):WaitForChild("Behavior")
+    local enabled = true
+    local connections = {}
+    local listener
+
+    local function onHighlight(hl)
+        if not enabled then return end
+        local function pressSprint()
+            if not LP.Character then return end
+            local btn = LP.PlayerGui:FindFirstChild("MainUI") and LP.PlayerGui.MainUI:FindFirstChild("SprintingButton")
+            if btn then
+                for _, c in pairs(getconnections(btn.MouseButton1Down)) do
+                    pcall(c.Fire, c)
+                    if c.Function then pcall(c.Function) end
+                end
+            end
+        end
+        table.insert(connections, hl:GetPropertyChangedSignal("Adornee"):Connect(pressSprint))
+        table.insert(connections, hl.AncestryChanged:Connect(function(_,p) if not p then for i=#connections,1,-1 if connections[i] then connections[i]:Disconnect() end end end))
+        task.spawn(pressSprint)
+    end
+
+    local function start()
+        if listener then return end
+        for _,v in ipairs(behavior:GetDescendants()) do if v:IsA("Highlight") then onHighlight(v) end end
+        listener = behavior.DescendantAdded:Connect(function(v) if v:IsA("Highlight") then onHighlight(v) end end)
+    end
+
+    local function stop()
+        if listener then listener:Disconnect() listener = nil end
+        for _,c in ipairs(connections) do pcall(c.Disconnect, c) end
+        connections = {}
+    end
+
+    Tab1:CreateToggle({Name="Auto Trick",CurrentValue=true,Callback=function(v) enabled=v if v then start() else stop() end end})
+    Tab1:CreateSection("Veeronica Scripts")
+    Tab1:CreateButton({Name="sk8 without graffiti",Callback=function() loadstring(game:HttpGet("https://pastebin.com/raw/y06gtEBa"))() end})
+    Tab1:CreateButton({Name="sk8 controller",Callback=function() loadstring(game:HttpGet("https://pastebin.com/raw/MzKS5uvm"))() end})
+
+    if enabled then start() end
+end
+
+do
+    local Killers = workspace:WaitForChild("Players"):WaitForChild("Killers")
+    local Names = {"Sixer","Slasher","Noli","JohnDoe","c00lkidd","1x1x1x1"}
+    local AttackIDs = {
+        ["106300477136129"]=true,["127793641088496"]=true,["112809109188560"]=true,["109348678063422"]=true,
+        ["105200830849301"]=true,["79391273191671"]=true,["82221759983649"]=true,["121954639447247"]=true,
+        ["85853080745515"]=true,["84307400688050"]=true,["71834552297085"]=true,["79980897195554"]=true,
+        ["131406927389838"]=true,["76959687420003"]=true,["95079963655241"]=true,["102228729296384"]=true,
+        ["119942598489800"]=true,["119583605486352"]=true,["108907358619313"]=true,["117173212095661"]=true,
+        ["12222216"]=true,["114742322778642"]=true,["105840448036441"]=true,["71805956520207"]=true,
+        ["84116622032112"]=true,["119089145505438"]=true,["75330693422988"]=true,["86174610237192"]=true,
+        ["89004992452376"]=true,["81702359653578"]=true,["86833981571073"]=true,["101698569375359"]=true,
+        ["110372418055226"]=true,["115026634746636"]=true,["86494585504534"]=true,["101553872555606"]=true,
+        ["136323728355613"]=true,["101199185291628"]=true,["125213046326879"]=true,["116581754553533"]=true,
+        ["113037804008732"]=true,["140242176732868"]=true,["117231507259853"]=true,["107444859834748"]=true,
+        ["80516583309685"]=true,["112395455254818"]=true,["109431876587852"]=true,["108610718831698"]=true
+    }
+
+    local RE = RS.Modules.Network.RemoteEvent
+    local autoBlock = false
+    local onlyLook = true
+    local range = 11
+    local espOn = false
+    local hdTech = false
+    local espParts = {}
+    local lastBlock = 0
+    local cooldown = 0.35
+    local dragTime = 0
+    local dragDur = 0.3
+
+    Tab2:CreateLabel("CodeSaken Tester Autoblock V3")
+    Tab2:CreateSlider({Name="Block Range",Range={5,50},Increment=1,Suffix=" studs",CurrentValue=range,Callback=function(v) range=v end})
+    Tab2:CreateToggle({Name="Auto Block",CurrentValue=false,Callback=function(v) autoBlock=v end})
+    Tab2:CreateToggle({Name="Only When They Look At Me",CurrentValue=true,Callback=function(v) onlyLook=v end})
+    Tab2:CreateToggle({Name="Detection Range ESP",CurrentValue=false,Callback=function(v)
+        espOn=v
+        if not v then for _,p in pairs(espParts) do if p then p:Destroy() end end espParts={} end
+    end})
+    Tab2:CreateSection("Hitbox Dragging Tech")
+    local hdToggle = Tab2:CreateToggle({Name="HD-Tech Reworked",CurrentValue=false})
+    Tab2:CreateLabel("For every killer except G666 recommended detection range is 11")
+
+    local function updateESP()
+        if not espOn or not LP.Character then return end
+        local myHRP = LP.Character:FindFirstChild("HumanoidRootPart")
+        if not myHRP then return end
+        for _,name in ipairs(Names) do
+            local k = Killers:FindFirstChild(name)
+            if k and k:FindFirstChild("HumanoidRootPart") then
+                local kHRP = k.HumanoidRootPart
+                if not espParts[name] then
+                    local p = Instance.new("Part")
+                    p.Shape = Enum.PartType.Ball
+                    p.Transparency = 0.95
+                    p.Anchored = true
+                    p.CanCollide = false
+                    p.Material = Enum.Material.Neon
+                    p.Color = Color3.new(1,0,0)
+                    p.Size = Vector3.new(range*2,range*2,range*2)
+                    p.Parent = workspace
+                    espParts[name] = p
+                end
+                local part = espParts[name]
+                part.Position = kHRP.Position
+                part.Size = Vector3.new(range*2,range*2,range*2)
+                part.Color = (myHRP.Position - kHRP.Position).Magnitude <= range and Color3.new(0,1,0) or Color3.new(1,0,0)
+            end
+        end
+    end
+
+    local function startDrag(kHRP)
+        if not hdTech then return end
+        local s = tick()
+        local c
+        c = RSvc.Heartbeat:Connect(function()
+            if tick()-s >= dragDur then c:Disconnect() LP.Character.Humanoid:Move(Vector3.new()) return end
+            LP.Character.Humanoid:MoveTo(kHRP.Position)
+        end)
+    end
+
+    RSvc.Heartbeat:Connect(function()
+        hdTech = hdToggle.CurrentValue
+        if espOn then updateESP() end
+        if not autoBlock then return end
+        local char = LP.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local myHRP = char.HumanoidRootPart
+        local block = false
+
+        for _,name in ipairs(Names) do
+            local k = Killers:FindFirstChild(name)
+            if k and k:FindFirstChild("HumanoidRootPart") then
+                local kHRP = k.HumanoidRootPart
+                if (myHRP.Position - kHRP.Position).Magnitude <= range then
+                    local attacking = false
+                    for _,s in ipairs(k:GetDescendants()) do
+                        if s:IsA("Sound") and s.Playing then
+                            local id = tostring(s.SoundId:match("%d+"))
+                            if AttackIDs[id] then
+                                attacking = true
+                                if hdTech then startDrag(kHRP) end
+                                break
+                            end
+                        end
+                    end
+                    if attacking and k:FindFirstChild("Head") then
+                        local look = k.Head.CFrame.LookVector
+                        local dir = (myHRP.Position - k.Head.Position).Unit
+                        if not onlyLook or look:Dot(dir) > 0.5 then
+                            block = true
+                        end
+                    end
+                end
+            end
+        end
+
+        if block and tick()-lastBlock >= cooldown then
+            lastBlock = tick()
+            RE:FireServer("UseActorAbility", {"Block"})
+        end
+    end)
+end
+
+do
+    local pred = 5
+    local type = "HRP Aimbot"
+    local animId = "114155003741146"
+    local enabled = false
+    local hum, hrp
+    local cam = workspace.CurrentCamera
+    local autoRotBackup
+
+    local function setup(c) hum = c:WaitForChild("Humanoid") hrp = c:WaitForChild("HumanoidRootPart") end
+    if LP.Character then setup(LP.Character) end
+    LP.CharacterAdded:Connect(setup)
+
+    local function getAnims()
+        local t = {}
+        if hum then
+            for _,track in ipairs(hum:GetPlayingAnimationTracks()) do
+                if track.Animation and track.Animation.AnimationId then
+                    local id = track.Animation.AnimationId:match("%d+")
+                    if id then t[id]=true end
+                end
+            end
+        end
+        return t
+    end
+
+    local function closestSurvivor()
+        local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
+        if not folder or not hrp then return end
+        local best, health = nil, math.huge
+        for _,c in ipairs(folder:GetChildren()) do
+            if c ~= LP.Character then
+                local h = c:FindFirstChildOfClass("Humanoid")
+                local r = c:FindFirstChild("HumanoidRootPart")
+                if h and r and h.Health>0 and h.Health<h.MaxHealth and h.Health<health then
+                    health = h.Health
+                    best = r
+                end
+            end
+        end
+        return best
+    end
+
+    local function aim(target)
+        if not target then return end
+        local vel = target.AssemblyLinearVelocity
+        local pos = target.Position + (vel.Unit * pred) * (vel.Magnitude > 16 and 1 or 0)
+
+        if type == "HRP Aimbot" and hrp and hum then
+            if not autoRotBackup then autoRotBackup = hum.AutoRotate end
+            hum.AutoRotate = false
+            hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+            local dir = (pos - hrp.Position).Unit
+            local yaw = math.atan2(-dir.X, -dir.Z)
+            local _,curYaw = hrp.CFrame:ToEulerAnglesYXZ()
+            local smooth = curYaw + (yaw - curYaw) * 0.3
+            hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, smooth, 0)
+        elseif type == "Camera Aimbot" then
+            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, pos)
+        end
+    end
+
+    Tab3:CreateInput({Name="Prediction Studs",PlaceholderText="Enter prediction distance",Callback=function(t) local n=tonumber(t) if n and n>=0 then pred=n end end})
+    Tab3:CreateDropdown({Name="Aimbot Type",Options={"HRP Aimbot","Camera Aimbot"},CurrentOption={"HRP Aimbot"},Callback=function(o) type=o[1] end})
+    Tab3:CreateToggle({Name="Elliot Aimbot V1.1",CurrentValue=false,Callback=function(v)
+        enabled=v
+        if not v and autoRotBackup~=nil then hum.AutoRotate=autoRotBackup autoRotBackup=nil end
+    end})
+
+    RSvc.RenderStepped:Connect(function()
+        if not enabled or not hum or not hrp then return end
+        if not getAnims()[animId] then if autoRotBackup~=nil then hum.AutoRotate=autoRotBackup autoRotBackup=nil end return end
+        aim(closestSurvivor())
+    end)
+end
+
+do
+    local enabled = false
+    local strength = 0.14
+    local reqAnim = "133491532453922"
+    local names = {"Noli","JohnDoe","1x1x1x1","Sixer","Slasher","c00lkidd"}
+
+    local function hasAnim()
+        local c = LP.Character
+        if not c or not c:FindFirstChild("Humanoid") then return false end
+        for _,t in ipairs(c.Humanoid:GetPlayingAnimationTracks()) do
+            if t.Animation.AnimationId == "rbxassetid://"..reqAnim then return true end
+        end
+        return false
+    end
+
+    local function bestKiller()
+        local my = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if not my then return end
+        local best, dist = nil, math.huge
+        for _,n in ipairs(names) do
+            local k = workspace.Players.Killers:FindFirstChild(n)
+            if k and k:FindFirstChild("HumanoidRootPart") and k.Humanoid.Health>0 then
+                local hrp = k.HumanoidRootPart
+                local pred = hrp.Position + hrp.Velocity * strength
+                local d = (my.Position - pred).Magnitude
+                if d < dist then dist = d best = {HRP=hrp, Pos=pred} end
+            end
+        end
+        return best
+    end
+
+    Tab4:CreateToggle({Name="HRP Prediction Stare Aimbot",CurrentValue=false,Callback=function(v)
+        enabled=v
+        Rayfield:Notify({Title="Prediction Aimbot",Content=v and "ON – Play the animation!" or "OFF",Duration=4})
+    end})
+    Tab4:CreateSlider({Name="Prediction Strength",Range={0,0.4},Increment=0.01,CurrentValue=strength,Callback=function(v) strength=v end})
+
+    RSvc.RenderStepped:Connect(function()
+        if not enabled or not hasAnim() then return end
+        local my = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if not my then return end
+        local t = bestKiller()
+        if t then my.CFrame = CFrame.new(my.Position, t.Pos) end
+    end)
+end
+
+do
+    local module = require(RS.Systems.Character.Game.Sprinting)
+    local orig = {SprintSpeed=module.SprintSpeed or 24, MaxStamina=module.MaxStamina or 100, MinStamina=module.MinStamina or 0, StaminaGain=module.StaminaGain or 20, StaminaLoss=module.StaminaLoss or 10}
+    local enabled = false
+
+    local function apply()
+        if enabled then module.StaminaLoss=0 module.StaminaGain=10000
+        else for k,v in pairs(orig) do module[k]=v end end
+    end
+
+    LP.CharacterAdded:Connect(function() task.wait(1) apply() end)
+    if LP.Character then task.spawn(function() task.wait(1) apply() end) end
+
+    Tab5:CreateSection("Infinite Stamina")
+    Tab5:CreateToggle({Name="Infinite Stamina",CurrentValue=false,Callback=function(v) enabled=v apply() end})
+end
+
+do
+    local dur = 4
+    local enabled = false
+    local taskRef
+    getgenv().LocalDelay = 0.1
+    getgenv().AutoHintEnabled = false
+
+    Tab6:CreateSection("Auto Gens")
+    Tab6:CreateSlider({Name="Gen Duration",Range={1,10},Increment=0.5,Suffix=" sec",CurrentValue=dur,Callback=function(v) dur=v end})
+    Tab6:CreateToggle({Name="Auto Gen",CurrentValue=false,Callback=function(v)
+        enabled=v
+        if v then
+            local last = tick()
+            taskRef = task.spawn(function()
+                while enabled do
+                    task.wait(0.1)
+                    if tick()-last >= dur then
+                        for _,gen in ipairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if gen.Name=="Generator" and gen:FindFirstChild("Remotes") and gen.Remotes:FindFirstChild("RE") then
+                                gen.Remotes.RE:FireServer()
+                            end
+                        end
+                        last = tick()
+                    end
+                end
+            end)
+        elseif taskRef then task.cancel(taskRef) taskRef=nil end
+    end})
+
+    Tab6:CreateSection("Auto Gen [Legit]")
+    Tab6:CreateToggle({Name="Auto Gen [Legit]",CurrentValue=false,Callback=function(v) getgenv().AutoHintEnabled=v end})
+    Tab6:CreateSlider({Name="Local Delay Speed",Range={1,25},Increment=1,Suffix="x fast",CurrentValue=10,Callback=function(v) getgenv().LocalDelay=0.1/v end})
+
+    local flow = RS.Modules:FindFirstChild("Misc")
+    if flow then flow = flow:FindFirstChild("FlowGameManager") end
+    if flow then flow = flow:FindFirstChild("FlowGame") end
+    if flow then
+        local old = require(flow).new
+        require(flow).new = function(...)
+            local inst = old(...)
+            task.spawn(function()
+                if getgenv().AutoHintEnabled and inst and inst.Solution then
+                    for i=1,#inst.Solution do
+                        local path = inst.Solution[i]
+                        inst.paths[i] = {}
+                        for _,cell in ipairs(path) do
+                            table.insert(inst.paths[i], {row=cell.row, col=cell.col})
+                            inst:updateGui()
+                            task.wait(getgenv().LocalDelay)
+                        end
+                        inst:checkForWin()
+                    end
+                end
+            end)
+            return inst
+        end
+    end
+end
+
+do
+    local fonts = {"Legacy","Arial","ArialBold","SourceSans","SourceSansBold","Gotham","GothamBold","AmaticSC","Bangers","Creepster","FredokaOne","LuckiestGuy","Oswald","Roboto","Ubuntu"}
+    local selected = Enum.Font.SourceSans
+    local enabled = false
+    local backup = {}
+
+    local function apply(f)
+        backup = {}
+        for _,o in ipairs(game:GetDescendants()) do
+            if not o:IsDescendantOf(game:GetService("CoreGui")) and (o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox")) then
+                backup[o] = o.Font
+                o.Font = f
+            end
+        end
+    end
+
+    Tab7:CreateSection("Font Changer")
+    Tab7:CreateToggle({Name="Enable Font Changer",CurrentValue=false,Callback=function(v)
+        enabled=v
+        if v then apply(selected)
+        else for o,f in pairs(backup) do if o and o.Parent then o.Font=f end end backup={} end
+    end})
+    Tab7:CreateDropdown({Name="Select Font",Options=fonts,CurrentOption={"SourceSans"},Callback=function(o)
+        selected = Enum.Font[o[1]]
+        if enabled then apply(selected) end
+    end})
+
+    Tab7:CreateSection("Remove Debuffs")
+    Tab7:CreateToggle({Name="Remove Effects",CurrentValue=false,Callback=function(v)
+        if v then task.spawn(function()
+            while v do
+                for _,e in ipairs(game.Lighting:GetDescendants()) do if e:IsA("PostEffect") then e:Destroy() end end
+                for _,g in ipairs(LP.PlayerGui:GetDescendants()) do
+                    if string.find(string.lower(g.Name),"overlay") or string.find(string.lower(g.Name),"effect") then g:Destroy() end
+                end
+                task.wait(0.5)
+            end
+        end) end
+    end})
+
+    Tab7:CreateSection("Chat Window")
+    Tab7:CreateToggle({Name="Enable Chat",CurrentValue=false,Callback=function(v) game:GetService("TextChatService").ChatWindowConfiguration.Enabled=v end})
+
+    Tab7:CreateSection("Anti 1x1x1x1")
+    Tab7:CreateToggle({Name="Anti 1x1x1x1 Popup",CurrentValue=false,Callback=function(v)
+        if _G.AntiLoop then task.cancel(_G.AntiLoop) _G.AntiLoop=nil end
+        if v then _G.AntiLoop = task.spawn(function()
+            while task.wait(0.1) do
+                local ui = LP.PlayerGui:FindFirstChild("TemporaryUI")
+                if ui and ui:FindFirstChild("1x1x1x1Popup") then ui["1x1x1x1Popup"]:Destroy() end
+            end
+        end) end
+    end})
+end
+
+Tab8:CreateParagraph({Title="Credits",Content=[[
+
+@vlana0108 - Main Developer / Owner
+MagicScripts - Provided complete Guest 1337 IDs
+orange leaves - Auto Skate & Skate Controller
+Rayfield - Amazing UI Library
+
+Thank you for using this script!
+Made with love
+]]})
+
+Rayfield:Notify({Title="Codesaken V1.6",Content="CodeSaken V1.6 has loaded successfully!",Duration=6})

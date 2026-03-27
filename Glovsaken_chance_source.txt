@@ -1,0 +1,258 @@
+-- Services declaration
+-- leakk by kittygd 
+local playersService = game:GetService("Players")
+local lightingService = game:GetService("Lighting")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local materialService = game:GetService("MaterialService")
+local workspaceService = game:GetService("Workspace")
+local statsService = game:GetService("Stats")
+local debrisService = game:GetService("Debris")
+local textChatService = game:GetService("TextChatService")
+
+
+-- Client references
+local clientPlayer = playersService.LocalPlayer
+local PlayerGui = clientPlayer:WaitForChild("PlayerGui", 10)
+
+
+-- Load WindUI library
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+
+-- Create main window
+local Window = WindUI:CreateWindow({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    Author = "By GlovDev",
+    Folder = "GlovSakenScript",
+    Size = UDim2.fromOffset(350, 300),
+    Transparent = false,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+
+-- Window toggle key
+Window:SetToggleKey(Enum.KeyCode.K)
+
+
+-- Window text font
+WindUI:SetFont("rbxasset://fonts/families/AccanthisADFStd.json")
+
+
+-- Mobile open button configuration
+Window:EditOpenButton({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 0,
+    Color = ColorSequence.new(
+        Color3.fromHex("000000"), 
+        Color3.fromHex("000000")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+
+----------------------------------------------------------------
+-- Sentinel Tab
+----------------------------------------------------------------
+local SentinelTab = Window:Tab({
+    Title = "Sentinel",
+    Icon = "shield",
+})
+
+
+----------------------------------------------------------------
+-- Chance Section
+----------------------------------------------------------------
+local ChanceSection = SentinelTab:Section({
+    Title = "Chance",
+    Opened = true,
+})
+
+
+-- Variables
+local chanceActive = false
+local chanceAimDuration = 1.6
+local chanceAimTargets = {"Slasher", "c00lkidd", "JohnDoe", "1x1x1x1", "Noli", "Sixer", "Nosferatu"}
+local chancePredictionValue = 4
+local chanceMovementThreshold = 0.5
+local chancePlayerHumanoid, chancePlayerHRP = nil, nil
+local chanceLastTriggerTime = 0
+local chanceAiming = false
+local chanceOriginalWS, chanceOriginalAutoRotate = nil, nil
+local chanceActiveTrack = nil
+
+
+-- Animation IDs that trigger aim
+local chanceAimAnimationIds = {
+    "133491532453922",
+    "133607163653602",
+    "76649505662612",
+    "86371356500204"
+}
+
+
+-- Setup character references
+local function chanceConfigureCharacter(char)
+    chancePlayerHumanoid = char:FindFirstChild("Humanoid")
+    chancePlayerHRP = char:FindFirstChild("HumanoidRootPart")
+end
+
+
+if playersService.LocalPlayer.Character then
+    chanceConfigureCharacter(playersService.LocalPlayer.Character)
+end
+playersService.LocalPlayer.CharacterAdded:Connect(chanceConfigureCharacter)
+
+
+-- Find valid killer target
+local function chanceFindValidTarget()
+    local killersFolder = workspaceService:FindFirstChild("Players") and workspaceService.Players:FindFirstChild("Killers")
+    if not killersFolder then return nil end
+    for _, name in ipairs(chanceAimTargets) do
+        local target = killersFolder:FindFirstChild(name)
+        if target and target:FindFirstChild("HumanoidRootPart") then
+            return target.HumanoidRootPart
+        end
+    end
+    return nil
+end
+
+
+-- Simple studs prediction
+local function chancePredictPosition(targetHRP, studs)
+    if not targetHRP then return nil end
+    if targetHRP.Velocity.Magnitude > chanceMovementThreshold then
+        return targetHRP.Position + (targetHRP.CFrame.LookVector * studs)
+    end
+    return targetHRP.Position
+end
+
+
+-- Detect aim animation start
+local function chanceCheckAimAnimation()
+    if not chancePlayerHumanoid or chanceActiveTrack then return false end
+    for _, track in ipairs(chancePlayerHumanoid:GetPlayingAnimationTracks()) do
+        local id = track.Animation.AnimationId:match("%d+")
+        if id and table.find(chanceAimAnimationIds, id) then
+            chanceActiveTrack = track
+            track.Stopped:Once(function()
+                chanceActiveTrack = nil
+            end)
+            return true
+        end
+    end
+    return false
+end
+
+
+-- Main aim loop
+runService.RenderStepped:Connect(function()
+    if not chanceActive or not chancePlayerHumanoid or not chancePlayerHRP then
+        if chanceAiming then
+            chanceAiming = false
+            if chanceOriginalWS and chanceOriginalAutoRotate ~= nil then
+                chancePlayerHumanoid.WalkSpeed = chanceOriginalWS
+                chancePlayerHumanoid.AutoRotate = chanceOriginalAutoRotate
+                chanceOriginalWS, chanceOriginalAutoRotate = nil, nil
+            end
+        end
+        return
+    end
+
+
+    if not chanceAiming and chanceCheckAimAnimation() then
+        chanceLastTriggerTime = tick()
+        chanceAiming = true
+        chanceOriginalWS = chancePlayerHumanoid.WalkSpeed
+        chanceOriginalAutoRotate = chancePlayerHumanoid.AutoRotate
+    end
+
+
+    if chanceAiming then
+        local elapsed = tick() - chanceLastTriggerTime
+        local targetHRP = chanceFindValidTarget()
+
+
+        if not targetHRP or (targetHRP.Position - chancePlayerHRP.Position).Magnitude < 6 or elapsed > chanceAimDuration then
+            chanceAiming = false
+            if chanceOriginalWS and chanceOriginalAutoRotate ~= nil then
+                chancePlayerHumanoid.WalkSpeed = chanceOriginalWS
+                chancePlayerHumanoid.AutoRotate = chanceOriginalAutoRotate
+                chanceOriginalWS, chanceOriginalAutoRotate = nil, nil
+            end
+            return
+        end
+
+
+        chancePlayerHumanoid.AutoRotate = false
+        chancePlayerHRP.AssemblyAngularVelocity = Vector3.zero
+
+
+        local predicted = chancePredictPosition(targetHRP, chancePredictionValue)
+        if predicted then
+            local dir = (predicted - chancePlayerHRP.Position).Unit
+            local yaw = math.atan2(-dir.X, -dir.Z)
+            chancePlayerHRP.CFrame = CFrame.new(chancePlayerHRP.Position) * CFrame.Angles(0, yaw, 0)
+        end
+    end
+end)
+
+
+-- UI Controls
+ChanceSection:Toggle({
+    Title = "Aim One Shot",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        chanceActive = state
+    end
+})
+
+
+ChanceSection:Slider({
+    Title = "One Shot Prediction",
+    Step = 1,
+    Value = { Min = 0, Max = 10, Default = 4 },
+    Callback = function(value)
+        chancePredictionValue = value
+    end
+})
+
+
+----------------------------------------------------------------
+-- Interface Tab
+----------------------------------------------------------------
+local InterfaceTab = Window:Tab({
+    Title = "Interface",
+    Icon = "scan",
+    Locked = false,
+})
+
+
+----------------------------------------------------------------
+-- UI Functions Section
+----------------------------------------------------------------
+local UIFunctionsSection = InterfaceTab:Section({ 
+    Title = "UI Functions",
+    Opened = true,
+})
+
+
+-- Close UI
+InterfaceTab:Button({
+    Title = "Close UI",
+    Locked = false,
+    Callback = function()
+        Window:Destroy()
+    end
+})

@@ -1,0 +1,2474 @@
+if LoadingScriptDoor then return end
+LoadingScriptDoor = true
+if game.Players.LocalPlayer.PlayerGui:FindFirstChild("LoadingUI") and game.Players.LocalPlayer.PlayerGui.LoadingUI.Enabled == true then
+repeat task.wait() until game.Players.LocalPlayer.PlayerGui.LoadingUI.Enabled == false
+end
+
+local ESPLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/bocaj111004/ESPLibrary/refs/heads/main/Library.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Articles-Hub/ROBLOXScript/refs/heads/main/Library/LinoriaLib/Test.lua"))()
+local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Articles-Hub/ROBLOXScript/refs/heads/main/Library/LinoriaLib/addons/ThemeManagerCopy.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Articles-Hub/ROBLOXScript/refs/heads/main/Library/LinoriaLib/addons/SaveManagerCopy.lua"))()
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library:SetWatermarkVisibility(true)
+
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local PFS = game:GetService("PathfindingService")
+local Storage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = game.Players.LocalPlayer or game.Players.PlayerAdded:Wait()
+local playergui = player:WaitForChild("PlayerGui")
+local pack = player:WaitForChild("Backpack")
+local char = player.Character or player.CharacterAdded:Wait()
+local root = char:WaitForChild("HumanoidRootPart") 
+local cam = workspace.CurrentCamera
+
+local MobileOn = table.find({Enum.Platform.Android, Enum.Platform.IOS}, UserInputService:GetPlatform())
+
+_G.GetOldBright = {
+	["Old"] = {
+		Brightness = Lighting.Brightness,
+		ClockTime = Lighting.ClockTime,
+		FogEnd = Lighting.FogEnd,
+		FogStart = Lighting.FogStart,
+		GlobalShadows = Lighting.GlobalShadows,
+		OutdoorAmbient = Lighting.OutdoorAmbient
+	},
+	["New"] = {
+		Brightness = 2,
+		ClockTime = 14,
+		FogEnd = 200000,
+		FogStart = 100000,
+		GlobalShadows = false,
+		OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+	}
+}
+
+if not HookLoading and hookmetamethod then
+HookLoading = true
+local old
+old = hookmetamethod(game,"__namecall",newcclosure(function(self,...)
+    local args = {...}
+    local method = getnamecallmethod()
+    if method == "FireServer" then
+        if self.Name == "ClutchHeartbeat" and Toggles["Heart Win"].Value then
+            return
+        end
+        if self.Name == "Crouch" and Toggles["Auto Use Crouch"].Value then
+            args[1] = true
+            return old(self,unpack(args))
+        end
+    end
+    return old(self,...)
+end))
+end
+
+function Distance(pos)
+	if root then
+		return (root.Position - pos).Magnitude
+	end
+end
+function Distance2(pos)
+	if root then
+		return (pos - root.Position).Magnitude
+	end
+end
+
+function Deciphercode(v)
+local Hints = playergui:WaitForChild("PermUI"):WaitForChild("Hints")
+local code = {[1] = "_",[2] = "_", [3] = "_", [4] = "_", [5] = "_"}
+    for i, v in pairs(v:WaitForChild("UI"):GetChildren()) do
+        if v:IsA("ImageLabel") and v.Name ~= "Image" then
+            for b, n in pairs(Hints:GetChildren()) do
+                if n:IsA("ImageLabel") and n.Visible and v.ImageRectOffset == n.ImageRectOffset then
+                    code[tonumber(v.Name)] = n:FindFirstChild("TextLabel").Text 
+                end
+            end
+        end
+    end 
+    return code
+end
+
+function NotifyDoor(Notify)
+if MainUi:FindFirstChild("AchievementsHolder") and MainUi.AchievementsHolder:FindFirstChild("Achievement") then
+local acheivement = MainUi.AchievementsHolder.Achievement:Clone()
+acheivement.Size = UDim2.new(0, 0, 0, 0)
+acheivement.Frame.Position = UDim2.new(1.1, 0, 0, 0)
+acheivement.Name = "LiveAchievement"
+acheivement.Visible = true
+acheivement.Frame.TextLabel.Text = Notify.NotificationType or "NOTIFICATION"
+
+if Notify.Color ~= nil then
+	acheivement.Frame.TextLabel.TextColor3 = Notify.Color
+	acheivement.Frame.UIStroke.Color = Notify.Color
+	acheivement.Frame.Glow.ImageColor3 = Notify.Color
+end
+
+acheivement.Frame.Details.Desc.Text = tostring(Notify.Description)
+acheivement.Frame.Details.Title.Text = tostring(Notify.Title)
+acheivement.Frame.Details.Reason.Text = tostring(Notify.Reason or "")
+
+if Notify.Image:match("rbxthumb://") or Notify.Image:match("rbxassetid://") then
+	acheivement.Frame.ImageLabel.Image = tostring(Notify.Image or "rbxassetid://0")
+else
+	acheivement.Frame.ImageLabel.Image = "rbxassetid://" .. tostring(Notify.Image or "0")
+end
+if Notify.Image ~= nil then acheivement.Frame.ImageLabel.BackgroundTransparency = 1 end
+acheivement.Parent = MainUi.AchievementsHolder
+acheivement.Sound.SoundId = "rbxassetid://10469938989"
+acheivement.Sound.Volume = 1
+if Notify.SoundToggle then
+	acheivement.Sound:Play()
+end
+
+task.spawn(function()
+	acheivement:TweenSize(UDim2.new(1, 0, 0.2, 0), "In", "Quad", 0.8, true)
+	task.wait(0.8)
+	acheivement.Frame:TweenPosition(UDim2.new(0, 0, 0, 0), "Out", "Quad", 0.5, true)
+	TweenService:Create(acheivement.Frame.Glow, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In),{ImageTransparency = 1}):Play()
+	if Notify.Time ~= nil then
+        if typeof(Notify.Time) == "number" then
+            task.wait(Notify.Time)
+        elseif typeof(Notify.Time) == "Instance" then
+            Notify.Time.Destroying:Wait()
+        end
+    else
+        task.wait(5)
+    end
+	acheivement.Frame:TweenPosition(UDim2.new(1.1, 0, 0, 0), "In", "Quad", 0.5, true)
+	task.wait(0.5)
+	acheivement:TweenSize(UDim2.new(1, 0, -0.1, 0), "InOut", "Quad", 0.5, true)
+	task.wait(0.5)
+	acheivement:Destroy()
+end)
+end
+end
+
+_G.EntityTable = {
+	Entity = {
+		["FigureRig"] = "Figure",
+		["SallyMoving"] = "Window",
+		["RushMoving"] = "Rush",
+		["Eyes"] = "Eyes",
+		["Groundskeeper"] = "Skeeper",
+		["BackdoorLookman"] = "Lookman",
+		["BackdoorRush"] = "Blitz",
+		["MandrakeLive"] = "Mandrake",
+		["GloomPile"] = "Egg",
+		["Snare"] = "Snare",
+		["MonumentEntity"] = "Monument",
+		["LiveEntityBramble"] = "Bramble",
+		["GrumbleRig"] = "Grumble",
+		["GiggleCeiling"] = "Giggle",
+		["AmbushMoving"] = "Ambush",
+		["A60"] = "A-60",
+		["A120"] = "A-120"
+	},
+	EntityNotify = {
+		RushMoving = {"Rush", "Find a hiding spot."},
+		AmbushMoving = {"Ambush", "Hide multiple times!"},
+		A60 = {"A-60", "Hide immediately!"},
+		A120 = {"A-120", "Find A HidingSpot!"},
+		JeffTheKiller = {"Jeff", "Keep distance and avoid."},
+		SeekMovingNewClone = {"Seek", "Run and dodge obstacles!"},
+		BackdoorRush = {"Blitz", "Find a hiding spot."},
+		GlitchRush = {"GlitchRush", "Find a hiding spot."},
+		GlitchAmbush = {"Glitch Ambush", "Find HidingSpot!"},
+		GiggleCeiling = {"Giggle", "Avoid it."},
+		Groundskeeper = {"Skeeper", "Don't touch grass"},
+		MonumentEntity = {"Monument", "You go a distance and have to look back to check."}
+	},
+	Closet = {
+		["A60"] = 190,
+		["A120"] = 90,
+		["RushMoving"] = 150,
+		["AmbushMoving"] = 200,
+		["GlitchRush"] = 190,
+		["GlitchAmbush"] = 200,
+		["BackdoorRush"] = 160
+	}
+}
+
+function EntityFond()
+	for i, v in pairs(workspace:GetChildren()) do
+		for j, b in pairs(_G.EntityTable.Closet) do
+			if v.Name == j and v.PrimaryPart then
+				return v
+			end
+		end
+	end
+end
+
+if game.CoreGui:FindFirstChild("Gui Track") == nil then
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "Gui Track"
+gui.Enabled = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0.2, 0, 0.1, 0)
+Frame.Position = UDim2.new(0.02, 0, 0.87, 0)
+Frame.BackgroundColor3 = Color3.new(1, 1, 1)
+Frame.BorderColor3 = Color3.new(0, 0, 0)
+Frame.BorderSizePixel = 1
+Frame.Active = true
+Frame.BackgroundTransparency = 0 
+Frame.Parent = gui
+
+local UICorner = Instance.new("UIStroke")
+UICorner.Color = Color3.new(0, 0, 0)
+UICorner.Thickness = 2.5
+UICorner.Parent = Frame
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Frame
+
+local Frame1 = Instance.new("Frame")
+Frame1.Size = UDim2.new(1, 0, 1, 0)
+Frame1.Position = UDim2.new(0, 0, 0, 0)
+Frame1.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+Frame1.BorderColor3 = Color3.new(0, 0, 0)
+Frame1.BorderSizePixel = 1
+Frame1.Active = true
+Frame1.BackgroundTransparency = 0.3
+Frame1.Parent = Frame
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Frame1
+
+local Frame2 = Instance.new("Frame")
+Frame2.Name = "Frame1"
+Frame2.Size = UDim2.new(1, 0, 1, 0)
+Frame2.Position = UDim2.new(0, 0, 0, 0)
+Frame2.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+Frame2.BorderColor3 = Color3.new(0, 0, 0)
+Frame2.BorderSizePixel = 1
+Frame2.Active = true
+Frame2.BackgroundTransparency = 0.15
+Frame2.Parent = Frame1
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Frame2
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(1, 0, 1, 0)
+TextLabel.Position = UDim2.new(0, 0, 0, 0)
+TextLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+TextLabel.BorderColor3 = Color3.new(0, 0, 0)
+TextLabel.BorderSizePixel = 1
+TextLabel.Text = ""
+TextLabel.TextSize = 16
+TextLabel.BackgroundTransparency = 1
+TextLabel.TextColor3 = Color3.new(0, 0, 0)
+TextLabel.Font = Enum.Font.Code
+TextLabel.TextWrapped = true
+TextLabel.Parent = Frame
+
+local UITextSizeConstraint = Instance.new("UITextSizeConstraint", TextLabel)
+UITextSizeConstraint.MaxTextSize = 35
+end
+
+function UpdateTrack(enabled, update)
+update.Name = update.Name or "Bruh"
+update.Size = update.Size or 1
+if game.CoreGui:FindFirstChild("Gui Track") then
+game.CoreGui["Gui Track"].Enabled = enabled or false
+game.CoreGui["Gui Track"].Frame:FindFirstChild("TextLabel").Text = update.Name
+local TweenService = game:GetService("TweenService")
+local TweenBar = TweenService:Create(game.CoreGui["Gui Track"].Frame.Frame:FindFirstChild("Frame1"), TweenInfo.new(1.5), {Size = UDim2.new(update.Size, 0, 1, 0)})
+TweenBar:Play()
+end
+end
+
+local EntityModules = Storage.ModulesClient.EntityModules
+gameData = Storage:WaitForChild("GameData")
+local RoomLate = gameData.LatestRoom
+local floor = gameData:WaitForChild("Floor")
+local isMines = floor.Value == "Mines"
+local isHotel = floor.Value == "Hotel"
+local isBackdoor = floor.Value == "Backdoor"
+local isGarden = floor.Value == "Garden"
+local isRoom = floor.Value == "Rooms"
+local isParty = floor.Value == "Party"
+
+for i, v in pairs(playergui:GetChildren()) do
+	if v.Name == "MainUI" and v:FindFirstChild("Initiator") and v.Initiator:FindFirstChild("Main_Game") then
+		requireGui = require(v.Initiator.Main_Game)
+		MainUi = v
+	end
+end
+playergui.ChildAdded:Connect(function()
+	if v.Name == "MainUI" and v:FindFirstChild("Initiator") and v.Initiator:FindFirstChild("Main_Game") then
+		requireGui = require(v.Initiator.Main_Game)
+		MainUi = v
+	end
+end)
+
+local FrameTimer = tick()
+local CurrentRooms = 0
+local FrameCounter = 0
+local FPS = 60
+game:GetService("RunService").RenderStepped:Connect(function()
+FrameCounter += 1
+if (tick() - FrameTimer) >= 1 then
+    FPS = FrameCounter
+    FrameTimer = tick()
+    FrameCounter = 0
+end
+if isMines then 
+	CurrentRooms = 100 + RoomLate.Value 
+elseif isBackdoor then 
+	CurrentRooms = -50 + RoomLate.Value 
+else 
+	CurrentRooms = RoomLate.Value 
+end
+if char:FindFirstChild("Humanoid") then SpeedUp = char.Humanoid.WalkSpeed else SpeedUp = 0 end
+Library:SetWatermark(("%s Current Rooms | %s Speed | %s FPS | %s MS"):format(
+	math.floor(CurrentRooms),
+	math.floor(SpeedUp or 0),
+    math.floor(FPS),
+    math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+))
+for i, v in pairs(_G.GetOldBright.New) do
+	if _G.FullBright then
+		Lighting[i] = v
+	end
+end
+if Toggles.FastClosetExit.Value and char:FindFirstChild("Humanoid") and char.Humanoid.MoveDirection.Magnitude > 0 and char:GetAttribute("Hiding") then
+    Storage:WaitForChild("RemotesFolder"):WaitForChild("CamLock"):FireServer()
+end
+if _G.AntiCheatBruh and char then
+char:PivotTo(char:GetPivot() * CFrame.new(0, 0, 1000))
+end
+if game:GetService("Workspace"):FindFirstChild("Camera") then
+local CAM = game:GetService("Workspace").Camera
+if requireGui then
+	if _G.ThirdCamera then
+		CAM.CFrame = requireGui.finalCamCFrame * CFrame.new(1.5, -0.5, 6.5)
+	end
+	if _G.NoShake then
+		requireGui.csgo = CFrame.new()
+	end
+end
+if char:FindFirstChild("Head") and not (requireGui and requireGui.stopcam or char.HumanoidRootPart.Anchored and not char:GetAttribute("Hiding")) then
+    char:SetAttribute("ShowInFirstPerson", _G.ThirdCamera)
+    char.Head.LocalTransparencyModifier = _G.ThirdCamera and 0 or 1
+end
+if _G.FovOPCamera then
+	if not requireGui then
+		CAM.FieldOfView = _G.FovOP or 71
+	else
+		requireGui.fovtarget = _G.FovOP or 70
+	end
+end
+end
+end)
+
+if not isHotel then
+_G.RemoveLag = {"Leaves", "HidingShrub", "Flowers"}
+function RemoveLagTo(v)
+	if _G.AntiLag == true then
+		local Terrain = workspace:FindFirstChildOfClass("Terrain")
+		Terrain.WaterWaveSize = 0
+		Terrain.WaterWaveSpeed = 0
+		Terrain.WaterReflectance = 0
+		Terrain.WaterTransparency = 1
+		Lighting.GlobalShadows = false
+		Lighting.FogEnd = 9e9
+		Lighting.FogStart = 9e9
+		if v:IsA("ForceField") or v:IsA("Sparkles") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Beam") then
+			v:Destroy()
+		end
+		for i, n in pairs(_G.RemoveLag) do
+			if v.Name == n or v.Name:find("grass") then
+				v:Destroy()
+			end
+		end
+		if v:IsA("PostEffect") then
+			v.Enabled = false
+		end
+		if v:IsA("BasePart") then
+			v.Material = "Plastic"
+			v.Reflectance = 0
+			v.BackSurface = "SmoothNoOutlines"
+			v.BottomSurface = "SmoothNoOutlines"
+			v.FrontSurface = "SmoothNoOutlines"
+			v.LeftSurface = "SmoothNoOutlines"
+			v.RightSurface = "SmoothNoOutlines"
+			v.TopSurface = "SmoothNoOutlines"
+		elseif v:IsA("Decal") then
+			v.Transparency = 1
+		elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+			v.Lifetime = NumberRange.new(0)
+		end
+	end
+end
+game.Workspace.DescendantAdded:Connect(function(v)
+	RemoveLagTo(v)
+end)
+end
+
+if isRoom then
+	if workspace:FindFirstChild("PathFindPartsFolder") == nil then
+	    local Folder = Instance.new("Folder")
+	    Folder.Parent = workspace
+	    Folder.Name = "PathFindPartsFolder"
+	end
+end
+
+---- UiLib ----
+
+function Notification(notifyFu)
+if _G.ChooseNotify == "Obsidian" then
+Library:Notify({
+    Title = notifyFu.title or "",
+    Description = notifyFu.content or "",
+    Time = notifyFu.duration or 5,
+})
+elseif _G.ChooseNotify == "Roblox" then
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = notifyFu.title,
+	Text = notifyFu.content,
+	Icon = ("rbxassetid://"..notifyFu.icon) or "",
+	Duration = notifyFu.duration or 5
+})
+elseif _G.ChooseNotify == "Door" then
+NotifyDoor({
+    Title = notifyFu.title or "",
+    Description = notifyFu.content or "",
+    Time = notifyFu.duration or 5,
+    Image = ("rbxassetid://"..notifyFu.icon) or "",
+    SoundToggle = true,
+})
+end
+if _G.ChooseNotify ~= "Door" then
+local sound = Instance.new("Sound", workspace)
+sound.SoundId = "rbxassetid://4590662766"
+sound.Volume = _G.VolumeTime or 2
+sound.PlayOnRemove = true
+sound:Destroy()
+end
+end
+
+Library:SetDPIScale(85)
+local Window = Library:CreateWindow({
+    Title = "laws hub",
+    Center = true,
+    AutoShow = true,
+    Resizable = true,
+	Footer = "by tobey (laws hub team)",
+	Icon = 119629543947699,
+	ShowCustomCursor = true,
+    NotifySide = "Right",
+    TabPadding = 2,
+    MenuFadeTime = 0
+})
+    
+Tabs = {
+	Tab = Window:AddTab("Main", "house"),
+    Tab1 = Window:AddTab("Misc", "layout-list"),
+    Tab2 = Window:AddTab("Esp", "house-plus"),
+	["UI Settings"] = Window:AddTab("UI Settings", "settings")
+}
+
+local Main = Tabs.Tab:AddLeftGroupbox("Main")
+
+Main:AddToggle("Fullbright", {
+    Text = "Fullbright",
+    Default = false,
+    Callback = function(Value)
+_G.FullBright = Value
+if _G.FullBright then
+for i, v in pairs(_G.GetOldBright.New) do
+Lighting[i] = v
+end
+else
+for i, v in pairs(_G.GetOldBright.Old) do
+Lighting[i] = v
+end
+end
+    end
+})
+
+Main:AddToggle("Nofog", {
+    Text = "No Fog",
+    Default = false,
+    Callback = function(Value)
+_G.Nofog = Value
+while _G.Nofog do
+for i, v in pairs(Lighting:GetChildren()) do
+if v.ClassName == "Atmosphere" then
+v.Density = 0
+v.Haze = 0
+end
+end
+task.wait()
+end
+for i, v in pairs(Lighting:GetChildren()) do
+if v.ClassName == "Atmosphere" then
+v.Density = 0.3
+v.Haze = 1
+end
+end
+    end
+})
+
+Main:AddToggle("Instant Prompt", {
+    Text = "Instant Prompt",
+    Default = false,
+    Callback = function(Value)
+_G.NoCooldownProximity = Value
+if _G.NoCooldownProximity == true then
+for i, v in pairs(workspace:GetDescendants()) do
+if v.ClassName == "ProximityPrompt" then
+v.HoldDuration = 0
+end
+end
+CooldownProximity = workspace.DescendantAdded:Connect(function(Cooldown)
+if _G.NoCooldownProximity == true then
+if Cooldown:IsA("ProximityPrompt") then
+Cooldown.HoldDuration = 0
+end
+end
+end)
+else
+if CooldownProximity then
+CooldownProximity:Disconnect()
+CooldownProximity = nil
+end
+end
+    end
+})
+
+Main:AddToggle("3rd Cam", {
+    Text = "Third Camera",
+    Default = false,
+    Callback = function(Value)
+_G.ThirdCamera = Value
+    end
+})
+
+Main:AddSlider("FovCam", {
+    Text = "FOV Camera",
+    Default = 80,
+    Min = 70,
+    Max = 150,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+_G.FovOP = Value
+    end
+})
+
+Main:AddToggle("FOVCam", {
+    Text = "FOV Camera",
+    Default = false,
+    Callback = function(Value)
+_G.FovOPCamera = Value
+    end
+})
+
+Main:AddToggle("NoShake", {
+    Text = "No Camera Shake",
+    Default = false,
+    Callback = function(Value)
+_G.NoShake = Value
+    end
+})
+
+local Main1 = Tabs.Tab:AddRightGroupbox("Misc")
+
+Main1:AddToggle("AntiScreech", {
+    Text = "Anti Screech",
+    Default = false,
+    Callback = function(Value)
+_G.AntiScreech = Value
+if MainUi:FindFirstChild("Initiator") and MainUi.Initiator:FindFirstChild("Main_Game") and MainUi.Initiator.Main_Game:FindFirstChild("RemoteListener") and MainUi.Initiator.Main_Game.RemoteListener:FindFirstChild("Modules") then
+	local ScreechScript = MainUi.Initiator.Main_Game.RemoteListener.Modules:FindFirstChild("Screech") or MainUi.Initiator.Main_Game.RemoteListener.Modules:FindFirstChild("_Screech")
+	if ScreechScript then
+	    ScreechScript.Name = _G.AntiScreech and "_Screech" or "Screech"
+	end
+end
+    end
+})
+
+Main1:AddToggle("Heart Win", {
+    Text = "Anti Clutch Heart",
+    Default = false
+})
+
+Main1:AddToggle("Anti Halt", {
+    Text = "Anti Halt",
+    Default = false,
+    Callback = function(Value)
+_G.NoHalt = Value
+local HaltShade = EntityModules:FindFirstChild("Shade") or EntityModules:FindFirstChild("_Shade")
+if HaltShade then
+    HaltShade.Name = _G.NoHalt and "_Shade" or "Shade"
+end
+    end
+})
+
+Main1:AddToggle("AntiEyes", {
+    Text = "Anti Eyes / Lookman",
+    Default = false,
+    Callback = function(Value)
+_G.NoEyes = Value
+while _G.NoEyes do
+if workspace:FindFirstChild("Eyes") or workspace:FindFirstChild("BackdoorLookman") then
+if Storage:FindFirstChild("RemotesFolder") then
+Storage:WaitForChild("RemotesFolder"):WaitForChild("MotorReplication"):FireServer(-649)
+end
+end
+task.wait()
+end
+    end
+})
+
+Main1:AddToggle("Anti Snare", {
+    Text = "Anti Snare",
+    Default = false,
+    Callback = function(Value)
+for i, v in ipairs(workspace:GetDescendants()) do
+	if v.Name == "Snare" then
+        if v:FindFirstChild("Hitbox") then
+           v.Hitbox:Destroy()
+        end
+    end
+end
+    end
+})
+
+if isGarden then
+Main1:AddToggle("Anti Monument", {
+    Text = "Anti Monument",
+    Default = false,
+    Callback = function(Value)
+_G.NoMonument = Value
+while _G.NoMonument do
+for i, v in pairs(game.Workspace:GetChildren()) do
+        if v.Name == "MonumentEntity" and v:FindFirstChild("Top") then
+                for _, x in pairs(v.Top:GetChildren()) do
+                        if x.Name:find("Hitbox") then
+                                x:Destroy()
+                        end
+                end
+        end
+end
+task.wait()
+end
+    end
+})
+end
+
+if isRoom or isParty then
+Main1:AddToggle("Anti A90", {
+    Text = "Anti A-90",
+    Default = false,
+    Callback = function(Value)
+_G.NoA90 = Value
+if MainUi:FindFirstChild("Initiator") and MainUi.Initiator:FindFirstChild("Main_Game") and MainUi.Initiator.Main_Game:FindFirstChild("RemoteListener") and MainUi.Initiator.Main_Game.RemoteListener:FindFirstChild("Modules") then
+	local A90Script = MainUi.Initiator.Main_Game.RemoteListener.Modules:FindFirstChild("A90") or MainUi.Initiator.Main_Game.RemoteListener.Modules:FindFirstChild("_A90")
+	if A90Script then
+	    A90Script.Name = _G.NoA90 and "_A90" or "A90"
+	end
+end
+    end
+})
+end
+
+if isMines or isParty then
+Main1:AddToggle("Anti Egg Gloom", {
+    Text = "Anti Egg Gloom",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v.Name == "Egg" then
+		v.CanTouch = not Value
+	end
+end
+    end
+})
+
+Main1:AddToggle("Anti Giggle", {
+    Text = "Anti Giggle",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace:GetDescendants()) do
+	if v:IsA("Model") and v.Name == "GiggleCeiling" then
+		repeat task.wait() until v:FindFirstChild("Hitbox")
+		wait(0.1)
+		if v:FindFirstChild("Hitbox") then
+			v.Hitbox:Destroy()
+		end
+	end
+end
+    end
+})
+
+Main1:AddToggle("Anti Seek Flood", {
+    Text = "Anti Seek Flood",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace:GetDescendants()) do
+	if v.Name == "_DamHandler" then
+		repeat task.wait() until v:FindFirstChild("SeekFloodline")
+		wait(0.1)
+		if v:FindFirstChild("SeekFloodline") then
+			v.SeekFloodline.CanCollide = Value
+		end
+	end
+end
+    end
+})
+
+Main1:AddToggle("Anti Fall Barrier", {
+    Text = "Anti Fall Barrier",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace:GetDescendants()) do
+	if v.Name == "PlayerBarrier" and v.Size.Y == 2.75 and (v.Rotation.X == 0 or v.Rotation.X == 180) then
+		local CLONEBARRIER = v:Clone()
+		CLONEBARRIER.CFrame = CLONEBARRIER.CFrame * CFrame.new(0, 0, -5)
+		CLONEBARRIER.Color = Color3.new(1, 1, 1)
+		CLONEBARRIER.Name = "CLONEBARRIER_ANTI"
+		CLONEBARRIER.Size = Vector3.new(CLONEBARRIER.Size.X, CLONEBARRIER.Size.Y, 11)
+		CLONEBARRIER.Transparency = 0
+		CLONEBARRIER.Parent = v.Parent
+	end
+end
+    end
+})
+
+Main1:AddToggle("Guide Path", {
+    Text = "Guide Path",
+    Default = false,
+    Callback = function(Value)
+_G.GuideNah = Value
+if _G.GuideNah then
+local function PathLights()
+	if workspace:FindFirstChild("PathLights") then
+		local function GuideMine(v)
+			if v:IsA("Part") then
+				local CLONEGUIDE = v:Clone()
+	            CLONEGUIDE.CFrame = CLONEGUIDE.CFrame
+	            CLONEGUIDE.Color = Color3.fromRGB(0, 255, 0)
+	            CLONEGUIDE.Name = "GuideClone"
+	            CLONEGUIDE.Shape = Enum.PartType.Ball
+	            CLONEGUIDE.Size = Vector3.new(1, 1, 1)
+			    CLONEGUIDE.Transparency = 0
+				CLONEGUIDE.Anchored = true
+			    CLONEGUIDE.Parent = v
+				for i, n in pairs(CLONEGUIDE:GetChildren()) do
+					n:Destroy()
+				end
+			end
+		end
+		for _, v in ipairs(workspace.PathLights:GetChildren()) do
+			GuideMine(v)
+		end
+		GuideMineReal = workspace.PathLights.ChildAdded:Connect(function(v)
+			GuideMine(v)
+		end)
+	end
+end
+for _, v in ipairs(workspace:GetChildren()) do
+	PathLights()
+end
+GoLightPath = workspace.ChildAdded:Connect(function(v)
+	PathLights()
+end)
+else
+if GuideMineReal then
+GuideMineReal:Disconnect()
+GuideMineReal = nil
+end
+if GoLightPath then
+GoLightPath:Disconnect()
+GoLightPath = nil
+end
+if workspace:FindFirstChild("PathLights") then
+	for i, v in pairs(workspace:FindFirstChild("PathLights"):GetChildren()) do
+		if v:IsA("Part") then
+			for _, d in pairs(v:GetChildren()) do
+				if d.Name == "GuideClone" then
+					d:Destroy()
+				end
+			end
+		end
+	end
+end
+end
+    end
+})
+end
+
+if not isHotel then
+Main1:AddToggle("Anti Lag", {
+    Text = "Anti Lag",
+    Default = false,
+    Callback = function(Value)
+_G.AntiLag = Value
+if _G.AntiLag == true then
+for i,v in pairs(workspace:GetDescendants()) do
+	RemoveLagTo(v)
+end
+end
+    end
+})
+end
+
+if isHotel then
+Main1:AddToggle("Anti Seek Obstruction", {
+    Text = "Anti Seek Obstruction",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace.CurrentRooms:GetDescendants()) do
+	if v.Name == "ChandelierObstruction" or v.Name == "Seek_Arm" then
+        for b, h in pairs(v:GetDescendants()) do
+            if h:IsA("BasePart") then 
+				h.CanTouch = not Value
+			end
+        end
+    end
+end
+    end
+})
+end
+
+if not isGarden and not isRoom then
+Main1:AddToggle("Anti Fake Door", {
+    Text = "Anti Fake Door",
+    Default = false,
+    Callback = function(Value)
+for _, v in ipairs(workspace:GetDescendants()) do
+	if v.Name == "DoorFake" then
+		local CollisionFake = v:FindFirstChild("Hidden", true)
+		local Prompt = v:FindFirstChild("UnlockPrompt", true)
+		if CollisionFake then
+			CollisionFake.CanTouch = not Value
+		end
+		if Prompt then
+			Prompt:Destroy()
+		end
+	end
+end
+    end
+})
+end
+
+Main1:AddDivider()
+
+Main1:AddToggle("Auto Use Crouch", {
+    Text = "Auto Use Crouch",
+    Default = false
+})
+
+Main1:AddToggle("Use Jump", {
+    Text = "Use Jump",
+    Default = false,
+    Callback = function(Value)
+_G.ButtonJump = Value 
+while _G.ButtonJump do 
+if char then
+char:SetAttribute("CanJump", true)
+end
+task.wait()
+end 
+if char then
+char:SetAttribute("CanJump", false)
+end
+    end
+})
+
+Main1:AddToggle("Check Fool", {
+    Text = "Check "..(isBackdoor and "Haste Clock" or "Oxygen"),
+    Default = false,
+    Callback = function(Value)
+_G.ActiveCheck = Value
+if _G.ActiveCheck then
+if isBackdoor then
+	if Storage:FindFirstChild("FloorReplicated") and game:GetService("ReplicatedStorage").FloorReplicated:FindFirstChild("DigitalTimer") and game:GetService("ReplicatedStorage").FloorReplicated:FindFirstChild("ScaryStartsNow") then
+		local function getTimeFormat(sec)
+		    local min = math.floor(sec / 60)
+		    local remSec = sec % 60
+		    return string.format("%02d:%02d", min, remSec)
+		end
+		getCheck = Storage.FloorReplicated.DigitalTimer:GetPropertyChangedSignal("Value"):Connect(function()
+		    if _G.ActiveCheck and game:GetService("ReplicatedStorage").FloorReplicated.ScaryStartsNow.Value then
+			    if Storage.FloorReplicated.DigitalTimer.Value <= 60 then
+					SizeTime = (Storage.FloorReplicated.DigitalTimer.Value / 60)
+				else
+					SizeTime = 1
+				end
+		        UpdateTrack(true, {Name = "Clock: "..getTimeFormat(Storage.FloorReplicated.DigitalTimer.Value), Size = SizeTime or 1})
+		    end
+		end)
+	end
+else
+	getCheck = char:GetAttributeChangedSignal("Oxygen"):Connect(function()
+		if char:GetAttribute("Oxygen") < 100 then
+			UpdateTrack(true, {
+				Name = string.format("Oxygen: %.1f", char:GetAttribute("Oxygen")),
+				Size = (char:GetAttribute("Oxygen") / 100)
+			})
+		else
+			UpdateTrack(false, {Name = "Oxygen: 100", Size = 1})
+		end
+	end)
+end
+else
+if getCheck then
+	getCheck:Disconnect()
+	getCheck = nil
+end
+UpdateTrack(false, {Name = "Ok", Size = 1})
+end
+    end
+})
+
+local Misc = Tabs.Tab1:AddLeftGroupbox("Misc")
+
+local EntityName = {}
+for i, v in pairs(_G.EntityTable.EntityNotify) do
+	table.insert(EntityName, v[1])
+end
+
+Misc:AddDropdown("EntityNotify", {
+    Text = "Entity Notify",
+    Values = EntityName,
+    Default = {"Rush"},
+    Multi = true,
+    Callback = function(Value)
+_G.EntityNotifyNow = {}
+for i, v in next, Options.EntityNotify.Value do
+	table.insert(_G.EntityNotifyNow, i)
+end
+    end
+})
+
+Misc:AddToggle("Notification Entity", {
+    Text = "Notification Entity",
+    Default = false,
+    Callback = function(Value)
+_G.NotifyEntity = Value
+if _G.NotifyEntity then
+    EntityChild = workspace.DescendantAdded:Connect(function(child)
+	    for i, v in pairs(_G.EntityNotifyNow or {"Rush"}) do
+            if child:IsA("Model") and child.Name:find(v) then
+	            repeat task.wait() until not child:IsDescendantOf(workspace) or Distance(child:GetPivot().Position) < 10000
+				local EntityName = _G.EntityTable.EntityNotify[child.Name][1]
+				local EntityWa = _G.EntityTable.EntityNotify[child.Name][2]
+				if child:IsDescendantOf(workspace) then
+					child.AncestryChanged:Connect(function()
+					  if not child.Parent then
+						if _G.GoodbyeBro then
+						    Notification({title = "Arona", content = "Entity: Goodbye "..EntityName.."!!", duration = 5, icon = "82357489459031"})
+			                if _G.NotifyEntityChat then
+			                    local text = _G.ChatNotifyGoodBye or "Goodbye "
+			                    game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(text..EntityName)
+			                end
+						end
+					  end
+					end)
+                    Notification({title = "Arona", content = "Entity: "..EntityName.." has spawned! "..EntityWa, duration = 5, icon = "82357489459031"})
+                    if _G.NotifyEntityChat then
+                        local text = _G.ChatNotify or " Spawn!!"
+                        game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(EntityName..text)
+                    end
+                end
+            end
+		end
+	end)
+else
+    if EntityChild then
+        EntityChild:Disconnect()
+        EntityChild = nil
+    end
+end
+    end
+})
+
+Misc:AddInput("ChatGodbye", {
+    Text = "Input Chat GoodBye",
+    Default = "Goodbye!!",
+    Numeric = false,
+    Finished = true,
+    Placeholder = "Your Chat GoodBye...",
+    Callback = function(Value)
+_G.ChatNotifyGoodBye = Value
+    end
+})
+
+Misc:AddInput("Input Chat Entity", {
+    Text = "Input Chat Entity",
+    Default = "Spawn!!",
+    Numeric = false,
+    Finished = true,
+    Placeholder = "Your Chat...",
+    Callback = function(Value)
+_G.NotifyEntityChat = Value
+    end
+})
+
+Misc:AddToggle("Notification Chat", {
+    Text = "Notification Chat Entity",
+    Default = false,
+    Callback = function(Value)
+_G.NotifyEntityChat = Value
+    end
+})
+
+Misc:AddToggle("Notification Goodbye", {
+    Text = "Notification Goodbye",
+    Default = false,
+    Callback = function(Value)
+_G.GoodbyeBro = Value
+    end
+})
+
+Misc:AddDivider()
+
+if isGarden then
+Misc:AddToggle("Notification Bramble Light", {
+    Text = "Notification Bramble Light",
+    Default = false,
+    Callback = function(Value)
+_G.BrambleLight = Value
+if _G.BrambleLight then
+local function BrambleLight(v)
+	if v.Name == "LiveEntityBramble" and v:FindFirstChild("Head") and v.Head:FindFirstChild("LanternNeon") then
+		for i, x in pairs(v.Head.LanternNeon:GetChildren()) do
+			if x.Name == "Attachment" and x:FindFirstChild("PointLight") then
+				LightningNotifyBr = x.PointLight:GetPropertyChangedSignal("Enabled"):Connect(function()
+					if x.PointLight.Enabled then turn = "ON" else turn = "OFF" end
+					Notification({title = "Arona", content = "Bramble Light ("..turn..")", duration = 3, icon = "82357489459031"})
+					if _G.NotifyEntityChat then
+						game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(TextChat.." Bramble Light ("..turn..")")
+					end
+				end)
+			end
+		end
+	end
+end
+for _, v in ipairs(workspace:GetDescendants()) do
+	BrambleLight(v)
+end
+BrambleSpawn = workspace.DescendantAdded:Connect(function(v)
+	BrambleLight(v)
+end)
+else
+if LightningNotifyBr then
+LightningNotifyBr:Disconnect()
+LightningNotifyBr = nil
+end
+if BrambleSpawn then
+BrambleSpawn:Disconnect()
+BrambleSpawn = nil
+end
+end
+    end
+})
+end
+
+if isHotel then
+Misc:AddToggle("Auto Get Code Library", {
+    Text = "Auto Get Code Library",
+    Default = false,
+    Callback = function(Value)
+_G.NotifyEntity = Value
+if _G.NotifyEntity then
+local function CodeAll(v)
+	if v:IsA("Tool") and v.Name == "LibraryHintPaper" then
+        code = table.concat(Deciphercode(v))
+        if code then
+	        Notification({title = "Arona", content = "Code: "..code, duration = 15, icon = "82357489459031"})
+			if _G.NotifyEntityChat then
+				game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync("Library Code: "..code)
+			end
+			if _G.AutoUnlockPadlock then
+				game:GetService("ReplicatedStorage"):WaitForChild("RemotesFolder"):WaitForChild("PL"):FireServer(code)
+			end
+		end
+    end
+end
+Getpaper = char.ChildAdded:Connect(function(v)
+CodeAll(v)
+end)
+else
+if Getpaper then
+Getpaper:Disconnect()
+Getpaper = nil
+end
+end
+    end
+})
+
+Misc:AddToggle("Auto Unlock Padlock", {
+    Text = "Auto Unlock Padlock",
+    Default = false,
+    Callback = function(Value)
+_G.AutoUnlockPadlock = Value
+    end
+})
+end
+
+Misc:AddToggle("Notification Chat", {
+    Text = "Notification Chat",
+    Default = false,
+    Callback = function(Value)
+_G.NotifyChat = Value
+    end
+})
+
+local Misc1 = Tabs.Tab1:AddRightGroupbox("Misc")
+
+if isHotel then
+Misc1:AddButton({
+    Text = "Instant Cube Glitch",
+    Func = function()
+LoadingInstant = true
+spawn(function()
+	Toggles["Bypass Speed"]:SetValue(false)
+	wait(0.3)
+	repeat task.wait() until not LoadingInstant
+	wait(0.5)
+	Toggles["Bypass Speed"]:SetValue(true)
+end)
+local OldCollision = char:FindFirstChild("CollisionPart").CFrame 
+for i = 1, 6 do
+	repeat task.wait()
+		if root and root.Position.Y > -5 and char:FindFirstChild("CollisionPart") then
+			char:FindFirstChild("CollisionPart").CFrame = OldCollision * CFrame.new(0, 90, 0)
+		end
+	until cam and cam:FindFirstChild("Glitch")
+	wait(0.3)
+	repeat task.wait() until cam and not cam:FindFirstChild("Glitch")
+	wait(0.4)
+	Notification({title = "Arona", content = "Glitch times "..i.." / 6", duration = 3, icon = "82357489459031"})
+end
+wait(0.7)
+local Cube = workspace:FindFirstChild("GlitchCube", true)
+if not Cube then
+	Notification({title = "Arona", content = "You can go find it.", duration = 5, icon = "82357489459031"})
+end
+for _, v in ipairs(workspace:GetDescendants()) do
+	if v:IsA("Model") and v.Name == "GlitchCube" then
+		Notification({title = "Arona", content = "Oh look! Glitch Cube spawn here", duration = 5, icon = "82357489459031"})
+		ESPLibrary:AddESP({Object = v, Text = "Glitch Cube", Color = Color3.fromRGB(151, 50, 168)})
+		break
+	end
+end
+LoadingInstant = false
+    end
+})
+end
+
+if isMines then
+Misc1:AddToggle("Auto Mines Anchor", {
+    Text = "Auto Mines Anchor",
+    Default = false,
+    Callback = function(Value)
+_G.MinesAnchorOh = Value
+while _G.MinesAnchorOh do
+if _G.AddedGet then
+if MainUi:FindFirstChild("AnchorHintFrame") and MainUi.AnchorHintFrame:FindFirstChild("Code") then
+for i, v in pairs(_G.AddedGet) do
+if v.Name == "MinesAnchor" and v:FindFirstChild("AnchorRemote") and Distance(v:GetPivot().Position) <= 15 then
+v.AnchorRemote:InvokeServer(MainUi.AnchorHintFrame.Code.Text)
+end
+end
+end
+end
+task.wait()
+end
+    end
+})
+end
+
+Misc1:AddSlider("Hiding Transparency", {
+    Text = "Hiding Transparency",
+    Default = 0.5,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+_G.TransparencyHide = Value
+    end
+})
+
+Misc1:AddToggle("Transparency Hiding", {
+    Text = "Transparency Hiding",
+    Default = false,
+    Callback = function(Value)
+_G.HidingTransparency = Value
+while _G.HidingTransparency do
+if char:GetAttribute("Hiding") then
+	for _, v in pairs(workspace.CurrentRooms:GetDescendants()) do
+		if v:IsA("ObjectValue") and v.Name == "HiddenPlayer" then
+			if v.Value == char then
+                local hidePart = {}
+                for _, i in pairs(v.Parent:GetChildren()) do
+                    if i:IsA("BasePart") then
+		                i.Transparency = _G.TransparencyHide or 0.5
+		                table.insert(hidePart, i)
+		            end
+		        end
+            repeat task.wait()
+                for _, h in pairs(hidePart) do
+                    h.Transparency = _G.TransparencyHide or 0.5
+                    task.wait()
+                end
+            until not char:GetAttribute("Hiding") or not _G.HidingTransparency
+            for _, n in pairs(hidePart) do
+                n.Transparency = 0
+                task.wait()
+            end
+            break
+		end
+	end
+end
+end
+task.wait()
+end
+    end
+})
+
+if not isRoom then
+Misc1:AddToggle("FastClosetExit", {
+    Text = "Fast Closet Exit",
+    Default = false
+})
+
+Misc1:AddToggle("Auto Closet", {
+    Text = "Auto Closet",
+    Default = false,
+    Callback = function(Value)
+_G.AutoCloset = Value
+while _G.AutoCloset do
+local EntityCl = EntityFond()
+if EntityCl and EntityCl.PrimaryPart then
+	local distanceCloset = _G.EntityTable.Closet[EntityCl.Name]
+	local distance = Distance2(EntityCl.PrimaryPart.Position)
+	if distanceCloset and distance then
+		if distance <= distanceCloset then
+			if not char:GetAttribute("Hiding") then
+				for i, v in pairs(_G.AddedGet) do
+					if v:FindFirstChild("HiddenPlayer") and v:FindFirstChildWhichIsA("BasePart") and v:FindFirstChild("Main") and not v.Main:FindFirstChild("HideEntityOnSpot") then
+						if Distance2(v:FindFirstChildWhichIsA("BasePart").Position) <= 20 then
+							local Pro = v:FindFirstChild("HidePrompt", true)
+							if Pro and Pro.Enabled == true then
+								if not v.Main:FindFirstChild("HideEntityOnSpot") then
+									fireproximityprompt(Pro)
+								end
+							end
+						end
+					end
+				end
+			end
+		elseif distance > distanceCloset + 10 then
+			if char:GetAttribute("Hiding") then
+				Storage:WaitForChild("RemotesFolder"):WaitForChild("CamLock"):FireServer()
+			end
+		end
+	end
+end
+task.wait()
+end
+    end
+})
+end
+
+Misc1:AddToggle("Anticheat Manipulation", {
+    Text = "Anticheat Manipulation",
+    Default = false,
+    Callback = function(Value)
+_G.AntiCheatBruh = Value
+if _G.BypassSpeed then
+	Toggles["Bypass Speed"]:SetValue(false)
+	wait(0.3)
+	repeat task.wait() until not _G.AntiCheatBruh
+	wait(0.5)
+	Toggles["Bypass Speed"]:SetValue(true)
+end
+    end
+}):AddKeyPicker("AnticheatManipulation", {
+   Default = "U",
+   Text = "Anticheat Manipulation",
+   Mode = "Toggle",
+   SyncToggleState = true
+})
+
+if isRoom then
+Misc1:AddToggle("Auto Room", {
+    Text = "Auto Room",
+    Default = false,
+    Callback = function(Value)
+_G.AutoRoom = Value
+if _G.AutoRoom then
+	if MainUi:FindFirstChild("Initiator") and MainUi.Initiator:FindFirstChild("Main_Game") and MainUi.Initiator.Main_Game:FindFirstChild("RemoteListener") and MainUi.Initiator.Main_Game.RemoteListener:FindFirstChild("Modules") then
+		local A90Script = MainUi.Initiator.Main_Game.RemoteListener.Modules:FindFirstChild("A90")
+		if A90Script then
+		    A90Script.Name = "_A90"
+		end
+	end
+	function Locker()
+		local LockerRooms
+		for i,v in pairs(workspace.CurrentRooms:GetDescendants()) do
+	        if v.Name == "Rooms_Locker" then
+	            if v:FindFirstChild("Door") and v:FindFirstChild("HiddenPlayer") then
+	                if v.HiddenPlayer.Value == nil and v.Door.Position.Y > -3 then
+                        if LockerRooms == nil then
+                            LockerRooms = v.Door
+                        else
+                            if Distance(v.Door.Position) < (LockerRooms.Position - root.Position).Magnitude then
+                                LockerRooms = v.Door
+                            end
+                        end
+	                end
+	            end
+	        end
+	    end
+		return LockerRooms
+	end
+	function getPathRooms()
+	    local Part
+	    local Entity = (workspace:FindFirstChild("A60") or workspace:FindFirstChild("A120"))
+	    if Entity and Entity.Main.Position.Y > -6.5 then
+	        Part = Locker()
+	    else
+			if RoomLate.Value ~= 1000 then
+				if char:GetAttribute("Hiding") then
+		           Storage:WaitForChild("RemotesFolder"):WaitForChild("CamLock"):FireServer()	
+				end
+		        Part = workspace.CurrentRooms[RoomLate.Value].Door.Door
+			end
+	    end
+	    return Part
+	end
+	function getHide()
+		local Path = getPathRooms()
+	    local Entity = (workspace:FindFirstChild("A60") or workspace:FindFirstChild("A120"))
+	    if Entity then
+	        if Path then
+	            if Path.Parent.Name:find("Rooms_Locker") and Entity:FindFirstChild("Main") and Entity.Main.Position.Y > -6.5 then
+                    if (root.Position - Path.Position).Magnitude <= 30 then
+                        if not char:GetAttribute("Hiding") then
+                            fireproximityprompt(Path.Parent:FindFirstChild("HidePrompt"))
+                        end
+                    end
+	            end
+	        end
+		end
+	end
+end
+spawn(function() 
+while _G.AutoRoom do 
+	getHide()
+	if Toggles.WalkSpeed.Value then
+		Toggles.WalkSpeed:SetValue(false)
+	end
+	if Toggles["Bypass Speed"].Value then
+		Toggles["Bypass Speed"]:SetValue(false)
+	end
+	if Toggles["Use Jump"].Value then
+		Toggles["Use Jump"]:SetValue(false)
+	end
+	if char:FindFirstChild("Humanoid") then
+		char.Humanoid.WalkSpeed = 21.5
+	end
+	if char:FindFirstChild("CloneCollisionPart1") then
+		char:FindFirstChild("CloneCollisionPart1"):Destroy()
+	end
+	task.wait() 
+end 
+end)
+while _G.AutoRoom do 
+	Destination = getPathRooms()
+	local path = PFS:CreatePath({WaypointSpacing = 0.25, AgentRadius = 1.55, AgentCanJump = false})
+	path:ComputeAsync(root.Position - Vector3.new(0, 2.5, 0), Destination.Position)
+	if path and path.Status == Enum.PathStatus.Success then
+		local Waypoints = path:GetWaypoints()
+	    workspace:FindFirstChild("PathFindPartsFolder"):ClearAllChildren()
+	    for _, Waypoint in pairs(Waypoints) do
+	        local part = Instance.new("Part")
+	        part.Size = Vector3.new(0.5, 0.5, 0.5)
+	        part.Position = Waypoint.Position
+	        part.Shape = "Cylinder"
+	        part.Material = "SmoothPlastic"
+			part.Shape = Enum.PartType.Ball
+	        part.Anchored = true
+	        part.CanCollide = false
+	        part.Parent = workspace:FindFirstChild("PathFindPartsFolder")
+	    end
+		for _, Waypoint in pairs(Waypoints) do
+	        if not char:GetAttribute("Hiding") then
+	            char.Humanoid:MoveTo(Waypoint.Position)
+	            char.Humanoid.MoveToFinished:Wait()
+	        end
+	    end
+	end
+end
+wait(0.3)
+workspace:FindFirstChild("PathFindPartsFolder"):ClearAllChildren()
+    end
+})
+end
+
+Misc1:AddDropdown("Auto Loot type", {
+    Text = "No Loot",
+    Multi = true,
+    Values = {"Unlock Lockpick", "Jeff Shop", "Gold", "Light Items", "Skull Prompt"}
+})
+
+_G.Aura = {
+	["AuraPrompt"] = {
+		"ActivateEventPrompt",
+		"HerbPrompt",
+		"LootPrompt",
+		"SkullPrompt",
+		"ValvePrompt",
+		"LongPushPrompt",
+		"LeverPrompt",
+		"FusesPrompt",
+		"UnlockPrompt",
+		"AwesomePrompt",
+		"ModulePrompt",
+		"PartyDoorPrompt",
+	},
+	["AutoLootInteractions"] = {
+		"ActivateEventPrompt",
+		"HerbPrompt",
+		"LootPrompt",
+		"SkullPrompt",
+		"ValvePrompt"
+	},
+	["AutoLootNotInter"] = {
+		"LongPushPrompt",
+		"LeverPrompt",
+		"FusesPrompt",
+		"UnlockPrompt",
+		"AwesomePrompt",
+		"ModulePrompt",
+		"PartyDoorPrompt",
+	}
+}
+Misc1:AddToggle("Auto Loot", {
+    Text = "Auto Loot",
+    Default = false,
+    Callback = function(Value)
+_G.AutoLoot = Value
+while _G.AutoLoot do
+for i, v in pairs(_G.AddedGet) do
+	if v:IsA("ProximityPrompt") and v.Enabled == true then
+		if Distance(v.Parent:GetPivot().Position) <= 12 then
+            if Options["Auto Loot type"].Value["Unlock Lockpick"] and (v.Name == "UnlockPrompt" or v.Parent:GetAttribute("Locked")) and char:FindFirstChild("Lockpick") then continue end
+            if Options["Auto Loot type"].Value["Gold"] and v.Name == "LootPrompt" then continue end
+            if Options["Auto Loot type"].Value["Light Items"] and v.Parent:GetAttribute("Tool_LightSource") and not v.Parent:GetAttribute("Tool_CanCutVines") then continue end
+            if Options["Auto Loot type"].Value["Skull Prompt"] and v.Name == "SkullPrompt" then continue end
+			if Options["Auto Loot type"].Value["Jeff Shop"] and v.Parent:GetAttribute("JeffShop") then continue end
+			
+			if v.Parent:GetAttribute("PropType") == "Battery" and ((char:FindFirstChildOfClass("Tool") and char:FindFirstChildOfClass("Tool"):GetAttribute("RechargeProp") ~= "Battery") or char:FindFirstChildOfClass("Tool") == nil) then continue end 
+            if v.Parent:GetAttribute("PropType") == "Heal" and char:FindFirstChild("Humanoid") and char.Humanoid.Health == char.Humanoid.MaxHealth then continue end
+            if v.Parent.Name == "MinesAnchor" then continue end
+            
+			if table.find(_G.Aura["AutoLootNotInter"], v.Name) then
+				fireproximityprompt(v)
+			end
+			if table.find(_G.Aura["AutoLootInteractions"], v.Name) and not v:GetAttribute("Interactions"..game.Players.LocalPlayer.Name) then
+				fireproximityprompt(v)
+			end
+		end
+	end
+end
+task.wait()
+end
+    end
+})
+
+Misc1:AddSlider("WS", {
+    Text = "WalkSpeed",
+    Default = 20,
+    Min = 16,
+    Max = (isParty and 80 or 21),
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+_G.WalkSpeedTp = Value
+    end
+})
+
+if isMines or isParty then
+Misc1:AddSlider("Ladder", {
+    Text = "Ladder Speed",
+    Default = 20,
+    Min = 16,
+    Max = 75,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+_G.LadderSpeed = Value
+    end
+})
+end
+
+Misc1:AddSlider("Vitamin", {
+    Text = "Vitamin Speed",
+    Default = 3,
+    Min = 1,
+    Max = 6,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+_G.VitaminSpeed = Value
+    end
+})
+
+Misc1:AddDropdown("WalkSpeed", {
+    Text = "WalkSpeed",
+    Multi = false,
+    Values = {"Vitamin", "Speed Hack"},
+    Callback = function(Value)
+_G.WalkSpeedChose = Value
+if Value ~= "Vitamin" then
+if char then
+char:SetAttribute("SpeedBoost", 0)
+end
+end
+    end
+})
+
+if not isParty then
+Misc1:AddToggle("Bypass Speed", {
+    Text = "Bypass Speed",
+    Default = false,
+    Callback = function(Value)
+_G.BypassSpeed = Value
+if not _G.BypassSpeed then
+	if char:FindFirstChild("CloneCollisionPart1") then
+		char:FindFirstChild("CloneCollisionPart1"):Destroy()
+	end
+	if not _G.AntiCheatBruh and not LoadingInstant then
+		Options.WS:SetMax(21)
+		Options.Vitamin:SetMax(6)
+	end
+else
+	Options.WS:SetMax(60)
+	Options.Vitamin:SetMax(40)
+end
+while _G.BypassSpeed do
+if char:FindFirstChild("CollisionPart") then
+	if not char:FindFirstChild("CloneCollisionPart1") then
+		local ClonedCollision = char.CollisionPart:Clone()
+		ClonedCollision.Parent = char
+		ClonedCollision.Name = "CloneCollisionPart1"
+		ClonedCollision.Massless = true
+		ClonedCollision.CanCollide = false
+	end
+end
+if char:FindFirstChild("HumanoidRootPart") then
+	local CloneColl = char:FindFirstChild("CloneCollisionPart1")
+	if CloneColl then
+		CloneColl.Anchored = false
+		CloneColl.Massless = not CloneColl.Massless
+		wait(0.23)
+	end
+end
+task.wait()
+end
+    end
+})
+end
+
+Misc1:AddToggle("WalkSpeed", {
+    Text = "WalkSpeed",
+    Default = false,
+    Callback = function(Value)
+_G.SpeedWalk = Value
+while _G.SpeedWalk do
+if _G.WalkSpeedChose == "Speed Hack" then
+if char:FindFirstChild("Humanoid") then
+char.Humanoid.WalkSpeed = (char:GetAttribute("Climbing") and (_G.LadderSpeed or 30) or _G.WalkSpeedTp)
+end
+elseif _G.WalkSpeedChose == "Vitamin" then
+if char then
+if not char:GetAttribute("Climbing") then
+char:SetAttribute("SpeedBoost", _G.VitaminSpeed or 3)
+else
+char:SetAttribute("SpeedBoost", 0)
+char.Humanoid.WalkSpeed = _G.LadderSpeed or 30
+end
+end
+end
+task.wait()
+end
+if char then
+char:SetAttribute("SpeedBoost", 0)
+end
+    end
+})
+
+local Esp = Tabs.Tab2:AddLeftGroupbox("Esp")
+
+if not isGarden and not isRoom and not isParty then
+Esp:AddToggle("Esp1", {
+    Text = "Esp"..(((isHotel or isBackdoor) and " Key / Lever") or (isMines and " Fuse")),
+    Default = false,
+    Callback = function(Value)
+_G.EspKey = Value
+if not _G.EspKey then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("Key") or v.Name == "LeverForGate" or v.Name:find("FuseObtain") then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspKey do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("Key") or v.Name == "LeverForGate" or v.Name:find("FuseObtain") then
+			local ObjectsKey = ((v.Name == "LeverForGate" and "Lever") or (v.Name:find("Key") and "Key") or (v.Name:find("FuseObtain") and "Fuse"))
+			if ObjectsKey then
+				ESPLibrary:AddESP({
+					Object = v,
+					Text = ObjectsKey,
+					Color = _G.ColorEsp1 or Color3.fromRGB(240, 196, 77)
+				})
+				ESPLibrary:UpdateObjectText(v, ObjectsKey)
+				ESPLibrary:UpdateObjectColor(v, _G.ColorEsp1 or Color3.fromRGB(240, 196, 77))
+				ESPLibrary:SetOutlineColor(_G.ColorEsp1 or Color3.fromRGB(240, 196, 77))
+			end
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp1 Color", {
+    Default = Color3.fromRGB(240, 196, 77),
+    Callback = function(Value)
+        _G.ColorEsp1 = Value
+    end
+})
+end
+
+Esp:AddToggle("Esp5", {
+    Text = "Esp "..(isRoom and "Room" or "Door"),
+    Default = false,
+    Callback = function(Value)
+_G.EspDoor = Value
+if not _G.EspDoor then
+	for i, v in pairs(game.Workspace:FindFirstChild("CurrentRooms"):GetChildren()) do
+		if v:IsA("Model") and v:FindFirstChild("Door") and v.Door:FindFirstChild("Door") then
+			if not v.Door:GetAttribute("Opened") then
+				ESPLibrary:RemoveESP(v.Door)
+			end
+		end
+	end
+end
+while _G.EspDoor do
+if _G.AddedEsp then
+	for i, v in pairs(game.Workspace:FindFirstChild("CurrentRooms"):GetChildren()) do
+		if v:IsA("Model") and v:FindFirstChild("Door") and v.Door:FindFirstChild("Door") then
+			if not v.Door:GetAttribute("Opened") then
+				local DoorE = (isRoom and "Room " or "Door ")..((v.Door:FindFirstChild("Sign") and v.Door.Sign:FindFirstChild("Stinker") and v.Door.Sign.Stinker.Text) or (v.Door.Sign:FindFirstChild("SignText") and v.Door.Sign.SignText.Text)):gsub("^0+", "")..(v.Door:FindFirstChild("Lock") and " (lock)" or "")
+				if DoorE then
+					ESPLibrary:AddESP({
+						Object = v.Door,
+						Text = DoorE,
+						Color = _G.ColorEsp5 or Color3.fromRGB(245, 160, 12)
+					})
+					ESPLibrary:UpdateObjectText(v.Door, DoorE)
+					ESPLibrary:UpdateObjectColor(v.Door, _G.ColorEsp5 or Color3.fromRGB(245, 160, 12))
+					ESPLibrary:SetOutlineColor(_G.ColorEsp5 or Color3.fromRGB(245, 160, 12))
+				end
+			elseif v.Door:GetAttribute("Opened") then
+				ESPLibrary:RemoveESP(v.Door)
+			end
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp5 Color", {
+    Default = Color3.fromRGB(245, 160, 12),
+    Callback = function(Value)
+        _G.ColorEsp5 = Value
+    end
+})
+
+if isBackdoor then
+Esp:AddToggle("Esp9", {
+    Text = "Esp Time Lever",
+    Default = false,
+    Callback = function(Value)
+_G.EspTimeLever = Value
+if not _G.EspTimeLever then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("TimerLever") then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspTimeLever do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("TimerLever") then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Time Lever",
+				Color = _G.ColorEsp9 or Color3.fromRGB(66, 245, 152)
+			})
+			ESPLibrary:UpdateObjectText(v, "Time Lever")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp9 or Color3.fromRGB(66, 245, 152))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp9 or Color3.fromRGB(66, 245, 152))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp9 Color", {
+    Default = Color3.fromRGB(66, 245, 152),
+    Callback = function(Value)
+        _G.ColorEsp9 = Value
+    end
+})
+end
+
+Esp:AddToggle("Esp10", {
+    Text = "Esp Chest Box",
+    Default = false,
+    Callback = function(Value)
+_G.EspChest = Value
+if not _G.EspChest then
+	for i, v in pairs(_G.AddedEsp) do
+		if v:GetAttribute("Storage") == "ChestBox" or v.Name == "Toolshed_Small" then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspChest do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v:GetAttribute("Storage") == "ChestBox" or v.Name == "Toolshed_Small" then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = v.Name:gsub("Box", ""):gsub("_Vine", ""):gsub("_Small", ""):gsub("Locked", "")..(v:GetAttribute("Locked") and " (Locked)" or ""),
+				Color = _G.ColorEsp10 or Color3.fromRGB(235, 140, 16)
+			})
+			ESPLibrary:UpdateObjectText(v, v.Name:gsub("Box", ""):gsub("_Vine", ""):gsub("_Small", ""):gsub("Locked", "")..(v:GetAttribute("Locked") and " (Locked)" or ""))
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp10 or Color3.fromRGB(235, 140, 16))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp10 or Color3.fromRGB(235, 140, 16))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp10 Color", {
+    Default = Color3.fromRGB(235, 140, 16),
+    Callback = function(Value)
+        _G.ColorEsp10 = Value
+    end
+})
+
+if isHotel then
+Esp:AddToggle("Esp12", {
+    Text = "Esp Book",
+    Default = false,
+    Callback = function(Value)
+_G.EspBook = Value
+if not _G.EspBook then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("LiveHintBook") then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspBook do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("LiveHintBook") then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Book",
+				Color = _G.ColorEsp12 or Color3.fromRGB(199, 85, 44)
+			})
+			ESPLibrary:UpdateObjectText(v, "Book")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp12 or Color3.fromRGB(199, 85, 44))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp12 or Color3.fromRGB(199, 85, 44))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp12 Color", {
+    Default = Color3.fromRGB(199, 85, 44),
+    Callback = function(Value)
+        _G.ColorEsp12 = Value
+    end
+})
+
+Esp:AddToggle("Esp13", {
+    Text = "Esp Breaker",
+    Default = false,
+    Callback = function(Value)
+_G.EspBreaker = Value
+if not _G.EspBreaker then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("LiveBreakerPolePickup") then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspBreaker do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name:find("LiveBreakerPolePickup") then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Breaker",
+				Color = _G.ColorEsp13 or Color3.fromRGB(216, 235, 9)
+			})
+			ESPLibrary:UpdateObjectText(v, "Breaker")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp13 or Color3.fromRGB(216, 235, 9))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp13 or Color3.fromRGB(216, 235, 9))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp13 Color", {
+    Default = Color3.fromRGB(216, 235, 9),
+    Callback = function(Value)
+        _G.ColorEsp13 = Value
+    end
+})
+end
+
+if isGarden then
+Esp:AddToggle("Esp2", {
+    Text = "Esp Guillotine",
+    Default = false,
+    Callback = function(Value)
+_G.EspGuillotine = Value
+if not _G.EspBook then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "VineGuillotine" then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspGuillotine do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "VineGuillotine" then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Guillotine",
+				Color = _G.ColorEsp2 or Color3.fromRGB(143, 240, 70)
+			})
+			ESPLibrary:UpdateObjectText(v, "Guillotine")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp2 or Color3.fromRGB(143, 240, 70))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp2 or Color3.fromRGB(143, 240, 70))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp2 Color", {
+    Default = Color3.fromRGB(143, 240, 70),
+    Callback = function(Value)
+        _G.ColorEsp2 = Value
+    end
+})
+end
+
+if isMines then
+Esp:AddToggle("Esp3", {
+    Text = "Esp Generator",
+    Default = false,
+    Callback = function(Value)
+_G.EspGenerator = Value
+if not _G.EspBreaker then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "MinesGenerator" then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspGenerator do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "MinesGenerator" then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Generator",
+				Color = _G.ColorEsp3 or Color3.fromRGB(250, 75, 75)
+			})
+			ESPLibrary:UpdateObjectText(v, "Generator")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp3 or Color3.fromRGB(250, 75, 75))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp3 or Color3.fromRGB(250, 75, 75))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp3 Color", {
+    Default = Color3.fromRGB(250, 75, 75),
+    Callback = function(Value)
+        _G.ColorEsp3 = Value
+    end
+})
+
+Esp:AddToggle("Esp4", {
+    Text = "Esp Mines Anchor",
+    Default = false,
+    Callback = function(Value)
+_G.EspMinesAnchor = Value
+if not _G.EspMinesAnchor then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "MinesAnchor" then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspMinesAnchor do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "MinesAnchor" and v:FindFirstChild("Sign") and v.Sign:FindFirstChild("TextLabel") then
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Anchor Mines ("..(v:FindFirstChild("Sign") and v.Sign:FindFirstChild("TextLabel") and v.Sign.TextLabel.Text)..")",
+				Color = _G.ColorEsp4 or Color3.fromRGB(148, 242, 220)
+			})
+			ESPLibrary:UpdateObjectText(v, "Anchor Mines ("..(v:FindFirstChild("Sign") and v.Sign:FindFirstChild("TextLabel") and v.Sign.TextLabel.Text)..")")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp4 or Color3.fromRGB(148, 242, 220))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp4 or Color3.fromRGB(148, 242, 220))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp4 Color", {
+    Default = Color3.fromRGB(148, 242, 220),
+    Callback = function(Value)
+        _G.ColorEsp4 = Value
+    end
+})
+
+Esp:AddToggle("Esp7", {
+    Text = "Esp Pumps",
+    Default = false,
+    Callback = function(Value)
+_G.EspMinesAnchor = Value
+if not _G.EspMinesAnchor then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "WaterPump" and v:FindFirstChild("Wheel") then
+			ESPLibrary:RemoveESP(v)
+		end
+	end
+end
+while _G.EspMinesAnchor do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "WaterPump" and v:FindFirstChild("Wheel") then
+			if v:FindFirstChild("ScreenUI") and v.ScreenUI:FindFirstChild("OnFrame") and v.ScreenUI.OnFrame.Visible then PumpsOnOff = "ON" elseif v:FindFirstChild("ScreenUI") and v.ScreenUI:FindFirstChild("OffFrame") and v.ScreenUI.OffFrame.Visible then PumpsOnOff = "OFF" end
+			ESPLibrary:AddESP({
+				Object = v,
+				Text = "Pumps ("..(PumpsOnOff or "Nah")..")",
+				Color = _G.ColorEsp7 or Color3.fromRGB(79, 91, 255)
+			})
+			ESPLibrary:UpdateObjectText(v, "Pumps ("..(PumpsOnOff or "Nah")..")")
+			ESPLibrary:UpdateObjectColor(v, _G.ColorEsp7 or Color3.fromRGB(79, 91, 255))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp7 or Color3.fromRGB(79, 91, 255))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp7 Color", {
+    Default = Color3.fromRGB(79, 91, 255),
+    Callback = function(Value)
+        _G.ColorEsp7 = Value
+    end
+})
+end
+
+Esp:AddToggle("Esp9", {
+    Text = "Esp Item",
+    Default = false,
+    Callback = function(Value)
+_G.EspItem = Value
+if not _G.EspItem then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "Handle" and v.Parent:FindFirstChildOfClass("ProximityPrompt") then
+			ESPLibrary:RemoveESP(v.Parent)
+		end
+	end
+end
+while _G.EspItem do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v.Name == "Handle" and v.Parent:FindFirstChildOfClass("ProximityPrompt") then
+			ESPLibrary:AddESP({
+				Object = v.Parent,
+				Text = v.Parent.Name,
+				Color = _G.ColorEsp9 or Color3.fromRGB(0, 255, 0)
+			})
+			ESPLibrary:UpdateObjectText(v.Parent, v.Parent.Name)
+			ESPLibrary:UpdateObjectColor(v.Parent, _G.ColorEsp9 or Color3.fromRGB(0, 255, 0))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp9 or Color3.fromRGB(0, 255, 0))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp9 Color", {
+    Default = Color3.fromRGB(0, 255, 0),
+    Callback = function(Value)
+        _G.ColorEsp9 = Value
+    end
+})
+
+Esp:AddToggle("Esp6", {
+    Text = "Esp Entity",
+    Default = false,
+    Callback = function(Value)
+_G.EspEntity = Value
+if not _G.EspEntity then
+	for i, v in pairs(_G.AddedEsp) do
+		for x, z in pairs(_G.EntityTable.Entity) do
+			if v:IsA("Model") and v.Name == x then
+				ESPLibrary:RemoveESP(v)
+			end
+		end
+	end
+end
+while _G.EspEntity do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		for x, z in pairs(_G.EntityTable.Entity) do
+			if v:IsA("Model") and v.Name == x then
+				ESPLibrary:AddESP({
+					Object = v,
+					Text = _G.EntityTable.Entity[v.Name],
+					Color = _G.ColorEsp6 or Color3.fromRGB(230, 14, 25)
+				})
+				ESPLibrary:UpdateObjectText(v, _G.EntityTable.Entity[v.Name])
+				ESPLibrary:UpdateObjectColor(v, _G.ColorEsp6 or Color3.fromRGB(230, 14, 25))
+				ESPLibrary:SetOutlineColor(_G.ColorEsp6 or Color3.fromRGB(230, 14, 25))
+			end
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp6 Color", {
+    Default = Color3.fromRGB(230, 14, 25),
+    Callback = function(Value)
+        _G.ColorEsp6 = Value
+    end
+})
+
+Esp:AddToggle("Esp15", {
+    Text = "Esp Hidden",
+    Default = false,
+    Callback = function(Value)
+_G.EspHidden = Value
+if not _G.EspHidden then
+	for i, v in pairs(_G.AddedEsp) do
+		if v:IsA("ObjectValue") and v.Name == "HiddenPlayer" then
+			ESPLibrary:RemoveESP(v.Parent)
+		end
+	end
+end
+while _G.EspHidden do
+if _G.AddedEsp then
+	for i, v in pairs(_G.AddedEsp) do
+		if v:IsA("ObjectValue") and v.Name == "HiddenPlayer" then
+			ESPLibrary:AddESP({
+				Object = v.Parent,
+				Text = v.Parent.Name:gsub("Rooms_", ""):gsub("Backdoor_", ""):gsub("Locker_", ""),
+				Color = _G.ColorEsp15 or Color3.fromRGB(52, 67, 235)
+			})
+			ESPLibrary:UpdateObjectText(v.Parent, v.Parent.Name:gsub("Rooms_", ""):gsub("Backdoor_", ""):gsub("Locker_", ""))
+			ESPLibrary:UpdateObjectColor(v.Parent, _G.ColorEsp15 or Color3.fromRGB(52, 67, 235))
+			ESPLibrary:SetOutlineColor(_G.ColorEsp15 or Color3.fromRGB(52, 67, 235))
+		end
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp15 Color", {
+    Default = Color3.fromRGB(52, 67, 235),
+    Callback = function(Value)
+        _G.ColorEsp15 = Value
+    end
+})
+
+Esp:AddToggle("Esp14", {
+    Text = "Esp Player",
+    Default = false,
+    Callback = function(Value)
+_G.EspPlayer = Value
+for i, v in pairs(game.Players:GetChildren()) do
+	if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") then
+		ESPLibrary:RemoveESP(v.Character)
+	end
+end
+while _G.EspPlayer do
+for i, v in pairs(game.Players:GetChildren()) do
+	if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") then
+		ESPLibrary:AddESP({
+			Object = v.Character,
+			Text = v.Name,
+			Color = _G.ColorEsp14 or Color3.fromRGB(1, 1, 1)
+		})
+		ESPLibrary:UpdateObjectText(v.Character, v.Name)
+		ESPLibrary:UpdateObjectColor(v.Character, _G.ColorEsp14 or Color3.fromRGB(1, 1, 1))
+		ESPLibrary:SetOutlineColor(_G.ColorEsp14 or Color3.fromRGB(1, 1, 1))
+	end
+end
+task.wait()
+end
+    end
+}):AddColorPicker("Esp14 Color", {
+    Default = Color3.fromRGB(1, 1, 1),
+    Callback = function(Value)
+        _G.ColorEsp14 = Value
+    end
+})
+
+local Esp1 = Tabs.Tab2:AddRightGroupbox("Settings Esp")
+
+local Font = {}
+for _, v in ipairs(Enum.Font:GetEnumItems()) do
+    table.insert(Font, v.Name)
+end
+Esp1:AddDropdown("Font", {
+    Text = "Set Font",
+    Values = Font,
+    Default = "Code",
+    Multi = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetFont(Value)
+end
+    end
+})
+
+Esp1:AddToggle("Show Distance", {
+    Text = "Show Distance",
+    Default = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetShowDistance(Value)
+end
+    end
+})
+
+Esp1:AddToggle("Show Rainbow", {
+    Text = "Show Rainbow",
+    Default = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetRainbow(Value)
+end
+    end
+})
+
+Esp1:AddToggle("Show Tracers", {
+    Text = "Show Tracers",
+    Default = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetTracers(Value)
+end
+    end
+})
+
+Esp1:AddDropdown("TracersOrigin", {
+    Text = "Tracers Origin",
+    Multi = false,
+    Values = {"Bottom", "Top", "Center", "Mouse"},
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetTracerOrigin(Value)
+end
+    end
+})
+
+Esp1:AddToggle("Show Arrows", {
+    Text = "Show Arrows",
+    Default = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetArrows(Value)
+end
+    end
+})
+
+Esp1:AddSlider("ArrowsSize", {
+    Text = "Set Arrows Radius",
+    Default = 300,
+    Min = 0,
+    Max = 500,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetArrowRadius(Value)
+end
+    end
+})
+
+Esp1:AddSlider("SetTextSize", {
+    Text = "Set TextSize",
+    Default = 15,
+    Min = 1,
+    Max = 50,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetTextSize(Value)
+end
+    end
+})
+
+Esp1:AddSlider("SetFillTransparency", {
+    Text = "Set Fill Transparency",
+    Default = 0.6,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetFillTransparency(Value)
+end
+    end
+})
+
+Esp1:AddSlider("SetOutlineTransparency", {
+    Text = "Set OutLine Transparency",
+    Default = 0.6,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+if ESPLibrary then
+	ESPLibrary:SetOutlineTransparency(Value)
+end
+    end
+})
+
+-----------------------------------
+local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
+local Info = Tabs["UI Settings"]:AddRightGroupbox("Info")
+
+MenuGroup:AddDropdown("NotifySide", {
+    Text = "Notification Side",
+    Values = {"Left", "Right"},
+    Default = "Right",
+    Multi = false,
+    Callback = function(Value)
+Library.NotifySide = Value
+    end
+})
+
+_G.ChooseNotify = "Door"
+MenuGroup:AddDropdown("NotifyChoose", {
+    Text = "Notification Choose",
+    Values = {"Obsidian", "Roblox", "Door"},
+    Default = "",
+    Multi = false,
+    Callback = function(Value)
+_G.ChooseNotify = Value
+    end
+})
+
+MenuGroup:AddSlider("Volume Notification", {
+    Text = "Volume Notification",
+    Default = 2,
+    Min = 2,
+    Max = 10,
+    Rounding = 1,
+    Compact = true,
+    Callback = function(Value)
+_G.VolumeTime = Value
+    end
+})
+
+MenuGroup:AddToggle("KeybindMenuOpen", {Default = false, Text = "Open Keybind Menu", Callback = function(Value) Library.KeybindFrame.Visible = Value end})
+MenuGroup:AddToggle("ShowCustomCursor", {Text = "Custom Cursor", Default = true, Callback = function(Value) Library.ShowCustomCursor = Value end})
+MenuGroup:AddToggle("watermark", {Text = "Show Watermark", Default = true, Callback = function(Value) Library:SetWatermarkVisibility(Value) end})
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {Default = "RightShift", NoUI = true, Text = "Menu keybind"})
+_G.LinkJoin = "https://discord.gg/9unH9FzzT"
+MenuGroup:AddButton("Copy Link Discord", function()
+    if setclipboard then
+        setclipboard(_G.LinkJoin)
+        Library:Notify("Copied discord link to clipboard!")
+    else
+        Library:Notify("Discord link: ".._G.LinkJoin, 10)
+    end
+end)
+MenuGroup:AddButton("Unload", function()
+Library:Unload() 
+ESPLibrary:Unload()
+end)
+
+Info:AddLabel("Counter [ "..game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(game.Players.LocalPlayer).." ]", true)
+Info:AddLabel("Executor [ "..identifyexecutor().." ]", true)
+Info:AddLabel("Phone / PC [ "..(MobileOn and "Phone" or "PC").." ]", true)
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+ThemeManager:ApplyToTab(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
+
+----- Script -------
+
+_G.AddedGet = {}
+_G.AddedEsp = {}
+local function Added(v)
+	if v.Name == "Snare" then
+        if v:FindFirstChild("Hitbox") then
+	        if Toggles["Anti Snare"].Value then
+		        v.Hitbox:Destroy()
+			end
+        end
+    end
+	if v.Name == "Egg" then
+		v.CanTouch = not Toggles["Anti Egg Gloom"].Value
+	end
+	task.spawn(function()
+		if v:IsA("Model") and v.Name == "GiggleCeiling" then
+			repeat task.wait() until v:FindFirstChild("Hitbox")
+			wait(0.1)
+			if Toggles["Anti Giggle"].Value and v:FindFirstChild("Hitbox") then
+				v.Hitbox:Destroy()
+			end
+		end
+	end)
+	task.spawn(function()
+		if v.Name == "_DamHandler" then
+			repeat task.wait() until v:FindFirstChild("SeekFloodline")
+			wait(0.1)
+			if v:FindFirstChild("SeekFloodline") then
+				v.SeekFloodline.CanCollide = Toggles["Anti Seek Flood"].Value
+			end
+		end
+	end)
+	if v.Name == "PlayerBarrier" and v.Size.Y == 2.75 and (v.Rotation.X == 0 or v.Rotation.X == 180) then
+		if Toggles["Anti Fall Barrier"].Value then
+			local CLONEBARRIER = v:Clone()
+			CLONEBARRIER.CFrame = CLONEBARRIER.CFrame * CFrame.new(0, 0, -5)
+			CLONEBARRIER.Color = Color3.new(1, 1, 1)
+			CLONEBARRIER.Name = "CLONEBARRIER_ANTI"
+			CLONEBARRIER.Size = Vector3.new(CLONEBARRIER.Size.X, CLONEBARRIER.Size.Y, 11)
+			CLONEBARRIER.Transparency = 0
+			CLONEBARRIER.Parent = v.Parent
+		end
+	end
+	if v.Name == "ChandelierObstruction" or v.Name == "Seek_Arm" then
+        for b, h in pairs(v:GetDescendants()) do
+            if h:IsA("BasePart") then 
+				h.CanTouch = not Toggles["Anti Seek Obstruction"].Value
+			end
+        end
+    end
+    if v.Name == "DoorFake" then
+		local CollisionFake = v:FindFirstChild("Hidden", true)
+		local Prompt = v:FindFirstChild("UnlockPrompt", true)
+		if CollisionFake then
+			CollisionFake.CanTouch = not Toggles["Anti Fake Door"].Value
+		end
+		if Prompt and Toggles["Anti Fake Door"].Value then
+			Prompt:Destroy()
+		end
+	end
+	--------- AddedPrompt -----------
+	if not table.find(_G.AddedGet, v) then
+		if v:IsA("Model") and v.Name == "MinesAnchor" then
+			table.insert(_G.AddedGet, v)
+		end
+		if v:IsA("ProximityPrompt") and table.find(_G.Aura["AuraPrompt"], v.Name) then
+		    table.insert(_G.AddedGet, v)
+		end
+		if v:IsA("ObjectValue") and v.Name == "HiddenPlayer" then
+	        table.insert(_G.AddedGet, v.Parent)
+	    end
+	end
+	--------- EspAdded -----------
+	if not table.find(_G.AddedEsp, v) then
+		if ((v.Name:find("Key") or v.Name:find("FuseObtain")) and v:FindFirstChild("Hitbox")) or (v.Name == "LeverForGate" and v.PrimaryPart) then
+	        table.insert(_G.AddedEsp, v)
+		end
+		if (v.Name == "VineGuillotine" or v.Name == "MinesGenerator" or v.Name == "MinesAnchor" or v.Name == "WaterPump" or v.Name:find("TimerLever") or v.Name == "LiveBreakerPolePickup" or v.Name:find("LiveHintBook")) or (v:GetAttribute("Storage") == "ChestBox" or v.Name == "Toolshed_Small") then
+			table.insert(_G.AddedEsp, v)
+		end
+		if v:IsA("ObjectValue") and v.Name == "HiddenPlayer" then
+			table.insert(_G.AddedEsp, v)
+		end
+		if v.Name == "Handle" then
+			table.insert(_G.AddedEsp, v)
+		end
+		for x, z in pairs(_G.EntityTable.Entity) do
+			if v:IsA("Model") and v.Name == x then
+				if v.Name == "Snare" and v.Parent and v.Parent:IsA("Model") and v.Parent.Name == "Snare" then return end			
+				table.insert(_G.AddedEsp, v)
+			end
+		end
+    end
+end
+
+for _, v in ipairs(workspace:GetDescendants()) do
+	Added(v)
+end
+workspace.DescendantAdded:Connect(function(v)
+	Added(v)
+end)
+
+workspace.DescendantRemoving:Connect(function(v)
+    for i = #_G.AddedGet, 1, -1 do
+        if _G.AddedGet[i] == v then
+            table.remove(_G.AddedGet, i)
+            break
+        end
+    end
+end)
+workspace.DescendantRemoving:Connect(function(v)
+    for i = #_G.AddedEsp, 1, -1 do
+        if _G.AddedEsp[i] == v then
+            table.remove(_G.AddedEsp, i)
+            break
+        end
+    end
+end)

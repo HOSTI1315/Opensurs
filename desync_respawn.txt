@@ -1,0 +1,89 @@
+--hello guys
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local running = false
+
+local function applyFlags()
+    local flags = {
+        {"GameNetPVHeaderRotationalVelocityZeroCutoffExponent", "-5000"},
+        {"GameNetPVHeaderLinearVelocityZeroCutoffExponent", "-5000"},
+        {"LargeReplicatorWrite5", "true"},
+        {"LargeReplicatorRead5", "true"},
+        {"LargeReplicatorEnabled9", "true"},
+        {"LargeReplicatorSerializeRead3", "true"},
+        {"LargeReplicatorSerializeWrite4", "true"},
+        {"NextGenReplicatorEnabledWrite4", "true"},
+        {"AngularVelociryLimit", "360"},
+        {"S2PhysicsSenderRate", "15000"},
+        {"PhysicsSenderMaxBandwidthBps", "20000"},
+        {"MaxDataPacketPerSend", "2147483647"},
+        {"MaxAcceptableUpdateDelay", "1"},
+        {"InterpolationFrameVelocityThresholdMillionth", "5"},
+        {"InterpolationFramePositionThresholdMillionth", "5"},
+        {"InterpolationFrameRotVelocityThresholdMillionth", "5"},
+        {"CheckPVCachedVelThresholdPercent", "10"},
+        {"CheckPVCachedRotVelThresholdPercent", "10"},
+        {"WorldStepMax", "30"},
+        {"TimestepArbiterOmegaThou", "1073741823"},
+        {"TimestepArbiterHumanoidLinearVelThreshold", "1"},
+        {"TimestepArbiterHumanoidTurningVelThreshold", "1"},
+        {"TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646"},
+        {"SimExplicitlyCappedTimestepMultiplier", "2147483646"},
+        {"MaxTimestepMultiplierAcceleration", "2147483647"},
+        {"MaxTimestepMultiplierBuoyancy", "2147483647"},
+        {"MaxTimestepMultiplierContstraint", "2147483647"},
+        {"MaxMissedWorldStepsRemembered", "-2147483648"},
+        {"SimOwnedNOUCountThresholdMillionth", "2147483647"},
+        {"StreamJobNOUVolumeCap", "2147483647"},
+        {"StreamJobNOUVolumeLengthCap", "2147483647"},
+        {"ReplicationFocusNouExtentsSizeCutoffForPauseStuds", "2147483647"},
+        {"DebugSendDistInSteps", "-2147483648"},
+        {"GameNetDontSendRedundantNumTimes", "1"},
+        {"GameNetDontSendRedundantDeltaPositionMillionth", "1"},
+        {"CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent", "1"},
+        {"CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth", "1"},
+        {"CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth", "1"},
+    }
+
+    for _, f in ipairs(flags) do
+        pcall(function()
+            setfflag(f[1], f[2])
+        end)
+        task.wait(0.004)
+    end
+end
+
+local function doDesync()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hum = char:FindFirstChildWhichIsA("Humanoid")
+    if hum then
+        hum:ChangeState(Enum.HumanoidStateType.Dead)
+    end
+
+    char:ClearAllChildren()
+
+    local fake = Instance.new("Model", workspace)
+    LocalPlayer.Character = fake
+    task.wait(0.02)
+    LocalPlayer.Character = char
+    fake:Destroy()
+end
+
+local function start()
+    if running then return end
+    running = true
+    applyFlags()
+    doDesync()
+    running = false
+end
+
+return {
+    start = start,
+    running = function()
+        return running
+    end
+}

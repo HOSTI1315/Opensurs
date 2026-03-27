@@ -1,0 +1,393 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+local plr = Players.LocalPlayer
+local pgui = plr:WaitForChild("PlayerGui")
+
+local saved = {}
+local markers = {}
+local tpMode = false
+local tping = false
+local hidden = false
+
+local DELAY = 0.3
+
+local screen = Instance.new("ScreenGui")
+screen.Name = "X1sqr Tp"
+screen.ResetOnSpawn = false
+screen.Parent = pgui
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 195, 0, 215)
+main.Position = UDim2.new(0.5, -97, 0.5, -107)
+main.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+main.BorderSizePixel = 0
+main.Parent = screen
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
+
+local mStroke = Instance.new("UIStroke", main)
+mStroke.Color = Color3.fromRGB(45, 80, 130)
+mStroke.Thickness = 1.5
+
+local miniBtn = Instance.new("TextButton")
+miniBtn.Size = UDim2.new(0, 42, 0, 42)
+miniBtn.Position = UDim2.new(0, 20, 0.5, -21)
+miniBtn.BackgroundColor3 = Color3.fromRGB(30, 55, 95)
+miniBtn.BorderSizePixel = 0
+miniBtn.Text = "TP"
+miniBtn.TextColor3 = Color3.fromRGB(140, 180, 255)
+miniBtn.TextSize = 14
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.AutoButtonColor = false
+miniBtn.Visible = false
+miniBtn.Parent = screen
+Instance.new("UICorner", miniBtn).CornerRadius = UDim.new(0, 12)
+
+local miniStroke = Instance.new("UIStroke", miniBtn)
+miniStroke.Color = Color3.fromRGB(60, 100, 160)
+miniStroke.Thickness = 1.5
+
+local function makeDrag(obj, handle)
+	local dragging, dragStart, startPos
+	handle = handle or obj
+	
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = obj.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local d = input.Position - dragStart
+			obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end)
+end
+
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 36)
+titleBar.BackgroundColor3 = Color3.fromRGB(25, 32, 48)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = main
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 14)
+
+local tFix = Instance.new("Frame")
+tFix.Size = UDim2.new(1, 0, 0, 14)
+tFix.Position = UDim2.new(0, 0, 1, -14)
+tFix.BackgroundColor3 = Color3.fromRGB(25, 32, 48)
+tFix.BorderSizePixel = 0
+tFix.Parent = titleBar
+
+local titleTxt = Instance.new("TextLabel")
+titleTxt.Size = UDim2.new(1, -50, 1, 0)
+titleTxt.Position = UDim2.new(0, 14, 0, 0)
+titleTxt.BackgroundTransparency = 1
+titleTxt.Text = "X1sqr Tp"
+titleTxt.TextColor3 = Color3.fromRGB(120, 160, 220)
+titleTxt.TextSize = 14
+titleTxt.Font = Enum.Font.GothamBold
+titleTxt.TextXAlignment = Enum.TextXAlignment.Left
+titleTxt.Parent = titleBar
+
+local hideBtn = Instance.new("TextButton")
+hideBtn.Size = UDim2.new(0, 28, 0, 28)
+hideBtn.Position = UDim2.new(1, -38, 0.5, -14)
+hideBtn.BackgroundColor3 = Color3.fromRGB(40, 55, 80)
+hideBtn.BorderSizePixel = 0
+hideBtn.Text = "-"
+hideBtn.TextColor3 = Color3.fromRGB(150, 180, 230)
+hideBtn.TextSize = 18
+hideBtn.Font = Enum.Font.GothamBold
+hideBtn.AutoButtonColor = false
+hideBtn.Parent = titleBar
+Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0, 8)
+
+local slotsFrame = Instance.new("Frame")
+slotsFrame.Size = UDim2.new(1, -24, 0, 36)
+slotsFrame.Position = UDim2.new(0, 12, 0, 46)
+slotsFrame.BackgroundTransparency = 1
+slotsFrame.Parent = main
+
+local sLayout = Instance.new("UIListLayout", slotsFrame)
+sLayout.FillDirection = Enum.FillDirection.Horizontal
+sLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sLayout.Padding = UDim.new(0, 10)
+
+local slotData = {}
+
+for i = 1, 3 do
+	local s = Instance.new("Frame")
+	s.Size = UDim2.new(0, 45, 0, 36)
+	s.BackgroundColor3 = Color3.fromRGB(28, 38, 55)
+	s.BorderSizePixel = 0
+	s.Parent = slotsFrame
+	Instance.new("UICorner", s).CornerRadius = UDim.new(0, 10)
+	
+	local ss = Instance.new("UIStroke", s)
+	ss.Color = Color3.fromRGB(45, 65, 95)
+	ss.Thickness = 1
+	
+	local n = Instance.new("TextLabel")
+	n.Size = UDim2.new(1, 0, 1, 0)
+	n.BackgroundTransparency = 1
+	n.Text = tostring(i)
+	n.TextColor3 = Color3.fromRGB(70, 100, 140)
+	n.TextSize = 16
+	n.Font = Enum.Font.GothamBold
+	n.Parent = s
+	
+	slotData[i] = {f = s, s = ss, n = n}
+end
+
+local saveBtn = Instance.new("TextButton")
+saveBtn.Size = UDim2.new(1, -24, 0, 42)
+saveBtn.Position = UDim2.new(0, 12, 0, 94)
+saveBtn.BackgroundColor3 = Color3.fromRGB(35, 75, 140)
+saveBtn.BorderSizePixel = 0
+saveBtn.Text = "SAVE"
+saveBtn.TextColor3 = Color3.fromRGB(200, 220, 255)
+saveBtn.TextSize = 15
+saveBtn.Font = Enum.Font.GothamBold
+saveBtn.AutoButtonColor = false
+saveBtn.Parent = main
+Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 10)
+
+local saveBtnStroke = Instance.new("UIStroke", saveBtn)
+saveBtnStroke.Color = Color3.fromRGB(60, 110, 180)
+saveBtnStroke.Thickness = 1
+
+local resetBtn = Instance.new("TextButton")
+resetBtn.Size = UDim2.new(1, -24, 0, 32)
+resetBtn.Position = UDim2.new(0, 12, 0, 146)
+resetBtn.BackgroundColor3 = Color3.fromRGB(45, 35, 50)
+resetBtn.BorderSizePixel = 0
+resetBtn.Text = "RESET"
+resetBtn.TextColor3 = Color3.fromRGB(180, 150, 180)
+resetBtn.TextSize = 13
+resetBtn.Font = Enum.Font.GothamBold
+resetBtn.AutoButtonColor = false
+resetBtn.Parent = main
+Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0, 10)
+
+-- credit label
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Name = "Credit"
+creditLabel.Size = UDim2.new(1, 0, 0, 20)
+creditLabel.Position = UDim2.new(0, 0, 1, -22)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "Made By X1sqr"
+creditLabel.TextColor3 = Color3.fromRGB(70, 90, 120)
+creditLabel.TextSize = 11
+creditLabel.Font = Enum.Font.Gotham
+creditLabel.Parent = main
+
+-- protezione
+local _c = "Made By X1sqr"
+local function check()
+	if not creditLabel or not creditLabel.Parent then return false end
+	if creditLabel.Text ~= _c then return false end
+	return true
+end
+
+makeDrag(main, titleBar)
+makeDrag(miniBtn)
+
+local function setupHover(btn, c1, c2)
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = c2}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		local c = c1
+		if btn == saveBtn then
+			c = tpMode and Color3.fromRGB(45, 100, 170) or Color3.fromRGB(35, 75, 140)
+		end
+		TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = c}):Play()
+	end)
+end
+
+setupHover(saveBtn, Color3.fromRGB(35, 75, 140), Color3.fromRGB(50, 95, 165))
+setupHover(resetBtn, Color3.fromRGB(45, 35, 50), Color3.fromRGB(60, 45, 65))
+setupHover(hideBtn, Color3.fromRGB(40, 55, 80), Color3.fromRGB(55, 75, 105))
+setupHover(miniBtn, Color3.fromRGB(30, 55, 95), Color3.fromRGB(45, 75, 120))
+
+local function toggleHide()
+	hidden = not hidden
+	if hidden then
+		TweenService:Create(main, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, 0), Position = main.Position + UDim2.new(0, 97, 0, 107)}):Play()
+		task.wait(0.2)
+		main.Visible = false
+		miniBtn.Visible = true
+		TweenService:Create(miniBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 42, 0, 42)}):Play()
+	else
+		miniBtn.Visible = false
+		main.Visible = true
+		main.Size = UDim2.new(0, 0, 0, 0)
+		TweenService:Create(main, TweenInfo.new(0.2), {Size = UDim2.new(0, 195, 0, 215), Position = main.Position - UDim2.new(0, 97, 0, 107)}):Play()
+	end
+end
+
+hideBtn.MouseButton1Click:Connect(toggleHide)
+miniBtn.MouseButton1Click:Connect(toggleHide)
+
+local function updateSlots()
+	for i = 1, 3 do
+		local sl = slotData[i]
+		if i <= #saved then
+			sl.f.BackgroundColor3 = Color3.fromRGB(40, 110, 160)
+			sl.s.Color = Color3.fromRGB(70, 150, 200)
+			sl.n.TextColor3 = Color3.fromRGB(220, 240, 255)
+		else
+			sl.f.BackgroundColor3 = Color3.fromRGB(28, 38, 55)
+			sl.s.Color = Color3.fromRGB(45, 65, 95)
+			sl.n.TextColor3 = Color3.fromRGB(70, 100, 140)
+		end
+	end
+end
+
+local function updateBtn()
+	if #saved >= 3 then
+		tpMode = true
+		saveBtn.Text = "TELEPORT"
+		saveBtn.BackgroundColor3 = Color3.fromRGB(45, 100, 170)
+		saveBtnStroke.Color = Color3.fromRGB(80, 140, 210)
+	else
+		tpMode = false
+		saveBtn.Text = "SAVE"
+		saveBtn.BackgroundColor3 = Color3.fromRGB(35, 75, 140)
+		saveBtnStroke.Color = Color3.fromRGB(60, 110, 180)
+	end
+	updateSlots()
+end
+
+local function equipCarpet()
+	if not check() then return end
+	local bp = plr:FindFirstChild("Backpack")
+	local char = plr.Character
+	if not bp or not char then return end
+	
+	local hum = char:FindFirstChild("Humanoid")
+	if not hum then return end
+	
+	for _, t in pairs(bp:GetChildren()) do
+		if t:IsA("Tool") then
+			local nm = t.Name:lower()
+			if nm:find("carpet") or nm:find("flying") then
+				hum:EquipTool(t)
+				task.wait(0.2)
+				return
+			end
+		end
+	end
+end
+
+local function makeMarker(pos, idx)
+	if not check() then return nil end
+	local m = Instance.new("Part")
+	m.Size = Vector3.new(4, 0.2, 4)
+	m.Position = pos + Vector3.new(0, 0.1, 0)
+	m.Anchored = true
+	m.CanCollide = false
+	m.Material = Enum.Material.Neon
+	m.Color = Color3.fromRGB(50, 130, 200)
+	m.Transparency = 0.35
+	m.Parent = workspace
+	Instance.new("CylinderMesh", m)
+	
+	local bb = Instance.new("BillboardGui")
+	bb.Size = UDim2.new(0, 32, 0, 32)
+	bb.StudsOffset = Vector3.new(0, 2.5, 0)
+	bb.AlwaysOnTop = true
+	bb.Parent = m
+	
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.new(1, 0, 1, 0)
+	l.BackgroundColor3 = Color3.fromRGB(25, 35, 55)
+	l.Text = tostring(idx)
+	l.TextColor3 = Color3.fromRGB(130, 175, 240)
+	l.TextSize = 16
+	l.Font = Enum.Font.GothamBold
+	l.Parent = bb
+	Instance.new("UICorner", l).CornerRadius = UDim.new(0, 8)
+	
+	local ls = Instance.new("UIStroke", l)
+	ls.Color = Color3.fromRGB(50, 90, 150)
+	ls.Thickness = 1.5
+	
+	return m
+end
+
+local function save()
+	if not check() then return end
+	if tping or #saved >= 3 then return end
+	local char = plr.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	
+	table.insert(saved, hrp.Position)
+	local m = makeMarker(hrp.Position, #saved)
+	if m then table.insert(markers, m) end
+	updateBtn()
+end
+
+local function tp(pos)
+	if not check() then return end
+	local char = plr.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
+end
+
+local function autoTp()
+	if not check() then return end
+	if tping or #saved == 0 then return end
+	
+	tping = true
+	saveBtn.Text = "..."
+	saveBtn.BackgroundColor3 = Color3.fromRGB(140, 120, 50)
+	
+	equipCarpet()
+	task.wait(0.25)
+	
+	for i = 1, #saved do
+		if not tping or not check() then break end
+		saveBtn.Text = i .. "/" .. #saved
+		tp(saved[i])
+		if i < #saved then task.wait(DELAY) end
+	end
+	
+	saveBtn.Text = "DONE"
+	task.wait(0.5)
+	
+	tping = false
+	updateBtn()
+end
+
+local function reset()
+	if not check() then return end
+	tping = false
+	saved = {}
+	for _, m in pairs(markers) do
+		if m then m:Destroy() end
+	end
+	markers = {}
+	updateBtn()
+end
+
+saveBtn.MouseButton1Click:Connect(function()
+	if not check() then return end
+	if tping then return end
+	if tpMode then autoTp() else save() end
+end)
+
+resetBtn.MouseButton1Click:Connect(reset)
+
+updateBtn()

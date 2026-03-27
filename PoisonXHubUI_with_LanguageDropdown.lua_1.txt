@@ -1,0 +1,886 @@
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local FONT_MAP = {
+    ["Gotham"] = Enum.Font.Gotham, ["Arial"] = Enum.Font.Arial, ["SciFi"] = Enum.Font.SciFi, ["Antique"] = Enum.Font.Antique,
+    ["Arcade"] = Enum.Font.Arcade, ["Bodoni"] = Enum.Font.Bodoni, ["Cartoon"] = Enum.Font.Cartoon, ["Code"] = Enum.Font.Code,
+    ["Fantasy"] = Enum.Font.Fantasy, ["FredokaOne"] = Enum.Font.FredokaOne, ["Garamond"] = Enum.Font.Garamond,
+    ["GrenzeGotisch"] = Enum.Font.GrenzeGotisch, ["Highway"] = Enum.Font.Highway, ["IndieFlower"] = Enum.Font.IndieFlower,
+    ["JosefinSans"] = Enum.Font.JosefinSans, ["LuckiestGuy"] = Enum.Font.LuckiestGuy, ["Merriweather"] = Enum.Font.Merriweather,
+    ["Montserrat"] = Enum.Font.Montserrat, ["Nunito"] = Enum.Font.Nunito, ["Oswald"] = Enum.Font.Oswald, ["PatrickHand"] = Enum.Font.PatrickHand,
+    ["PermanentMarker"] = Enum.Font.PermanentMarker, ["Roboto"] = Enum.Font.Roboto, ["SourceSans"] = Enum.Font.SourceSans,
+    ["TitilliumWeb"] = Enum.Font.TitilliumWeb, ["Ubuntu"] = Enum.Font.Ubuntu, ["Minecraft"] = Enum.Font.Arcade
+}
+
+local TRANSLATIONS = {
+    ["pt"] = {
+        Title = "Poison X Hub", Subtitle = "https://discord.gg/hrzbxmSnXa", Tabs = {"Principal", "Custom UI"},
+        Customization = "Personalização", Fonte = "Fonte", SelectFont = "Selecionar fonte ▼", Tamanho = "Tamanho",
+        SizeUI = "Tamanho UI ▼", Sizes = {"Pequeno", "Médio", "Grande", "Extra Grande", "Ultra"}, SaveSettings = "Salvar Configurações",
+        ModoTurbo = "Modo Turbo", Notification = "Notificação", Enabled = "foi ativado!", Disabled = "foi desativado!"
+    },
+    ["en"] = {
+        Title = "Poison X Hub", Subtitle = "https://discord.gg/hrzbxmSnXa", Tabs = {"Main", "Custom UI"},
+        Customization = "Customization", Fonte = "Font", SelectFont = "Select font ▼", Tamanho = "Size",
+        SizeUI = "UI Size ▼", Sizes = {"Small", "Medium", "Large", "Extra Large", "Ultra"}, SaveSettings = "Save Settings",
+        ModoTurbo = "Turbo Mode", Notification = "Notification", Enabled = "has been enabled!", Disabled = "has been disabled!"
+    },
+    ["vn"] = {
+        Title = "Poison X Hub", Subtitle = "https://discord.gg/hrzbxmSnXa", Tabs = {"Chính", "Tùy chỉnh UI"},
+        Customization = "Tùy chỉnh", Fonte = "Phông chữ", SelectFont = "Chọn phông chữ ▼", Tamanho = "Kích cỡ",
+        SizeUI = "Kích cỡ UI ▼", Sizes = {"Nhỏ", "Vừa", "Lớn", "Rất lớn", "Siêu lớn"}, SaveSettings = "Lưu thiết lập",
+        ModoTurbo = "Chế độ Turbo", Notification = "Thông báo", Enabled = "đã được bật!", Disabled = "đã được tắt!"
+    }
+}
+
+local currentLang = "pt"
+local function getTranslation(key, index)
+    local t = TRANSLATIONS[currentLang][key]
+    if typeof(t) == "table" then
+        return t[index]
+    end
+    return t
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PoisonXHubUI"
+ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 765, 0, 510)
+MainFrame.Position = UDim2.new(0.5, -382, 0.5, -255)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Selectable = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 24)
+UICorner.Parent = MainFrame
+
+local fontObjects = {}
+
+local LangBtnSize, LangBtnPad = 36, 18
+local LangDropdownHeight = 32 * 3 + 6
+
+local LangFrame = Instance.new("Frame")
+LangFrame.Name = "LangFrame"
+LangFrame.Size = UDim2.new(0, LangBtnSize, 0, LangBtnSize)
+LangFrame.AnchorPoint = Vector2.new(1,1)
+LangFrame.Position = UDim2.new(1, -LangBtnPad, 1, -LangBtnPad)
+LangFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+LangFrame.BackgroundTransparency = 0.08
+LangFrame.Parent = MainFrame
+LangFrame.ZIndex = 200
+
+local LangCorner = Instance.new("UICorner")
+LangCorner.CornerRadius = UDim.new(1, 0)
+LangCorner.Parent = LangFrame
+
+local LangIcon = Instance.new("ImageButton")
+LangIcon.Name = "LangIcon"
+LangIcon.Image = "rbxassetid://11887653877"
+LangIcon.Size = UDim2.new(1, 0, 1, 0)
+LangIcon.BackgroundTransparency = 1
+LangIcon.Parent = LangFrame
+LangIcon.ZIndex = 201
+
+local LangDropdown = Instance.new("Frame")
+LangDropdown.Name = "LangDropdown"
+LangDropdown.Size = UDim2.new(0, 130, 0, 0)
+LangDropdown.AnchorPoint = Vector2.new(1,1)
+LangDropdown.Position = UDim2.new(1, 0, 0, -4)
+LangDropdown.BackgroundColor3 = Color3.fromRGB(40,40,40)
+LangDropdown.Visible = false
+LangDropdown.ClipsDescendants = true
+LangDropdown.Parent = LangFrame
+LangDropdown.ZIndex = 250
+
+local LangDropCorner = Instance.new("UICorner")
+LangDropCorner.CornerRadius = UDim.new(0, 12)
+LangDropCorner.Parent = LangDropdown
+
+local langOptions = {
+    {key="pt", text="Português"},
+    {key="en", text="English"},
+    {key="vn", text="Tiếng Việt"}
+}
+for i, opt in ipairs(langOptions) do
+    local btn = Instance.new("TextButton")
+    btn.Name = "LangOpt"..opt.key
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.Position = UDim2.new(0,0,0,(i-1)*32)
+    btn.BackgroundTransparency = 1
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 15
+    btn.Text = opt.text
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.ZIndex = 251
+    btn.Parent = LangDropdown
+
+    btn.MouseButton1Click:Connect(function()
+        currentLang = opt.key
+        LangDropdown.Visible = false
+        LangDropdown.Size = UDim2.new(0, 130, 0, 0)
+        updateAllText()
+    end)
+end
+LangIcon.MouseButton1Click:Connect(function()
+    if not LangDropdown.Visible then
+        LangDropdown.Visible = true
+        LangDropdown:TweenSize(UDim2.new(0, 130, 0, LangDropdownHeight), "Out", "Quad", 0.16, true)
+    else
+        LangDropdown:TweenSize(UDim2.new(0, 130, 0, 0), "Out", "Quad", 0.16, true)
+        wait(0.16)
+        LangDropdown.Visible = false
+    end
+end)
+
+local TitleFrame = Instance.new("Frame")
+TitleFrame.Name = "TitleFrame"
+TitleFrame.BackgroundTransparency = 1
+TitleFrame.Size = UDim2.new(0, 220, 0, 30)
+TitleFrame.Position = UDim2.new(0, 24, 0, 20 + MainFrame.Size.Y.Offset * 0.025)
+TitleFrame.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Text = getTranslation("Title")
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(0, 145, 1, 0)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleFrame
+table.insert(fontObjects, Title)
+
+local TitleIcon = Instance.new("ImageLabel")
+TitleIcon.Name = "TitleIcon"
+TitleIcon.Image = "rbxassetid://13551034662"
+TitleIcon.Size = UDim2.new(0, 24, 0, 24)
+TitleIcon.BackgroundTransparency = 1
+TitleIcon.Parent = TitleFrame
+
+local function updateTitleIconPosition()
+    local padding = 6
+    TitleIcon.Position = UDim2.new(0, Title.Position.X.Offset + Title.TextBounds.X + padding, 0, 3 - math.floor(TitleFrame.Size.Y.Offset * 0.03))
+end
+Title:GetPropertyChangedSignal("TextBounds"):Connect(updateTitleIconPosition)
+Title:GetPropertyChangedSignal("Font"):Connect(updateTitleIconPosition)
+Title:GetPropertyChangedSignal("TextSize"):Connect(updateTitleIconPosition)
+updateTitleIconPosition()
+
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Name = "Subtitle"
+Subtitle.Text = getTranslation("Subtitle")
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.TextSize = 13
+Subtitle.TextColor3 = Color3.fromRGB(0, 132, 255)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Size = UDim2.new(0, 180, 0, 16)
+Subtitle.Position = UDim2.new(0, 24, 0, 52 + math.floor(TitleFrame.Size.Y.Offset * 0.01))
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.Parent = MainFrame
+table.insert(fontObjects, Subtitle)
+
+local SubtitleLine = Instance.new("Frame")
+SubtitleLine.Name = "SubtitleLine"
+SubtitleLine.Size = UDim2.new(1, -48, 0, 2)
+SubtitleLine.Position = UDim2.new(0, 24, 0, 72)
+SubtitleLine.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SubtitleLine.BorderSizePixel = 0
+SubtitleLine.Parent = MainFrame
+
+local TimerWidth = 160
+local TimerFrame = Instance.new("Frame")
+TimerFrame.Name = "TimerFrame"
+TimerFrame.Size = UDim2.new(0, TimerWidth, 0, 32)
+TimerFrame.Position = UDim2.new(0, MainFrame.Size.X.Offset - TimerWidth - 20, 0, 20)
+TimerFrame.BackgroundTransparency = 1
+TimerFrame.Parent = MainFrame
+
+local TimerImage = Instance.new("ImageLabel")
+TimerImage.Name = "TimerImage"
+TimerImage.Image = "rbxassetid://98137520899240"
+TimerImage.Size = UDim2.new(0, 28, 0, 28)
+TimerImage.Position = UDim2.new(0, 0, 0, 2)
+TimerImage.BackgroundTransparency = 1
+TimerImage.Parent = TimerFrame
+
+local TimerLabel = Instance.new("TextLabel")
+TimerLabel.Name = "TimerLabel"
+TimerLabel.Font = Enum.Font.GothamBold
+TimerLabel.TextSize = 22
+TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerLabel.BackgroundTransparency = 1
+TimerLabel.Size = UDim2.new(0, 120, 0, 32)
+TimerLabel.Position = UDim2.new(0, 34, 0, 0)
+TimerLabel.TextXAlignment = Enum.TextXAlignment.Left
+TimerLabel.Text = ""
+TimerLabel.Parent = TimerFrame
+table.insert(fontObjects, TimerLabel)
+
+local TabsFrame = Instance.new("Frame")
+TabsFrame.Name = "TabsFrame"
+TabsFrame.BackgroundTransparency = 1
+TabsFrame.Size = UDim2.new(0.25, 0, 0, 112)
+TabsFrame.Position = UDim2.new(0, 0, 0, 80)
+TabsFrame.Parent = MainFrame
+
+local tabConfigs = {
+    {name = getTranslation("Tabs",1), image = "rbxassetid://11919039182"},
+    {name = getTranslation("Tabs",2), image = "rbxassetid://6953995540"}
+}
+local tabButtons = {}
+local tabLines = {}
+local tabContents = {}
+local tabTextLabels = {}
+
+for i, config in ipairs(tabConfigs) do
+    local Tab = Instance.new("TextButton")
+    Tab.Name = config.name .. "Tab"
+    Tab.Text = ""
+    Tab.Font = Enum.Font.Gotham
+    Tab.TextSize = 18
+    Tab.TextColor3 = Color3.fromRGB(255,255,255)
+    Tab.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Tab.BackgroundTransparency = 1
+    Tab.Size = UDim2.new(1, -20, 0, 44)
+    Tab.Position = UDim2.new(0, 10, 0, (i-1)*54+4)
+    Tab.AutoButtonColor = false
+    Tab.Parent = TabsFrame
+    table.insert(fontObjects, Tab)
+
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 12)
+    TabCorner.Parent = Tab
+
+    local TabIcon = Instance.new("ImageLabel")
+    TabIcon.Name = "TabIcon"
+    TabIcon.Image = config.image
+    TabIcon.Size = UDim2.new(0, 28, 0, 28)
+    TabIcon.Position = UDim2.new(0, 6, 0.5, -14)
+    TabIcon.BackgroundTransparency = 1
+    TabIcon.Parent = Tab
+
+    local TabText = Instance.new("TextLabel")
+    TabText.Name = "TabText"
+    TabText.Text = config.name
+    TabText.Font = Enum.Font.Gotham
+    TabText.TextSize = 18
+    TabText.TextColor3 = Color3.fromRGB(255,255,255)
+    TabText.BackgroundTransparency = 1
+    TabText.Size = UDim2.new(1, -40, 1, 0)
+    TabText.Position = UDim2.new(0, 40, 0, 0)
+    TabText.TextXAlignment = Enum.TextXAlignment.Left
+    TabText.Parent = Tab
+    table.insert(fontObjects, TabText)
+    tabTextLabels[i] = TabText
+
+    local TabLine = Instance.new("Frame")
+    TabLine.Name = "TabLine"
+    TabLine.Size = UDim2.new(0, 4, 1, -14)
+    TabLine.Position = UDim2.new(0, 0, 0, 7)
+    TabLine.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    TabLine.BorderSizePixel = 0
+    TabLine.Visible = false
+    TabLine.Parent = Tab
+
+    tabButtons[i] = Tab
+    tabLines[i] = TabLine
+
+    local Content = Instance.new("Frame")
+    Content.Name = config.name .. "Content"
+    Content.Size = UDim2.new(0.75, -24, 1, -112)
+    Content.Position = UDim2.new(0.25, 12, 0, 92)
+    Content.BackgroundTransparency = 1
+    Content.Visible = false
+    Content.Parent = MainFrame
+    tabContents[i] = Content
+
+    if i == 2 then
+        local SubAbaFrame = Instance.new("Frame")
+        SubAbaFrame.Name = "SubAbaFrame"
+        SubAbaFrame.Size = UDim2.new(1, -40, 0, 158)
+        SubAbaFrame.Position = UDim2.new(0, 20, 0, 10)
+        SubAbaFrame.BackgroundTransparency = 1
+        SubAbaFrame.Parent = Content
+
+        local CustomizationBox = Instance.new("Frame")
+        CustomizationBox.Name = "CustomizationBox"
+        CustomizationBox.Position = UDim2.new(0, 0, 0, 0)
+        CustomizationBox.Size = UDim2.new(0, 210, 1, 0)
+        CustomizationBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        CustomizationBox.BackgroundTransparency = 0.08
+        CustomizationBox.Parent = SubAbaFrame
+        local boxUICorner = Instance.new("UICorner")
+        boxUICorner.CornerRadius = UDim.new(0, 18)
+        boxUICorner.Parent = CustomizationBox
+
+        local CustomizationTitle = Instance.new("TextLabel")
+        CustomizationTitle.Name = "CustomizationTitle"
+        CustomizationTitle.Text = getTranslation("Customization")
+        CustomizationTitle.Font = Enum.Font.GothamBold
+        CustomizationTitle.TextSize = 17
+        CustomizationTitle.TextColor3 = Color3.fromRGB(255,255,255)
+        CustomizationTitle.BackgroundTransparency = 1
+        CustomizationTitle.Size = UDim2.new(1, 0, 0, 28)
+        CustomizationTitle.Position = UDim2.new(0, 0, 0, 7)
+        CustomizationTitle.Parent = CustomizationBox
+        table.insert(fontObjects, CustomizationTitle)
+
+        local FonteLabel = Instance.new("TextLabel")
+        FonteLabel.Name = "FonteLabel"
+        FonteLabel.Text = getTranslation("Fonte")
+        FonteLabel.Font = Enum.Font.Gotham
+        FonteLabel.TextSize = 15
+        FonteLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        FonteLabel.BackgroundTransparency = 1
+        FonteLabel.Size = UDim2.new(0, 70, 0, 22)
+        FonteLabel.Position = UDim2.new(0, 14, 0, 39)
+        FonteLabel.TextXAlignment = Enum.TextXAlignment.Left
+        FonteLabel.Parent = CustomizationBox
+        table.insert(fontObjects, FonteLabel)
+
+        local FonteDropdown = Instance.new("Frame")
+        FonteDropdown.Name = "FonteDropdown"
+        FonteDropdown.Size = UDim2.new(0, 122, 0, 22)
+        FonteDropdown.Position = UDim2.new(0, 70, 0, 39)
+        FonteDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        FonteDropdown.BorderSizePixel = 0
+        FonteDropdown.Parent = CustomizationBox
+        FonteDropdown.ZIndex = 20
+
+        local FonteCorner = Instance.new("UICorner")
+        FonteCorner.CornerRadius = UDim.new(0, 8)
+        FonteCorner.Parent = FonteDropdown
+
+        local FonteButton = Instance.new("TextButton")
+        FonteButton.Name = "FonteButton"
+        FonteButton.Text = getTranslation("SelectFont")
+        FonteButton.Font = Enum.Font.Gotham
+        FonteButton.TextSize = 13
+        FonteButton.TextColor3 = Color3.fromRGB(255,255,255)
+        FonteButton.BackgroundTransparency = 1
+        FonteButton.Size = UDim2.new(1, 0, 1, 0)
+        FonteButton.Position = UDim2.new(0, 0, 0, 0)
+        FonteButton.Parent = FonteDropdown
+        FonteButton.ZIndex = 21
+        table.insert(fontObjects, FonteButton)
+
+        local FonteList = Instance.new("ScrollingFrame")
+        FonteList.Name = "FonteList"
+        FonteList.Size = UDim2.new(1, 0, 0, 0)
+        FonteList.Position = UDim2.new(0, 0, 1, 0)
+        FonteList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        FonteList.BorderSizePixel = 0
+        FonteList.Visible = false
+        FonteList.CanvasSize = UDim2.new(0,0,0,0)
+        FonteList.ScrollBarThickness = 5
+        FonteList.Parent = FonteDropdown
+        FonteList.ZIndex = 99
+        FonteList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+        local FonteListCorner = Instance.new("UICorner")
+        FonteListCorner.CornerRadius = UDim.new(0, 8)
+        FonteListCorner.Parent = FonteList
+
+        local fontes = {
+            "Gotham", "Arial", "SciFi", "Antique", "Arcade", "Bodoni", "Cartoon", "Code",
+            "Fantasy", "FredokaOne", "Garamond", "GrenzeGotisch", "Highway", "IndieFlower",
+            "JosefinSans", "LuckiestGuy", "Merriweather", "Montserrat", "Nunito", "Oswald",
+            "PatrickHand", "PermanentMarker", "Roboto", "SourceSans", "TitilliumWeb", "Ubuntu",
+            "Minecraft"
+        }
+        local fonteHeight = 20
+
+        for idx, fonte in ipairs(fontes) do
+            local FonteOption = Instance.new("TextButton")
+            FonteOption.Name = "FonteOption" .. idx
+            FonteOption.Text = fonte
+            FonteOption.Font = Enum.Font.Gotham
+            FonteOption.TextSize = 13
+            FonteOption.TextColor3 = Color3.fromRGB(255,255,255)
+            FonteOption.BackgroundTransparency = 1
+            FonteOption.Size = UDim2.new(1, 0, 0, fonteHeight)
+            FonteOption.Position = UDim2.new(0, 0, 0, (idx-1)*fonteHeight)
+            FonteOption.Parent = FonteList
+            FonteOption.ZIndex = 100
+            table.insert(fontObjects, FonteOption)
+
+            FonteOption.MouseButton1Click:Connect(function()
+                FonteButton.Text = fonte
+                FonteList.Visible = false
+                FonteList.Size = UDim2.new(1, 0, 0, 0)
+                local selectedFont = FONT_MAP[fonte] or Enum.Font.Gotham
+                for _, obj in ipairs(fontObjects) do
+                    if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+                        obj.Font = selectedFont
+                    end
+                end
+                updateTitleIconPosition()
+            end)
+        end
+
+        FonteButton.MouseButton1Click:Connect(function()
+            if not FonteList.Visible then
+                local maxHeight = 120
+                local neededHeight = #fontes * fonteHeight
+                FonteList.Visible = true
+                FonteList.Size = UDim2.new(1, 0, 0, math.min(neededHeight, maxHeight))
+                FonteList.CanvasSize = UDim2.new(0,0,0,neededHeight)
+                FonteList.ZIndex = 99
+            else
+                FonteList.Visible = false
+                FonteList.Size = UDim2.new(1, 0, 0, 0)
+            end
+        end)
+
+        local SizeLabel = Instance.new("TextLabel")
+        SizeLabel.Name = "SizeLabel"
+        SizeLabel.Text = getTranslation("Tamanho")
+        SizeLabel.Font = Enum.Font.Gotham
+        SizeLabel.TextSize = 15
+        SizeLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        SizeLabel.BackgroundTransparency = 1
+        SizeLabel.Size = UDim2.new(0, 70, 0, 22)
+        SizeLabel.Position = UDim2.new(0, 14, 0, 73)
+        SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SizeLabel.Parent = CustomizationBox
+        table.insert(fontObjects, SizeLabel)
+
+        local SizeDropdown = Instance.new("Frame")
+        SizeDropdown.Name = "SizeDropdown"
+        SizeDropdown.Size = UDim2.new(0, 122, 0, 22)
+        SizeDropdown.Position = UDim2.new(0, 70, 0, 73)
+        SizeDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        SizeDropdown.BorderSizePixel = 0
+        SizeDropdown.Parent = CustomizationBox
+        SizeDropdown.ZIndex = 20
+
+        local SizeCorner = Instance.new("UICorner")
+        SizeCorner.CornerRadius = UDim.new(0, 8)
+        SizeCorner.Parent = SizeDropdown
+
+        local SizeButton = Instance.new("TextButton")
+        SizeButton.Name = "SizeButton"
+        SizeButton.Text = getTranslation("SizeUI")
+        SizeButton.Font = Enum.Font.Gotham
+        SizeButton.TextSize = 13
+        SizeButton.TextColor3 = Color3.fromRGB(255,255,255)
+        SizeButton.BackgroundTransparency = 1
+        SizeButton.Size = UDim2.new(1, 0, 1, 0)
+        SizeButton.Position = UDim2.new(0, 0, 0, 0)
+        SizeButton.Parent = SizeDropdown
+        SizeButton.ZIndex = 21
+        table.insert(fontObjects, SizeButton)
+
+        local SizeList = Instance.new("ScrollingFrame")
+        SizeList.Name = "SizeList"
+        SizeList.Size = UDim2.new(1, 0, 0, 0)
+        SizeList.Position = UDim2.new(0, 0, 1, 0)
+        SizeList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        SizeList.BorderSizePixel = 0
+        SizeList.Visible = false
+        SizeList.CanvasSize = UDim2.new(0,0,0,0)
+        SizeList.ScrollBarThickness = 5
+        SizeList.Parent = SizeDropdown
+        SizeList.ZIndex = 99
+        SizeList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+        local SizeListCorner = Instance.new("UICorner")
+        SizeListCorner.CornerRadius = UDim.new(0, 8)
+        SizeListCorner.Parent = SizeList
+
+        local sizes = {
+            {label = getTranslation("Sizes",1), size = UDim2.new(0, 500, 0, 320)},
+            {label = getTranslation("Sizes",2), size = UDim2.new(0, 650, 0, 420)},
+            {label = getTranslation("Sizes",3), size = UDim2.new(0, 765, 0, 510)},
+            {label = getTranslation("Sizes",4), size = UDim2.new(0, 900, 0, 600)},
+            {label = getTranslation("Sizes",5), size = UDim2.new(0, 1100, 0, 770)}
+        }
+        local sizeHeight = 20
+
+        for idx, sizeData in ipairs(sizes) do
+            local SizeOption = Instance.new("TextButton")
+            SizeOption.Name = "SizeOption" .. idx
+            SizeOption.Text = sizeData.label
+            SizeOption.Font = Enum.Font.Gotham
+            SizeOption.TextSize = 13
+            SizeOption.TextColor3 = Color3.fromRGB(255,255,255)
+            SizeOption.BackgroundTransparency = 1
+            SizeOption.Size = UDim2.new(1, 0, 0, sizeHeight)
+            SizeOption.Position = UDim2.new(0, 0, 0, (idx-1)*sizeHeight)
+            SizeOption.Parent = SizeList
+            SizeOption.ZIndex = 100
+            table.insert(fontObjects, SizeOption)
+
+            SizeOption.MouseButton1Click:Connect(function()
+                SizeButton.Text = sizeData.label
+                SizeList.Visible = false
+                SizeList.Size = UDim2.new(1, 0, 0, 0)
+                MainFrame.Size = sizeData.size
+                MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset/2, 0.5, -MainFrame.Size.Y.Offset/2)
+                TimerFrame.Position = UDim2.new(0, MainFrame.Size.X.Offset - TimerWidth - 20, 0, 20)
+            end)
+        end
+
+        SizeButton.MouseButton1Click:Connect(function()
+            if not SizeList.Visible then
+                local maxHeight = 100
+                local neededHeight = #sizes * sizeHeight
+                SizeList.Visible = true
+                SizeList.Size = UDim2.new(1, 0, 0, math.min(neededHeight, maxHeight))
+                SizeList.CanvasSize = UDim2.new(0,0,0,neededHeight)
+                SizeList.ZIndex = 99
+            else
+                SizeList.Visible = false
+                SizeList.Size = UDim2.new(1, 0, 0, 0)
+            end
+        end)
+
+        local SaveBox = Instance.new("Frame")
+        SaveBox.Name = "SaveBox"
+        SaveBox.Position = UDim2.new(0, 230, 0, 0)
+        SaveBox.Size = UDim2.new(0, 210, 1, 0)
+        SaveBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        SaveBox.BackgroundTransparency = 0.08
+        SaveBox.Parent = SubAbaFrame
+        local saveUICorner = Instance.new("UICorner")
+        saveUICorner.CornerRadius = UDim.new(0, 18)
+        saveUICorner.Parent = SaveBox
+
+        local SaveTitle = Instance.new("TextLabel")
+        SaveTitle.Name = "SaveTitle"
+        SaveTitle.Text = getTranslation("SaveSettings")
+        SaveTitle.Font = Enum.Font.GothamBold
+        SaveTitle.TextSize = 17
+        SaveTitle.TextColor3 = Color3.fromRGB(255,255,255)
+        SaveTitle.BackgroundTransparency = 1
+        SaveTitle.Size = UDim2.new(1, 0, 0, 28)
+        SaveTitle.Position = UDim2.new(0, 0, 0, 7)
+        SaveTitle.Parent = SaveBox
+        table.insert(fontObjects, SaveTitle)
+    end
+end
+
+local activeNotifications = {}
+local function showNotification(toggleName, ativado)
+    local duration = 1.5
+    local notifW, notifH = math.floor(380 * 0.88), math.floor(90 * 0.88)
+    local gap = 10
+
+    local notification = Instance.new("Frame")
+    notification.Name = "Notification"
+    notification.AnchorPoint = Vector2.new(1, 0)
+    notification.Size = UDim2.new(0, notifW, 0, notifH)
+    notification.Position = UDim2.new(1, 400, 0, 24)
+    notification.BackgroundColor3 = MainFrame.BackgroundColor3
+    notification.BackgroundTransparency = 0
+    notification.BorderSizePixel = 0
+    notification.ZIndex = 200
+    notification.Parent = ScreenGui
+
+    local notifCorner = Instance.new("UICorner")
+    notifCorner.CornerRadius = UDim.new(0, 18)
+    notifCorner.Parent = notification
+    notification.ClipsDescendants = true
+
+    local fakeRight = Instance.new("Frame")
+    fakeRight.Size = UDim2.new(0, notifW/2, 1, 0)
+    fakeRight.Position = UDim2.new(1, -notifW/2, 0, 0)
+    fakeRight.AnchorPoint = Vector2.new(0,0)
+    fakeRight.BackgroundColor3 = MainFrame.BackgroundColor3
+    fakeRight.BorderSizePixel = 0
+    fakeRight.ZIndex = 201
+    fakeRight.Parent = notification
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Text = getTranslation("Notification")
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 13
+    titleLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, -32, 0, math.floor(18 * 0.88))
+    titleLabel.Position = UDim2.new(0, 16, 0, math.floor(4 * 0.88))
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.ZIndex = 202
+    titleLabel.Parent = notification
+
+    local notifText = Instance.new("TextLabel")
+    notifText.Name = "NotificationText"
+    notifText.Text = toggleName
+    notifText.Font = Enum.Font.GothamBold
+    notifText.TextSize = math.floor(22 * 0.88)
+    notifText.TextColor3 = Color3.fromRGB(255,255,255)
+    notifText.BackgroundTransparency = 1
+    notifText.Size = UDim2.new(1, -32, 0, math.floor(38 * 0.88))
+    notifText.Position = UDim2.new(0, 16, 0, math.floor(22 * 0.88))
+    notifText.ZIndex = 202
+    notifText.TextXAlignment = Enum.TextXAlignment.Left
+    notifText.TextYAlignment = Enum.TextYAlignment.Center
+    notifText.Parent = notification
+
+    local subText = Instance.new("TextLabel")
+    subText.Name = "SubText"
+    subText.Text = ativado and getTranslation("Enabled") or getTranslation("Disabled")
+    subText.Font = Enum.Font.Gotham
+    subText.TextSize = math.floor(15 * 0.88)
+    subText.TextColor3 = Color3.fromRGB(0, 170, 255)
+    subText.BackgroundTransparency = 1
+    subText.Size = UDim2.new(1, -32, 0, math.floor(20 * 0.88))
+    subText.Position = UDim2.new(0, 16, 0, math.floor(62 * 0.88))
+    subText.ZIndex = 202
+    subText.TextXAlignment = Enum.TextXAlignment.Left
+    subText.TextYAlignment = Enum.TextYAlignment.Top
+    subText.Parent = notification
+
+    local timeLine = Instance.new("Frame")
+    timeLine.Name = "TimeLine"
+    timeLine.AnchorPoint = Vector2.new(0, 1)
+    timeLine.Size = UDim2.new(1, -32, 0, math.floor(6 * 0.88))
+    timeLine.Position = UDim2.new(0, 16, 1, -math.floor(5 * 0.88))
+    timeLine.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    timeLine.BorderSizePixel = 0
+    timeLine.ZIndex = 203
+    timeLine.Parent = notification
+
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://18886652611"
+    sound.Volume = 1
+    sound.Looped = false
+    sound.Parent = notification
+    sound:Play()
+
+    table.insert(activeNotifications, notification)
+    local function updateNotificationPositions()
+        for idx, notif in ipairs(activeNotifications) do
+            local y = 24 + (notifH + gap) * (idx-1)
+            notif:TweenPosition(UDim2.new(1, -24, 0, y), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+        end
+    end
+    updateNotificationPositions()
+
+    local startTime = tick()
+    local runService = game:GetService("RunService")
+    local renderStepName = "NotifTimeBar_"..tostring(math.random(1,1e6))
+    local running = true
+
+    runService:BindToRenderStep(renderStepName, 201, function()
+        if not running then return end
+        local elapsed = tick() - startTime
+        local ratio = math.clamp(1 - (elapsed / duration), 0, 1)
+        timeLine.Size = UDim2.new(ratio, -32 * ratio, 0, math.floor(6 * 0.88))
+    end)
+
+    task.wait(duration)
+    running = false
+    runService:UnbindFromRenderStep(renderStepName)
+    notification:TweenPosition(UDim2.new(1, 400, 0, notification.Position.Y.Offset), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3)
+    task.wait(0.4)
+    for idx, notif in ipairs(activeNotifications) do
+        if notif == notification then
+            table.remove(activeNotifications, idx)
+            break
+        end
+    end
+    notification:Destroy()
+    updateNotificationPositions()
+end
+
+do
+    local Content = tabContents[1]
+    local testToggleFrame = Instance.new("Frame")
+    testToggleFrame.Name = "TestToggleFrame"
+    testToggleFrame.Size = UDim2.new(0, 220, 0, 36)
+    testToggleFrame.Position = UDim2.new(0, 36, 0, 36)
+    testToggleFrame.BackgroundColor3 = Color3.fromRGB(26, 30, 40)
+    testToggleFrame.BackgroundTransparency = 0.05
+    testToggleFrame.Parent = Content
+    testToggleFrame.ZIndex = 10
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 12)
+    toggleCorner.Parent = testToggleFrame
+
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Name = "ToggleLabel"
+    toggleLabel.Text = getTranslation("ModoTurbo")
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.TextSize = 15
+    toggleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Size = UDim2.new(1, -48, 1, 0)
+    toggleLabel.Position = UDim2.new(0, 16, 0, 0)
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.Parent = testToggleFrame
+    table.insert(fontObjects, toggleLabel)
+
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Name = "ToggleBtn"
+    toggleBtn.Size = UDim2.new(0, 32, 0, 18)
+    toggleBtn.Position = UDim2.new(1, -40, 0.5, -9)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(55,55,55)
+    toggleBtn.Text = ""
+    toggleBtn.Parent = testToggleFrame
+    toggleBtn.ZIndex = 12
+    toggleBtn.AutoButtonColor = false
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(1, 0)
+    btnCorner.Parent = toggleBtn
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new(0, 1, 0, 1)
+    knob.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    knob.Parent = toggleBtn
+    knob.ZIndex = 13
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = knob
+
+    local enabled = false
+    local function setToggleState(state)
+        enabled = state
+        if enabled then
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+            knob.Position = UDim2.new(1, -17, 0, 1)
+        else
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+            knob.Position = UDim2.new(0, 1, 0, 1)
+        end
+    end
+    setToggleState(false)
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        setToggleState(not enabled)
+        showNotification(toggleLabel.Text, enabled)
+    end)
+end
+
+local function selectTab(index)
+    for i, tab in ipairs(tabButtons) do
+        if i == index then
+            tab.BackgroundTransparency = 0
+            tab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            tabLines[i].Visible = true
+            tabContents[i].Visible = true
+        else
+            tab.BackgroundTransparency = 1
+            tabLines[i].Visible = false
+            tabContents[i].Visible = false
+        end
+    end
+end
+for i, tab in ipairs(tabButtons) do
+    tab.MouseButton1Click:Connect(function()
+        selectTab(i)
+    end)
+end
+selectTab(1)
+
+local OptionsArea = Instance.new("Frame")
+OptionsArea.Name = "OptionsArea"
+OptionsArea.Size = UDim2.new(0.75, -24, 1, -112)
+OptionsArea.Position = UDim2.new(0.25, 12, 0, 92)
+OptionsArea.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+OptionsArea.BackgroundTransparency = 0.25
+OptionsArea.BorderSizePixel = 0
+OptionsArea.Parent = MainFrame
+
+local OptionsUICorner = Instance.new("UICorner")
+OptionsUICorner.CornerRadius = UDim.new(0, 18)
+OptionsUICorner.Parent = OptionsArea
+
+local UserIconFrame = Instance.new("Frame")
+UserIconFrame.Name = "UserIconFrame"
+UserIconFrame.Size = UDim2.new(0.25, 0, 0, 52)
+UserIconFrame.Position = UDim2.new(0, 0, 1, -62)
+UserIconFrame.BackgroundTransparency = 1
+UserIconFrame.Parent = MainFrame
+
+local UserIcon = Instance.new("ImageLabel")
+UserIcon.Name = "UserIcon"
+UserIcon.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. tostring(localPlayer.UserId) .. "&width=420&height=420&format=png"
+UserIcon.Size = UDim2.new(0, 36, 0, 36)
+UserIcon.Position = UDim2.new(0, 10, 0.5, -18)
+UserIcon.BackgroundTransparency = 1
+UserIcon.Parent = UserIconFrame
+
+local UserIconRound = Instance.new("UICorner")
+UserIconRound.CornerRadius = UDim.new(1, 0)
+UserIconRound.Parent = UserIcon
+
+local UserNameLabel = Instance.new("TextLabel")
+UserNameLabel.Name = "UserNameLabel"
+UserNameLabel.Text = localPlayer.Name
+UserNameLabel.Font = Enum.Font.Gotham
+UserNameLabel.TextSize = 16
+UserNameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+UserNameLabel.BackgroundTransparency = 1
+UserNameLabel.Size = UDim2.new(1, -60, 0, 36)
+UserNameLabel.Position = UDim2.new(0, 56, 0.5, -18)
+UserNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+UserNameLabel.Parent = UserIconFrame
+table.insert(fontObjects, UserNameLabel)
+
+local function getLocalTimeString()
+    local timeTable = os.date("*t")
+    return string.format("%02d:%02d:%02d", timeTable.hour, timeTable.min, timeTable.sec)
+end
+
+spawn(function()
+    while true do
+        TimerLabel.Text = getLocalTimeString()
+        wait(1)
+    end
+end)
+
+function updateAllText()
+    Title.Text = getTranslation("Title")
+    Subtitle.Text = getTranslation("Subtitle")
+    for i, tabText in ipairs(tabTextLabels) do
+        tabText.Text = getTranslation("Tabs",i)
+    end
+    for _, obj in ipairs(fontObjects) do
+        if obj.Name == "CustomizationTitle" then obj.Text = getTranslation("Customization")
+        elseif obj.Name == "FonteLabel" then obj.Text = getTranslation("Fonte")
+        elseif obj.Name == "FonteButton" then obj.Text = getTranslation("SelectFont")
+        elseif obj.Name == "SizeLabel" then obj.Text = getTranslation("Tamanho")
+        elseif obj.Name == "SizeButton" then obj.Text = getTranslation("SizeUI")
+        elseif obj.Name == "SaveTitle" then obj.Text = getTranslation("SaveSettings")
+        elseif obj.Name == "ToggleLabel" then obj.Text = getTranslation("ModoTurbo")
+        end
+    end
+    if tabContents[2] then
+        local CustomizationBox = tabContents[2]:FindFirstChild("SubAbaFrame")
+        if CustomizationBox then
+            local sList = CustomizationBox:FindFirstChild("CustomizationBox")
+            if sList then
+                local sizeList = sList:FindFirstChild("SizeDropdown")
+                if sizeList and sizeList:FindFirstChild("SizeList") then
+                    for i=1,5 do
+                        local so = sizeList.SizeList:FindFirstChild("SizeOption"..i)
+                        if so then so.Text = getTranslation("Sizes",i) end
+                    end
+                end
+            end
+        end
+    end
+    if tabContents[2] then
+        local SubAbaFrame = tabContents[2]:FindFirstChild("SubAbaFrame")
+        if SubAbaFrame then
+            local saveBox = SubAbaFrame:FindFirstChild("SaveBox")
+            if saveBox then
+                local saveTitle = saveBox:FindFirstChild("SaveTitle")
+                if saveTitle then saveTitle.Text = getTranslation("SaveSettings") end
+            end
+        end
+    end
+end
+updateAllText()

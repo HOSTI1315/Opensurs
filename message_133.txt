@@ -1,0 +1,164 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+if game:GetService("CoreGui"):FindFirstChild("InsertPartGUI") then
+    game:GetService("CoreGui"):FindFirstChild("InsertPartGUI"):Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "InsertPartGUI"
+gui.Parent = game:GetService("CoreGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 350, 0, 350)
+frame.Position = UDim2.new(0.5, -175, 0.5, -175)
+frame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+task.spawn(function()
+    while frame do
+        for i = 0, 255, 3 do
+            frame.BackgroundColor3 = Color3.fromRGB(0, i, 0)
+            task.wait(0.01)
+        end
+        for i = 255, 0, -3 do
+            frame.BackgroundColor3 = Color3.fromRGB(0, i, 0)
+            task.wait(0.01)
+        end
+    end
+end)
+
+local UIS = game:GetService("UserInputService")
+local dragging, dragStart, startPos
+
+local function drag(input)
+    dragging = true
+    dragStart = input.Position
+    startPos = frame.Position
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        drag(input)
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
+        or input.UserInputType == Enum.UserInputType.Touch) then
+
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "Insert Part GUI"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 26
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = frame
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 25)
+subtitle.Position = UDim2.new(0, 0, 0, 35)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Created by MysteryHacker"
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 18
+subtitle.TextColor3 = Color3.fromRGB(230, 230, 230)
+subtitle.Parent = frame
+
+local function crearBoton(nombre, posicionY)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -40, 0, 40)
+    btn.Position = UDim2.new(0, 20, 0, posicionY)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 20
+    btn.Text = nombre
+    btn.Parent = frame
+    return btn
+end
+
+local b1 = crearBoton("Insert part Blue", 80)
+b1.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+
+local b2 = crearBoton("Insert part Orange", 130)
+b2.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+
+local b3 = crearBoton("Insert part Purple", 180)
+b3.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+
+local b4 = crearBoton("Insert part Green", 230)
+b4.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+
+local b5 = crearBoton("Insert part Grey", 280)
+b5.BackgroundColor3 = Color3.fromRGB(128, 128, 128)
+
+local function insertPart(color)
+    local plr = game.Players.LocalPlayer
+    if not plr.Character then return end
+    local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local part = Instance.new("Part")
+    part.Size = Vector3.new(4, 4, 4)
+    part.Color = color
+    part.Position = hrp.Position + Vector3.new(5, 0, 0)
+    part.CanCollide = true
+    part.Anchored = false
+    part.Parent = workspace
+end
+
+b1.MouseButton1Click:Connect(function()
+    insertPart(Color3.fromRGB(0, 100, 255))
+end)
+b2.MouseButton1Click:Connect(function()
+    insertPart(Color3.fromRGB(255, 140, 0))
+end)
+b3.MouseButton1Click:Connect(function()
+    insertPart(Color3.fromRGB(128, 0, 255))
+end)
+b4.MouseButton1Click:Connect(function()
+    insertPart(Color3.fromRGB(0, 255, 0))
+end)
+b5.MouseButton1Click:Connect(function()
+    insertPart(Color3.fromRGB(128, 128, 128))
+end)
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0, 40, 0, 40)
+close.Position = UDim2.new(1, -45, 0, 5)
+close.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+close.TextColor3 = Color3.fromRGB(255, 255, 255)
+close.Text = "X"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 20
+close.Parent = frame
+
+close.MouseButton1Click:Connect(function()
+    for i = 1, 20 do
+        frame.Size = frame.Size - UDim2.new(0, 10, 0, 10)
+        frame.BackgroundTransparency = i / 20
+        task.wait(0.02)
+    end
+    gui:Destroy()
+end)

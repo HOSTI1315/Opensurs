@@ -1,0 +1,337 @@
+
+game:GetService("StarterGui"):SetCore("SendNotification", {
+	Title = "Custom Cursor",
+	Text = "To remove the custom cursor, go to UI Settings.",
+	Duration = 15
+})
+
+local repo = 'https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/'
+
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ShowToggleFrameInKeybinds = true -- Make toggle keybinds work inside the keybinds UI (aka adds a toggle to the UI). Good for mobile users (Default value = true)
+Library.ShowCustomCursor = true -- Toggles the Linoria cursor globaly (Default value = true)
+Library.NotifySide = "Left" -- Changes the side of the notifications globaly (Left, Right) (Default value = Left)
+
+local Window = Library:CreateWindow({
+	Title = 'ZentirHub: South London Script                    .gg/Hhf3gB7RXV',
+	Center = true,
+	AutoShow = true,
+	Resizable = true,
+	ShowCustomCursor = true,
+	NotifySide = "Left",
+	TabPadding = 8,
+	MenuFadeTime = 0.2
+})
+
+local Tabs = {
+	Main = Window:AddTab('Main'),
+	['UI Settings'] = Window:AddTab('UI Settings'),
+}
+
+
+local dLeftG = Tabs.Main:AddLeftGroupbox('Main')
+
+
+
+local AutoReward = false
+local RewardThread
+
+dLeftG:AddToggle('autmoneye', {
+    Text = 'Inf Money',
+    Tooltip = 'Automatically gives you money forever',
+    Default = false,
+    Callback = function(Value)
+        AutoReward = Value
+        if AutoReward then
+            RewardThread = task.spawn(function()
+                while AutoReward do
+                    local args = { "8000$" }
+                    game:GetService("ReplicatedStorage")
+                        :WaitForChild("RemotesS")
+                        :WaitForChild("Reward")
+                        :FireServer(unpack(args))
+                    task.wait(0.1)
+                end
+            end)
+        else
+            AutoReward = false
+            RewardThread = nil
+        end
+    end
+})
+
+Toggles.autmoneye:SetValue(false)
+
+
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local GunRemotes = ReplicatedStorage:WaitForChild("GunRemotes")
+local Impact = GunRemotes:WaitForChild("Impact")
+
+local AutoImpact = false
+local ImpactThread
+local CurrentCharacter = LocalPlayer.Character
+local CurrentTargetIndex = 1
+local TargetCycleDelay = 2
+
+local ImpactRange = 100
+local ShowRangeDisc = false
+local RangeDisc
+
+local function createRangeDisc()
+    if RangeDisc then RangeDisc:Destroy() end
+    RangeDisc = Instance.new("Part")
+    RangeDisc.Anchored = true
+    RangeDisc.CanCollide = false
+    RangeDisc.Transparency = 0.5
+    RangeDisc.Color = Color3.fromRGB(0, 255, 0)
+    
+    RangeDisc.Size = Vector3.new(ImpactRange*2, 0.2, ImpactRange*2)
+
+    local mesh = Instance.new("CylinderMesh")
+    mesh.Parent = RangeDisc
+    mesh.Scale = Vector3.new(1, 0.1, 1)
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrpPos = LocalPlayer.Character.HumanoidRootPart.Position
+        RangeDisc.CFrame = CFrame.new(hrpPos)
+    end
+
+    RangeDisc.Parent = workspace
+end
+
+local function updateRangeDisc()
+    if RangeDisc and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local offsetY = 3
+        RangeDisc.Position = Vector3.new(hrp.Position.X, hrp.Position.Y - offsetY, hrp.Position.Z)
+
+        RangeDisc.Size = Vector3.new(ImpactRange*2, 0.2, ImpactRange*2)
+    end
+end
+
+local function getEquippedTool()
+    local character = LocalPlayer.Character
+    if character then
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                return item
+            end
+        end
+    end
+    for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if item:IsA("Tool") then
+            return item
+        end
+    end
+    return nil
+end
+
+local function getValidPlayers()
+    local valid = {}
+    local rootPos = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.Position
+    if not rootPos then return valid end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("Humanoid") then
+            local humanoid = player.Character.Humanoid
+            local valStats = player:FindFirstChild("Valuestats")
+            local passiveMode = false
+            if valStats then
+                local passiveBool = valStats:FindFirstChild("PassiveMode")
+                if passiveBool and passiveBool:IsA("BoolValue") then
+                    passiveMode = passiveBool.Value
+                end
+            end
+            local distance = (rootPos - player.Character.Head.Position).Magnitude
+            if humanoid.Health > 0 and not passiveMode and distance <= ImpactRange then
+                table.insert(valid, player)
+            end
+        end
+    end
+    return valid
+end
+
+local function startImpact()
+    ImpactThread = task.spawn(function()
+        local lastSwitch = tick()
+        local currentTarget
+        while AutoImpact do
+            local tool = getEquippedTool()
+            local validPlayers = getValidPlayers()
+            if #validPlayers > 0 then
+                if not currentTarget or tick() - lastSwitch >= TargetCycleDelay then
+                    CurrentTargetIndex = CurrentTargetIndex + 1
+                    if CurrentTargetIndex > #validPlayers then
+                        CurrentTargetIndex = 1
+                    end
+                    currentTarget = validPlayers[CurrentTargetIndex]
+                    lastSwitch = tick()
+                end
+                if tool and currentTarget and currentTarget.Character and currentTarget.Character:FindFirstChild("Head") then
+                    local args = {
+                        tool,
+                        currentTarget.Character.Head,
+                        currentTarget.Character.Head.Position,
+                        Vector3.new(0,0,0),
+                        Vector3.new(0,0,0),
+                        "PART",
+                        { Camera, LocalPlayer.Character }
+                    }
+                    Impact:FireServer(unpack(args))
+                end
+            end
+
+            if AutoImpact and ShowRangeDisc then
+                if not RangeDisc then
+                    createRangeDisc()
+                end
+                updateRangeDisc()
+            elseif RangeDisc then
+                RangeDisc.Transparency = 1
+            end
+
+            task.wait(0.05)
+        end
+        if RangeDisc then RangeDisc:Destroy() end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    CurrentCharacter = char
+    task.wait(0.1)
+    if AutoImpact and ShowRangeDisc then
+        createRangeDisc()
+    end
+end)
+
+dLeftG:AddToggle('ImpactToggle', {
+    Text = 'Kill Aura',
+    Tooltip = 'Automatically kills players within range',
+    Default = false,
+    Callback = function(Value)
+        AutoImpact = Value
+        if AutoImpact then
+            startImpact()
+            if ShowRangeDisc then
+                createRangeDisc()
+            end
+        else
+            AutoImpact = false
+            ImpactThread = nil
+            if RangeDisc then RangeDisc:Destroy() end
+        end
+    end
+})
+Toggles.ImpactToggle:SetValue(false)
+
+dLeftG:AddSlider('ImpactRangeSlider', {
+    Text = 'Kill Aura Range',
+    Default = 50,
+    Min = 10,
+    Max = 200,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        ImpactRange = Value
+        if AutoImpact and ShowRangeDisc then
+            createRangeDisc()
+        end
+    end,
+    Tooltip = 'Adjust Kill Aura range',
+})
+
+dLeftG:AddToggle('ShowRangeDisc', {
+    Text = 'Visualize Kill Range',
+    Default = false,
+    Callback = function(Value)
+        ShowRangeDisc = Value
+        if ShowRangeDisc and AutoImpact then
+            createRangeDisc()
+        elseif RangeDisc then
+            RangeDisc:Destroy()
+        end
+    end
+})
+Toggles.ShowRangeDisc:SetValue(false)
+
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RemotesS = ReplicatedStorage:WaitForChild("RemotesS")
+local RewardRemote = RemotesS:WaitForChild("Reward")
+
+dLeftG:AddButton({
+    Text = "Get Free Weapons",
+    Func = function()
+        local weapons = { "Glock 23", "Ar Pistol" }
+        for _, weapon in ipairs(weapons) do
+            RewardRemote:FireServer(weapon)
+        end
+    end,
+    DoubleClick = false,
+    Disabled = false,
+    Visible = true
+})
+
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FistRemote = ReplicatedStorage:WaitForChild("Fist")
+
+local AutoPunch = false
+local PunchThread
+
+local function startAutoPunch()
+    PunchThread = task.spawn(function()
+        while AutoPunch do
+            FistRemote:FireServer("SwingBegin", {"Punch1"})
+            task.wait(0.01)
+
+            FistRemote:FireServer("SwingBegin", {"Punch2"})
+            task.wait(0.01)
+        end
+    end)
+end
+
+dLeftG:AddToggle("AutoPunchToggle", {
+    Text = "Punch Aura",
+    Default = false,
+    Callback = function(Value)
+        AutoPunch = Value
+        if AutoPunch then
+            startAutoPunch()
+        else
+            AutoPunch = false
+            PunchThread = nil
+        end
+    end
+})
+Toggles.AutoPunchToggle:SetValue(false)
+
+
+
+local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
+MenuGroup:AddToggle("KeybindMenuOpen", { Default = Library.KeybindFrame.Visible, Text = "Open Keybind Menu", Callback = function(value) Library.KeybindFrame.Visible = value end})
+MenuGroup:AddToggle("ShowCustomCursor", {Text = "Custom Cursor", Default = true, Callback = function(Value) Library.ShowCustomCursor = Value end})
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+MenuGroup:AddButton("Unload", function() Library:Unload() end)
+Library.ToggleKeybind = Options.MenuKeybind
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+ThemeManager:SetFolder('MyScriptHub')
+SaveManager:SetFolder('MyScriptHub/specific-game')
+SaveManager:SetSubFolder('specific-place')
+SaveManager:BuildConfigSection(Tabs['UI Settings'])
+ThemeManager:ApplyToTab(Tabs['UI Settings'])
+SaveManager:LoadAutoloadConfig()

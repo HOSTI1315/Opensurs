@@ -1,0 +1,145 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Remove old GUI if exists
+if PlayerGui:FindFirstChild("FriendLockGUI") then
+    PlayerGui.FriendLockGUI:Destroy()
+end
+
+-- Create ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FriendLockGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 180, 0, 32)
+MainFrame.Position = UDim2.new(1, -190, 0, 50)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.ZIndex = 10
+MainFrame.Parent = ScreenGui
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(1, 0)
+
+-- Hot pink pulsing outline
+local Outline = Instance.new("UIStroke")
+Outline.Color = Color3.fromRGB(255, 105, 180)
+Outline.Thickness = 3
+Outline.Transparency = 0.4
+Outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Outline.Parent = MainFrame
+
+-- Pulsing animation (runs safely in background)
+task.spawn(function()
+    while MainFrame.Parent do
+        TweenService:Create(Outline, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            Transparency = 0.2
+        }):Play()
+        task.wait(1.6)  -- Slightly longer than tween to avoid overlap lag
+    end
+end)
+
+-- Inner soft glow
+local InnerGlow = Instance.new("UIStroke")
+InnerGlow.Color = Color3.fromRGB(255, 150, 200)
+InnerGlow.Thickness = 6
+InnerGlow.Transparency = 0.8
+InnerGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+InnerGlow.Parent = MainFrame
+
+-- Text Label
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(0, 120, 1, 0)
+TextLabel.Position = UDim2.new(0, 0, 0, 0)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "Friend Toggle"
+TextLabel.TextColor3 = Color3.new(1, 1, 1)
+TextLabel.TextSize = 16
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.TextYAlignment = Enum.TextYAlignment.Center
+TextLabel.ZIndex = 13
+TextLabel.Parent = MainFrame
+
+local TextPadding = Instance.new("UIPadding")
+TextPadding.PaddingLeft = UDim.new(0, 14)
+TextPadding.PaddingRight = UDim.new(0, 20)
+TextPadding.Parent = TextLabel
+
+-- Switch Background
+local SwitchBG = Instance.new("Frame")
+SwitchBG.Size = UDim2.new(0, 44, 0, 20)
+SwitchBG.Position = UDim2.new(1, -54, 0.5, 0)
+SwitchBG.AnchorPoint = Vector2.new(0, 0.5)
+SwitchBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SwitchBG.BorderSizePixel = 0
+SwitchBG.ZIndex = 11
+SwitchBG.Parent = MainFrame
+
+Instance.new("UICorner", SwitchBG).CornerRadius = UDim.new(1, 0)
+
+-- Knob (starts OFF)
+local Knob = Instance.new("Frame")
+Knob.Size = UDim2.new(0, 26, 0, 26)
+Knob.Position = UDim2.new(0, 3, 0.5, 0)
+Knob.AnchorPoint = Vector2.new(0, 0.5)
+Knob.BackgroundColor3 = Color3.fromRGB(255, 60, 60)  -- Red = OFF
+Knob.BorderSizePixel = 0
+Knob.ZIndex = 12
+Knob.Parent = SwitchBG
+
+Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+-- Remote (with safety wait)
+local ToggleFriendsRemote
+pcall(function()
+    ToggleFriendsRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/PlotService/ToggleFriends", 5)
+end)
+
+if not ToggleFriendsRemote then
+    warn("ToggleFriends Remote not found! GUI loaded but toggle won't work.")
+end
+
+-- Toggle logic
+local enabled = false
+local lastToggleTime = 0
+local COOLDOWN = 1.25
+
+local function toggle()
+    if not ToggleFriendsRemote then return end
+    
+    local currentTime = tick()
+    if currentTime - lastToggleTime < COOLDOWN then
+        return
+    end
+    
+    lastToggleTime = currentTime
+    enabled = not enabled
+    
+    local targetPos = enabled and UDim2.new(1, -29, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+    local targetColor = enabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 60, 60)
+    
+    TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {
+        Position = targetPos,
+        BackgroundColor3 = targetColor
+    }):Play()
+    
+    pcall(function()
+        ToggleFriendsRemote:FireServer()
+    end)
+end
+
+-- Tap to toggle (mobile + PC)
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggle()
+    end
+end)
+
+print("Friend Toggle GUI Loaded Successfully! (Hot Pink Glow)")

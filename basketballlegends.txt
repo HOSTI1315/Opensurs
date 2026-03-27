@@ -1,0 +1,843 @@
+--// Melon Decompiler v1.2 | Discord: @melon.uwu
+--// Resolved: 247 identifiers | 43 functions | 0 strings
+--// Renamed: 43 functions | Connected: 15 callbacks | Dead Code Removed: 89 blocks
+--// [Renamer: ON] [Decompiler: ON]
+
+local RayfieldUI = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = RayfieldUI:CreateWindow({
+    Name = "Flash Hub | Basketball Legends",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "by Leakg0d & Eon!",
+    Theme = {
+        Background = Color3.fromRGB(10, 15, 30),
+        Topbar = Color3.fromRGB(15, 25, 45),
+        Shadow = Color3.fromRGB(5, 10, 20),
+        TabBackground = Color3.fromRGB(40, 60, 100),
+        TabBackgroundSelected = Color3.fromRGB(25, 40, 80),
+        TabStroke = Color3.fromRGB(50, 70, 120),
+        TabTextColor = Color3.fromRGB(170, 200, 255),
+        SelectedTabTextColor = Color3.fromRGB(120, 170, 255),
+        ElementBackground = Color3.fromRGB(20, 30, 55),
+        ElementBackgroundHover = Color3.fromRGB(30, 45, 80),
+        ElementStroke = Color3.fromRGB(70, 110, 180),
+        SecondaryElementBackground = Color3.fromRGB(15, 25, 45),
+        SecondaryElementStroke = Color3.fromRGB(50, 90, 160),
+        SliderBackground = Color3.fromRGB(40, 70, 120),
+        SliderProgress = Color3.fromRGB(100, 150, 255),
+        SliderStroke = Color3.fromRGB(70, 120, 200),
+        ToggleBackground = Color3.fromRGB(20, 25, 45),
+        ToggleEnabled = Color3.fromRGB(100, 150, 255),
+        ToggleDisabled = Color3.fromRGB(90, 90, 90),
+        ToggleEnabledStroke = Color3.fromRGB(70, 120, 200),
+        ToggleDisabledStroke = Color3.fromRGB(60, 60, 60),
+        ToggleEnabledOuterStroke = Color3.fromRGB(50, 90, 160),
+        ToggleDisabledOuterStroke = Color3.fromRGB(40, 40, 40),
+        InputBackground = Color3.fromRGB(15, 25, 45),
+        InputStroke = Color3.fromRGB(70, 110, 190),
+        PlaceholderColor = Color3.fromRGB(140, 180, 255),
+        TextColor = Color3.fromRGB(170, 200, 255),
+        DropdownSelected = Color3.fromRGB(30, 45, 80),
+        DropdownUnselected = Color3.fromRGB(20, 30, 55),
+        NotificationBackground = Color3.fromRGB(20, 30, 55),
+        NotificationActionsBackground = Color3.fromRGB(35, 50, 80),
+    },
+})
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+local Camera = workspace.CurrentCamera
+
+local ActiveConnections = {}
+
+local function DisconnectConnection(connectionName)
+    if ActiveConnections[connectionName] then
+        ActiveConnections[connectionName]:Disconnect()
+        ActiveConnections[connectionName] = nil
+    end
+end
+
+local BallModsTab = Window:CreateTab("Ball Mods", nil)
+
+BallModsTab:CreateSection("Auto Green")
+BallModsTab:CreateLabel("It will say Callback Error but 100% works!", nil)
+
+BallModsTab:CreateToggle({
+    Name = "Auto Perfect",
+    CurrentValue = false,
+    Flag = "AutoPerfect",
+    Callback = function(value)
+        RayfieldUI.Flags.AutoGood:Set(false)
+        RayfieldUI.Flags.AutoGreat:Set(false)
+        RayfieldUI.Flags.Randomizer:Set(false)
+        
+        DisconnectConnection("AutoPerfect")
+        
+        if value then
+            ActiveConnections["AutoPerfect"] = RunService.RenderStepped:Connect(function()
+                local shootingUI = LocalPlayer.PlayerGui:FindFirstChild("Visual")
+                if shootingUI and shootingUI:FindFirstChild("Shooting") then
+                    if shootingUI.Shooting.Visible then
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateToggle({
+    Name = "Auto Good",
+    CurrentValue = false,
+    Flag = "AutoGood",
+    Callback = function(value)
+        RayfieldUI.Flags.AutoPerfect:Set(false)
+        RayfieldUI.Flags.AutoGreat:Set(false)
+        RayfieldUI.Flags.Randomizer:Set(false)
+        
+        DisconnectConnection("AutoGood")
+        
+        if value then
+            ActiveConnections["AutoGood"] = RunService.RenderStepped:Connect(function()
+                local shootingUI = LocalPlayer.PlayerGui:FindFirstChild("Visual")
+                if shootingUI and shootingUI:FindFirstChild("Shooting") then
+                    if shootingUI.Shooting.Visible then
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateToggle({
+    Name = "Auto Great",
+    CurrentValue = false,
+    Flag = "AutoGreat",
+    Callback = function(value)
+        RayfieldUI.Flags.AutoPerfect:Set(false)
+        RayfieldUI.Flags.AutoGood:Set(false)
+        RayfieldUI.Flags.Randomizer:Set(false)
+        
+        DisconnectConnection("AutoGreat")
+        
+        if value then
+            ActiveConnections["AutoGreat"] = RunService.RenderStepped:Connect(function()
+                local shootingUI = LocalPlayer.PlayerGui:FindFirstChild("Visual")
+                if shootingUI and shootingUI:FindFirstChild("Shooting") then
+                    if shootingUI.Shooting.Visible then
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateToggle({
+    Name = "Randomizer",
+    CurrentValue = false,
+    Flag = "Randomizer",
+    Callback = function(value)
+        RayfieldUI.Flags.AutoPerfect:Set(false)
+        RayfieldUI.Flags.AutoGood:Set(false)
+        RayfieldUI.Flags.AutoGreat:Set(false)
+        
+        DisconnectConnection("Randomizer")
+        
+        if value then
+            ActiveConnections["Randomizer"] = RunService.RenderStepped:Connect(function()
+                local shootingUI = LocalPlayer.PlayerGui:FindFirstChild("Visual")
+                if shootingUI and shootingUI:FindFirstChild("Shooting") then
+                    if shootingUI.Shooting.Visible then
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateSlider({
+    Name = "Good Value",
+    CurrentValue = 0.9,
+    MinValue = 0.1,
+    MaxValue = 1,
+    Increment = 0.01,
+    Suffix = "value",
+    Flag = "GoodValue",
+    Callback = function(value)
+    end,
+})
+
+BallModsTab:CreateSlider({
+    Name = "Great Value",
+    CurrentValue = 0.95,
+    MinValue = 0.1,
+    MaxValue = 1,
+    Increment = 0.01,
+    Suffix = "value",
+    Flag = "GreatValue",
+    Callback = function(value)
+    end,
+})
+
+BallModsTab:CreateSection("Ball Magnet")
+
+BallModsTab:CreateButton({
+    Name = "Ball Magnet Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/kcYYUzPg"))()
+    end,
+})
+
+BallModsTab:CreateToggle({
+    Name = "Ball Magnet",
+    CurrentValue = false,
+    Flag = "BallMagEnabled",
+    Callback = function(value)
+        DisconnectConnection("BallMagnet")
+        
+        if value then
+            ActiveConnections["BallMagnet"] = RunService.Heartbeat:Connect(function()
+                local magnetRange = RayfieldUI.Flags.BallMagRange:Get()
+                for _, object in pairs(workspace:GetDescendants()) do
+                    if object.Name == "Basketball" and object:IsA("BasePart") then
+                        local distance = (HumanoidRootPart.Position - object.Position).Magnitude
+                        if distance <= magnetRange then
+                            object.CFrame = HumanoidRootPart.CFrame
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateSlider({
+    Name = "Ball Magnet Range",
+    CurrentValue = 10,
+    MinValue = 1,
+    MaxValue = 10,
+    Increment = 1,
+    Suffix = "studs",
+    Flag = "BallMagRange",
+    Callback = function(value)
+    end,
+})
+
+BallModsTab:CreateSection("Auto Guard")
+
+BallModsTab:CreateToggle({
+    Name = "Auto Guard",
+    CurrentValue = false,
+    Flag = "AutoGuard",
+    Callback = function(value)
+        DisconnectConnection("AutoGuard")
+        
+        if value then
+            ActiveConnections["AutoGuard"] = RunService.Heartbeat:Connect(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
+                        local targetCharacter = player.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("Basketball") then
+                            local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
+                            if targetRoot then
+                                local targetPosition = targetRoot.Position
+                                HumanoidRootPart.CFrame = CFrame.lookAt(HumanoidRootPart.Position, Vector3.new(targetPosition.X, HumanoidRootPart.Position.Y, targetPosition.Z))
+                                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+        end
+    end,
+})
+
+BallModsTab:CreateLabel("This will auto face the character to the person that has the ball, so this makes it easier for you to Block & Guard!")
+BallModsTab:CreateDivider()
+
+BallModsTab:CreateSection("Auto Get Rebound")
+
+BallModsTab:CreateToggle({
+    Name = "Auto Get Rebound",
+    CurrentValue = false,
+    Flag = "AutoGetBall",
+    Callback = function(value)
+        DisconnectConnection("AutoGetBall")
+        
+        if value then
+            ActiveConnections["AutoGetBall"] = RunService.Heartbeat:Connect(function()
+                for _, object in pairs(workspace:GetDescendants()) do
+                    if object.Name == "Basketball" and object:IsA("BasePart") then
+                        local isInPlayerHands = false
+                        for _, player in pairs(Players:GetPlayers()) do
+                            if player.Character and player.Character:FindFirstChild("Basketball") then
+                                isInPlayerHands = true
+                                break
+                            end
+                        end
+                        
+                        if not isInPlayerHands then
+                            object.CFrame = HumanoidRootPart.CFrame
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+BallModsTab:CreateLabel("100% auto gets the basketball if it exists and isn't in anyone hands!")
+
+BallModsTab:CreateSection("Auto Steal")
+
+BallModsTab:CreateButton({
+    Name = "Auto Steal",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/xISFifA3/raw"))()
+    end,
+})
+
+BallModsTab:CreateLabel("Has NOT been tested but it should work!")
+
+local PlayerConfigTab = Window:CreateTab("Player Configuration", nil)
+
+PlayerConfigTab:CreateSection("Speed Boost")
+
+PlayerConfigTab:CreateToggle({
+    Name = "Speed Boost",
+    CurrentValue = false,
+    Flag = "SpeedEnabled",
+    Callback = function(value)
+        DisconnectConnection("SpeedBoost")
+        
+        if value then
+            ActiveConnections["SpeedBoost"] = RunService.RenderStepped:Connect(function()
+                if Character and Character:FindFirstChild("HumanoidRootPart") and Humanoid then
+                    local moveDirection = Humanoid.MoveDirection
+                    if moveDirection.Magnitude > 0 then
+                        local speedMultiplier = RayfieldUI.Flags.SpeedValue:Get()
+                        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + (moveDirection * speedMultiplier)
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+PlayerConfigTab:CreateSlider({
+    Name = "Speed Value",
+    CurrentValue = 1,
+    MinValue = 0.1,
+    MaxValue = 2,
+    Increment = 0.1,
+    Suffix = "x",
+    Flag = "SpeedValue",
+    Callback = function(value)
+    end,
+})
+
+PlayerConfigTab:CreateSection("Mobile Teleports")
+
+PlayerConfigTab:CreateToggle({
+    Name = "Quick TP",
+    CurrentValue = false,
+    Flag = "QuickTpEnabled",
+    Callback = function(value)
+        local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+        
+        if PlayerGui:FindFirstChild("TpButton") then
+            PlayerGui.TpButton:Destroy()
+        end
+        
+        if value then
+            local ScreenGui = Instance.new("ScreenGui")
+            ScreenGui.Name = "TpButton"
+            ScreenGui.Parent = PlayerGui
+            
+            local Button = Instance.new("TextButton")
+            Button.Name = "Btn"
+            Button.Size = UDim2.new(0, 200, 0, 50)
+            Button.Position = UDim2.new(0.5, -100, 0.9, -25)
+            Button.AnchorPoint = Vector2.new(0.5, 0.5)
+            Button.BackgroundTransparency = 1
+            Button.Text = ""
+            Button.Parent = ScreenGui
+            
+            local Background = Instance.new("Frame")
+            Background.Name = "Bg"
+            Background.Size = UDim2.new(1, 0, 1, 0)
+            Background.BackgroundColor3 = Color3.new(1, 1, 1)
+            Background.Parent = Button
+            
+            local Gradient = Instance.new("UIGradient")
+            Gradient.Rotation = 90
+            Gradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 0, 255)),
+            })
+            Gradient.Parent = Background
+            
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 12)
+            Corner.Parent = Background
+            
+            local Stroke = Instance.new("UIStroke")
+            Stroke.Color = Color3.fromRGB(60, 60, 60)
+            Stroke.Thickness = 2
+            Stroke.Parent = Background
+            
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, 0, 1, 0)
+            Label.BackgroundTransparency = 1
+            Label.Text = "Quick Tp"
+            Label.Font = Enum.Font.GothamBold
+            Label.TextColor3 = Color3.new(1, 1, 1)
+            Label.TextSize = 20
+            Label.Parent = Button
+            
+            local TextStroke = Instance.new("UIStroke")
+            TextStroke.Color = Color3.new(0, 0, 0)
+            TextStroke.Thickness = 1.5
+            TextStroke.Parent = Label
+            
+            local HoverGradient = Gradient:Clone()
+            HoverGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 150, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 50, 255)),
+            })
+            
+            Button.MouseEnter:Connect(function()
+                TweenService:Create(Gradient, TweenInfo.new(0.2), {Color = HoverGradient.Color}):Play()
+                TweenService:Create(Stroke, TweenInfo.new(0.2), {Thickness = 3}):Play()
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                local normalColor = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 0, 255)),
+                })
+                TweenService:Create(Gradient, TweenInfo.new(0.3), {Color = normalColor}):Play()
+                TweenService:Create(Stroke, TweenInfo.new(0.3), {Thickness = 2}):Play()
+            end)
+            
+            Button.MouseButton1Click:Connect(function()
+                if Character and Character:FindFirstChild("HumanoidRootPart") and Humanoid then
+                    if Humanoid.MoveDirection.Magnitude > 0 then
+                        local tpDistance = RayfieldUI.Flags.QuickTpDist:Get()
+                        local tpDelay = RayfieldUI.Flags.QuickTpDelay:Get()
+                        
+                        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + (Humanoid.MoveDirection * tpDistance)
+                        task.wait(tpDelay)
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+PlayerConfigTab:CreateSlider({
+    Name = "Quick TP Distance",
+    CurrentValue = 2.5,
+    MinValue = 0.1,
+    MaxValue = 5,
+    Increment = 0.1,
+    Suffix = "studs",
+    Flag = "QuickTpDist",
+    Callback = function(value)
+    end,
+})
+
+PlayerConfigTab:CreateSlider({
+    Name = "Quick TP Delay",
+    CurrentValue = 0.3,
+    MinValue = 0.1,
+    MaxValue = 1,
+    Increment = 0.1,
+    Suffix = "seconds",
+    Flag = "QuickTpDelay",
+    Callback = function(value)
+    end,
+})
+
+PlayerConfigTab:CreateSection("Computer Teleports")
+
+PlayerConfigTab:CreateToggle({
+    Name = "R to TP",
+    CurrentValue = false,
+    Flag = "RToTpEnabled",
+    Callback = function(value)
+        DisconnectConnection("RToTp")
+        
+        if value then
+            ActiveConnections["RToTp"] = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if not gameProcessed and input.KeyCode == Enum.KeyCode.R then
+                    if Character and Character:FindFirstChild("HumanoidRootPart") and Humanoid then
+                        if Humanoid.MoveDirection.Magnitude > 0 then
+                            local tpDistance = RayfieldUI.Flags.RToTpDist:Get()
+                            local tpDelay = RayfieldUI.Flags.RToTpDelay:Get()
+                            
+                            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + (Humanoid.MoveDirection * tpDistance)
+                            task.wait(tpDelay)
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+PlayerConfigTab:CreateSlider({
+    Name = "R TP Distance",
+    CurrentValue = 2.5,
+    MinValue = 0.1,
+    MaxValue = 3,
+    Increment = 0.1,
+    Suffix = "studs",
+    Flag = "RToTpDist",
+    Callback = function(value)
+    end,
+})
+
+PlayerConfigTab:CreateSlider({
+    Name = "R TP Delay",
+    CurrentValue = 0.3,
+    MinValue = 0.1,
+    MaxValue = 1,
+    Increment = 0.1,
+    Suffix = "seconds",
+    Flag = "RToTpDelay",
+    Callback = function(value)
+    end,
+})
+
+PlayerConfigTab:CreateLabel("Click R to teleport if you are in a Computer!")
+
+local ESPTab = Window:CreateTab("ESP Features", nil)
+
+local TracerLines = {}
+
+ESPTab:CreateSection("Tracers")
+
+ESPTab:CreateToggle({
+    Name = "Tracer ESP",
+    CurrentValue = false,
+    Flag = "TracerEnabled",
+    Callback = function(value)
+        for _, line in pairs(TracerLines) do
+            line:Remove()
+        end
+        TracerLines = {}
+        
+        DisconnectConnection("TracerESP")
+        
+        if value then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    local line = Drawing.new("Line")
+                    line.Visible = false
+                    line.Color = Color3.new(1, 0, 0)
+                    line.Thickness = 2
+                    TracerLines[player.Name] = line
+                end
+            end
+            
+            ActiveConnections["TracerESP"] = RunService.RenderStepped:Connect(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character then
+                        local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        if targetRoot then
+                            local screenPosition, onScreen = Camera:WorldToViewportPoint(targetRoot.Position)
+                            local line = TracerLines[player.Name]
+                            
+                            if line and onScreen then
+                                line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                                line.To = Vector2.new(screenPosition.X, screenPosition.Y)
+                                line.Visible = true
+                            elseif line then
+                                line.Visible = false
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+ESPTab:CreateSection("Basketball ESP")
+
+ESPTab:CreateToggle({
+    Name = "Basketball Highlight",
+    CurrentValue = false,
+    Flag = "BasketballHighlight",
+    Callback = function(value)
+        DisconnectConnection("BasketballHighlight")
+        
+        if value then
+            ActiveConnections["BasketballHighlight"] = RunService.RenderStepped:Connect(function()
+                for _, object in pairs(workspace:GetDescendants()) do
+                    if object.Name == "Basketball" and object:IsA("BasePart") then
+                        if not object:FindFirstChild("BallHighlight") then
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "BallHighlight"
+                            highlight.FillColor = Color3.new(1, 0.5, 0)
+                            highlight.OutlineColor = Color3.new(1, 1, 0)
+                            highlight.FillTransparency = 0.5
+                            highlight.OutlineTransparency = 0
+                            highlight.Parent = object
+                        end
+                    end
+                end
+            end)
+        else
+            for _, object in pairs(workspace:GetDescendants()) do
+                if object.Name == "BallHighlight" then
+                    object:Destroy()
+                end
+            end
+        end
+    end,
+})
+
+ESPTab:CreateSection("Player ESP")
+
+ESPTab:CreateToggle({
+    Name = "Player ESP",
+    CurrentValue = false,
+    Flag = "PlayerESP",
+    Callback = function(value)
+        DisconnectConnection("PlayerESP")
+        
+        if value then
+            ActiveConnections["PlayerESP"] = RunService.RenderStepped:Connect(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character then
+                        if not player.Character:FindFirstChild("PlayerESP") then
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "PlayerESP"
+                            highlight.FillColor = Color3.new(0, 1, 0)
+                            highlight.OutlineColor = Color3.new(0, 0, 1)
+                            highlight.FillTransparency = 0.7
+                            highlight.OutlineTransparency = 0
+                            highlight.Parent = player.Character
+                        end
+                    end
+                end
+            end)
+        else
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character and player.Character:FindFirstChild("PlayerESP") then
+                    player.Character.PlayerESP:Destroy()
+                end
+            end
+        end
+    end,
+})
+
+local WorldTab = Window:CreateTab("World Changer", nil)
+
+WorldTab:CreateSection("FOV Modifier")
+
+WorldTab:CreateToggle({
+    Name = "FOV Modifier",
+    CurrentValue = false,
+    Flag = "FOVEnabled",
+    Callback = function(value)
+        DisconnectConnection("FOVModifier")
+        
+        if value then
+            ActiveConnections["FOVModifier"] = RunService.RenderStepped:Connect(function()
+                Camera.FieldOfView = RayfieldUI.Flags.FOVValue:Get()
+            end)
+        else
+            Camera.FieldOfView = 70
+        end
+    end,
+})
+
+WorldTab:CreateSlider({
+    Name = "FOV Value",
+    CurrentValue = 90,
+    MinValue = 60,
+    MaxValue = 120,
+    Increment = 1,
+    Suffix = "FOV",
+    Flag = "FOVValue",
+    Callback = function(value)
+        if RayfieldUI.Flags.FOVEnabled:Get() then
+            Camera.FieldOfView = value
+        end
+    end,
+})
+
+WorldTab:CreateSection("Camera Resolution")
+
+WorldTab:CreateToggle({
+    Name = "Camera Resolution Toggle",
+    CurrentValue = false,
+    Flag = "CameraResEnabled",
+    Callback = function(value)
+        DisconnectConnection("CameraRes")
+        
+        if value then
+            ActiveConnections["CameraRes"] = RunService.RenderStepped:Connect(function()
+                local resValue = RayfieldUI.Flags.CameraResValue:Get()
+                Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, resValue, 0, 0, 0, 1)
+            end)
+        end
+    end,
+})
+
+WorldTab:CreateSlider({
+    Name = "Camera Resolution",
+    CurrentValue = 0.8,
+    MinValue = 0.3,
+    MaxValue = 1,
+    Increment = 0.05,
+    Suffix = "quality",
+    Flag = "CameraResValue",
+    Callback = function(value)
+    end,
+})
+
+WorldTab:CreateSection("Extra Stuff")
+
+WorldTab:CreateToggle({
+    Name = "Full Bright",
+    CurrentValue = false,
+    Flag = "FullBright",
+    Callback = function(value)
+        if value then
+            Lighting.Ambient = Color3.new(0.8, 0.8, 0.8)
+            Lighting.Brightness = 1.5
+            Lighting.GlobalShadows = false
+            Lighting.OutdoorAmbient = Color3.new(0.8, 0.8, 0.8)
+        else
+            Lighting.Ambient = Color3.new(0, 0, 0)
+            Lighting.Brightness = 1
+            Lighting.GlobalShadows = true
+            Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+        end
+    end,
+})
+
+WorldTab:CreateToggle({
+    Name = "No Fog",
+    CurrentValue = false,
+    Flag = "NoFog",
+    Callback = function(value)
+        if value then
+            Lighting.FogEnd = 1000000
+            Lighting.FogStart = 1000000
+        else
+            Lighting.FogEnd = 100
+            Lighting.FogStart = 0
+        end
+    end,
+})
+
+WorldTab:CreateToggle({
+    Name = "NVIDIA Style Shaders",
+    CurrentValue = false,
+    Flag = "Shaders",
+    Callback = function(value)
+        if value then
+            for _, effect in pairs(Lighting:GetChildren()) do
+                if effect:IsA("PostEffect") then
+                    effect:Destroy()
+                end
+            end
+            
+            local bloom = Instance.new("BloomEffect")
+            bloom.Name = "NVIDIABloom"
+            bloom.Intensity = 0.2
+            bloom.Size = 16
+            bloom.Threshold = 0.9
+            bloom.Parent = Lighting
+            
+            local colorCorrection = Instance.new("ColorCorrectionEffect")
+            colorCorrection.Name = "NVIDIAColor"
+            colorCorrection.Brightness = 0.02
+            colorCorrection.Contrast = 0.1
+            colorCorrection.Saturation = 0.1
+            colorCorrection.TintColor = Color3.new(1.01, 1.005, 0.995)
+            colorCorrection.Parent = Lighting
+            
+            local depthOfField = Instance.new("DepthOfFieldEffect")
+            depthOfField.Name = "NVIDIADepth"
+            depthOfField.FarIntensity = 0.02
+            depthOfField.FocusDistance = 25
+            depthOfField.InFocusRadius = 40
+            depthOfField.NearIntensity = 0.1
+            depthOfField.Parent = Lighting
+            
+            local sunRays = Instance.new("SunRaysEffect")
+            sunRays.Name = "NVIDIASunRays"
+            sunRays.Intensity = 0.1
+            sunRays.Spread = 0.4
+            sunRays.Parent = Lighting
+            
+            local blur = Instance.new("BlurEffect")
+            blur.Name = "NVIDIABlur"
+            blur.Size = 0.2
+            blur.Parent = Lighting
+            
+            Lighting.GlobalShadows = true
+            Lighting.ShadowSoftness = 0.4
+            Lighting.Brightness = 1.05
+            Lighting.OutdoorAmbient = Color3.new(0.6, 0.7, 0.9)
+            Lighting.Ambient = Color3.new(0.45, 0.45, 0.55)
+            Lighting.ColorShift_Bottom = Color3.new(0.02, 0.02, 0.05)
+            Lighting.ColorShift_Top = Color3.new(0.8, 0.7, 0.6)
+            Lighting.FogColor = Color3.new(0.4, 0.5, 0.7)
+            Lighting.FogStart = 100
+            Lighting.FogEnd = 500
+            
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("Part") then
+                    if part.Material == Enum.Material.Plastic or part.Material == Enum.Material.Wood then
+                        part.Material = Enum.Material.SmoothPlastic
+                    end
+                end
+            end
+        else
+            for _, effect in pairs(Lighting:GetChildren()) do
+                if effect.Name:find("NVIDIA") then
+                    effect:Destroy()
+                end
+            end
+        end
+    end,
+})
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    HumanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    Humanoid = newCharacter:WaitForChild("Humanoid")
+    
+    for connectionName, _ in pairs(ActiveConnections) do
+        DisconnectConnection(connectionName)
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    if RayfieldUI.Flags.TracerEnabled:Get() and player ~= LocalPlayer then
+        local line = Drawing.new("Line")
+        line.Visible = false
+        line.Color = Color3.new(1, 0, 0)
+        line.Thickness = 2
+        TracerLines[player.Name] = line
+    end
+end)
+
+RayfieldUI:LoadConfiguration()

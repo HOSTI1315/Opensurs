@@ -1,0 +1,492 @@
+-- Load GUI dari GitHub
+loadstring(game:HttpGet("https://raw.githubusercontent.com/NabaruBrainrot/Tempat-Penyimpanan-Roblox-Brainrot-/refs/heads/main/Ui%20library"))()
+
+
+
+_G.FaDhenAddToggle("Main", {
+    Name = "Steal Helper",
+    Callback = function(on)
+        if on then
+            -- Eksekusi script hanya saat toggle ON
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/ily123950/Vulkan/refs/heads/main/Trx"))()
+        else
+            print("Instan Steal dimatikan.")
+        end
+    end
+})
+
+
+
+
+-- Load Anti Steal
+loadstring(game:HttpGet("https://raw.githubusercontent.com/NabaruBrainrot/Tempat-Penyimpanan-Roblox-Brainrot-/refs/heads/main/Anti%20Steal"))()
+
+-- Tambahkan toggle di tab Main
+_G.FaDhenAddToggle("Main", {
+    Name = "Anti Steal",
+    Callback = function(on)
+        if getgenv().AntiSteal_SetEnabled then
+            getgenv().AntiSteal_SetEnabled(on)
+        else
+            warn("Anti Steal belum siap!")
+        end
+    end
+})
+
+
+
+
+--=== ESP PLAYER (FaDhen Toggle) ===--
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- reuse global table supaya aman kalau script di-execute ulang
+local FaESP = getgenv().FaDhenESP or {}
+getgenv().FaDhenESP = FaESP
+
+FaESP.Enabled = FaESP.Enabled or false
+FaESP.Connections = FaESP.Connections or {}
+
+local function destroyESPFromCharacter(character)
+	if character:FindFirstChild("ESP_Highlight") then
+		character.ESP_Highlight:Destroy()
+	end
+	local head = character:FindFirstChild("Head")
+	if head and head:FindFirstChild("ESP_Name") then
+		head.ESP_Name:Destroy()
+	end
+end
+
+local function applyESPToCharacter(player, character)
+	if player == localPlayer then return end
+	if not character then return end
+
+	local head = character:FindFirstChild("Head") or character:WaitForChild("Head", 5)
+	if not head then return end
+
+	-- bersihkan dulu
+	destroyESPFromCharacter(character)
+
+	-- nama (Billboard)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP_Name"
+	billboard.Adornee = head
+	billboard.Size = UDim2.new(0, 100, 0, 40)
+	billboard.StudsOffset = Vector3.new(0, 1.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = player.Name
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeTransparency = 0.5
+	label.Font = Enum.Font.SourceSansBold
+	label.TextScaled = true
+	label.Parent = billboard
+
+	-- highlight
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESP_Highlight"
+	highlight.Adornee = character
+	highlight.FillColor = Color3.new(1, 0, 0)
+	highlight.FillTransparency = 0.5
+	highlight.OutlineColor = Color3.new(0, 0, 0)
+	highlight.OutlineTransparency = 0.2
+	highlight.Parent = character
+end
+
+local function trackPlayer(player)
+	if player == localPlayer then return end
+	-- apply sekarang kalau sudah spawn
+	if player.Character then
+		applyESPToCharacter(player, player.Character)
+	end
+	-- pantau respawn
+	FaESP.Connections[player] = player.CharacterAdded:Connect(function(character)
+		applyESPToCharacter(player, character)
+	end)
+end
+
+local function untrackPlayer(player)
+	if FaESP.Connections[player] then
+		FaESP.Connections[player]:Disconnect()
+		FaESP.Connections[player] = nil
+	end
+	if player ~= localPlayer and player.Character then
+		destroyESPFromCharacter(player.Character)
+	end
+end
+
+function FaESP:Enable()
+	if self.Enabled then return end
+	self.Enabled = true
+
+	-- apply ke semua player yang ada
+	for _, plr in ipairs(Players:GetPlayers()) do
+		trackPlayer(plr)
+	end
+
+	-- player join
+	self.Connections._PlayerAdded = Players.PlayerAdded:Connect(function(plr)
+		trackPlayer(plr)
+	end)
+
+	-- player leave (bersihin sisa ESP)
+	self.Connections._PlayerRemoving = Players.PlayerRemoving:Connect(function(plr)
+		untrackPlayer(plr)
+	end)
+end
+
+function FaESP:Disable()
+	if not self.Enabled then return end
+	self.Enabled = false
+
+	-- disconnect semua
+	for key, conn in pairs(self.Connections) do
+		if conn and conn.Disconnect then
+			conn:Disconnect()
+		end
+		self.Connections[key] = nil
+	end
+
+	-- hapus ESP dari semua karakter
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= localPlayer and plr.Character then
+			destroyESPFromCharacter(plr.Character)
+		end
+	end
+end
+
+--=== Toggle pakai FaDhen ===--
+_G.FaDhenAddToggle("Main", {
+	Name = "Esp Player",
+	Callback = function(on)
+		print("ESP Player:", on)
+		if on then
+			FaESP:Enable()
+		else
+			FaESP:Disable()
+		end
+	end
+})
+
+
+
+_G.FaDhenAddToggle("Main", {
+    Name = "New Lock Base",
+    Callback = function(on)
+        if on then
+            -- Eksekusi script hanya saat toggle ON
+         loadstring(game:HttpGet("https://pastebin.com/raw/makzCS0N"))()
+        else
+            print("Instan Steal dimatikan.")
+        end
+    end
+})
+
+
+
+_G.FaDhenAddToggle("Visual", {
+	Name = "Rejoin",
+	Callback = function(v)
+		print("rejoin:", v)
+		if v then
+			local TeleportService = game:GetService("TeleportService")
+			local Players = game:GetService("Players")
+			local player = Players.LocalPlayer
+			local placeId = game.PlaceId
+			local jobId = game.JobId
+
+			TeleportService:TeleportToPlaceInstance(placeId, jobId, player)
+		end
+	end
+})
+
+
+
+
+
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+
+local screenGui
+local function createMainGui()
+    if screenGui then return screenGui end
+
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "UtilityGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.Parent = gui
+
+    -- FRAME UTAMA UNTUK BUTTON
+    local frame = Instance.new("Frame")
+    frame.Name = "MainFrame"
+    frame.Size = UDim2.new(0, 200, 0, 32)
+    frame.Position = UDim2.new(0.5, 0, 0.02, 0)
+    frame.AnchorPoint = Vector2.new(0.5, 0)
+    frame.BackgroundTransparency = 1
+    frame.Parent = screenGui
+
+    -- RESET BUTTON
+    local resetBtn = Instance.new("TextButton")
+    resetBtn.Size = UDim2.new(0, 90, 1, 0)
+    resetBtn.Position = UDim2.new(0, 0, 0, 0)
+    resetBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    resetBtn.TextColor3 = Color3.new(1, 1, 1)
+    resetBtn.Text = "Reset"
+    resetBtn.Font = Enum.Font.GothamBold
+    resetBtn.TextSize = 14
+    resetBtn.Parent = frame
+    Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0, 6)
+
+    resetBtn.MouseButton1Click:Connect(function()
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then humanoid.Health = 0 end
+    end)
+
+    -- LEAVE BUTTON
+    local leaveBtn = Instance.new("TextButton")
+    leaveBtn.Size = UDim2.new(0, 90, 1, 0)
+    leaveBtn.Position = UDim2.new(0, 100, 0, 0)
+    leaveBtn.BackgroundColor3 = Color3.fromRGB(44, 44, 44)
+    leaveBtn.TextColor3 = Color3.new(1, 1, 1)
+    leaveBtn.Text = "Leave"
+    leaveBtn.Font = Enum.Font.GothamBold
+    leaveBtn.TextSize = 14
+    leaveBtn.Parent = frame
+    Instance.new("UICorner", leaveBtn).CornerRadius = UDim.new(0, 6)
+
+    leaveBtn.MouseButton1Click:Connect(function()
+        game:Shutdown()
+    end)
+
+    player.CharacterAdded:Connect(function()
+        task.wait(0.1)
+        if not gui:FindFirstChild("UtilityGui") then
+            screenGui.Parent = gui
+        end
+    end)
+
+    return screenGui
+end
+
+_G.FaDhenAddToggle("Visual", {
+    Name = "Exit Button",
+    Callback = function(on)
+        if on then
+            createMainGui().Enabled = true
+        else
+            if screenGui then
+                screenGui.Enabled = false
+            end
+        end
+    end
+})
+
+
+
+_G.FaDhenAddToggle("Visual", {
+	Name = "ESP Target",
+	Callback = function(v)
+		if v then
+			-- Saat Toggle ON: jalankan ESP dari Pastebin
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/NabaruBrainrot/Tempat-Penyimpanan-Roblox-Brainrot-/refs/heads/main/esp%20target"))()
+			task.delay(0.1, function()
+				if getgenv().activateESP then
+					getgenv().activateESP()
+				end
+			end)
+		else
+			-- Saat Toggle OFF: hentikan dan bersihkan semuanya
+			if getgenv().disableESP then
+				getgenv().disableESP()
+			end
+		end
+	end
+})
+
+
+
+-- Tambahkan toggle di tab Visual
+_G.FaDhenAddToggle("Visual", {
+    Name = "Anti Hit",
+    Callback = function(on)
+        if on then
+            -- Eksekusi script hanya saat toggle ON
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/bananaGanteng/muscle-mayhem/refs/heads/main/kunci%20karakter"))()
+        else
+            print("Instan Steal dimatikan.")
+        end
+    end
+})
+
+
+
+
+
+-- Tambahkan toggle di tab Visual
+_G.FaDhenAddToggle("Misc", {
+    Name = "KenHub Script",
+    Callback = function(on)
+        if on then
+            -- Eksekusi script hanya saat toggle ON
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/Gregy677/Gunmods-strucid/main/Steal%20a%20brain%20rot",true))()
+        else
+            print("Instan Steal dimatikan.")
+        end
+    end
+})
+
+
+
+
+-- Tambahkan toggle di tab Visual
+_G.FaDhenAddToggle("Misc", {
+    Name = "Kurdhub Script",
+    Callback = function(on)
+        if on then
+            -- Eksekusi script hanya saat toggle ON
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Kurdhub"))()
+        else
+            print("Instan Steal dimatikan.")
+        end
+    end
+})
+
+
+
+
+
+
+
+
+
+
+--Script lain
+
+
+local DEBUG = false
+local BATCH_SIZE = 250
+local SEARCH_TRAPS_IN_GAME = false
+
+local function dprint(...) if DEBUG then print(...) end end
+
+local function processBillboardIfNeeded(obj)
+	if not (obj:IsA("BasePart") and obj.Name == "Main") then return end
+	if obj:GetAttribute("BillboardProcessed") then return end
+	local parent = obj.Parent
+	local ok = false
+	while parent do
+		if parent:IsA("Folder") and parent.Name == "Purchases" then ok = true break end
+		parent = parent.Parent
+	end
+	if not ok then return end
+	for _, child in ipairs(obj:GetChildren()) do
+		if child:IsA("BillboardGui") then
+			child.Size = UDim2.new(0, 180, 0, 150)
+			child.MaxDistance = 90
+			child.StudsOffset = Vector3.new(0, 5, 0)
+			dprint("✅ BillboardGui diubah:", obj:GetFullName())
+		end
+	end
+	obj:SetAttribute("BillboardProcessed", true)
+end
+
+task.defer(function()
+	local all = workspace:GetDescendants()
+	for i = 1, #all do
+		processBillboardIfNeeded(all[i])
+		if i % BATCH_SIZE == 0 then task.wait() end
+	end
+end)
+
+workspace.DescendantAdded:Connect(processBillboardIfNeeded)
+
+local function shouldRemoveTrapTouch(tt)
+	if not (tt:IsA("TouchTransmitter") and tt.Name == "TouchInterest") then return false end
+	local p = tt.Parent
+	if not (p and p:IsA("MeshPart") and p.Name == "Open") then return false end
+	local m = p:FindFirstAncestorOfClass("Model")
+	if not (m and m.Name == "Trap") then return false end
+	return true
+end
+
+local function removeTrapTouch(tt)
+	if tt.Parent then
+		tt:Destroy()
+		dprint("🔥 TouchInterest Dihapus:", (tt.Parent and tt.Parent:GetFullName()) or "?")
+	end
+end
+
+task.defer(function()
+	local root = SEARCH_TRAPS_IN_GAME and game or workspace
+	local all = root:GetDescendants()
+	for i = 1, #all do
+		local o = all[i]
+		if o:IsA("TouchTransmitter") and shouldRemoveTrapTouch(o) then
+			removeTrapTouch(o)
+		end
+		if i % BATCH_SIZE == 0 then task.wait() end
+	end
+end)
+
+workspace.DescendantAdded:Connect(function(obj)
+	if obj:IsA("TouchTransmitter") and shouldRemoveTrapTouch(obj) then
+		removeTrapTouch(obj)
+	end
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local currentRagdollConnection
+
+local function anchorCharacter(char, state)
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+			part.Anchored = state
+		end
+	end
+end
+
+local function disconnectRagdoll()
+	if currentRagdollConnection then
+		currentRagdollConnection:Disconnect()
+		currentRagdollConnection = nil
+	end
+end
+
+local function handleRagdoll(char)
+	disconnectRagdoll()
+	local humanoid = char:WaitForChild("Humanoid", 5)
+	if not humanoid then return end
+	currentRagdollConnection = humanoid.StateChanged:Connect(function(_, newState)
+		if newState == Enum.HumanoidStateType.Physics
+		or newState == Enum.HumanoidStateType.Ragdoll
+		or newState == Enum.HumanoidStateType.FallingDown then
+			anchorCharacter(char, true)
+			task.wait(0.01)
+			anchorCharacter(char, false)
+			humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end
+	end)
+end
+
+if player.Character then
+	task.defer(function() handleRagdoll(player.Character) end)
+end
+
+player.CharacterAdded:Connect(function(char)
+	task.wait(0.5)
+	handleRagdoll(char)
+end)
+
+player.CharacterRemoving:Connect(function()
+	disconnectRagdoll()
+end)

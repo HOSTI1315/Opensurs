@@ -1,0 +1,420 @@
+-- DZ HUB FINAL (con DESYNC intacto tal como pediste)
+-- Pegar en StarterPlayer > StarterPlayerScripts como LocalScript
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PhysicsService = game:GetService("PhysicsService")
+local GuiService = game:GetService("GuiService")
+
+local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+local workspaceCam = workspace.CurrentCamera
+
+-- ===== CONFIG =====
+local BUTTON_SIZE = UDim2.new(0, 64, 0, 64)
+local BUTTON_START_POS = UDim2.new(0, 18, 0.5, -32)
+local BUTTON_MIN_MARGIN = 8 -- px
+local HEAD_OFFSET = 4
+local PLATFORM_SIZE = Vector3.new(6, 0.5, 6)
+local PLATFORM_TRANSPARENCY = 0.5
+local PLATFORM_RISE_SPEED = 15
+local PLATFORM_HUE_SPEED = 0.3
+local FLOAT_SPEED = 3.5
+local REBOUND_HEIGHT = 2.5
+
+-- ===== STATE =====
+local platform = nil
+local platformConn = nil
+local platformRainbowConn = nil
+local platformActive = false
+
+-- ===== collision group (safe) =====
+pcall(function()
+	PhysicsService:CreateCollisionGroup("NoPlayerCollide")
+	PhysicsService:CollisionGroupSetCollidable("NoPlayerCollide", "Players", false)
+end)
+
+local function setPlayerCollisionGroup(character)
+	pcall(function()
+		for _, part in ipairs(character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				PhysicsService:SetPartCollisionGroup(part, "NoPlayerCollide")
+			end
+		end
+	end)
+end
+
+-- ===== UI =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DZ_Hub_GUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = false
+screenGui.DisplayOrder = 999999
+
+-- DZ toggle button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "DZToggle"
+toggleButton.Size = BUTTON_SIZE
+toggleButton.Position = BUTTON_START_POS
+toggleButton.AnchorPoint = Vector2.new(0, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(18,18,18)
+toggleButton.BackgroundTransparency = 0.15
+toggleButton.Text = "DZ"
+toggleButton.Font = Enum.Font.Arcade
+toggleButton.TextSize = 18
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.AutoButtonColor = false
+toggleButton.Active = true
+toggleButton.Draggable = true
+toggleButton.Parent = screenGui
+
+local btnCorner = Instance.new("UICorner", toggleButton)
+btnCorner.CornerRadius = UDim.new(1, 0)
+
+local btnStroke = Instance.new("UIStroke", toggleButton)
+btnStroke.Thickness = 3
+btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local shadow = Instance.new("ImageLabel", toggleButton)
+shadow.Size = UDim2.new(1.2,0,1.2,0)
+shadow.Position = UDim2.new(-0.1,0,-0.1,0)
+shadow.Image = "rbxassetid://5028857084"
+shadow.BackgroundTransparency = 1
+shadow.ImageTransparency = 0.7
+shadow.ZIndex = 0
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(24,24,276,276)
+
+RunService.Heartbeat:Connect(function()
+	local hue = (tick() * 0.45) % 1
+	btnStroke.Color = Color3.fromHSV(hue, 1, 1)
+end)
+
+local function clampButtonOnScreen()
+	local viewport = workspaceCam and workspaceCam.ViewportSize or Vector2.new(1920,1080)
+	local absPos = toggleButton.AbsolutePosition
+	local absSize = toggleButton.AbsoluteSize
+	local newX = math.clamp(absPos.X, BUTTON_MIN_MARGIN, viewport.X - absSize.X - BUTTON_MIN_MARGIN)
+	local newY = math.clamp(absPos.Y, BUTTON_MIN_MARGIN, viewport.Y - absSize.Y - BUTTON_MIN_MARGIN)
+	toggleButton.Position = UDim2.new(0, newX, 0, newY)
+end
+RunService.RenderStepped:Connect(clampButtonOnScreen)
+
+-- Main panel
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 180, 0, 220)
+mainFrame.Position = UDim2.new(0.5, -90, 0.5, -110)
+mainFrame.BackgroundColor3 = Color3.fromRGB(12,12,12)
+mainFrame.BackgroundTransparency = 0.12
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 12)
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text = "💠 DZ HUB"
+title.Font = Enum.Font.Arcade
+title.TextSize = 16
+title.TextColor3 = Color3.new(1,1,1)
+
+local listLayout = Instance.new("UIListLayout", mainFrame)
+listLayout.Padding = UDim.new(0,6)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	mainFrame.Size = UDim2.new(0, mainFrame.Size.X.Offset, 0, math.max(80, listLayout.AbsoluteContentSize.Y + 40))
+end)
+
+local function createMenuButton(text, color)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0, 150, 0, 32)
+	b.BackgroundColor3 = color or Color3.fromRGB(220,20,60)
+	b.Text = text
+	b.Font = Enum.Font.Arcade
+	b.TextSize = 16
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Parent = mainFrame
+	local c = Instance.new("UICorner", b)
+	c.CornerRadius = UDim.new(0,8)
+	return b
+end
+
+local btnTeleg = createMenuButton("🎯 Teleguiado", Color3.fromRGB(52, 58, 64))
+local btnSpeed = createMenuButton("⚡ Speed Booster", Color3.fromRGB(52, 58, 64))
+local btnFloor = createMenuButton("🌈 3rd Floor", Color3.fromRGB(52, 58, 64))
+local btnDesync = createMenuButton("🌀 Desync", Color3.fromRGB(52, 58, 64))
+local btnDiscord = createMenuButton("🔗 Discord", Color3.fromRGB(64,93,242))
+
+-- Map DZ toggle to main frame
+local uiVisible = false
+toggleButton.MouseButton1Click:Connect(function()
+	uiVisible = not uiVisible
+	mainFrame.Visible = uiVisible
+end)
+
+-- =========================
+-- === DESYNC (ORIGINAL) ===
+-- =========================
+-- We keep the original desync logic exactly; map it to the UI button "btnDesync" via variable extraButton
+local extraButton = btnDesync
+
+-- DESYNC INTEGRADO (versión optimizada) (original logic preserved)
+do
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
+    local desyncActive = false
+
+    -- Função principal do Mobile Desync
+    local function enableMobileDesync()
+        local success, error = pcall(function()
+            local backpack = LocalPlayer:WaitForChild("Backpack")
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            
+            local packages = ReplicatedStorage:WaitForChild("Packages", 5)
+            if not packages then warn("❌ Packages não encontrado") return false end
+            
+            local netFolder = packages:WaitForChild("Net", 5)
+            if not netFolder then warn("❌ Net folder não encontrado") return false end
+            
+            local useItemRemote = netFolder:WaitForChild("RE/UseItem", 5)
+            local teleportRemote = netFolder:WaitForChild("RE/QuantumCloner/OnTeleport", 5)
+            if not useItemRemote or not teleportRemote then warn("❌ Remotos não encontrados") return false end
+
+            -- Procurar ferramenta
+            local toolNames = {"Quantum Cloner", "Brainrot", "brainrot"}
+            local tool
+            for _, toolName in ipairs(toolNames) do
+                tool = backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+                if tool then break end
+            end
+            if not tool then
+                for _, item in ipairs(backpack:GetChildren()) do
+                    if item:IsA("Tool") then tool=item break end
+                end
+            end
+
+            if tool and tool.Parent==backpack then
+                humanoid:EquipTool(tool)
+                task.wait(0.5)
+            end
+
+            if setfflag then setfflag("WorldStepMax", "-9999999999") end
+            task.wait(0.2)
+            useItemRemote:FireServer()
+            task.wait(1)
+            teleportRemote:FireServer()
+            task.wait(2)
+            if setfflag then setfflag("WorldStepMax", "-1") end
+            print("✅ Mobile Desync ativado!")
+            return true
+        end)
+        if not success then
+            warn("❌ Erro ao ativar desync: " .. tostring(error))
+            return false
+        end
+        return success
+    end
+
+    local function disableMobileDesync()
+        pcall(function()
+            if setfflag then setfflag("WorldStepMax", "-1") end
+            print("❌ Mobile Desync desativado!")
+        end)
+    end
+
+    -- Toggle com botão extraButton
+    extraButton.MouseButton1Click:Connect(function()
+        desyncActive = not desyncActive
+        if desyncActive then
+            local success = enableMobileDesync()
+            if success then
+                extraButton.BackgroundColor3 = Color3.fromRGB(200, 200, 0) -- amarelo
+            else
+                desyncActive=false
+                extraButton.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+            end
+        else
+            disableMobileDesync()
+            extraButton.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+        end
+    end)
+
+    -- Resetar desync ao morrer
+    LocalPlayer.CharacterAdded:Connect(function()
+        desyncActive=false
+        extraButton.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    end)
+end
+-- End desync (unchanged)
+
+-- =========================
+-- === SPEED BOOSTER ===
+-- =========================
+do
+	local running = false
+	local conn
+	local BASE_SPEED = 27
+	btnSpeed.MouseButton1Click:Connect(function()
+		running = not running
+		if running then
+			btnSpeed.BackgroundColor3 = Color3.fromRGB(0,170,0)
+			conn = RunService.Heartbeat:Connect(function()
+				local char = LocalPlayer.Character
+				if not char then return end
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				local hrp = char:FindFirstChild("HumanoidRootPart")
+				if not hum or not hrp then return end
+				local dir = hum.MoveDirection
+				if dir.Magnitude > 0 then
+					hrp.AssemblyLinearVelocity = Vector3.new(dir.X * BASE_SPEED, hrp.AssemblyLinearVelocity.Y, dir.Z * BASE_SPEED)
+				end
+			end)
+		else
+			if conn then conn:Disconnect() conn = nil end
+			btnSpeed.BackgroundColor3 = Color3.fromRGB(220,20,60)
+		end
+	end)
+end
+
+-- =========================
+-- === TELEGUIDADO ===
+-- =========================
+do
+	local guided = false
+	local gconn
+	btnTeleg.MouseButton1Click:Connect(function()
+		guided = not guided
+		btnTeleg.BackgroundColor3 = guided and Color3.fromRGB(0,200,0) or Color3.fromRGB(220,20,60)
+		if guided then
+			local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			gconn = RunService.RenderStepped:Connect(function()
+				if guided and hrp then
+					hrp.Velocity = workspaceCam.CFrame.LookVector * 25
+				end
+			end)
+		else
+			if gconn then gconn:Disconnect() gconn = nil end
+		end
+	end)
+end
+
+-- =========================
+-- === DISCORD BTN ===
+-- =========================
+btnDiscord.MouseButton1Click:Connect(function()
+	if setclipboard then setclipboard("https://discord.gg/gXnTrfbd") end
+	btnDiscord.Text = "Copiado!"
+	task.wait(1.5)
+	btnDiscord.Text = "🔗 Discord"
+end)
+
+-- =========================
+-- === 3RD FLOOR REPARADA ===
+-- =========================
+do
+	local Run = RunService
+	local player = LocalPlayer
+	local selectionBox
+	local riseConn, rainbowConnLocal
+
+	local function clearPlatform()
+		if riseConn then riseConn:Disconnect() riseConn = nil end
+		if rainbowConnLocal then rainbowConnLocal:Disconnect() rainbowConnLocal = nil end
+		if selectionBox then selectionBox:Destroy() selectionBox = nil end
+		if platform then platform:Destroy() platform = nil end
+		platformActive = false
+		btnFloor.BackgroundColor3 = Color3.fromRGB(220,20,60)
+	end
+
+	local function spaceAboveClear(part)
+		local origin = part.Position + Vector3.new(0, part.Size.Y/2 + 0.2, 0)
+		local dir = Vector3.new(0, part.Size.Y + 2, 0)
+		local rp = RaycastParams.new()
+		rp.FilterDescendantsInstances = {part, player.Character}
+		rp.FilterType = Enum.RaycastFilterType.Blacklist
+		local res = workspace:Raycast(origin, dir, rp)
+		return not res
+	end
+
+	btnFloor.MouseButton1Click:Connect(function()
+		local char = player.Character or player.CharacterAdded:Wait()
+		local hrp = char:WaitForChild("HumanoidRootPart")
+		platformActive = not platformActive
+		if platformActive then
+			btnFloor.BackgroundColor3 = Color3.fromRGB(0,170,0)
+			platform = Instance.new("Part")
+			platform.Name = "DZ_3rdFloor_Platform"
+			platform.Size = PLATFORM_SIZE
+			platform.Anchored = true
+			platform.CanCollide = true
+			platform.Transparency = PLATFORM_TRANSPARENCY
+			platform.Material = Enum.Material.ForceField
+			platform.Position = hrp.Position - Vector3.new(0, 3, 0)
+			platform.Parent = workspace
+
+			-- selection box contorno
+			selectionBox = Instance.new("SelectionBox")
+			selectionBox.Adornee = platform
+			selectionBox.LineThickness = 0.09
+			selectionBox.SurfaceTransparency = 0.9
+			selectionBox.Parent = platform
+
+			-- rainbow animation
+			rainbowConnLocal = Run.Heartbeat:Connect(function()
+				local hue = (tick() * PLATFORM_HUE_SPEED) % 1
+				local color = Color3.fromHSV(hue, 1, 1)
+				if platform and platform.Parent then
+					platform.Color = color
+				end
+				if selectionBox and selectionBox.Parent then
+					selectionBox.Color3 = color
+				end
+			end)
+
+			-- follow & rise loop
+			riseConn = Run.Heartbeat:Connect(function(dt)
+				if not platform or not platform.Parent or not hrp or not hrp.Parent then return end
+				local newPos = Vector3.new(hrp.Position.X, platform.Position.Y, hrp.Position.Z)
+				platform.Position = newPos
+				if platformActive and spaceAboveClear(platform) then
+					platform.Position = platform.Position + Vector3.new(0, dt * PLATFORM_RISE_SPEED, 0)
+				end
+			end)
+		else
+			clearPlatform()
+		end
+	end)
+
+	-- cleanup on death / char added
+	player.CharacterAdded:Connect(function(c)
+		clearPlatform()
+	end)
+end
+
+-- ===== safety: reset on respawn =====
+LocalPlayer.CharacterAdded:Connect(function(char)
+	task.wait(0.8)
+	setPlayerCollisionGroup(char)
+	if platformActive and platform then
+		platform:Destroy()
+		platform = nil
+		platformActive = false
+	end
+	mainFrame.Visible = false
+	uiVisible = false
+end)
+
+-- END

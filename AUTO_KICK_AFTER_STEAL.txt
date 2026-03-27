@@ -1,0 +1,80 @@
+-- Anti "You stole" GUI detector
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+local keyword = "you stole" -- chữ cần dò, không phân biệt hoa thường
+local kickMessage = "You stole brainrot!" -- tiêu đề kick chính xác
+
+-- Hàm kiểm tra text có chứa keyword
+local function hasKeyword(text)
+    if typeof(text) ~= "string" then return false end
+    return string.find(string.lower(text), keyword) ~= nil
+end
+
+-- Hàm kick player an toàn với tiêu đề bạn muốn
+local function kickPlayer()
+    local success, err = pcall(function()
+        player:Kick(kickMessage)
+    end)
+    if not success then
+        warn("Kick thất bại: "..tostring(err))
+    end
+end
+
+-- Hàm quét các object GUI
+local function scanGuiObjects(parent)
+    for _, obj in ipairs(parent:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            if hasKeyword(obj.Text) then
+                print("⚠️ Phát hiện GUI chứa 'You stole' → Kick local player")
+                kickPlayer()
+                return true
+            end
+
+            -- Theo dõi khi text thay đổi
+            obj:GetPropertyChangedSignal("Text"):Connect(function()
+                if hasKeyword(obj.Text) then
+                    print("⚠️ GUI text thay đổi thành 'You stole' → Kick local player")
+                    kickPlayer()
+                end
+            end)
+        end
+    end
+    return false
+end
+
+-- Hàm theo dõi GUI mới thêm
+local function setupGuiWatcher(gui)
+    gui.DescendantAdded:Connect(function(desc)
+        if desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
+            if hasKeyword(desc.Text) then
+                print("⚠️ Phát hiện GUI chứa 'You stole' → Kick local player")
+                kickPlayer()
+            end
+
+            desc:GetPropertyChangedSignal("Text"):Connect(function()
+                if hasKeyword(desc.Text) then
+                    print("⚠️ GUI text thay đổi thành 'You stole' → Kick local player")
+                    kickPlayer()
+                end
+            end)
+        end
+    end)
+end
+
+-- Setup watcher cho tất cả GUI hiện tại
+for _, gui in ipairs(PlayerGui:GetChildren()) do
+    setupGuiWatcher(gui)
+end
+
+-- Khi GUI mới được thêm vào PlayerGui
+PlayerGui.ChildAdded:Connect(function(gui)
+    setupGuiWatcher(gui)
+    scanGuiObjects(gui) -- kiểm tra ngay khi thêm
+end)
+
+-- Quét ban đầu toàn bộ PlayerGui
+scanGuiObjects(PlayerGui)
+
+print("✅ Anti 'You stole' GUI detector đã bật")

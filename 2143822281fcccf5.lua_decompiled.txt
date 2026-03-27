@@ -1,0 +1,1098 @@
+--// Melon Decompiler [Private] v1.1
+--// Resolved: 156 identifiers | 42 functions | 0 strings
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+Workspace:FindFirstChild("Game")
+
+local Window = Fluent:CreateWindow({
+    Title = "Aoi Scripts (Jailbreak))",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightShift
+})
+
+local Tabs = {
+    Main = Window:AddTab({
+        Title = "Main",
+        Icon = ""
+    }),
+    ESP = Window:AddTab({
+        Title = "ESP",
+        Icon = ""
+    }),
+    Misc = Window:AddTab({
+        Title = "Misc",
+        Icon = ""
+    }),
+    Robberies = Window:AddTab({
+        Title = "Robberies",
+        Icon = ""
+    })
+}
+
+Tabs.Main:AddButton({
+    Title = "Give Items",
+    Callback = function()
+        if workspace:FindFirstChild("Givers") then
+            local Player = Players.LocalPlayer
+            local GiverData = nil
+
+            if GiverData then
+                for _, Data in pairs(GiverData) do
+                    Data.ClickDetector.Parent = Data.OriginalParent
+                    Data.Event:Disconnect()
+                end
+                getmetatable(GiverData):Destroy()
+            end
+
+            local NewGiverData = {}
+            local TempPart = Instance.new("Part", Workspace)
+            TempPart.Anchored = true
+            TempPart.CanCollide = false
+            TempPart.CFrame = Player.Character:WaitForChild("HumanoidRootPart").CFrame
+
+            setmetatable(NewGiverData, {
+                __metatable = TempPart
+            })
+
+            local CurrentData = NewGiverData
+
+            for _, Giver in pairs(Workspace.Givers:GetChildren()) do
+                local ClickDetector = Giver:FindFirstChildOfClass("ClickDetector")
+
+                if ClickDetector then
+                    local DataEntry = {
+                        ClickDetector = ClickDetector,
+                        OriginalParent = Giver
+                    }
+
+                    ClickDetector.Parent = TempPart
+
+                    DataEntry.Event = ClickDetector.MouseClick:Connect(function()
+                        ClickDetector.Parent = Giver
+                    end)
+
+                    table.insert(NewGiverData, DataEntry)
+                end
+            end
+
+            spawn(function()
+                wait(10)
+                if NewGiverData == CurrentData then
+                    NewGiverData = nil
+
+                    for _, Data in pairs(CurrentData) do
+                        Data.ClickDetector.Parent = Data.OriginalParent
+                        Data.Event:Disconnect()
+                    end
+
+                    getmetatable(CurrentData):Destroy()
+                end
+            end)
+        end
+    end
+})
+
+Tabs.Main:AddParagraph({
+    Title = "Give Items",
+    Content = "Pistol, Baton, Shotgun and SWAT stuff (if you bought)"
+})
+
+Tabs.Main:AddButton({
+    Title = "Give Glider",
+    Callback = function()
+        local Player = Players.LocalPlayer
+        local GliderData = nil
+
+        if Workspace:FindFirstChild("Givers") then
+            if GliderData then
+                for _, Data in pairs(GliderData) do
+                    Data.ClickDetector.Parent = Data.OriginalParent
+                    Data.Event:Disconnect()
+                end
+                getmetatable(GliderData).__metatable = nil
+            end
+
+            local NewGliderData = {}
+            local CurrentData = NewGliderData
+
+            local TempPart = Instance.new("Part", Workspace)
+            TempPart.Anchored = true
+            TempPart.CanCollide = false
+            TempPart.CFrame = Player.Character:WaitForChild("HumanoidRootPart").CFrame
+
+            setmetatable(NewGliderData, {
+                __metatable = TempPart
+            })
+
+            local GliderGiver = Workspace.Givers:FindFirstChild("Glider")
+            local GliderClickDetector = GliderGiver and GliderGiver:FindFirstChildOfClass("ClickDetector")
+
+            if GliderClickDetector then
+                local DataEntry = {
+                    ClickDetector = GliderClickDetector,
+                    OriginalParent = GliderGiver
+                }
+
+                GliderClickDetector.Parent = TempPart
+
+                DataEntry.Event = GliderClickDetector.MouseClick:Connect(function()
+                    GliderClickDetector.Parent = GliderGiver
+                end)
+
+                table.insert(NewGliderData, DataEntry)
+            end
+
+            spawn(function()
+                wait(10)
+                if NewGliderData == CurrentData then
+                    NewGliderData = nil
+
+                    for _, Data in pairs(CurrentData) do
+                        Data.ClickDetector.Parent = Data.OriginalParent
+                        Data.Event:Disconnect()
+                    end
+
+                    getmetatable(CurrentData).__metatable = nil
+                end
+            end)
+        end
+    end
+})
+
+local ESPToggle = Tabs.ESP:AddToggle("ESP", {
+    Title = "ESP",
+    Default = false
+})
+
+local ESPEnabled = false
+local TracersEnabled = false
+local BoxesEnabled = false
+local NamesEnabled = false
+local DistanceEnabled = false
+local ESPDrawings = {}
+
+local function ClearESP()
+    for _, Drawing in pairs(ESPDrawings) do
+        if Drawing.Line then
+            Drawing.Line:Remove()
+        end
+        if Drawing.NameLabel then
+            Drawing.NameLabel:Remove()
+        end
+        if Drawing.Box then
+            Drawing.Box:Remove()
+        end
+        if Drawing.DistanceLabel then
+            Drawing.DistanceLabel:Remove()
+        end
+    end
+    ESPDrawings = {}
+end
+
+local function UpdateESP()
+    ClearESP()
+
+    if ESPEnabled then
+        local Player = Players.LocalPlayer
+        local Character = Player.Character
+        local LocalPosition = nil
+
+        if Character then
+            local HRP = Character:FindFirstChild("HumanoidRootPart")
+            if HRP then
+                LocalPosition = HRP.Position
+            end
+        end
+
+        for _, TargetPlayer in pairs(Players:GetPlayers()) do
+            if TargetPlayer ~= Players.LocalPlayer then
+                local TargetCharacter = TargetPlayer.Character
+
+                if TargetCharacter and TargetCharacter:FindFirstChild("HumanoidRootPart") then
+                    local TargetPosition = TargetCharacter.HumanoidRootPart.Position
+                    local TeamColor = Color3.new(1, 1, 1)
+
+                    if TargetPlayer.TeamColor == BrickColor.new("Bright red") then
+                        TeamColor = Color3.new(1, 0, 0)
+                    elseif TargetPlayer.TeamColor == BrickColor.new("Bright blue") then
+                        TeamColor = Color3.new(0, 0, 1)
+                    elseif TargetPlayer.TeamColor == BrickColor.new("Bright orange") then
+                        TeamColor = Color3.new(1, 0.5, 0)
+                    end
+
+                    local ScreenPosition, OnScreen = Workspace.CurrentCamera:WorldToViewportPoint(TargetPosition)
+                    local LocalScreenPosition = LocalPosition and Workspace.CurrentCamera:WorldToViewportPoint(LocalPosition)
+
+                    if OnScreen and LocalScreenPosition and LocalScreenPosition.Z > 0 and TargetPlayer ~= Player then
+                        if TracersEnabled then
+                            local Line = Drawing.new("Line")
+                            Line.Visible = true
+                            Line.From = Vector2.new(LocalScreenPosition.X, LocalScreenPosition.Y)
+                            Line.To = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
+                            Line.Color = TeamColor
+                            Line.Thickness = 2
+                            table.insert(ESPDrawings, { Line = Line })
+                        end
+
+                        if NamesEnabled then
+                            local NameLabel = Drawing.new("Text")
+                            NameLabel.Visible = true
+                            NameLabel.Position = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
+                            NameLabel.Size = 18
+                            NameLabel.Color = TeamColor
+                            NameLabel.Center = true
+                            NameLabel.Outline = true
+                            NameLabel.Text = TargetPlayer.Name
+                            table.insert(ESPDrawings, { NameLabel = NameLabel })
+                        end
+
+                        if BoxesEnabled then
+                            local Box = Drawing.new("Square")
+                            Box.Visible = true
+                            Box.Position = Vector2.new(ScreenPosition.X - 15, ScreenPosition.Y - 30)
+                            Box.Size = Vector2.new(30, 30)
+                            Box.Color = TeamColor
+                            Box.Thickness = 2
+                            table.insert(ESPDrawings, { Box = Box })
+                        end
+
+                        if DistanceEnabled then
+                            local Distance = (TargetPosition - (LocalPosition or Vector3.new())).Magnitude
+                            local DistanceText = string.format("%.1f m", Distance)
+
+                            local DistanceLabel = Drawing.new("Text")
+                            DistanceLabel.Visible = true
+                            DistanceLabel.Position = Vector2.new(ScreenPosition.X, ScreenPosition.Y + 15)
+                            DistanceLabel.Size = 18
+                            DistanceLabel.Color = TeamColor
+                            DistanceLabel.Center = true
+                            DistanceLabel.Outline = true
+                            DistanceLabel.Text = DistanceText
+                            table.insert(ESPDrawings, { DistanceLabel = DistanceLabel })
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local TracersToggle = Tabs.ESP:AddToggle("Tracers", {
+    Title = "Tracers",
+    Default = false
+})
+
+local BoxesToggle = Tabs.ESP:AddToggle("Boxes", {
+    Title = "Boxes",
+    Default = false
+})
+
+local NamesToggle = Tabs.ESP:AddToggle("Names", {
+    Title = "Names",
+    Default = false
+})
+
+local DistanceToggle = Tabs.ESP:AddToggle("Distance", {
+    Title = "Distance",
+    Default = false
+})
+
+TracersToggle:OnChanged(function(Value)
+    TracersEnabled = Value
+    if ESPEnabled then
+        ClearESP()
+    end
+end)
+
+BoxesToggle:OnChanged(function(Value)
+    BoxesEnabled = Value
+    if ESPEnabled then
+        ClearESP()
+    end
+end)
+
+NamesToggle:OnChanged(function(Value)
+    NamesEnabled = Value
+    if ESPEnabled then
+        ClearESP()
+    end
+end)
+
+DistanceToggle:OnChanged(function(Value)
+    DistanceEnabled = Value
+    if ESPEnabled then
+        ClearESP()
+    end
+end)
+
+ESPToggle:OnChanged(function(Value)
+    ESPEnabled = Value
+    if not ESPEnabled then
+        ClearESP()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if ESPEnabled then
+        UpdateESP()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if DropESPEnabled then
+        updateDropESP()
+    end
+end)
+
+Tabs.Robberies:AddSection("Tomb")
+
+local SavedSpikes = {}
+
+Tabs.Robberies:AddToggle("RemoveSpikes", {
+    Title = "Remove Spikes",
+    Default = false,
+    Callback = function(Value)
+        local RobberyTomb = Workspace:FindFirstChild("RobberyTomb")
+        local SpikeRoom = RobberyTomb and RobberyTomb:FindFirstChild("SpikeRoom")
+        local Spikes = SpikeRoom and SpikeRoom:FindFirstChild("Spikes")
+
+        if Spikes then
+            if Value then
+                SavedSpikes = {}
+
+                for _, Child in pairs(Spikes:GetChildren()) do
+                    if Child:IsA("Model") then
+                        for _, SubChild in pairs(Child:GetChildren()) do
+                            if SubChild:IsA("Model") and SubChild.Name == "Tile" then
+                                for _, TileChild in pairs(SubChild:GetChildren()) do
+                                    if TileChild:IsA("Model") and TileChild.Name == "Model" then
+                                        table.insert(SavedSpikes, { TileChild:Clone(), SubChild })
+                                        TileChild:Destroy()
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            else
+                for _, Data in pairs(SavedSpikes) do
+                    Data[1].Parent = Data[2]
+                end
+                SavedSpikes = {}
+            end
+        end
+    end
+})
+
+local SavedDarts = {}
+
+Tabs.Robberies:AddToggle("DeleteDarts", {
+    Title = "Remove Darts",
+    Default = false,
+    Callback = function(Value)
+        local RobberyTomb = Workspace:FindFirstChild("RobberyTomb")
+        local DartRoom = RobberyTomb and RobberyTomb:FindFirstChild("DartRoom")
+        local Darts = DartRoom and DartRoom:FindFirstChild("Darts")
+
+        if Darts then
+            if Value then
+                SavedDarts = {}
+
+                for _, Child in pairs(Darts:GetChildren()) do
+                    if Child:IsA("BasePart") then
+                        table.insert(SavedDarts, Child:Clone())
+                        Child:Destroy()
+                    end
+                end
+            else
+                for _, Dart in pairs(SavedDarts) do
+                    Dart.Parent = Darts
+                end
+                SavedDarts = {}
+            end
+        end
+    end
+})
+
+local SavedPlanks = {}
+
+local function RemovePlanks()
+    local RobberyTomb = Workspace:FindFirstChild("RobberyTomb")
+
+    if RobberyTomb then
+        local Cart = RobberyTomb:FindFirstChild("Cart")
+        local Planks = Cart and Cart:FindFirstChild("Planks")
+
+        if Planks then
+            table.insert(SavedPlanks, {
+                model = Planks:Clone(),
+                parent = Planks.Parent
+            })
+            Planks:Destroy()
+        end
+    end
+end
+
+local function RestorePlanks()
+    for _, Data in ipairs(SavedPlanks) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedPlanks = {}
+end
+
+Tabs.Robberies:AddToggle("RemovePlanks", {
+    Title = "Remove Planks",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemovePlanks()
+        else
+            RestorePlanks()
+        end
+    end
+})
+
+local SavedKillModel = {}
+
+local function RemoveKillModel()
+    local RobberyTomb = Workspace:FindFirstChild("RobberyTomb")
+    local Kill = RobberyTomb and RobberyTomb:FindFirstChild("Kill")
+
+    if Kill then
+        table.insert(SavedKillModel, {
+            model = Kill:Clone(),
+            parent = Kill.Parent
+        })
+        Kill:Destroy()
+    end
+end
+
+local function RestoreKillModel()
+    for _, Data in ipairs(SavedKillModel) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedKillModel = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveKillModel", {
+    Title = "Remove Lava Damage",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveKillModel()
+        else
+            RestoreKillModel()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("PowerPlant")
+
+local SavedBarbedWire = {}
+
+local function RemoveBarbedWireRecursive(Parent)
+    for _, Child in pairs(Parent:GetChildren()) do
+        if Child:IsA("Model") and Child.Name == "Model" then
+            local HasBarbedWire = false
+
+            for _, Descendant in pairs(Child:GetDescendants()) do
+                if Descendant:IsA("BasePart") and Descendant.Name == "BarbedWire" then
+                    HasBarbedWire = true
+                    break
+                end
+            end
+
+            if HasBarbedWire then
+                table.insert(SavedBarbedWire, Child:Clone())
+                Child:Destroy()
+            end
+        else
+            RemoveBarbedWireRecursive(Child)
+        end
+    end
+end
+
+Tabs.Robberies:AddToggle("RemoveBarbedWireModel", {
+    Title = "Remove Lasers",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveBarbedWireRecursive(workspace)
+        else
+            for _, Model in pairs(SavedBarbedWire) do
+                Model.Parent = workspace
+            end
+            SavedBarbedWire = {}
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Jelwery")
+
+Tabs.Robberies:AddToggle("RemoveBarbedWireAndCamera", {
+    Title = "Not working",
+    Default = false,
+    Callback = function(_) end
+})
+
+Tabs.Robberies:AddSection("Bank")
+
+local SavedBankLasers = {}
+
+local function RemoveBankLasersRecursive(Parent)
+    for _, Child in pairs(Parent:GetChildren()) do
+        if Child:IsA("Model") and Child.Name == "Lasers" then
+            table.insert(SavedBankLasers, Child:Clone())
+            Child:Destroy()
+        else
+            RemoveBankLasersRecursive(Child)
+        end
+    end
+end
+
+Tabs.Robberies:AddToggle("RemoveLasersBank1", {
+    Title = "Remove 1st city Bank Lasers",
+    Default = false,
+    Callback = function(Value)
+        local Banks = workspace:FindFirstChild("Banks")
+        local Bank = Banks and Banks:FindFirstChild("Bank")
+
+        if Bank then
+            if Value then
+                RemoveBankLasersRecursive(Bank)
+            else
+                for _, Laser in pairs(SavedBankLasers) do
+                    Laser.Parent = Bank
+                end
+                SavedBankLasers = {}
+            end
+        end
+    end
+})
+
+local SavedBank2Lasers = {}
+
+local function RemoveBank2LasersRecursive(Parent)
+    for _, Child in pairs(Parent:GetChildren()) do
+        if Child:IsA("Model") and Child.Name == "Lasers" then
+            table.insert(SavedBank2Lasers, Child:Clone())
+            Child:Destroy()
+        else
+            RemoveBank2LasersRecursive(Child)
+        end
+    end
+end
+
+Tabs.Robberies:AddToggle("RemoveBank2Lasers", {
+    Title = "Remove 2nd city Bank Lasers",
+    Default = false,
+    Callback = function(Value)
+        local Banks = workspace:FindFirstChild("Banks")
+
+        if Banks then
+            local Bank2 = Banks:FindFirstChild("Bank2")
+            local Layout = Bank2 and Bank2:FindFirstChild("Layout")
+
+            if Layout then
+                if Value then
+                    RemoveBank2LasersRecursive(Layout)
+                else
+                    for _, Laser in pairs(SavedBank2Lasers) do
+                        Laser.Parent = Layout
+                    end
+                    SavedBank2Lasers = {}
+                end
+            end
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Casino")
+
+local SavedCasinoModels = {}
+
+local function RemoveCasinoModelsRecursive(Parent, TargetNames)
+    for _, Child in pairs(Parent:GetChildren()) do
+        if Child:IsA("Model") and table.find(TargetNames, Child.Name) then
+            SavedCasinoModels[Child.Name] = Child:Clone()
+            Child:Destroy()
+        else
+            RemoveCasinoModelsRecursive(Child, TargetNames)
+        end
+    end
+end
+
+local function RestoreCasinoModels()
+    for _, Model in pairs(SavedCasinoModels) do
+        Model.Parent = workspace
+    end
+    SavedCasinoModels = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveCasinoModels", {
+    Title = "Remove Lasers",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveCasinoModelsRecursive(workspace, {
+                "Lasers",
+                "CamerasMoving",
+                "LaserCarousel",
+                "LasersMoving",
+                "VaultLaserControl"
+            })
+        else
+            RestoreCasinoModels()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Museum")
+
+local SavedMuseumLights = nil
+
+local function RemoveMuseumLights(Parent)
+    local Museum = Parent:FindFirstChild("Museum")
+    local Lights = Museum and Museum:FindFirstChild("Lights")
+
+    if Lights then
+        SavedMuseumLights = Lights:Clone()
+        Lights:Destroy()
+    end
+end
+
+local function RestoreMuseumLights()
+    if SavedMuseumLights then
+        SavedMuseumLights.Parent = workspace.Museum
+        SavedMuseumLights = nil
+    end
+end
+
+Tabs.Robberies:AddToggle("RemoveMuseumLaser", {
+    Title = "Remove Lasers",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveMuseumLights(workspace)
+        else
+            RestoreMuseumLights()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Mansion")
+
+local SavedMansionBarbedWire = {}
+local SavedMansionLasers = {}
+local SavedMansionLaserTraps = {}
+local SavedMansionGuards = {}
+local SavedMansionShields = {}
+
+local function RemoveMansionBarbedWire()
+    local MansionDecorative = Workspace:FindFirstChild("MansionDecorative")
+
+    if MansionDecorative then
+        for _, Descendant in pairs(MansionDecorative:GetDescendants()) do
+            if Descendant:IsA("BasePart") and Descendant.Name == "BarbedWire" then
+                table.insert(SavedMansionBarbedWire, {
+                    part = Descendant:Clone(),
+                    parent = Descendant.Parent
+                })
+                Descendant:Destroy()
+            end
+        end
+    end
+
+    for _, Child in pairs(Workspace:GetChildren()) do
+        if Child:IsA("BasePart") and Child.Name == "BarbedWire" then
+            table.insert(SavedMansionBarbedWire, {
+                part = Child:Clone(),
+                parent = Child.Parent
+            })
+            Child:Destroy()
+        end
+    end
+end
+
+local function RestoreMansionBarbedWire()
+    for _, Data in ipairs(SavedMansionBarbedWire) do
+        if Data.part.Parent == nil then
+            Data.part.Parent = Data.parent
+        end
+    end
+    SavedMansionBarbedWire = {}
+end
+
+local function RemoveMansionLasers()
+    local MansionRobbery = Workspace:FindFirstChild("MansionRobbery")
+    local Lasers = MansionRobbery and MansionRobbery:FindFirstChild("Lasers")
+
+    if Lasers then
+        table.insert(SavedMansionLasers, {
+            model = Lasers:Clone(),
+            parent = Lasers.Parent
+        })
+        Lasers:Destroy()
+    end
+end
+
+local function RestoreMansionLasers()
+    for _, Data in ipairs(SavedMansionLasers) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedMansionLasers = {}
+end
+
+local function RemoveMansionLaserTraps()
+    local MansionRobbery = Workspace:FindFirstChild("MansionRobbery")
+    local LaserTraps = MansionRobbery and MansionRobbery:FindFirstChild("LaserTraps")
+
+    if LaserTraps then
+        table.insert(SavedMansionLaserTraps, {
+            model = LaserTraps:Clone(),
+            parent = LaserTraps.Parent
+        })
+        LaserTraps:Destroy()
+    end
+end
+
+local function RestoreMansionLaserTraps()
+    for _, Data in ipairs(SavedMansionLaserTraps) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedMansionLaserTraps = {}
+end
+
+local function RemoveMansionGuards()
+    local MansionRobbery = Workspace:FindFirstChild("MansionRobbery")
+    local GuardsFolder = MansionRobbery and MansionRobbery:FindFirstChild("GuardsFolder")
+
+    if GuardsFolder then
+        table.insert(SavedMansionGuards, {
+            folder = GuardsFolder:Clone(),
+            parent = GuardsFolder.Parent
+        })
+        GuardsFolder:Destroy()
+    end
+end
+
+local function RestoreMansionGuards()
+    for _, Data in ipairs(SavedMansionGuards) do
+        if Data.folder.Parent == nil then
+            Data.folder.Parent = Data.parent
+        end
+    end
+    SavedMansionGuards = {}
+end
+
+local function RemoveMansionShields()
+    local MansionRobbery = Workspace:FindFirstChild("MansionRobbery")
+    local Shields = MansionRobbery and MansionRobbery:FindFirstChild("Shields")
+
+    if Shields then
+        table.insert(SavedMansionShields, {
+            model = Shields:Clone(),
+            parent = Shields.Parent
+        })
+        Shields:Destroy()
+    end
+end
+
+local function RestoreMansionShields()
+    for _, Data in ipairs(SavedMansionShields) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedMansionShields = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveBarbedWireAndLasers", {
+    Title = "Remove Lasers",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveMansionBarbedWire()
+            RemoveMansionLasers()
+        else
+            RestoreMansionBarbedWire()
+            RestoreMansionLasers()
+        end
+    end
+})
+
+Tabs.Robberies:AddToggle("RemoveLaserTraps", {
+    Title = "Remove Laser Traps",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveMansionLaserTraps()
+        else
+            RestoreMansionLaserTraps()
+        end
+    end
+})
+
+Tabs.Robberies:AddToggle("RemoveGuardsFolder", {
+    Title = "Remove NPCs",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveMansionGuards()
+        else
+            RestoreMansionGuards()
+        end
+    end
+})
+
+Tabs.Robberies:AddToggle("RemoveShields", {
+    Title = "Remove CEO Walls",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveMansionShields()
+        else
+            RestoreMansionShields()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Oil Rig")
+
+local SavedOilRigGuards = {}
+
+local function RemoveOilRigGuards()
+    local OilRig = Workspace:FindFirstChild("OilRig")
+    local GuardsFolder = OilRig and OilRig:FindFirstChild("GuardsFolder")
+
+    if GuardsFolder then
+        table.insert(SavedOilRigGuards, {
+            folder = GuardsFolder:Clone(),
+            parent = GuardsFolder.Parent
+        })
+        GuardsFolder:Destroy()
+    end
+end
+
+local function RestoreOilRigGuards()
+    for _, Data in ipairs(SavedOilRigGuards) do
+        if Data.folder.Parent == nil then
+            Data.folder.Parent = Data.parent
+        end
+    end
+    SavedOilRigGuards = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveGuardsFolder", {
+    Title = "Remove NPCs",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveOilRigGuards()
+        else
+            RestoreOilRigGuards()
+        end
+    end
+})
+
+local SavedOilRigLasers = {}
+
+local function RemoveOilRigLasers()
+    local OilRig = Workspace:FindFirstChild("OilRig")
+    local MovingLasers = OilRig and OilRig:FindFirstChild("MovingLasers")
+
+    if MovingLasers then
+        table.insert(SavedOilRigLasers, {
+            model = MovingLasers:Clone(),
+            parent = MovingLasers.Parent
+        })
+        MovingLasers:Destroy()
+    end
+end
+
+local function RestoreOilRigLasers()
+    for _, Data in ipairs(SavedOilRigLasers) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedOilRigLasers = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveMovingLasers", {
+    Title = "Remove Lasers",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveOilRigLasers()
+        else
+            RestoreOilRigLasers()
+        end
+    end
+})
+
+local SavedOilRigTurrets = {}
+
+local function RemoveOilRigTurrets()
+    local OilRig = Workspace:FindFirstChild("OilRig")
+    local Turrets = OilRig and OilRig:FindFirstChild("Turrets")
+
+    if Turrets then
+        table.insert(SavedOilRigTurrets, {
+            model = Turrets:Clone(),
+            parent = Turrets.Parent
+        })
+        Turrets:Destroy()
+    end
+end
+
+local function RestoreOilRigTurrets()
+    for _, Data in ipairs(SavedOilRigTurrets) do
+        if Data.model.Parent == nil then
+            Data.model.Parent = Data.parent
+        end
+    end
+    SavedOilRigTurrets = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveTurrets", {
+    Title = "Remove Turrets",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveOilRigTurrets()
+        else
+            RestoreOilRigTurrets()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("CargoShip")
+
+local SavedCargoShipTurrets = {}
+
+local function RemoveCargoShipTurrets()
+    local CargoShip = Workspace:FindFirstChild("CargoShip")
+
+    if CargoShip then
+        local TurretBack = CargoShip:FindFirstChild("TurretBack")
+        local TurretFront = CargoShip:FindFirstChild("TurretFront")
+
+        if TurretBack and TurretFront then
+            table.insert(SavedCargoShipTurrets, {
+                back = TurretBack:Clone(),
+                front = TurretFront:Clone(),
+                parent = TurretBack.Parent
+            })
+            TurretBack:Destroy()
+            TurretFront:Destroy()
+        end
+    end
+end
+
+local function RestoreCargoShipTurrets()
+    for _, Data in ipairs(SavedCargoShipTurrets) do
+        if Data.back.Parent == nil then
+            Data.back.Parent = Data.parent
+        end
+        if Data.front.Parent == nil then
+            Data.front.Parent = Data.parent
+        end
+    end
+    SavedCargoShipTurrets = {}
+end
+
+Tabs.Robberies:AddToggle("RemoveTurretsCargoShip", {
+    Title = "Remove Turrets",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveCargoShipTurrets()
+        else
+            RestoreCargoShipTurrets()
+        end
+    end
+})
+
+Tabs.Robberies:AddSection("Airdrop")
+
+local SavedAirdropNPCs = nil
+
+local function RemoveAirdropNPCs(Parent)
+    local Drop = Parent:FindFirstChild("Drop")
+    local NPCs = Drop and Drop:FindFirstChild("NPCs")
+
+    if NPCs then
+        SavedAirdropNPCs = NPCs:Clone()
+        NPCs:Destroy()
+    end
+end
+
+local function RestoreAirdropNPCs()
+    if SavedAirdropNPCs then
+        SavedAirdropNPCs.Parent = workspace.Drop
+        SavedAirdropNPCs = nil
+    end
+end
+
+Tabs.Robberies:AddToggle("DisableNPCs", {
+    Title = "Remove NPCs",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            RemoveAirdropNPCs(workspace)
+        else
+            RestoreAirdropNPCs()
+        end
+    end
+})
+
+local InfiniteJumpEnabled = false
+
+Tabs.Misc:AddToggle("Infinite Jump", {
+    Title = "Infinite Jump",
+    Default = false
+}):OnChanged(function(Value)
+    InfiniteJumpEnabled = Value
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+local ClickTPEnabled = false
+
+Tabs.Misc:AddToggle("Click TP", {
+    Title = "Click TP",
+    Default = false
+}):OnChanged(function(Value)
+    ClickTPEnabled = Value
+end)
+
+UserInputService.InputBegan:Connect(function(Input)
+    if ClickTPEnabled and Input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local TargetPosition = LocalPlayer:GetMouse().Hit.Position
+        LocalPlayer.Character:MoveTo(TargetPosition)
+    end
+end)

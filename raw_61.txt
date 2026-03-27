@@ -1,0 +1,1640 @@
+--// Settings
+local Settings = {
+   
+    Blatant = {
+        CFrameSpeed = {
+            Enabled = nil,
+            Value = nil
+        },
+        Fly = {
+            Value = nil
+        },
+        MessageSpammer = {
+            Enabled = nil,
+            Message = nil,
+            UseEmojis = nil
+        },
+    },
+    Visuals = {
+        Local = {
+            Light = {
+                Enabled = nil,
+                Color = nil,
+                Strength = nil
+            },
+            AspectRatio = {
+                Enabled = nil,
+                Value = nil
+            },
+            CloneChams = {
+                Enabled = nil,
+                Duration = nil,
+                Color = nil,
+                Material = nil
+            },
+            Nametag = {
+                Enabled = nil,
+                Color = nil
+            },
+        },
+    },
+}
+
+--// Variables
+local lplr = game:GetService("Players").LocalPlayer
+local TweenService = game:GetService("TweenService")
+local CurrentCamera = workspace.CurrentCamera
+local lockedPlayer = nil
+local stickyLockedPlayer = nil
+local mousemoverel = mousemoverel or (Input and Input.MouseMove)
+local funny = {"unreadable code", "pasted code"}
+local day = os.date(" %d", os.time())
+local second_string = ", %Y."
+local worldToViewportPoint = CurrentCamera.worldToViewportPoint
+local mouse = lplr:GetMouse()
+local UserInput = game:GetService("UserInputService")
+
+
+--// get sub prefix or smth lmfao
+function GetSubPrefix(str)
+    local str = tostring(str):gsub(" ", "")
+    local var = ""
+
+    if #str == 2 then
+        local sec = string.sub(str, #str, #str + 1)
+        var = sec == "1" and "st" or sec == "2" and "nd" or sec == "3" and "rd" or "th"
+    end
+
+    return var
+end
+
+
+--// Library
+local repo = "https://raw.githubusercontent.com/DaniHRE/LinoriaLib/refs/heads/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+--// pasted esp no way
+getgenv().taffy_esp = {
+    box = {
+        enabled1 = true,
+        enabled = false,
+        outline = false,
+        healthbar = false,
+        color1 = Color3.fromRGB(255, 255, 255),
+        color2 = Color3.fromRGB(0, 0, 0),
+        healthbarcolor = Color3.fromRGB(4, 0, 255)
+    },
+    tracer = {
+        enabled = false,
+        unlocktracers = false,
+        color = Color3.fromRGB(255, 255, 255)
+    },
+    name = {
+        enabled = false,
+        outline = false,
+        size = 13,
+        font = 2,
+        color = Color3.fromRGB(255, 255, 255)
+    },
+    misc = {
+        teamcheck = false,
+        useteamcolors = false,
+        visibleonly = true
+    },
+    Toolsshow = {
+        enable = false,
+        outline = false,
+        size = 8,
+        font = 3,
+        color = Color3.fromRGB(147, 39, 161)
+    }
+}
+
+function esp(v)
+    local BLOCKOUTLINE = Drawing.new("Square")
+    BLOCKOUTLINE.Visible = false
+    BLOCKOUTLINE.Color = Color3.new(0, 0, 0)
+    BLOCKOUTLINE.Thickness = 3
+    BLOCKOUTLINE.Transparency = 1
+    BLOCKOUTLINE.Filled = false
+    local BOXPLAYER = Drawing.new("Square")
+    BOXPLAYER.Visible = false
+    BOXPLAYER.Color = taffy_esp.box.color1
+    BOXPLAYER.Thickness = 1
+    BOXPLAYER.Transparency = 1
+    BOXPLAYER.Filled = false
+    local HealthBarOUTLINE = Drawing.new("Square")
+    HealthBarOUTLINE.Thickness = 3
+    HealthBarOUTLINE.Filled = false
+    HealthBarOUTLINE.Color = Color3.new(0, 0, 0)
+    HealthBarOUTLINE.Transparency = 1
+    HealthBarOUTLINE.Visible = false
+    local HealthBarITSELF = Drawing.new("Square")
+    HealthBarITSELF.Thickness = 1
+    HealthBarITSELF.Filled = false
+    HealthBarITSELF.Transparency = 1
+    HealthBarITSELF.Visible = false
+    local Tracer = Drawing.new("Line")
+    Tracer.Visible = false
+    Tracer.Color = Color3.new(1, 1, 1)
+    Tracer.Thickness = 1
+    Tracer.Transparency = 1
+    local Name = Drawing.new("Text")
+    Name.Transparency = 1
+    Name.Visible = false
+    Name.Color = taffy_esp.name.color
+    Name.Size = 16
+    Name.Center = true
+    Name.Outline = false
+    Name.Font = 2
+    Name.Text = "name [100/100]"
+    local toolshow = Drawing.new("Text")
+    toolshow.Transparency = 1
+    toolshow.Visible = false
+    toolshow.Color = getgenv().taffy_esp.Toolsshow.color
+    toolshow.Size = 16
+    toolshow.Center = true
+    toolshow.Outline = false
+    toolshow.Font = 2
+    toolshow.Text = ""
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if v.Character ~= nil and v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("HumanoidRootPart") ~= nil and v ~= lplr and v.Character.Humanoid.Health > 0 and (not taffy_esp.misc.teamcheck or v.TeamColor ~= lplr.TeamColor) and v.Character:FindFirstChild("Head") ~= nil then
+            local Vector, onScreen = CurrentCamera:worldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            local Distance = (CurrentCamera.CFrame.p - v.Character.HumanoidRootPart.Position).Magnitude
+            local RootPart = v.Character.HumanoidRootPart
+            local Head = v.Character.Head
+            local RootPosition, RootVis = worldToViewportPoint(CurrentCamera, RootPart.Position)
+            local HeadPosition = worldToViewportPoint(CurrentCamera, Head.Position + Vector3.new(0, 0.5, 0))
+            local LegPosition = worldToViewportPoint(CurrentCamera, RootPart.Position - Vector3.new(0, 3, 0))
+
+            if not taffy_esp.misc.visibleonly or onScreen then
+                if taffy_esp.box.enabled1 then
+                    BLOCKOUTLINE.Size = Vector2.new(2500 / RootPosition.Z, HeadPosition.Y - LegPosition.Y)
+                    BLOCKOUTLINE.Position = Vector2.new(RootPosition.X - BLOCKOUTLINE.Size.X / 2, RootPosition.Y - BLOCKOUTLINE.Size.Y / 2)
+                    BLOCKOUTLINE.Visible = taffy_esp.box.outline
+                    BLOCKOUTLINE.Color = taffy_esp.box.color2
+                    BOXPLAYER.Size = Vector2.new(2500 / RootPosition.Z, HeadPosition.Y - LegPosition.Y)
+                    BOXPLAYER.Position = Vector2.new(RootPosition.X - BOXPLAYER.Size.X / 2, RootPosition.Y - BOXPLAYER.Size.Y / 2)
+                    BOXPLAYER.Visible = taffy_esp.box.enabled
+
+                    if not taffy_esp.misc.useteamcolors then
+                        local color = v.TeamColor
+                        BOXPLAYER.Color = taffy_esp.box.color1
+                    else
+                        BOXPLAYER.Color = taffy_esp.box.color1
+                    end
+
+                    HealthBarOUTLINE.Size = Vector2.new(2, HeadPosition.Y - LegPosition.Y)
+                    HealthBarOUTLINE.Position = HealthBarOUTLINE.Position - Vector2.new(6, 0)
+                    HealthBarOUTLINE.Visible = taffy_esp.box.outline
+                    HealthBarITSELF.Size = Vector2.new(2, (HeadPosition.Y - LegPosition.Y) / (v.Character.Humanoid.MaxHealth / math.clamp(v.Character.Humanoid.Health, 0, v.Character.Humanoid.MaxHealth)))
+                    HealthBarITSELF.Position = Vector2.new(BOXPLAYER.Position.X - 5, BOXPLAYER.Position.Y + (1 / HealthBarITSELF.Size.Y))
+                    HealthBarITSELF.Color = taffy_esp.box.healthbarcolor
+                    HealthBarITSELF.Visible = taffy_esp.box.healthbar
+                else
+                    BLOCKOUTLINE.Visible = false
+                    BOXPLAYER.Visible = false
+                    HealthBarOUTLINE.Visible = false
+                    HealthBarITSELF.Visible = false
+                end
+
+                if taffy_esp.tracer.enabled then
+                    if taffy_esp.tracer.unlocktracers then
+                        Tracer.From = Vector2.new(mouse.X, mouse.Y + 36)
+                    else
+                        Tracer.From = Vector2.new(CurrentCamera.ViewportSize.X / 2, CurrentCamera.ViewportSize.Y / 1)
+                    end
+
+                    Tracer.To = Vector2.new(Vector.X, Vector.Y)
+                    Tracer.Visible = taffy_esp.tracer.enabled
+
+                    if not taffy_esp.misc.useteamcolors then
+                        local color = v.TeamColor
+                        Tracer.Color = taffy_esp.tracer.color
+                    else
+                        Tracer.Color = taffy_esp.tracer.color
+                    end
+                else
+                    Tracer.Visible = false
+                end
+
+                if taffy_esp.Toolsshow.enable then
+                    local Equipped = v.Character:FindFirstChildOfClass("Tool") and v.Character:FindFirstChildOfClass("Tool").Name or "None"
+                    toolshow.Text = Equipped
+                    toolshow.Position = Vector2.new(CurrentCamera:WorldToViewportPoint(v.Character.Head.Position).X, CurrentCamera:WorldToViewportPoint(v.Character.Head.Position).Y + 30)
+                    toolshow.Color = getgenv().taffy_esp.Toolsshow.color
+                    toolshow.Font = 3
+                    Name.Size = taffy_esp.Toolsshow.size
+                    toolshow.Visible = true
+                else
+                    toolshow.Visible = false
+                end
+
+                if taffy_esp.name.enabled then
+                    Name.Text = tostring(v.Character.Humanoid.DisplayName) .. " [" .. tostring(math.floor(v.Character.Humanoid.Health + 0.5)) .. "/" .. tostring(v.Character.Humanoid.MaxHealth) .. "]"
+                    Name.Position = Vector2.new(CurrentCamera:WorldToViewportPoint(v.Character.Head.Position).X, CurrentCamera:WorldToViewportPoint(v.Character.Head.Position).Y - 30)
+                    Name.Visible = true
+                    Name.Size = taffy_esp.name.size
+
+                    if not taffy_esp.misc.useteamcolors then
+                        local color = v.TeamColor   
+                        Name.Color = taffy_esp.name.color
+                    else
+                        Name.Color = taffy_esp.name.color
+                    end
+
+                    Name.Outline = taffy_esp.name.outline
+                else
+                    Name.Visible = false
+                end
+            else
+                BLOCKOUTLINE.Visible = false
+                BOXPLAYER.Visible = false
+                toolshow.Visible = false
+                HealthBarOUTLINE.Visible = false
+                HealthBarITSELF.Visible = false
+                Tracer.Visible = false
+                Name.Visible = false
+            end
+        else
+            toolshow.Visible = false
+            BLOCKOUTLINE.Visible = false
+            BOXPLAYER.Visible = false
+            HealthBarOUTLINE.Visible = false
+            HealthBarITSELF.Visible = false
+            Tracer.Visible = false
+            Name.Visible = false
+        end
+    end)
+end
+
+for i, v in pairs(game.Players:GetChildren()) do
+    esp(v)
+end
+
+game.Players.PlayerAdded:Connect(function(v)
+    esp(v)
+end)
+
+--// Create the  main window
+local Window = Library:CreateWindow({
+    Title = "Blockspin Script | Legend Hub",
+    Center = true,
+    AutoShow = true,
+})
+
+--// Create the main tabs
+local Tabs = {
+     MiscTab = Window:AddTab("Main-Features"),
+    Visuals = Window:AddTab("Visuals"),
+    UiSettings = Window:AddTab("Settings")
+}
+
+local EspTab = Tabs.Visuals:AddLeftGroupbox("Esp")
+local LightTab = Tabs.Visuals:AddRightGroupbox("Light")
+local AspectRatioTab = Tabs.Visuals:AddLeftGroupbox("Aspect Ratio")
+local NameTagTab = Tabs.Visuals:AddRightGroupbox("Nametag")
+local CloneChamsTab = Tabs.Visuals:AddRightGroupbox("Clone Chams")
+local WorldTab = Tabs.Visuals:AddLeftGroupbox("World")
+local Main = Tabs.MiscTab:AddLeftGroupbox("Main-Features")
+local FakeAnimations = Tabs.MiscTab:AddLeftGroupbox("FE Animations")
+local CFrameSpeedTab = Tabs.MiscTab:AddRightGroupbox("CFrame Speed")
+local FlyTab = Tabs.MiscTab:AddRightGroupbox("Fly (FLY WHEN DOWN)")
+local MenuGroup = Tabs.UiSettings:AddLeftGroupbox("Config")
+
+EspTab:AddToggle("BoxesEnableToggleNoWay", {
+    Text = "Boxes",
+    Default = false,
+    Tooltip = "Boxes Enabled",
+})
+
+Toggles.BoxesEnableToggleNoWay:OnChanged(function()
+    taffy_esp.box.enabled = Toggles.BoxesEnableToggleNoWay.Value
+end)
+
+Toggles.BoxesEnableToggleNoWay:AddColorPicker("BoxesEnableColorPickerNoWay", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Boxes Color"
+})
+
+Options.BoxesEnableColorPickerNoWay:OnChanged(function()
+    taffy_esp.box.color1 = Options.BoxesEnableColorPickerNoWay.Value
+end)
+
+EspTab:AddToggle("NamesEnableToggleNoWay", {
+    Text = "Names",
+    Default = false,
+    Tooltip = "Names Enabled",
+})
+
+Toggles.NamesEnableToggleNoWay:OnChanged(function()
+    taffy_esp.name.enabled = Toggles.NamesEnableToggleNoWay.Value
+end)
+
+Toggles.NamesEnableToggleNoWay:AddColorPicker("NamesEnableColorPickerNoWay", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Names Color"
+})
+
+Options.NamesEnableColorPickerNoWay:OnChanged(function()
+    taffy_esp.name.color = Options.NamesEnableColorPickerNoWay.Value
+end)
+
+EspTab:AddToggle("TracersEnableToggleNoWay", {
+    Text = "Tracers",
+    Default = false,
+    Tooltip = "Tracers Enabled",
+})
+
+Toggles.TracersEnableToggleNoWay:OnChanged(function()
+    taffy_esp.tracer.enabled = Toggles.TracersEnableToggleNoWay.Value
+end)
+
+Toggles.TracersEnableToggleNoWay:AddColorPicker("TracersEnableColorPickerNoWay", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Tracers Color"
+})
+
+Options.TracersEnableColorPickerNoWay:OnChanged(function()
+    taffy_esp.tracer.color = Options.TracersEnableColorPickerNoWay.Value
+end)
+
+EspTab:AddToggle("UnlockTracersEnableToggleNoWay", {
+    Text = "Unlock Tracers",
+    Default = false,
+    Tooltip = "Unlock Tracers Enabled",
+})
+
+Toggles.UnlockTracersEnableToggleNoWay:OnChanged(function()
+    taffy_esp.tracer.unlocktracers = Toggles.UnlockTracersEnableToggleNoWay.Value
+end)
+
+EspTab:AddToggle("MiscTeamcheckToggle", {
+    Text = "Teamcheck",
+    Default = false,
+    Tooltip = "Teamcheck Enabled",
+})
+
+Toggles.MiscTeamcheckToggle:OnChanged(function()
+    taffy_esp.misc.teamcheck = Toggles.MiscTeamcheckToggle.Value
+end)
+
+LightTab:AddToggle("LightHeadToggleFunny", {
+    Text = "Light",
+    Default = false,
+    Tooltip = "Light Enabled",
+})
+
+Toggles.LightHeadToggleFunny:OnChanged(function()
+    Settings.Visuals.Local.Light.Enabled = Toggles.LightHeadToggleFunny.Value
+end)
+
+Toggles.LightHeadToggleFunny:AddColorPicker("LightHeadFunnyColorPicker", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Light Color"
+})
+
+Options.LightHeadFunnyColorPicker:OnChanged(function()
+    Settings.Visuals.Local.Light.Color = Options.LightHeadFunnyColorPicker.Value
+end)
+
+LightTab:AddSlider("LightHeadSliderFunny", {
+    Text = "Strength",
+    Default = 1,
+    Min = 1,
+    Max = 100,
+    Rounding = 1,
+    Compact = false,
+})
+
+Options.LightHeadSliderFunny:OnChanged(function()
+    Settings.Visuals.Local.Light.Strength = Options.LightHeadSliderFunny.Value
+end)
+
+AspectRatioTab:AddToggle("AspectRaioEnabled", {
+    Text = "Enabled",
+    Default = false,
+    Tooltip = "Aspect Ratio Enabled",
+})
+
+Toggles.AspectRaioEnabled:OnChanged(function()
+    Settings.Visuals.Local.AspectRatio.Enabled = Toggles.AspectRaioEnabled.Value
+end)
+
+AspectRatioTab:AddSlider("AspectRatioValue", {
+    Text = "Value",
+    Default = 1,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+})
+
+
+Options.AspectRatioValue:OnChanged(function()
+    Settings.Visuals.Local.AspectRatio.Value = Options.AspectRatioValue.Value
+end)
+
+NameTagTab:AddToggle("NametagEnabledFunnyHaha", {
+    Text = "Enabled",
+    Default = false,
+    Tooltip = "Nametag Enabled",
+})
+
+Toggles.NametagEnabledFunnyHaha:OnChanged(function()
+    Settings.Visuals.Local.Nametag.Enabled = Toggles.NametagEnabledFunnyHaha.Value
+end)
+
+Toggles.NametagEnabledFunnyHaha:AddColorPicker("NametagColorPickerFunny", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Nametag Color"
+})
+
+Options.NametagColorPickerFunny:OnChanged(function()
+    Settings.Visuals.Local.Nametag.Color = Options.NametagColorPickerFunny.Value
+end)
+
+CloneChamsTab:AddToggle("CloneChamsEnabled", {
+    Text = "Clone Chams",
+    Default = false,
+    Tooltip = "Clone Chams Enabled",
+})
+
+Toggles.CloneChamsEnabled:OnChanged(function()
+    Settings.Visuals.Local.CloneChams.Enabled = Toggles.CloneChamsEnabled.Value
+end)
+
+Toggles.CloneChamsEnabled:AddColorPicker("CloneChamsColor", {
+    Default = Color3.fromRGB(255, 255, 255),
+    Title = "Clone Chams Color"
+})
+
+Options.CloneChamsColor:OnChanged(function()
+    Settings.Visuals.Local.CloneChams.Color = Options.CloneChamsColor.Value
+end)
+
+local function getEnumMaterial(materialString)
+    local materialMap = {
+        ["Neon"] = Enum.Material.Neon,
+        ["ForceField"] = Enum.Material.ForceField,
+        ["Plastic"] = Enum.Material.Plastic,
+    }
+    return materialMap[materialString] or Enum.Material.Neon
+end
+
+task.spawn(function()
+    while true do
+        wait()
+        if Settings.Visuals.Local.CloneChams.Enabled then
+            repeat
+                lplr.Character.Archivable = true
+                local Clone = lplr.Character:Clone()
+                for _, Obj in next, Clone:GetDescendants() do
+                    if Obj.Name == "HumanoidRootPart" or Obj:IsA("Humanoid") or Obj:IsA("LocalScript") or Obj:IsA("Script") or Obj:IsA("Decal") then
+                        Obj:Destroy()
+                    elseif Obj:IsA("BasePart") or Obj:IsA("MeshPart") or Obj:IsA("Part") then
+                        if Obj.Transparency == 1 then
+                            Obj:Destroy()
+                        else
+                            Obj.CanCollide = false
+                            Obj.Anchored = true
+                            Obj.Material = getEnumMaterial(Settings.Visuals.Local.CloneChams.Material)
+
+                            Obj.Color = Settings.Visuals.Local.CloneChams.Color
+                            Obj.Transparency = 0
+                            Obj.Size = Obj.Size + Vector3.new(0.03, 0.03, 0.03)
+                        end
+                    end
+                end
+
+                Clone.Parent = workspace
+                wait(Settings.Visuals.Local.CloneChams.Duration)
+                Clone:Destroy()
+            until not Settings.Visuals.Local.CloneChams.Enabled
+        end
+    end
+end)
+
+CloneChamsTab:AddSlider("DurationSliderWHAT", {
+    Text = "Duration",
+    Default = 0.1,
+    Min = 0.1,
+    Max = 3,
+    Rounding = 2,
+    Compact = false,
+})
+
+Options.DurationSliderWHAT:OnChanged(function()
+    Settings.Visuals.Local.CloneChams.Duration = Options.DurationSliderWHAT.Value
+end)
+
+CloneChamsTab:AddDropdown("CloneChamsMaterial", {
+    Values = {"Neon", "ForceField", "Plastic"},
+    Default = 2,
+    Multi = false,
+    Text = "Clone Chams Material",
+    Tooltip = "Clone Chams Material",
+})
+
+Options.CloneChamsMaterial:OnChanged(function()
+    Settings.Visuals.Local.CloneChams.Material = Options.CloneChamsMaterial.Value
+end)
+
+WorldTab:AddLabel("Ambient"):AddColorPicker("AmbientColorPicker", {
+    Default = Color3.fromRGB(0, 0, 0),
+    Title = "Ambient",
+})
+
+Options.AmbientColorPicker:OnChanged(function()
+    if AmbientRainbowMode == true then
+    else
+        game.Lighting.Ambient = Options.AmbientColorPicker.Value
+    end
+end)
+
+WorldTab:AddToggle("RainbowAmbient", {
+    Text = "Rainbow Ambient",
+    Default = false,
+    Tooltip = "Rainbow Ambient Enabled",
+})
+
+Toggles.RainbowAmbient:OnChanged(function()
+    AmbientRainbowMode = Toggles.RainbowAmbient.Value
+
+    if Toggles.RainbowAmbient.Value then
+        while Toggles.RainbowAmbient.Value do
+            wait()
+            game:GetService("Lighting").Ambient = Color3.new(255 / 255, 0 / 255, 0 / 255)
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(255 / 255, i / 255, 0 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(i / 255, 255 / 255, 0 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(0 / 255, 255 / 255, i / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(0 / 255, i / 255, 255 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(i / 255, 0 / 255, 255 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").Ambient = Color3.new(255 / 255, 0 / 255, i / 255)
+            end
+
+            if Toggles.RainbowAmbient.Value == false then break end
+        end
+    end
+end)
+
+local AmbientReset = WorldTab:AddButton("Reset to Default", function()
+    Options.AmbientColorPicker:SetValueRGB(Color3.fromRGB(0, 0, 0))
+end)
+
+Options.AmbientColorPicker:SetValueRGB(Color3.fromRGB(0, 0, 0))
+
+WorldTab:AddLabel("Outdoor Ambient"):AddColorPicker("OutdoorAmbientColor", {
+    Default = Color3.fromRGB(152, 152, 146),
+    Title = "Outdoor Ambient",
+})
+
+Options.OutdoorAmbientColor:OnChanged(function()
+    if OutdoorAmbientRainbowMode then
+    else
+        game.Lighting.OutdoorAmbient = Options.OutdoorAmbientColor.Value
+    end
+end)
+
+WorldTab:AddToggle("RainbowOutdoorAmbient", {
+    Text = "Rainbow Outdoor",
+    Default = false,
+    Tooltip = "Rainbow Outdoor Ambient Enabled",
+})
+
+Toggles.RainbowOutdoorAmbient:OnChanged(function()
+    OutdoorAmbientRainbowMode = Toggles.RainbowOutdoorAmbient.Value
+
+    if Toggles.RainbowOutdoorAmbient.Value then
+        while Toggles.RainbowOutdoorAmbient.Value do
+            wait()
+            game:GetService("Lighting").OutdoorAmbient = Color3.new(255 / 255, 0 / 255, 0 / 255)
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(255 / 255, i / 255, 0 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(i / 255, 255 / 255, 0 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(0 / 255, 255 / 255, i / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(0 / 255, i / 255, 255 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(i / 255, 0 / 255, 255 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").OutdoorAmbient = Color3.new(255 / 255, 0 / 255, i / 255)
+            end
+
+            if Toggles.RainbowOutdoorAmbient.Value == false then break end
+        end
+    end
+end)
+
+local OutdoorAmbientReset = WorldTab:AddButton("Reset to Default", function()
+    Options.OutdoorAmbientColor:SetValueRGB(Color3.fromRGB(152, 152, 146))
+end)
+
+Options.OutdoorAmbientColor:SetValueRGB(Color3.fromRGB(152, 152, 146))
+
+WorldTab:AddSlider("FogEndSlider", {
+    Text = "Fog End",
+    Default = 500,
+    Min = 1,
+    Max = 500,
+    Rounding = 1,
+    Compact = false,
+})
+
+Options.FogEndSlider:OnChanged(function()
+    game.Lighting.FogEnd = Options.FogEndSlider.Value
+end)
+
+WorldTab:AddLabel("Fog Color"):AddColorPicker("FogColorColorPicker", {
+    Default = Color3.fromRGB(100, 87, 72),
+    Title = "Fog Color",
+})
+
+Options.FogColorColorPicker:OnChanged(function()
+    if FogRainbowMode then
+    else
+        game.Lighting.FogColor = Options.FogColorColorPicker.Value
+    end
+end)
+
+WorldTab:AddToggle("RainbowFogColor", {
+    Text = "Rainbow Outdoor",
+    Default = false,
+    Tooltip = "Rainbow Outdoor Ambient Enabled",
+})
+
+Toggles.RainbowFogColor:OnChanged(function()
+    FogRainbowMode = Toggles.RainbowFogColor.Value
+
+    if Toggles.RainbowFogColor.Value then
+        while Toggles.RainbowFogColor.Value do
+            wait()
+            game:GetService("Lighting").FogColor = Color3.new(255 / 255, 0 / 255, 0 / 255)
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(255 / 255, i / 255, 0 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(i / 255, 255 / 255, 0 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(0 / 255, 255 / 255, i / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(0 / 255, i / 255, 255 / 255)
+            end
+
+            for i = 0, 255, 10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(i / 255, 0 / 255, 255 / 255)
+            end
+
+            for i = 255, 0, -10 do
+                wait()
+                game:GetService("Lighting").FogColor = Color3.new(255 / 255, 0 / 255, i / 255)
+            end
+
+            if Toggles.RainbowFogColor.Value == false then break end
+        end
+    end
+end)
+
+local ResetFogEnd = WorldTab:AddButton("Reset to Default", function()
+    Options.FogEndSlider:SetValue(500)
+    Options.FogColorColorPicker:SetValueRGB(Color3.fromRGB(100, 87, 72))
+end)
+
+WorldTab:AddToggle("GlobalShadowsEnabled", {
+    Text = "Global Shadows",
+    Default = true,
+    Tooltip = "Global Shadows Enabled",
+})
+
+Toggles.GlobalShadowsEnabled:OnChanged(function()
+    game.Lighting.GlobalShadows = Toggles.GlobalShadowsEnabled.Value
+end)
+
+WorldTab:AddSlider("Saturation", {
+    Text = "Saturation",
+    Default = 0,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Compact = false,
+})
+
+Options.Saturation:OnChanged(function()
+    local ColorCorrection = game.Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect")
+    ColorCorrection.Saturation = Options.Saturation.Value
+end)
+
+WorldTab:AddSlider("Contrast", {
+    Text = "Contrast",
+    Default = 0.1,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Compact = false,
+})
+
+Options.Contrast:OnChanged(function()
+    local ColorCorrection = game.Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect")
+    ColorCorrection.Contrast = Options.Contrast.Value
+end)
+
+Main:AddButton({
+    Text = 'Infinite Money',
+    Func = function()
+while true do
+	game:GetService("Players").LocalPlayer.PlayerGui.TopRightHud.Holder.Frame.MoneyTextLabel.Text = "1e90"
+		wait(0)
+end
+
+ end,
+     DoubleClick = false,
+    Tooltip = 'Inf Cash'
+})
+      Main:AddLabel('Auto Farm Steak (FIXED)')
+
+            Main:AddToggle("autofarm_enabled", {
+                Text = "Enabled",
+                Tooltip = "Make sure to be inside of the kitchen.",
+            });
+
+            --[[
+            This seems to not work with the 'solara way' of triggering proximityprompts, if you know what you're doing and you're not using solara, then you can uncomment this and the safe mode logic aswell.
+            steakhouse_enabled:AddToggle("safe_mode", {
+                Text = "Safe Mode",
+                Default = true,
+                Tooltip = "Destroys your character to prevent others from killing you.",
+            });
+            ]]
+
+            Main:AddToggle("get_steak", {
+                Text = "Auto Receive Steak",
+                Default = true,
+                Tooltip = "Picks up the steak for you",
+            });
+      
+local a = false -- Variable to track the toggle state
+
+-- Adding the "AutoFarm (Nearest Players)" toggle inside the group
+Main:AddToggle('MyToggle', {
+    Text = 'AutoFarm (Nearest Players)',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'AutoFarm Nearest Players (Turn Off If Finishing)', -- Information shown when you hover over the toggle
+
+    Callback = function(Value)
+        a = Value -- Set 'a' to true or false depending on the toggle state
+        if a then
+            -- Start the autofarm loop when the toggle is enabled
+            startAutoFarm()
+        else
+            -- Stop the autofarm loop when the toggle is disabled
+            stopAutoFarm()
+        end
+    end
+})
+
+local autofarmTask -- This will hold the task reference to stop the loop later
+
+-- Function to start the autofarm task
+function startAutoFarm()
+    autofarmTask = task.spawn(function()
+        while a do
+            task.wait(0.02)
+            pcall(function()
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                local char_root = char and char:FindFirstChild("HumanoidRootPart")
+
+                if not char_root then
+                    -- Character not loaded yet, wait for it
+                    char = player.CharacterAdded:Wait()
+                    char_root = char:WaitForChild("HumanoidRootPart")
+                end
+
+                local function findNearestPlayer()
+                    local nearest_dist = math.huge
+                    local target_root
+
+                    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                        if targetPlayer ~= player and targetPlayer.Character then
+                            local targetChar = targetPlayer.Character
+                            local targetHumanoidRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                            if targetHumanoidRoot then
+                                local dist = (char_root.Position - targetHumanoidRoot.Position).magnitude
+
+                                if dist < nearest_dist and dist < 8 then -- Target players within 10 studs
+                                    local obstructed = false
+
+                                    -- Check for obstacles between the player and target
+                                    local ray = Ray.new(char_root.Position, (targetHumanoidRoot.Position - char_root.Position).unit * 20)
+                                    local part, _ = workspace:FindPartOnRayWithIgnoreList(ray, { char }, false, true)
+
+                                    if part and part.Parent ~= targetChar then
+                                        obstructed = true
+                                    end
+
+                                    if not obstructed then
+                                        nearest_dist = dist
+                                        target_root = targetHumanoidRoot
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    return target_root
+                end
+
+                local function farm()
+                    local target_root = findNearestPlayer()
+
+                    if target_root then
+                        -- Move towards the nearest player (teleporting fast)
+                        local behind = (target_root.CFrame * CFrame.new(0, 0, 3)).p
+                        local lookAt = (target_root.Position - char_root.Position).unit
+
+                        char_root.CFrame = CFrame.new(behind)
+                        char_root.CFrame = CFrame.new(behind, behind + Vector3.new(lookAt.X, 0, lookAt.Z))
+                    end
+                end
+
+                -- Throttle the script to run at most once every 0.5 seconds
+                local lastRunTime = 0
+                local throttleInterval = 0.05
+
+                while a do
+                    local currentTime = tick()
+                    if currentTime - lastRunTime >= throttleInterval then
+                        farm()
+                        lastRunTime = currentTime
+                    end
+                    wait() -- Adjust the wait time to balance responsiveness and performance
+                end
+            end)
+        end
+    end)
+end
+
+-- Function to stop the autofarm task
+function stopAutoFarm()
+    if autofarmTask then
+        task.cancel(autofarmTask) -- Stop the task when the toggle is turned off
+        autofarmTask = nil
+    end
+end
+
+
+-- LocalScript ONLY
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- Shared enabled flag for the aimbot
+local enabled = false
+
+-- Default value for MAX_DISTANCE
+local MAX_DISTANCE = 70 -- initial distance
+
+-- Your UI Toggle (example using Main:AddToggle)
+Main:AddToggle('MyToggle', { 
+    Text = 'Aimbot (Aim = Work)',
+    Default = false,
+    Tooltip = 'Aimlock Aim To Work',
+    Callback = function(state)
+        enabled = state
+    end
+})
+
+-- Slider for changing the MAX_DISTANCE value
+Main:AddSlider("AimbotDis", {
+    Text = "Aimbot Distance", 
+    Default = 70, 
+    Min = 5, 
+    Max = 250, 
+    Rounding = 2, -- 2 decimal places 
+    Compact = false,
+
+    Callback = function(value)
+        MAX_DISTANCE = value -- Update MAX_DISTANCE when slider value changes
+    end,
+})
+
+-- Check if QLockMouseRobloxCamera attribute is true in workspace.Camera
+function isQLockActive()
+    local qLockValue = Camera:GetAttribute("QLockMouseRobloxCamera")
+    return qLockValue == true
+end
+
+-- Closest player finder (within MAX_DISTANCE)
+function getClosestPlayer()
+    local closest, minDist = nil, math.huge
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local headPart = player.Character.Head
+            local distance = (headPart.Position - Camera.CFrame.Position).Magnitude
+
+            if distance <= MAX_DISTANCE then -- only if nearby
+                local screenPos, onScreen = Camera:WorldToViewportPoint(headPart.Position)
+                if onScreen then
+                    local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                    if screenDist < minDist then
+                        minDist = screenDist
+                        closest = player
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- RenderStepped Aimlock
+RunService.RenderStepped:Connect(function()
+    if not enabled then return end
+
+    -- Only lock onto a target if QLock is active
+    if isQLockActive() then
+        -- Get the closest player
+        local target = getClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild("Head") then
+            -- Aim at the target player's head
+            local head = target.Character.Head.Position
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, head)
+        end
+    end
+end)
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
+
+local autoAttackEnabled = false
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Check if player is interacting with GUI
+local function isUsingGui()
+    return UserInputService:GetFocusedTextBox() ~= nil
+        or GuiService.MenuIsOpen
+        or GuiService.SelectedObject ~= nil
+end
+
+-- Get screen center for clicking
+local function getClickPosition()
+    local screenSize = camera.ViewportSize
+    return Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+end
+
+-- Auto attack loop
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if autoAttackEnabled and not isUsingGui() then
+            local pos = getClickPosition()
+
+            if UserInputService.TouchEnabled then
+                -- Mobile tap
+                VirtualInputManager:SendTouchEvent(0, pos, Enum.UserInputState.Begin, false)
+                VirtualInputManager:SendTouchEvent(0, pos, Enum.UserInputState.End, false)
+            else
+                -- PC click
+                VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
+            end
+        end
+    end
+end)
+
+-- Toggle for UI
+Main:AddToggle('MyToggle', {
+    Text = 'Auto Attack',
+    Default = false,
+    Tooltip = 'Auto Shoot/Hit',
+    Callback = function(state)
+        autoAttackEnabled = state
+    end
+})
+
+
+Main:AddButton({
+    Text = 'Infinite Stamina',
+    Func = function()
+local player = game:GetService("Players").LocalPlayer
+local staminaFill = player:WaitForChild("PlayerGui")
+    :WaitForChild("TopRightHud")
+    :WaitForChild("Holder")
+    :WaitForChild("StaminaBar")
+    :WaitForChild("Fill")
+
+-- Set the Fill to always be at 100% size (infinite-like)
+while true do
+    staminaFill.Size = UDim2.new(10000, 0, 1, 0)  -- Set to 100% width and height for infinite effect
+    wait(0.1)  -- Update every 0.1 seconds to ensure it doesn't change
+end
+
+ end,
+     DoubleClick = false,
+    Tooltip = 'Inf Stamina'
+})
+
+Main:AddToggle('MyToggle', {
+    Text = 'Infinite Jump',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'Inf Jump', -- Information shown when you hover over the toggle
+    Callback = function(state)
+if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+            
+end})
+local hipHeightEnabled = false
+local hipHeightValue = 2
+
+-- Function to loop and apply hip height
+task.spawn(function()
+    while true do
+        task.wait(0.1) -- Adjust frequency if needed
+        if hipHeightEnabled and game.Players.LocalPlayer.Character then
+            local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.HipHeight = hipHeightValue
+            end
+        end
+    end
+end)
+
+Main:AddToggle('MyToggle', {
+    Text = 'Enable Hip Height',
+    Default = false,
+    Tooltip = 'HipHeight',
+    Callback = function(state)
+        hipHeightEnabled = state
+    end
+})
+
+Main:AddSlider("HipHeightDis", {
+    Text = "Hip Height Size", 
+    Default = 2, 
+    Min = 2, 
+    Max = 6.5, 
+    Rounding = 2,
+    Compact = false,
+    Callback = function(value)
+        hipHeightValue = value
+    end,
+})
+
+
+
+FakeAnimations:AddDropdown("RunAnimations", {
+    Values = {"None", "Rthro", "Werewolf", "Zombie", "Ninja", "Toy", "Superhero", "OldSchool", "Cartoony", "Stylish", "Vampire"},
+    Default = 1,
+    Multi = false,
+    Text = "Run",
+})
+
+Options.RunAnimations:OnChanged(function()
+    ChangeAnimHook = game:GetService("RunService").Stepped:Connect(function()
+        if Options.RunAnimations.Value == "None" then
+        elseif Options.RunAnimations.Value == "Rthro" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=2510198475"
+        elseif Options.RunAnimations.Value == "Werewolf" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=1083216690"
+        elseif Options.RunAnimations.Value == "Zombie" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=616163682"
+        elseif Options.RunAnimations.Value == "Ninja" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=656118852"
+        elseif Options.RunAnimations.Value == "Toy" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=782842708"
+        elseif Options.RunAnimations.Value == "Superhero" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=616117076"
+        elseif Options.RunAnimations.Value == "OldSchool" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=5319844329"
+        elseif Options.RunAnimations.Value == "Cartoony" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=742638842"
+        elseif Options.RunAnimations.Value == "Stylish" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=616140816"
+        elseif Options.RunAnimations.Value == "Vampire" then
+            lplr.Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=1083462077"
+        end
+    end)
+end)
+
+FakeAnimations:AddDropdown("JumpAnimations", {
+    Values = {"None", "Rthro", "Werewolf", "Zombie", "Ninja", "Toy", "Superhero", "OldSchool", "Cartoony", "Stylish", "Vampire"},
+    Default = 1,
+    Multi = false,
+    Text = "Jump",
+})
+
+Options.JumpAnimations:OnChanged(function()
+    ChangeJumpAnimHook = game:GetService("RunService").Stepped:Connect(function()
+        if Options.JumpAnimations.Value == "None" then
+        elseif Options.JumpAnimations.Value == "Rthro" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=2510197830"
+        elseif Options.JumpAnimations.Value == "Werewolf" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=1083218792"
+        elseif Options.JumpAnimations.Value == "Zombie" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=616161997"
+        elseif Options.JumpAnimations.Value == "Ninja" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=656117878"
+        elseif Options.JumpAnimations.Value == "Toy" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=782847020"
+        elseif Options.JumpAnimations.Value == "Superhero" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=616115533"
+        elseif Options.JumpAnimations.Value == "OldSchool" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=5319841935"
+        elseif Options.JumpAnimations.Value == "Cartoony" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=742637942"
+        elseif Options.JumpAnimations.Value == "Stylish" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=616139451"
+        elseif Options.JumpAnimations.Value == "Vampire" then
+            lplr.Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=1083455352"
+        end
+    end)
+end)
+
+FakeAnimations:AddDropdown("FallAnimations", {
+    Values = {"None", "Rthro", "Werewolf", "Zombie", "Ninja", "Toy", "Superhero", "OldSchool", "Cartoony", "Stylish", "Vampire"},
+    Default = 1,
+    Multi = false,
+    Text = "Fall",
+})
+
+Options.FallAnimations:OnChanged(function()
+    ChangeFallAnimHook = game:GetService("RunService").Stepped:Connect(function()
+        if Options.FallAnimations.Value == "None" then
+        elseif Options.FallAnimations.Value == "Rthro" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=2510195892"
+        elseif Options.FallAnimations.Value == "Werewolf" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=1083189019"
+        elseif Options.FallAnimations.Value == "Zombie" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=616157476"
+        elseif Options.FallAnimations.Value == "Ninja" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=656115606"
+        elseif Options.FallAnimations.Value == "Toy" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=782846423"
+        elseif Options.FallAnimations.Value == "Superhero" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=616115533"
+        elseif Options.FallAnimations.Value == "OldSchool" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=5319839762"
+        elseif Options.FallAnimations.Value == "Cartoony" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=742640026"
+        elseif Options.FallAnimations.Value == "Stylish" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=616134815"
+        elseif Options.FallAnimations.Value == "Vampire" then
+            lplr.Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=1083443587"
+        end
+    end)
+end)
+
+CFrameSpeedTab:AddToggle("CFrameSpeedToggleFunny", {
+    Text = "Enabled",
+    Default = false,
+    Tooltip = "Enable CFrame Speed",
+})
+
+Toggles.CFrameSpeedToggleFunny:OnChanged(function()
+    Settings.Blatant.CFrameSpeed.Enabled = Toggles.CFrameSpeedToggleFunny.Value
+end)
+
+Toggles.CFrameSpeedToggleFunny:AddKeyPicker("CFrameSpeedKeyBind", {
+    Default = "None",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "CFrame",
+    NoUI = false,
+})
+
+CFrameSpeedTab:AddSlider("CFrameSpeedValue", {
+    Text = "CFrame Speed Amount",
+    Default = 0.0001,
+    Min = 0.0001,
+    Max = 0.2,
+    Rounding = 4, -- NOT 0.01, this means 2 decimal places
+    Compact = false,
+
+    Callback = function(value)
+   
+    end,
+})
+
+
+Options.CFrameSpeedValue:OnChanged(function()
+    Settings.Blatant.CFrameSpeed.Value = Options.CFrameSpeedValue.Value
+end)
+
+FlyTab:AddToggle("FlyToggleFunny", {
+    Text = "Enabled",
+    Default = false,
+    Tooltip = "Fly Enabled",
+})
+
+Toggles.FlyToggleFunny:OnChanged(function()
+    if Toggles.FlyToggleFunny.Value == true then
+        FlyLoop = game:GetService("RunService").RenderStepped:Connect(function()
+            spawn(function()
+                pcall(function()
+                    local speed = Settings.Blatant.Fly.Value
+                    local velocity = Vector3.new(0, 0, 0)
+                    local UserInputService = game:GetService("UserInputService")
+                    local flyUpwards = UserInputService:IsKeyDown(Enum.KeyCode.Space)
+                    local flyDownwards = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) 
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                        velocity = velocity + (CurrentCamera.CoordinateFrame.lookVector * speed)
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                        velocity = velocity + (CurrentCamera.CoordinateFrame.rightVector * -speed)
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                        velocity = velocity + (CurrentCamera.CoordinateFrame.lookVector * -speed)
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                        velocity = velocity + (CurrentCamera.CoordinateFrame.rightVector * speed)
+                    end
+
+                    if flyUpwards then
+                        velocity = velocity + (Vector3.new(0, 1, 0) * speed)
+                    end
+                    if flyDownwards then
+                        velocity = velocity + (Vector3.new(0, -1, 0) * speed)
+                    end
+                    lplr.Character.HumanoidRootPart.Velocity = velocity
+                    lplr.Character.Humanoid:ChangeState("Freefall")
+                end)
+            end)
+        end)
+    elseif Toggles.FlyToggleFunny.Value == false and FlyLoop then
+        FlyLoop:Disconnect()
+        lplr.Character.Humanoid:ChangeState("Landing")
+    end
+end)
+
+Toggles.FlyToggleFunny:AddKeyPicker("FlyKeyBind", {
+    Default = "None",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Fly",
+    NoUI = false,
+})
+
+FlyTab:AddSlider("FlyValue", {
+    Text = "Fly Amount",
+    Default = 0.1,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(val)
+        flySpeed = val
+    end
+})
+
+Options.FlyValue:OnChanged(function()
+    Settings.Blatant.Fly.Value = Options.FlyValue.Value * 30
+end)
+
+
+--// Light head funny thing
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Settings.Visuals.Local.Light.Enabled then
+        local player = game.Players.LocalPlayer
+        local head = player.Character.Head
+        local light = head:FindFirstChild("HeadLight")
+        if not light then
+            light = Instance.new("PointLight")
+            light.Name = "HeadLight"
+            light.Range = 20
+            light.Parent = head
+        end
+
+        light.Brightness = Settings.Visuals.Local.Light.Strength
+        light.Color = Settings.Visuals.Local.Light.Color
+    else
+        local player = game.Players.LocalPlayer
+        local head = player.Character.Head
+        local light = head:FindFirstChild("HeadLight")
+        if light then
+            light:Destroy()
+        end
+    end
+end)
+
+--// Nametag Funny thing
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Settings.Visuals.Local.Nametag.Enabled then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local head = character and character:FindFirstChild("Head")
+        local billboard = head and head:FindFirstChild("NametagBillboard")
+        
+        if not billboard then
+            billboard = Instance.new("BillboardGui")
+            billboard.Name = "NametagBillboard"
+            billboard.Size = UDim2.new(0, 100, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 2, 0) 
+            
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Name = "NametagText"
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = Settings.Visuals.Local.Nametag.Color
+            textLabel.Text = "   " .. player.Name .. "\n     |\n     |\n     V"
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.TextSize = 20
+            textLabel.TextYAlignment = Enum.TextYAlignment.Top
+            textLabel.TextTransparency = 0 
+            textLabel.Parent = billboard
+            billboard.Parent = head
+        end
+
+        local nametagText = billboard:FindFirstChild("NametagText")
+        if nametagText then
+            nametagText.TextColor3 = Settings.Visuals.Local.Nametag.Color
+        end
+    else
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local head = character and character:FindFirstChild("Head")
+        local billboard = head and head:FindFirstChild("NametagBillboard")
+        
+        if billboard then
+            billboard:Destroy()
+        end
+    end
+end)
+
+--// Main CFrame speed
+game:GetService("RunService").Heartbeat:Connect(function()
+    if Settings.Blatant.CFrameSpeed.Enabled then
+        if lplr.Character.Humanoid.MoveDirection.Magnitude > 0 then
+            local moveDir = lplr.Character.Humanoid.MoveDirection
+            local speed = Settings.Blatant.CFrameSpeed.Value
+            lplr.Character:TranslateBy(moveDir * speed)
+        end
+    end
+end)
+
+
+--// Config and shit
+MenuGroup:AddButton("Unload Cheat", function()
+    Library:Unload()
+end)
+
+MenuGroup:AddToggle("WatermarkEnabled", {
+    Text = "Watermark",
+    Default = true,
+    Tooltip = "Watermark Enabled",
+})
+
+Toggles.WatermarkEnabled:OnChanged(function()
+    Library:SetWatermarkVisibility(Toggles.WatermarkEnabled.Value)
+end)
+
+Library.ToggleKeybind = Options.MenuKeybind
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+
+Library:SetWatermark("Legend Hub " .. os.date(funny[math.random(1, #funny)], os.time()) .. day .. GetSubPrefix(day) .. os.date(second_string, os.time()))
+
+SaveManager:SetIgnoreIndexes({"MenuKeybind"})
+
+
+SaveManager:BuildConfigSection(Tabs.UiSettings)
+ThemeManager:ApplyToTab(Tabs.UiSettings)
+
+MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
+    Default = "Insert",
+    NoUI = true,
+    Text = "Menu keybind"
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+
+-- Services
+local run_service = game:GetService("RunService");
+local players = game:GetService("Players");
+local replicated_storage = game:GetService("ReplicatedStorage");
+local virtual_input_manager = game:GetService("VirtualInputManager");
+local tween_service = game:GetService("TweenService");
+
+-- Variables
+local local_player = players.LocalPlayer;
+local player_gui = local_player.PlayerGui;
+local camera = workspace.CurrentCamera;
+
+local map = workspace.Map;
+local tiles = map.Tiles;
+
+local steak_house = tiles.ShoppingTile.SteakHouse;
+local steak_interior = steak_house.Interior;
+
+local updated = tick();
+
+-- Main
+do
+    local get_proximity_prompt = function(ancestor)
+        for _, descendant in ancestor:GetDescendants() do
+            if (descendant.ClassName == "ProximityPrompt") then
+                return descendant;
+            end
+        end
+    end
+
+    local visualize_click = function(x, y, lifetime)
+        local circle = Drawing.new("Circle");
+        circle.Visible = true;
+        circle.Transparency = 1;
+        circle.Filled = true;
+        circle.Radius = 10;
+        circle.Color = Color3.fromRGB(255, 255, 255);
+
+        circle.Position = Vector2.new(x, y);
+        task.wait(lifetime);
+        circle:Destroy();
+    end
+
+    local click_button = function(button, offset)
+        local absolute_position = button.AbsolutePosition;
+        local absolute_size = button.AbsoluteSize;
+    
+        local center_x = absolute_position.X + (absolute_size.X / 2);
+        local center_y = absolute_position.Y + (absolute_size.Y * 2);
+    
+        if (offset) then
+            center_x = center_x + offset.X;
+            center_y = center_y + offset.Y;
+        end
+    
+        local screen_size = camera.ViewportSize;
+        center_x, center_y = math.clamp(center_x, 0, screen_size.X), math.clamp(center_y, 0, screen_size.Y);
+        visualize_click(center_x, center_y, 0.3);
+    
+        virtual_input_manager:SendMouseButtonEvent(center_x, center_y, 0, true, game, 1);
+        task.wait();
+        virtual_input_manager:SendMouseButtonEvent(center_x, center_y, 0, false, game, 1);
+    end
+
+    local teleport = function(position, time)
+        time = time or 3.5;
+
+        local character = local_player.Character;
+        local root = character:FindFirstChild("HumanoidRootPart");
+
+        if (not root) then
+            return;
+        end
+
+        local completed = false;
+        local tween = tween_service:Create(root, TweenInfo.new(time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {CFrame = typeof(position) == "CFrame" and position or CFrame.new(position)});
+        tween:Play();
+        tween.Completed:Connect(function()
+            completed = true;
+        end)
+
+        repeat
+            task.wait();
+        until completed; -- plz yield until completed, bro thx!
+    end
+
+    run_service.RenderStepped:Connect(function()
+        if (Toggles.autofarm_enabled.Value and tick() - updated >= .3) then
+            local character = local_player.Character;
+            local root = (character and character:FindFirstChild("HumanoidRootPart"));
+            
+            if (root) then
+                local proximity_prompt = get_proximity_prompt(steak_interior.Fridge);
+                local job = local_player:GetAttribute("Job");
+                
+                if (job ~= "steakhouse_cook") then
+                    local touch = steak_interior.SteakHouseBeacon.TouchPart;
+
+                    if (touch) then
+                        teleport(touch.CFrame.Position);
+                        task.spawn(click_button, player_gui.JobApplication.JobApplicationFrame.ApplyJob);
+                    end
+                else
+                    --[[
+                    if (Toggles.safe_mode.Value) then
+                        pcall(function()
+                            require(replicated_storage.Modules.Core.Net).send("request_respawn");
+                        end)
+                    end
+                    ]]
+
+                    local progress_bar_frame = player_gui.ProgressBar.ProgressBarFrame;
+                    
+                    local main_frame = progress_bar_frame.MainFrame;
+                    local input_frame = progress_bar_frame.InputFrame;
+
+                    if (proximity_prompt and not progress_bar_frame.Visible) then
+                        if (Toggles.get_steak.Value) then
+                            local end_cf = proximity_prompt.Parent.Parent.CFrame;
+                            teleport((end_cf.Position + (end_cf.LookVector * -2)) + Vector3.new(0, 2.5, 0));
+
+                            proximity_prompt:InputHoldBegin();
+                            proximity_prompt:InputHoldEnd();
+                        end
+                    end
+                    
+                    local beacon = workspace:FindFirstChild("Beacon");
+                    local base = (beacon and beacon.Base);
+    
+                    if (base) then
+                        teleport(base.CFrame + vector.create(0, 1, 0));
+                    end
+    
+                    local bar = main_frame.BarAmount;
+                    local cooked_perfectly = main_frame.CookedPerfectly;
+    
+                    if (progress_bar_frame.Visible and bar and cooked_perfectly) then
+                        if (bar.Size.X.Scale >= cooked_perfectly.Position.X.Scale) then
+                            task.spawn(click_button, input_frame.FinishBar);
+                        end
+                    end
+                end
+
+                updated = tick();
+            end
+        end
+    end)
+end

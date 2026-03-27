@@ -1,0 +1,154 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local FOV_LOCK = 70
+
+local blacklist = {
+	"BlurEffect",
+	"ColorCorrectionEffect",
+	"BloomEffect",
+	"SunRaysEffect",
+	"DepthOfFieldEffect",
+	"Atmosphere",
+	"Sky",
+	"Smoke",
+	"ParticleEmitter",
+	"Beam",
+	"Trail",
+	"Highlight",
+	"PostEffect",
+	"SurfaceAppearance",
+	"Fire",
+	"Sparkles",
+	"Explosion",
+	"PointLight",
+	"SpotLight",
+	"SurfaceLight",
+	"Shadows",
+	"Blur",
+	"Fog",
+	"ColorGradingEffect",
+	"ToneMappingEffect",
+	"VignetteEffect",
+	"GodRays",
+	"Glare",
+	"ChromaticAberrationEffect",
+	"DistortionEffect",
+	"LensFlare",
+	"SunFlare",
+	"LightInfluence",
+	"AmbientOcclusionEffect",
+	"RefractionEffect",
+	"HeatDistortion",
+	"GlitchEffect",
+	"ScreenSpaceReflection",
+	"MotionBlur",
+	"VolumetricLight",
+	"RainEffect",
+	"SnowEffect",
+	"LightningEffect",
+	"NeonGlow",
+	"ContrastCorrection",
+	"ShadowMap",
+	"Bloom",
+	"Clouds",
+	"FogVolume",
+	"WaterEffect",
+	"WindEffect",
+	"PixelateEffect",
+	"FilmGrainEffect",
+	"CRTShader",
+	"NightVisionEffect",
+	"InfraredEffect",
+	"HazeEffect",
+	"ColorBalanceEffect",
+	"DynamicLight",
+	"AmbientEffect",
+	"ScreenDistortion",
+	"ScanlineEffect",
+	"UnderwaterEffect",
+	"ThermalVision",
+	"ShockwaveEffect",
+	"FlashEffect",
+	"ExplosionLight",
+	"VFXPart",
+	"GlitchScreen",
+	"ScreenFlash",
+	"OverlayEffect",
+	"ShadowEffect",
+	"GhostEffect",
+	"FogEmitter",
+	"WindEmitter",
+	"HeatWave",
+	"SunGlow",
+	"ColorOverlay",
+	"VisionDistort",
+	"EchoEffect",
+	"ScreenOverlay",
+	"RenderEffect",
+	"VisualEffect",
+	"LightingEffect",
+	"CameraEffect",
+	"WeatherEffect",
+	"SmokeTrail",
+	"FireTrail",
+	"NeonEffect",
+	"RefractionLayer",
+	"PostProcessingEffect",
+	"VisualNoise",
+	"ScreenNoise",
+}
+
+local function isBlacklisted(obj)
+	for _, name in ipairs(blacklist) do
+		if obj:IsA(name) then
+			return true
+		end
+	end
+	return false
+end
+
+local function clearEffects()
+	for _, v in pairs(Lighting:GetDescendants()) do
+		if isBlacklisted(v) then
+			v:Destroy()
+		end
+	end
+end
+
+clearEffects()
+
+Lighting.DescendantAdded:Connect(function(obj)
+	task.wait()
+	if isBlacklisted(obj) then
+		obj:Destroy()
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if camera.FieldOfView ~= FOV_LOCK then
+		camera.FieldOfView = FOV_LOCK
+	end
+end)
+
+local moveVector = Vector3.zero
+
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Gamepad1 or input.UserInputType == Enum.UserInputType.Touch then
+		if input.KeyCode == Enum.KeyCode.Thumbstick1 then
+			moveVector = Vector3.new(input.Position.X, 0, -input.Position.Y)
+		end
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	local char = player.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		humanoid:Move(moveVector, true)
+	end
+end)

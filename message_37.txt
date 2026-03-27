@@ -1,0 +1,104 @@
+local player = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+local playerModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule"))
+local controls = playerModule:GetControls()
+local RAGDOLL_SPEED = 32
+
+local antiRagdollEnabled = true
+local characterConnection = nil
+local currentCharacter = nil
+local ragdollRemoteConnection = nil
+local moveConnection = nil
+local inputConnection = nil
+local cleanupConnection = nil
+local TOGGLE_KEYBIND = Enum.KeyCode.F
+
+local function cleanupRagdoll()
+    if currentCharacter then
+        local root = currentCharacter:FindFirstChild("HumanoidRootPart")
+        if root then
+            local bodyPosition = root:FindFirstChild("RagdollAnchor")
+            if bodyPosition then
+                bodyPosition:Destroy()
+            end
+        end
+    end
+    
+    if moveConnection then
+        moveConnection:Disconnect()
+        moveConnection = nil
+    end
+end
+
+local function disconnectRemoteConnection()
+    if ragdollRemoteConnection then
+        ragdollRemoteConnection:Disconnect()
+        ragdollRemoteConnection = nil
+    end
+end
+
+local function setupAntiFlyRagdoll(char)
+    currentCharacter = char
+    cleanupRagdoll()
+    disconnectRemoteConnection()
+    
+    local humanoid = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    local head = char:WaitForChild("Head")
+
+    local ragdollRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Ragdoll"):WaitForChild("Ragdoll")
+
+    ragdollRemoteConnection = ragdollRemote.OnClientEvent:Connect(function(p1, p2)
+        if not antiRagdollEnabled then return end
+        
+        if p1 == "Make" or p2 == "manualM" then
+            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+            Camera.CameraSubject = head
+            root.CanCollide = false
+            controls:Enable()
+
+            cleanupRagdoll()
+
+            local bodyPosition = Instance.new("BodyPosition")
+            bodyPosition.Name = "RagdollAnchor"
+            bodyPosition.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+            bodyPosition.P = 5000
+            bodyPosition.D = 1000
+            bodyPosition.Position = root.Position
+            bodyPosition.Parent = root
+
+            moveConnection = RunService.RenderStepped:Connect(function()
+                if not antiRagdollEnabled or not bodyPosition or not bodyPosition.Parent then
+                    if moveConnection then
+                        moveConnection:Disconnect()
+                        moveConnection = nil
+                    end
+                    return
+                end
+                
+                local moveDir = humanoid.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    bodyPosition.Position = root.Position + moveDir.Unit * RAGDOLL_SPEED
+                else
+                    bodyPosition.Position = root.Position
+                end
+            end)
+        end
+
+        if p1 == "Destroy" or p2 == "manualD" then
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            Camera.CameraSubject = humanoid
+            root.CanCollide = true
+            controls:Enable()
+            
+            cleanupRagdoll()
+        end
+    end)
+end
+
+local function toggleAntiRagdoll()
+    antiRagdollEnabled = not antiRagdollEnabl

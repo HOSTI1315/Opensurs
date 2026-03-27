@@ -1,0 +1,368 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Hello - " .. game.Name,
+    SubTitle = "by Dra",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+})
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local Options = Fluent.Options
+
+do
+    Fluent:Notify({
+        Title = "Notification",
+        Content = "This is a notification",
+        SubContent = "SubContent", -- Optional
+        Duration = 5 -- Set to nil to make the notification not disappear
+    })
+
+
+
+    Tabs.Main:AddParagraph({
+        Title = "This script is beta ",
+        Content = ""
+    })
+
+Tabs.Main:AddButton({
+    Title = "Auto Walk to (5, 2012, -79)",
+    Description = "Automatically walks your character to position (5, 2012, -79)",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+        local targetPos = Vector3.new(5, 2012, -79)
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:MoveTo(targetPos)
+        end
+    end
+})
+
+
+    
+-- Free Axis Auto Spin Feature
+
+local autoSpin = false
+local spinSpeed = 50
+local spinAngularName = "AutoSpinAngular"
+local player = game:GetService("Players").LocalPlayer
+
+-- Default axis values (Y axis only at start)
+local spinAxis = Vector3.new(0, 1, 0)
+
+-- Helper to get HumanoidRootPart safely
+local function getHRP()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        return char.HumanoidRootPart
+    end
+    return nil
+end
+
+-- Helper to apply or update BodyAngularVelocity (free axis)
+local function applySpin()
+    local hrp = getHRP()
+    if not hrp then return end
+    local av = hrp:FindFirstChild(spinAngularName)
+    if not av then
+        av = Instance.new("BodyAngularVelocity")
+        av.Name = spinAngularName
+        av.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        av.AngularVelocity = spinAxis.Unit * spinSpeed
+        av.Parent = hrp
+    else
+        av.AngularVelocity = spinAxis.Unit * spinSpeed
+    end
+end
+
+-- Helper to remove BodyAngularVelocity
+local function removeSpin()
+    local hrp = getHRP()
+    if hrp then
+        local av = hrp:FindFirstChild(spinAngularName)
+        if av then av:Destroy() end
+    end
+end
+
+-- UI for axis control
+Tabs.Main:AddSlider("SpinAxisX", {
+    Title = "Spin Axis X",
+    Description = "Set X axis (-1 to 1)",
+    Default = 0,
+    Min = -1,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        spinAxis = Vector3.new(value, spinAxis.Y, spinAxis.Z)
+        if autoSpin then applySpin() end
+    end
+})
+Tabs.Main:AddSlider("SpinAxisY", {
+    Title = "Spin Axis Y",
+    Description = "Set Y axis (-1 to 1)",
+    Default = 1,
+    Min = -1,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        spinAxis = Vector3.new(spinAxis.X, value, spinAxis.Z)
+        if autoSpin then applySpin() end
+    end
+})
+Tabs.Main:AddSlider("SpinAxisZ", {
+    Title = "Spin Axis Z",
+    Description = "Set Z axis (-1 to 1)",
+    Default = 0,
+    Min = -1,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        spinAxis = Vector3.new(spinAxis.X, spinAxis.Y, value)
+        if autoSpin then applySpin() end
+    end
+})
+
+-- Toggle for auto spin
+Tabs.Main:AddToggle("AutoSpinToggle", {
+    Title = "Auto Spin",
+    Default = false,
+    Callback = function(value)
+        autoSpin = value
+        if autoSpin then
+            applySpin()
+            Fluent:Notify({
+                Title = "Auto Spin Enabled",
+                Content = "Your character will now spin freely!",
+                Duration = 3
+            })
+        else
+            removeSpin()
+            Fluent:Notify({
+                Title = "Auto Spin Disabled",
+                Content = "Spinning stopped.",
+                Duration = 2
+            })
+        end
+    end
+})
+
+-- Slider for spin speed
+Tabs.Main:AddSlider("SpinSpeedSlider", {
+    Title = "Spin Speed",
+    Description = "Adjust the spin speed",
+    Default = 50,
+    Min = 10,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(value)
+        spinSpeed = value
+        if autoSpin then
+            applySpin()
+        end
+    end
+})
+
+-- No axis dropdown, always Y axis
+
+-- Reapply spin if character respawns
+player.CharacterAdded:Connect(function()
+    if autoSpin then
+        -- Wait for HRP to exist
+        repeat task.wait() until getHRP()
+        applySpin()
+    end
+end)
+
+-- Clean up on script exit (optional, for good practice)
+if not _G.__AutoSpinCleanup then
+    _G.__AutoSpinCleanup = true
+    if game:GetService("RunService"):IsServer() then
+        game:BindToClose(function()
+            removeSpin()
+        end)
+    end
+end
+
+-- Heartbeat connection for extra safety (ensures spin is always applied)
+if not _G.__AutoSpinHeartbeat then
+    _G.__AutoSpinHeartbeat = game:GetService("RunService").Heartbeat:Connect(function()
+        if autoSpin then
+            local hrp = getHRP()
+            if hrp and not hrp:FindFirstChild(spinAngularName) then
+                applySpin()
+            end
+        end
+    end)
+end
+
+-- Toggle for Auto AFK (sets LocalPlayer.AFK.Value)
+Tabs.Main:AddToggle("AutoAFKToggle", {
+    Title = "Auto AFK",
+    Description = "Set yourself as AFK (true = AFK, false = not AFK)",
+    Default = false,
+    Callback = function(value)
+        local player = game:GetService("Players").LocalPlayer
+        if player and player:FindFirstChild("AFK") and player.AFK:IsA("BoolValue") then
+            player.AFK.Value = value and true or false
+        end
+    end
+})
+
+
+
+-- Auto Guarantee System (หยุดทุกอย่างและปิด Toggle ถ้า Gold, Diamond, หรือ Void เป็น true)
+
+local autoGuaranteeEnabled = false
+local autoGuaranteeThread = nil
+
+-- ตรวจสอบ Modifiers (Gold, Diamond, Void) ถ้ามีอันไหนเป็น true ให้หยุดและปิด Toggle
+local function shouldStopByModifiers()
+    local player = game:GetService("Players").LocalPlayer
+    local modifiers = player:FindFirstChild("Modifiers")
+    if not modifiers then return false end
+    local gold = modifiers:FindFirstChild("Gold")
+    local diamond = modifiers:FindFirstChild("Diamond")
+    local void_ = modifiers:FindFirstChild("Void")
+    -- ถ้า Gold, Diamond, หรือ Void มีค่า Value เป็น true ให้หยุด
+    if (gold and gold.Value == true) or (diamond and diamond.Value == true) or (void_ and void_.Value == true) then
+        return true
+    end
+    return false
+end
+
+local function getProgressInfo()
+    local player = game:GetService("Players").LocalPlayer
+    local gui = player:FindFirstChild("PlayerGui")
+    if not gui then return nil, nil end
+    local mainUI = gui:FindFirstChild("MainUI")
+    if not mainUI then return nil, nil end
+    local bottom = mainUI:FindFirstChild("Bottom")
+    if not bottom then return nil, nil end
+    local textLabel = bottom:FindFirstChild("TextLabel")
+    if not textLabel or not textLabel:IsA("TextLabel") then return nil, nil end
+    local text = textLabel.Text
+    if not text then return nil, nil end
+    -- Expecting format "3 / 10" or "3 / 50"
+    local current, max = string.match(text, "(%d+)%s*/%s*(%d+)")
+    current = tonumber(current)
+    max = tonumber(max)
+    return current, max
+end
+
+local function isProgressFull(current, max)
+    if current and max and current >= max then
+        return true
+    end
+    return false
+end
+
+local function stopAutoGuarantee()
+    autoGuaranteeEnabled = false
+    local option = Fluent and Fluent.Options and Fluent.Options.AutoGuaranteeToggle
+    if option and option.SetValue then
+        option:SetValue(false)
+    end
+end
+
+local function teleportToPositionAndResetAndStop(targetPos)
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+    local myChar = workspace:FindFirstChild(player.Name)
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = myChar.HumanoidRootPart
+    hrp.CFrame = CFrame.new(targetPos)
+
+    -- ก่อนจะรีเซ็ต ให้เช็ค Modifiers และ Progress อีกครั้ง
+    task.wait(0.5)
+    if shouldStopByModifiers() then
+        return
+    end
+    local current, max = getProgressInfo()
+    if isProgressFull(current, max) then
+        return
+    end
+    if myChar:FindFirstChildOfClass("Humanoid") then
+        myChar:FindFirstChildOfClass("Humanoid").Health = 0
+    end
+end
+
+Tabs.Main:AddToggle("AutoGuaranteeToggle", {
+    Title = "Auto Guarantee (Instant Move & Reset)",
+    Description = "Teleport to (5, 2012, -79), wait, reset, auto stop if Gold, Diamond, or Void is true, or progress is full.",
+    Default = false,
+    Callback = function(value)
+        autoGuaranteeEnabled = value
+        if value then
+            if autoGuaranteeThread and coroutine.status(autoGuaranteeThread) ~= "dead" then
+                return
+            end
+            autoGuaranteeThread = coroutine.create(function()
+                while autoGuaranteeEnabled do
+                    -- ตรวจ Modifiers ก่อนเสมอ
+                    if shouldStopByModifiers() then
+                        stopAutoGuarantee()
+                        break
+                    end
+
+                    local current, max = getProgressInfo()
+                    if isProgressFull(current, max) then
+                        stopAutoGuarantee()
+                        break
+                    end
+
+                    teleportToPositionAndResetAndStop(Vector3.new(5, 2012, -79))
+
+                    for i = 1, 10 do
+                        if not autoGuaranteeEnabled then break end
+                        if shouldStopByModifiers() then
+                            stopAutoGuarantee()
+                            break
+                        end
+                        local current, max = getProgressInfo()
+                        if isProgressFull(current, max) then
+                            stopAutoGuarantee()
+                            break
+                        end
+                        task.wait(0.2)
+                    end
+                end
+            end)
+            coroutine.resume(autoGuaranteeThread)
+        else
+            autoGuaranteeEnabled = false
+        end
+    end
+})
+
+
+
+end    
+-- Addons:
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+Window:SelectTab(1)
+SaveManager:LoadAutoloadConfig()

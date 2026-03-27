@@ -1,0 +1,132 @@
+-- Code by @rznnq
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local HRP = char:WaitForChild("HumanoidRootPart")
+local backpack = player:WaitForChild("Backpack")
+
+local shotTarget = nil
+local Event = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem") -- ajusta si tu remote cambia
+
+local function getNearestPlayer(maxRange)
+    maxRange = maxRange or math.huge
+    if not player.Character then return nil end
+    local myPos = HRP.Position
+    local nearest = nil
+    local shortest = maxRange
+    for _, pl in ipairs(Players:GetPlayers()) do
+        if pl ~= player and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = pl.Character.HumanoidRootPart
+            local dist = (hrp.Position - myPos).Magnitude
+            if dist < shortest then
+                shortest = dist
+                nearest = pl
+            end
+        end
+    end
+    return nearest
+end
+
+local function hasTool(toolName)
+    return backpack:FindFirstChild(toolName) ~= nil
+end
+
+local function equipTool(toolName)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool.Parent = char
+        return true
+    end
+    return false
+end
+
+local function equipOnlyTool(toolName)
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = backpack
+        end
+    end
+    if hasTool(toolName) then
+        equipTool(toolName)
+        return true
+    else
+        StarterGui:SetCore("SendNotification", {
+            Title = "Error",
+            Text = "Tool "..toolName.." not found in backpack!",
+            Duration = 4
+        })
+        return false
+    end
+end
+
+local function useWebSlinger(targetPart)
+    if not targetPart then return end
+    local args = {Vector3.new(-481, -6, -64), targetPart}
+    pcall(function()
+        Event:FireServer(unpack(args))
+    end)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Shot",
+        Text = "Web Slinger fired!",
+        Duration = 5
+    })
+end
+
+local screen = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screen.Name = "ShootGUI"
+
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0,220,0,80)
+frame.Position = UDim2.new(0.5,-110,0.4,-40)
+frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
+title.Text = "Shoot Tool"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.Arcade
+title.TextScaled = true
+
+local shootBtn = Instance.new("TextButton", frame)
+shootBtn.Size = UDim2.new(0,180,0,36)
+shootBtn.Position = UDim2.new(0,20,0,40)
+shootBtn.Text = "SHOOT"
+shootBtn.BackgroundColor3 = Color3.fromRGB(150,30,30)
+shootBtn.TextColor3 = Color3.fromRGB(255,255,255)
+shootBtn.Font = Enum.Font.Arcade
+shootBtn.TextSize = 18
+Instance.new("UICorner", shootBtn).CornerRadius = UDim.new(0,8)
+
+shootBtn.MouseButton1Click:Connect(function()
+    local target = getNearestPlayer()
+    if target and target.Character then
+        shotTarget = target
+        if not equipOnlyTool("Web Slinger") then return end
+        local hand = shotTarget.Character:FindFirstChild("RightHand") or shotTarget.Character:FindFirstChild("LeftHand")
+        if not hand then
+            StarterGui:SetCore("SendNotification", {
+                Title = "Error",
+                Text = "Target hand not found!",
+                Duration = 5
+            })
+            return
+        end
+        useWebSlinger(hand)
+    else
+        StarterGui:SetCore("SendNotification", {
+            Title = "Error",
+            Text = "No player nearby found!",
+            Duration = 4
+        })
+    end
+end)

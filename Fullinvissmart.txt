@@ -1,0 +1,626 @@
+-- SMARTSCRIPT INVIS
+-- Full Invis System com Ragdoll, Freeze e 3rd Floor
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Configurações
+local fullInvisEnabled = false
+local speedEnabled = false
+local isProcessing = false
+local frozenParts = {}
+local originalCFrames = {}
+local ballSockets = {}
+local attachments = {}
+
+-- Variável global para controlar movimento
+local moveConnection = nil
+
+-- Variáveis para 3rd Floor
+local thirdFloorEnabled = false
+local thirdFloorPlatform = nil
+local thirdFloorConnection = nil
+local transparencyParts = {}
+
+-- Aplicar Desync automaticamente ao iniciar
+local function applyDesync()
+    -- FFlags para Desync
+    local FFlags = {
+        GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
+        LargeReplicatorWrite5 = true,
+        LargeReplicatorEnabled9 = true,
+        AngularVelociryLimit = 360,
+        TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646,
+        S2PhysicsSenderRate = 15000,
+        DisableDPIScale = true,
+        MaxDataPacketPerSend = 2147483647,
+        PhysicsSenderMaxBandwidthBps = 20000,
+        TimestepArbiterHumanoidLinearVelThreshold = 21,
+        MaxMissedWorldStepsRemembered = -2147483648,
+        PlayerHumanoidPropertyUpdateRestrict = true,
+        SimDefaultHumanoidTimestepMultiplier = 0,
+        StreamJobNOUVolumeLengthCap = 2147483647,
+        DebugSendDistInSteps = -2147483648,
+        GameNetDontSendRedundantNumTimes = 1,
+        CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 1,
+        CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 1,
+        LargeReplicatorSerializeRead3 = true,
+        ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 2147483647,
+        CheckPVCachedVelThresholdPercent = 10,
+        CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 1,
+        GameNetDontSendRedundantDeltaPositionMillionth = 1,
+        InterpolationFrameVelocityThresholdMillionth = 5,
+        StreamJobNOUVolumeCap = 2147483647,
+        InterpolationFrameRotVelocityThresholdMillionth = 5,
+        CheckPVCachedRotVelThresholdPercent = 10,
+        WorldStepMax = 30,
+        InterpolationFramePositionThresholdMillionth = 5,
+        TimestepArbiterHumanoidTurningVelThreshold = 1,
+        SimOwnedNOUCountThresholdMillionth = 2147483647,
+        GameNetPVHeaderLinearVelocityZeroCutoffExponent = -5000,
+        NextGenReplicatorEnabledWrite4 = true,
+        TimestepArbiterOmegaThou = 1073741823,
+        MaxAcceptableUpdateDelay = 1,
+        LargeReplicatorSerializeWrite4 = true
+    }
+
+    -- Aplicar FFlags
+    for name, value in pairs(FFlags) do
+        pcall(function()
+            if setfflag then
+                setfflag(tostring(name), tostring(value))
+            end
+        end)
+    end
+    
+    -- Função de respawn para desync
+    local function respawnar(plr)
+        local rcdEnabled, wasHidden = false, false
+        if getgenv().gethidden then
+            rcdEnabled = getgenv().gethidden(workspace, 'RejectCharacterDeletions') ~= Enum.RejectCharacterDeletions.Disabled
+        end
+
+        if rcdEnabled and getgenv().replicatesignal then
+            getgenv().replicatesignal(plr.ConnectDiedSignalBackend)
+            task.wait(Players.RespawnTime - 0.1)
+            getgenv().replicatesignal(plr.Kill)
+        else
+            local char = plr.Character
+            local hum = char:FindFirstChildWhichIsA('Humanoid')
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+            end
+            char:ClearAllChildren()
+            local newChar = Instance.new('Model')
+            newChar.Parent = workspace
+            plr.Character = newChar
+            task.wait()
+            plr.Character = char
+            newChar:Destroy()
+        end
+    end
+    
+    -- Aplicar respawn
+    respawnar(player)
+    
+    print("SMARTSCRIPT INVIS: Desync aplicado automaticamente!")
+end
+
+-- Aplicar Dessync automaticamente
+applyDesync()
+
+-- Criar GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SMARTSCRIPT_INVIS_Panel"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Frame Principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Bordas Arredondadas
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
+
+-- Borda Azul (SmartScript)
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 170, 255)
+stroke.Thickness = 3
+stroke.Parent = mainFrame
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -20, 0, 50)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "SMARTSCRIPT INVIS"
+title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.TextSize = 26
+title.Font = Enum.Font.SciFi
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.Parent = mainFrame
+
+-- Subtítulo
+local subtitle = Instance.new("TextLabel")
+subtitle.Name = "Subtitle"
+subtitle.Size = UDim2.new(1, -20, 0, 20)
+subtitle.Position = UDim2.new(0, 10, 0, 55)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Advanced Invisibility System"
+subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+subtitle.TextSize = 14
+subtitle.Font = Enum.Font.SourceSans
+subtitle.TextXAlignment = Enum.TextXAlignment.Center
+subtitle.Parent = mainFrame
+
+-- Botão Full Invis
+local invisButton = Instance.new("TextButton")
+invisButton.Name = "InvisButton"
+invisButton.Size = UDim2.new(0, 280, 0, 45)
+invisButton.Position = UDim2.new(0.5, -140, 0, 90)
+invisButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+invisButton.BorderSizePixel = 0
+invisButton.Text = "FULL INVIS: OFF"
+invisButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+invisButton.TextSize = 16
+invisButton.Font = Enum.Font.SciFi
+invisButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = invisButton
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(0, 170, 255)
+buttonStroke.Thickness = 2
+buttonStroke.Parent = invisButton
+
+-- Botão Speed
+local speedButton = Instance.new("TextButton")
+speedButton.Name = "SpeedButton"
+speedButton.Size = UDim2.new(0, 280, 0, 45)
+speedButton.Position = UDim2.new(0.5, -140, 0, 145)
+speedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+speedButton.BorderSizePixel = 0
+speedButton.Text = "SPEED: OFF"
+speedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedButton.TextSize = 16
+speedButton.Font = Enum.Font.SciFi
+speedButton.Parent = mainFrame
+
+local speedButtonCorner = Instance.new("UICorner")
+speedButtonCorner.CornerRadius = UDim.new(0, 10)
+speedButtonCorner.Parent = speedButton
+
+local speedButtonStroke = Instance.new("UIStroke")
+speedButtonStroke.Color = Color3.fromRGB(0, 170, 255)
+speedButtonStroke.Thickness = 2
+speedButtonStroke.Parent = speedButton
+
+-- Botão 3rd Floor
+local thirdFloorButton = Instance.new("TextButton")
+thirdFloorButton.Name = "ThirdFloorButton"
+thirdFloorButton.Size = UDim2.new(0, 280, 0, 45)
+thirdFloorButton.Position = UDim2.new(0.5, -140, 0, 200)
+thirdFloorButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+thirdFloorButton.BorderSizePixel = 0
+thirdFloorButton.Text = "3RD FLOOR: OFF"
+thirdFloorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+thirdFloorButton.TextSize = 16
+thirdFloorButton.Font = Enum.Font.SciFi
+thirdFloorButton.Parent = mainFrame
+
+local thirdFloorButtonCorner = Instance.new("UICorner")
+thirdFloorButtonCorner.CornerRadius = UDim.new(0, 10)
+thirdFloorButtonCorner.Parent = thirdFloorButton
+
+local thirdFloorButtonStroke = Instance.new("UIStroke")
+thirdFloorButtonStroke.Color = Color3.fromRGB(0, 170, 255)
+thirdFloorButtonStroke.Thickness = 2
+thirdFloorButtonStroke.Parent = thirdFloorButton
+
+-- Botão Desync (apenas informativo)
+local desyncButton = Instance.new("TextButton")
+desyncButton.Name = "DesyncButton"
+desyncButton.Size = UDim2.new(0, 280, 0, 45)
+desyncButton.Position = UDim2.new(0.5, -140, 0, 255)
+desyncButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+desyncButton.BorderSizePixel = 0
+desyncButton.Text = "DESYNC: ACTIVE"
+desyncButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+desyncButton.TextSize = 16
+desyncButton.Font = Enum.Font.SciFi
+desyncButton.Parent = mainFrame
+
+local desyncButtonCorner = Instance.new("UICorner")
+desyncButtonCorner.CornerRadius = UDim.new(0, 10)
+desyncButtonCorner.Parent = desyncButton
+
+local desyncButtonStroke = Instance.new("UIStroke")
+desyncButtonStroke.Color = Color3.fromRGB(0, 170, 255)
+desyncButtonStroke.Thickness = 2
+desyncButtonStroke.Parent = desyncButton
+
+-- Função para fazer partes caírem com física (sem Motor6D/Ragdoll)
+local function makePartsFall()
+    -- Salvar posições originais ANTES de cair
+    originalCFrames = {}
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") and part ~= hrp then
+            originalCFrames[part] = part.CFrame -- Salvar posição ANTES
+        end
+    end
+    
+    -- Criar WeldConstraints temporários para cada parte com HRP
+    local welds = {}
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") and part ~= hrp and part.Parent == character then
+            -- Remover conexões existentes
+            for _, child in pairs(part:GetChildren()) do
+                if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Ativar física
+            part.CanCollide = false
+            part.Massless = false
+            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+            
+            -- Aplicar força de gravidade artificial para simular queda
+            local bodyForce = Instance.new("BodyForce")
+            bodyForce.Force = Vector3.new(0, -part:GetMass() * 196.2, 0) -- Gravidade aumentada
+            bodyForce.Parent = part
+            table.insert(welds, bodyForce)
+            
+            -- Adicionar velocidade inicial aleatória para movimento natural
+            part.AssemblyLinearVelocity = Vector3.new(
+                math.random(-5, 5),
+                math.random(-10, 0),
+                math.random(-5, 5)
+            )
+        end
+    end
+    
+    humanoid.AutoRotate = false
+    humanoid.PlatformStand = true
+    
+    return welds
+end
+
+-- Função para fazer partes invisíveis PERMANENTEMENTE (PARTES DO MAPA SEM COLISÃO)
+local function makePartsInvisible(welds)
+    -- Remover BodyForces
+    for _, force in pairs(welds) do
+        if force and force.Parent then
+            force:Destroy()
+        end
+    end
+    
+    -- Tornar partes do WORKSPACE (MAPA) sem colisão invisíveis
+    local invisibleParts = {}
+    for _, part in pairs(workspace:GetDescendants()) do
+        -- Ignorar partes do personagem
+        if part:IsA("BasePart") and not part:IsDescendantOf(character) and part.CanCollide == false and part.Transparency < 0.95 then
+            part.Transparency = 1
+            table.insert(invisibleParts, part)
+        end
+    end
+    
+    -- Também processar MeshParts do mapa e remover texturas
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("MeshPart") and not part:IsDescendantOf(character) and part.CanCollide == false and part.Transparency < 0.95 then
+            part.TextureID = ""
+            part.Transparency = 1
+        end
+    end
+    
+    -- Tornar Decals e Textures invisíveis em partes do mapa sem colisão
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Parent and obj.Parent:IsA("BasePart") then
+            if not obj:IsDescendantOf(character) and obj.Parent.CanCollide == false and obj.Transparency < 0.95 then
+                obj.Transparency = 1
+            end
+        end
+    end
+    
+    print("SMARTSCRIPT INVIS: Tornando " .. #invisibleParts .. " partes do MAPA sem colisão invisíveis")
+end
+
+-- Função para restaurar humanoid (Motor6Ds continuam desabilitados)
+local function restoreHumanoid()
+    -- Restaurar humanoid
+    humanoid.AutoRotate = true
+    humanoid.Sit = false
+    humanoid.PlatformStand = false
+    
+    -- Motor6Ds permanecem desabilitados permanentemente
+    -- Partes continuam congeladas permanentemente
+end
+
+-- Função para criar e atualizar plataforma do 3rd Floor
+local function updateThirdFloor()
+    if not thirdFloorEnabled or not hrp or not hrp.Parent then
+        if thirdFloorPlatform then
+            thirdFloorPlatform:Destroy()
+            thirdFloorPlatform = nil
+        end
+        return
+    end
+    
+    -- Criar ou atualizar plataforma
+    if not thirdFloorPlatform then
+        thirdFloorPlatform = Instance.new("Part")
+        thirdFloorPlatform.Name = "SMARTSCRIPT_3rdFloor"
+        thirdFloorPlatform.Size = Vector3.new(15, 1, 15) -- Tamanho maior
+        thirdFloorPlatform.Transparency = 0.5
+        thirdFloorPlatform.Color = Color3.fromRGB(0, 170, 255) -- Azul SmartScript
+        thirdFloorPlatform.Material = Enum.Material.Neon
+        thirdFloorPlatform.Anchored = true
+        thirdFloorPlatform.CanCollide = true
+        thirdFloorPlatform.CastShadow = false
+        thirdFloorPlatform.Parent = workspace
+    end
+    
+    -- Posicionar plataforma 3 studs abaixo do HRP
+    local targetPosition = hrp.Position - Vector3.new(0, 3, 0)
+    thirdFloorPlatform.Position = Vector3.new(targetPosition.X, targetPosition.Y, targetPosition.Z)
+    
+    -- Tornar partes dentro de "Plots" transparentes
+    transparencyParts = {}
+    
+    -- Procurar por pastas chamadas "Plots" no workspace
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower() == "plots" and obj:IsA("Folder") then
+            -- Processar todos os descendentes da pasta Plots
+            for _, plotObj in pairs(obj:GetDescendants()) do
+                if plotObj:IsA("BasePart") then
+                    -- Salvar transparência original
+                    if not transparencyParts[plotObj] then
+                        transparencyParts[plotObj] = plotObj.Transparency
+                    end
+                    -- Aplicar transparência 0.5
+                    plotObj.Transparency = 0.5
+                end
+            end
+        end
+    end
+    
+    -- Aplicar transparência também a Decals e Textures dentro de Plots
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Parent then
+            -- Verificar se o parente está em um Plot
+            local parent = obj.Parent
+            while parent and parent ~= workspace do
+                if parent.Name:lower() == "plots" then
+                    if not transparencyParts[obj] then
+                        transparencyParts[obj] = obj.Transparency
+                    end
+                    obj.Transparency = 0.5
+                    break
+                end
+                parent = parent.Parent
+            end
+        end
+    end
+end
+
+-- Função para limpar transparência quando 3rd Floor for desativado
+local function cleanupThirdFloor()
+    if thirdFloorPlatform then
+        thirdFloorPlatform:Destroy()
+        thirdFloorPlatform = nil
+    end
+    
+    -- Restaurar transparência original das partes
+    for obj, originalTransparency in pairs(transparencyParts) do
+        if obj and obj.Parent then
+            pcall(function()
+                obj.Transparency = originalTransparency
+            end)
+        end
+    end
+    
+    transparencyParts = {}
+    
+    if thirdFloorConnection then
+        thirdFloorConnection:Disconnect()
+        thirdFloorConnection = nil
+    end
+end
+
+-- Sistema de movimento personalizado
+local function customMovement()
+    -- Desconectar conexão anterior se existir
+    if moveConnection then
+        moveConnection:Disconnect()
+        moveConnection = nil
+    end
+    
+    if speedEnabled then
+        -- Criar nova conexão que continua indefinidamente
+        moveConnection = RunService.Heartbeat:Connect(function()
+            if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0 then
+                local moveDir = humanoid.MoveDirection
+                -- Speed de 28.3 usando Velocity
+                local newVelocity = Vector3.new(moveDir.X * 28.3, hrp.Velocity.Y, moveDir.Z * 28.3)
+                hrp.AssemblyLinearVelocity = newVelocity
+            end
+        end)
+    end
+end
+
+-- Sistema de detecção de ProximityPrompt
+local function setupProximityPromptDetection()
+    local connection
+    
+    connection = ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, playerWhoTriggered)
+        if playerWhoTriggered == player and fullInvisEnabled and not isProcessing then
+            isProcessing = true
+            
+            -- Atualizar referências do personagem
+            character = player.Character or player.CharacterAdded:Wait()
+            humanoid = character:WaitForChild("Humanoid")
+            hrp = character:WaitForChild("HumanoidRootPart")
+            
+            -- 1. Fazer partes caírem com física (sem Motor6D/Ragdoll)
+            local welds = makePartsFall()
+            
+            -- 2. Após 2 segundos, tornar partes sem colisão do MAPA invisíveis PERMANENTEMENTE
+            task.wait(2)
+            makePartsInvisible(welds)
+            
+            -- 3. Após 3 segundos adicionais (total 5s), restaurar humanoid
+            task.wait(3)
+            restoreHumanoid()
+            
+            isProcessing = false
+        end
+    end)
+    
+    return connection
+end
+
+local proximityConnection = nil
+
+-- Toggle do botão Full Invis
+invisButton.MouseButton1Click:Connect(function()
+    fullInvisEnabled = not fullInvisEnabled
+    
+    if fullInvisEnabled then
+        invisButton.Text = "FULL INVIS: ON"
+        invisButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+        proximityConnection = setupProximityPromptDetection()
+    else
+        invisButton.Text = "FULL INVIS: OFF"
+        invisButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        if proximityConnection then
+            proximityConnection:Disconnect()
+            proximityConnection = nil
+        end
+    end
+end)
+
+-- Toggle do botão Speed
+speedButton.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    
+    if speedEnabled then
+        speedButton.Text = "SPEED: ON"
+        speedButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+        customMovement()
+    else
+        speedButton.Text = "SPEED: OFF"
+        speedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        if moveConnection then
+            moveConnection:Disconnect()
+            moveConnection = nil
+        end
+    end
+end)
+
+-- Toggle do botão 3rd Floor
+thirdFloorButton.MouseButton1Click:Connect(function()
+    thirdFloorEnabled = not thirdFloorEnabled
+    
+    if thirdFloorEnabled then
+        thirdFloorButton.Text = "3RD FLOOR: ON"
+        thirdFloorButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+        
+        -- Criar conexão para atualizar a plataforma a cada frame
+        if thirdFloorConnection then
+            thirdFloorConnection:Disconnect()
+        end
+        
+        thirdFloorConnection = RunService.Heartbeat:Connect(function()
+            updateThirdFloor()
+        end)
+    else
+        thirdFloorButton.Text = "3RD FLOOR: OFF"
+        thirdFloorButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        cleanupThirdFloor()
+    end
+end)
+
+-- Botão Desync não é mais toggle, apenas informativo
+desyncButton.MouseButton1Click:Connect(function()
+    -- Apenas mostrar mensagem informativa
+    print("SMARTSCRIPT INVIS: Desync já está ativo desde o início!")
+    -- Pequeno efeito visual
+    desyncButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    task.wait(0.1)
+    desyncButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+end)
+
+-- Limpar recursos quando o personagem morrer
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoid = character:WaitForChild("Humanoid")
+    hrp = character:WaitForChild("HumanoidRootPart")
+    
+    -- Reativar recursos se estiverem ligados
+    if speedEnabled then
+        customMovement()
+    end
+    
+    if thirdFloorEnabled then
+        if thirdFloorConnection then
+            thirdFloorConnection:Disconnect()
+        end
+        thirdFloorConnection = RunService.Heartbeat:Connect(function()
+            updateThirdFloor()
+        end)
+    end
+end)
+
+-- Limpar recursos quando o script for encerrado
+game:GetService("Players").PlayerRemoving:Connect(function(leavingPlayer)
+    if leavingPlayer == player then
+        cleanupThirdFloor()
+        if moveConnection then
+            moveConnection:Disconnect()
+        end
+        if proximityConnection then
+            proximityConnection:Disconnect()
+        end
+    end
+end)
+
+-- Responsividade mobile
+if UserInputService.TouchEnabled then
+    mainFrame.Size = UDim2.new(0, 300, 0, 290)
+    mainFrame.Position = UDim2.new(0.5, -150, 0.5, -145)
+    invisButton.Size = UDim2.new(0, 260, 0, 45)
+    invisButton.Position = UDim2.new(0.5, -130, 0, 80)
+    speedButton.Size = UDim2.new(0, 260, 0, 45)
+    speedButton.Position = UDim2.new(0.5, -130, 0, 135)
+    thirdFloorButton.Size = UDim2.new(0, 260, 0, 45)
+    thirdFloorButton.Position = UDim2.new(0.5, -130, 0, 190)
+    desyncButton.Size = UDim2.new(0, 260, 0, 45)
+    desyncButton.Position = UDim2.new(0.5, -130, 0, 245)
+end
+
+print("========================================")
+print("SMARTSCRIPT INVIS carregado com sucesso!")
+print("Desync ativo automaticamente")
+print("Features: Full Invis, Speed, 3rd Floor")
+print("========================================")

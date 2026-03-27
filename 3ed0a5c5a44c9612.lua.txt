@@ -1,0 +1,2206 @@
+-- ts file was generated at discord.gg/25ms
+
+
+OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/VerbalHubz/Verbal-Hub/refs/heads/main/Orion%20Hub%20Ui", true))()
+Window = OrionLib:MakeWindow({
+    Name = "Verbal Hub Sigma BSS",
+    HidePremium = false,
+    SaveConfig = true,
+    IntroEnabled = true,
+    IntroText = "Welcome To Verbal Sigma Hub BSS",
+    IntroIcon = "rbxassetid://71946192211091",
+    ConfigFolder = "Verbal Config"
+})
+local v1 = game:GetService("ReplicatedStorage")
+local v2 = game:GetService("Workspace")
+game:GetService("Players")
+local vu3 = {
+    ToolCollect = v1.Events.ToolCollect,
+    ToyEvent = v1.Events.ToyEvent,
+    PlayerHiveCommand = v1.Events.PlayerHiveCommand,
+    ClaimHive = v1.Events.ClaimHive
+}
+local vu4 = {
+    HiddenStickers = v2.HiddenStickers,
+    Collectibles = v2.Collectibles
+}
+local vu5 = {
+    AutoDig = false,
+    CollectHiddenStickers = false
+}
+task.spawn(function()
+    while true do
+        if vu5.CollectHiddenStickers then
+            local v6, v7, v8 = vu4.HiddenStickers:GetChildren()
+            while true do
+                local v9
+                v8, v9 = v6(v7, v8)
+                if v8 == nil then
+                    break
+                end
+                fireclickdetector(v9.ClickDetector)
+            end
+        end
+        task.wait(1)
+        if false then
+            return
+        end
+    end
+end)
+local v10 = Window:MakeTab({
+    Name = "Farm",
+    Icon = "rbxassetid://18100081635",
+    PremiumOnly = false
+})
+local v11 = Window:MakeTab({
+    Name = "Event",
+    Icon = "rbxassetid://13518130183",
+    PremiumOnly = false
+})
+local v12 = Window:MakeTab({
+    Name = "Mobs",
+    Icon = "rbxassetid://13611590943",
+    PremiumOnly = false
+})
+local v13 = Window:MakeTab({
+    Name = "Items",
+    Icon = "rbxassetid://6146562015",
+    PremiumOnly = false
+})
+local vu14 = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://11162756258",
+    PremiumOnly = false
+})
+local v15 = Window:MakeTab({
+    Name = "Extra",
+    Icon = "rbxassetid://15928997778",
+    PremiumOnly = false
+})
+Window:MakeTab({
+    Name = "Settings",
+    Icon = "rbxassetid://8382597378",
+    PremiumOnly = false
+}):AddBind({
+    Name = "Toggle Gui",
+    Default = Enum.KeyCode.M,
+    Hold = false,
+    Callback = function()
+        if game.CoreGui.Orion.Enabled ~= true then
+            if game.CoreGui.Orion.Enabled == false then
+                game.CoreGui.Orion.Enabled = true
+            end
+        else
+            game.CoreGui.Orion.Enabled = false
+        end
+    end
+})
+v10:AddSection({
+    Name = "Farm"
+})
+local vu16 = 86400
+local vu17 = false
+v10:AddButton({
+    Name = "Find All Stickers",
+    Callback = function()
+        if vu17 then
+            OrionLib:MakeNotification({
+                Name = "Cooldown",
+                Content = "You need to wait another day. You\'ve already collected all your stickers!",
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
+        else
+            local v18, v19, v20 = ipairs(workspace.HiddenStickers:GetDescendants())
+            local vu21 = 0
+            while true do
+                local vu22
+                v20, vu22 = v18(v19, v20)
+                if v20 == nil then
+                    break
+                end
+                if vu22:IsA("ClickDetector") then
+                    task.spawn(function()
+                        fireclickdetector(vu22)
+                        vu21 = vu21 + 1
+                    end)
+                end
+            end
+            OrionLib:MakeNotification({
+                Name = "Stickers Collected",
+                Content = "You collected " .. vu21 .. " stickers!",
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
+            vu17 = true
+            task.delay(5, function()
+                OrionLib:MakeNotification({
+                    Name = "Limit Reached",
+                    Content = "Stickers are limited! You need to wait until tomorrow to collect more.",
+                    Image = "rbxassetid://4483345998",
+                    Time = 10
+                })
+            end)
+            task.delay(vu16, function()
+                vu17 = false
+                OrionLib:MakeNotification({
+                    Name = "Cooldown Finished",
+                    Content = "You can now collect stickers again!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+            end)
+        end
+    end
+})
+v10:AddButton({
+    Name = "Redeem All Codes",
+    Callback = function()
+        local vu23 = {
+            "Octobersmas",
+            "15MMembers",
+            "38217",
+            "BeesBuzz123",
+            "ClubBean",
+            "Bopmaster",
+            "Connoisseur",
+            "Crawlers",
+            "Nectar",
+            "Roof",
+            "Wax"
+        };
+        (function()
+            local v24 = game:GetService("ReplicatedStorage").Events.PromoCodeEvent
+            local v25, v26, v27 = pairs(vu23)
+            while true do
+                local v28
+                v27, v28 = v25(v26, v27)
+                if v27 == nil then
+                    break
+                end
+                v24:FireServer(v28)
+                print("Attempting to redeem code:", v28)
+                wait(1)
+            end
+            OrionLib:MakeNotification({
+                Name = "Codes Redeemed",
+                Content = "You have already redeemed these codes or they have been redeemed.",
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
+        end)()
+    end
+})
+v10:AddToggle({
+    Name = "Auto Dig",
+    Default = false,
+    Callback = function(p29)
+        vu5.AutoDig = p29
+        if p29 then
+            startAutoDig()
+        end
+    end
+})
+function startAutoDig()
+    spawn(function()
+        while true do
+            if vu5.AutoDig then
+                vu3.ToolCollect:FireServer()
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+vu5.AutoDig = false
+local vu30 = ""
+local vu31 = "Tween"
+v10:AddDropdown({
+    Name = "Select Field",
+    Default = "BamBoo Field",
+    Options = {
+        "BamBoo Field",
+        "Blue Field",
+        "Cactus Field",
+        "Clover Field",
+        "Coconut Field",
+        "Dandelion Field",
+        "Stump Field",
+        "MountainTop Field",
+        "Mushroom Field",
+        "Pepper Patch",
+        "Pineapple Field",
+        "PineTree Field",
+        "Pumpkin Field",
+        "Rose Field",
+        "Spider Field",
+        "StrawBerry Field",
+        "Sunflower Field"
+    },
+    Callback = function(p32)
+        vu30 = p32
+    end
+})
+v10:AddDropdown({
+    Name = "Select Farm Mode",
+    Default = "Tween",
+    Options = {
+        "Tween",
+        "TweenFast",
+        "Walk"
+    },
+    Callback = function(p33)
+        vu31 = p33
+    end
+})
+shared.farmFlames = false
+shared.farmBubbles = false
+shared.farmStars = false
+shared.farmBalloons = false
+v10:AddToggle({
+    Name = "Farm Flames",
+    Default = false,
+    Callback = function(p34)
+        shared.farmFlames = p34
+    end
+})
+v10:AddToggle({
+    Name = "Farm Bubbles",
+    Default = false,
+    Callback = function(p35)
+        shared.farmBubbles = p35
+    end
+})
+v10:AddToggle({
+    Name = "Farm Stars",
+    Default = false,
+    Callback = function(p36)
+        shared.farmStars = p36
+    end
+})
+v10:AddToggle({
+    Name = "Farm Balloons",
+    Default = false,
+    Callback = function(p37)
+        shared.farmBalloons = p37
+    end
+})
+v10:AddToggle({
+    Name = "Auto Farm",
+    Default = false,
+    Callback = function(p38)
+        if p38 then
+            if vu31 ~= "Tween" then
+                if vu31 ~= "TweenFast" then
+                    if vu31 == "Walk" then
+                        shared.a13 = true
+                        startWalkFarm()
+                    end
+                else
+                    shared.a12 = true
+                    startTweenFastFarm()
+                end
+            else
+                shared.a11 = true
+                startTweenFarm()
+            end
+        else
+            shared.a11 = false
+            shared.a12 = false
+            shared.a13 = false
+        end
+    end
+})
+local function vu41(p39, p40)
+    return (p39 - p40).Magnitude <= 40
+end
+local function vu50(p42)
+    local v43 = math.huge
+    local v44, v45, v46 = pairs(workspace.PlayerFlames:GetChildren())
+    local v47 = nil
+    while true do
+        local v48
+        v46, v48 = v44(v45, v46)
+        if v46 == nil then
+            break
+        end
+        local v49 = (v48.Position - p42).Magnitude
+        if v49 < v43 then
+            v47 = v48
+            v43 = v49
+        end
+    end
+    return v47
+end
+local function vu59(p51)
+    local v52 = math.huge
+    local v53, v54, v55 = pairs(workspace.Particles:GetChildren())
+    local v56 = nil
+    while true do
+        local v57
+        v55, v57 = v53(v54, v55)
+        if v55 == nil then
+            break
+        end
+        if v57.Name == "Bubble" and v57:IsA("Part") then
+            local v58 = (v57.Position - p51).Magnitude
+            if v58 < v52 then
+                v56 = v57
+                v52 = v58
+            end
+        end
+    end
+    return v56
+end
+local function vu68(p60)
+    local v61 = math.huge
+    local v62, v63, v64 = pairs(workspace.Particles:GetChildren())
+    local v65 = nil
+    while true do
+        local v66
+        v64, v66 = v62(v63, v64)
+        if v64 == nil then
+            break
+        end
+        if v66.Name == "Star" and v66:IsA("Part") then
+            local v67 = (v66.Position - p60).Magnitude
+            if v67 < v61 then
+                v65 = v66
+                v61 = v67
+            end
+        end
+    end
+    return v65
+end
+local function vu79(p69)
+    local v70 = math.huge
+    local v71, v72, v73 = pairs(workspace.Balloons.FieldBalloons:GetChildren())
+    local v74 = nil
+    local v75 = nil
+    while true do
+        local v76
+        v73, v76 = v71(v72, v73)
+        if v73 == nil then
+            break
+        end
+        local v77 = v76:FindFirstChild("BalloonBody")
+        if v77 then
+            local v78 = (v77.Position - p69).Magnitude
+            if v78 <= 40 and v78 < v70 then
+                v75 = v77.Position
+                v74 = v77
+                v70 = v78
+            end
+        end
+    end
+    return v74, v75
+end
+function startTweenFarm()
+    spawn(function()
+        local vu80 = {
+            ["BamBoo Field"] = CFrame.new(93, 20, - 25),
+            ["Blue Field"] = CFrame.new(113.7, 4, 101.5),
+            ["Cactus Field"] = CFrame.new(- 194, 68, - 107),
+            ["Clover Field"] = CFrame.new(174, 34, 189),
+            ["Coconut Field"] = CFrame.new(- 255, 72, 459),
+            ["Dandelion Field"] = CFrame.new(- 30, 4, 225),
+            ["Stump Field"] = CFrame.new(420, 117, - 178),
+            ["MountainTop Field"] = CFrame.new(76, 176, - 181),
+            ["Mushroom Field"] = CFrame.new(- 91, 4, 116),
+            ["Pepper Patch"] = CFrame.new(- 486, 124, 517),
+            ["Pineapple Field"] = CFrame.new(262, 68, - 201),
+            ["PineTree Field"] = CFrame.new(- 338, 69, - 180),
+            ["Pumpkin Field"] = CFrame.new(- 186, 68.5, - 194),
+            ["Rose Field"] = CFrame.new(- 322, 20, 124),
+            ["Spider Field"] = CFrame.new(- 57.2, 20, - 5.3),
+            ["StrawBerry Field"] = CFrame.new(- 179, 20, - 14),
+            ["Sunflower Field"] = CFrame.new(- 208, 4, 185)
+        }
+        local function vu82()
+            local v81 = vu80[vu30]
+            if v81 then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v81
+            end
+        end
+        vu82()
+        game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Died:Connect(function()
+            if shared.a11 then
+                wait(5)
+                vu82()
+            end
+        end)
+        local v83 = vu80
+        while shared.a11 do
+            local v84 = game.Players.LocalPlayer
+            local v85 = game:GetService("TweenService")
+            local v86 = TweenInfo.new(0.4)
+            local v87 = v84.Character.HumanoidRootPart.Position
+            local v88 = v83[vu30]
+            if (v87 - v88.Position).Magnitude > 40 then
+                v84.Character.HumanoidRootPart.CFrame = v88
+            end
+            local v89 = vu50(v87)
+            local v90 = vu59(v87)
+            local v91 = vu68(v87)
+            local v92, v93 = vu79(v87)
+            if shared.farmFlames and (v89 and vu41(v89.Position, v88.Position)) then
+                local v94 = v89.Position
+                local v95 = {
+                    CFrame = CFrame.new(v94.X, v84.Character.HumanoidRootPart.Position.Y, v94.Z)
+                }
+                local v96 = v85:Create(v84.Character.HumanoidRootPart, v86, v95)
+                v96:Play()
+                v96.Completed:Wait()
+            elseif shared.farmBubbles and (v90 and vu41(v90.Position, v88.Position)) then
+                local v97 = v90.Position
+                local v98 = {
+                    CFrame = CFrame.new(v97.X, v84.Character.HumanoidRootPart.Position.Y, v97.Z)
+                }
+                local v99 = v85:Create(v84.Character.HumanoidRootPart, v86, v98)
+                v99:Play()
+                v99.Completed:Wait()
+            elseif shared.farmStars and (v91 and vu41(v91.Position, v88.Position)) then
+                local v100 = v91.Position
+                local v101 = {
+                    CFrame = CFrame.new(v100.X, v84.Character.HumanoidRootPart.Position.Y, v100.Z)
+                }
+                local v102 = v85:Create(v84.Character.HumanoidRootPart, v86, v101)
+                v102:Play()
+                v102.Completed:Wait()
+            elseif shared.farmBalloons and (v92 and v93) then
+                local v103, v104, v105 = pairs(workspace.Collectibles:GetChildren())
+                local v106 = 10
+                local v107 = {}
+                while true do
+                    local v108
+                    v105, v108 = v103(v104, v105)
+                    if v105 == nil then
+                        break
+                    end
+                    if v108.Transparency == 0 and (v108.Position - v93).Magnitude <= v106 then
+                        table.insert(v107, v108)
+                    end
+                end
+                if # v107 <= 0 then
+                    local v109 = math.random() * math.pi * 2
+                    local v110 = math.random() * v106
+                    local v111 = math.cos(v109) * v110
+                    local v112 = math.sin(v109) * v110
+                    local v113 = Vector3.new(v93.X + v111, v84.Character.HumanoidRootPart.Position.Y, v93.Z + v112)
+                    local v114 = {
+                        CFrame = CFrame.new(v113)
+                    }
+                    local v115 = v85:Create(v84.Character.HumanoidRootPart, v86, v114)
+                    v115:Play()
+                    v115.Completed:Wait()
+                else
+                    local v116, v117, v118 = ipairs(v107)
+                    while true do
+                        local v119
+                        v118, v119 = v116(v117, v118)
+                        if v118 == nil then
+                            break
+                        end
+                        local v120 = v119.Position
+                        local v121 = {
+                            CFrame = CFrame.new(v120.X, v84.Character.HumanoidRootPart.Position.Y, v120.Z)
+                        }
+                        local v122 = v85:Create(v84.Character.HumanoidRootPart, v86, v121)
+                        v122:Play()
+                        v122.Completed:Wait()
+                    end
+                end
+            else
+                local v123, v124, v125 = pairs(workspace.Collectibles:GetChildren())
+                while true do
+                    local v126
+                    v125, v126 = v123(v124, v125)
+                    if v125 == nil then
+                        break
+                    end
+                    local v127 = (v126.Position - v87).Magnitude
+                    if v126.Transparency == 0 and v127 <= 40 then
+                        local v128 = v126.Position
+                        if (v128 - v88.Position).Magnitude <= 40 then
+                            local v129 = v128.X
+                            local v130 = v128.Z
+                            local v131 = {
+                                CFrame = CFrame.new(v129, v84.Character.HumanoidRootPart.Position.Y, v130)
+                            }
+                            v85:Create(v84.Character.HumanoidRootPart, v86, v131):Play()
+                        end
+                    end
+                end
+            end
+            task.wait(0.5)
+        end
+    end)
+end
+function startTweenFastFarm()
+    spawn(function()
+        local vu132 = {
+            ["BamBoo Field"] = CFrame.new(93, 20, - 25),
+            ["Blue Field"] = CFrame.new(113.7, 4, 101.5),
+            ["Cactus Field"] = CFrame.new(- 194, 68, - 107),
+            ["Clover Field"] = CFrame.new(174, 34, 189),
+            ["Coconut Field"] = CFrame.new(- 255, 72, 459),
+            ["Dandelion Field"] = CFrame.new(- 30, 4, 225),
+            ["Stump Field"] = CFrame.new(420, 117, - 178),
+            ["MountainTop Field"] = CFrame.new(76, 176, - 181),
+            ["Mushroom Field"] = CFrame.new(- 91, 4, 116),
+            ["Pepper Patch"] = CFrame.new(- 486, 124, 517),
+            ["Pineapple Field"] = CFrame.new(262, 68, - 201),
+            ["PineTree Field"] = CFrame.new(- 338, 69, - 180),
+            ["Pumpkin Field"] = CFrame.new(- 186, 68.5, - 194),
+            ["Rose Field"] = CFrame.new(- 322, 20, 124),
+            ["Spider Field"] = CFrame.new(- 57.2, 20, - 5.3),
+            ["StrawBerry Field"] = CFrame.new(- 179, 20, - 14),
+            ["Sunflower Field"] = CFrame.new(- 208, 4, 185)
+        }
+        local function vu134()
+            local v133 = vu132[vu30]
+            if v133 then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v133
+            end
+        end
+        vu134()
+        game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Died:Connect(function()
+            if shared.a12 then
+                wait(5)
+                vu134()
+            end
+        end)
+        local v135 = vu132
+        while shared.a12 do
+            local v136 = game.Players.LocalPlayer
+            local v137 = game:GetService("TweenService")
+            local v138 = TweenInfo.new(0.1)
+            local v139 = v136.Character.HumanoidRootPart.Position
+            local v140 = v135[vu30]
+            if (v139 - v140.Position).Magnitude > 40 then
+                v136.Character.HumanoidRootPart.CFrame = v140
+            end
+            local v141 = vu50(v139)
+            local v142 = vu59(v139)
+            local v143 = vu68(v139)
+            local v144, v145 = vu79(v139)
+            if shared.farmFlames and (v141 and vu41(v141.Position, v140.Position)) then
+                local v146 = v141.Position
+                local v147 = {
+                    CFrame = CFrame.new(v146.X, v136.Character.HumanoidRootPart.Position.Y, v146.Z)
+                }
+                local v148 = v137:Create(v136.Character.HumanoidRootPart, v138, v147)
+                v148:Play()
+                v148.Completed:Wait()
+            elseif shared.farmBubbles and (v142 and vu41(v142.Position, v140.Position)) then
+                local v149 = v142.Position
+                local v150 = {
+                    CFrame = CFrame.new(v149.X, v136.Character.HumanoidRootPart.Position.Y, v149.Z)
+                }
+                local v151 = v137:Create(v136.Character.HumanoidRootPart, v138, v150)
+                v151:Play()
+                v151.Completed:Wait()
+            elseif shared.farmStars and (v143 and vu41(v143.Position, v140.Position)) then
+                local v152 = v143.Position
+                local v153 = {
+                    CFrame = CFrame.new(v152.X, v136.Character.HumanoidRootPart.Position.Y, v152.Z)
+                }
+                local v154 = v137:Create(v136.Character.HumanoidRootPart, v138, v153)
+                v154:Play()
+                v154.Completed:Wait()
+            elseif shared.farmBalloons and (v144 and v145) then
+                local v155, v156, v157 = pairs(workspace.Collectibles:GetChildren())
+                local v158 = 10
+                local v159 = {}
+                while true do
+                    local v160
+                    v157, v160 = v155(v156, v157)
+                    if v157 == nil then
+                        break
+                    end
+                    if v160.Transparency == 0 and (v160.Position - v145).Magnitude <= v158 then
+                        table.insert(v159, v160)
+                    end
+                end
+                if # v159 <= 0 then
+                    local v161 = math.random() * math.pi * 2
+                    local v162 = math.random() * v158
+                    local v163 = math.cos(v161) * v162
+                    local v164 = math.sin(v161) * v162
+                    local v165 = Vector3.new(v145.X + v163, v136.Character.HumanoidRootPart.Position.Y, v145.Z + v164)
+                    local v166 = {
+                        CFrame = CFrame.new(v165)
+                    }
+                    local v167 = v137:Create(v136.Character.HumanoidRootPart, v138, v166)
+                    v167:Play()
+                    v167.Completed:Wait()
+                else
+                    local v168, v169, v170 = ipairs(v159)
+                    while true do
+                        local v171
+                        v170, v171 = v168(v169, v170)
+                        if v170 == nil then
+                            break
+                        end
+                        local v172 = v171.Position
+                        local v173 = {
+                            CFrame = CFrame.new(v172.X, v136.Character.HumanoidRootPart.Position.Y, v172.Z)
+                        }
+                        local v174 = v137:Create(v136.Character.HumanoidRootPart, v138, v173)
+                        v174:Play()
+                        v174.Completed:Wait()
+                    end
+                end
+            else
+                local v175, v176, v177 = pairs(workspace.Collectibles:GetChildren())
+                while true do
+                    local v178
+                    v177, v178 = v175(v176, v177)
+                    if v177 == nil then
+                        break
+                    end
+                    local v179 = (v178.Position - v139).Magnitude
+                    if v178.Transparency == 0 and v179 <= 40 then
+                        local v180 = v178.Position
+                        if (v180 - v140.Position).Magnitude <= 40 then
+                            local v181 = v180.X
+                            local v182 = v180.Z
+                            local v183 = {
+                                CFrame = CFrame.new(v181, v136.Character.HumanoidRootPart.Position.Y, v182)
+                            }
+                            v137:Create(v136.Character.HumanoidRootPart, v138, v183):Play()
+                        end
+                    end
+                end
+            end
+            task.wait(0.2)
+        end
+    end)
+end
+function startWalkFarm()
+    spawn(function()
+        local vu184 = {
+            ["BamBoo Field"] = CFrame.new(93, 20, - 25),
+            ["Blue Field"] = CFrame.new(113.7, 4, 101.5),
+            ["Cactus Field"] = CFrame.new(- 194, 68, - 107),
+            ["Clover Field"] = CFrame.new(174, 34, 189),
+            ["Coconut Field"] = CFrame.new(- 255, 72, 459),
+            ["Dandelion Field"] = CFrame.new(- 30, 4, 225),
+            ["Stump Field"] = CFrame.new(420, 117, - 178),
+            ["MountainTop Field"] = CFrame.new(76, 176, - 181),
+            ["Mushroom Field"] = CFrame.new(- 91, 4, 116),
+            ["Pepper Patch"] = CFrame.new(- 486, 124, 517),
+            ["Pineapple Field"] = CFrame.new(262, 68, - 201),
+            ["PineTree Field"] = CFrame.new(- 338, 69, - 180),
+            ["Pumpkin Field"] = CFrame.new(- 186, 68.5, - 194),
+            ["Rose Field"] = CFrame.new(- 322, 20, 124),
+            ["Spider Field"] = CFrame.new(- 57.2, 20, - 5.3),
+            ["StrawBerry Field"] = CFrame.new(- 179, 20, - 14),
+            ["Sunflower Field"] = CFrame.new(- 208, 4, 185)
+        }
+        local function vu186()
+            local v185 = vu184[vu30]
+            if v185 then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v185
+            end
+        end
+        vu186()
+        game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Died:Connect(function()
+            if shared.a13 then
+                wait(5)
+                vu186()
+            end
+        end)
+        local v187 = vu184
+        while shared.a13 do
+            local v188 = game.Players.LocalPlayer.Character
+            local v189 = v188:FindFirstChild("Humanoid")
+            local v190 = v188.HumanoidRootPart.Position
+            local v191 = v187[vu30]
+            if (v190 - v191.Position).Magnitude > 40 then
+                v188.HumanoidRootPart.CFrame = v191
+            end
+            local v192 = vu50(v190)
+            local v193 = vu59(v190)
+            local v194 = vu68(v190)
+            local v195, v196 = vu79(v190)
+            if shared.farmFlames and (v192 and vu41(v192.Position, v191.Position)) then
+                v189:MoveTo(Vector3.new(v192.Position.X, v188.HumanoidRootPart.Position.Y, v192.Position.Z))
+                v189.MoveToFinished:Wait()
+            elseif shared.farmBubbles and (v193 and vu41(v193.Position, v191.Position)) then
+                v189:MoveTo(Vector3.new(v193.Position.X, v188.HumanoidRootPart.Position.Y, v193.Position.Z))
+                v189.MoveToFinished:Wait()
+            elseif shared.farmStars and (v194 and vu41(v194.Position, v191.Position)) then
+                v189:MoveTo(Vector3.new(v194.Position.X, v188.HumanoidRootPart.Position.Y, v194.Position.Z))
+                v189.MoveToFinished:Wait()
+            elseif shared.farmBalloons and (v195 and v196) then
+                local v197, v198, v199 = pairs(workspace.Collectibles:GetChildren())
+                local v200 = 10
+                local v201 = {}
+                while true do
+                    local v202
+                    v199, v202 = v197(v198, v199)
+                    if v199 == nil then
+                        break
+                    end
+                    if v202.Transparency == 0 and (v202.Position - v196).Magnitude <= v200 then
+                        table.insert(v201, v202)
+                    end
+                end
+                if # v201 <= 0 then
+                    local v203 = math.random() * math.pi * 2
+                    local v204 = math.random() * v200
+                    local v205 = math.cos(v203) * v204
+                    local v206 = math.sin(v203) * v204
+                    v189:MoveTo((Vector3.new(v196.X + v205, v188.HumanoidRootPart.Position.Y, v196.Z + v206)))
+                    v189.MoveToFinished:Wait()
+                else
+                    local v207, v208, v209 = ipairs(v201)
+                    while true do
+                        local v210
+                        v209, v210 = v207(v208, v209)
+                        if v209 == nil then
+                            break
+                        end
+                        v189:MoveTo(Vector3.new(v210.Position.X, v188.HumanoidRootPart.Position.Y, v210.Position.Z))
+                        v189.MoveToFinished:Wait()
+                    end
+                end
+            else
+                local v211, v212, v213 = pairs(workspace.Collectibles:GetChildren())
+                while true do
+                    local v214
+                    v213, v214 = v211(v212, v213)
+                    if v213 == nil then
+                        break
+                    end
+                    local v215 = (v214.Position - v190).Magnitude
+                    if v214.Transparency == 0 and v215 <= 40 then
+                        local v216 = v214.Position
+                        if (v216 - v191.Position).Magnitude <= 40 then
+                            v189:MoveTo(Vector3.new(v216.X, v188.HumanoidRootPart.Position.Y, v216.Z))
+                            v189.MoveToFinished:Wait()
+                        end
+                    end
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+v10:AddToggle({
+    Name = "Auto Sell",
+    Default = false,
+    Callback = function(p217)
+        shared.autoSell = p217
+        if shared.autoSell then
+            spawn(function()
+                while true do
+                    if not shared.autoSell then
+                        return
+                    end
+                    local v218 = game.Players.LocalPlayer
+                    local v219 = v218.CoreStats.Capacity.Value
+                    if v218.CoreStats.Pollen.Value >= v219 * 0.99 then
+                        break
+                    end
+                    task.wait(8)
+                end
+                local v220 = v218.Character.HumanoidRootPart.CFrame
+                local v221 = shared.a11 or (shared.a12 or shared.a13)
+                local v222 = tostring(v218.Honeycomb.Value)
+                local v223 = shared
+                local v224 = shared
+                shared.a13 = false
+                v224.a12 = false
+                v223.a11 = false
+                for _ = 1, 5 do
+                    v218.Character.HumanoidRootPart.CFrame = workspace.Honeycombs[v222].LightHolder.CFrame * CFrame.new(0, 5, - 5)
+                    task.wait(0.1)
+                end
+                while true do
+                    if v218.PlayerGui.ScreenGui.ActivateButton.TextBox.Text == "Make Honey" then
+                        game.ReplicatedStorage.Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking")
+                    end
+                    task.wait()
+                    if v218.CoreStats.Pollen.Value == 0 or not shared.autoSell then
+                        if shared.autoSell then
+                            if v221 then
+                                if vu31 ~= "Tween" then
+                                    if vu31 ~= "TweenFast" then
+                                        if vu31 == "Walk" then
+                                            shared.a13 = true
+                                            startWalkFarm()
+                                        end
+                                    else
+                                        shared.a12 = true
+                                        startTweenFastFarm()
+                                    end
+                                else
+                                    shared.a11 = true
+                                    startTweenFarm()
+                                end
+                            else
+                                v218.Character.HumanoidRootPart.CFrame = v220
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+v10:AddSection({
+    Name = "Other"
+})
+v10:AddToggle({
+    Name = "Auto Use Micro-Converter",
+    Default = false,
+    Callback = function(p225)
+        getgenv().turnoff4 = p225
+        while turnoff4 == true do
+            local v226 = game:GetService("Players").LocalPlayer
+            local v227 = v226.Character:FindFirstChild("ProgressLabel", true)
+            local v228 = tonumber(v227.Text:match("%d+$"))
+            wait(0.1)
+            if v228 <= v226.CoreStats.Pollen.Value then
+                Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+                Event:FireServer({
+                    Name = "Micro-Converter"
+                })
+            end
+        end
+    end
+})
+v10:AddToggle({
+    Name = "Auto Use Instant Converter",
+    Default = false,
+    Callback = function(p229)
+        getgenv().turnoff4 = p229
+        while turnoff4 == true do
+            local v230 = game:GetService("Players").LocalPlayer
+            local v231 = v230.Character:FindFirstChild("ProgressLabel", true)
+            local v232 = tonumber(v231.Text:match("%d+$"))
+            wait(0.3)
+            if v232 > v230.CoreStats.Pollen.Value then
+                if v232 > v230.CoreStats.Pollen.Value then
+                    if v232 <= v230.CoreStats.Pollen.Value then
+                        zakharpidor = {
+                            "Instant Converter C"
+                        }
+                        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer(unpack(zakharpidor))
+                    end
+                else
+                    zakharpidor = {
+                        "Instant Converter B"
+                    }
+                    game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer(unpack(zakharpidor))
+                    wait(0.3)
+                end
+            else
+                game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer(unpack({
+                    "Instant Converter"
+                }))
+                wait(0.3)
+            end
+        end
+    end
+})
+v10:AddToggle({
+    Name = "Auto Use Coconut",
+    Default = false,
+    Callback = function(p233)
+        getgenv().turnoff4 = p233
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+            Event:FireServer({
+                Name = "Coconut"
+            })
+            wait(11)
+        end
+    end
+})
+v10:AddToggle({
+    Name = "Auto Use Gumdrops",
+    Default = false,
+    Callback = function(p234)
+        getgenv().turnoff4 = p234
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+            Event:FireServer({
+                Name = "Gumdrops"
+            })
+            wait(3)
+        end
+    end
+})
+v15:AddSection({
+    Name = "Mask"
+})
+v15:AddDropdown({
+    Name = "Equip Mask",
+    Default = "nil",
+    Options = {
+        "Gummy Mask",
+        "Demon Mask",
+        "Diamond Mask",
+        "Bubble Mask",
+        "Fire Mask",
+        "Honey Mask"
+    },
+    Callback = function(p235)
+        if p235 == "Gummy Mask" then
+            A_1 = "Equip"
+            A_2 = {
+                Mute = true,
+                Type = "Gummy Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_1, A_2)
+        elseif p235 == "Demon Mask" then
+            A_3 = "Equip"
+            A_4 = {
+                Mute = true,
+                Type = "Demon Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_3, A_4)
+        elseif p235 == "Diamond Mask" then
+            A_5 = "Equip"
+            A_6 = {
+                Mute = true,
+                Type = "Diamond Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_5, A_6)
+        elseif p235 == "Bubble Mask" then
+            A_7 = "Equip"
+            A_8 = {
+                Mute = true,
+                Type = "Bubble Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_7, A_8)
+        elseif p235 == "Fire Mask" then
+            A_9 = "Equip"
+            A_10 = {
+                Mute = true,
+                Type = "Fire Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_9, A_10)
+        elseif p235 == "Honey Mask" then
+            A_11 = "Equip"
+            A_12 = {
+                Mute = true,
+                Type = "Honey Mask",
+                Category = "Accessory"
+            }
+            Event = game:GetService("ReplicatedStorage").Events.ItemPackageEvent
+            Event:InvokeServer(A_11, A_12)
+        end
+    end
+})
+v11:AddButton({
+    Name = "Bee Bear Teleport",
+    Default = false,
+    Callback = function(_)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 38.666648864746094, 6.3912272453308105, 283.1805419921875)
+    end
+})
+v11:AddSection({
+    Name = "SnowFlakes"
+})
+local vu236 = false
+v11:AddToggle({
+    Name = "SnowFlakes Farm",
+    Default = false,
+    Callback = function(p237)
+        vu236 = p237
+        if vu236 then
+            farmSnowflakes()
+        end
+    end
+})
+local vu238 = workspace:WaitForChild("Particles"):WaitForChild("Snowflakes")
+local vu239 = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+function chatmsg(p240, p241)
+    game.StarterGui:SetCore("ChatMakeSystemMessage", {
+        Text = p240,
+        Color = p241
+    })
+end
+function notif(p242, p243, p244)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = p242,
+        Text = p243,
+        Duration = p244
+    })
+end
+function getsnowflake()
+    if # vu238:GetChildren() ~= 0 then
+        local v245 = vu238
+        return vu238:GetChildren()[math.random(1, # v245:GetChildren())]
+    end
+    notif("SnowWare", "No SnowFlakes Found", 5)
+    getsnowflake()
+    task.wait(0.1)
+end
+function farmSnowflakes()
+    while vu236 do
+        vu239 = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+        selectedsnowflake = getsnowflake()
+        collecttick = tick()
+        repeat
+            task.wait()
+            game:GetService("TweenService"):Create(vu239.HumanoidRootPart, TweenInfo.new(1), {
+                CFrame = selectedsnowflake.CFrame + Vector3.new(0, 15, 0)
+            }):Play()
+            vu239.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+        until tick() - collecttick > 3 or not vu236
+        task.wait(4)
+    end
+end
+chatmsg(info, Color3.fromRGB(107, 170, 253))
+v11:AddSection({
+    Name = "Gift Teleport"
+})
+v11:AddDropdown({
+    Name = "Teleport To Present - ",
+    Default = "Black Bearl",
+    Options = {
+        "Gift 3",
+        "Gift 4",
+        "Gift 6",
+        "Gift 8",
+        "Gift 9",
+        "Gift 10",
+        "Gift 11",
+        "Gift 13",
+        "Gift 14",
+        "Gift 16"
+    },
+    Callback = function(p246)
+        if p246 == "Gift 3" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(39, 5, 99)
+        elseif p246 == "Gift 3" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(86, 4.6, 294)
+        elseif p246 == "Gift 4" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 277, 18, 386.8)
+        elseif p246 == "Gift 6" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 449, 69, - 97.5)
+        elseif p246 == "Gift 8" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(327.6, 195, - 229.5)
+        elseif p246 == "Gift 9" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 55.7, 41.5, 719.8)
+        elseif p246 == "Gift 10" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 421.7, 72.8, 437.6)
+        elseif p246 == "Gift 11" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 453, 122.8, 336.5)
+        elseif p246 == "Gift 13" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(488, 180, - 329)
+        elseif p246 == "Gift 14" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(33.4, 235.8, - 581.9)
+        elseif p246 == "Gift 16" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 19.8, 231.5, - 121.3)
+        end
+    end
+})
+local vu247 = false
+local vu248 = false
+local vu249 = nil
+local vu250 = nil
+local vu251 = nil
+local vu252 = nil;
+(function()
+    local v253 = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+    vu249 = v253.Humanoid.WalkSpeed
+    vu250 = v253.Humanoid.JumpPower
+end)()
+vu14:AddSection({
+    Name = "Player Speed"
+})
+vu14:AddToggle({
+    Name = "Enable Speed",
+    Default = false,
+    Callback = function(p254)
+        vu247 = p254
+        if not vu247 then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = vu249
+        end
+    end
+})
+vu14:AddTextbox({
+    Name = "Set Speed 1-150",
+    Default = tostring(math.floor(vu249)),
+    TextDisappear = true,
+    Callback = function(p255)
+        local v256 = tonumber(p255)
+        if v256 and (1 <= v256 and v256 <= 150) then
+            vu251 = math.floor(v256)
+            vu14.Character.Humanoid.WalkSpeed = vu251
+        end
+    end
+})
+vu14:AddSection({
+    Name = "Player Jump Power"
+})
+vu14:AddToggle({
+    Name = "Enable Jump Power",
+    Default = false,
+    Callback = function(p257)
+        vu248 = p257
+        if not vu248 then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = vu250
+        end
+    end
+})
+vu14:AddTextbox({
+    Name = "Set Jump Power 1-200",
+    Default = tostring(math.floor(vu250)),
+    TextDisappear = true,
+    Callback = function(p258)
+        local v259 = tonumber(p258)
+        if v259 and (1 <= v259 and v259 <= 200) then
+            vu252 = math.floor(v259)
+            vu14.Character.Humanoid.JumpPower = vu252
+        end
+    end
+})
+game:GetService("RunService").Heartbeat:Connect(function()
+    if vu247 then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = vu251
+    end
+    if vu248 then
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = vu252
+    end
+end)
+vu14:AddSection({
+    Name = "Misc"
+})
+local vu260 = false
+vu14:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(p261)
+        vu260 = p261
+    end
+})
+game:GetService("RunService").Stepped:Connect(function()
+    if vu260 then
+        local v262, v263, v264 = pairs(game.Players.LocalPlayer.Character:GetDescendants())
+        while true do
+            local v265
+            v264, v265 = v262(v263, v264)
+            if v264 == nil then
+                break
+            end
+            if v265:IsA("BasePart") and v265.CanCollide then
+                v265.CanCollide = false
+            end
+        end
+    end
+end)
+v15:AddSection({
+    Name = "Teleports"
+})
+v15:AddButton({
+    Name = "TP To Hive",
+    Callback = function()
+        local v266 = game:GetService("Players").LocalPlayer
+        v266.Character:MoveTo(v266.SpawnPos.Value.p)
+    end
+})
+v15:AddDropdown({
+    Name = "Teleport To Shop - ",
+    Default = "Black Bearl",
+    Options = {
+        "Bee Shop",
+        "First Tool Shop",
+        "Second Tool Shop (15+ bees)",
+        "MountainTop Shop (25+ bees)",
+        "Spirit Shop (35+ bees)",
+        "Dapper Bear\'s Shop",
+        "GumBall Shop",
+        "Blue Clubhouse",
+        "Red Clubhouse",
+        "Ticket Shop",
+        "RoyalJelly Shop",
+        "Ticket RoyalJelly Shop",
+        "Treat Shop",
+        "Moon",
+        "Nuoc"
+    },
+    Callback = function(p267)
+        if p267 == "Bee Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 136.8, 4.6, 243.4)
+        elseif p267 == "First Tool Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(86, 4.6, 294)
+        elseif p267 == "Second Tool Shop (15+ bees)" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(165, 69, - 161)
+        elseif p267 == "MountainTop Shop (25+ bees)" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 18, 176, - 137)
+        elseif p267 == "Spirit Shop (35+ bees)" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 501, 52, 474)
+        elseif p267 == "Dapper Bear\'s Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(456.7, 137.9, - 313.8)
+        elseif p267 == "GumBall Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(269, 25257.55, - 724.2)
+        elseif p267 == "Blue Clubhouse" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(292, 4, 98)
+        elseif p267 == "Red Clubhouse" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 334, 21, 216)
+        elseif p267 == "Ticket Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 12.8, 184, - 222.2)
+        elseif p267 == "RoyalJelly Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 297, 53, 68)
+        elseif p267 == "Ticket RoyalJelly Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(81, 18, 240)
+        elseif p267 == "Treat Shop" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 228.2, 5, 89.4)
+        elseif p267 == "Moon" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(21, 88, - 54)
+        elseif p267 == "Nuoc" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 426, 70, 38)
+        end
+    end
+})
+v15:AddDropdown({
+    Name = "Teleport To Bear - ",
+    Default = "Black Bearl",
+    Options = {
+        "Black Bear",
+        "Brown Bear",
+        "Panda Bear",
+        "Polar Bear",
+        "Science Bear",
+        "Mother Bear",
+        "Spirit Bear",
+        "Gummy Bear",
+        "Onett",
+        "Tunnel Bear",
+        "Stick Bug"
+    },
+    Callback = function(p268)
+        if p268 == "Black Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 258.1, 5, 299.7)
+        elseif p268 == "Brown Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(282, 46, 236)
+        elseif p268 == "Panda Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(106.3, 35, 50.1)
+        elseif p268 == "Polar Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 106, 119, - 77)
+        elseif p268 == "Science Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(267, 103, 20)
+        elseif p268 == "Mother Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 183.898, 5.64093, 83.4582)
+        elseif p268 == "Spirit Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 363.936, 105.284, 485.853)
+        elseif p268 == "Gummy Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(271.624, 25292.9, - 850.958)
+        elseif p268 == "Tunnel Bear" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(313.654, 6.81172, - 46.9131)
+        elseif p268 == "Onett" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 9.41592, 232.791, - 520.278)
+        elseif p268 == "Stick Bug" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 129.2, 50.0709, 148.288)
+        end
+    end
+})
+v15:AddDropdown({
+    Name = "Teleport To Field - ",
+    Default = "BamBoo Fieldd",
+    Options = {
+        "BamBoo Field",
+        "Blue Field",
+        "Cactus Field",
+        "Clover Field",
+        "Coconut Field",
+        "Dandelion Field",
+        "Stump Field",
+        "MountainTop Field",
+        "Mushroom Field",
+        "Pepper Patch",
+        "Pineapple Field",
+        "PineTree Field",
+        "Pumpkin Field",
+        "Rose Field",
+        "Spider Field",
+        "StrawBerry Field",
+        "Sunflower Field"
+    },
+    Callback = function(p269)
+        if p269 == "BamBoo Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(93, 20, - 25)
+        elseif p269 == "Blue Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(113.7, 4, 101.5)
+        elseif p269 == "Cactus Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 194, 68, - 107)
+        elseif p269 == "Clover Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(174, 34, 189)
+        elseif p269 == "Coconut Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 255, 72, 459)
+        elseif p269 == "Dandelion Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 30, 4, 225)
+        elseif p269 == "Stump Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(420, 117, - 178)
+        elseif p269 == "MountainTop Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(76, 176, - 181)
+        elseif p269 == "Mushroom Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 91, 4, 116)
+        elseif p269 == "Pepper Patch" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 486, 124, 517)
+        elseif p269 == "Pineapple Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(262, 68, - 201)
+        elseif p269 == "PineTree Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 318, 68, - 150)
+        elseif p269 == "Pumpkin Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 486, 124, 517)
+        elseif p269 == "Pineapple Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 194, 68, - 182)
+        elseif p269 == "Rose Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 322, 20, 124)
+        elseif p269 == "Spider Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 57.2, 20, - 5.3)
+        elseif p269 == "StrawBerry Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(262, 68, - 201)
+        elseif p269 == "Sunflower Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 208, 4, 185)
+        end
+    end
+})
+v15:AddDropdown({
+    Name = "Teleport To Booster - ",
+    Default = "BamBoo Fieldd",
+    Options = {
+        "Ant",
+        "Bluefield Boost",
+        "Blueberry Dispenser",
+        "Club Honey",
+        "Gumdrop Dispenser",
+        "Glue Dispenser",
+        "Honeystorm Dispensor",
+        "Instant Honey Convertor",
+        "MountainTop Boost",
+        "Nectar Condenser",
+        "Redfield Boost",
+        "Sprout Dispenser",
+        "Star Hut",
+        "Strawberry Dispenser",
+        "Treat Dispenser"
+    },
+    Callback = function(p270)
+        if p270 == "Ant" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(125, 32, 495)
+        elseif p270 == "Blue Field" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(113.7, 4, 101.5)
+        elseif p270 == "Bluefield Boost" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(272, 58, 86)
+        elseif p270 == "Blueberry Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(307, 5, 134)
+        elseif p270 == "Club Honey" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(44.8, 5, 319.6)
+        elseif p270 == "Gumdrop Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(68, 21.8, 26)
+        elseif p270 == "Glue Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(269, 25257.546875, - 724)
+        elseif p270 == "Honeystorm Dispensor" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(238.4, 33.3, 165.6)
+        elseif p270 == "Instant Honey Convertor" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(282, 68, - 62)
+        elseif p270 == "MountainTop Boost" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 40, 176, - 191.7)
+        elseif p270 == "Nectar Condenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 416.7, 101.5, 342.8)
+        elseif p270 == "Redfield Boost" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 315.5, 21, 240)
+        elseif p270 == "Sprout Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 269.26, 26.56, 267.31)
+        elseif p270 == "Star Hut" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(135.9, 64.6, 322.1)
+        elseif p270 == "Strawberry Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 320.5, 46, 272.5)
+        elseif p270 == "Treat Dispenser" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(193.9, 68, - 123)
+        end
+    end
+})
+v13:AddSection({
+    Name = "Dispensers"
+})
+v13:AddButton({
+    Name = "Use All Dispensers",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Glue Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Wealth Clock")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Coconut Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Strawberry Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Treat Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Free Ant Pass Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Blueberry Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Honey Dispenser")
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Free Royal Jelly Dispenser")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use All Dispensers",
+    Default = false,
+    Callback = function(p271)
+        getgenv().turnoff5 = p271
+        while turnoff5 == true do
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Glue Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Wealth Clock")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Coconut Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Strawberry Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Treat Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Free Ant Pass Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Blueberry Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Honey Dispenser")
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Free Royal Jelly Dispenser")
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Glue Dispenser",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Glue Dispenser")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Glue Dispenser",
+    Default = false,
+    Callback = function(p272)
+        getgenv().turnoff4 = p272
+        while turnoff4 == true do
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Glue Dispenser")
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Wealth Clock",
+    Callback = function()
+        A_1 = "Wealth Clock"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Wealth Clock",
+    Default = false,
+    Callback = function(p273)
+        getgenv().turnoff4 = p273
+        while turnoff4 == true do
+            A_1 = "Wealth Clock"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Coconut Dispenser",
+    Callback = function()
+        A_1 = "Coconut Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Coconut Dispenser",
+    Default = false,
+    Callback = function(p274)
+        getgenv().turnoff4 = p274
+        while turnoff4 == true do
+            A_1 = "Coconut Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Strawberry Dispenser",
+    Callback = function()
+        A_1 = "Strawberry Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Strawberry Dispenser",
+    Default = false,
+    Callback = function(p275)
+        getgenv().turnoff4 = p275
+        while turnoff4 == true do
+            A_1 = "Strawberry Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Treat Dispenser",
+    Callback = function()
+        A_1 = "Treat Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Treat Dispenser",
+    Default = false,
+    Callback = function(p276)
+        getgenv().turnoff4 = p276
+        while turnoff4 == true do
+            A_1 = "Treat Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Free Ant Pass Dispenser",
+    Callback = function()
+        A_1 = "Free Ant Pass Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Free Ant Pass Dispenser",
+    Default = false,
+    Callback = function(p277)
+        getgenv().turnoff4 = p277
+        while turnoff4 == true do
+            A_1 = "Free Ant Pass Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Blueberry Dispenser",
+    Callback = function()
+        A_1 = "Blueberry Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Blueberry Dispenser",
+    Default = false,
+    Callback = function(p278)
+        getgenv().turnoff4 = p278
+        while turnoff4 == true do
+            A_1 = "Blueberry Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Honey Dispenser",
+    Callback = function()
+        A_1 = "Honey Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Honey Dispenser",
+    Default = false,
+    Callback = function(p279)
+        getgenv().turnoff4 = p279
+        while turnoff4 == true do
+            A_1 = "Honey Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Free Royal Jelly Dispenser",
+    Callback = function()
+        A_1 = "Free Royal Jelly Dispenser"
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer(A_1)
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Free Royal Jelly Dispenser",
+    Default = false,
+    Callback = function(p280)
+        getgenv().turnoff4 = p280
+        while turnoff4 == true do
+            A_1 = "Free Royal Jelly Dispenser"
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer(A_1)
+            wait(10)
+        end
+    end
+})
+v13:AddSection({
+    Name = "Dices"
+})
+v13:AddButton({
+    Name = "Use Field Dice",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({
+            Name = "Field Dice"
+        })
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Field Dice",
+    Default = false,
+    Callback = function(p281)
+        getgenv().turnoff4 = p281
+        while turnoff4 == true do
+            game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({
+                Name = "Field Dice"
+            })
+            wait(3)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Smooth Dice",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Smooth Dice"
+        })
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Smooth Dice",
+    Default = false,
+    Callback = function(p282)
+        getgenv().turnoff4 = p282
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+            Event:FireServer({
+                Name = "Smooth Dice"
+            })
+            wait(3)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Loaded Dice",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Loaded Dice"
+        })
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Loaded Dice",
+    Default = false,
+    Callback = function(p283)
+        getgenv().turnoff4 = p283
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+            Event:FireServer({
+                Name = "Loaded Dice"
+            })
+            wait(3)
+        end
+    end
+})
+v13:AddSection({
+    Name = "Boosts"
+})
+v13:AddButton({
+    Name = "Use All Boosters",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Red Field Booster")
+        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Blue Field Booster")
+        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Field Booster")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use All Field Booster",
+    Default = false,
+    Callback = function(p284)
+        getgenv().turnoff4 = p284
+        while turnoff4 == true do
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Red Field Booster")
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Blue Field Booster")
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Field Booster")
+            wait(5)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Red Field Booster",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Red Field Booster")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Red Field Booster",
+    Default = false,
+    Callback = function(p285)
+        getgenv().turnoff4 = p285
+        while turnoff4 == true do
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Red Field Booster")
+            wait(5)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Blue Field Booster",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Blue Field Booster")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Blue Field Booster",
+    Default = false,
+    Callback = function(p286)
+        getgenv().turnoff4 = p286
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Blue Field Booster")
+            wait(5)
+        end
+    end
+})
+v13:AddButton({
+    Name = "Use Field Booster",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+        Event:FireServer("Field Booster")
+    end
+})
+v13:AddToggle({
+    Name = "Auto Use Field Booster",
+    Default = false,
+    Callback = function(p287)
+        getgenv().turnoff4 = p287
+        while turnoff4 == true do
+            Event = game:GetService("ReplicatedStorage").Events.ToyEvent
+            Event:FireServer("Field Booster")
+            wait(5)
+        end
+    end
+})
+v13:AddSection({
+    Name = "Buffs"
+})
+v13:AddButton({
+    Name = "Use All Buffs [no potions and Marshmallow Bee]",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Red Extract"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Blue Extract"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Glitter"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Glue"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Oil"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Enzymes"
+        })
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Tropical TDrink"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Red Extract",
+    Callback = function()
+        ({}).Name = "Red Extract"
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer(RedEx)
+    end
+})
+v13:AddButton({
+    Name = "Use Blue Extract",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Blue Extract"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Glitter",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Glitter"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Glue",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Glue"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Oil",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Oil"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Enzymes",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Enzymes"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Tropical Drink",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Tropical Drink"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Purple Potion",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Purple Potion"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Super Smoothie",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Super Smoothie"
+        })
+    end
+})
+v13:AddButton({
+    Name = "Use Marshmallow Bee",
+    Callback = function()
+        Event = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
+        Event:FireServer({
+            Name = "Marshmallow Bee"
+        })
+    end
+})
+v12:AddToggle({
+    Name = "Kill Crab",
+    Default = false,
+    Callback = function(p288)
+        shared.a5 = p288
+        if shared.a5 then
+            local v289 = Instance.new("Part", game:GetService("Workspace"))
+            v289.Name = "Coconut Part"
+            v289.Anchored = true
+            v289.Transparency = 0.5
+            v289.Size = Vector3.new(6, 1, 6)
+            v289.Position = Vector3.new(- 307.52117919922, 105.91863250732, 467.86791992188)
+            spawn(function()
+                while shared.a5 do
+                    shared.a11 = false
+                    shared.a12 = false
+                    local v290 = game.Players.LocalPlayer
+                    local v291 = game:GetService("TweenService")
+                    local v292 = TweenInfo.new(0.1)
+                    local v293, v294, v295 = pairs(workspace.Collectibles:GetChildren())
+                    while true do
+                        local v296
+                        v295, v296 = v293(v294, v295)
+                        if v295 == nil then
+                            break
+                        end
+                        local v297 = (v296.Position - v290.Character.HumanoidRootPart.Position).magnitude
+                        if v296.Transparency == 0 and v297 <= 8 then
+                            local v298 = v296.Position.x
+                            local v299 = v296.Position.z
+                            local v300 = {
+                                CFrame = CFrame.new(v298, v290.Character.HumanoidRootPart.Position.y, v299)
+                            }
+                            v291:Create(v290.Character.HumanoidRootPart, v292, v300):Play()
+                        end
+                    end
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(- 307.52117919922, 110.91863250732, 467.86791992188)
+                    task.wait(0.2)
+                end
+            end)
+        elseif workspace:FindFirstChild("Coconut Part") then
+            workspace["Coconut Part"]:Destroy()
+        end
+    end
+})
+v12:AddButton({
+    Name = "Kill Commando Chick",
+    Callback = function()
+        local v301 = Instance.new("Part", game:GetService("Workspace"))
+        v301.Name = "Commando Part"
+        v301.Anchored = true
+        v301.Transparency = 1
+        v301.Size = Vector3.new(10, 1, 10)
+        v301.Position = Vector3.new(532.56, 68.1981, 162.801)
+        wait(0.1)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(532.56, 68.1981, 162.801)
+    end
+})
+v12:AddButton({
+    Name = "AFK Stump Snail",
+    Callback = function()
+        local v302 = Instance.new("Part", game:GetService("Workspace"))
+        v302.Name = "Coconut Part"
+        v302.Anchored = true
+        v302.Transparency = 1
+        v302.Size = Vector3.new(10, 1, 10)
+        v302.Position = Vector3.new(424.483276, 71.4255676, - 174.810959, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(424.483276, 68.4255676, - 174.810959, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        wait(0.1)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(424.483276, 74.4255676, - 174.810959, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+    end
+})
+v12:AddButton({
+    Name = "Kill Tunnel Bear",
+    Callback = function()
+        local v303 = Instance.new("Part", game:GetService("Workspace"))
+        v303.Name = "Tunnel Part"
+        v303.Anchored = true
+        v303.Transparency = 1
+        v303.Size = Vector3.new(10, 1, 10)
+        v303.Position = Vector3.new(469.095, 23.2665, - 46.3918)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(469.095, 7.2665, - 46.3918)
+        wait(0.1)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(469.095, 24.2665, - 46.3918)
+    end
+})
+v12:AddToggle({
+    Name = "Auto Kill Mondo Chick [In testing]",
+    Default = false,
+    Callback = function(p304)
+        getgenv().turnoff54 = p304
+        if turnoff54 ~= true then
+            game.Players.LocalPlayer.Character.Humanoid.HipHeight = 3
+        else
+            while turnoff54 == true do
+                mondopition = game.Workspace.Monsters["Mondo Chick (Lvl 8)"].Head.Position
+                api.tween(0.3, CFrame.new(mondopition.x, mondopition.y + 30, mondopition.z))
+                game.Players.LocalPlayer.Character.Humanoid.HipHeight = 40
+            end
+        end
+    end
+})
+v12:AddToggle({
+    Name = "Kill Windy Bee",
+    Callback = function(p305)
+        getgenv().pon1 = p305
+        if pon1 ~= true then
+            game.Players.LocalPlayer.Character.Humanoid.HipHeight = 3
+        else
+            while pon1 == true do
+                wait(0.3)
+                local v306, v307, v308 = pairs(game.workspace.NPCBees:GetChildren())
+                while true do
+                    local v309
+                    v308, v309 = v306(v307, v308)
+                    if v308 == nil then
+                        break
+                    end
+                    if v309.Name == "Windy" then
+                        game.Players.LocalPlayer.Character.Humanoid.HipHeight = 35
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v309.CFrame
+                    end
+                end
+                local v310 = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart
+                local v311 = next
+                local v312, v313 = game.workspace.Particles:GetChildren()
+                while true do
+                    local v314
+                    v313, v314 = v311(v312, v313)
+                    if v313 == nil then
+                        break
+                    end
+                    local v315, v316, v317 = string.gmatch(v314.Name, "Windy")
+                    while true do
+                        v317 = v315(v316, v317)
+                        if v317 == nil then
+                            break
+                        end
+                        if string.find(v314.Name, "Windy") then
+                            api.tween(1, CFrame.new(v314.Position.x, v314.Position.y, v314.Position.z))
+                            task.wait(1)
+                            api.tween(0.5, CFrame.new(v314.Position.x, v314.Position.y, v314.Position.z))
+                            task.wait(0.5)
+                        end
+                    end
+                end
+                local v318 = next
+                local v319, v320 = game.workspace.Particles:GetChildren()
+                while true do
+                    local v321
+                    v320, v321 = v318(v319, v320)
+                    if v320 == nil then
+                        break
+                    end
+                    local v322, v323, v324 = string.gmatch(v321.Name, "Windy")
+                    while true do
+                        v324 = v322(v323, v324)
+                        if v324 == nil then
+                            break
+                        end
+                        task.wait()
+                        if string.find(v321.Name, "Windy") then
+                            game.Players.LocalPlayer.Character.Humanoid.HipHeight = 20
+                            for _ = 1, 4 do
+                                v310.CFrame = CFrame.new(v321.Position + 10, v321.Position + 50, v321.Position)
+                                task.wait(0.3)
+                            end
+                        end
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+    end
+})
+v12:AddToggle({
+    Name = "Kill Viciuos Bee",
+    Default = false,
+    Callback = function(p325)
+        getgenv().turnoff4 = p325
+        if turnoff4 ~= true then
+            game.Players.LocalPlayer.Character.Humanoid.HipHeight = 3
+        else
+            while turnoff4 == true do
+                wait()
+                local v326 = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart
+                local v327 = next
+                local v328, v329 = game.workspace.Particles:GetChildren()
+                while true do
+                    local v330
+                    v329, v330 = v327(v328, v329)
+                    if v329 == nil then
+                        break
+                    end
+                    local v331, v332, v333 = string.gmatch(v330.Name, "Vicious")
+                    while true do
+                        v333 = v331(v332, v333)
+                        if v333 == nil then
+                            break
+                        end
+                        task.wait()
+                        if string.find(v330.Name, "Vicious") then
+                            game.Players.LocalPlayer.Character.Humanoid.HipHeight = 20
+                            for _ = 1, 4 do
+                                v326.CFrame = CFrame.new(v330.Position.x, v330.Position.y + 20, v330.Position.z)
+                                task.wait(0.3)
+                            end
+                        end
+                    end
+                end
+            end
+            task.wait(0.1)
+        end
+    end
+})
+wait(0.5)
+local v334 = Instance.new("ScreenGui")
+local v335 = Instance.new("TextLabel")
+local v336 = Instance.new("Frame")
+local v337 = Instance.new("TextLabel")
+local vu338 = Instance.new("TextLabel")
+v334.Parent = game.CoreGui
+v334.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+v335.Parent = v334
+v335.Active = true
+v335.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
+v335.Draggable = true
+v335.Position = UDim2.new(5.698610067, 0, 0.098096624, 0)
+v335.Size = UDim2.new(0, 150, 0, 52)
+v335.Font = Enum.Font.SourceSansSemibold
+v335.Text = "Anti AFK Script"
+v335.TextColor3 = Color3.new(0, 1, 1)
+v335.TextSize = 22
+v336.Parent = v335
+v336.BackgroundColor3 = Color3.new(0.196078, 0.196078, 0.196078)
+v336.Position = UDim2.new(0, 0, 1.0192306, 0)
+v336.Size = UDim2.new(0, 150, 0, 57)
+v337.Parent = v336
+v337.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
+v337.Position = UDim2.new(0, 0, 0.800455689, 0)
+v337.Size = UDim2.new(0, 150, 0, 21)
+v337.Font = Enum.Font.Arial
+v337.Text = "RBScr1pts"
+v337.TextColor3 = Color3.new(0, 1, 1)
+v337.TextSize = 20
+vu338.Parent = daaaaaaaaaa
+vu338.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
+vu338.Position = UDim2.new(0, 0, 0.158377, 0)
+vu338.Size = UDim2.new(0, 150, 0, 44)
+vu338.Font = Enum.Font.ArialBold
+vu338.Text = "Status: Active"
+vu338.TextColor3 = Color3.new(0, 1, 1)
+vu338.TextSize = 20
+local vu339 = game:service("VirtualUser")
+game:service("Players").LocalPlayer.Idled:connect(function()
+    vu339:CaptureController()
+    vu339:ClickButton2(Vector2.new())
+    vu338.Text = "Roblox Tried to kick you but we didnt let them kick you :D"
+    wait(2)
+    vu338.Text = "Status : Active"
+end)

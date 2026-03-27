@@ -1,0 +1,162 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+ESP_TOGGLES = ESP_TOGGLES or { brainrot = true }
+ESP_DISTANCE_LIMIT = ESP_DISTANCE_LIMIT or 1000
+
+local function parseGen(text)
+    if not text then return -1 end
+    local num = text:match("%d+")
+    return tonumber(num) or -1
+end
+
+local function findBestTemplate()
+    if not ESP_TOGGLES.brainrot then return end
+    local debris = Workspace:FindFirstChild("Debris")
+    if not debris then return end
+    
+    local bestValue, bestTemplate = -1, nil
+    
+    for _, template in ipairs(debris:GetChildren()) do
+        if not template:IsA("BasePart") then continue end
+        
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local dist = hrp and (template.Position - hrp.Position).Magnitude or math.huge
+        
+        if dist > ESP_DISTANCE_LIMIT then continue end
+        
+        local gui = template:FindFirstChild("GUI")
+        local genLabel = gui and gui:FindFirstChild("Generation")
+        local displayNameLabel = gui and gui:FindFirstChild("DisplayName")
+        
+        if genLabel and displayNameLabel then
+            local val = parseGen(genLabel.Text)
+            if val > bestValue then
+                bestValue = val
+                bestTemplate = {
+                    template = template,
+                    generation = genLabel.Text,
+                    displayName = displayNameLabel.Text,
+                    value = val
+                }
+            end
+        end
+    end
+    
+    return bestTemplate
+end
+
+local currentBillboard = nil
+local currentBeam = nil
+local currentPlayerAtt = nil
+local currentTargetAtt = nil
+
+local function clearESP()
+    if currentBillboard then currentBillboard:Destroy() end
+    if currentBeam then currentBeam:Destroy() end
+    if currentPlayerAtt then currentPlayerAtt:Destroy() end
+    if currentTargetAtt then currentTargetAtt:Destroy() end
+    
+    currentBillboard = nil
+    currentBeam = nil
+    currentPlayerAtt = nil
+    currentTargetAtt = nil
+end
+
+local function updateESP()
+    local best = findBestTemplate()
+    
+    if not best then
+        clearESP()
+        return
+    end
+    
+    local template = best.template
+    
+    if not currentBillboard or currentBillboard.Adornee ~= template then
+        clearESP()
+        
+        currentBillboard = Instance.new("BillboardGui")
+        currentBillboard.Name = "BrainrotESP"
+        currentBillboard.Adornee = template
+        currentBillboard.Size = UDim2.new(0, 200, 0, 100)
+        currentBillboard.StudsOffset = Vector3.new(0, 3, 0)
+        currentBillboard.AlwaysOnTop = true
+        currentBillboard.LightInfluence = 0
+        currentBillboard.MaxDistance = ESP_DISTANCE_LIMIT
+        
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        frame.BackgroundTransparency = 1
+        frame.BorderSizePixel = 2
+        frame.BorderColor3 = Color3.fromRGB(255, 255, 0)
+        frame.Parent = currentBillboard
+        
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1, 0, 0.3, 0)
+        nameLabel.Position = UDim2.new(0, 0, 0.4, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = best.displayName
+        nameLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+        nameLabel.TextScaled = true
+        nameLabel.Font = Enum.Font.Gotham
+        nameLabel.Parent = frame
+        
+        local genLabel = Instance.new("TextLabel")
+        genLabel.Size = UDim2.new(1, 0, 0.3, 0)
+        genLabel.Position = UDim2.new(0, 0, 0.7, 0)
+        genLabel.BackgroundTransparency = 1
+        genLabel.Text = best.generation
+        genLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        genLabel.TextScaled = true
+        genLabel.Font = Enum.Font.GothamBold
+        genLabel.Parent = frame
+        
+        currentBillboard.Parent = template
+    end
+    
+    local character = LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    
+    if hrp and template then
+        if not currentPlayerAtt then
+            currentPlayerAtt = Instance.new("Attachment")
+            currentPlayerAtt.Parent = hrp
+        end
+        
+        if not currentTargetAtt or currentTargetAtt.Parent ~= template then
+            currentTargetAtt = Instance.new("Attachment")
+            currentTargetAtt.Parent = template
+        end
+        
+        if not currentBeam then
+            currentBeam = Instance.new("Beam")
+            currentBeam.FaceCamera = true
+            currentBeam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
+            currentBeam.LightEmission = 1
+            currentBeam.LightInfluence = 0
+            currentBeam.Width0 = 0.5
+            currentBeam.Width1 = 1.5
+            currentBeam.Transparency = NumberSequence.new(0.2)
+            currentBeam.Parent = hrp
+        end
+        
+        currentBeam.Attachment0 = currentPlayerAtt
+        currentBeam.Attachment1 = currentTargetAtt
+        currentBeam.Enabled = true
+    else
+        if currentBeam then currentBeam.Enabled = false end
+    end
+end
+
+spawn(function()
+    while task.wait(0.5) do
+        updateESP()
+    end
+end)
+
+updateESP()

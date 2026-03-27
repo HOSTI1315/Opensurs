@@ -1,0 +1,731 @@
+--[[
+                 . .  .     .          .  .             .
+          .       .  .  .     ..   .    .      .        .
+                   .   .     .             ...  .        
+.                  .       .    ..  .    .=*+-.         .
+       . .             .               .-*:..+:  .      .
+..      .               .+=:..        :*-.. .-+          
+.           ..        . :#-..-#=.   .#-      .*.         
+  .          .........:-=#=.  ..=*-==.       .*..   .    
+        . .:+#%%%%*#%%#%%=..      -+:.       .*.         
+         .-%#%*%%#****%%#=:.       ..     .. .*.      .  
+        ..=%%*@*******%%##+.           .    .==        . 
+       .  -%%%**********+--.   .  ..:*%=-. .:+:  .. . .  
+          .=#****#%@%**++**:.    .+#-.#..  .=-. .   .    
+      ..   :****#@@@@%*****-.=..-%@%-.--  :*=:..     .   
+     .     :*****#%@%******=-:+#@@@#:..=..:::+=          
+. .       .:##************=:. ..*@%=..... .:*-..         
+           :##**********+=++::..  ..:==-:.=*.      .     
+          .=##********##===+*+++:  ...-... :+:..  .    . 
+ ..  .    :+##********##===*-....  ...:++===*=.      .   
+    .     .-#%#%*****##@=-*= ....:=#%+.                  
+        .     :%%%%#%*%%#*..      .:+.                .  
+        . .   -@%#%#******+..   .  .-+.                  
+    .        :%%#******+-... .  .  ..+=.   .         .   
+            :%*%********+...  .    . .%.            .  . 
+       .   .*##%*********....        .:+.  .   .         
+          .-#*##*********+:..        ..*.    .           
+  .    .  .=#*%#********+::...     .  .=:  . .           
+    .     .+#*%#*******=.... ..       .--        .  ..   
+          .*#*%%********=.. .     . . .-=.    .    .     
+   .   .  .+#*#%*******-:..           .-=.         .   . 
+       .  .:--+*********+-...   .  .  ... .  .     .     
+        .     .........::::..            .  ..           
+                        .. .                     ..      
+             .            .           .               .  
+]]
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Window = Rayfield:CreateWindow({
+	["Name"] = "Saturn Hub (.gg/6UaRDjBY42)",
+	["LoadingTitle"] = "99 Nights In The Forest",
+	["LoadingSubtitle"] = "by JScripter",
+	["Icon"] = 108632720139222,
+	["Theme"] = nil,
+	["ConfigurationSaving"] = {
+		["Enabled"] = true,
+		["FolderName"] = "SaturnHub",
+		["FileName"] = "99NitF"
+	},
+	["Discord"] = {
+		["Enabled"] = true,
+		["Invite"] = "6UaRDjBY42",
+		["RememberJoins"] = true
+	},
+	["KeySystem"] = false,
+	["KeySettings"] = {
+		["Title"] = "Saturn Keysystem",
+		["Subtitle"] = "Sorry I need more member :)",
+		["Note"] = "Get from discord server : discord.gg/6UaRDjBY42",
+		["FileName"] = "SaturnKey",
+		["SaveKey"] = false,
+		["GrabKeyFromSite"] = false,
+		["Key"] = { "Saturn-0001-111" }
+	}
+})
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local EntityESPData = {}
+local DrawingLines = {}
+local ItemESPData = {}
+local ESPSettings = {
+	["PlayerESP"] = false,
+	["Fairy"] = false,
+	["Wolf"] = false,
+	["Bunny"] = false,
+	["Cultist"] = false,
+	["PeltTrader"] = false,
+	["ItemESP"] = false,
+	["NameColor"] = Color3.fromRGB(200, 220, 255),
+	["ItemColor"] = Color3.fromRGB(255, 220, 120)
+}
+local SpeedSettings = {
+	["enabled"] = false,
+	["value"] = 28
+}
+local HitboxSettings = {
+	["Wolf"] = false,
+	["Bunny"] = false,
+	["Cultist"] = false,
+	["Show"] = false,
+	["Size"] = 10
+}
+local ItemFilters = {
+	["Berry"] = false,
+	["Log"] = false,
+	["Chest"] = false,
+	["Toolbox"] = false,
+	["Coal"] = false,
+	["Carrot"] = false,
+	["Flashlight"] = false,
+	["Radio"] = false,
+	["Sheet Metal"] = false,
+	["Bolt"] = false,
+	["Chair"] = false,
+	["Fan"] = false,
+	["Good Sack"] = false,
+	["Good Axe"] = false,
+	["Raw Meat"] = false,
+	["Cooked Meat"] = false,
+	["Stone"] = false,
+	["Nails"] = false,
+	["Scrap"] = false,
+	["Wooden Plank"] = false,
+	["Revolver"] = false,
+	["Revolver Ammo"] = false
+}
+local InfoTab = Window:CreateTab("Infomation", "info")
+local VisualsTab = Window:CreateTab("Visuals", "eye")
+local TeleportTab = Window:CreateTab("Teleport", "door-closed")
+local BringItemsTab = Window:CreateTab("Bring Items", "box")
+local HitboxTab = Window:CreateTab("Hitbox", "swords")
+local MiscTab = Window:CreateTab("Misc", "settings")
+local function CreateEntityESP(model, label)
+	local headPart = model:FindFirstChild("Head") or model:FindFirstChildWhichIsA("BasePart")
+	if headPart then
+		local nameText = Drawing.new("Text")
+		nameText.Size = 14
+		nameText.Center = true
+		nameText.Outline = true
+		nameText.Color = ESPSettings.NameColor
+		nameText.Visible = false
+		local hpBackground = Drawing.new("Square")
+		hpBackground.Color = Color3.fromRGB(0, 0, 0)
+		hpBackground.Thickness = 1
+		hpBackground.Filled = true
+		hpBackground.Transparency = 0.6
+		hpBackground.Visible = false
+		local hpBar = Drawing.new("Square")
+		hpBar.Color = Color3.fromRGB(100, 255, 100)
+		hpBar.Thickness = 1
+		hpBar.Filled = true
+		hpBar.Transparency = 0.8
+		hpBar.Visible = false
+		EntityESPData[model] = {
+			["head"] = headPart,
+			["model"] = model,
+			["name"] = nameText,
+			["hpBar"] = hpBar,
+			["hpBack"] = hpBackground,
+			["label"] = label
+		}
+	end
+end
+local function ClearDrawingLines()
+	for _, line in ipairs(DrawingLines) do
+		line:Remove()
+	end
+	table.clear(DrawingLines)
+end
+local function CreateItemText()
+	local textDrawing = Drawing.new("Text")
+	textDrawing.Size = 12
+	textDrawing.Center = true
+	textDrawing.Outline = true
+	textDrawing.Font = 2
+	textDrawing.Color = ESPSettings.ItemColor
+	textDrawing.Visible = false
+	return textDrawing
+end
+local function UpdateItemESP()
+	local itemsFolder = Workspace:FindFirstChild("Items")
+	if itemsFolder then
+		for _, item in ipairs(itemsFolder:GetChildren()) do
+			if not ItemESPData[item] then
+				local basePart = item:FindFirstChildWhichIsA("BasePart")
+				if not basePart then
+					if item:IsA("BasePart") then
+						basePart = item
+					end
+				end
+				if basePart then
+					ItemESPData[item] = {
+						["part"] = basePart,
+						["text"] = CreateItemText()
+					}
+				end
+			end
+		end
+		for item, data in pairs(ItemESPData) do
+			if not item:IsDescendantOf(Workspace) then
+				data.text:Remove()
+				ItemESPData[item] = nil
+			end
+		end
+	end
+end
+RunService.RenderStepped:Connect(function()
+	local screenBottom = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+	ClearDrawingLines()
+	for model, espData in pairs(EntityESPData) do
+		local headPart = espData.head
+		if model and headPart and model.Parent and headPart:IsDescendantOf(workspace) then
+			local player = Players:GetPlayerFromCharacter(model)
+			local shouldShow = false
+			local displayText = ""
+			if player and ESPSettings.PlayerESP then
+				local distance = math.floor((Camera.CFrame.Position - headPart.Position).Magnitude)
+				displayText = model.Name .. " {" .. distance .. "m}"
+				shouldShow = true
+			elseif not player then
+				local modelName = model.Name:lower()
+				local distance = math.floor((Camera.CFrame.Position - headPart.Position).Magnitude)
+				if ESPSettings.Fairy and modelName:find("fairy") then
+					displayText = " Fairy {" .. distance .. "m}"
+					shouldShow = true
+				elseif ESPSettings.Wolf and (modelName:find("wolf") or modelName:find("alpha")) then
+					displayText = " Wolf {" .. distance .. "m}"
+					shouldShow = true
+				elseif ESPSettings.Bunny and modelName:find("bunny") then
+					displayText = " Bunny {" .. distance .. "m}"
+					shouldShow = true
+				elseif ESPSettings.Cultist and modelName:find("cultist") then
+					displayText = " Cultist {" .. distance .. "m}"
+					shouldShow = true
+				elseif ESPSettings.PeltTrader and modelName:find("pelt") then
+					displayText = " Pelt Trader {" .. distance .. "m}"
+					shouldShow = true
+				end
+			end
+			if shouldShow then
+				local screenPos, onScreen = Camera:WorldToViewportPoint(headPart.Position)
+				if onScreen then
+					local textY = screenPos.Y - 25
+					espData.name.Text = displayText
+					espData.name.Position = Vector2.new(screenPos.X, textY)
+					espData.name.Color = ESPSettings.NameColor
+					espData.name.Visible = true
+					local humanoid = model:FindFirstChildOfClass("Humanoid")
+					if humanoid and humanoid.Health > 0 then
+						local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+						local barWidth = 50
+						local barHeight = 5
+						local barX = screenPos.X - barWidth / 2
+						local barY = textY + 16
+						espData.hpBack.Size = Vector2.new(barWidth, barHeight)
+						espData.hpBack.Position = Vector2.new(barX, barY)
+						espData.hpBack.Visible = true
+						espData.hpBar.Size = Vector2.new(barWidth * healthPercent, barHeight)
+						espData.hpBar.Position = Vector2.new(barX, barY)
+						espData.hpBar.Color = Color3.new(1 - healthPercent, healthPercent, 0.2)
+						espData.hpBar.Visible = true
+					else
+						espData.hpBar.Visible = false
+						espData.hpBack.Visible = false
+					end
+					local tracerLine = Drawing.new("Line")
+					tracerLine.From = screenBottom - Vector2.new(0, 10)
+					tracerLine.To = Vector2.new(screenPos.X, screenPos.Y)
+					tracerLine.Color = Color3.fromRGB(150, 200, 255)
+					tracerLine.Thickness = 1
+					tracerLine.Visible = true
+					table.insert(DrawingLines, tracerLine)
+				else
+					espData.name.Visible = false
+					espData.hpBar.Visible = false
+					espData.hpBack.Visible = false
+				end
+			else
+				espData.name.Visible = false
+				espData.hpBar.Visible = false
+				espData.hpBack.Visible = false
+			end
+		else
+			espData.name.Visible = false
+			espData.hpBar.Visible = false
+			espData.hpBack.Visible = false
+		end
+	end
+	if ESPSettings.ItemESP then
+		UpdateItemESP()
+		for item, data in pairs(ItemESPData) do
+			local part = data.part
+			local text = data.text
+			local itemName = item.Name
+			if part and ItemFilters[itemName] then
+				local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+				if onScreen then
+					local distance = (Camera.CFrame.Position - part.Position).Magnitude
+					text.Text = string.format("%s [%.0fm]", itemName, distance)
+					text.Position = Vector2.new(screenPos.X, screenPos.Y)
+					text.Color = ESPSettings.ItemColor
+					text.Visible = true
+				else
+					text.Visible = false
+				end
+			else
+				text.Visible = false
+			end
+		end
+	else
+		for _, data in pairs(ItemESPData) do
+			data.text.Visible = false
+		end
+	end
+end)
+task.spawn(function()
+	while true do
+		task.wait(2)
+		for _, descendant in pairs(workspace:GetDescendants()) do
+			if descendant:IsA("Model") and not EntityESPData[descendant] and descendant:FindFirstChild("Head") and (Players:GetPlayerFromCharacter(descendant) or descendant:IsDescendantOf(workspace.Characters)) then
+				CreateEntityESP(descendant, "Unknown")
+			end
+		end
+	end
+end)
+local function ApplySpeed()
+	local humanoid = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = SpeedSettings.enabled and SpeedSettings.value or 16
+	end
+end
+local function ApplyHitbox(model)
+	local rootPart = model:FindFirstChild("HumanoidRootPart")
+	if rootPart then
+		local modelName = model.Name:lower()
+		local shouldApply = false
+		if HitboxSettings.Wolf and (modelName:find("wolf") or modelName:find("alpha")) then
+			shouldApply = true
+		elseif HitboxSettings.Bunny and modelName:find("bunny") then
+			shouldApply = true
+		elseif HitboxSettings.Cultist and (modelName:find("cultist") or modelName:find("cross")) then
+			shouldApply = true
+		end
+		if shouldApply then
+			rootPart.Size = Vector3.new(HitboxSettings.Size, HitboxSettings.Size, HitboxSettings.Size)
+			rootPart.Transparency = HitboxSettings.Show and 0.4 or 1
+			rootPart.Color = Color3.fromRGB(180, 220, 255)
+			rootPart.Material = Enum.Material.ForceField
+			rootPart.CanCollide = false
+		end
+	end
+end
+task.spawn(function()
+	while true do
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			if descendant:IsA("Model") and descendant:FindFirstChild("HumanoidRootPart") then
+				ApplyHitbox(descendant)
+			end
+		end
+		task.wait(3)
+	end
+end)
+local function BringItem(itemName)
+	local itemsFolder = Workspace:FindFirstChild("Items")
+	if not itemsFolder then return end
+	local character = LocalPlayer.Character
+	if not character then return end
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+	for _, item in ipairs(itemsFolder:GetChildren()) do
+		if item.Name:lower():find(itemName:lower()) then
+			local targetPart = item:FindFirstChildWhichIsA("BasePart")
+			if not targetPart and item:IsA("BasePart") then
+				targetPart = item
+			end
+			if targetPart then
+				targetPart.CFrame = rootPart.CFrame + Vector3.new(math.random(-3, 3), 2, math.random(-3, 3))
+			end
+		end
+	end
+end
+VisualsTab:CreateToggle({
+	["Name"] = "Player ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "PlayerESP",
+	["Callback"] = function(value)
+		ESPSettings.PlayerESP = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Fairy ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "FairyESP",
+	["Callback"] = function(value)
+		ESPSettings.Fairy = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Wolf ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "WolfESP",
+	["Callback"] = function(value)
+		ESPSettings.Wolf = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Bunny ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "BunnyESP",
+	["Callback"] = function(value)
+		ESPSettings.Bunny = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Cultist ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "CultistESP",
+	["Callback"] = function(value)
+		ESPSettings.Cultist = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Pelt Trader ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "PeltTraderESP",
+	["Callback"] = function(value)
+		ESPSettings.PeltTrader = value
+	end
+})
+VisualsTab:CreateDivider()
+VisualsTab:CreateToggle({
+	["Name"] = "Item ESP (Enable This Before All Toggles)",
+	["CurrentValue"] = false,
+	["Flag"] = "ItemESP",
+	["Callback"] = function(value)
+		ESPSettings.ItemESP = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Food Items",
+	["CurrentValue"] = false,
+	["Flag"] = "FoodItems",
+	["Callback"] = function(value)
+		ItemFilters.Berry = value
+		ItemFilters.Carrot = value
+		ItemFilters["Raw Meat"] = value
+		ItemFilters["Cooked Meat"] = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Weapon & Ammo",
+	["CurrentValue"] = false,
+	["Flag"] = "WeaponAmmo",
+	["Callback"] = function(value)
+		ItemFilters.Revolver = value
+		ItemFilters["Revolver Ammo"] = value
+	end
+})
+VisualsTab:CreateToggle({
+	["Name"] = "Building Materials",
+	["CurrentValue"] = false,
+	["Flag"] = "BuildingMats",
+	["Callback"] = function(value)
+		ItemFilters.Log = value
+		ItemFilters["Sheet Metal"] = value
+		ItemFilters.Nails = value
+		ItemFilters["Wooden Plank"] = value
+	end
+})
+VisualsTab:CreateColorPicker({
+	["Name"] = "ESP Color",
+	["Color"] = Color3.fromRGB(200, 220, 255),
+	["Flag"] = "ESPColor",
+	["Callback"] = function(color)
+		ESPSettings.NameColor = color
+	end
+})
+VisualsTab:CreateColorPicker({
+	["Name"] = "Item ESP Color",
+	["Color"] = Color3.fromRGB(255, 220, 120),
+	["Flag"] = "ItemESPColor",
+	["Callback"] = function(color)
+		ESPSettings.ItemColor = color
+	end
+})
+TeleportTab:CreateButton({
+	["Name"] = "Teleport to Camp",
+	["Callback"] = function()
+		local character = LocalPlayer.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			character.HumanoidRootPart.CFrame = CFrame.new(13.29, 4, 0.36, 0.6, 0, 0.8, 0, 1, 0, -0.8, 0, 0.6)
+		end
+	end
+})
+TeleportTab:CreateButton({
+	["Name"] = "Teleport to Trader",
+	["Callback"] = function()
+		local traderPosition = Vector3.new(-37.08, 3.98, -16.33)
+		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local rootPart = character:WaitForChild("HumanoidRootPart")
+		rootPart.CFrame = CFrame.new(traderPosition)
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Everything",
+	["Callback"] = function()
+		local itemsFolder = Workspace:FindFirstChild("Items")
+		if not itemsFolder then return end
+		local character = LocalPlayer.Character
+		if not character then return end
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then return end
+		for _, item in ipairs(itemsFolder:GetChildren()) do
+			local targetPart = item:FindFirstChildWhichIsA("BasePart")
+			if not targetPart and item:IsA("BasePart") then
+				targetPart = item
+			end
+			if targetPart then
+				targetPart.CFrame = rootPart.CFrame + Vector3.new(math.random(-5, 5), 3, math.random(-5, 5))
+			end
+		end
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Auto Cook Meat",
+	["Callback"] = function()
+		local firePosition = Vector3.new(1.87, 4.33, -3.67)
+		local itemsFolder = Workspace:FindFirstChild("Items")
+		if not itemsFolder then return end
+		for _, item in pairs(itemsFolder:GetChildren()) do
+			if (item:IsA("Model") or item:IsA("BasePart")) and item.Name:lower():find("meat") then
+				local targetPart = item:FindFirstChildWhichIsA("BasePart") or item
+				if targetPart then
+					targetPart.CFrame = CFrame.new(firePosition + Vector3.new(math.random(-2, 2), 0.5, math.random(-2, 2)))
+				end
+			end
+		end
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Logs",
+	["Callback"] = function()
+		BringItem("log")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Coal",
+	["Callback"] = function()
+		BringItem("coal")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Flashlight",
+	["Callback"] = function()
+		BringItem("flashlight")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Nails",
+	["Callback"] = function()
+		BringItem("nails")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Revolver",
+	["Callback"] = function()
+		BringItem("revolver")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Bandage",
+	["Callback"] = function()
+		BringItem("bandage")
+	end
+})
+BringItemsTab:CreateButton({
+	["Name"] = "Bring Lost Child",
+	["Callback"] = function()
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			if descendant:IsA("Model") and descendant.Name:lower():find("lost") and descendant:FindFirstChild("HumanoidRootPart") then
+				local character = LocalPlayer.Character
+				if character then
+					local rootPart = character:FindFirstChild("HumanoidRootPart")
+					if rootPart then
+						descendant:PivotTo(rootPart.CFrame + Vector3.new(0, 2, 0))
+					end
+				end
+			end
+		end
+	end
+})
+HitboxTab:CreateToggle({
+	["Name"] = "Wolf Hitbox",
+	["CurrentValue"] = false,
+	["Flag"] = "WolfHitbox",
+	["Callback"] = function(value)
+		HitboxSettings.Wolf = value
+	end
+})
+HitboxTab:CreateToggle({
+	["Name"] = "Bunny Hitbox",
+	["CurrentValue"] = false,
+	["Flag"] = "BunnyHitbox",
+	["Callback"] = function(value)
+		HitboxSettings.Bunny = value
+	end
+})
+HitboxTab:CreateToggle({
+	["Name"] = "Cultist Hitbox",
+	["CurrentValue"] = false,
+	["Flag"] = "CultistHitbox",
+	["Callback"] = function(value)
+		HitboxSettings.Cultist = value
+	end
+})
+HitboxTab:CreateSlider({
+	["Name"] = "Hitbox Size",
+	["Range"] = { 2, 25 },
+	["Increment"] = 1,
+	["CurrentValue"] = 10,
+	["Flag"] = "HitboxSize",
+	["Callback"] = function(value)
+		HitboxSettings.Size = value
+	end
+})
+HitboxTab:CreateToggle({
+	["Name"] = "Show Hitbox",
+	["CurrentValue"] = false,
+	["Flag"] = "ShowHitbox",
+	["Callback"] = function(value)
+		HitboxSettings.Show = value
+	end
+})
+MiscTab:CreateToggle({
+	["Name"] = "Speed Hack",
+	["CurrentValue"] = false,
+	["Flag"] = "SpeedHack",
+	["Callback"] = function(value)
+		SpeedSettings.enabled = value
+		ApplySpeed()
+	end
+})
+MiscTab:CreateSlider({
+	["Name"] = "Speed Value",
+	["Range"] = { 16, 200 },
+	["Increment"] = 1,
+	["CurrentValue"] = 28,
+	["Flag"] = "SpeedValue",
+	["Callback"] = function(value)
+		SpeedSettings.value = value
+		if SpeedSettings.enabled then
+			ApplySpeed()
+		end
+	end
+})
+MiscTab:CreateButton({
+	["Name"] = "FPS Boost",
+	["Callback"] = function()
+		pcall(function()
+			settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+			local lighting = game:GetService("Lighting")
+			lighting.Brightness = 0
+			lighting.FogEnd = 100
+			lighting.GlobalShadows = false
+			lighting.EnvironmentDiffuseScale = 0
+			lighting.EnvironmentSpecularScale = 0
+			local terrain = workspace:FindFirstChildOfClass("Terrain")
+			if terrain then
+				terrain.WaterWaveSize = 0
+				terrain.WaterWaveSpeed = 0
+				terrain.WaterReflectance = 0
+				terrain.WaterTransparency = 1
+			end
+			for _, effect in ipairs(lighting:GetDescendants()) do
+				if effect:IsA("PostEffect") or effect:IsA("BloomEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("SunRaysEffect") or effect:IsA("BlurEffect") then
+					effect.Enabled = false
+				end
+			end
+			for _, instance in ipairs(game:GetDescendants()) do
+				if instance:IsA("ParticleEmitter") or instance:IsA("Trail") then
+					instance.Enabled = false
+				elseif instance:IsA("Texture") or instance:IsA("Decal") then
+					instance.Transparency = 1
+				end
+			end
+			for _, part in ipairs(workspace:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CastShadow = false
+				end
+			end
+		end)
+		Rayfield:Notify({
+			["Title"] = "FPS Boost",
+			["Content"] = "Applied successfully!",
+			["Duration"] = 3,
+			["Image"] = 108632720139222
+		})
+	end
+})
+LocalPlayer.CharacterAdded:Connect(function()
+	if SpeedSettings.enabled then
+		task.wait(1)
+		ApplySpeed()
+	end
+end)
+InfoTab:CreateSection("Supported Games")
+InfoTab:CreateParagraph({
+	["Title"] = "Saturn Hub Wanna Say",
+	["Content"] = "Thanks if you are joining our discord server below, Positive Comment can leave us in joy :]"
+})
+InfoTab:CreateButton({
+	["Name"] = "Copy Discord Invite",
+	["Callback"] = function()
+		pcall(function()
+			setclipboard("https://discord.gg/6UaRDjBY42")
+			Rayfield:Notify({
+				["Title"] = "Copied!",
+				["Content"] = "Discord link copied to clipboard",
+				["Duration"] = 3,
+				["Image"] = 108632720139222
+			})
+		end)
+	end
+})
+InfoTab:CreateParagraph({
+	["Title"] = "Update Notice",
+	["Content"] = "This is V.1 so don't expect much :)"
+})
+Rayfield:Notify({
+	["Title"] = "Saturn Hub",
+	["Content"] = "Script loaded successfully!",
+	["Duration"] = 5,
+	["Image"] = 108632720139222
+})
+pcall(function()
+	if Rayfield.LoadConfiguration then
+		Rayfield:LoadConfiguration()
+	end
+end)

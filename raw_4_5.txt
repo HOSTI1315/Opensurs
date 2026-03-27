@@ -1,0 +1,794 @@
+-- Piano Key System for Roblox
+-- Enhanced with mobile compatibility, 24-hour key storage, Linkvertise/LootLabs support, and PandaFreeAccess
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Configuration
+local CONFIG = {
+    FOLDER_NAME = ".hiddenkey",
+    FILE_NAME = "ChordRushKey",
+    PANDA_FILE_NAME = "PandaFreeAccess",
+    KEY_DURATION = 24 * 60 * 60,
+    PANDA_ACTIVE_DURATION = 2 * 24 * 60 * 60,
+    PANDA_COOLDOWN_DURATION = 9 * 24 * 60 * 60,
+    UI_WIDTH = 250,
+    UI_HEIGHT = 350, -- Increased height for new button
+    LINKVERTISE_URL = "https://link-hub.net/548819/NMe1ApwcXy28",
+    LOOTLABS_URL = "" -- Will be fetched
+}
+
+-- Safely fetch LootLabs URL
+local function fetchLootLabsUrl()
+    local success, result = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/MADNESSTEST/need/refs/heads/main/secret.txt")
+    end)
+    
+    if success and result then
+        CONFIG.LOOTLABS_URL = result:gsub("%s+", "") -- Remove whitespace
+    else
+        CONFIG.LOOTLABS_URL = "https://example.com/lootlabs-fallback"
+        warn("Failed to fetch LootLabs URL, using fallback")
+    end
+end
+
+-- Safely fetch main script hash
+local function fetchMainScriptUrl()
+    local success, hashWhiteSpace = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/wownskdo/TestForApi/refs/heads/main/Midi/Main%20Script")
+    end)
+    
+    if success and hashWhiteSpace then
+        local hashScript = hashWhiteSpace:gsub("%s+", "")
+        return "https://gist.githubusercontent.com/wownskdo/c725bcec64b38afeea83e0228c54f5bf/raw/"..hashScript.."/Official%20Main%20Script"
+    else
+        warn("Failed to fetch main script hash")
+        return nil
+    end
+end
+
+-- Key fetching URLs
+local function getKeyUrls()
+    local success, ketGit = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/MADNESSTEST/need/main/new.txt")
+    end)
+    
+    if success and ketGit then
+        local keyGist = "https://gist.githubusercontent.com/MADNESSTEST/d68fc1ce7ea72159553b21b769a4be1c/raw/"..ketGit.."/key"
+        return ketGit:gsub("%s+", ""), keyGist
+    else
+        warn("Failed to fetch key URLs")
+        return nil, nil
+    end
+end
+
+-- Notification system with error handling
+local function sendNotification(title, text, duration)
+    duration = duration or 5
+    
+    local success, _ = pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = duration,
+            Icon = "rbxthumb://type=AvatarHeadShot&id="..player.UserId.."&w=150&h=150"
+        })
+    end)
+    
+    if not success then
+        warn("Failed to send notification: " .. title .. " - " .. text)
+    end
+end
+
+-- File management functions with error handling
+local function createHiddenFolder()
+    local success, _ = pcall(function()
+        if not isfolder(CONFIG.FOLDER_NAME) then
+            makefolder(CONFIG.FOLDER_NAME)
+        end
+    end)
+    
+    if not success then
+        warn("Failed to create hidden folder")
+        return false
+    end
+    return true
+end
+
+local function saveKey(keyText)
+    if not createHiddenFolder() then
+        return false
+    end
+    
+    local timestamp = os.time()
+    local keyData = {
+        timestamp = timestamp,
+        text = keyText
+    }
+    
+    local success, _ = pcall(function()
+        local jsonData = HttpService:JSONEncode(keyData)
+        local filePath = CONFIG.FOLDER_NAME .. "/" .. CONFIG.FILE_NAME
+        writefile(filePath, jsonData)
+    end)
+    
+    if success then
+        -- Calculate expiration time
+        local expirationTime = timestamp + CONFIG.KEY_DURATION
+        local expirationDate = os.date("%B %d, %Y at %I:%M %p", expirationTime)
+        
+        sendNotification("🎹 Key Saved!", "⏳ Key will expire on " .. expirationDate, 8)
+        return true
+    else
+        warn("Failed to save key")
+        return false
+    end
+end
+
+local function loadKey()
+    local filePath = CONFIG.FOLDER_NAME .. "/" .. CONFIG.FILE_NAME
+    
+    local success, result = pcall(function()
+        if not isfile(filePath) then
+            return nil
+        end
+        
+        local jsonData = readfile(filePath)
+        return HttpService:JSONDecode(jsonData)
+    end)
+    
+    if success then
+        return result
+    else
+        warn("Failed to load key")
+        return nil
+    end
+end
+
+local function isKeyValid(keyData)
+    if not keyData or not keyData.timestamp then
+        return false
+    end
+    
+    local currentTime = os.time()
+    local keyAge = currentTime - keyData.timestamp
+    
+    return keyAge < CONFIG.KEY_DURATION
+end
+
+-- PandaFreeAccess functions
+local function savePandaAccess(activateTime)
+    if not createHiddenFolder() then
+        return false
+    end
+    
+    local pandaData = {
+        activateTime = activateTime,
+        timeLeft = CONFIG.PANDA_ACTIVE_DURATION,
+        isActive = true,
+        hasBeenUsed = true
+    }
+    
+    local success, _ = pcall(function()
+        local jsonData = HttpService:JSONEncode(pandaData)
+        local filePath = CONFIG.FOLDER_NAME .. "/" .. CONFIG.PANDA_FILE_NAME
+        writefile(filePath, jsonData)
+    end)
+    
+    if success then
+        local expirationTime = activateTime + CONFIG.PANDA_ACTIVE_DURATION
+        local expirationDate = os.date("%B %d, %Y at %I:%M %p", expirationTime)
+        
+        sendNotification("🐼 PandaFreeAccess", "✅ Free access activated! Expires on " .. expirationDate, 8)
+        return true
+    else
+        warn("Failed to save PandaFreeAccess")
+        return false
+    end
+end
+
+local function loadPandaAccess()
+    local filePath = CONFIG.FOLDER_NAME .. "/" .. CONFIG.PANDA_FILE_NAME
+    
+    local success, result = pcall(function()
+        if not isfile(filePath) then
+            return nil
+        end
+        
+        local jsonData = readfile(filePath)
+        return HttpService:JSONDecode(jsonData)
+    end)
+    
+    if success then
+        return result
+    else
+        warn("Failed to load PandaFreeAccess")
+        return nil
+    end
+end
+
+local function isPandaAccessActive()
+    local pandaData = loadPandaAccess()
+    if not pandaData or not pandaData.activateTime then
+        return false, nil
+    end
+    
+    local currentTime = os.time()
+    local timeElapsed = currentTime - pandaData.activateTime
+    
+    if timeElapsed < CONFIG.PANDA_ACTIVE_DURATION then
+        -- Still active
+        local timeLeft = CONFIG.PANDA_ACTIVE_DURATION - timeElapsed
+        return true, timeLeft
+    else
+        -- Has expired
+        return false, nil
+    end
+end
+
+local function canActivatePandaAccess()
+    local pandaData = loadPandaAccess()
+    if not pandaData or not pandaData.hasBeenUsed then
+        return true -- Never used before
+    end
+    
+    local currentTime = os.time()
+    local timeElapsed = currentTime - pandaData.activateTime
+    
+    if timeElapsed >= CONFIG.PANDA_COOLDOWN_DURATION then
+        return true -- Cooldown period has passed
+    else
+        local timeLeft = CONFIG.PANDA_COOLDOWN_DURATION - timeElapsed
+        return false, timeLeft
+    end
+end
+
+local function formatTime(seconds)
+    local days = math.floor(seconds / (24 * 60 * 60))
+    local hours = math.floor((seconds % (24 * 60 * 60)) / (60 * 60))
+    local minutes = math.floor((seconds % (60 * 60)) / 60)
+    
+    if days > 0 then
+        return days .. "d " .. hours .. "h " .. minutes .. "m"
+    elseif hours > 0 then
+        return hours .. "h " .. minutes .. "m"
+    else
+        return minutes .. "m"
+    end
+end
+
+-- UI Creation
+local function createUI()
+    -- Remove existing UI if present
+    if playerGui:FindFirstChild("PianoKeySystem") then
+        playerGui:FindFirstChild("PianoKeySystem"):Destroy()
+    end
+    
+    -- Main ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "PianoKeySystem"
+    screenGui.Parent = playerGui
+    screenGui.ResetOnSpawn = false
+    
+    -- Main Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, CONFIG.UI_WIDTH, 0, CONFIG.UI_HEIGHT)
+    mainFrame.Position = UDim2.new(0.5, -CONFIG.UI_WIDTH/2, 0.5, -CONFIG.UI_HEIGHT/2)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+    
+    -- Corner rounding
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- Shadow effect
+    local shadow = Instance.new("Frame")
+    shadow.Name = "Shadow"
+    shadow.Size = UDim2.new(1, 6, 1, 6)
+    shadow.Position = UDim2.new(0, -3, 0, -3)
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.7
+    shadow.ZIndex = mainFrame.ZIndex - 1
+    shadow.Parent = mainFrame
+    
+    local shadowCorner = Instance.new("UICorner")
+    shadowCorner.CornerRadius = UDim.new(0, 12)
+    shadowCorner.Parent = shadow
+    
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.Position = UDim2.new(0, 0, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "🎹 Piano Key System"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.Parent = mainFrame
+    
+    -- Service Selection Frame
+    local serviceFrame = Instance.new("Frame")
+    serviceFrame.Name = "ServiceFrame"
+    serviceFrame.Size = UDim2.new(1, -20, 0, 35)
+    serviceFrame.Position = UDim2.new(0, 10, 0, 50)
+    serviceFrame.BackgroundTransparency = 1
+    serviceFrame.Parent = mainFrame
+    
+    -- Linkvertise Button
+    local linkvertiseBtn = Instance.new("TextButton")
+    linkvertiseBtn.Name = "LinkvertiseButton"
+    linkvertiseBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    linkvertiseBtn.Position = UDim2.new(0, 0, 0, 0)
+    linkvertiseBtn.BackgroundColor3 = Color3.fromRGB(255, 87, 51)
+    linkvertiseBtn.BorderSizePixel = 0
+    linkvertiseBtn.Text = "🔗 Linkvertise"
+    linkvertiseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    linkvertiseBtn.TextScaled = true
+    linkvertiseBtn.Font = Enum.Font.GothamBold
+    linkvertiseBtn.Parent = serviceFrame
+    
+    local linkvertiseCorner = Instance.new("UICorner")
+    linkvertiseCorner.CornerRadius = UDim.new(0, 6)
+    linkvertiseCorner.Parent = linkvertiseBtn
+    
+    -- LootLabs Button
+    local lootlabsBtn = Instance.new("TextButton")
+    lootlabsBtn.Name = "LootLabsButton"
+    lootlabsBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    lootlabsBtn.Position = UDim2.new(0.52, 0, 0, 0)
+    lootlabsBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    lootlabsBtn.BorderSizePixel = 0
+    lootlabsBtn.Text = "💎 LootLabs"
+    lootlabsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lootlabsBtn.TextScaled = true
+    lootlabsBtn.Font = Enum.Font.GothamBold
+    lootlabsBtn.Parent = serviceFrame
+    
+    local lootlabsCorner = Instance.new("UICorner")
+    lootlabsCorner.CornerRadius = UDim.new(0, 6)
+    lootlabsCorner.Parent = lootlabsBtn
+    
+    -- Status Label
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Size = UDim2.new(1, -20, 0, 30)
+    statusLabel.Position = UDim2.new(0, 10, 0, 95)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "🔑 Checking key status..."
+    statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    statusLabel.TextScaled = true
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.Parent = mainFrame
+    
+    -- Key Input
+    local keyInput = Instance.new("TextBox")
+    keyInput.Name = "KeyInput"
+    keyInput.Size = UDim2.new(1, -20, 0, 40)
+    keyInput.Position = UDim2.new(0, 10, 0, 135)
+    keyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    keyInput.BorderSizePixel = 0
+    keyInput.PlaceholderText = "🔐 Enter your key here..."
+    keyInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+    keyInput.Text = ""
+    keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyInput.TextScaled = true
+    keyInput.Font = Enum.Font.Gotham
+    keyInput.ClearTextOnFocus = false
+    keyInput.Parent = mainFrame
+    
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 8)
+    inputCorner.Parent = keyInput
+    
+    -- Get Key Button
+    local getKeyBtn = Instance.new("TextButton")
+    getKeyBtn.Name = "GetKeyButton"
+    getKeyBtn.Size = UDim2.new(1, -20, 0, 40)
+    getKeyBtn.Position = UDim2.new(0, 10, 0, 185)
+    getKeyBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+    getKeyBtn.BorderSizePixel = 0
+    getKeyBtn.Text = "🔗 Get Key"
+    getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    getKeyBtn.TextScaled = true
+    getKeyBtn.Font = Enum.Font.GothamBold
+    getKeyBtn.Parent = mainFrame
+    
+    local getKeyCorner = Instance.new("UICorner")
+    getKeyCorner.CornerRadius = UDim.new(0, 8)
+    getKeyCorner.Parent = getKeyBtn
+    
+    -- Submit Button
+    local submitBtn = Instance.new("TextButton")
+    submitBtn.Name = "SubmitButton"
+    submitBtn.Size = UDim2.new(1, -20, 0, 40)
+    submitBtn.Position = UDim2.new(0, 10, 0, 235)
+    submitBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+    submitBtn.BorderSizePixel = 0
+    submitBtn.Text = "✅ Submit Key"
+    submitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submitBtn.TextScaled = true
+    submitBtn.Font = Enum.Font.GothamBold
+    submitBtn.Parent = mainFrame
+    
+    local submitCorner = Instance.new("UICorner")
+    submitCorner.CornerRadius = UDim.new(0, 8)
+    submitCorner.Parent = submitBtn
+    
+    -- PandaFreeAccess Button
+    local pandaBtn = Instance.new("TextButton")
+    pandaBtn.Name = "PandaFreeAccessButton"
+    pandaBtn.Size = UDim2.new(1, -20, 0, 40)
+    pandaBtn.Position = UDim2.new(0, 10, 0, 285)
+    pandaBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    pandaBtn.BorderSizePixel = 0
+    pandaBtn.Text = "🐼 PandaFreeAccess"
+    pandaBtn.TextColor3 = Color3.fromRGB(255, 100, 100) -- Default red
+    pandaBtn.TextScaled = true
+    pandaBtn.Font = Enum.Font.GothamBold
+    pandaBtn.Parent = mainFrame
+    
+    local pandaCorner = Instance.new("UICorner")
+    pandaCorner.CornerRadius = UDim.new(0, 8)
+    pandaCorner.Parent = pandaBtn
+    
+    -- Invisible Status Label for PandaFreeAccess
+    local pandaStatusLabel = Instance.new("TextLabel")
+    pandaStatusLabel.Name = "PandaStatusLabel"
+    pandaStatusLabel.Size = UDim2.new(1, -20, 0, 15)
+    pandaStatusLabel.Position = UDim2.new(0, 10, 0, 330)
+    pandaStatusLabel.BackgroundTransparency = 1
+    pandaStatusLabel.Text = ""
+    pandaStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    pandaStatusLabel.TextScaled = true
+    pandaStatusLabel.Font = Enum.Font.Gotham
+    pandaStatusLabel.Visible = false
+    pandaStatusLabel.Parent = mainFrame
+    
+    -- Close Button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseButton"
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.TextScaled = true
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.Parent = mainFrame
+    
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 15)
+    closeCorner.Parent = closeBtn
+    
+    return screenGui, mainFrame, statusLabel, keyInput, getKeyBtn, submitBtn, closeBtn, linkvertiseBtn, lootlabsBtn, pandaBtn, pandaStatusLabel
+end
+
+-- Animation functions
+local function animateButton(button, scale)
+    local originalSize = button.Size
+    local newSize = UDim2.new(originalSize.X.Scale * scale, originalSize.X.Offset * scale, originalSize.Y.Scale * scale, originalSize.Y.Offset * scale)
+    
+    local tween = TweenService:Create(button, TweenInfo.new(0.1), {Size = newSize})
+    tween:Play()
+    tween.Completed:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.1), {Size = originalSize}):Play()
+    end)
+end
+
+-- Main system logic
+local function initializeKeySystem()
+    -- Fetch URLs first
+    fetchLootLabsUrl()
+    local mainScriptUrl = fetchMainScriptUrl()
+    
+    if not mainScriptUrl then
+        sendNotification("🎹 Error", "❌ Failed to initialize script URLs", 5)
+        return
+    end
+    
+    local screenGui, mainFrame, statusLabel, keyInput, getKeyBtn, submitBtn, closeBtn, linkvertiseBtn, lootlabsBtn, pandaBtn, pandaStatusLabel = createUI()
+    
+    -- Service selection state
+    local selectedService = "linkvertise"
+    
+    local function updateServiceSelection(service)
+        selectedService = service
+        
+        if service == "linkvertise" then
+            linkvertiseBtn.BackgroundColor3 = Color3.fromRGB(255, 87, 51)
+            lootlabsBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        else
+            linkvertiseBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            lootlabsBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+        end
+    end
+    
+    -- Update PandaFreeAccess button status
+    local function updatePandaStatus()
+        local isActive, timeLeft = isPandaAccessActive()
+        
+        if isActive then
+            pandaBtn.TextColor3 = Color3.fromRGB(100, 255, 100) -- Green
+            pandaStatusLabel.Text = "Free Access Active."
+            pandaStatusLabel.Visible = true
+        else
+            pandaBtn.TextColor3 = Color3.fromRGB(255, 100, 100) -- Red
+            pandaStatusLabel.Visible = false
+        end
+    end
+    
+    -- Initialize default selection
+    updateServiceSelection("linkvertise")
+    updatePandaStatus()
+    
+    -- Check for existing valid key or active PandaFreeAccess
+    local existingKey = loadKey()
+    local isKeyValid = existingKey and isKeyValid(existingKey)
+    local isPandaActive, pandaTimeLeft = isPandaAccessActive()
+    
+    if isKeyValid or isPandaActive then
+        if isKeyValid then
+            local timeLeft = CONFIG.KEY_DURATION - (os.time() - existingKey.timestamp)
+            local hoursLeft = math.floor(timeLeft / 3600)
+            local minutesLeft = math.floor((timeLeft % 3600) / 60)
+            
+            statusLabel.Text = "✅ Valid key found! " .. hoursLeft .. "h " .. minutesLeft .. "m remaining"
+            statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        else
+            statusLabel.Text = "✅ PandaFreeAccess active! " .. formatTime(pandaTimeLeft) .. " remaining"
+            statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        end
+        
+        -- Auto-access script after 2 seconds
+        RunService.Heartbeat:Wait()
+        wait(2)
+        sendNotification("🎹 Piano Key System", "🚀 Accessing script...", 3)
+        screenGui:Destroy()
+        
+        -- Load main script
+        local success, _ = pcall(function()
+            loadstring(game:HttpGet(mainScriptUrl))()
+        end)
+        
+        if not success then
+            sendNotification("🎹 Error", "❌ Failed to load main script", 5)
+        end
+        return
+    end
+    
+    -- No valid key found, show UI
+    if existingKey then
+        statusLabel.Text = "⚠️ Key expired! Please get a new key."
+        statusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    else
+        statusLabel.Text = "🔑 No key found. Please get a key first."
+        statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+    
+    -- Button event handlers
+    linkvertiseBtn.MouseButton1Click:Connect(function()
+        animateButton(linkvertiseBtn, 0.95)
+        updateServiceSelection("linkvertise")
+        sendNotification("🔗 Linkvertise", "Selected Linkvertise as key service", 3)
+    end)
+    
+    lootlabsBtn.MouseButton1Click:Connect(function()
+        animateButton(lootlabsBtn, 0.95)
+        updateServiceSelection("lootlabs")
+        sendNotification("💎 LootLabs", "Selected LootLabs as key service", 3)
+    end)
+    
+    getKeyBtn.MouseButton1Click:Connect(function()
+        animateButton(getKeyBtn, 0.95)
+        
+        local keyUrl = selectedService == "linkvertise" and CONFIG.LINKVERTISE_URL or CONFIG.LOOTLABS_URL
+        
+        local success, _ = pcall(function()
+            if setclipboard then
+                setclipboard(keyUrl)
+                sendNotification("🎹 Key Link", "🔗 " .. (selectedService == "linkvertise" and "Linkvertise" or "LootLabs") .. " URL copied to clipboard!", 5)
+            else
+                sendNotification("🎹 Key Link", "🔗 " .. (selectedService == "linkvertise" and "Linkvertise" or "LootLabs") .. " URL: " .. keyUrl, 8)
+            end
+        end)
+        
+        if not success then
+            sendNotification("🎹 Error", "❌ Failed to copy URL", 3)
+        end
+    end)
+    
+    submitBtn.MouseButton1Click:Connect(function()
+        animateButton(submitBtn, 0.95)
+        
+        local inputKey = keyInput.Text:gsub("%s+", "")
+        
+        if inputKey == "" then
+            sendNotification("🎹 Invalid Input", "⚠️ Please enter a key first!", 3)
+            return
+        end
+        
+        -- Validate key
+        local ketGit, keyUrl = getKeyUrls()
+        if not ketGit or not keyUrl then
+            sendNotification("🎹 Error", "❌ Failed to connect to key server", 5)
+            statusLabel.Text = "❌ Connection error. Please try again."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            return
+        end
+        
+        local success, currentKey = pcall(function()
+            return game:HttpGet(keyUrl):gsub("%s+", "")
+        end)
+        
+        if not success then
+            sendNotification("🎹 Error", "❌ Failed to verify key. Please try again.", 5)
+            statusLabel.Text = "❌ Connection error. Please try again."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            return
+        end
+        
+        -- Check if key matches current key OR is a stored valid key
+        local existingStoredKey = loadKey()
+        local isCurrentKey = (inputKey == currentKey)
+        local isValidStoredKey = (existingStoredKey and existingStoredKey.text == inputKey and isKeyValid(existingStoredKey))
+        
+        if isCurrentKey or isValidStoredKey then
+            if isCurrentKey then
+                saveKey(inputKey)
+            end
+            
+            statusLabel.Text = "✅ Key verified! Accessing script..."
+            statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+            
+            sendNotification("🎹 Success!", "🎉 Key accepted! Welcome to Piano Key System!", 5)
+            
+            -- Access main script after 2 seconds
+            RunService.Heartbeat:Wait()
+            wait(2)
+            screenGui:Destroy()
+            
+            -- Load main script
+            local scriptSuccess, _ = pcall(function()
+                loadstring(game:HttpGet(mainScriptUrl))()
+            end)
+            
+            if not scriptSuccess then
+                sendNotification("🎹 Error", "❌ Failed to load main script", 5)
+            end
+        else
+            sendNotification("🎹 Invalid Key", "❌ The key you entered is invalid or expired.", 5)
+            statusLabel.Text = "❌ Invalid key. Please get a new one."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+    end)
+    
+    -- PandaFreeAccess button handler
+    pandaBtn.MouseButton1Click:Connect(function()
+        animateButton(pandaBtn, 0.95)
+        
+        local isActive, timeLeft = isPandaAccessActive()
+        
+        if isActive then
+            -- Already active, show script access
+            statusLabel.Text = "✅ PandaFreeAccess active! Accessing script..."
+            statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+            
+            sendNotification("🐼 PandaFreeAccess", "🚀 Accessing script with free access!", 3)
+            
+            -- Access main script after 2 seconds
+            RunService.Heartbeat:Wait()
+            wait(2)
+            screenGui:Destroy()
+            
+            -- Load main script
+            local scriptSuccess, _ = pcall(function()
+                loadstring(game:HttpGet(mainScriptUrl))()
+            end)
+            
+            if not scriptSuccess then
+                sendNotification("🎹 Error", "❌ Failed to load main script", 5)
+            end
+        else
+            -- Not active, check if can activate
+            local canActivate, cooldownTimeLeft = canActivatePandaAccess()
+            
+            if canActivate then
+                -- Activate PandaFreeAccess
+                local activateTime = os.time()
+                if savePandaAccess(activateTime) then
+                    updatePandaStatus()
+                    statusLabel.Text = "✅ PandaFreeAccess activated! Accessing script..."
+                    statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+                    
+                    -- Access main script after 2 seconds
+                    RunService.Heartbeat:Wait()
+                    wait(2)
+                    screenGui:Destroy()
+                    
+                    -- Load main script
+                    local scriptSuccess, _ = pcall(function()
+                        loadstring(game:HttpGet(mainScriptUrl))()
+                    end)
+                    
+                    if not scriptSuccess then
+                        sendNotification("🎹 Error", "❌ Failed to load main script", 5)
+                    end
+                else
+                    sendNotification("🐼 Error", "❌ Failed to activate PandaFreeAccess", 5)
+                end
+            else
+                -- Still in cooldown
+                local cooldownMessage = "You must wait " .. formatTime(cooldownTimeLeft) .. " to reactivate."
+                sendNotification("🐼 PandaFreeAccess", "⏳ " .. cooldownMessage, 8)
+                statusLabel.Text = "⏳ Cooldown: " .. formatTime(cooldownTimeLeft) .. " remaining"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+            end
+        end
+    end)
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        animateButton(closeBtn, 0.9)
+        wait(0.1)
+        screenGui:Destroy()
+    end)
+    
+    -- Make draggable
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    local function updateInput(input)
+        if dragging and dragStart and startPos then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+    
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            
+            local connection
+            connection = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    connection:Disconnect()
+                end
+            end)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                updateInput(input)
+            end
+        end
+    end)
+    
+    -- Entrance animation
+    mainFrame.Position = UDim2.new(0.5, -CONFIG.UI_WIDTH/2, 1.5, 0)
+    local entranceTween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+        Position = UDim2.new(0.5, -CONFIG.UI_WIDTH/2, 0.5, -CONFIG.UI_HEIGHT/2)
+    })
+    entranceTween:Play()
+    
+    sendNotification("🎹 Piano Key System", "🎵 Welcome! Select a service and get your key to access the script.", 5)
+end
+
+-- Initialize the system
+initializeKeySystem()

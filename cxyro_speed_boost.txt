@@ -1,0 +1,88 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+local Part = Instance.new("Part")
+Part.Name = "SpeedAlignPart"
+Part.Size = Vector3.new(12, 8, 0.5)
+Part.Transparency = 1
+Part.CanCollide = false
+Part.Anchored = true
+Part.Parent = workspace
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpeedGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 180, 0, 80)
+Frame.Position = UDim2.new(0.01, 0, 0.25, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Size = UDim2.new(0, 160, 0, 40)
+TextButton.Position = UDim2.new(0, 10, 0, 10)
+TextButton.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+TextButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+TextButton.Text = "Speed: OFF"
+TextButton.TextSize = 20
+TextButton.Font = Enum.Font.GothamBold
+TextButton.Parent = Frame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 10)
+ButtonCorner.Parent = TextButton
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(0, 160, 0, 20)
+TextLabel.Position = UDim2.new(0, 10, 0, 55)
+TextLabel.BackgroundTransparency = 1
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextScaled = true
+TextLabel.Text = "discord.gg/a4Z6gDu4Be"
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.Parent = Frame
+
+local SpeedEnabled = false
+
+TextButton.MouseButton1Click:Connect(function()
+    SpeedEnabled = not SpeedEnabled
+    
+    if SpeedEnabled then
+        TextButton.Text = "Speed: ON"
+        TextButton.BackgroundColor3 = Color3.fromRGB(0, 40, 0)
+        TextButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        TextButton.Text = "Speed: OFF"
+        TextButton.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+        TextButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+    end
+end)
+
+task.delay(0.2, function()
+    setclipboard("https://discord.gg/a4Z6gDu4Be")
+    StarterGui:SetCore("SendNotification", {
+        Title = "Copied!",
+        Text = "Discord link copied to clipboard",
+        Duration = 4
+    })
+end)
+
+RunService.Heartbeat:Connect(function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local Root = LocalPlayer.Character.HumanoidRootPart
+        local Behind = Root.Position - Root.CFrame.LookVector * 3.5
+        Part.CFrame = CFrame.new(Behind, Root.Position)
+    end
+end)

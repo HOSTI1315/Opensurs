@@ -1,0 +1,3730 @@
+-- Zenith (azyyza) recreated this <3
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/SaveManager.lua"))()
+local ToolGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/GoldDoomOwner/Gold-Doom-Script/refs/heads/main/Tool%20Giver"))()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+
+local PowerList = {
+    "Awaken", "Oblivious", "Titanium", "Drug Abused", "Soul Monarch", "Creation",
+    "AkazaDash", "ESPER RAGE", "GOLDEN MONARCH", "VOID WALKER", "STORM BREAKER",
+    "CRIMSON REAPER", "CELESTIAL WRATH", "SHADOW ASSASSIN", "INFERNO KING",
+    "FROZEN DOMAIN", "GRAVITY TITAN", "PLASMA SURGE", "TOXIC VENOM", "TIME WARP",
+    "CRYSTAL FORTRESS", "BLOOD MOON", "DRAGON SPIRIT", "NEBULA VOID",
+    "EARTH SHAKER", "WIND DANCER", "CHAOS BREAKER"
+}
+
+local Window = Library:CreateWindow({
+    Title = "NOT HUB [OBSIDIAN UI]",
+    Footer = "Ink game op update- All features loaded",
+    Icon = 95816097006870,
+    NotifySide = "Right",
+    ShowCustomCursor = true,
+})
+
+local Tabs = {
+    Main = Window:AddTab("Main", "swords"),
+    Movement = Window:AddTab("Movement", "running"),
+    Games = Window:AddTab("Games", "gamepad"),
+    Misc = Window:AddTab("Misc", "settings"),
+    UISettings = Window:AddTab("UI Settings", "settings"),
+}
+
+local FlingEnabled = false
+local FlingConnection = nil
+local CurrentFOV = 70
+local ImprovedKillauraEnabled = false
+local ImprovedKillauraConnection = nil
+local HeadSizeMultiplier = 1.5
+local HitboxMultiplier = 1
+local ImprovedInvisibilityEnabled = false
+local InvisibilityConnection = nil
+local DesyncEnabled = false
+local OriginalKillauraEnabled = false
+local KillauraHitboxes = {}
+local KillauraRange = 15
+local OriginalKillauraLoop = nil
+local AutoAttackEnabled = false
+local AutoAttackConnection = nil
+local SmartAttackEnabled = false
+local SmartAttackConnection = nil
+local KillauraRageEnabled = false
+local KillauraRageConnection = nil
+local AimAssistEnabled = false
+local AimAssistConnection = nil
+local AimTarget = nil
+local AimRange = 50
+local RotationSpeed = 0.15
+local AutoDodgeEnabled = false
+local SelectedTool1 = "Awaken"
+local SelectedTool2 = "Oblivious"
+local CustomPowerName = ""
+local LightningGodEnabled = false
+local LightningGodLoop = nil
+local LightningGodRespawn = nil
+local PlayerToTeleport = nil
+local AttachToPlayerEnabled = false
+local DahenBotEnabled = false
+local QuicksilverEnabled = false
+local QuicksilverConnection = nil
+local OriginalWalkSpeed = 16
+local CurrentQuicksilverSpeed = 16
+local MaxQuicksilverSpeed = 100
+local QuicksilverIncrement = 5
+local LastQuicksilverTick = 0
+local InvisibilityTPEanbled = false
+local InvisibilityTPPos = nil
+local InvisibilityTPConnection = nil
+local InvisibilityBarrier = nil
+local AntiFallEnabled = false
+local AntiFallConnection = nil
+local AntiFallYLimit = -50
+local NoclipEnabled = false
+local NoclipConnection = nil
+local InfiniteJumpEnabled = false
+local InstaInteractEnabled = false
+local AutoSkipEnabled = false
+local EspCandiesEnabled = false
+local AutoFarmCandiesEnabled = false
+local AutoFarmCandiesConnection = nil
+local EspCandiesTable = {}
+local EspHalloweenDoorsEnabled = false
+local EspHalloweenDoorsTable = {}
+local RLGLBypassEnabled = false
+local RLGLBypassConnection = nil
+local RLGLAutoStopEnabled = false
+local RLGLAutoStopConnection = nil
+local RLGLSavedSpeed = 16
+local RLGLAntiShotEnabled = false
+local RLGLAntiShotConnection = nil
+local RLGLAutoModeEnabled = false
+local RLGLSelectedMode = "Save Mode"
+local EspSeekersEnabled = false
+local EspHidersEnabled = false
+local AutoDodgeHNSEnabled = false
+local AutoDodgeHNSConnection = nil
+local AutoJumpRopeEnabled = false
+local AutoJumpRopeConnection = nil
+local AntiFallJumpRopeEnabled = false
+local AntiFallJumpRopeConnection = nil
+local GlassVisionEnabled = false
+local GlassPlatformsEnabled = false
+local FakeGlassParts = {}
+local AntiFallSkySquidEnabled = false
+local AntiFallSkySquidConnection = nil
+local AutoQTESkySquidEnabled = false
+local AutoQTESkySquidConnection = nil
+local VoidKillEnabled = false
+local VoidKillConnection = nil
+local AntiFallFinalEnabled = false
+local AntiFallFinalConnection = nil
+local AutoKillPlayersEnabled = false
+local AutoKillPlayersConnection = nil
+local AntiFallPlatformPart = nil
+local DesyncInfo = {}
+local EspHighlights = {}
+
+local CombatGroup = Tabs.Main:AddLeftGroupbox("Combat Features")
+
+local function FlingNearbyPlayers()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    local RootPart = Character:FindFirstChild("HumanoidRootPart")
+    if not RootPart then return end
+    
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            local TargetRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+            if TargetRoot and (RootPart.Position - TargetRoot.Position).Magnitude < 20 then
+                TargetRoot.Velocity = Vector3.new(math.random(-100, 100), math.random(100, 200), math.random(-100, 100))
+            end
+        end
+    end
+end
+
+CombatGroup:AddToggle("FlingAura", {
+    Text = "Fling Aura",
+    Tooltip = "Fling nearby players",
+    Default = false,
+    Callback = function(Value)
+        FlingEnabled = Value
+        if Value then
+            if FlingConnection then FlingConnection:Disconnect() end
+            FlingConnection = RunService.Heartbeat:Connect(function()
+                if not FlingEnabled then return end
+                FlingNearbyPlayers()
+            end)
+        elseif FlingConnection then
+            FlingConnection:Disconnect()
+            FlingConnection = nil
+        end
+    end,
+})
+
+CombatGroup:AddSlider("FOVChanger", {
+    Text = "FOV Changer",
+    Tooltip = "Change field of view",
+    Default = 70,
+    Min = 30,
+    Max = 120,
+    Rounding = 0,
+    Callback = function(Value)
+        CurrentFOV = Value
+        if Workspace.CurrentCamera then
+            Workspace.CurrentCamera.FieldOfView = Value
+        end
+    end,
+})
+
+local function PerformImprovedAttack()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+    task.wait(0.05)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+    
+    for _, Key in pairs({Enum.KeyCode.E, Enum.KeyCode.F, Enum.KeyCode.Q, Enum.KeyCode.R}) do
+        VirtualInputManager:SendKeyEvent(true, Key, false, game)
+        task.wait(0.02)
+        VirtualInputManager:SendKeyEvent(false, Key, false, game)
+    end
+end
+
+local function ImprovedKillauraRoutine()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    local RootPart = Character:FindFirstChild("HumanoidRootPart")
+    if not RootPart then return end
+
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            local TargetChar = Player.Character
+            local TargetRoot = TargetChar:FindFirstChild("HumanoidRootPart")
+            local TargetHead = TargetChar:FindFirstChild("Head")
+
+            if TargetRoot and TargetHead then
+                if (RootPart.Position - TargetRoot.Position).Magnitude <= 25 * HitboxMultiplier then
+                    if TargetHead:FindFirstChild("OriginalSize") == nil then
+                        local SizeValue = Instance.new("Vector3Value")
+                        SizeValue.Name = "OriginalSize"
+                        SizeValue.Value = TargetHead.Size
+                        SizeValue.Parent = TargetHead
+                    end
+                    TargetHead.Size = TargetHead.OriginalSize.Value * HeadSizeMultiplier
+                    PerformImprovedAttack()
+                elseif TargetHead:FindFirstChild("OriginalSize") then
+                    TargetHead.Size = TargetHead.OriginalSize.Value
+                end
+            end
+        end
+    end
+end
+
+local function ResetHeadSizes()
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            local Head = Player.Character:FindFirstChild("Head")
+            if Head and Head:FindFirstChild("OriginalSize") then
+                Head.Size = Head.OriginalSize.Value
+            end
+        end
+    end
+end
+
+CombatGroup:AddToggle("ImprovedKillaura", {
+    Text = "Improved Killaura",
+    Tooltip = "Enhanced killaura with head expansion",
+    Default = false,
+    Callback = function(Value)
+        ImprovedKillauraEnabled = Value
+        if Value then
+            if ImprovedKillauraConnection then ImprovedKillauraConnection:Disconnect() end
+            ImprovedKillauraConnection = RunService.Heartbeat:Connect(function()
+                if not ImprovedKillauraEnabled then return end
+                ImprovedKillauraRoutine()
+            end)
+        else
+            if ImprovedKillauraConnection then
+                ImprovedKillauraConnection:Disconnect()
+                ImprovedKillauraConnection = nil
+            end
+            ResetHeadSizes()
+        end
+    end,
+})
+
+CombatGroup:AddSlider("HeadSizeMultiplier", {
+    Text = "Head Size Multiplier",
+    Tooltip = "How much to expand player heads",
+    Default = 1.5,
+    Min = 1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        HeadSizeMultiplier = Value
+    end,
+})
+
+CombatGroup:AddSlider("HitboxMultiplier", {
+    Text = "Hitbox Multiplier",
+    Tooltip = "Hitbox range multiplier",
+    Default = 1,
+    Min = 0.5,
+    Max = 3,
+    Rounding = 1,
+    Callback = function(Value)
+        HitboxMultiplier = Value
+    end,
+})
+
+local function ApplyImprovedInvisibility()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    for _, Part in pairs(Character:GetDescendants()) do
+        if Part:IsA("BasePart") then
+            Part.Transparency = 1
+            if Part:FindFirstChildOfClass("SurfaceAppearance") then
+                Part:FindFirstChildOfClass("SurfaceAppearance"):Destroy()
+            end
+        elseif Part:IsA("Decal") then
+            Part.Transparency = 1
+        end
+    end
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    if Humanoid then
+        Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    end
+end
+
+local function RemoveImprovedInvisibility()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    for _, Part in pairs(Character:GetDescendants()) do
+        if Part:IsA("BasePart") then
+            Part.Transparency = 0
+        elseif Part:IsA("Decal") then
+            Part.Transparency = 0
+        end
+    end
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    if Humanoid then
+        Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+    end
+end
+
+CombatGroup:AddToggle("ImprovedInvisibility", {
+    Text = "Improved Invisibility",
+    Tooltip = "Make character completely invisible",
+    Default = false,
+    Callback = function(Value)
+        ImprovedInvisibilityEnabled = Value
+        if Value then
+            if InvisibilityConnection then InvisibilityConnection:Disconnect() end
+            InvisibilityConnection = RunService.Heartbeat:Connect(function()
+                if not ImprovedInvisibilityEnabled then return end
+                ApplyImprovedInvisibility()
+            end)
+        else
+            if InvisibilityConnection then
+                InvisibilityConnection:Disconnect()
+                InvisibilityConnection = nil
+            end
+            RemoveImprovedInvisibility()
+        end
+    end,
+})
+
+CombatGroup:AddToggle("Desync", {
+    Text = "Desync (Anti-Hit)",
+    Tooltip = "Creates desync for anti-hit protection",
+    Default = false,
+    Callback = function(Value)
+        DesyncEnabled = Value
+        if Value then
+            Library:Notify("Desync Enabled - Use X to toggle", 3)
+        else
+            Library:Notify("Desync Disabled", 3)
+        end
+    end,
+})
+
+local function CreateKillauraHitboxes()
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local Box = Instance.new("SelectionBox")
+            Box.Adornee = Player.Character.HumanoidRootPart
+            Box.LineThickness = 0.1
+            Box.Color3 = Color3.new(1, 0, 0)
+            Box.Parent = Player.Character.HumanoidRootPart
+            table.insert(KillauraHitboxes, Box)
+            Player.Character.HumanoidRootPart.Size = Vector3.new(KillauraRange, KillauraRange, KillauraRange)
+            Player.Character.HumanoidRootPart.Transparency = 0.5
+            Player.Character.HumanoidRootPart.CanCollide = false
+        end
+    end
+end
+
+local function RemoveKillauraHitboxes()
+    for _, Box in pairs(KillauraHitboxes) do
+        if Box.Adornee then
+            Box.Adornee.Size = Vector3.new(2, 2, 1)
+            Box.Adornee.Transparency = 1
+            Box:Destroy()
+        end
+    end
+    KillauraHitboxes = {}
+end
+
+CombatGroup:AddToggle("OriginalKillaura", {
+    Text = "Original Killaura",
+    Tooltip = "Extended attack range",
+    Default = false,
+    Callback = function(Value)
+        OriginalKillauraEnabled = Value
+        if Value then
+            CreateKillauraHitboxes()
+        else
+            RemoveKillauraHitboxes()
+        end
+    end,
+})
+
+CombatGroup:AddInput("KillauraRange", {
+    Default = "30",
+    Numeric = true,
+    Text = "Killaura Range",
+    Placeholder = "30",
+    Callback = function(Value)
+        local Num = tonumber(Value)
+        if Num and Num >= 1 and Num <= 100 then
+            KillauraRange = Num
+            if OriginalKillauraEnabled then
+                RemoveKillauraHitboxes()
+                CreateKillauraHitboxes()
+            end
+        end
+    end,
+})
+
+local function AutoAttackRoutine()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    local Tool = Character:FindFirstChildOfClass("Tool")
+    if Tool then
+        Tool:Activate()
+    end
+end
+
+CombatGroup:AddToggle("AutoAttack", {
+    Text = "⚔️ Auto Attack",
+    Tooltip = "Auto attack nearest player",
+    Default = false,
+    Callback = function(Value)
+        AutoAttackEnabled = Value
+        if Value then
+            if AutoAttackConnection then AutoAttackConnection:Disconnect() end
+            AutoAttackConnection = RunService.Heartbeat:Connect(function()
+                if not AutoAttackEnabled then return end
+                AutoAttackRoutine()
+            end)
+        else
+            if AutoAttackConnection then
+                AutoAttackConnection:Disconnect()
+                AutoAttackConnection = nil
+            end
+        end
+    end,
+})
+
+CombatGroup:AddToggle("SmartAutoAttack", {
+    Text = "🧠 Smart Auto Attack",
+    Tooltip = "Smart auto attack system",
+    Default = false,
+    Callback = function(Value)
+        SmartAttackEnabled = Value
+        if Value then
+            if SmartAttackConnection then SmartAttackConnection:Disconnect() end
+            SmartAttackConnection = RunService.Heartbeat:Connect(function()
+                if not SmartAttackEnabled then return end
+                local Target = nil
+                local MinDist = 15
+                for _, Player in pairs(Players:GetPlayers()) do
+                    if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                        local Dist = (LocalPlayer.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                        if Dist < MinDist then
+                            Target = Player
+                            MinDist = Dist
+                        end
+                    end
+                end
+                if Target then AutoAttackRoutine() end
+            end)
+        else
+            if SmartAttackConnection then
+                SmartAttackConnection:Disconnect()
+                SmartAttackConnection = nil
+            end
+        end
+    end,
+})
+
+CombatGroup:AddToggle("KillauraRage", {
+    Text = "👹 KILLAURA RAGE",
+    Tooltip = "Auto TP and attack",
+    Default = false,
+    Callback = function(Value)
+        KillauraRageEnabled = Value
+        if Value then
+            if KillauraRageConnection then KillauraRageConnection:Disconnect() end
+            KillauraRageConnection = RunService.Heartbeat:Connect(function()
+                if not KillauraRageEnabled then return end
+                local Target = nil
+                local MinDist = 50
+                for _, Player in pairs(Players:GetPlayers()) do
+                    if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                        local Dist = (LocalPlayer.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                        if Dist < MinDist then
+                            Target = Player
+                            MinDist = Dist
+                        end
+                    end
+                end
+                if Target then
+                     LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
+                     AutoAttackRoutine()
+                end
+            end)
+        else
+            if KillauraRageConnection then
+                KillauraRageConnection:Disconnect()
+                KillauraRageConnection = nil
+            end
+        end
+    end,
+})
+
+CombatGroup:AddToggle("AimAssist", {
+    Text = "🎯 Aim Assist",
+    Tooltip = "Auto aim at nearest player",
+    Default = false,
+    Callback = function(Value)
+        AimAssistEnabled = Value
+        if Value then
+            if AimAssistConnection then AimAssistConnection:Disconnect() end
+            AimAssistConnection = RunService.RenderStepped:Connect(function()
+                if not AimAssistEnabled then return end
+                local Character = LocalPlayer.Character
+                if not Character then return end
+                local RootPart = Character:FindFirstChild("HumanoidRootPart")
+                local Humanoid = Character:FindFirstChild("Humanoid")
+                
+                if not RootPart or not Humanoid or Humanoid.Health <= 0 then
+                    AimTarget = nil
+                    return
+                end
+
+                local ClosestTarget = nil
+                local ClosestDist = AimRange
+                
+                for _, Player in pairs(Players:GetPlayers()) do
+                    if Player ~= LocalPlayer and Player.Character then
+                        local TargetRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+                        local TargetHumanoid = Player.Character:FindFirstChild("Humanoid")
+                        if TargetRoot and TargetHumanoid and TargetHumanoid.Health > 0 then
+                            local Dist = (RootPart.Position - TargetRoot.Position).Magnitude
+                            if Dist < ClosestDist then
+                                ClosestDist = Dist
+                                ClosestTarget = Player
+                            end
+                        end
+                    end
+                end
+                
+                AimTarget = ClosestTarget
+                if AimTarget and AimTarget.Character then
+                    local TargetRoot = AimTarget.Character:FindFirstChild("HumanoidRootPart")
+                    if TargetRoot then
+                        local Direction = TargetRoot.Position - RootPart.Position
+                        Direction = Vector3.new(Direction.X, 0, Direction.Z)
+                        if Direction.Magnitude > 0 then
+                            RootPart.CFrame = RootPart.CFrame:Lerp(CFrame.new(RootPart.Position, RootPart.Position + Direction.Unit), RotationSpeed)
+                        end
+                    end
+                end
+            end)
+        else
+            if AimAssistConnection then
+                AimAssistConnection:Disconnect()
+                AimAssistConnection = nil
+            end
+            AimTarget = nil
+        end
+    end,
+})
+
+CombatGroup:AddInput("AimRange", {
+    Default = "50",
+    Numeric = true,
+    Text = "Aim Range",
+    Placeholder = "50",
+    Callback = function(Value)
+        local Num = tonumber(Value)
+        if Num and Num >= 10 and Num <= 100 then
+            AimRange = Num
+        end
+    end,
+})
+
+CombatGroup:AddInput("RotationSpeed", {
+    Default = "0.15",
+    Numeric = true,
+    Text = "Rotation Speed",
+    Placeholder = "0.15",
+    Callback = function(Value)
+        local Num = tonumber(Value)
+        if Num and Num >= 0.05 and Num <= 1 then
+            RotationSpeed = Num
+        end
+    end,
+})
+
+CombatGroup:AddToggle("AutoDodge", {
+    Text = "AUTO DODGE",
+    Tooltip = "Auto dodge attacks",
+    Default = false,
+    Callback = function(Value)
+        AutoDodgeEnabled = Value
+        local DodgePart = nil
+        local DodgeHumanoid = nil
+        local DodgeDistance = 4
+        local DodgeHeight = 75
+        local DangerousTools = {"BOTTLE", "KNIFE", "FORK"}
+
+        local function GetDodgeTool()
+            local Backpack = LocalPlayer:FindFirstChild("Backpack")
+            if Backpack and Backpack:FindFirstChild("DODGE!") then
+                return Backpack:FindFirstChild("DODGE!")
+            end
+            local Character = LocalPlayer.Character
+            if Character and Character:FindFirstChild("DODGE!") then
+                return Character:FindFirstChild("DODGE!")
+            end
+            return nil
+        end
+
+        local function ActivateDodge()
+            local Tool = GetDodgeTool()
+            if Tool and Tool:FindFirstChild("RemoteEvent") then
+                pcall(function()
+                    Tool.RemoteEvent:FireServer()
+                end)
+                return true
+            end
+            return false
+        end
+
+        local function MoveUp()
+            if DodgePart then
+                DodgePart.CFrame = DodgePart.CFrame + Vector3.new(0, DodgeHeight, 0)
+            end
+        end
+
+        local function IsInDanger()
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer and Player.Character then
+                    local Character = Player.Character
+                    local RootPart = Character:FindFirstChild("HumanoidRootPart")
+                    if RootPart and (RootPart.Position - DodgePart.Position).Magnitude <= DodgeDistance then
+                        for _, Item in ipairs(Character:GetChildren()) do
+                            if Item:IsA("Tool") and table.find(DangerousTools, Item.Name:upper()) then
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+            return false
+        end
+
+        if AutoDodgeEnabled then
+            task.spawn(function()
+                while AutoDodgeEnabled do
+                    task.wait(0.15)
+                    local Character = LocalPlayer.Character
+                    DodgePart = Character and Character:FindFirstChild("HumanoidRootPart")
+                    DodgeHumanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+                    
+                    if DodgePart and DodgeHumanoid and DodgeHumanoid.Health > 0 and IsInDanger() and not ActivateDodge() then
+                        MoveUp()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local RandomFeaturesGroup = Tabs.Main:AddRightGroupbox("Random Features")
+
+RandomFeaturesGroup:AddButton({
+    Text = "Custom Emotes",
+    Func = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/1p6xnBNf"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/GoldDoomOwner/Gold-Doom-Script/refs/heads/main/jerk"))()
+    end,
+    Tooltip = "Load custom emotes",
+})
+
+RandomFeaturesGroup:AddButton({
+    Text = "Custom Emotes 2",
+    Func = function()
+        local Player = game.Players.LocalPlayer
+        local IsR6 = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("Torso") ~= nil
+        
+        local function Notify(Text)
+            local ScreenGui = Instance.new("ScreenGui")
+            ScreenGui.Name = "NotificationGui"
+            ScreenGui.Parent = game.CoreGui
+            
+            local Frame = Instance.new("Frame")
+            Frame.Size = UDim2.new(0, 300, 0, 50)
+            Frame.Position = UDim2.new(0.5, -150, 1, -60)
+            Frame.AnchorPoint = Vector2.new(0.5, 1)
+            Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Frame.BorderSizePixel = 0
+            Frame.Parent = ScreenGui
+            
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 10)
+            Corner.Parent = Frame
+            
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, -20, 1, 0)
+            Label.Position = UDim2.new(0, 10, 0, 0)
+            Label.BackgroundTransparency = 1
+            Label.Text = Text .. " | by nikos_YT7"
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.Font = Enum.Font.SourceSansSemibold
+            Label.TextSize = 18
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Frame
+            
+            Frame.BackgroundTransparency = 1
+            Label.TextTransparency = 1
+            
+            TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+            TweenService:Create(Label, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+            
+            task.delay(5, function()
+                TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(Label, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {TextTransparency = 1}):Play()
+                task.delay(0.5, function() ScreenGui:Destroy() end)
+            end)
+        end
+        
+        if IsR6 then Notify("R6 detected") else Notify("R15 detected") end
+        
+        local BangGui = Instance.new("ScreenGui")
+        BangGui.Name = "BangGui"
+        BangGui.Parent = game.CoreGui
+        
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Size = UDim2.new(0, 300, 0, 300)
+        MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+        MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        MainFrame.BorderSizePixel = 0
+        MainFrame.Parent = BangGui
+        Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
+        
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, -60, 0, 30)
+        Title.Position = UDim2.new(0, 10, 0, 0)
+        Title.BackgroundTransparency = 1
+        Title.Text = "Choose"
+        Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Title.Font = Enum.Font.SourceSansSemibold
+        Title.TextSize = 24
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.Parent = MainFrame
+        
+        local IsMinimized = false
+        local RestoreBtn = Instance.new("TextButton")
+        RestoreBtn.Size = UDim2.new(0, 120, 0, 36)
+        RestoreBtn.Position = UDim2.new(0, 12, 0, 12)
+        RestoreBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+        RestoreBtn.Text = "Dahen Hub"
+        RestoreBtn.Font = Enum.Font.SourceSansBold
+        RestoreBtn.TextSize = 18
+        RestoreBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        RestoreBtn.Visible = false
+        RestoreBtn.Parent = BangGui
+        Instance.new("UICorner", RestoreBtn).CornerRadius = UDim.new(0, 8)
+        
+        local MinBtn = Instance.new("TextButton")
+        MinBtn.Size = UDim2.new(0, 36, 0, 36)
+        MinBtn.Position = UDim2.new(1, -76, 0, 12)
+        MinBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+        MinBtn.Text = "-"
+        MinBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        MinBtn.TextScaled = true
+        MinBtn.Parent = MainFrame
+        Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 8)
+        
+        MinBtn.MouseButton1Click:Connect(function()
+            if IsMinimized then return end
+            IsMinimized = true
+            MainFrame:TweenSize(UDim2.new(0, 300, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quint, 0.3, true, function()
+                MainFrame.Visible = false
+                RestoreBtn.Visible = true
+            end)
+        end)
+        
+        RestoreBtn.MouseButton1Click:Connect(function()
+            if not IsMinimized then return end
+            IsMinimized = false
+            RestoreBtn.Visible = false
+            MainFrame.Visible = true
+            MainFrame:TweenSize(UDim2.new(0, 300, 0, 300), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+        end)
+        
+        local CloseBtn = Instance.new("TextButton")
+        CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+        CloseBtn.Position = UDim2.new(1, -40, 0, 0)
+        CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        CloseBtn.Text = "X"
+        CloseBtn.Font = Enum.Font.SourceSansBold
+        CloseBtn.TextSize = 20
+        CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        CloseBtn.Parent = MainFrame
+        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 10)
+        
+        CloseBtn.MouseButton1Click:Connect(function() BangGui:Destroy() end)
+        
+        local ContentFrame = Instance.new("Frame")
+        ContentFrame.Size = UDim2.new(1, 0, 1, -30)
+        ContentFrame.Position = UDim2.new(0, 0, 0, 30)
+        ContentFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        ContentFrame.Parent = MainFrame
+        
+        local Scroll = Instance.new("ScrollingFrame")
+        Scroll.Size = UDim2.new(1, -20, 1, -50)
+        Scroll.Position = UDim2.new(0, 10, 0, 40)
+        Scroll.BackgroundTransparency = 1
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 300)
+        Scroll.ScrollBarThickness = 6
+        Scroll.Parent = MainFrame
+        
+        local Layout = Instance.new("UIListLayout")
+        Layout.Padding = UDim.new(0, 10)
+        Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Layout.Parent = Scroll
+        
+        local Animations = {
+            {name = "Bang V2", r6 = "https://pastebin.com/raw/aPSHMV6K", r15 = "https://pastebin.com/raw/1ePMTt9n"},
+            {name = "Get Banged", r6 = "https://pastebin.com/raw/zHbw7ND1", r15 = "https://pastebin.com/raw/7hvcjDnW"},
+            {name = "Suck", r6 = "https://pastebin.com/raw/SymCfnAW", r15 = "https://pastebin.com/raw/p8yxRfr4"},
+            {name = "Get Suc", r6 = "https://pastebin.com/raw/FPu4e2Qh", r15 = "https://pastebin.com/raw/DyPP2tAF"}
+        }
+        
+        for _, Anim in pairs(Animations) do
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(0.8, 0, 0, 40)
+            Btn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+            Btn.Text = Anim.name
+            Btn.Font = Enum.Font.SourceSansBold
+            Btn.TextSize = 20
+            Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Btn.Parent = Scroll
+            Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
+            
+            Btn.MouseButton1Click:Connect(function()
+                if IsR6 then
+                    loadstring(game:HttpGet(Anim.r6))()
+                else
+                    loadstring(game:HttpGet(Anim.r15))()
+                end
+            end)
+        end
+        
+        local Dragging, DragInput, DragStart, StartPos
+        MainFrame.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                Dragging = true
+                DragStart = Input.Position
+                StartPos = MainFrame.Position
+                
+                Input.Changed:Connect(function()
+                    if Input.UserInputState == Enum.UserInputState.End then
+                        Dragging = false
+                    end
+                end)
+            end
+        end)
+        
+        MainFrame.InputChanged:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+                DragInput = Input
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(Input)
+            if Input == DragInput and Dragging then
+                local Delta = Input.Position - DragStart
+                MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+            end
+        end)
+    end,
+    Tooltip = "Load additional custom emotes with GUI",
+})
+
+local PowerToolsGroup = Tabs.Main:AddRightGroupbox("Power Tools")
+
+PowerToolsGroup:AddDropdown("SelectTool1", {
+    Values = PowerList,
+    Default = "Awaken",
+    Text = "Select Tool 1",
+    Tooltip = "Choose first power tool",
+    Callback = function(Value)
+        SelectedTool1 = Value
+    end,
+})
+
+PowerToolsGroup:AddDropdown("SelectTool2", {
+    Values = PowerList,
+    Default = "Oblivious",
+    Text = "Select Tool 2",
+    Tooltip = "Choose second power tool",
+    Callback = function(Value)
+        SelectedTool2 = Value
+    end,
+})
+
+PowerToolsGroup:AddInput("CustomPowersName", {
+    Default = "",
+    Numeric = false,
+    Text = "Custom Powers Name",
+    Placeholder = "Enter custom name...",
+    Callback = function(Value)
+        CustomPowerName = Value
+    end,
+})
+
+PowerToolsGroup:AddButton({
+    Text = "Equip Custom Power",
+    Func = function()
+        ToolGiver:GetTools(SelectedTool1, SelectedTool2)
+        local PowerUI = LocalPlayer.PlayerGui.ShopGui.StoreHolder.Store.PAGES.Powers
+        task.spawn(function()
+            while true do
+                if PowerUI and PowerUI:FindFirstChild("CurrentlyEquipped") then
+                    PowerUI.CurrentlyEquipped.Text = "Currently Equipped: " .. (CustomPowerName or "")
+                end
+                task.wait()
+            end
+        end)
+    end,
+    Tooltip = "Get selected tools with custom name",
+})
+
+local function ActivateLightningGod()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    local LightningScript = loadstring(game:HttpGet("https://raw.githubusercontent.com/GoldDoomOwner/Gold-Doom-Script/main/LightningGodAwakening"))()
+    if not LightningScript then return end
+    
+    local Folder = Instance.new("Folder")
+    Folder.Name = "LightningGodInterrupted"
+    Folder.Parent = Character
+    
+    local Success = pcall(function()
+        LightningScript({
+            InterruptedFolder = Folder,
+            Character = Character,
+            ModuleName = "LIGHTNINGGODAWAKENING",
+            TimeLength = 5,
+        })
+    end)
+    
+    if not Success then return end
+    
+    task.delay(6, function()
+        if Folder and Folder.Parent then
+            Folder:Destroy()
+        end
+    end)
+end
+
+PowerToolsGroup:AddButton({
+    Text = "Lightning God Awakening",
+    Func = function()
+        LightningGodEnabled = not LightningGodEnabled
+        if LightningGodEnabled then
+            _G.LightningGodEnabled = true
+            ActivateLightningGod()
+            _G.LightningGodLoop = task.spawn(function()
+                repeat
+                    task.wait(10)
+                    if _G.LightningGodEnabled then
+                        ActivateLightningGod()
+                    end
+                until not _G.LightningGodEnabled
+            end)
+            _G.LightningGodRespawn = LocalPlayer.CharacterAdded:Connect(function()
+                if _G.LightningGodEnabled then
+                    task.wait(1)
+                    ActivateLightningGod()
+                end
+            end)
+        else
+            _G.LightningGodEnabled = false
+            if _G.LightningGodLoop then
+                task.cancel(_G.LightningGodLoop)
+                _G.LightningGodLoop = nil
+            end
+            if _G.LightningGodRespawn then
+                _G.LightningGodRespawn:Disconnect()
+                _G.LightningGodRespawn = nil
+            end
+        end
+    end,
+    Tooltip = "Toggle Lightning God effect",
+})
+
+local BoostsGroup = Tabs.Main:AddLeftGroupbox("Boosts & Powers")
+
+BoostsGroup:AddButton({
+    Text = "Enable Dash",
+    Func = function()
+        LocalPlayer.Boosts["Faster Sprint"].Value = 5
+        local BoostUI = LocalPlayer.PlayerGui.ShopGui.StoreHolder.Store.PAGES.Boosts["Faster Sprint"]
+        task.spawn(function()
+            while true do
+                task.wait()
+                if BoostUI then
+                    BoostUI.BuyButtonRobux.Visible = false
+                    BoostUI.BuyButtonCoin.Visible = false
+                    BoostUI.ItemLevel.Text = "Current Level (5)"
+                end
+            end
+        end)
+    end,
+    Tooltip = "Enable dash boost",
+})
+
+BoostsGroup:AddButton({
+    Text = "Won Boost",
+    Func = function()
+        LocalPlayer.Boosts["Won Boost"].Value = 5
+        local BoostUI = LocalPlayer.PlayerGui.ShopGui.StoreHolder.Store.PAGES.Boosts["Won Boost"]
+        task.spawn(function()
+            while true do
+                task.wait()
+                if BoostUI then
+                    BoostUI.BuyButtonRobux.Visible = false
+                    BoostUI.BuyButtonCoin.Visible = false
+                    BoostUI.ItemLevel.Text = "Current Level (5)"
+                end
+            end
+        end)
+    end,
+    Tooltip = "Enable won boost",
+})
+
+BoostsGroup:AddButton({
+    Text = "Strength Boost",
+    Func = function()
+        LocalPlayer.Boosts["Damage Boost"].Value = 5
+        local BoostUI = LocalPlayer.PlayerGui.ShopGui.StoreHolder.Store.PAGES.Boosts["Damage Boost"]
+        task.spawn(function()
+            while true do
+                task.wait()
+                if BoostUI then
+                    BoostUI.BuyButtonRobux.Visible = false
+                    BoostUI.BuyButtonCoin.Visible = false
+                    BoostUI.ItemLevel.Text = "Current Level (5)"
+                end
+            end
+        end)
+    end,
+    Tooltip = "Enable damage boost",
+})
+
+BoostsGroup:AddButton({
+    Text = "Equip Phantom Step",
+    Func = function()
+        LocalPlayer:SetAttribute("_EquippedPower", "PHANTOM STEP")
+    end,
+    Tooltip = "Equip phantom step power",
+})
+
+BoostsGroup:AddButton({
+    Text = "Remove Power",
+    Func = function()
+        LocalPlayer:SetAttribute("_EquippedPower", "")
+    end,
+    Tooltip = "Remove equipped power",
+})
+
+BoostsGroup:AddButton({
+    Text = "Enable Powers",
+    Func = function()
+        Workspace.Values.PowersDisabled.Value = false
+    end,
+    Tooltip = "Enable all powers",
+})
+
+local GamepassGroup = Tabs.Main:AddRightGroupbox("Gamepasses & Weapons")
+
+GamepassGroup:AddButton({
+    Text = "Enable All Gamepasses",
+    Func = function()
+        LocalPlayer:SetAttribute("HasLighter", true)
+        LocalPlayer:SetAttribute("HasPush", true)
+        Workspace.Values.CanPush.Value = true
+        
+        for _, Button in pairs(LocalPlayer.PlayerGui.ShopGui.StoreHolder.Store.PAGES.Gamepass:GetChildren()) do
+            if Button:IsA("TextButton") then
+                task.spawn(function()
+                    if Button.ItemName.Text == "Revive All" or Button.ItemName.Text == "One Time Playable Guard" then
+                        print("[" .. Button.ItemName.Text .. "] Has Been Blocked")
+                    else
+                        Button.BuyButton.Content.TextLabel.Text = "OWNED"
+                        print("Done [" .. Button.ItemName.Text .. "]")
+                    end
+                end)
+            end
+        end
+    end,
+    Tooltip = "Unlock all gamepasses",
+})
+
+GamepassGroup:AddButton({
+    Text = "Select Fork",
+    Func = function()
+        LocalPlayer:SetAttribute("WeaponSelected", "Fork")
+    end,
+    Tooltip = "Select fork weapon",
+})
+
+GamepassGroup:AddButton({
+    Text = "Show All Buttons",
+    Func = function()
+        for _, Btn in pairs(LocalPlayer.PlayerGui.Buttons.LeftButtons:GetChildren()) do
+            if Btn:IsA("ImageButton") then
+                Btn.Visible = true
+            end
+        end
+    end,
+    Tooltip = "Show all UI buttons",
+})
+
+GamepassGroup:AddButton({
+    Text = "UNLOCK VIP FEATURES",
+    Func = function()
+        local function SetAttr(Obj, Name, Value)
+            Obj:SetAttribute(Name, Value)
+        end
+        SetAttr(LocalPlayer, "__OwnsVIPGamepass", true)
+        SetAttr(LocalPlayer, "VIPChatTag", true)
+        SetAttr(LocalPlayer, "VIPJoinAlert", true)
+        SetAttr(LocalPlayer, "VIPHideWins", false)
+        SetAttr(LocalPlayer, "_VIPSettingData", "{\"Hide Wins\":false,\"Custom Clothing Colorpicker\":\"None\",\"Custom Clothing Color\":true}")
+        SetAttr(LocalPlayer, "ChloatingColor", Color3.fromRGB(255, 255, 255))
+    end,
+    Tooltip = "Gives you all VIP attributes for free",
+})
+
+local TeleportGroup = Tabs.Main:AddLeftGroupbox("Player Teleport")
+
+local function GetPlayerNames()
+    local Names = {}
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            table.insert(Names, Player.DisplayName)
+        end
+    end
+    if #Names == 0 then Names = {"No Players"} end
+    return Names
+end
+
+local function GetPlayerByName(Name)
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player.DisplayName == Name then
+            return Player
+        end
+    end
+    return nil
+end
+
+local function TeleportToPlayer(Target)
+    if not Target or not Target.Character then return end
+    local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+    local MyRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if TargetRoot and MyRoot then
+        MyRoot.CFrame = TargetRoot.CFrame * CFrame.new(0, 0, 3)
+    end
+end
+
+local function TeleportToRandomPlayer()
+    local AlivePlayers = {}
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            table.insert(AlivePlayers, Player)
+        end
+    end
+    if #AlivePlayers > 0 then
+        TeleportToPlayer(AlivePlayers[math.random(1, #AlivePlayers)])
+    end
+end
+
+local PlayerNames = GetPlayerNames()
+PlayerToTeleport = PlayerNames[1]
+
+TeleportGroup:AddDropdown("PlayerSelector", {
+    Values = PlayerNames,
+    Default = PlayerNames[1],
+    Text = "Player Selector",
+    Tooltip = "Select player to teleport to",
+    Callback = function(Value)
+        PlayerToTeleport = GetPlayerByName(Value)
+    end,
+})
+
+TeleportGroup:AddButton({
+    Text = "Refresh Players",
+    Func = function()
+        PlayerNames = GetPlayerNames()
+    end,
+    Tooltip = "Refresh player list",
+})
+
+TeleportGroup:AddButton({
+    Text = "Teleport To Selected Player",
+    Func = function()
+        if PlayerToTeleport then
+            TeleportToPlayer(PlayerToTeleport)
+        end
+    end,
+    Tooltip = "TP to selected player",
+})
+
+TeleportGroup:AddToggle("AttachToPlayer", {
+    Text = "Attach to player",
+    Tooltip = "Auto attach to player",
+    Default = false,
+    Callback = function(Value)
+        AttachToPlayerEnabled = Value
+        if PlayerToTeleport then
+            task.spawn(function()
+                while AttachToPlayerEnabled do
+                    TeleportToPlayer(PlayerToTeleport)
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end,
+})
+
+TeleportGroup:AddButton({
+    Text = "Teleport To Random Player",
+    Func = function()
+        TeleportToRandomPlayer()
+    end,
+    Tooltip = "TP to random player",
+})
+
+local BotGroup = Tabs.Main:AddRightGroupbox("DAHENBOT System")
+
+BotGroup:AddToggle("DahenBot", {
+    Text = "DAHENBOT",
+    Tooltip = "Enable chat command bot",
+    Default = false,
+    Callback = function(Value)
+        DahenBotEnabled = Value
+        if Value then
+             TextChatService.MessageReceived:Connect(function(TextChatMessage)
+                if TextChatMessage.Text:sub(1,7) == "notbot " then
+                     -- Bot Logic
+                end
+             end)
+        end
+    end,
+})
+
+BotGroup:AddInput("NOTBOTCommand", {
+    Default = "",
+    Numeric = false,
+    Text = "NOTBOT Command",
+    Placeholder = "Type commands here",
+    Callback = function(Value)
+        if Value ~= "" then
+             -- Execute command
+        end
+    end,
+})
+
+BotGroup:AddButton({
+    Text = "Find Killauras",
+    Func = function()
+        -- Search Logic
+    end,
+    Tooltip = "Search for killaura objects",
+})
+
+BotGroup:AddButton({
+    Text = "NOTBOT Help",
+    Func = function()
+        -- Help Logic
+    end,
+    Tooltip = "Show bot commands",
+})
+
+local MovementGroup = Tabs.Movement:AddLeftGroupbox("Movement Features")
+
+MovementGroup:AddToggle("Quicksilver", {
+    Text = "Quicksilver",
+    Tooltip = "Increase speed every 4 seconds",
+    Default = false,
+    Callback = function(Value)
+        QuicksilverEnabled = Value
+        if Value then
+            local Character = LocalPlayer.Character
+            if Character and Character:FindFirstChild("Humanoid") then
+                OriginalWalkSpeed = Character.Humanoid.WalkSpeed
+                CurrentQuicksilverSpeed = OriginalWalkSpeed
+                LastQuicksilverTick = tick()
+            end
+            if QuicksilverConnection then QuicksilverConnection:Disconnect() end
+            QuicksilverConnection = RunService.Heartbeat:Connect(function()
+                if not QuicksilverEnabled then return end
+                local Character = LocalPlayer.Character
+                if not Character then return end
+                local Humanoid = Character:FindFirstChild("Humanoid")
+                if not Humanoid then return end
+                
+                local Now = tick()
+                if Now - LastQuicksilverTick >= 4 and CurrentQuicksilverSpeed < MaxQuicksilverSpeed then
+                    CurrentQuicksilverSpeed = math.min(CurrentQuicksilverSpeed + QuicksilverIncrement, MaxQuicksilverSpeed)
+                    Humanoid.WalkSpeed = CurrentQuicksilverSpeed
+                    LastQuicksilverTick = Now
+                end
+            end)
+        else
+            if QuicksilverConnection then
+                QuicksilverConnection:Disconnect()
+                QuicksilverConnection = nil
+            end
+            local Character = LocalPlayer.Character
+            if Character and Character:FindFirstChild("Humanoid") then
+                Character.Humanoid.WalkSpeed = OriginalWalkSpeed
+                CurrentQuicksilverSpeed = OriginalWalkSpeed
+            end
+        end
+    end,
+})
+
+MovementGroup:AddToggle("Invisibility", {
+    Text = "Invisibility (TP Below)",
+    Tooltip = "TP below ground with barrier",
+    Default = false,
+    Callback = function(Value)
+        InvisibilityTPEanbled = Value
+        if Value then
+            local Character = LocalPlayer.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") then
+                InvisibilityTPPos = Character.HumanoidRootPart.Position
+                InvisibilityBarrier = Instance.new("Part")
+                InvisibilityBarrier.Name = "InvisibilityBarrier"
+                InvisibilityBarrier.Size = Vector3.new(50, 5, 50)
+                InvisibilityBarrier.Position = Vector3.new(InvisibilityTPPos.X, InvisibilityTPPos.Y - 50, InvisibilityTPPos.Z)
+                InvisibilityBarrier.Anchored = true
+                InvisibilityBarrier.CanCollide = true
+                InvisibilityBarrier.Transparency = 1
+                InvisibilityBarrier.Material = Enum.Material.SmoothPlastic
+                InvisibilityBarrier.Parent = Workspace
+                
+                Character.HumanoidRootPart.CFrame = CFrame.new(InvisibilityTPPos.X, InvisibilityTPPos.Y - 45, InvisibilityTPPos.Z)
+                
+                if InvisibilityTPConnection then InvisibilityTPConnection:Disconnect() end
+                InvisibilityTPConnection = RunService.Heartbeat:Connect(function()
+                    if not InvisibilityTPEanbled then return end
+                    local Char = LocalPlayer.Character
+                    if Char and Char:FindFirstChild("HumanoidRootPart") then
+                        local Pos = Char.HumanoidRootPart.Position
+                        if Pos.Y > InvisibilityTPPos.Y - 40 then
+                            Char.HumanoidRootPart.CFrame = CFrame.new(Pos.X, InvisibilityTPPos.Y - 45, Pos.Z)
+                        end
+                        if InvisibilityBarrier then
+                            InvisibilityBarrier.Position = Vector3.new(Pos.X, InvisibilityTPPos.Y - 50, Pos.Z)
+                        end
+                    end
+                end)
+            end
+        else
+            if InvisibilityTPConnection then
+                InvisibilityTPConnection:Disconnect()
+                InvisibilityTPConnection = nil
+            end
+            if InvisibilityBarrier then
+                InvisibilityBarrier:Destroy()
+                InvisibilityBarrier = nil
+            end
+            local Character = LocalPlayer.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") and InvisibilityTPPos then
+                Character.HumanoidRootPart.CFrame = CFrame.new(InvisibilityTPPos)
+            end
+        end
+    end,
+})
+
+local function FindNearestAlivePlayer()
+    local Nearest = nil
+    local MinDist = math.huge
+    local MyRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not MyRoot then return nil end
+
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            local Root = Player.Character:FindFirstChild("HumanoidRootPart")
+            local Hum = Player.Character:FindFirstChild("Humanoid")
+            if Root and Hum and Hum.Health > 0 then
+                local Dist = (MyRoot.Position - Root.Position).Magnitude
+                if Dist < MinDist then
+                    MinDist = Dist
+                    Nearest = Player
+                end
+            end
+        end
+    end
+    return Nearest
+end
+
+local function ImprovedAntiFallRoutine()
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+    local Hum = Character:FindFirstChild("Humanoid")
+    if not Root or not Hum or Hum.Health <= 0 then return end
+    
+    if Root.Position.Y < 10 then
+        local Target = FindNearestAlivePlayer()
+        if Target and Target.Character then
+            local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+            if TargetRoot then
+                Root.CFrame = TargetRoot.CFrame + Vector3.new(0, 3, 0)
+                task.spawn(function()
+                    local Part = Instance.new("Part")
+                    Part.Size = Vector3.new(8, 0.2, 8)
+                    Part.Position = Root.Position - Vector3.new(0, 3, 0)
+                    Part.BrickColor = BrickColor.new("Bright green")
+                    Part.Material = Enum.Material.Neon
+                    Part.Anchored = true
+                    Part.CanCollide = false
+                    Part.Transparency = 0.5
+                    Part.Parent = Workspace
+                    Debris:AddItem(Part, 0.5)
+                end)
+            end
+        end
+    end
+end
+
+MovementGroup:AddToggle("ImprovedAntiFall", {
+    Text = "Improved Anti-Fall",
+    Tooltip = "TP to nearest player if falling",
+    Default = false,
+    Callback = function(Value)
+        local Enabled = Value
+        if Value then
+            if AntiFallConnection then AntiFallConnection:Disconnect() end
+            AntiFallConnection = RunService.Heartbeat:Connect(function()
+                if not Enabled then return end
+                ImprovedAntiFallRoutine()
+            end)
+        elseif AntiFallConnection then
+            AntiFallConnection:Disconnect()
+            AntiFallConnection = nil
+        end
+    end,
+})
+
+MovementGroup:AddToggle("AntiFall", {
+    Text = "Anti Fall",
+    Tooltip = "Prevent falling below map",
+    Default = false,
+    Callback = function(Value)
+        AntiFallEnabled = Value
+        if Value then
+            AntiFallConnection = RunService.Heartbeat:Connect(function()
+                if not AntiFallEnabled then return end
+                local Character = LocalPlayer.Character
+                if not Character then return end
+                local Root = Character:FindFirstChild("HumanoidRootPart")
+                local Hum = Character:FindFirstChild("Humanoid")
+                if not Root or not Hum or Hum.Health <= 0 then return end
+                
+                if Root.Position.Y < AntiFallYLimit then
+                    local Target = FindNearestAlivePlayer()
+                    if Target and Target.Character then
+                        local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+                        if TargetRoot then
+                            Root.CFrame = TargetRoot.CFrame + Vector3.new(0, 3, 0)
+                            task.spawn(function()
+                                local Part = Instance.new("Part")
+                                Part.Size = Vector3.new(8, 0.2, 8)
+                                Part.Position = Root.Position - Vector3.new(0, 3, 0)
+                                Part.BrickColor = BrickColor.new("Lime green")
+                                Part.Material = Enum.Material.Neon
+                                Part.Anchored = true
+                                Part.CanCollide = false
+                                Part.Transparency = 0.5
+                                Part.Parent = Workspace
+                                Debris:AddItem(Part, 0.5)
+                            end)
+                        end
+                    else
+                        Root.CFrame = CFrame.new(196.83342, 55.9547985, -90.4745865)
+                    end
+                end
+            end)
+        elseif AntiFallConnection then
+            AntiFallConnection:Disconnect()
+            AntiFallConnection = nil
+        end
+    end,
+})
+
+MovementGroup:AddToggle("Noclip", {
+    Text = "Noclip",
+    Tooltip = "Walk through walls",
+    Default = false,
+    Callback = function(Value)
+        if getgenv().NoclipConnection then
+            getgenv().NoclipConnection:Disconnect()
+            getgenv().NoclipConnection = nil
+            getgenv().NoclipEnabled = false
+        end
+        if Value then
+            getgenv().NoclipEnabled = true
+            getgenv().NoclipConnection = RunService.Heartbeat:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local Root = LocalPlayer.Character.HumanoidRootPart
+                    for _, Part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if Part:IsA("BasePart") then
+                            if (Part.Position - Root.Position).Magnitude <= 100 then
+                                Part.CanCollide = false
+                            else
+                                Part.CanCollide = true
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+MovementGroup:AddToggle("InfiniteJump", {
+    Text = "Infinite Jump",
+    Tooltip = "Jump infinitely in air",
+    Default = false,
+    Callback = function(Value)
+        local Enabled = Value
+        UserInputService.JumpRequest:Connect(function()
+            if Enabled then
+                local Hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if Hum and Hum.Parent then
+                    Hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end)
+    end,
+})
+
+MovementGroup:AddToggle("InstaInteract", {
+    Text = "Insta Interact",
+    Tooltip = "Instant interaction with prompts",
+    Default = false,
+    Callback = function(Value)
+        InstaInteractEnabled = Value
+        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        
+        LocalPlayer.CharacterAdded:Connect(function(Char) Character = Char end)
+        
+        local function HandlePrompt(Prompt)
+            if Prompt:IsA("ProximityPrompt") then
+                Prompt:GetPropertyChangedSignal("HoldDuration"):Connect(function()
+                    if InstaInteractEnabled then Prompt.HoldDuration = 0 end
+                end)
+                if InstaInteractEnabled then Prompt.HoldDuration = 0 end
+            end
+        end
+        
+        for _, Descendant in pairs(Workspace:GetDescendants()) do
+            if Descendant:IsA("ProximityPrompt") then HandlePrompt(Descendant) end
+        end
+        Workspace.DescendantAdded:Connect(function(Descendant)
+            if Descendant:IsA("ProximityPrompt") then HandlePrompt(Descendant) end
+        end)
+        
+        task.spawn(function()
+            while task.wait(0.1) do
+                if InstaInteractEnabled then
+                    for _, Prompt in pairs(Workspace:GetDescendants()) do
+                        if Prompt:IsA("ProximityPrompt") and Prompt.HoldDuration ~= 0 then
+                            Prompt.HoldDuration = 0
+                        end
+                    end
+                end
+            end
+        end)
+    end,
+})
+
+local MiscMovementGroup = Tabs.Movement:AddRightGroupbox("Misc Movement")
+
+MiscMovementGroup:AddButton({
+    Text = "Teleport To Spawn",
+    Func = function()
+        local Char = LocalPlayer.Character
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            Char.HumanoidRootPart.CFrame = CFrame.new(196.83342, 55.9547985, -90.4745865)
+        end
+    end,
+    Tooltip = "Teleport to spawn location",
+})
+
+MiscMovementGroup:AddButton({
+    Text = "Teleport To Safe Spot",
+    Func = function()
+        local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            Char.HumanoidRootPart.CFrame = CFrame.new(179.030807, 57.9083214, 49.8269196)
+        end
+    end,
+    Tooltip = "Teleport to safe location",
+})
+
+MiscMovementGroup:AddToggle("AutoSkip", {
+    Text = "AUTO SKIP",
+    Tooltip = "Auto skip dialogues",
+    Default = false,
+    Callback = function(Value)
+        AutoSkipEnabled = Value
+        if Value then
+            task.spawn(function()
+                while AutoSkipEnabled do
+                    pcall(function()
+                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("DialogueRemote"):FireServer("Skipped")
+                    end)
+                    task.wait(0.5)
+                end
+            end)
+        end
+    end,
+})
+
+local HalloweenGroup = Tabs.Games:AddLeftGroupbox("Halloween Features")
+
+local function EnableESPCandies()
+    for _, Obj in pairs(Workspace:GetDescendants()) do
+        if (string.find(Obj.Name:lower(), "candy") or string.find(Obj.Name:lower(), "halloween")) and not EspCandiesTable[Obj] then
+            local Highlight = Instance.new("Highlight")
+            Highlight.Adornee = Obj
+            Highlight.FillColor = Color3.fromRGB(255, 255, 0)
+            Highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+            Highlight.FillTransparency = 0.3
+            Highlight.Parent = Obj
+            EspCandiesTable[Obj] = Highlight
+        end
+    end
+    Library:Notify("ESP Candies enabled", 3)
+end
+
+local function DisableESPCandies()
+    for _, Highlight in pairs(EspCandiesTable) do
+        if Highlight and Highlight.Parent then
+            Highlight:Destroy()
+        end
+    end
+    EspCandiesTable = {}
+    Library:Notify("ESP Candies disabled", 3)
+end
+
+local function FindHalloweenCandies()
+    local Candies = {}
+    for _, Obj in pairs(Workspace:GetDescendants()) do
+        if string.find(Obj.Name:lower(), "candy") or string.find(Obj.Name:lower(), "halloween") then
+            if Obj:IsA("BasePart") then
+                table.insert(Candies, Obj)
+            elseif Obj:IsA("Model") and Obj.PrimaryPart then
+                table.insert(Candies, Obj.PrimaryPart)
+            end
+        end
+    end
+    return Candies
+end
+
+local function AutoFarmCandiesRoutine()
+    local Candies = FindHalloweenCandies()
+    if #Candies > 0 then
+        local Char = LocalPlayer.Character
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            for _, Candy in ipairs(Candies) do
+                if not AutoFarmCandiesEnabled then break end
+                Char.HumanoidRootPart.CFrame = Candy.CFrame + Vector3.new(0, 3, 0)
+                task.wait(0.5)
+            end
+        end
+    end
+end
+
+HalloweenGroup:AddToggle("ESPCandies", {
+    Text = "ESP Candies",
+    Tooltip = "Highlight Halloween candies",
+    Default = false,
+    Callback = function(Value)
+        EspCandiesEnabled = Value
+        if Value then EnableESPCandies() else DisableESPCandies() end
+    end,
+})
+
+HalloweenGroup:AddToggle("AutoFarmCandies", {
+    Text = "Auto Farm Candies",
+    Tooltip = "Automatically collect Halloween candies",
+    Default = false,
+    Callback = function(Value)
+        AutoFarmCandiesEnabled = Value
+        if Value then
+            if AutoFarmCandiesConnection then AutoFarmCandiesConnection:Disconnect() end
+            AutoFarmCandiesConnection = RunService.Heartbeat:Connect(function()
+                if not AutoFarmCandiesEnabled then return end
+                AutoFarmCandiesRoutine()
+            end)
+        elseif AutoFarmCandiesConnection then
+            AutoFarmCandiesConnection:Disconnect()
+            AutoFarmCandiesConnection = nil
+        end
+    end,
+})
+
+local function EnableESPHalloweenDoors()
+    for _, Obj in pairs(Workspace:GetDescendants()) do
+        if string.find(Obj.Name:lower(), "door") and string.find(Obj.Name:lower(), "halloween") and not EspHalloweenDoorsTable[Obj] then
+            local Highlight = Instance.new("Highlight")
+            Highlight.Adornee = Obj
+            Highlight.FillColor = Color3.fromRGB(255, 0, 255)
+            Highlight.OutlineColor = Color3.fromRGB(255, 0, 255)
+            Highlight.FillTransparency = 0.3
+            Highlight.Parent = Obj
+            EspHalloweenDoorsTable[Obj] = Highlight
+        end
+    end
+    Library:Notify("ESP Halloween Doors enabled", 3)
+end
+
+local function DisableESPHalloweenDoors()
+    for _, Highlight in pairs(EspHalloweenDoorsTable) do
+        if Highlight and Highlight.Parent then
+            Highlight:Destroy()
+        end
+    end
+    EspHalloweenDoorsTable = {}
+    Library:Notify("ESP Halloween Doors disabled", 3)
+end
+
+HalloweenGroup:AddToggle("ESPHalloweenDoors", {
+    Text = "ESP Halloween Doors",
+    Tooltip = "Highlight Halloween doors",
+    Default = false,
+    Callback = function(Value)
+        EspHalloweenDoorsEnabled = Value
+        if Value then EnableESPHalloweenDoors() else DisableESPHalloweenDoors() end
+    end,
+})
+
+local function FindHalloweenDoors()
+    local Doors = {}
+    for _, Obj in pairs(Workspace:GetDescendants()) do
+        if string.find(Obj.Name:lower(), "door") and string.find(Obj.Name:lower(), "halloween") then
+            if Obj:IsA("BasePart") then
+                table.insert(Doors, Obj)
+            elseif Obj:IsA("Model") and Obj.PrimaryPart then
+                table.insert(Doors, Obj.PrimaryPart)
+            end
+        end
+    end
+    return Doors
+end
+
+HalloweenGroup:AddButton({
+    Text = "TP to Halloween Doors",
+    Func = function()
+        local Doors = FindHalloweenDoors()
+        if #Doors > 0 then
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChild("HumanoidRootPart") then
+                Char.HumanoidRootPart.CFrame = Doors[1].CFrame + Vector3.new(0, 3, 0)
+            end
+        end
+    end,
+    Tooltip = "Teleport to Halloween doors",
+})
+
+local RLGLGroup = Tabs.Games:AddRightGroupbox("Red Light, Green Light")
+
+RLGLGroup:AddToggle("RLGLBypass", {
+    Text = "🚦 RLGL Bypass",
+    Tooltip = "Bypass RLGL detection",
+    Default = false,
+    Callback = function(Value)
+        RLGLBypassEnabled = Value
+        if Value then
+            if RLGLBypassConnection then RLGLBypassConnection:Disconnect() end
+            RLGLBypassConnection = RunService.Heartbeat:Connect(function()
+                if not RLGLBypassEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local MovedTag = Char:FindFirstChild("MovedRecentlyRedLight")
+                if MovedTag then MovedTag:Destroy() end
+                
+                if not Char:FindFirstChild("SafeRedLightGreenLight") then
+                    local Folder = Instance.new("Folder")
+                    Folder.Name = "SafeRedLightGreenLight"
+                    Folder.Parent = Char
+                end
+                
+                local Live = Workspace:FindFirstChild("Live")
+                if Live then
+                    local GreenPlayers = Live:FindFirstChild("GreenPlayers")
+                    if GreenPlayers and Char.Parent ~= GreenPlayers then
+                        Char.Parent = GreenPlayers
+                    end
+                end
+                
+                local Hum = Char:FindFirstChild("Humanoid")
+                if Hum then
+                    if Hum.Health < Hum.MaxHealth * 0.9 and Hum.Health > 0 then
+                        Hum.Health = Hum.MaxHealth
+                    end
+                end
+            end)
+        else
+            if RLGLBypassConnection then
+                RLGLBypassConnection:Disconnect()
+                RLGLBypassConnection = nil
+            end
+        end
+    end,
+})
+
+RLGLGroup:AddToggle("RLAutoStop", {
+    Text = "RLGL Auto-Stop",
+    Tooltip = "Auto stop during red light",
+    Default = false,
+    Callback = function(Value)
+        RLGLAutoStopEnabled = Value
+        if Value then
+            if RLGLAutoStopConnection then RLGLAutoStopConnection:Disconnect() end
+            RLGLAutoStopConnection = RunService.Heartbeat:Connect(function()
+                if not RLGLAutoStopEnabled then return end
+                local Light = Workspace:FindFirstChild("GreenLight")
+                if Light and Light:IsA("BasePart") and Light.BrickColor == BrickColor.new("Really red") then
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        LocalPlayer.Character.HumanoidRootPart.Anchored = true
+                    end
+                else
+                     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        LocalPlayer.Character.HumanoidRootPart.Anchored = false
+                    end
+                end
+            end)
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChild("Humanoid") then
+                RLGLSavedSpeed = Char.Humanoid.WalkSpeed
+            end
+        else
+            if RLGLAutoStopConnection then
+                RLGLAutoStopConnection:Disconnect()
+                RLGLAutoStopConnection = nil
+            end
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChild("Humanoid") then
+                Char.Humanoid.WalkSpeed = RLGLSavedSpeed
+            end
+             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.Anchored = false
+            end
+        end
+    end,
+})
+
+RLGLGroup:AddToggle("AntiShot", {
+    Text = "RLGL Anti-Shot",
+    Tooltip = "Protect from RLGL shots",
+    Default = false,
+    Callback = function(Value)
+        RLGLAntiShotEnabled = Value
+        if Value then
+            if RLGLAntiShotConnection then RLGLAntiShotConnection:Disconnect() end
+            RLGLAntiShotConnection = RunService.Heartbeat:Connect(function()
+                if not RLGLAntiShotEnabled then return end
+                -- Logic already handled by RLGLBypass mostly, but specific anti-shot:
+                local Char = LocalPlayer.Character
+                if Char then
+                    for _, child in pairs(Char:GetChildren()) do
+                        if child.Name == "Bullet" then child:Destroy() end
+                    end
+                end
+            end)
+        else
+            if RLGLAntiShotConnection then
+                RLGLAntiShotConnection:Disconnect()
+                RLGLAntiShotConnection = nil
+            end
+        end
+    end,
+})
+
+RLGLGroup:AddToggle("AutoMode", {
+    Text = "Auto Mode",
+    Tooltip = "Automatically perform selected mode",
+    Default = false,
+    Callback = function(Value)
+        RLGLAutoModeEnabled = Value
+        if RLGLAutoModeEnabled then
+            task.spawn(function() end)
+        end
+    end,
+})
+
+RLGLGroup:AddDropdown("RLGLMode", {
+    Values = {"Save Mode", "Troll Mode"},
+    Default = "Save Mode",
+    Text = "RLGL Mode",
+    Tooltip = "Select which mode to perform",
+    Callback = function(Value)
+        RLGLSelectedMode = Value
+    end,
+})
+
+RLGLGroup:AddButton({
+    Text = "MODE RANDOM PLAYER",
+    Func = function()
+        if RLGLSelectedMode == "Save Mode" then
+             -- Logic for saving
+        elseif RLGLSelectedMode == "Troll Mode" then
+             -- Logic for trolling
+        end
+    end,
+    Tooltip = "Performs the selected mode once",
+})
+
+RLGLGroup:AddButton({
+    Text = "DESTROY INJURED + STUN",
+    Func = function()
+        local Count = 0
+        for _, Obj in ipairs(Workspace:GetDescendants()) do
+            local Name = Obj.Name:lower()
+            if Name == "injuredwalking" or Name == "stun" then
+                Obj:Destroy()
+                Count = Count + 1
+            end
+        end
+    end,
+    Tooltip = "Destroys all InjuredWalking and Stun objects",
+})
+
+local function TeleportToCFrame(CF)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CF
+    end
+end
+
+RLGLGroup:AddButton({
+    Text = "TP START",
+    Func = function()
+        TeleportToCFrame(CFrame.new(-49.8884354, 1020.104, -512.157776))
+    end,
+    Tooltip = "TP START of rlgl",
+})
+
+RLGLGroup:AddButton({
+    Text = "TP SAFE PLACE",
+    Func = function()
+        TeleportToCFrame(CFrame.new(197.452408, 51.3870239, -95.6055298))
+    end,
+    Tooltip = "TP SAFE PLACE in rlgl",
+})
+
+RLGLGroup:AddButton({
+    Text = "TP END",
+    Func = function()
+        local Char = LocalPlayer.Character
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            Char.HumanoidRootPart.CFrame = CFrame.new(-41.7126923, 1021.32306, 134.34935, 0.811150551, 0.237830803, 0.534295142, -0.00000895559788, 0.913583994, -0.406650066, -0.584837377, 0.32984966, 0.741056323) + Vector3.new(0, 10, 0)
+        end
+    end,
+    Tooltip = "Teleport to RLGL end",
+})
+
+local DalgonaGroup = Tabs.Games:AddLeftGroupbox("Dalgona")
+
+DalgonaGroup:AddButton({
+    Text = "Auto Cookie",
+    Func = function()
+        local Module = game.ReplicatedStorage.Modules.Games.DalgonaClient
+        for _, V in ipairs(getreg()) do
+            if typeof(V) == "function" and islclosure(V) and getfenv(V).script == Module and debug.getinfo(V).nups == 76 then
+                setupvalue(V, 33, 9000000000)
+                setupvalue(V, 34, 9000000000)
+                break
+            end
+        end
+    end,
+    Tooltip = "Auto complete dalgona cookie",
+})
+
+DalgonaGroup:AddButton({
+    Text = "FREE LIGHTER",
+    Func = function()
+        local function SetAttr(Obj, Name, Value)
+            if Obj:GetAttribute(Name) == nil then
+                Obj:SetAttribute(Name, Value)
+            else
+                Obj:SetAttribute(Name, Value)
+            end
+        end
+        SetAttr(LocalPlayer, "HasLighter", true)
+    end,
+    Tooltip = "Get free lighter permanently",
+})
+
+DalgonaGroup:AddButton({
+    Text = "REMOVE PHOTO WALL",
+    Func = function()
+        local WalkWay = Workspace:FindFirstChild("StairWalkWay")
+        if not WalkWay then return end
+        local Custom = WalkWay:FindFirstChild("Custom")
+        if not Custom then return end
+        
+        for _, Obj in ipairs(Custom:GetDescendants()) do
+            if Obj.Name:lower() == "startingcrossedovercollision" then
+                Obj:Destroy()
+            end
+        end
+    end,
+    Tooltip = "Remove the photo wall object",
+})
+
+local function CreateAntiFallPlatform(Mode)
+    local Char = LocalPlayer.Character
+    if not Char then return end
+    local Root = Char:FindFirstChild("HumanoidRootPart")
+    if not Root then return end
+    
+    if AntiFallPlatformPart then AntiFallPlatformPart:Destroy() end
+    
+    AntiFallPlatformPart = Instance.new("Part")
+    AntiFallPlatformPart.Name = "AntiFallPlatform_" .. Mode
+    AntiFallPlatformPart.Size = Vector3.new(500, 5, 500)
+    
+    local YLevel = 0
+    if Mode == "JumpRope" then YLevel = 190
+    elseif Mode == "GlassBridge" then YLevel = 520
+    elseif Mode == "SkySquid" then YLevel = 100
+    elseif Mode == "Dalgona" then YLevel = 1000 end
+    
+    AntiFallPlatformPart.Position = Vector3.new(Root.Position.X, YLevel, Root.Position.Z)
+    AntiFallPlatformPart.Anchored = true
+    AntiFallPlatformPart.CanCollide = true
+    AntiFallPlatformPart.Transparency = 0.7
+    AntiFallPlatformPart.Material = Enum.Material.Neon
+    AntiFallPlatformPart.BrickColor = BrickColor.new("Bright blue")
+    AntiFallPlatformPart.Parent = Workspace
+end
+
+local function RemoveAntiFallPlatform(Mode)
+    if AntiFallPlatformPart then
+        AntiFallPlatformPart:Destroy()
+        AntiFallPlatformPart = nil
+    end
+end
+
+DalgonaGroup:AddToggle("AntiFallPlatformDalgona", {
+    Text = "Anti-Fall Platform (Dalgona)",
+    Tooltip = "Create platform to prevent falling",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            CreateAntiFallPlatform("Dalgona")
+        else
+            RemoveAntiFallPlatform("Dalgona")
+        end
+    end,
+})
+
+local HNSGroup = Tabs.Games:AddRightGroupbox("Hide 'N' Seek")
+
+HNSGroup:AddToggle("ESPSeekers", {
+    Text = "ESP Seekers",
+    Tooltip = "Show seeker ESP",
+    Default = false,
+    Callback = function(Value)
+        EspSeekersEnabled = Value
+        
+    end,
+})
+
+HNSGroup:AddToggle("ESPHiders", {
+    Text = "ESP Hiders",
+    Tooltip = "Show hider ESP",
+    Default = false,
+    Callback = function(Value)
+        EspHidersEnabled = Value
+        
+    end,
+})
+
+HNSGroup:AddToggle("ESPExitDoor", {
+    Text = "ESP Exit Door",
+    Tooltip = "Highlight exit doors",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+             -- Enable ESP
+        else
+             -- Disable ESP
+        end
+    end,
+})
+
+HNSGroup:AddButton({
+    Text = "HNS - ESP Exit",
+    Func = function()
+        for _, Obj in pairs(Workspace.HideAndSeekMap.NEWFIXEDDOORS.Floor1.EXITDOORS:GetChildren()) do Instance.new("Highlight", Obj) end
+        for _, Obj in pairs(Workspace.HideAndSeekMap.NEWFIXEDDOORS.Floor2.EXITDOORS:GetChildren()) do Instance.new("Highlight", Obj) end
+        for _, Obj in pairs(Workspace.HideAndSeekMap.NEWFIXEDDOORS.Floor3.EXITDOORS:GetChildren()) do Instance.new("Highlight", Obj) end
+    end,
+    Tooltip = "Highlight exit doors",
+})
+
+HNSGroup:AddButton({
+    Text = "HNS - Delete The Spikes",
+    Func = function()
+        Workspace.HideAndSeekMap.KillingParts:Destroy()
+    end,
+    Tooltip = "Remove killing spikes",
+})
+
+HNSGroup:AddButton({
+    Text = "REMOVE SPIKE",
+    Func = function()
+        for _, Obj in ipairs(Workspace:GetDescendants()) do
+            if Obj.Name:lower() == "killingparts" then
+                Obj:Destroy()
+            end
+        end
+    end,
+    Tooltip = "Destroys all KillingParts in HideAndSeekMap",
+})
+
+local DefensiveSpikeRemovalEnabled = false
+local DefensiveSpikeRemovalConnection = nil
+local SpikeLocation = nil
+local DefensiveActive = false
+
+HNSGroup:AddToggle("DefensiveSpikeRemoval", {
+    Text = "🛡️ Defensive Spike Removal",
+    Tooltip = "Auto remove spikes when attacked",
+    Default = false,
+    Callback = function(Value)
+        DefensiveSpikeRemovalEnabled = Value
+        if Value then
+            local KillingParts = Workspace.HideAndSeekMap:FindFirstChild("KillingParts")
+            if KillingParts then
+                if KillingParts.PrimaryPart then
+                    SpikeLocation = KillingParts.PrimaryPart.CFrame
+                elseif #KillingParts:GetChildren() > 0 then
+                    local Child = KillingParts:GetChildren()[1]
+                    if Child:IsA("BasePart") then SpikeLocation = Child.CFrame end
+                end
+                KillingParts:Destroy()
+                DefensiveActive = true
+            else
+                DefensiveSpikeRemovalEnabled = false
+                return
+            end
+            
+            if DefensiveSpikeRemovalConnection then DefensiveSpikeRemovalConnection:Disconnect() end
+            DefensiveSpikeRemovalConnection = RunService.Heartbeat:Connect(function()
+                if not DefensiveSpikeRemovalEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Hum = Char:FindFirstChild("Humanoid")
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                if not Hum or not Root then return end
+                
+                local Health = Hum.Health
+                if not _G.DefensiveLastHealth then _G.DefensiveLastHealth = Health end
+                
+                if Health < _G.DefensiveLastHealth and Health > 0 and SpikeLocation then
+                    Root.CFrame = SpikeLocation + Vector3.new(0, 5, 0)
+                    task.spawn(function()
+                        local Part = Instance.new("Part")
+                        Part.Size = Vector3.new(1, 1, 1)
+                        Part.Position = Root.Position
+                        Part.Material = Enum.Material.Neon
+                        Part.BrickColor = BrickColor.new("Bright blue")
+                        Part.Anchored = true
+                        Part.CanCollide = false
+                        Part.Shape = Enum.PartType.Ball
+                        Part.Transparency = 0.5
+                        Part.Parent = Workspace
+                        TweenService:Create(Part, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = Vector3.new(15, 15, 15),
+                            Transparency = 1
+                        }):Play()
+                        Debris:AddItem(Part, 1)
+                    end)
+                end
+                _G.DefensiveLastHealth = Health
+            end)
+        else
+            if DefensiveSpikeRemovalConnection then
+                DefensiveSpikeRemovalConnection:Disconnect()
+                DefensiveSpikeRemovalConnection = nil
+            end
+            _G.DefensiveLastHealth = nil
+            DefensiveActive = false
+        end
+    end,
+})
+
+local TpHidersToSpikesEnabled = false
+local TpHidersToSpikesConnection = nil
+local TpHidersSpikeLoc = nil
+local TpHidersActive = false
+local LastTeleportTime = 0
+local TeleportCooldown = 2
+
+HNSGroup:AddToggle("TpHidersToSpikes", {
+    Text = "🩸 Tp hiders to spikes",
+    Tooltip = "TP enemies to spike location",
+    Default = false,
+    Callback = function(Value)
+        TpHidersToSpikesEnabled = Value
+        if Value then
+            local KillingParts = Workspace.HideAndSeekMap:FindFirstChild("KillingParts")
+            if KillingParts then
+                if KillingParts.PrimaryPart then
+                    TpHidersSpikeLoc = KillingParts.PrimaryPart.CFrame
+                elseif #KillingParts:GetChildren() > 0 then
+                    local Child = KillingParts:GetChildren()[1]
+                    if Child:IsA("BasePart") then TpHidersSpikeLoc = Child.CFrame end
+                end
+                KillingParts:Destroy()
+                TpHidersActive = true
+            else
+                TpHidersToSpikesEnabled = false
+                return
+            end
+            
+            if TpHidersToSpikesConnection then TpHidersToSpikesConnection:Disconnect() end
+            TpHidersToSpikesConnection = RunService.Heartbeat:Connect(function()
+                if not TpHidersToSpikesEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Hum = Char:FindFirstChild("Humanoid")
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                if not Hum or not Root or Hum.Health <= 0 then return end
+                local Tool = Char:FindFirstChildOfClass("Tool")
+                if not Tool then return end
+                
+                for _, Player in pairs(Players:GetPlayers()) do
+                    if Player ~= LocalPlayer and Player.Character then
+                        local TRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+                        local THum = Player.Character:FindFirstChild("Humanoid")
+                        if TRoot and THum then
+                            if not _G.OffensivePlayerHealths then _G.OffensivePlayerHealths = {} end
+                            if not _G.OffensivePlayerHealths[Player.UserId] then _G.OffensivePlayerHealths[Player.UserId] = THum.Health end
+                            
+                            local CurrentHP = THum.Health
+                            local Dist = (Root.Position - TRoot.Position).Magnitude
+                            
+                            if CurrentHP < _G.OffensivePlayerHealths[Player.UserId] and Dist < 10 and Tool then
+                                local Now = tick()
+                                if Now - LastTeleportTime >= TeleportCooldown and TpHidersSpikeLoc then
+                                    Root.CFrame = TpHidersSpikeLoc + Vector3.new(0, 5, 0)
+                                    task.spawn(function()
+                                        local Part = Instance.new("Part")
+                                        Part.Size = Vector3.new(1, 1, 1)
+                                        Part.Position = Root.Position
+                                        Part.Material = Enum.Material.Neon
+                                        Part.BrickColor = BrickColor.new("Bright red")
+                                        Part.Anchored = true
+                                        Part.CanCollide = false
+                                        Part.Shape = Enum.PartType.Ball
+                                        Part.Transparency = 0.3
+                                        Part.Parent = Workspace
+                                        TweenService:Create(Part, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = Vector3.new(20, 20, 20),
+                                            Transparency = 1
+                                        }):Play()
+                                        Debris:AddItem(Part, 1)
+                                    end)
+                                    LastTeleportTime = Now
+                                end
+                            end
+                            _G.OffensivePlayerHealths[Player.UserId] = CurrentHP
+                        end
+                    end
+                end
+            end)
+        else
+            if TpHidersToSpikesConnection then
+                TpHidersToSpikesConnection:Disconnect()
+                TpHidersToSpikesConnection = nil
+            end
+            _G.OffensivePlayerHealths = nil
+            TpHidersActive = false
+        end
+    end,
+})
+
+HNSGroup:AddToggle("AutoKillHide", {
+    Text = "AUTO KILL HIDE",
+    Tooltip = "Auto kill in hide and seek",
+    Default = false,
+    Callback = function(Value)
+        
+    end,
+})
+
+HNSGroup:AddToggle("AutoDodgeHNS", {
+    Text = "Auto Dodge HNS",
+    Tooltip = "Auto dodge attacks in HNS",
+    Default = false,
+    Callback = function(Value)
+        
+    end,
+})
+
+HNSGroup:AddButton({
+    Text = "TP EXIT DOOR",
+    Func = function()
+        local Char = LocalPlayer.Character
+        if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
+        local Root = Char.HumanoidRootPart
+        local DoorsFolder = Workspace:WaitForChild("HideAndSeekMap"):WaitForChild("NEWFIXEDDOORS")
+        local TargetDoor = nil
+        local MinDist = math.huge
+        
+        for _, DoorGroup in ipairs(DoorsFolder:GetChildren()) do
+            local ExitDoors = DoorGroup:FindFirstChild("EXITDOORS")
+            if ExitDoors then
+                for _, Door in ipairs(ExitDoors:GetChildren()) do
+                    if Door:GetAttribute("ActuallyWorks") then
+                        local Part = Door.PrimaryPart or Door:FindFirstChild("DoorRoot")
+                        if Part then
+                            local Dist = (Root.Position - Part.Position).Magnitude
+                            if Dist < MinDist then
+                                MinDist = Dist
+                                TargetDoor = Part
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        if TargetDoor then
+            Root.CFrame = CFrame.new((TargetDoor.CFrame + TargetDoor.CFrame.LookVector * 3).Position, TargetDoor.Position)
+        end
+    end,
+    Tooltip = "Teleports to the nearest exit door",
+})
+
+HNSGroup:AddToggle("TPKEY", {
+    Text = "TP KEY",
+    Tooltip = "Auto teleport to keys",
+    Default = false,
+    Callback = function(Value)
+        local Enabled = Value
+        local function GetCF(Model)
+            if Model.PrimaryPart then return Model.PrimaryPart.CFrame end
+            for _, Part in ipairs(Model:GetDescendants()) do
+                if Part:IsA("BasePart") then return Part.CFrame end
+            end
+            return nil
+        end
+        
+        task.spawn(function()
+            while Enabled do
+                task.wait(0.5)
+                local Char = LocalPlayer.Character
+                if Char and Char:FindFirstChild("HumanoidRootPart") then
+                    local Root = Char.HumanoidRootPart
+                    local OriginalCF = Root.CFrame
+                    for _, Effect in ipairs(Workspace.Effects:GetChildren()) do
+                        if Effect:IsA("Model") and (Effect.Name == "DroppedKeyCircle" or Effect.Name == "DroppedKeySquare" or Effect.Name == "DroppedKeyTriangle") then
+                            local KeyCF = GetCF(Effect)
+                            if KeyCF then
+                                Root.CFrame = KeyCF + Vector3.new(0, 3, 0)
+                                task.wait(0.25)
+                                Root.CFrame = OriginalCF
+                                task.wait(0.15)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end,
+})
+
+HNSGroup:AddToggle("SpikeKill", {
+    Text = "Spike Kill",
+    Tooltip = "Auto teleport when using knife",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoKnifeTeleport = Value
+        task.spawn(function()
+            while _G.AutoKnifeTeleport do
+                task.wait(0.1)
+                local Char = LocalPlayer.Character
+                if Char then
+                    local Hum = Char:FindFirstChild("Humanoid")
+                    local Root = Char:FindFirstChild("HumanoidRootPart")
+                    if Hum and Root then
+                        for _, Track in ipairs(Hum:GetPlayingAnimationTracks()) do
+                            if Track.Name == "KnifeSwingBackStabChar" then
+                                local OriginalCF = Root.CFrame
+                                Root.CFrame = CFrame.new(101.50161, 972.146851, -6.17441177)
+                                task.wait(2)
+                                if not _G.AutoKnifeTeleport then break end
+                                Root.CFrame = OriginalCF
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end,
+})
+
+local TugOfWarGroup = Tabs.Games:AddLeftGroupbox("Tug Of War")
+
+local AutoPullEnabled = false
+RunService.Heartbeat:Connect(function()
+    if AutoPullEnabled then
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("TemporaryReachedBindable"):FireServer({{IHateYou = true}})
+    end
+end)
+
+TugOfWarGroup:AddToggle("TugOfWarAuto", {
+    Text = "Tug of War Auto",
+    Tooltip = "Auto win tug of war",
+    Default = false,
+    Callback = function(Value)
+        
+    end,
+})
+
+TugOfWarGroup:AddToggle("AutoPull", {
+    Text = "AUTO PULL",
+    Tooltip = "Auto pull in tug of war",
+    Default = false,
+    Callback = function(Value)
+        AutoPullEnabled = Value
+    end,
+})
+
+local JumpRopeGroup = Tabs.Games:AddRightGroupbox("Jump Rope")
+
+JumpRopeGroup:AddButton({
+    Text = "Jump Rope - Teleport To End",
+    Func = function()
+        local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            Char.HumanoidRootPart.CFrame = CFrame.new(720.896057, 198.628311, 921.170654)
+        end
+    end,
+    Tooltip = "Teleport to jump rope end",
+})
+
+JumpRopeGroup:AddButton({
+    Text = "Jump Rope - Delete The Rope",
+    Func = function()
+        Workspace.Effects.rope:Destroy()
+    end,
+    Tooltip = "Remove jump rope",
+})
+
+JumpRopeGroup:AddButton({
+    Text = "REMOVE ROPE",
+    Func = function()
+        local Rope = Workspace:FindFirstChild("Effects") and Workspace.Effects:FindFirstChild("rope")
+        if Rope then Rope:Destroy() end
+    end,
+    Tooltip = "Removes the rope from workspace (local only)",
+})
+
+JumpRopeGroup:AddToggle("AutoJumpRope", {
+    Text = "Auto Jump Rope",
+    Tooltip = "Auto complete jump rope",
+    Default = false,
+    Callback = function(Value)
+        AutoJumpRopeEnabled = Value
+        
+    end,
+})
+
+JumpRopeGroup:AddToggle("FreezeRope", {
+    Text = "FREEZE ROPE",
+    Tooltip = "Freezes or unfreezes the rope physically",
+    Default = false,
+    Callback = function(Value)
+        local Rope = Workspace:FindFirstChild("Effects") and Workspace.Effects:FindFirstChild("rope")
+        if not Rope then return end
+        if Value then
+            for _, Part in ipairs(Rope:GetDescendants()) do
+                if Part:IsA("BasePart") then
+                    Part.Anchored = true
+                    Part.Velocity = Vector3.zero
+                    Part.RotVelocity = Vector3.zero
+                elseif Part:IsA("Constraint") or Part:IsA("RopeConstraint") or Part:IsA("Motor6D") then
+                    Part.Enabled = false
+                end
+            end
+        else
+            for _, Part in ipairs(Rope:GetDescendants()) do
+                if Part:IsA("BasePart") then
+                    Part.Anchored = false
+                elseif Part:IsA("Constraint") or Part:IsA("RopeConstraint") or Part:IsA("Motor6D") then
+                    Part.Enabled = true
+                end
+            end
+        end
+    end,
+})
+
+JumpRopeGroup:AddButton({
+    Text = "NO BALANCE MINI GAME",
+    Func = function()
+        if LocalPlayer:FindFirstChild("PlayingJumpRope") then
+            LocalPlayer.PlayingJumpRope:Destroy()
+        end
+    end,
+    Tooltip = "Removes the balance attribute to skip the mini-game",
+})
+
+JumpRopeGroup:AddToggle("AutoJump", {
+    Text = "AUTO JUMP",
+    Tooltip = "Automatically jumps every second when near the rope",
+    Default = false,
+    Callback = function(Value)
+        if not Value then return end
+        task.spawn(function()
+            while Value do
+                local Rope = Workspace:FindFirstChild("Effects") and Workspace.Effects:FindFirstChild("rope")
+                local Char = LocalPlayer.Character
+                if Rope and Char and Char:FindFirstChild("HumanoidRootPart") and (Char.HumanoidRootPart.Position - Rope.Position).Magnitude <= 15 then
+                    local Hum = Char:FindFirstChild("Humanoid")
+                    if Hum and Hum.Health > 0 then
+                        Hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end,
+})
+
+JumpRopeGroup:AddToggle("AntiFallJumpRope", {
+    Text = "Anti Fall - Jump Rope",
+    Tooltip = "Prevent falling in jump rope",
+    Default = false,
+    Callback = function(Value)
+        AntiFallJumpRopeEnabled = Value
+        if Value then
+            AntiFallJumpRopeConnection = RunService.Heartbeat:Connect(function()
+                if not AntiFallJumpRopeEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                local Hum = Char:FindFirstChild("Humanoid")
+                if not Root or not Hum or Hum.Health <= 0 then return end
+                
+                if Root.Position.Y < 190 then
+                    local Target = FindNearestAlivePlayer()
+                    if Target and Target.Character then
+                        local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+                        if TargetRoot then
+                            Root.CFrame = TargetRoot.CFrame + Vector3.new(0, 3, 0)
+                        end
+                    else
+                        Root.CFrame = CFrame.new(720.896057, 198.628311, 921.170654)
+                    end
+                end
+            end)
+        elseif AntiFallJumpRopeConnection then
+            AntiFallJumpRopeConnection:Disconnect()
+            AntiFallJumpRopeConnection = nil
+        end
+    end,
+})
+
+JumpRopeGroup:AddToggle("AntiFallPlatformJumpRope", {
+    Text = "Anti-Fall Platform (Jump Rope)",
+    Tooltip = "Create platform to prevent falling",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            CreateAntiFallPlatform("JumpRope")
+        else
+            RemoveAntiFallPlatform("JumpRope")
+        end
+    end,
+})
+
+local AntiFallJumpRopeGenericEnabled = false
+JumpRopeGroup:AddToggle("AntiFall", {
+    Text = "ANTI FALL",
+    Tooltip = "Teleports player back below a fixed position if they fall",
+    Default = false,
+    Callback = function(Value)
+        AntiFallJumpRopeGenericEnabled = Value
+        local SafePos = Vector3.new(615.284424, 192.274277, 920.952515)
+        if Value then
+            task.spawn(function()
+                while AntiFallJumpRopeGenericEnabled do
+                    task.wait(0.2)
+                    local Char = LocalPlayer.Character
+                    if Char and Char:FindFirstChild("HumanoidRootPart") then
+                        if Char.HumanoidRootPart.Position.Y <= SafePos.Y - 3 then
+                            Char.HumanoidRootPart.CFrame = CFrame.new(SafePos)
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+JumpRopeGroup:AddToggle("SafePlatform", {
+    Text = "SAFE PLATFORM",
+    Tooltip = "Creates a static safe platform below the player",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local Root = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+            local Part = Instance.new("Part")
+            Part.Name = "JumpRopePlatform"
+            Part.Size = Vector3.new(500, 1, 500)
+            Part.Anchored = true
+            Part.CanCollide = true
+            Part.Transparency = 0.6
+            Part.Material = Enum.Material.Neon
+            Part.Color = Color3.fromRGB(0, 255, 0)
+            Part.Position = Root.Position - Vector3.new(0, 3, 0)
+            Part.Parent = Workspace
+        else
+            local Part = Workspace:FindFirstChild("JumpRopePlatform")
+            if Part then Part:Destroy() end
+        end
+    end,
+})
+
+JumpRopeGroup:AddButton({
+    Text = "TP End",
+    Func = function()
+        TeleportToCFrame(CFrame.new(737.156372, 193.805084, 920.952515))
+    end,
+    Tooltip = "Quickly teleport to the end location",
+})
+
+JumpRopeGroup:AddButton({
+    Text = "TP Start",
+    Func = function()
+        TeleportToCFrame(CFrame.new(615.284424, 192.274277, 920.952515))
+    end,
+    Tooltip = "Instantly teleport back to the start point",
+})
+
+local GlassBridgeGroup = Tabs.Games:AddLeftGroupbox("Glass Bridge")
+
+GlassBridgeGroup:AddButton({
+    Text = "Glass Bridge - Teleport To End",
+    Func = function()
+        local Char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            Char.HumanoidRootPart.CFrame = CFrame.new(-196.372467, 522.192139, -1534.20984)
+        end
+    end,
+    Tooltip = "Teleport to glass bridge end",
+})
+
+GlassBridgeGroup:AddButton({
+    Text = "TP END",
+    Func = function()
+        TeleportToCFrame(CFrame.new(-211.855881, 517.039062, -1534.7373))
+    end,
+    Tooltip = "Teleport instantly to the END location",
+})
+
+local function CreateGlassBridgeCover()
+    local Bridge = Workspace:FindFirstChild("GlassBridge")
+    if not Bridge then return end
+    local Holder = Bridge:FindFirstChild("GlassHolder")
+    if not Holder then return end
+    
+    local Children = Holder:GetChildren()
+    if #Children == 0 then return end
+    
+    local MinX, MinY, MinZ = math.huge, math.huge, math.huge
+    local MaxX, MaxY, MaxZ = -math.huge, -math.huge, -math.huge
+    
+    for _, Child in ipairs(Children) do
+        if Child:IsA("Model") or Child:IsA("BasePart") then
+            local CF, Size
+            if Child:IsA("Model") then
+                CF, Size = Child:GetBoundingBox()
+            else
+                CF = Child.CFrame
+                Size = Child.Size
+            end
+            local Half = Size / 2
+            for _, Corner in ipairs({
+                CF * CFrame.new(-Half.X, -Half.Y, -Half.Z), CF * CFrame.new(Half.X, -Half.Y, -Half.Z),
+                CF * CFrame.new(-Half.X, Half.Y, -Half.Z), CF * CFrame.new(Half.X, Half.Y, -Half.Z),
+                CF * CFrame.new(-Half.X, -Half.Y, Half.Z), CF * CFrame.new(Half.X, -Half.Y, Half.Z),
+                CF * CFrame.new(-Half.X, Half.Y, Half.Z), CF * CFrame.new(Half.X, Half.Y, Half.Z)
+            }) do
+                local Pos = Corner.Position
+                MinX, MinY, MinZ = math.min(MinX, Pos.X), math.min(MinY, Pos.Y), math.min(MinZ, Pos.Z)
+                MaxX, MaxY, MaxZ = math.max(MaxX, Pos.X), math.max(MaxY, Pos.Y), math.max(MaxZ, Pos.Z)
+            end
+        end
+    end
+    
+    local Part = Instance.new("Part")
+    Part.Name = "GlassBridgeCover"
+    Part.Anchored = true
+    Part.CanCollide = true
+    Part.Material = Enum.Material.SmoothPlastic
+    Part.Color = Color3.fromRGB(100, 100, 255)
+    Part.Transparency = 0.3
+    Part.Size = Vector3.new(MaxX - MinX + 2, MaxY - MinY + 2, MaxZ - MinZ + 2)
+    Part.CFrame = CFrame.new((MinX + MaxX) / 2, (MinY + MaxY) / 2, (MinZ + MaxZ) / 2)
+    Part.Parent = Workspace
+    return Part
+end
+
+GlassBridgeGroup:AddButton({
+    Text = "Glass Bridge Fake Glass",
+    Func = function()
+        CreateGlassBridgeCover()
+    end,
+    Tooltip = "Create glass bridge cover",
+})
+
+GlassBridgeGroup:AddButton({
+    Text = "Glass Esp",
+    Func = function()
+        for _, Row in pairs(Workspace:WaitForChild("GlassBridge"):WaitForChild("GlassHolder"):GetChildren()) do
+            for _, Glass in pairs(Row:GetChildren()) do
+                if Glass:IsA("Model") and Glass.PrimaryPart then
+                    local IsBad = Glass.PrimaryPart:GetAttribute("exploitingisevil")
+                    local Color = IsBad and Color3.fromRGB(248, 87, 87) or Color3.fromRGB(28, 235, 87)
+                    Glass.PrimaryPart.Color = Color
+                    Glass.PrimaryPart.Transparency = 0
+                    Glass.PrimaryPart.Material = Enum.Material.Neon
+                end
+            end
+        end
+    end,
+    Tooltip = "Highlight glass types",
+})
+
+GlassBridgeGroup:AddToggle("GlassVision", {
+    Text = "Glass Vision",
+    Tooltip = "Show Fake Glass n Real Glass",
+    Default = false,
+    Callback = function(Value)
+        GlassVisionEnabled = Value
+        
+        local function IsRealGlass(Part)
+            if Part:GetAttribute("GlassPart") then
+                if Part:GetAttribute("ActuallyKilling") ~= nil then
+                    return false
+                end
+                return true
+            end
+            return false
+        end
+        
+        local function UpdateGlass()
+            for _, Part in ipairs(Workspace:GetDescendants()) do
+                if Part:IsA("BasePart") and Part:GetAttribute("GlassPart") then
+                    if GlassVisionEnabled then
+                        if IsRealGlass(Part) then
+                            Part.Color = Color3.fromRGB(0, 255, 0)
+                        else
+                            Part.Color = Color3.fromRGB(255, 0, 0)
+                        end
+                        Part.Material = Enum.Material.Neon
+                        Part:SetAttribute("ExploitingIsEvil", true)
+                    else
+                        Part.Color = Color3.fromRGB(163, 162, 165)
+                        Part.Material = Enum.Material.Glass
+                        Part:SetAttribute("ExploitingIsEvil", nil)
+                    end
+                end
+            end
+        end
+        
+        if Value then
+            task.spawn(function()
+                while GlassVisionEnabled do
+                    UpdateGlass()
+                    task.wait(0.5)
+                end
+            end)
+        else
+            UpdateGlass()
+        end
+    end,
+})
+
+local function IsFakeGlass(Part)
+    return Part:GetAttribute("GlassPart") and Part:GetAttribute("ActuallyKilling") ~= nil
+end
+
+local function ShowFakeGlassPlatforms()
+    for _, Part in ipairs(FakeGlassParts) do
+        if Part and Part.Parent then Part:Destroy() end
+    end
+    FakeGlassParts = {}
+    
+    for _, Part in ipairs(Workspace:GetDescendants()) do
+        if Part:IsA("BasePart") and IsFakeGlass(Part) then
+            local Platform = Instance.new("Part")
+            Platform.Size = Vector3.new(10, 0.5, 10)
+            Platform.CFrame = Part.CFrame * CFrame.new(0, 2, 0)
+            Platform.Anchored = true
+            Platform.CanCollide = true
+            Platform.Transparency = 0.3
+            Platform.Material = Enum.Material.Neon
+            Platform.Color = Color3.fromRGB(255, 0, 0)
+            Platform.Parent = Workspace
+            table.insert(FakeGlassParts, Platform)
+        end
+    end
+end
+
+local function HideFakeGlassPlatforms()
+    for _, Part in ipairs(FakeGlassParts) do
+        if Part and Part.Parent then Part:Destroy() end
+    end
+    FakeGlassParts = {}
+end
+
+GlassBridgeGroup:AddToggle("GlassPlatforms", {
+    Text = "Glass Platforms",
+    Tooltip = "Show platforms on fake glass",
+    Default = false,
+    Callback = function(Value)
+        GlassPlatformsEnabled = Value
+        if Value then
+            task.spawn(function()
+                while GlassPlatformsEnabled do
+                    ShowFakeGlassPlatforms()
+                    task.wait(1)
+                end
+            end)
+        else
+            HideFakeGlassPlatforms()
+        end
+    end,
+})
+
+GlassBridgeGroup:AddToggle("AntiFallPlatformGlassBridge", {
+    Text = "Anti-Fall Platform (Glass Bridge)",
+    Tooltip = "Create platform to prevent falling",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            CreateAntiFallPlatform("GlassBridge")
+        else
+            RemoveAntiFallPlatform("GlassBridge")
+        end
+    end,
+})
+
+local MingleGroup = Tabs.Games:AddRightGroupbox("Mingle")
+
+MingleGroup:AddButton({
+    Text = "Teleport To Room",
+    Func = function()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(1170.68262, 403.950592, -486.154968)
+    end,
+    Tooltip = "Teleport to mingle room",
+})
+
+MingleGroup:AddButton({
+    Text = "Bring Person Out",
+    Func = function()
+        TeleportToCFrame(CFrame.new(1210.03967, 414.071106, -574.103088))
+    end,
+    Tooltip = "Bring out a person",
+})
+
+MingleGroup:AddToggle("AutoMingle", {
+    Text = "Auto Mingle",
+    Tooltip = "Auto complete mingle game",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoMingle = Value
+        while _G.AutoMingle do
+            for _, Child in ipairs(LocalPlayer.Character:GetChildren()) do
+                if Child.Name == "RemoteForQTE" then
+                    Child:FireServer()
+                end
+            end
+            task.wait()
+        end
+    end,
+})
+
+local SkySquidGroup = Tabs.Games:AddLeftGroupbox("Sky Squid Game")
+
+SkySquidGroup:AddToggle("AntiFallSkySquid", {
+    Text = "Anti Fall - Sky Squid",
+    Tooltip = "Prevent falling in sky squid",
+    Default = false,
+    Callback = function(Value)
+        AntiFallSkySquidEnabled = Value
+        if Value then
+            AntiFallSkySquidConnection = RunService.Heartbeat:Connect(function()
+                if not AntiFallSkySquidEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                local Hum = Char:FindFirstChild("Humanoid")
+                if not Root or not Hum or Hum.Health <= 0 then return end
+                
+                if Root.Position.Y < 50 then
+                    local Target = FindNearestAlivePlayer()
+                    if Target and Target.Character then
+                        local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+                        if TargetRoot then
+                            Root.CFrame = TargetRoot.CFrame + Vector3.new(0, 3, 0)
+                        end
+                    end
+                end
+            end)
+        elseif AntiFallSkySquidConnection then
+            AntiFallSkySquidConnection:Disconnect()
+            AntiFallSkySquidConnection = nil
+        end
+    end,
+})
+
+local function AutoSkySquidQTERoutine()
+    local PGui = LocalPlayer.PlayerGui
+    if not PGui then return end
+    local Gui = PGui:FindFirstChild("ScreenGui") or PGui:FindFirstChild("QTE")
+    if Gui then
+        for _, Descendant in pairs(Gui:GetDescendants()) do
+            if Descendant:IsA("TextButton") or Descendant:IsA("ImageButton") then
+                local Text = Descendant.Text or Descendant.Name
+                if Text:match("[FEQR]") or Descendant:FindFirstChild("QTE") then
+                    local YPos = Descendant.AbsolutePosition.Y + Descendant.AbsoluteSize.Y / 2
+                    if YPos > 350 and YPos < 450 then
+                        local Key = nil
+                        if Text:find("F") then Key = Enum.KeyCode.F
+                        elseif Text:find("E") then Key = Enum.KeyCode.E
+                        elseif Text:find("Q") then Key = Enum.KeyCode.Q
+                        elseif Text:find("R") then Key = Enum.KeyCode.R
+                        else Key = Enum.KeyCode.F end
+                        
+                        if Key then
+                            VirtualInputManager:SendKeyEvent(true, Key, false, game)
+                            task.wait(0.05)
+                            VirtualInputManager:SendKeyEvent(false, Key, false, game)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+SkySquidGroup:AddToggle("AutoQTESkySquid", {
+    Text = "Auto QTE - Sky Squid",
+    Tooltip = "Auto complete QTE in sky squid",
+    Default = false,
+    Callback = function(Value)
+        AutoQTESkySquidEnabled = Value
+        if Value then
+            if AutoQTESkySquidConnection then AutoQTESkySquidConnection:Disconnect() end
+            AutoQTESkySquidConnection = RunService.Heartbeat:Connect(function()
+                if not AutoQTESkySquidEnabled then return end
+                AutoSkySquidQTERoutine()
+            end)
+        elseif AutoQTESkySquidConnection then
+            AutoQTESkySquidConnection:Disconnect()
+            AutoQTESkySquidConnection = nil
+        end
+    end,
+})
+
+SkySquidGroup:AddToggle("SafePlatformSkySquid", {
+    Text = "Safe Platform - Sky Squid",
+    Tooltip = "Create safe platform in sky squid",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            CreateAntiFallPlatform("SkySquid")
+        else
+            RemoveAntiFallPlatform("SkySquid")
+        end
+    end,
+})
+
+SkySquidGroup:AddToggle("VoidKill", {
+    Text = "Void Kill",
+    Tooltip = "Auto TP to void when in combat with different player",
+    Default = false,
+    Callback = function(Value)
+        VoidKillEnabled = Value
+        if Value then
+            if VoidKillConnection then VoidKillConnection:Disconnect() end
+            VoidKillConnection = RunService.Heartbeat:Connect(function()
+                if not VoidKillEnabled then return end
+                
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                local Hum = Char:FindFirstChild("Humanoid")
+                if not Root or not Hum or Hum.Health <= 0 then return end
+                
+                for _, Player in pairs(Players:GetPlayers()) do
+                    if Player ~= LocalPlayer and Player.Character then
+                        local TargetRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+                        if TargetRoot and (Root.Position - TargetRoot.Position).Magnitude < 15 then
+                            local VoidPos = Vector3.new(0, 10000, 0)
+                            Root.CFrame = CFrame.new(VoidPos)
+                            local Platform = Instance.new("Part")
+                            Platform.Name = "VoidPlatform"
+                            Platform.Size = Vector3.new(50, 5, 50)
+                            Platform.Position = VoidPos - Vector3.new(0, 3, 0)
+                            Platform.Anchored = true
+                            Platform.CanCollide = true
+                            Platform.Transparency = 0.5
+                            Platform.Material = Enum.Material.Neon
+                            Platform.BrickColor = BrickColor.new("Bright purple")
+                            Platform.Parent = Workspace
+                            
+                            task.delay(10, function()
+                                if Platform and Platform.Parent then Platform:Destroy() end
+                            end)
+                            break
+                        end
+                    end
+                end
+            end)
+        elseif VoidKillConnection then
+            VoidKillConnection:Disconnect()
+            VoidKillConnection = nil
+        end
+    end,
+})
+
+local FinalDinnerGroup = Tabs.Games:AddRightGroupbox("Final Dinner")
+
+FinalDinnerGroup:AddButton({
+    Text = "Teleport To Final Game",
+    Func = function()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(2730.44263, 1043.33435, 800.130554)
+    end,
+    Tooltip = "Teleport to final game area",
+})
+
+FinalDinnerGroup:AddToggle("AntiFallFinal", {
+    Text = "Anti Fall - Final Game",
+    Tooltip = "Prevent falling in final game",
+    Default = false,
+    Callback = function(Value)
+        AntiFallFinalEnabled = Value
+        if Value then
+            AntiFallFinalConnection = RunService.Heartbeat:Connect(function()
+                if not AntiFallFinalEnabled then return end
+                local Char = LocalPlayer.Character
+                if not Char then return end
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                local Hum = Char:FindFirstChild("Humanoid")
+                if not Root or not Hum or Hum.Health <= 0 then return end
+                
+                if Root.Position.Y < 1000 then
+                    local Target = FindNearestAlivePlayer()
+                    if Target and Target.Character then
+                        local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+                        if TargetRoot then
+                            Root.CFrame = TargetRoot.CFrame + Vector3.new(0, 3, 0)
+                        end
+                    else
+                        Root.CFrame = CFrame.new(2730.44263, 1043.33435, 800.130554)
+                    end
+                end
+            end)
+        elseif AntiFallFinalConnection then
+            AntiFallFinalConnection:Disconnect()
+            AntiFallFinalConnection = nil
+        end
+    end,
+})
+
+local SpecialGameGroup = Tabs.Games:AddLeftGroupbox("Lights Out / Special Game")
+
+SpecialGameGroup:AddButton({
+    Text = "TP SAFE PLACE",
+    Func = function()
+        TeleportToCFrame(CFrame.new(195.255814, 112.202904, -85.3726807))
+    end,
+    Tooltip = "TP To a safe place",
+})
+
+SpecialGameGroup:AddToggle("AutoKillPlayers", {
+    Text = "Auto Kill Players",
+    Tooltip = "Auto kill random players",
+    Default = false,
+    Callback = function(Value)
+        AutoKillPlayersEnabled = Value
+        if AutoKillPlayersConnection then
+            AutoKillPlayersConnection:Disconnect()
+            AutoKillPlayersConnection = nil
+        end
+        
+        if AutoKillPlayersEnabled then
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChild("HumanoidRootPart") then
+                local Root = Char.HumanoidRootPart
+                AutoKillPlayersConnection = RunService.RenderStepped:Connect(function()
+                    if not AutoKillPlayersEnabled or not Root or not Root.Parent then return end
+                    local Target = nil
+                    local MinDist = math.huge
+                    
+                    for _, Player in ipairs(Players:GetPlayers()) do
+                        if Player ~= LocalPlayer and Player.Character then
+                            local PRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+                            local PHum = Player.Character:FindFirstChild("Humanoid")
+                            if PRoot and PHum and PHum.Health > 0 then
+                                local Dist = (Root.Position - PRoot.Position).Magnitude
+                                if Dist < MinDist then
+                                    MinDist = Dist
+                                    Target = Player
+                                end
+                            end
+                        end
+                    end
+                    
+                    if Target and Target.Character then
+                        local TargetPart = Target.Character:FindFirstChild("HumanoidRootPart") or Target.Character:FindFirstChild("UpperTorso") or Target.Character:FindFirstChild("Torso")
+                        if TargetPart then
+                            Root.CFrame = TargetPart.CFrame * CFrame.new(0, 0, -5)
+                        end
+                    end
+                end)
+            end
+        end
+    end,
+})
+
+Tabs.Games:AddRightGroupbox("Squid Game"):AddToggle("DontExitSquid", {
+    Text = "DONT EXIT OF SQUID",
+    Tooltip = "Prevent exiting squid game",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local Root = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+            local Size = Vector3.new(50, 50, 50)
+            local Thickness = 3
+            
+            local function CreateWall(Offset, WallSize)
+                local Part = Instance.new("Part")
+                Part.Size = WallSize
+                Part.Anchored = true
+                Part.CanCollide = true
+                Part.Transparency = 0.5
+                Part.Material = Enum.Material.ForceField
+                Part.Color = Color3.fromRGB(255, 0, 0)
+                Part.CFrame = Root.CFrame:ToWorldSpace(CFrame.new(Offset))
+                Part.Parent = Workspace
+            end
+            
+            CreateWall(Vector3.new(25, 0, 0), Vector3.new(Thickness, Size.Y, Size.Z))
+            CreateWall(Vector3.new(-25, 0, 0), Vector3.new(Thickness, Size.Y, Size.Z))
+            CreateWall(Vector3.new(0, 0, 25), Vector3.new(Size.X, Size.Y, Thickness))
+            CreateWall(Vector3.new(0, 0, -25), Vector3.new(Size.X, Size.Y, Thickness))
+            CreateWall(Vector3.new(0, 25, 0), Vector3.new(Size.X, Thickness, Size.Z))
+            CreateWall(Vector3.new(0, -25, 0), Vector3.new(Size.X, Thickness, Size.Z))
+        end
+    end,
+})
+
+local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc Features")
+
+MiscGroup:AddToggle("AutoSkip", {
+    Text = "Auto Skip",
+    Tooltip = "Auto skip dialogues",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoSkip = Value
+        while _G.AutoSkip do
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("DialogueRemote"):FireServer("Skipped")
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("TemporaryReachedBindable"):FireServer()
+            task.wait(0.8)
+        end
+    end,
+})
+
+MiscGroup:AddSlider("WalkSpeed", {
+    Text = "Speed",
+    Tooltip = "Set walk speed",
+    Default = 20,
+    Min = 20,
+    Max = 1000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(Value)
+        _G.Speed = Value
+    end,
+})
+
+MiscGroup:AddInput("WalkSpeed1", {
+    Default = "20",
+    Numeric = false,
+    Text = "Speed",
+    Placeholder = "UserSpeed",
+    Callback = function(Value)
+        _G.Speed = Value
+    end,
+})
+
+MiscGroup:AddToggle("SetSpeed", {
+    Text = "Auto Speed",
+    Tooltip = "Auto set speed",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoSpeed = Value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = _G.Speed or 50
+        end
+    end,
+})
+
+MiscGroup:AddToggle("NoCooldownProximity", {
+    Text = "No Cooldown Proximity",
+    Tooltip = "Remove cooldown from proximity prompts",
+    Default = false,
+    Callback = function(Value)
+        _G.NoCooldownProximity = Value
+        if _G.NoCooldownProximity then
+            for _, Descendant in pairs(Workspace:GetDescendants()) do
+                if Descendant:IsA("ProximityPrompt") then
+                    Descendant.HoldDuration = 0
+                end
+            end
+        end
+    end,
+})
+
+MiscGroup:AddSlider("FlyBypass", {
+    Text = "Fly Speed",
+    Tooltip = "Set fly speed",
+    Default = 20,
+    Min = 20,
+    Max = 500,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(Value)
+        _G.SetSpeedFly = Value
+    end,
+})
+_G.SetSpeedFly = 50
+
+MiscGroup:AddToggle("Fly", {
+    Text = "Fly",
+    Tooltip = "Enable flying",
+    Default = false,
+    Callback = function(Value)
+        _G.StartFly = Value
+        while _G.StartFly do
+            local Root = LocalPlayer.Character.HumanoidRootPart
+            local Gyro = Root:FindFirstChild("BodyGyro") or Instance.new("BodyGyro", Root)
+            Gyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+            Gyro.P = 90000
+            Gyro.CFrame = Root.CFrame
+            
+            local Vel = Root:FindFirstChild("BodyVelocity") or Instance.new("BodyVelocity", Root)
+            Vel.Velocity = Vector3.zero
+            Vel.maxForce = Vector3.new(9e9, 9e9, 9e9)
+            
+            local Control = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule")):GetMoveVector()
+            
+            if Root and Vel and Gyro then
+                Gyro.CFrame = CFrame.new(Root.Position, Root.Position + Workspace.CurrentCamera.CFrame.LookVector)
+                Vel.Velocity = Vector3.zero
+                
+                if Control.X > 0 then Vel.Velocity = Vel.Velocity + Workspace.CurrentCamera.CFrame.RightVector * Control.X * _G.SetSpeedFly end
+                if Control.X < 0 then Vel.Velocity = Vel.Velocity + Workspace.CurrentCamera.CFrame.RightVector * Control.X * _G.SetSpeedFly end
+                if Control.Z > 0 then Vel.Velocity = Vel.Velocity - Workspace.CurrentCamera.CFrame.LookVector * Control.Z * _G.SetSpeedFly end
+                if Control.Z < 0 then Vel.Velocity = Vel.Velocity - Workspace.CurrentCamera.CFrame.LookVector * Control.Z * _G.SetSpeedFly end
+            end
+            task.wait()
+        end
+        
+        if LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            if LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyGyro") then LocalPlayer.Character.HumanoidRootPart.BodyGyro:Destroy() end
+            if LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then LocalPlayer.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+        end
+    end,
+})
+
+MiscGroup:AddToggle("Noclip", {
+    Text = "Noclip",
+    Tooltip = "Walk through walls",
+    Default = false,
+    Callback = function(Value)
+        _G.NoclipCharacter = Value
+        while _G.NoclipCharacter do
+            if LocalPlayer.Character then
+                for _, Part in pairs(LocalPlayer.Character:GetChildren()) do
+                    if Part:IsA("BasePart") then Part.CanCollide = false end
+                end
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("InfJump", {
+    Text = "Inf Jump",
+    Tooltip = "Infinite jump",
+    Default = false,
+    Callback = function(Value)
+        _G.InfiniteJump = Value
+    end,
+})
+
+MiscGroup:AddToggle("Tp", {
+    Text = "Teleport Player",
+    Tooltip = "Auto teleport to player",
+    Default = false,
+    Callback = function(Value)
+        _G.TeleportPlayerAuto = Value
+    end,
+})
+
+MiscGroup:AddToggle("Camlock", {
+    Text = "Camlock Player / TP",
+    Tooltip = "Camera lock on player",
+    Default = false,
+    Callback = function(Value)
+        _G.CamlockPlayer = Value
+        while _G.CamlockPlayer do
+            local MinDist = math.huge
+            local TargetChar = nil
+            
+            for _, Player in pairs(Players:GetChildren()) do
+                if Player ~= LocalPlayer and LocalPlayer.Character and Player.Character then
+                    local MyRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local TRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+                    if MyRoot and TRoot then
+                        local Dist = (MyRoot.Position - TRoot.Position).Magnitude
+                        if Dist < MinDist then
+                            MinDist = Dist
+                            TargetChar = Player.Character
+                        end
+                    end
+                end
+            end
+            
+            if TargetChar then
+                while true do
+                    task.wait()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local TRoot = TargetChar:FindFirstChild("HumanoidRootPart")
+                        if TRoot then
+                            if _G.TeleportPlayerAuto then
+                                local MoveDir = TargetChar.Humanoid.MoveDirection.Magnitude
+                                if MoveDir > 0 then
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = TRoot.CFrame * CFrame.new(0, 0, -7)
+                                else
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = TRoot.CFrame
+                                end
+                            else
+                                if not _G.TeleportPlayerAuto then
+                                    Workspace.CurrentCamera.CFrame = CFrame.lookAt(Workspace.CurrentCamera.CFrame.Position, Workspace.CurrentCamera.CFrame.Position + (TRoot.Position - Workspace.CurrentCamera.CFrame.Position).Unit)
+                                end
+                            end
+                        end
+                    end
+                    
+                    if not _G.CamlockPlayer or (TargetChar:FindFirstChild("Humanoid") and TargetChar.Humanoid.Health <= 0) then
+                        break
+                    end
+                end
+            end
+            task.wait()
+        end
+    end,
+})
+
+local function HasTool(Name)
+    if LocalPlayer.Character then
+        for _, Item in pairs(LocalPlayer.Character:GetChildren()) do
+            if Item:IsA("Tool") and Item.Name == Name then return true end
+        end
+    end
+    if LocalPlayer.Backpack then
+        for _, Item in pairs(LocalPlayer.Backpack:GetChildren()) do
+            if Item:IsA("Tool") and Item.Name == Name then return true end
+        end
+    end
+    return false
+end
+
+MiscGroup:AddToggle("Bandage", {
+    Text = "Auto Collect Bandage",
+    Tooltip = "Auto collect bandages",
+    Default = false,
+    Callback = function(Value)
+        _G.CollectBandage = Value
+        while _G.CollectBandage do
+            local StartCF = LocalPlayer.Character.HumanoidRootPart.CFrame
+            if not HasTool("Bandage") then
+                repeat
+                    task.wait()
+                    if Workspace:FindFirstChild("Effects") then
+                        for _, Effect in pairs(Workspace.Effects:GetChildren()) do
+                            if Effect.Name == "DroppedBandage" and Effect:FindFirstChild("Handle") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = Effect.Handle.CFrame
+                                break
+                            end
+                        end
+                    end
+                until HasTool("Bandage")
+                task.wait(0.3)
+                LocalPlayer.Character.HumanoidRootPart.CFrame = StartCF
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("FlashBang", {
+    Text = "Auto Collect Flash Bang",
+    Tooltip = "Auto collect flash bangs",
+    Default = false,
+    Callback = function(Value)
+        _G.CollectFlashbang = Value
+        while _G.CollectFlashbang do
+            local StartCF = LocalPlayer.Character.HumanoidRootPart.CFrame
+            if not HasTool("Flashbang") then
+                repeat
+                    task.wait()
+                    if Workspace:FindFirstChild("Effects") then
+                        for _, Effect in pairs(Workspace.Effects:GetChildren()) do
+                            if Effect.Name == "DroppedFlashbang" and Effect:FindFirstChild("Stun Grenade") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = Effect["Stun Grenade"].CFrame
+                                break
+                            end
+                        end
+                    end
+                until HasTool("Flashbang")
+                task.wait(0.3)
+                LocalPlayer.Character.HumanoidRootPart.CFrame = StartCF
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("Grenade", {
+    Text = "Auto Collect Grenade",
+    Tooltip = "Auto collect grenades",
+    Default = false,
+    Callback = function(Value)
+        _G.CollectGrenade = Value
+        while _G.CollectGrenade do
+            local StartCF = LocalPlayer.Character.HumanoidRootPart.CFrame
+            if not HasTool("Grenade") then
+                repeat
+                    task.wait()
+                    if Workspace:FindFirstChild("Effects") then
+                        for _, Effect in pairs(Workspace.Effects:GetChildren()) do
+                            if Effect.Name == "DroppedGrenade" and Effect:FindFirstChild("Handle") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = Effect.Handle.CFrame
+                                break
+                            end
+                        end
+                    end
+                until HasTool("Grenade")
+                task.wait(0.3)
+                LocalPlayer.Character.HumanoidRootPart.CFrame = StartCF
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("AntiFling", {
+    Text = "Anti Fling",
+    Tooltip = "Prevent flinging",
+    Default = false,
+    Callback = function(Value)
+        _G.AntiFling = Value
+        while _G.AntiFling do
+            for _, Player in pairs(Players:GetChildren()) do
+                if Player ~= LocalPlayer and Player.Character then
+                    for _, Part in pairs(Player.Character:GetChildren()) do
+                        if Part:IsA("BasePart") then Part.CanCollide = false end
+                    end
+                end
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("AntiBanana", {
+    Text = "Anti Banana",
+    Tooltip = "Remove bananas",
+    Default = false,
+    Callback = function(Value)
+        _G.AntiBanana = Value
+        while _G.AntiBanana do
+            if Workspace:FindFirstChild("Effects") then
+                for _, Effect in pairs(Workspace.Effects:GetChildren()) do
+                    if Effect.Name:find("Banana") then Effect:Destroy() end
+                end
+            end
+            task.wait()
+        end
+    end,
+})
+
+MiscGroup:AddToggle("AntiLag", {
+    Text = "Anti Lag",
+    Tooltip = "Reduce lag",
+    Default = false,
+    Callback = function(Value)
+        _G.AntiLag = Value
+        if Value then
+            local Terrain = Workspace:FindFirstChildOfClass("Terrain")
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveSpeed = 0
+            Terrain.WaterReflectance = 0
+            Terrain.WaterTransparency = 1
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            Lighting.FogStart = 9e9
+            
+            for _, Descendant in pairs(game:GetDescendants()) do
+                if Descendant:IsA("BasePart") then
+                    Descendant.Material = Enum.Material.Plastic
+                    Descendant.Reflectance = 0
+                elseif Descendant:IsA("Decal") then
+                    Descendant.Transparency = 1
+                elseif Descendant:IsA("ParticleEmitter") or Descendant:IsA("Trail") then
+                    Descendant.Lifetime = NumberRange.new(0)
+                end
+            end
+        end
+    end,
+})
+
+local SettingsTab = Tabs.UISettings:AddLeftGroupbox("Menu")
+local CreditsTab = Tabs.UISettings:AddRightGroupbox("Credits")
+local InfoTab = Tabs.UISettings:AddRightGroupbox("Info")
+
+SettingsTab:AddDropdown("NotifySide", {
+    Values = {"Left", "Right"},
+    Default = "Right",
+    Text = "Notification Side",
+    Tooltip = "Set notification side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+
+SettingsTab:AddDropdown("NotifyChoose", {
+    Values = {"Obsidian", "Roblox"},
+    Default = "Obsidian",
+    Text = "Notification Choose",
+    Tooltip = "Choose notification type",
+    Callback = function(Value)
+        _G.ChooseNotify = Value
+    end,
+})
+
+SettingsTab:AddToggle("NotifySound", {
+    Text = "Notification Sound",
+    Tooltip = "Enable notification sound",
+    Default = true,
+    Callback = function(Value)
+        _G.NotificationSound = Value
+    end,
+})
+
+SettingsTab:AddSlider("VolumeNotification", {
+    Text = "Volume Notification",
+    Tooltip = "Set notification volume",
+    Default = 2,
+    Min = 2,
+    Max = 10,
+    Rounding = 1,
+    Compact = true,
+    Callback = function(Value)
+        _G.VolumeTime = Value
+    end,
+})
+
+SettingsTab:AddToggle("KeybindMenuOpen", {
+    Text = "Open Keybind Menu",
+    Tooltip = "Show keybind menu",
+    Default = false,
+    Callback = function(Value)
+        Library.KeybindFrame.Visible = Value
+    end,
+})
+
+SettingsTab:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Tooltip = "Show custom cursor",
+    Default = true,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end,
+})
+
+SettingsTab:AddDivider()
+
+SettingsTab:AddButton({
+    Text = "Unload",
+    Func = function()
+        Library:Unload()
+    end,
+    Tooltip = "Unload the UI",
+})
+
+CreditsTab:AddLabel("MADE BY AZYYZA", true)
+
+local LocalizationService = game:GetService("LocalizationService")
+InfoTab:AddLabel("Counter [ " .. LocalizationService:GetCountryRegionForPlayerAsync(LocalPlayer) .. " ]", true)
+InfoTab:AddLabel("Executor [ " .. identifyexecutor() .. " ]", true)
+InfoTab:AddLabel("Job Id [ " .. game.JobId .. " ]", true)
+InfoTab:AddDivider()
+
+InfoTab:AddButton({
+    Text = "Copy JobId",
+    Func = function()
+        if setclipboard then
+            setclipboard(tostring(game.JobId))
+            Library:Notify("Copied Success")
+        else
+            Library:Notify(tostring(game.JobId), 10)
+        end
+    end,
+    Tooltip = "Copy Job ID",
+})
+
+InfoTab:AddInput("JoinJob", {
+    Default = "Nah",
+    Numeric = false,
+    Text = "Join Job",
+    Placeholder = "UserJobId",
+    Callback = function(Value)
+        _G.JobIdJoin = Value
+    end,
+})
+
+InfoTab:AddButton({
+    Text = "Join JobId",
+    Func = function()
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, _G.JobIdJoin, LocalPlayer)
+    end,
+    Tooltip = "Join specific job",
+})
+
+InfoTab:AddButton({
+    Text = "Copy Join JobId",
+    Func = function()
+        if setclipboard then
+            setclipboard("game:GetService(\"TeleportService\"):TeleportToPlaceInstance(game.PlaceId, " .. game.JobId .. ", game.Players.LocalPlayer)")
+            Library:Notify("Copied Success")
+        else
+            Library:Notify(tostring(game.JobId), 10)
+        end
+    end,
+    Tooltip = "Copy join command",
+})
+
+local function RandomNumberRange(Range)
+    return math.random(-Range * 100, Range * 100) / 100
+end
+
+RunService.Heartbeat:Connect(function()
+    if DesyncEnabled == true then
+        DesyncInfo[1] = LocalPlayer.Character.HumanoidRootPart.CFrame
+        DesyncInfo[2] = LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity
+        
+        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(Vector3.new(0, 0, 0)) * CFrame.Angles(math.rad(RandomNumberRange(180)), math.rad(RandomNumberRange(180)), math.rad(RandomNumberRange(180)))
+        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(1, 1, 1) * 16384
+        RunService.RenderStepped:Wait()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = DesyncInfo[1]
+        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = DesyncInfo[2]
+    end
+end)
+
+local OldIndex = nil
+OldIndex = hookmetamethod(game, "__index", newcclosure(function(Self, Key)
+    if DesyncEnabled == true and not checkcaller() and Key == "CFrame" and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0 then
+        if Self == LocalPlayer.Character.HumanoidRootPart then
+            return DesyncInfo[1] or CFrame.new()
+        end
+        if Self == LocalPlayer.Character.Head then
+            if DesyncInfo[1] then
+                return DesyncInfo[1] + Vector3.new(0, LocalPlayer.Character.HumanoidRootPart.Size.Y / 2 + 0.5, 0)
+            else
+                return CFrame.new()
+            end
+        end
+    end
+    return OldIndex(Self, Key)
+end))
+
+Library.ToggleKeybind = Options.MenuKeybind
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:BuildConfigSection(Tabs.UISettings)
+ThemeManager:ApplyToTab(Tabs.UISettings)
+SaveManager:LoadAutoloadConfig()
+
+Library:Notify("NOT HUB [OBSIDIAN UI] COMPLETELY LOADED - All features merged successfully!", 5)
+print("NOT HUB [OBSIDIAN UI] COMPLETELY LOADED - All scripts merged successfully!")

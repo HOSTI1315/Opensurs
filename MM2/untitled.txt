@@ -1,0 +1,486 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+if getgenv().papi_Loaded then 
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = "ZENITH", Text = "Already Executed.", Duration = 4})
+    return 
+end
+getgenv().papi_Loaded = true
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+local LP = Players.LocalPlayer
+local Cam = workspace.CurrentCamera
+local Wind = loadstring(game:HttpGet("https://github.com/Footagesuss/WindUI/releases/latest/download/main.lua"))()
+
+Wind:AddTheme({
+    Name = "Zenith",
+    Accent = Wind:Gradient({
+        ["0"] = { Color = Color3.fromRGB(0, 255, 255), Transparency = 0 },   -- Electric Cyan
+        ["100"] = { Color = Color3.fromRGB(0, 140, 255), Transparency = 0 }, -- Deep Sky Blue
+    }, { Rotation = 90 }),
+    
+    Background = Color3.fromRGB(10, 12, 20), -- Deep Midnight Blue (Not boring black)
+    Outline = Color3.fromRGB(30, 40, 60),
+    Text = Color3.fromRGB(240, 250, 255),
+    Placeholder = Color3.fromRGB(100, 120, 150),
+    Button = Color3.fromRGB(20, 25, 40),
+    Icon = Color3.fromRGB(0, 255, 255), -- Cyan Icons
+    Hover = Color3.fromRGB(0, 200, 255),
+    
+    WindowBackground = Color3.fromRGB(12, 14, 24),
+    WindowShadow = Color3.fromRGB(0, 150, 255), -- Blue Glow
+    
+    WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
+    WindowTopbarAuthor = Color3.fromRGB(100, 180, 255),
+    WindowTopbarIcon = Color3.fromRGB(0, 255, 255),
+    
+    TabBackground = Color3.fromRGB(255, 255, 255),
+    TabTitle = Color3.fromRGB(255, 255, 255),
+    TabIcon = Color3.fromRGB(200, 200, 200),
+    
+    ElementBackground = Color3.fromRGB(22, 26, 45), -- Lighter Navy
+    ElementTitle = Color3.fromRGB(255, 255, 255),
+    ElementDesc = Color3.fromRGB(120, 140, 180),
+    
+    Toggle = Color3.fromRGB(30, 35, 60),
+    ToggleBar = Color3.fromRGB(255, 255, 255),
+    
+    Slider = Color3.fromRGB(30, 35, 60),
+    SliderThumb = Color3.fromRGB(255, 255, 255),
+})
+
+local GH_Sys = {
+    Info = { Name = "ZENITH", Game = "MM2", Ver = "1.0.0", Dev = "Zenith Team" },
+    Cfg = { Bag = 40, Walk = 25, Scale = 80 },
+    State = { 
+        Farming = false, 
+        Rage = false, 
+        Reset = false, 
+        Evade = true, 
+        ShowRoles = false, 
+        AimAssist = false, 
+        Smooth = 0.2,
+        LoopFling = false,
+        Esp = { On = true, Hex = { M = Color3.fromRGB(255,50,50), S = Color3.fromRGB(50,50,255), I = Color3.fromRGB(50,255,50) } } 
+    }
+}
+
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local ShopRemote = Remotes:WaitForChild("Shop"):WaitForChild("BoxController")
+local DB_Item = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+local DB_Profile = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
+
+Wind:SetNotificationLower(true)
+
+local Runtime = {
+    Roles = { Murd = "None", Sher = "None", Me = "Innocent" },
+    Match = { Alive = true, Active = true },
+    Farm = { Node = nil, Tick = 0, Folder = nil, Cur = 0, Max = 50, Ignored = {} }
+}
+
+local FlingState = false
+local function RunFling(targetPlayer)
+    if FlingState then FlingState = false; return end
+    if not targetPlayer or not targetPlayer.Character then return end
+    
+    FlingState = true
+    
+    local TChar = targetPlayer.Character
+    local TRoot = TChar:FindFirstChild("HumanoidRootPart")
+    local MyChar = LP.Character
+    local MyRoot = MyChar and MyChar:FindFirstChild("HumanoidRootPart")
+    local OldFPDH = workspace.FallenPartsDestroyHeight
+    local OldPos = MyRoot.CFrame
+
+    if not TRoot or not MyRoot then FlingState = false; return end
+
+    workspace.FallenPartsDestroyHeight = 0/0
+    workspace.CurrentCamera.CameraSubject = TChar
+    MyChar.Humanoid.PlatformStand = true
+    
+    local BAV = Instance.new("BodyAngularVelocity", MyRoot)
+    BAV.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    BAV.AngularVelocity = Vector3.new(0, 100000, 0)
+
+    local BT = Instance.new("BodyThrust", MyRoot)
+    BT.Force = Vector3.new(20000, 20000, 20000)
+    
+    task.spawn(function()
+        local tStart = tick()
+        while FlingState and targetPlayer.Parent and TChar.Parent and MyRoot.Parent do
+            if TRoot.Position.Y < -50 or TChar.Humanoid.Health <= 0 then break end
+            if (tick() - tStart) > 15 then break end
+            if TRoot.Velocity.Magnitude > 100 or TRoot.Velocity.Y > 50 then break end
+            local Pred = TRoot.CFrame + (TRoot.Velocity * 0.15)
+            local Jitter = Vector3.new(math.random(-1,1), math.random(-1,1), math.random(-1,1))
+            
+            MyRoot.CFrame = Pred + Jitter
+            MyRoot.Velocity = Vector3.new(9e9, 9e9, 9e9)
+            MyRoot.RotVelocity = Vector3.new(9e9, 9e9, 9e9)
+            
+            RunService.Heartbeat:Wait()
+        end
+        
+        if BAV then BAV:Destroy() end
+        if BT then BT:Destroy() end
+        if MyRoot then MyRoot.Velocity = Vector3.zero; MyRoot.RotVelocity = Vector3.zero; MyRoot.CFrame = OldPos end
+        if MyChar and MyChar:FindFirstChild("Humanoid") then MyChar.Humanoid.PlatformStand = false end
+        workspace.CurrentCamera.CameraSubject = LP.Character.Humanoid
+        workspace.FallenPartsDestroyHeight = OldFPDH
+        FlingState = false
+    end)
+end
+
+local function Detect(p)
+    if p.Name == Runtime.Roles.Murd then return "Murderer" end
+    if p.Name == Runtime.Roles.Sher then return "Sheriff" end
+    
+    if not p.Character then return "Innocent" end
+    if p.Character:FindFirstChild("Knife") or (p.Backpack and p.Backpack:FindFirstChild("Knife")) then return "Murderer" end
+    if p.Character:FindFirstChild("Gun") or (p.Backpack and p.Backpack:FindFirstChild("Gun")) then return "Sheriff" end
+    return "Innocent"
+end
+
+local GUI = Wind:CreateWindow({
+    Title = "ZENITH", 
+    Icon = "crown", 
+    Author = "The Peak", 
+    Folder = "ZenithHub",
+    Size = UDim2.fromOffset(750, 520), 
+    Theme = "Zenith", 
+    Resizable = true,
+    Transparent = true
+})
+GUI:SetToggleKey(Enum.KeyCode.RightControl)
+
+GUI:EditOpenButton({
+    Title = "ZENITH",
+    Icon = "crown",
+    CornerRadius = UDim.new(0, 12),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(Color3.fromRGB(0, 255, 255), Color3.fromRGB(0, 100, 255)),
+    Enabled = true,
+    Draggable = true
+})
+
+local Tabs = {
+    Home = GUI:Tab({ Title = "Dashboard", Icon = "layout-dashboard" }),
+    Bot = GUI:Tab({ Title = "Auto Farm", Icon = "bot" }),
+    Fling = GUI:Tab({ Title = "Fling", Icon = "swords" }),
+    War = GUI:Tab({ Title = "Combat", Icon = "crosshair" }),
+    Esp = GUI:Tab({ Title = "Visuals", Icon = "eye" }),
+    Util = GUI:Tab({ Title = "Misc", Icon = "wrench" }),
+    Set = GUI:Tab({ Title = "Settings", Icon = "settings" })
+}
+
+local FlingSec = Tabs.Fling:Section({ Title = "Target Selector", Box = true, Opened = true })
+local PList = {}
+local FlingTargetName = ""
+
+local function UpdPList()
+    PList = {}
+    for _, v in pairs(Players:GetPlayers()) do if v ~= LP then table.insert(PList, v.Name) end end
+end
+UpdPList()
+
+local Drop = FlingSec:Dropdown({ Title = "Select Player", Values = PList, AllowClearing = true, Callback = function(v) FlingTargetName = v end })
+FlingSec:Button({ Title = "Refresh Players", Callback = function() UpdPList(); Drop:Refresh(PList) end })
+
+FlingSec:Button({ Title = "Fling Selected", Callback = function() 
+    if FlingTargetName ~= "" then RunFling(Players:FindFirstChild(FlingTargetName)) end 
+end })
+
+local FlingAuto = Tabs.Fling:Section({ Title = "Auto Fling", Box = true })
+
+FlingAuto:Button({ Title = "Fling Random", Callback = function()
+    local c = {}
+    for _, p in pairs(Players:GetPlayers()) do if p ~= LP and p.Character then table.insert(c, p) end end
+    if #c > 0 then RunFling(c[math.random(1, #c)]) end
+end })
+
+FlingAuto:Button({ Title = "Fling Murderer", Callback = function() 
+    local m = Players:FindFirstChild(Runtime.Roles.Murd)
+    if not m then for _, p in pairs(Players:GetPlayers()) do if Detect(p) == "Murderer" then m = p break end end end
+    if m then RunFling(m) end
+end })
+
+FlingAuto:Button({ Title = "Fling Sheriff", Callback = function() 
+    local s = Players:FindFirstChild(Runtime.Roles.Sher)
+    if not s then for _, p in pairs(Players:GetPlayers()) do if Detect(p) == "Sheriff" then s = p break end end end
+    if s then RunFling(s) end
+end })
+
+FlingAuto:Toggle({ Title = "Loop Fling All", Callback = function(v)
+    GH_Sys.State.LoopFling = v
+    if v then
+        task.spawn(function()
+            while GH_Sys.State.LoopFling do
+                for _, p in pairs(Players:GetPlayers()) do
+                    if not GH_Sys.State.LoopFling then break end
+                    if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        RunFling(p)
+                        local s = tick()
+                        repeat task.wait(0.1) until not FlingState or (tick() - s) > 8
+                        task.wait(0.2)
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    else
+        FlingState = false
+    end
+end })
+
+FlingAuto:Button({ Title = "Stop Fling", Callback = function() FlingState = false end })
+
+local Status = Tabs.Home:Section({ Title = "Match Status", Box = true, Opened = true })
+local RolesLbl = Status:Paragraph({ Title = "Current Roles", Desc = "Waiting for data...", Icon = "users" })
+local BagLbl = Status:Paragraph({ Title = "Coin Bag", Desc = "0 / 50", Icon = "shopping-bag" })
+
+local att = Instance.new("Attachment"); att.Name = "GH_Force"
+local rot = Instance.new("AlignOrientation"); rot.Mode = Enum.OrientationAlignmentMode.OneAttachment; rot.RigidityEnabled = true; rot.Attachment0 = att
+local mov = Instance.new("LinearVelocity"); mov.Attachment0 = att; mov.MaxForce = math.huge; mov.VectorVelocity = Vector3.zero; mov.RelativeTo = Enum.ActuatorRelativeTo.World
+
+local function FindBag()
+    if Runtime.Farm.Folder and Runtime.Farm.Folder.Parent then return Runtime.Farm.Folder end
+    Runtime.Farm.Folder = workspace:FindFirstChild("CoinContainer", true)
+    return Runtime.Farm.Folder
+end
+
+local function GetEnemy()
+    if not GH_Sys.State.Evade then return nil end
+    local n = (Runtime.Roles.Me == "Murderer") and Runtime.Roles.Sher or Runtime.Roles.Murd
+    local p = Players:FindFirstChild(n)
+    return (p and p.Character and p.Character:FindFirstChild("HumanoidRootPart")) and p.Character.HumanoidRootPart.Position or nil
+end
+
+local function ScanGrid()
+    local c = FindBag()
+    if not c then return nil end
+    local best, dist = nil, math.huge
+    local pos = LP.Character.HumanoidRootPart.Position
+    local bad = GetEnemy()
+    for _, v in pairs(c:GetChildren()) do
+        if not Runtime.Farm.Ignored[v] then
+            local p = v:IsA("BasePart") and v or (v:IsA("Model") and v.PrimaryPart)
+            if p and (v.Name == "Coin" or v.Name == "SnowToken" or v:FindFirstChild("TouchInterest")) then
+                if GH_Sys.State.Evade and bad and (p.Position - bad).Magnitude < 18 then continue end
+                local d = (pos - p.Position).Magnitude
+                if d < dist then dist = d; best = p end
+            end
+        end
+    end
+    return best
+end
+
+local function KillLoop()
+    if not LP.Character then return end
+    local k = LP.Backpack:FindFirstChild("Knife")
+    if k then LP.Character.Humanoid:EquipTool(k) end
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
+            local t = v.Character.HumanoidRootPart
+            local s = tick()
+            repeat
+                if not GH_Sys.State.Farming then return end
+                k = LP.Character:FindFirstChild("Knife") or LP.Backpack:FindFirstChild("Knife")
+                if k and k.Parent ~= LP.Character then LP.Character.Humanoid:EquipTool(k) end
+                LP.Character.HumanoidRootPart.CFrame = t.CFrame * CFrame.new(0, 0, 2)
+                if k then k:Activate() end
+                RunService.Heartbeat:Wait()
+            until v.Character.Humanoid.Health <= 0 or (tick() - s) > 2 or not v.Parent
+        end
+    end
+    GH_Sys.State.Farming = false
+    att.Parent = nil; rot.Parent = nil; mov.Parent = nil
+    LP.Character.Humanoid.PlatformStand = false
+end
+
+task.spawn(function()
+    Remotes:WaitForChild("Gameplay"):WaitForChild("PlayerDataChanged").OnClientEvent:Connect(function(d)
+        if type(d) == "table" then
+            local me = d[LP.Name]
+            Runtime.Roles.Murd = "None"; Runtime.Roles.Sher = "None"
+            for n, data in pairs(d) do
+                if data.Role == "Murderer" then Runtime.Roles.Murd = n
+                elseif data.Role == "Sheriff" then Runtime.Roles.Sher = n end
+            end
+            RolesLbl:SetDesc("Murderer: " .. Runtime.Roles.Murd .. "\nSheriff: " .. Runtime.Roles.Sher)
+            if me then
+                Runtime.Match.Active = true; Runtime.Roles.Me = me.Role or "Innocent"
+                Runtime.Match.Alive = not (me.Dead or me.Killed)
+                GH_Sys.State.Rage = false
+                if me.Coins then Runtime.Farm.Cur = me.Coins end
+            else
+                Runtime.Match.Active = false; GH_Sys.State.Rage = false
+            end
+        end
+    end)
+    
+    Remotes:WaitForChild("Gameplay"):WaitForChild("CoinCollected").OnClientEvent:Connect(function(t, a, m)
+        if type(a) == "number" then Runtime.Farm.Cur = a end
+        if type(m) == "number" then Runtime.Farm.Max = m end
+        if Runtime.Farm.Node then Runtime.Farm.Ignored[Runtime.Farm.Node] = true; Runtime.Farm.Node = nil end
+        BagLbl:SetDesc(Runtime.Farm.Cur .. " / " .. Runtime.Farm.Max)
+        if Runtime.Farm.Cur >= Runtime.Farm.Max then
+            if Runtime.Roles.Me == "Murderer" and GH_Sys.State.Rage then
+                GH_Sys.State.Rage = true
+            elseif GH_Sys.State.Reset then
+                GH_Sys.State.Farming = false
+                LP.Character.Humanoid.Health = 0
+                task.wait(4)
+                Runtime.Farm.Cur = 0; Runtime.Farm.Ignored = {}; GH_Sys.State.Farming = true
+            else
+                GH_Sys.State.Farming = false
+            end
+        end
+    end)
+end)
+
+RunService.Heartbeat:Connect(function()
+    local c = LP.Character
+    if not c then return end
+    local hrp, hum = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid")
+    if not hrp or not hum then return end
+
+    if GH_Sys.State.Farming and Runtime.Match.Alive and hum.Health > 0 then
+        if GH_Sys.State.Rage then
+            att.Parent = nil; rot.Parent = nil; mov.Parent = nil
+            hum.PlatformStand = false
+            KillLoop()
+            return
+        end
+
+        if not FindBag() then
+            att.Parent = nil; rot.Parent = nil; mov.Parent = nil
+            hum.PlatformStand = false
+            return
+        end
+
+        att.Parent = hrp; rot.Parent = hrp; mov.Parent = hrp
+        hum.PlatformStand = true
+        for _, t in pairs(hum:GetPlayingAnimationTracks()) do t:Stop() end
+        for _, v in pairs(c:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+
+        if GH_Sys.State.Evade then
+            local d = GetEnemy()
+            if d and (hrp.Position - d).Magnitude < 22 then
+                local esc = (hrp.Position - d).Unit
+                mov.VectorVelocity = esc * (GH_Sys.Cfg.Walk * 1.5)
+                rot.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + esc)
+                return
+            end
+        end
+
+        if Runtime.Farm.Node and not Runtime.Farm.Node.Parent then Runtime.Farm.Node = nil end
+        if Runtime.Farm.Node and (tick() - Runtime.Farm.Tick) > 1.3 then 
+            Runtime.Farm.Ignored[Runtime.Farm.Node] = true; Runtime.Farm.Node = nil 
+        end
+        if not Runtime.Farm.Node then Runtime.Farm.Node = ScanGrid(); Runtime.Farm.Tick = tick() end
+
+        if Runtime.Farm.Node then
+            local tp = Runtime.Farm.Node.Position + Vector3.new(0, -1.5, 0)
+            mov.VectorVelocity = (tp - hrp.Position).Unit * GH_Sys.Cfg.Walk
+            if (tp - hrp.Position).Magnitude > 2 then rot.CFrame = CFrame.lookAt(hrp.Position, tp) * CFrame.Angles(math.rad(90), 0, 0) end
+        else
+            mov.VectorVelocity = Vector3.zero
+        end
+    else
+        att.Parent = nil; rot.Parent = nil; mov.Parent = nil
+        if hum.PlatformStand and not FlingState then hum.PlatformStand = false end
+    end
+end)
+
+local function UiFix()
+    local p = LP:FindFirstChild("PlayerGui")
+    if p then
+        if p:FindFirstChild("MysteryBoxOpen") then p.MysteryBoxOpen:Destroy() end
+        if p:FindFirstChild("MainGUI") then
+            if p.MainGUI:FindFirstChild("CrateOpen") then p.MainGUI.CrateOpen:Destroy() end
+            pcall(function() p.MainGUI.Lobby.Screens.Shop.Main.ViewCrate.Visible = false end)
+        end
+    end
+end
+RunService.RenderStepped:Connect(UiFix)
+
+local function ItemSpawn(n)
+    if not n or n == "" then return end
+    local id = DB_Item[n] and n or nil
+    if not id then for k,_ in pairs(DB_Item) do if k:lower() == n:lower() then id = k; break end end end
+    if not id then return end
+    pcall(function() ShopRemote:Fire("KnifeBox4", id); DB_Profile.Weapons.Owned[id] = (DB_Profile.Weapons.Owned[id] or 0) + 1 end)
+    task.spawn(function()
+        UiFix()
+        pcall(function() getsenv(LP.PlayerGui.MainGUI.Inventory.NewItem)._G.NewItem(id, nil, nil, "Weapons", 1) end)
+    end)
+    task.delay(1.5, function() if LP.Character then LP.Character:BreakJoints() end end)
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character then
+            local r = Detect(p)
+            local c = GH_Sys.State.Esp.Hex.I
+            if r == "Murderer" then c = GH_Sys.State.Esp.Hex.M elseif r == "Sheriff" then c = GH_Sys.State.Esp.Hex.S end
+            if GH_Sys.State.Esp.On then 
+                local h = p.Character:FindFirstChild("G_ESP") or Instance.new("Highlight", p.Character)
+                h.Name = "G_ESP"; h.FillColor = c; h.FillTransparency = 0.5; h.OutlineTransparency = 1; h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            else 
+                if p.Character:FindFirstChild("G_ESP") then p.Character.G_ESP:Destroy() end
+            end
+        end
+    end
+end)
+
+local Farm = Tabs.Bot:Section({ Title = "Configuration", Box = true, Opened = true })
+local Tog = Farm:Toggle({ Title = "Enable Auto Farm", Callback = function(v) GH_Sys.State.Farming = v end })
+Farm:Keybind({ Title = "Farm Toggle Key", Value = "None", Callback = function() Tog:Set(not GH_Sys.State.Farming) end })
+Farm:Toggle({ Title = "Reset on Full Bag", Value = false, Callback = function(v) GH_Sys.State.Reset = v end })
+Farm:Toggle({ Title = "Evade Murderer", Value = true, Callback = function(v) GH_Sys.State.Evade = v end })
+Farm:Slider({ Title = "Farm Speed", Step = 1, Value = {Min = 10, Max = 100, Default = 35}, Callback = function(v) GH_Sys.Cfg.Walk = v end })
+
+local Pvp = Tabs.War:Section({ Title = "Combat Logic", Box = true, Opened = true })
+Pvp:Toggle({ Title = "Kill Aura (Murderer)", Callback = function(v) GH_Sys.State.Rage = v end })
+Pvp:Toggle({ Title = "Show Roles HUD", Value = false, Callback = function(v) GH_Sys.State.ShowRoles = v end })
+Pvp:Slider({ Title = "HUD Scale", Step = 10, Value = {Min = 50, Max = 200, Default = 80}, Callback = function(v) GH_Sys.Cfg.Scale = v end })
+Pvp:Slider({ Title = "Aim Smoothness", Step = 0.1, Value = {Min = 0.1, Max = 1, Default = 0.2}, Callback = function(v) GH_Sys.State.Smooth = v end })
+
+local Vis = Tabs.Esp:Section({ Title = "ESP Settings", Box = true, Opened = true })
+Vis:Toggle({ Title = "Enable ESP", Value = true, Callback = function(v) GH_Sys.State.Esp.On = v end })
+Vis:Colorpicker({ Title = "Murderer Color", Default = Color3.fromRGB(255, 50, 50), Callback = function(v) GH_Sys.State.Esp.Hex.M = v end })
+Vis:Colorpicker({ Title = "Sheriff Color", Default = Color3.fromRGB(50, 50, 255), Callback = function(v) GH_Sys.State.Esp.Hex.S = v end })
+Tabs.Esp:Section({ Title = "World", Box = true }):Toggle({ Title = "Fullbright", Callback = function(v) Lighting.Brightness = v and 2 or 1; Lighting.GlobalShadows = not v end })
+
+local TP = Tabs.Util:Section({ Title = "Teleports", Box = true })
+TP:Button({ Title = "Teleport to Murderer", Callback = function() for _, p in pairs(Players:GetPlayers()) do if Detect(p) == "Murderer" and p.Character then LP.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame end end end })
+TP:Button({ Title = "Teleport to Sheriff", Callback = function() for _, p in pairs(Players:GetPlayers()) do if Detect(p) == "Sheriff" and p.Character then LP.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame end end end })
+
+local Spawn = Tabs.Util:Section({ Title = "Item Spawner", Box = true })
+Spawn:Input({ Title = "Item Name", Placeholder = "Icewing", Callback = function(v) _G.Item = v end })
+Spawn:Button({ Title = "Spawn Item", Callback = function() ItemSpawn(_G.Item) end })
+
+local Char = Tabs.Util:Section({ Title = "Local Player", Box = true })
+Char:Slider({ Title = "Walk Speed", Step = 1, Value = {Min = 16, Max = 200, Default = 16}, Callback = function(v) getgenv().G_WS = v end })
+Char:Slider({ Title = "Jump Power", Step = 1, Value = {Min = 50, Max = 200, Default = 50}, Callback = function(v) getgenv().G_JP = v end })
+Char:Slider({ Title = "Field of View", Step = 1, Value = {Min = 70, Max = 120, Default = 70}, Callback = function(v) Cam.FieldOfView = v end })
+
+local Sets = Tabs.Set:Section({ Title = "Interface", Box = true })
+Sets:Dropdown({ Title = "UI Theme", Values = {"Zenith", "Dark", "Rose", "Aqua"}, Value = "Zenith", Callback = function(v) Wind:SetTheme(v) end })
+
+task.spawn(function()
+    RunService.RenderStepped:Connect(function()
+        if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+            if getgenv().G_WS and getgenv().G_WS > 16 then LP.Character.Humanoid.WalkSpeed = getgenv().G_WS end
+            if getgenv().G_JP and getgenv().G_JP > 50 then LP.Character.Humanoid.UseJumpPower = true; LP.Character.Humanoid.JumpPower = getgenv().G_JP end
+        end
+    end)
+end)
+
+Wind:Notify({ Title = "ZENITH", Content = "System Active.", Icon = "crown", Duration = 5 })

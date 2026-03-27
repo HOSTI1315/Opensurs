@@ -1,0 +1,531 @@
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+if playerGui:FindFirstChild("MiniGUI") then
+    playerGui.MiniGUI:Destroy()
+end
+
+local godModeEnabled = false
+local espTimerEnabled = false
+local espConnection = nil
+local screenEspGui = nil
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MiniGUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 250, 0, 180)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -90)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+mainFrame.BackgroundTransparency = 0.15
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(138, 43, 226)
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.3
+mainStroke.Parent = mainFrame
+
+local headerBar = Instance.new("Frame")
+headerBar.Name = "HeaderBar"
+headerBar.Size = UDim2.new(1, 0, 0, 35)
+headerBar.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+headerBar.BackgroundTransparency = 0.7
+headerBar.BorderSizePixel = 0
+headerBar.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 12)
+headerCorner.Parent = headerBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "😈 IMPOSTEUR"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 16
+titleLabel.Font = Enum.Font.LuckiestGuy
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = headerBar
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0.5, -15)
+closeButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+closeButton.BackgroundTransparency = 0.3
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextSize = 16
+closeButton.Font = Enum.Font.GothamBold
+closeButton.BorderSizePixel = 0
+closeButton.Parent = headerBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
+
+local godModeFrame = Instance.new("Frame")
+godModeFrame.Size = UDim2.new(1, -20, 0, 50)
+godModeFrame.Position = UDim2.new(0, 10, 0, 50)
+godModeFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+godModeFrame.BackgroundTransparency = 0.3
+godModeFrame.BorderSizePixel = 0
+godModeFrame.Parent = mainFrame
+
+local godCorner = Instance.new("UICorner")
+godCorner.CornerRadius = UDim.new(0, 8)
+godCorner.Parent = godModeFrame
+
+local godStroke = Instance.new("UIStroke")
+godStroke.Color = Color3.fromRGB(138, 43, 226)
+godStroke.Thickness = 1.5
+godStroke.Transparency = 0.5
+godStroke.Parent = godModeFrame
+
+local godLabel = Instance.new("TextLabel")
+godLabel.Size = UDim2.new(0.6, 0, 1, 0)
+godLabel.Position = UDim2.new(0, 10, 0, 0)
+godLabel.BackgroundTransparency = 1
+godLabel.Text = "🛡️ GOD MODE"
+godLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+godLabel.TextSize = 14
+godLabel.Font = Enum.Font.LuckiestGuy
+godLabel.TextXAlignment = Enum.TextXAlignment.Left
+godLabel.Parent = godModeFrame
+
+local toggleFrame = Instance.new("Frame")
+toggleFrame.Size = UDim2.new(0, 50, 0, 26)
+toggleFrame.Position = UDim2.new(1, -60, 0.5, -13)
+toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+toggleFrame.BorderSizePixel = 0
+toggleFrame.Parent = godModeFrame
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleFrame
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 22, 0, 22)
+toggleButton.Position = UDim2.new(0, 2, 0.5, -11)
+toggleButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+toggleButton.Text = ""
+toggleButton.BorderSizePixel = 0
+toggleButton.Parent = toggleFrame
+
+local toggleBtnCorner = Instance.new("UICorner")
+toggleBtnCorner.CornerRadius = UDim.new(1, 0)
+toggleBtnCorner.Parent = toggleButton
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 15)
+statusLabel.Position = UDim2.new(0, 0, 1, -78)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = " "
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statusLabel.TextSize = 11
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.Parent = mainFrame
+
+local espFrame = Instance.new("Frame")
+espFrame.Size = UDim2.new(1, -20, 0, 50)
+espFrame.Position = UDim2.new(0, 10, 0, 110)
+espFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+espFrame.BackgroundTransparency = 0.3
+espFrame.BorderSizePixel = 0
+espFrame.Parent = mainFrame
+
+local espCorner = Instance.new("UICorner")
+espCorner.CornerRadius = UDim.new(0, 8)
+espCorner.Parent = espFrame
+
+local espStroke = Instance.new("UIStroke")
+espStroke.Color = Color3.fromRGB(138, 43, 226)
+espStroke.Thickness = 1.5
+espStroke.Transparency = 0.5
+espStroke.Parent = espFrame
+
+local espLabel = Instance.new("TextLabel")
+espLabel.Size = UDim2.new(0.6, 0, 1, 0)
+espLabel.Position = UDim2.new(0, 10, 0, 0)
+espLabel.BackgroundTransparency = 1
+espLabel.Text = "⏱️ ESP TIMER SECRET"
+espLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+espLabel.TextSize = 14
+espLabel.Font = Enum.Font.LuckiestGuy
+espLabel.TextXAlignment = Enum.TextXAlignment.Left
+espLabel.Parent = espFrame
+
+local espToggleFrame = Instance.new("Frame")
+espToggleFrame.Size = UDim2.new(0, 50, 0, 26)
+espToggleFrame.Position = UDim2.new(1, -60, 0.5, -13)
+espToggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+espToggleFrame.BorderSizePixel = 0
+espToggleFrame.Parent = espFrame
+
+local espToggleCorner = Instance.new("UICorner")
+espToggleCorner.CornerRadius = UDim.new(1, 0)
+espToggleCorner.Parent = espToggleFrame
+
+local espToggleButton = Instance.new("TextButton")
+espToggleButton.Size = UDim2.new(0, 22, 0, 22)
+espToggleButton.Position = UDim2.new(0, 2, 0.5, -11)
+espToggleButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+espToggleButton.Text = ""
+espToggleButton.BorderSizePixel = 0
+espToggleButton.Parent = espToggleFrame
+
+local espToggleBtnCorner = Instance.new("UICorner")
+espToggleBtnCorner.CornerRadius = UDim.new(1, 0)
+espToggleBtnCorner.Parent = espToggleButton
+
+local espStatusLabel = Instance.new("TextLabel")
+espStatusLabel.Size = UDim2.new(1, 0, 0, 15)
+espStatusLabel.Position = UDim2.new(0, 0, 1, -18)
+espStatusLabel.BackgroundTransparency = 1
+espStatusLabel.Text = " "
+espStatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+espStatusLabel.TextSize = 11
+espStatusLabel.Font = Enum.Font.Gotham
+espStatusLabel.Parent = mainFrame
+
+local openButton = Instance.new("TextButton")
+openButton.Size = UDim2.new(0, 50, 0, 50)
+openButton.Position = UDim2.new(0, 15, 0.5, -25)
+openButton.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+openButton.BackgroundTransparency = 0.2
+openButton.Text = "☰"
+openButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+openButton.TextSize = 24
+openButton.Font = Enum.Font.GothamBold
+openButton.BorderSizePixel = 0
+openButton.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(1, 0)
+openCorner.Parent = openButton
+
+local openStroke = Instance.new("UIStroke")
+openStroke.Color = Color3.fromRGB(255, 255, 255)
+openStroke.Thickness = 2
+openStroke.Transparency = 0.5
+openStroke.Parent = openButton
+
+local pulseAnimation = TweenService:Create(openStroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    Transparency = 0
+})
+pulseAnimation:Play()
+
+local function toggleGodMode()
+    godModeEnabled = not godModeEnabled
+    
+    if godModeEnabled then
+        toggleButton.Position = UDim2.new(1, -24, 0.5, -11)
+        toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        toggleFrame.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+        toggleFrame.BackgroundTransparency = 0.3
+        statusLabel.Text = " "
+        statusLabel.TextColor3 = Color3.fromRGB(138, 226, 43)
+        
+        humanoid.MaxHealth = math.huge
+        humanoid.Health = math.huge
+        
+        humanoid.HealthChanged:Connect(function(health)
+            if godModeEnabled and health < humanoid.MaxHealth then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+        
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local packages = ReplicatedStorage:FindFirstChild("Packages")
+        if packages then
+            local net = packages:FindFirstChild("Net")
+            if net then
+                local kill = net:FindFirstChild("RE/TsunamiEventService/Kill")
+                if kill then kill:Destroy() end
+            end
+        end
+        
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanTouch = false
+            end
+        end
+    else
+        toggleButton.Position = UDim2.new(0, 2, 0.5, -11)
+        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+        toggleFrame.BackgroundTransparency = 0
+        statusLabel.Text = " "
+        statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        
+        humanoid.MaxHealth = 100
+        humanoid.Health = 100
+        
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanTouch = true
+            end
+        end
+    end
+    
+    local tween = TweenService:Create(toggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = godModeEnabled and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
+    })
+    tween:Play()
+end
+
+local function toggleEspTimer()
+    espTimerEnabled = not espTimerEnabled
+    
+    if espTimerEnabled then
+        espToggleButton.Position = UDim2.new(1, -24, 0.5, -11)
+        espToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        espToggleFrame.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+        espToggleFrame.BackgroundTransparency = 0.3
+        espStatusLabel.Text = " "
+        espStatusLabel.TextColor3 = Color3.fromRGB(138, 226, 43)
+        
+        screenEspGui = Instance.new("ScreenGui")
+        screenEspGui.Name = "TimerSecretESP"
+        screenEspGui.ResetOnSpawn = false
+        screenEspGui.IgnoreGuiInset = true
+        screenEspGui.Parent = playerGui
+        
+        local frame = Instance.new("Frame", screenEspGui)
+        frame.Size = UDim2.new(0.52, 0, 0, 58)
+        frame.Position = UDim2.new(0.24, 0, 0, 6)
+        frame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        frame.BackgroundTransparency = 0.35
+        frame.BorderSizePixel = 0
+        
+        local corner = Instance.new("UICorner", frame)
+        corner.CornerRadius = UDim.new(0, 14)
+        
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(138, 43, 226)
+        stroke.Thickness = 2.2
+        stroke.Transparency = 0.35
+        
+        local textLabel = Instance.new("TextLabel", frame)
+        textLabel.Size = UDim2.new(0.96, 0, 0.92, 0)
+        textLabel.Position = UDim2.new(0.02, 0, 0.04, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.LuckiestGuy
+        textLabel.TextStrokeTransparency = 0.7
+        textLabel.TextStrokeColor3 = Color3.fromRGB(50, 50, 80)
+        textLabel.Text = "High Tier Secret Spawning in : ???"
+        
+        local pulse = TweenService:Create(textLabel, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            TextTransparency = 0.05
+        })
+        pulse:Play()
+        
+        espConnection = RunService.RenderStepped:Connect(function()
+            if not espTimerEnabled then return end
+            
+            local map = Workspace:FindFirstChild("Map")
+            if not map then 
+                textLabel.Text = "High Tier Secret Spawning in : Map introuvable"
+                return 
+            end
+            
+            local sign = map:FindFirstChild("SpawnTimerSign")
+            if not sign then 
+                textLabel.Text = "High Tier Secret Spawning in : Sign introuvable"
+                return 
+            end
+            
+            local panel = sign:FindFirstChild("Panel")
+            if not panel then 
+                textLabel.Text = "High Tier Secret Spawning in : Panel introuvable"
+                return 
+            end
+            
+            local surfaceGui = panel:FindFirstChildOfClass("SurfaceGui")
+            if not surfaceGui then 
+                textLabel.Text = "High Tier Secret Spawning in : SurfaceGui introuvable"
+                return 
+            end
+            
+            local mainFrameGui = surfaceGui:FindFirstChild("MainFrame")
+            if not mainFrameGui then 
+                textLabel.Text = "High Tier Secret Spawning in : MainFrame introuvable"
+                return 
+            end
+            
+            local timerLabel = mainFrameGui:FindFirstChild("Timer")
+            if timerLabel and timerLabel:IsA("TextLabel") then
+                textLabel.Text = "High Tier Secret Spawning in : " .. (timerLabel.Text or "???")
+            else
+                textLabel.Text = "High Tier Secret Spawning in : Timer introuvable"
+            end
+        end)
+        
+    else
+        espToggleButton.Position = UDim2.new(0, 2, 0.5, -11)
+        espToggleButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        espToggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+        espToggleFrame.BackgroundTransparency = 0
+        espStatusLabel.Text = " "
+        espStatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        
+        if espConnection then
+            espConnection:Disconnect()
+            espConnection = nil
+        end
+        
+        if screenEspGui then
+            screenEspGui:Destroy()
+            screenEspGui = nil
+        end
+        
+        if pulse then pulse:Cancel() end
+    end
+    
+    local tween = TweenService:Create(espToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = espTimerEnabled and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
+    })
+    tween:Play()
+end
+
+local isOpen = false
+
+local function toggleMenu()
+    isOpen = not isOpen
+    
+    if isOpen then
+        mainFrame.Visible = true
+        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 250, 0, 180)
+        })
+        tween:Play()
+        pulseAnimation:Cancel()
+        openStroke.Transparency = 0.5
+    else
+        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            mainFrame.Visible = false
+        end)
+        pulseAnimation:Play()
+    end
+end
+
+openButton.MouseButton1Click:Connect(toggleMenu)
+closeButton.MouseButton1Click:Connect(toggleMenu)
+toggleButton.MouseButton1Click:Connect(toggleGodMode)
+godModeFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleGodMode()
+    end
+end)
+espToggleButton.MouseButton1Click:Connect(toggleEspTimer)
+espFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleEspTimer()
+    end
+end)
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+headerBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+headerBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local draggingOpen = false
+local openDragInput
+local openDragStart
+local openStartPos
+
+openButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingOpen = true
+        openDragStart = input.Position
+        openStartPos = openButton.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingOpen = false
+            end
+        end)
+    end
+end)
+
+openButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        openDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == openDragInput and draggingOpen then
+        local delta = input.Position - openDragStart
+        openButton.Position = UDim2.new(
+            openStartPos.X.Scale,
+            openStartPos.X.Offset + delta.X,
+            openStartPos.Y.Scale,
+            openStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+wait(0.3)
+openButton.Size = UDim2.new(0, 0, 0, 0)
+local entryTween = TweenService:Create(openButton, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 50, 0, 50)
+})
+entryTween:Play()

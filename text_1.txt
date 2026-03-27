@@ -1,0 +1,274 @@
+local hasExecuted = false
+
+if hasExecuted then
+    return
+end
+hasExecuted = true
+
+-- Anti-cheat bypass: Randomize execution patterns
+local function randomWait(min, max)
+    task.wait(math.random(min * 100, max * 100) / 100)
+end
+
+-- Anti-dead: Ensure character is alive
+local function ensureAlive()
+    local player = game.Players.LocalPlayer
+    if not player.Character then
+        player.CharacterAdded:Wait()
+    end
+    
+    local character = player.Character
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    
+    if humanoid.Health <= 0 then
+        -- Respawn character
+        player:LoadCharacter()
+        player.CharacterAdded:Wait()
+        character = player.Character
+        humanoid = character:WaitForChild("Humanoid", 5)
+    end
+    
+    return character, humanoid
+end
+
+-- Anti-kick: Limit actions per second
+local lastActionTime = 0
+local actionDelay = 0.5 -- Minimum delay between actions (seconds)
+local function safeAction(callback)
+    local currentTime = tick()
+    if currentTime - lastActionTime < actionDelay then
+        task.wait(actionDelay - (currentTime - lastActionTime))
+    end
+    lastActionTime = tick()
+    callback()
+end
+
+-- Advanced no-clip system with aggressive anti-teleport
+local noClipActive = false
+local noClipConnection = nil
+local antiTeleportConnection = nil
+local originalCollision = {}
+local lastValidPosition = nil
+local spawnPosition = nil
+
+local function enableNoClip()
+    if noClipActive then return end
+    noClipActive = true
+    
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    -- Store spawn position for reference
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        spawnPosition = player.Character.HumanoidRootPart.Position
+    end
+    
+    -- Store original collision states
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") and part.CanCollide then
+            originalCollision[part] = true
+            part.CanCollide = false
+        end
+    end
+    
+    -- Monitor for new parts and disable collision
+    noClipConnection = character.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("BasePart") and descendant.CanCollide then
+            descendant.CanCollide = false
+            originalCollision[descendant] = true
+        end
+    end)
+    
+    -- Aggressive anti-teleport system
+    local lastPosition = character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.Position or Vector3.new(0, 0, 0)
+    lastValidPosition = lastPosition
+    
+    antiTeleportConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not noClipActive then return end
+        
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        
+        local rootPart = character.HumanoidRootPart
+        local currentPosition = rootPart.Position
+        
+        -- Update last valid position if moved normally
+        if (currentPosition - lastPosition).Magnitude < 5 then
+            lastValidPosition = currentPosition
+        end
+        
+        -- Check if character was teleported to spawn
+        if spawnPosition and (currentPosition - spawnPosition).Magnitude < 10 then
+            -- Character was teleported to spawn, revert it
+            rootPart.CFrame = CFrame.new(lastValidPosition)
+            return
+        end
+        
+        -- Check for sudden large position changes (teleportation)
+        if (currentPosition - lastPosition).Magnitude > 15 then
+            -- Character was teleported, revert it
+            rootPart.CFrame = CFrame.new(lastValidPosition)
+        else
+            -- Update last position
+            lastPosition = currentPosition
+        end
+        
+        -- Aggressive wall collision removal
+        for _, part in pairs(workspace:GetPartsInPart(rootPart)) do
+            if part.CanCollide and part ~= rootPart and not part:IsDescendantOf(character) then
+                part.CanCollide = false
+                
+                -- Schedule collision restoration after a short delay
+                task.spawn(function()
+                    task.wait(0.2)
+                    if part and part.Parent then
+                        part.CanCollide = true
+                    end
+                end)
+            end
+        end
+        
+        -- Also check for nearby walls within a larger radius
+        for _, part in pairs(workspace:GetPartBoundsInRadius(currentPosition, 8)) do
+            if part.CanCollide and part ~= rootPart and not part:IsDescendantOf(character) then
+                part.CanCollide = false
+                
+                -- Schedule collision restoration after a short delay
+                task.spawn(function()
+                    task.wait(0.2)
+                    if part and part.Parent then
+                        part.CanCollide = true
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+local function disableNoClip()
+    if not noClipActive then return end
+    noClipActive = false
+    
+    -- Restore original collision states
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character then
+        for part, wasCollidable in pairs(originalCollision) do
+            if part and part.Parent then
+                part.CanCollide = wasCollidable
+            end
+        end
+    end
+    
+    -- Clear stored states
+    originalCollision = {}
+    
+    -- Disconnect connections
+    if noClipConnection then
+        noClipConnection:Disconnect()
+        noClipConnection = nil
+    end
+    
+    if antiTeleportConnection then
+        antiTeleportConnection:Disconnect()
+        antiTeleportConnection = nil
+    end
+end
+
+-- Anti-respawn system
+local respawnConnection = nil
+
+local function setupAntiRespawn()
+    local player = game.Players.LocalPlayer
+    
+    -- Disconnect previous connection if exists
+    if respawnConnection then
+        respawnConnection:Disconnect()
+    end
+    
+    -- Hook into respawn process
+    respawnConnection = player.CharacterAdded:Connect(function(newCharacter)
+        task.wait(0.5) -- Wait for character to fully load
+        
+        -- Re-enable no-clip after respawn
+        enableNoClip()
+        
+        -- If we have a last valid position, teleport there
+        if lastValidPosition then
+            if newCharacter:FindFirstChild("HumanoidRootPart") then
+                newCharacter.HumanoidRootPart.CFrame = CFrame.new(lastValidPosition)
+            end
+        end
+    end)
+end
+
+-- Main no-clip functionality
+local function main()
+    -- Setup anti-respawn system
+    setupAntiRespawn()
+    
+    -- Enable no-clip
+    enableNoClip()
+    
+    -- Notification
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
+        Title = "No-Clip Activated",
+        Text = "You can now walk through walls!",
+        Duration = 5
+    })
+    
+    -- Keep no-clip active
+    while noClipActive do
+        task.wait(1)
+        
+        -- Check if character is still alive
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local humanoid = player.Character.Humanoid
+            if humanoid.Health <= 0 then
+                -- Character died, wait for respawn
+                task.wait(2)
+                ensureAlive()
+                enableNoClip()
+            end
+        end
+    end
+end
+
+-- Toggle function (can be called from executor)
+_G.ToggleNoClip = function()
+    if noClipActive then
+        disableNoClip()
+        
+        local StarterGui = game:GetService("StarterGui")
+        StarterGui:SetCore("SendNotification", {
+            Title = "No-Clip Deactivated",
+            Text = "Collision restored!",
+            Duration = 5
+        })
+    else
+        main()
+    end
+end
+
+-- Force position function (can be called to set a specific position)
+_G.SetPosition = function(position)
+    if typeof(position) == "Vector3" then
+        lastValidPosition = position
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+        end
+    end
+end
+
+-- Auto-start no-clip
+main()
+
+-- Instructions
+print("No-clip script activated!")
+print("Press F9 to see notifications")
+print("To toggle no-clip, execute: _G.ToggleNoClip()")
+print("To set position, execute: _G.SetPosition(Vector3.new(x, y, z))")

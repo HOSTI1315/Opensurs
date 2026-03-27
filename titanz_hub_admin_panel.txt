@@ -1,0 +1,1163 @@
+-- titanz rework flx hub
+repeat task.wait() until game:IsLoaded()
+task.wait(2)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer
+repeat
+    LocalPlayer = Players.LocalPlayer
+    if not LocalPlayer then
+        task.wait(0.5)
+    end
+until LocalPlayer
+
+if not LocalPlayer then
+    warn("Failed to get LocalPlayer after extended wait")
+    return
+end
+
+local playerGui = LocalPlayer:WaitForChild("PlayerGui", 15)
+if not playerGui then
+    warn("PlayerGui not available after 15 seconds")
+    return
+end
+
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+task.wait(1)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
+
+local THEME = {
+    DarkBg = Color3.fromRGB(10, 14, 24),
+    CardBg = Color3.fromRGB(20, 25, 35),
+    AccentPurple = Color3.fromRGB(180, 0, 255),
+    AccentWhite = Color3.fromRGB(255, 255, 255),
+    AccentGreen = Color3.fromRGB(100, 255, 100),
+    AccentRed = Color3.fromRGB(255, 100, 100),
+    AccentOrange = Color3.fromRGB(240, 173, 78),
+    AccentCyan = Color3.fromRGB(0, 220, 255),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(185, 193, 199),
+    TextMuted = Color3.fromRGB(128, 139, 150),
+    Border = Color3.fromRGB(52, 58, 64),
+    Divider = Color3.fromRGB(73, 80, 87),
+}
+
+local function smoothTween(object, properties, duration, easingStyle)
+    duration = duration or 0.25
+    easingStyle = easingStyle or Enum.EasingStyle.Quad
+    local tween = TweenService:Create(object, TweenInfo.new(duration, easingStyle, Enum.EasingDirection.Out), properties)
+    tween:Play()
+    return tween
+end
+
+local function addCorners(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 8)
+    corner.Parent = parent
+    return corner
+end
+
+local function addStroke(parent, color, thickness, transparency)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color or THEME.Border
+    stroke.Thickness = thickness or 1
+    stroke.Transparency = transparency or 0.3
+    stroke.Parent = parent
+    return stroke
+end
+
+local function addPurpleGradient(parent)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, THEME.AccentPurple),
+        ColorSequenceKeypoint.new(1, THEME.AccentWhite)
+    }
+    gradient.Rotation = 0
+    gradient.Parent = parent
+    return gradient
+end
+
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "FlxHubGaming"
+mainGui.Parent = playerGui
+mainGui.ResetOnSpawn = false
+mainGui.IgnoreGuiInset = true
+mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local function showNotification(text, color, duration)
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 300, 0, 60)
+    notification.Position = UDim2.new(1, -320, 0, 20)
+    notification.BackgroundColor3 = THEME.CardBg
+    notification.Parent = mainGui
+    addCorners(notification, 12)
+    addStroke(notification, color or THEME.AccentPurple, 2, 0.2)
+
+    local notifText = Instance.new("TextLabel")
+    notifText.Size = UDim2.new(1, -20, 1, 0)
+    notifText.Position = UDim2.new(0, 10, 0, 0)
+    notifText.BackgroundTransparency = 1
+    notifText.Text = text
+    notifText.Font = Enum.Font.GothamSemibold
+    notifText.TextSize = 14
+    notifText.TextColor3 = THEME.TextPrimary
+    notifText.TextWrapped = true
+    notifText.Parent = notification
+
+    notification.Position = UDim2.new(1, 0, 0, 20)
+    smoothTween(notification, {Position = UDim2.new(1, -320, 0, 20)}, 0.4, Enum.EasingStyle.Back)
+
+    task.spawn(function()
+        task.wait(duration or 3)
+        smoothTween(notification, {
+            Position = UDim2.new(1, 0, 0, 20),
+            BackgroundTransparency = 1
+        }, 0.3)
+        task.wait(0.3)
+        notification:Destroy()
+    end)
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- AUTO DESTROY TURRET (REWRITTEN - Ignores your own sentries)
+-- ══════════════════════════════════════════════════════════════
+
+local autoTurretEnabled = false
+local autoTurretManualOverride = false
+local originalBatSize = nil
+local mySentries = {}
+local lastSentryPlaceTime = 0
+local lastSentryPlacePosition = nil
+local turretConnection = nil
+
+local function forceBatEquip()
+    local char = LocalPlayer.Character
+    if not char then return nil, nil end
+    local backpack = LocalPlayer.Backpack
+    if not backpack then return nil, nil end
+    
+    local bat = backpack:FindFirstChild("Bat") or char:FindFirstChild("Bat")
+    if not bat then return nil, nil end
+    
+    bat.Parent = char
+    task.wait(0.05)
+    
+    local handle = bat:FindFirstChild("Handle")
+    if handle and not originalBatSize then
+        originalBatSize = handle.Size
+    end
+    
+    return bat, handle
+end
+
+local function restoreBat(bat, handle)
+    if bat and handle and originalBatSize then
+        handle.Size = originalBatSize
+        handle.CanCollide = true
+        handle.Transparency = 0
+    end
+    if bat and LocalPlayer.Backpack then
+        bat.Parent = LocalPlayer.Backpack
+    end
+end
+
+local function getSentryTimer(turret)
+    for _, child in pairs(turret:GetDescendants()) do
+        if child:IsA("TextLabel") or child:IsA("TextBox") then
+            local number = child.Text:match("(%d+)s!")
+            if number then return tonumber(number) end
+        end
+    end
+    return nil
+end
+
+local function isMySentry(sentry)
+    return mySentries[sentry] == true
+end
+
+local function markAsMySentry(sentry)
+    if mySentries[sentry] then return end
+    
+    mySentries[sentry] = true
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "MySentryHighlight"
+    highlight.FillColor = Color3.fromRGB(0, 150, 255)
+    highlight.OutlineColor = Color3.fromRGB(0, 255, 255)
+    highlight.FillTransparency = 0.7
+    highlight.OutlineTransparency = 0
+    highlight.Parent = sentry
+    
+    sentry.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            mySentries[sentry] = nil
+        end
+    end)
+end
+
+local function attackSentry(sentry)
+    if not autoTurretEnabled then return end
+    if isMySentry(sentry) then return end
+    
+    task.spawn(function()
+        local bat, handle = forceBatEquip()
+        if not bat or not handle then return end
+        
+        handle.Size = Vector3.new(99991002, 190, 999922)
+        handle.CanCollide = false
+        handle.Transparency = 1
+        
+        local char = LocalPlayer.Character
+        local equipPhase = true
+        
+        while sentry and sentry.Parent and autoTurretEnabled and not isMySentry(sentry) do
+            local timer = getSentryTimer(sentry)
+            if not timer then
+                task.wait(0.1)
+                continue
+            end
+            
+            if equipPhase then
+                bat.Parent = char
+            else
+                bat.Parent = LocalPlayer.Backpack
+            end
+            equipPhase = not equipPhase
+            
+            if bat.Parent ~= char then
+                bat.Parent = char
+                task.wait(0.02)
+            end
+            
+            pcall(function() bat:Activate() end)
+            
+            for _, remote in pairs(bat:GetDescendants()) do
+                if remote:IsA("RemoteEvent") then
+                    pcall(function() remote:FireServer() end)
+                end
+            end
+            
+            task.wait(0.05)
+        end
+        
+        restoreBat(bat, handle)
+    end)
+end
+
+local function setupSentryToolWatcher()
+    local function watchTool(tool)
+        if tool.Name == "All Seeing Sentry" then
+            tool.Activated:Connect(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    lastSentryPlaceTime = tick()
+                    lastSentryPlacePosition = char.HumanoidRootPart.Position
+                end
+            end)
+        end
+    end
+    
+    for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+        watchTool(tool)
+    end
+    if LocalPlayer.Character then
+        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+            watchTool(tool)
+        end
+    end
+    
+    LocalPlayer.Backpack.ChildAdded:Connect(watchTool)
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        char.ChildAdded:Connect(watchTool)
+        for _, tool in pairs(char:GetChildren()) do
+            watchTool(tool)
+        end
+    end)
+end
+
+local function onSentrySpawned(obj)
+    if not obj.Name:match("^Sentry_%d+$") then return end
+    if not autoTurretEnabled then return end
+    
+    local timeSincePlaced = tick() - lastSentryPlaceTime
+    
+    if timeSincePlaced < 2 and lastSentryPlacePosition then
+        local sentryPos = nil
+        local primaryPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+        if primaryPart then
+            sentryPos = primaryPart.Position
+        end
+        
+        if sentryPos then
+            local distance = (sentryPos - lastSentryPlacePosition).Magnitude
+            if distance < 20 then
+                markAsMySentry(obj)
+                lastSentryPlaceTime = 0
+                lastSentryPlacePosition = nil
+                return
+            end
+        end
+    end
+    
+    task.delay(0.1, function()
+        if not isMySentry(obj) then
+            attackSentry(obj)
+        end
+    end)
+end
+
+local function enableAutoTurret()
+    if turretConnection then return end
+    autoTurretEnabled = true
+    
+    setupSentryToolWatcher()
+    
+    turretConnection = Workspace.ChildAdded:Connect(onSentrySpawned)
+    
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj.Name:match("^Sentry_%d+$") and not isMySentry(obj) then
+            attackSentry(obj)
+        end
+    end
+end
+
+local function disableAutoTurret()
+    autoTurretEnabled = false
+    
+    if turretConnection then
+        turretConnection:Disconnect()
+        turretConnection = nil
+    end
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- PROXIMITY COMMANDS
+-- ══════════════════════════════════════════════════════════════
+
+local commandCooldowns = {
+    rocket = 120,
+    ragdoll = 30,
+    balloon = 30,
+    inverse = 60,
+    nightvision = 60,
+    jail = 60,
+    tiny = 60,
+    jumpscare = 60,
+    morph = 60
+}
+
+local lastCommandUse = {}
+local commands = {"balloon","jumpscare","morph","inverse","nightvision","tiny"}
+
+local function findRemote()
+    for _, d in ipairs(ReplicatedStorage:GetDescendants()) do
+        local n = d.Name:lower()
+        if n:find("executecommand") and (d:IsA("RemoteEvent") or d:IsA("RemoteFunction")) then
+            return d
+        end
+    end
+end
+local remote = findRemote()
+
+local proximityEnabled, playerCommandPools, lastHit = false, {}, {}
+local selectedCommand, armedButton, globalCommandsLeft = nil, nil, #commands
+
+local function isCommandOnCooldown(command)
+    local lastUse = lastCommandUse[command]
+    if not lastUse then return false end
+    local cooldownTime = commandCooldowns[command] or 0
+    return (tick() - lastUse) < cooldownTime
+end
+
+local function getRemainingCooldown(command)
+    local lastUse = lastCommandUse[command]
+    if not lastUse then return 0 end
+    local cooldownTime = commandCooldowns[command] or 0
+    local remaining = cooldownTime - (tick() - lastUse)
+    return math.max(0, remaining)
+end
+
+local function executeCommand(player, command, source)
+    if not remote then remote = findRemote() if not remote then return end end
+    
+    if isCommandOnCooldown(command) then
+        local remaining = math.ceil(getRemainingCooldown(command))
+        return
+    end
+    
+    local ok = pcall(function() remote:FireServer(player, command) end)
+    if ok then
+        lastCommandUse[command] = tick()
+        if source=="proximity" and globalCommandsLeft>0 then
+            globalCommandsLeft -= 1
+            if globalCommandsLeft < 0 then globalCommandsLeft=0 end
+        end
+        
+        if source == "manual" then
+            local cooldownTime = commandCooldowns[command] or 0
+            if cooldownTime > 0 then
+                task.spawn(function()
+                    task.wait(cooldownTime)
+                    local pool = playerCommandPools[player]
+                    if pool and not table.find(pool, command) then
+                        table.insert(pool, command)
+                        for i = #pool, 2, -1 do 
+                            local j = math.random(i) 
+                            pool[i], pool[j] = pool[j], pool[i] 
+                        end
+                    end
+                end)
+            end
+        end
+    end
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- GUI - QUICK COMMANDS PANEL
+-- ══════════════════════════════════════════════════════════════
+
+local quickCommandsPanel = Instance.new("Frame")
+quickCommandsPanel.Name = "QuickCommands"
+quickCommandsPanel.Size = UDim2.new(0, 280, 0, 280)
+quickCommandsPanel.Position = UDim2.new(0, 20, 0.5, -140)
+quickCommandsPanel.BackgroundColor3 = THEME.DarkBg
+quickCommandsPanel.BackgroundTransparency = 0.1
+quickCommandsPanel.Parent = mainGui
+addCorners(quickCommandsPanel, 12)
+addStroke(quickCommandsPanel, THEME.AccentPurple, 2, 0.3)
+
+local qcHeader = Instance.new("Frame")
+qcHeader.Size = UDim2.new(1, 0, 0, 50)
+qcHeader.BackgroundTransparency = 1
+qcHeader.Parent = quickCommandsPanel
+
+local qcTitle = Instance.new("TextLabel")
+qcTitle.Size = UDim2.new(1, -50, 1, 0)
+qcTitle.Position = UDim2.new(0, 15, 0, 0)
+qcTitle.BackgroundTransparency = 1
+qcTitle.Text = "TitanzHub Proximity"
+qcTitle.Font = Enum.Font.GothamBold
+qcTitle.TextSize = 16
+qcTitle.TextColor3 = THEME.AccentWhite
+qcTitle.TextXAlignment = Enum.TextXAlignment.Left
+qcTitle.TextYAlignment = Enum.TextYAlignment.Center
+qcTitle.Parent = qcHeader
+addPurpleGradient(qcTitle)
+
+local proximityFrame = Instance.new("Frame")
+proximityFrame.Size = UDim2.new(1, -30, 0, 50)
+proximityFrame.Position = UDim2.new(0, 15, 0, 55)
+proximityFrame.BackgroundColor3 = THEME.CardBg
+proximityFrame.Parent = quickCommandsPanel
+addCorners(proximityFrame, 8)
+
+local proximityLabel = Instance.new("TextLabel")
+proximityLabel.Size = UDim2.new(1, 0, 0, 20)
+proximityLabel.Position = UDim2.new(0, 10, 0, 5)
+proximityLabel.BackgroundTransparency = 1
+proximityLabel.Text = "Proximity Commands"
+proximityLabel.Font = Enum.Font.GothamSemibold
+proximityLabel.TextSize = 13
+proximityLabel.TextColor3 = THEME.TextPrimary
+proximityLabel.TextXAlignment = Enum.TextXAlignment.Left
+proximityLabel.TextYAlignment = Enum.TextYAlignment.Center
+proximityLabel.Parent = proximityFrame
+
+local proximityStatus = Instance.new("TextLabel")
+proximityStatus.Size = UDim2.new(1, -20, 0, 15)
+proximityStatus.Position = UDim2.new(0, 10, 0, 22)
+proximityStatus.BackgroundTransparency = 1
+proximityStatus.Text = ""
+proximityStatus.Font = Enum.Font.Gotham
+proximityStatus.TextSize = 10
+proximityStatus.TextColor3 = THEME.TextMuted
+proximityStatus.TextXAlignment = Enum.TextXAlignment.Left
+proximityStatus.TextYAlignment = Enum.TextYAlignment.Center
+proximityStatus.Parent = proximityFrame
+
+local proximityToggle = Instance.new("TextButton")
+proximityToggle.Size = UDim2.new(0, 80, 0, 28)
+proximityToggle.Position = UDim2.new(1, -90, 0.5, -14)
+proximityToggle.BackgroundColor3 = THEME.AccentRed
+proximityToggle.Text = "DISABLED"
+proximityToggle.Font = Enum.Font.GothamBold
+proximityToggle.TextSize = 11
+proximityToggle.TextColor3 = THEME.TextPrimary
+proximityToggle.AutoButtonColor = false
+proximityToggle.Parent = proximityFrame
+addCorners(proximityToggle, 6)
+
+local rangeFrame = Instance.new("Frame")
+rangeFrame.Size = UDim2.new(1, -30, 0, 55)
+rangeFrame.Position = UDim2.new(0, 15, 0, 115)
+rangeFrame.BackgroundColor3 = THEME.CardBg
+rangeFrame.Parent = quickCommandsPanel
+addCorners(rangeFrame, 8)
+
+local rangeText = Instance.new("TextLabel")
+rangeText.Size = UDim2.new(1, -20, 0, 20)
+rangeText.Position = UDim2.new(0, 10, 0, 5)
+rangeText.BackgroundTransparency = 1
+rangeText.Text = "Proximity Range: 60 studs"
+rangeText.Font = Enum.Font.Gotham
+rangeText.TextSize = 13
+rangeText.TextColor3 = THEME.TextMuted
+rangeText.TextXAlignment = Enum.TextXAlignment.Left
+rangeText.TextYAlignment = Enum.TextYAlignment.Center
+rangeText.Parent = rangeFrame
+
+local sliderTrack = Instance.new("Frame")
+sliderTrack.Size = UDim2.new(1, -20, 0, 4)
+sliderTrack.Position = UDim2.new(0, 10, 0, 35)
+sliderTrack.BackgroundColor3 = THEME.Border
+sliderTrack.Parent = rangeFrame
+addCorners(sliderTrack, 2)
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(0.5, 0, 1, 0)
+sliderFill.BackgroundColor3 = THEME.AccentPurple
+sliderFill.Parent = sliderTrack
+addCorners(sliderFill, 2)
+
+local sliderHandle = Instance.new("TextButton")
+sliderHandle.Size = UDim2.new(0, 16, 0, 16)
+sliderHandle.Position = UDim2.new(0.5, -8, 0.5, -8)
+sliderHandle.BackgroundColor3 = THEME.AccentPurple
+sliderHandle.Text = ""
+sliderHandle.AutoButtonColor = false
+sliderHandle.Parent = sliderTrack
+addCorners(sliderHandle, 8)
+
+local proximityRange = 60
+local draggingSlider = false
+
+local function updateSlider(mouseX)
+    local trackPos = sliderTrack.AbsolutePosition.X
+    local trackSize = sliderTrack.AbsoluteSize.X
+    local relativeX = math.clamp((mouseX - trackPos) / trackSize, 0, 1)
+    
+    proximityRange = math.floor(20 + (relativeX * 180))
+    rangeText.Text = "Proximity Range: " .. proximityRange .. " studs"
+    
+    sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+    sliderHandle.Position = UDim2.new(relativeX, -8, 0.5, -8)
+end
+
+sliderHandle.MouseButton1Down:Connect(function()
+    draggingSlider = true
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateSlider(input.Position.X)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingSlider = false
+    end
+end)
+
+local autoTurretFrame = Instance.new("Frame")
+autoTurretFrame.Size = UDim2.new(1, -30, 0, 50)
+autoTurretFrame.Position = UDim2.new(0, 15, 0, 180)
+autoTurretFrame.BackgroundColor3 = THEME.CardBg
+autoTurretFrame.Parent = quickCommandsPanel
+addCorners(autoTurretFrame, 8)
+
+local autoTurretLabel = Instance.new("TextLabel")
+autoTurretLabel.Size = UDim2.new(1, 0, 0, 20)
+autoTurretLabel.Position = UDim2.new(0, 10, 0, 5)
+autoTurretLabel.BackgroundTransparency = 1
+autoTurretLabel.Text = "Auto Destroy Turret"
+autoTurretLabel.Font = Enum.Font.GothamSemibold
+autoTurretLabel.TextSize = 13
+autoTurretLabel.TextColor3 = THEME.TextPrimary
+autoTurretLabel.TextXAlignment = Enum.TextXAlignment.Left
+autoTurretLabel.TextYAlignment = Enum.TextYAlignment.Center
+autoTurretLabel.Parent = autoTurretFrame
+
+local autoTurretToggle = Instance.new("TextButton")
+autoTurretToggle.Size = UDim2.new(0, 80, 0, 28)
+autoTurretToggle.Position = UDim2.new(1, -90, 0.5, -14)
+autoTurretToggle.BackgroundColor3 = THEME.AccentRed
+autoTurretToggle.Text = "OFF"
+autoTurretToggle.Font = Enum.Font.GothamBold
+autoTurretToggle.TextSize = 11
+autoTurretToggle.TextColor3 = THEME.TextPrimary
+autoTurretToggle.AutoButtonColor = false
+autoTurretToggle.Parent = autoTurretFrame
+addCorners(autoTurretToggle, 6)
+
+if not ReplicatedStorage:FindFirstChild("juisdfj0i32i0eidsuf0iok") then
+    local detection = Instance.new("Decal")
+    detection.Name = "juisdfj0i32i0eidsuf0iok"
+    detection.Parent = ReplicatedStorage
+end
+
+autoTurretToggle.MouseButton1Click:Connect(function()
+    autoTurretManualOverride = true
+    if autoTurretEnabled then
+        disableAutoTurret()
+        autoTurretToggle.Text = "OFF"
+        autoTurretToggle.BackgroundColor3 = THEME.AccentRed
+    else
+        enableAutoTurret()
+        autoTurretToggle.Text = "ON"
+        autoTurretToggle.BackgroundColor3 = THEME.AccentGreen
+    end
+end)
+
+autoTurretToggle.MouseEnter:Connect(function()
+    local currentColor = autoTurretEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(autoTurretToggle, {BackgroundColor3 = Color3.fromRGB(currentColor.R - 0.1, currentColor.G - 0.1, currentColor.B - 0.1)}, 0.2)
+end)
+
+autoTurretToggle.MouseLeave:Connect(function()
+    local currentColor = autoTurretEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(autoTurretToggle, {BackgroundColor3 = currentColor}, 0.2)
+end)
+
+-- ══════════════════════════════════════════════════════════════
+-- GUI - TROLL PANEL
+-- ══════════════════════════════════════════════════════════════
+
+local trollPanel = Instance.new("Frame")
+trollPanel.Name = "TrollCommands"
+trollPanel.Size = UDim2.new(0, 300, 0, 550)
+trollPanel.Position = UDim2.new(1, -320, 0.5, -275)
+trollPanel.BackgroundColor3 = THEME.DarkBg
+trollPanel.BackgroundTransparency = 0.1
+trollPanel.Parent = mainGui
+addCorners(trollPanel, 12)
+addStroke(trollPanel, THEME.AccentPurple, 2, 0.3)
+
+local trollHeader = Instance.new("Frame")
+trollHeader.Size = UDim2.new(1, 0, 0, 50)
+trollHeader.BackgroundTransparency = 1
+trollHeader.Parent = trollPanel
+
+local trollTitle = Instance.new("TextLabel")
+trollTitle.Size = UDim2.new(1, -50, 1, 0)
+trollTitle.Position = UDim2.new(0, 15, 0, 0)
+trollTitle.BackgroundTransparency = 1
+trollTitle.Text = "TitanzHub Command Center"
+trollTitle.Font = Enum.Font.GothamBold
+trollTitle.TextSize = 16
+trollTitle.TextColor3 = THEME.AccentWhite
+trollTitle.TextXAlignment = Enum.TextXAlignment.Left
+trollTitle.TextYAlignment = Enum.TextYAlignment.Center
+trollTitle.Parent = trollHeader
+addPurpleGradient(trollTitle)
+
+local allButtonFrame = Instance.new("Frame")
+allButtonFrame.Size = UDim2.new(1, -30, 0, 40)
+allButtonFrame.Position = UDim2.new(0, 15, 0, 55)
+allButtonFrame.BackgroundColor3 = THEME.CardBg
+allButtonFrame.Parent = trollPanel
+addCorners(allButtonFrame, 8)
+
+local allButtonLabel = Instance.new("TextLabel")
+allButtonLabel.Size = UDim2.new(0.6, 0, 1, 0)
+allButtonLabel.Position = UDim2.new(0, 10, 0, 0)
+allButtonLabel.BackgroundTransparency = 1
+allButtonLabel.Text = "Execute All"
+allButtonLabel.Font = Enum.Font.GothamSemibold
+allButtonLabel.TextSize = 12
+allButtonLabel.TextColor3 = THEME.TextPrimary
+allButtonLabel.TextXAlignment = Enum.TextXAlignment.Left
+allButtonLabel.TextYAlignment = Enum.TextYAlignment.Center
+allButtonLabel.Parent = allButtonFrame
+
+local allButton = Instance.new("TextButton")
+allButton.Size = UDim2.new(0, 60, 0, 24)
+allButton.Position = UDim2.new(1, -65, 0.5, -12)
+allButton.BackgroundColor3 = THEME.AccentGreen
+allButton.Text = "ON"
+allButton.Font = Enum.Font.GothamBold
+allButton.TextSize = 10
+allButton.TextColor3 = THEME.TextPrimary
+allButton.AutoButtonColor = false
+allButton.Parent = allButtonFrame
+addCorners(allButton, 6)
+
+local allModeEnabled = true
+
+allButton.MouseButton1Click:Connect(function()
+    allModeEnabled = not allModeEnabled
+    allButton.Text = allModeEnabled and "ON" or "OFF"
+    allButton.BackgroundColor3 = allModeEnabled and THEME.AccentGreen or THEME.AccentRed
+end)
+
+allButton.MouseEnter:Connect(function()
+    local currentColor = allModeEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(allButton, {BackgroundColor3 = Color3.fromRGB(currentColor.R - 0.1, currentColor.G - 0.1, currentColor.B - 0.1)}, 0.2)
+end)
+
+allButton.MouseLeave:Connect(function()
+    local currentColor = allModeEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(allButton, {BackgroundColor3 = currentColor}, 0.2)
+end)
+
+local ragdollSelfFrame = Instance.new("Frame")
+ragdollSelfFrame.Size = UDim2.new(1, -30, 0, 40)
+ragdollSelfFrame.Position = UDim2.new(0, 15, 0, 100)
+ragdollSelfFrame.BackgroundColor3 = THEME.CardBg
+ragdollSelfFrame.Parent = trollPanel
+addCorners(ragdollSelfFrame, 8)
+
+local ragdollSelfLabel = Instance.new("TextLabel")
+ragdollSelfLabel.Size = UDim2.new(0.6, 0, 1, 0)
+ragdollSelfLabel.Position = UDim2.new(0, 10, 0, 0)
+ragdollSelfLabel.BackgroundTransparency = 1
+ragdollSelfLabel.Text = "Ragdoll Self"
+ragdollSelfLabel.Font = Enum.Font.GothamSemibold
+ragdollSelfLabel.TextSize = 12
+ragdollSelfLabel.TextColor3 = THEME.TextPrimary
+ragdollSelfLabel.TextXAlignment = Enum.TextXAlignment.Left
+ragdollSelfLabel.TextYAlignment = Enum.TextYAlignment.Center
+ragdollSelfLabel.Parent = ragdollSelfFrame
+
+local ragdollSelfButton = Instance.new("TextButton")
+ragdollSelfButton.Size = UDim2.new(0, 80, 0, 28)
+ragdollSelfButton.Position = UDim2.new(1, -90, 0.5, -14)
+ragdollSelfButton.BackgroundColor3 = THEME.AccentPurple
+ragdollSelfButton.Text = "RAGDOLL"
+ragdollSelfButton.Font = Enum.Font.GothamBold
+ragdollSelfButton.TextSize = 10
+ragdollSelfButton.TextColor3 = THEME.TextPrimary
+ragdollSelfButton.AutoButtonColor = false
+ragdollSelfButton.Parent = ragdollSelfFrame
+addCorners(ragdollSelfButton, 6)
+
+ragdollSelfButton.MouseButton1Click:Connect(function()
+    if not isCommandOnCooldown("ragdoll") then
+        executeCommand(LocalPlayer, "ragdoll", "manual")
+        smoothTween(ragdollSelfButton, {BackgroundTransparency = 0.5}, 0.1)
+        task.wait(0.1)
+        smoothTween(ragdollSelfButton, {BackgroundTransparency = 0}, 0.1)
+    end
+end)
+
+ragdollSelfButton.MouseEnter:Connect(function()
+    if not isCommandOnCooldown("ragdoll") then
+        smoothTween(ragdollSelfButton, {BackgroundColor3 = Color3.fromRGB(THEME.AccentPurple.R + 0.1, THEME.AccentPurple.G + 0.1, THEME.AccentPurple.B + 0.1)}, 0.2)
+    end
+end)
+
+ragdollSelfButton.MouseLeave:Connect(function()
+    smoothTween(ragdollSelfButton, {BackgroundColor3 = THEME.AccentPurple}, 0.2)
+end)
+
+task.spawn(function()
+    while ragdollSelfButton.Parent do
+        if isCommandOnCooldown("ragdoll") then
+            ragdollSelfButton.BackgroundTransparency = 0.6
+            ragdollSelfButton.TextTransparency = 0.5
+        else
+            ragdollSelfButton.BackgroundTransparency = 0
+            ragdollSelfButton.TextTransparency = 0
+        end
+        task.wait(1)
+    end
+end)
+
+local playerListFrame = Instance.new("ScrollingFrame")
+playerListFrame.Size = UDim2.new(1, -30, 1, -160)
+playerListFrame.Position = UDim2.new(0, 15, 0, 150)
+playerListFrame.BackgroundTransparency = 1
+playerListFrame.BorderSizePixel = 0
+playerListFrame.ScrollBarThickness = 4
+playerListFrame.ScrollBarImageColor3 = THEME.AccentPurple
+playerListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+playerListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+playerListFrame.Parent = trollPanel
+
+local playerListLayout = Instance.new("UIListLayout")
+playerListLayout.SortOrder = Enum.SortOrder.Name
+playerListLayout.Padding = UDim.new(0, 5)
+playerListLayout.Parent = playerListFrame
+
+-- ══════════════════════════════════════════════════════════════
+-- GUI - COOLDOWNS PANEL
+-- ══════════════════════════════════════════════════════════════
+
+local cooldownsPanel = Instance.new("Frame")
+cooldownsPanel.Name = "Cooldowns"
+cooldownsPanel.Size = UDim2.new(0, 200, 0, 220)
+cooldownsPanel.Position = UDim2.new(1, -220, 1, -240)
+cooldownsPanel.BackgroundColor3 = THEME.DarkBg
+cooldownsPanel.BackgroundTransparency = 0.1
+cooldownsPanel.Parent = mainGui
+addCorners(cooldownsPanel, 12)
+addStroke(cooldownsPanel, THEME.AccentPurple, 2, 0.3)
+
+local cooldownHeader = Instance.new("TextLabel")
+cooldownHeader.Size = UDim2.new(1, -20, 0, 30)
+cooldownHeader.Position = UDim2.new(0, 10, 0, 10)
+cooldownHeader.BackgroundTransparency = 1
+cooldownHeader.Text = "Admin Panel Cooldowns"
+cooldownHeader.Font = Enum.Font.GothamBold
+cooldownHeader.TextSize = 14
+cooldownHeader.TextColor3 = THEME.AccentWhite
+cooldownHeader.TextXAlignment = Enum.TextXAlignment.Left
+cooldownHeader.TextYAlignment = Enum.TextYAlignment.Center
+cooldownHeader.Parent = cooldownsPanel
+addPurpleGradient(cooldownHeader)
+
+local cooldownLabels = {}
+local cooldownCommandsList = {
+    {name = "Rocket", cmd = "rocket", color = THEME.AccentOrange},
+    {name = "Ragdoll", cmd = "ragdoll", color = THEME.AccentPurple}, 
+    {name = "Balloon", cmd = "balloon", color = THEME.AccentGreen},
+    {name = "Inverse", cmd = "inverse", color = THEME.AccentCyan},
+    {name = "Jail", cmd = "jail", color = THEME.AccentRed},
+    {name = "NightVision", cmd = "nightvision", color = THEME.AccentPurple},
+    {name = "Tiny", cmd = "tiny", color = THEME.AccentGreen},
+    {name = "Morph", cmd = "morph", color = THEME.AccentPurple}
+}
+
+for i, cmd in ipairs(cooldownCommandsList) do
+    local cooldownItem = Instance.new("Frame")
+    cooldownItem.Size = UDim2.new(1, -20, 0, 16)
+    cooldownItem.Position = UDim2.new(0, 10, 0, 40 + (i-1) * 18)
+    cooldownItem.BackgroundTransparency = 1
+    cooldownItem.Parent = cooldownsPanel
+    
+    local cmdNameLabel = Instance.new("TextLabel")
+    cmdNameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    cmdNameLabel.BackgroundTransparency = 1
+    cmdNameLabel.Text = cmd.name .. ":"
+    cmdNameLabel.Font = Enum.Font.Gotham
+    cmdNameLabel.TextSize = 11
+    cmdNameLabel.TextColor3 = THEME.TextSecondary
+    cmdNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    cmdNameLabel.TextYAlignment = Enum.TextYAlignment.Center
+    cmdNameLabel.Parent = cooldownItem
+    
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(0.4, 0, 1, 0)
+    statusLabel.Position = UDim2.new(0.6, 0, 0, 0)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "Ready"
+    statusLabel.Font = Enum.Font.GothamBold
+    statusLabel.TextSize = 11
+    statusLabel.TextColor3 = THEME.AccentGreen
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Right
+    statusLabel.TextYAlignment = Enum.TextYAlignment.Center
+    statusLabel.Parent = cooldownItem
+    
+    cooldownLabels[cmd.cmd] = statusLabel
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- PLAYER LIST FUNCTIONS
+-- ══════════════════════════════════════════════════════════════
+
+local function resetPlayerPool(plr)
+    playerCommandPools[plr] = table.clone(commands)
+    for i = #playerCommandPools[plr], 2, -1 do 
+        local j = math.random(i) 
+        playerCommandPools[plr][i], playerCommandPools[plr][j] = playerCommandPools[plr][j], playerCommandPools[plr][i] 
+    end
+end
+
+local playerFrames = {}
+
+local function createPlayerButton(player)
+    local playerFrame = Instance.new("Frame")
+    playerFrame.Name = "Player_" .. player.Name
+    playerFrame.Size = UDim2.new(1, 0, 0, 35)
+    playerFrame.BackgroundColor3 = THEME.CardBg
+    playerFrame.Parent = playerListFrame
+    addCorners(playerFrame, 6)
+    
+    playerFrames[player] = playerFrame
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(0.45, -10, 1, 0)
+    nameLabel.Position = UDim2.new(0, 10, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.DisplayName .. "\n@" .. player.Name
+    nameLabel.Font = Enum.Font.Gotham
+    nameLabel.TextSize = 10
+    nameLabel.TextColor3 = THEME.TextPrimary
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.TextYAlignment = Enum.TextYAlignment.Center
+    nameLabel.TextWrapped = true
+    nameLabel.Parent = playerFrame
+    
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Size = UDim2.new(0.55, -10, 1, -6)
+    buttonContainer.Position = UDim2.new(0.45, 0, 0, 3)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Parent = playerFrame
+    
+    local buttonLayout = Instance.new("UIListLayout")
+    buttonLayout.FillDirection = Enum.FillDirection.Horizontal
+    buttonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    buttonLayout.Padding = UDim.new(0, 3)
+    buttonLayout.Parent = buttonContainer
+    
+    local buttons = {
+        {text = "JAIL", color = THEME.AccentRed, command = "jail", size = UDim2.new(0, 35, 0, 28)},
+        {text = "RAG", color = THEME.AccentPurple, command = "ragdoll", size = UDim2.new(0, 32, 0, 28)},
+        {text = "RKT", color = THEME.AccentOrange, command = "rocket", size = UDim2.new(0, 32, 0, 28)},
+        {text = "BLN", color = THEME.AccentGreen, command = "balloon", size = UDim2.new(0, 32, 0, 28)}
+    }
+    
+    for _, btn in ipairs(buttons) do
+        local button = Instance.new("TextButton")
+        button.Size = btn.size
+        button.BackgroundColor3 = btn.color
+        button.Text = btn.text
+        button.Font = Enum.Font.GothamBold
+        button.TextSize = 8
+        button.TextColor3 = THEME.TextPrimary
+        button.AutoButtonColor = false
+        button.Parent = buttonContainer
+        addCorners(button, 4)
+        
+        button.MouseButton1Click:Connect(function()
+            if not isCommandOnCooldown(btn.command) then
+                executeCommand(player, btn.command, "manual")
+                local pool = playerCommandPools[player]
+                if pool then
+                    for i = #pool, 1, -1 do
+                        if pool[i] == btn.command then
+                            table.remove(pool, i)
+                            break
+                        end
+                    end
+                end
+                smoothTween(button, {BackgroundTransparency = 0.5}, 0.1)
+                task.wait(0.1)
+                smoothTween(button, {BackgroundTransparency = 0}, 0.1)
+            end
+        end)
+        
+        button.MouseEnter:Connect(function()
+            if not isCommandOnCooldown(btn.command) then
+                smoothTween(button, {BackgroundColor3 = Color3.fromRGB(btn.color.R + 0.1, btn.color.G + 0.1, btn.color.B + 0.1)}, 0.15)
+            end
+        end)
+        
+        button.MouseLeave:Connect(function()
+            smoothTween(button, {BackgroundColor3 = btn.color}, 0.15)
+        end)
+        
+        task.spawn(function()
+            while button.Parent do
+                if isCommandOnCooldown(btn.command) then
+                    button.BackgroundTransparency = 0.6
+                    button.TextTransparency = 0.5
+                else
+                    button.BackgroundTransparency = 0
+                    button.TextTransparency = 0
+                end
+                task.wait(1)
+            end
+        end)
+    end
+    
+    playerFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and allModeEnabled then
+            for cmdName, _ in pairs(commandCooldowns) do
+                if not isCommandOnCooldown(cmdName) then
+                    executeCommand(player, cmdName, "manual")
+                    local pool = playerCommandPools[player]
+                    if pool then
+                        for i = #pool, 1, -1 do
+                            if pool[i] == cmdName then
+                                table.remove(pool, i)
+                                break
+                            end
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end
+        end
+    end)
+    
+    playerFrame.MouseEnter:Connect(function()
+        smoothTween(playerFrame, {BackgroundColor3 = Color3.fromRGB(THEME.CardBg.R + 0.05, THEME.CardBg.G + 0.05, THEME.CardBg.B + 0.05)}, 0.2)
+    end)
+    
+    playerFrame.MouseLeave:Connect(function()
+        smoothTween(playerFrame, {BackgroundColor3 = THEME.CardBg}, 0.2)
+    end)
+    
+    return playerFrame
+end
+
+local function refreshPlayerList()
+    for _, child in ipairs(playerListFrame:GetChildren()) do
+        if child:IsA("Frame") and child.Name:find("Player_") then
+            child:Destroy()
+        end
+    end
+    
+    playerFrames = {}
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if not playerCommandPools[player] then
+                resetPlayerPool(player)
+            end
+            createPlayerButton(player)
+        end
+    end
+end
+
+if Players and Players.PlayerAdded then
+    Players.PlayerAdded:Connect(refreshPlayerList)
+end
+if Players and Players.PlayerRemoving then
+    Players.PlayerRemoving:Connect(function(player)
+        playerFrames[player] = nil
+        refreshPlayerList()
+    end)
+end
+
+-- ══════════════════════════════════════════════════════════════
+-- PROXIMITY TOGGLE
+-- ══════════════════════════════════════════════════════════════
+
+local function toggleProximity()
+    proximityEnabled = not proximityEnabled
+    if proximityEnabled then
+        proximityToggle.Text = "ENABLED"
+        proximityToggle.BackgroundColor3 = THEME.AccentGreen
+    else
+        proximityToggle.Text = "DISABLED"
+        proximityToggle.BackgroundColor3 = THEME.AccentRed
+    end
+end
+
+proximityToggle.MouseButton1Click:Connect(toggleProximity)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.C then
+        toggleProximity()
+    end
+end)
+
+proximityToggle.MouseEnter:Connect(function()
+    local currentColor = proximityEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(proximityToggle, {BackgroundColor3 = Color3.fromRGB(currentColor.R - 0.1, currentColor.G - 0.1, currentColor.B - 0.1)}, 0.2)
+end)
+
+proximityToggle.MouseLeave:Connect(function()
+    local currentColor = proximityEnabled and THEME.AccentGreen or THEME.AccentRed
+    smoothTween(proximityToggle, {BackgroundColor3 = currentColor}, 0.2)
+end)
+
+-- loop
+
+task.spawn(function()
+    while true do
+        for command, label in pairs(cooldownLabels) do
+            if isCommandOnCooldown(command) then
+                local remaining = math.ceil(getRemainingCooldown(command))
+                label.Text = remaining .. "s"
+                label.TextColor3 = THEME.AccentRed
+            else
+                label.Text = "Ready"
+                label.TextColor3 = THEME.AccentGreen
+            end
+        end
+        
+        task.wait(1)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        for player, frame in pairs(playerFrames) do
+            if player and player.Parent and frame and frame.Parent then
+                local char = player.Character
+                if char then
+                    local humanoid = char:FindFirstChild("Humanoid")
+                    if humanoid then
+                        local ws = humanoid.WalkSpeed
+                        if ws > 13 and ws < 30 then
+                            frame.BackgroundColor3 = Color3.fromRGB(120, 20, 20)
+                        else
+                            frame.BackgroundColor3 = THEME.CardBg
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not proximityEnabled then return end
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") 
+    if not hrp then return end
+    local myPos = hrp.Position
+    
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if (plr.Character.HumanoidRootPart.Position - myPos).Magnitude <= proximityRange then
+                if (not lastHit[plr]) or (tick() - lastHit[plr]) >= 1.5 then
+                    local pool = playerCommandPools[plr]
+                    if pool and #pool > 0 and globalCommandsLeft > 0 then
+                        local cmd = table.remove(pool, 1)
+                        executeCommand(plr, cmd, "proximity")
+                        lastHit[plr] = tick()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ══════════════════════════════════════════════════════════════
+-- DRAGGABLE PANELS
+-- ══════════════════════════════════════════════════════════════
+
+local function makeDraggable(frame)
+    local dragging, dragStart, startPos
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+makeDraggable(quickCommandsPanel)
+makeDraggable(trollPanel)
+makeDraggable(cooldownsPanel)
+
+refreshPlayerList()

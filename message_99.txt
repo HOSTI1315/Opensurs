@@ -1,0 +1,1074 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+loadstring(game:HttpGet("https://raw.githubusercontent.com/as6cd0/SP_Hub/refs/heads/main/DiscordADgui"))()
+repeat
+  wait(1)
+until not game:GetService("CoreGui"):FindFirstChild("DiscordAdUI")
+(function(r0_22, r1_22, r2_22)
+  -- line: [0, 0] id: 22
+  game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = r0_22,
+    Text = r1_22,
+    Duration = r2_22,
+  })
+end)("SP Hub", "This will take some sec for loading", 6)
+local r1_0 = false
+local r2_0 = game:GetService("Players").LocalPlayer:GetMouse()
+local r3_0 = 0.001
+local r4_0 = Enum.KeyCode.T
+local r5_0 = false
+local r6_0 = false
+local r7_0 = nil
+local r8_0 = game:GetService("UserInputService")
+local r9_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/as6cd0/SP_Hub/refs/heads/main/OrionLibEdited"))()
+local r10_0 = r9_0:MakeWindow({
+  Name = "SP Hub | Blade Ball | 1.3v",
+  HidePremium = false,
+  SaveConfig = true,
+  ConfigFolder = "OrionTest",
+  IntroEnabled = false,
+  CloseCallback = true,
+})
+local r11_0 = r10_0:MakeTab({
+  Name = "Info",
+  Icon = "rbxassetid://14624193192",
+  PremiumOnly = false,
+})
+r11_0:AddSection({
+  Name = "Server",
+})
+local r12_0 = 0
+for r16_0, r17_0 in pairs(game.Players:GetChildren()) do
+  if r17_0:IsA("Player") then
+    r12_0 = r12_0 + 1
+  end
+end
+local r13_0 = r11_0:AddLabel("Players Count: " .. r12_0)
+game.Players.PlayerAdded:Connect(function()
+  -- line: [0, 0] id: 27
+  r12_0 = r12_0 + 1
+  r13_0:Set("Players Count: " .. r12_0)
+end)
+game.Players.PlayerRemoving:Connect(function()
+  -- line: [0, 0] id: 76
+  r12_0 = r12_0 - 1
+  r13_0:Set("Players Count: " .. r12_0)
+end)
+r11_0:AddSection({
+  Name = "SP Hub Channels",
+})
+r11_0:AddButton({
+  Name = "Telegram Channel",
+  Callback = function()
+    -- line: [0, 0] id: 78
+    r9_0:MakeNotification({
+      Name = "link copied",
+      Content = "The link has been copied successfully.",
+      Image = "rbxassetid://11242915823",
+      Time = 5,
+    })
+    setclipboard("https://t.me/SPscript1")
+  end,
+})
+r11_0:AddButton({
+  Name = "YouTube Channel",
+  Callback = function()
+    -- line: [0, 0] id: 45
+    r9_0:MakeNotification({
+      Name = "link copied",
+      Content = "The link has been copied successfully.",
+      Image = "rbxassetid://11242915823",
+      Time = 5,
+    })
+    setclipboard("https://www.youtube.com/@SphinxR7")
+  end,
+})
+r11_0:AddButton({
+  Name = "Discord Server",
+  Callback = function()
+    -- line: [0, 0] id: 23
+    r9_0:MakeNotification({
+      Name = "link copied",
+      Content = "The link has been copied successfully.",
+      Image = "rbxassetid://11242915823",
+      Time = 5,
+    })
+    setclipboard("https://discord.gg/dyQW9jEBqX")
+  end,
+})
+local r14_0 = r10_0:MakeTab({
+  Name = "Main",
+  Icon = "rbxassetid://279461710",
+  PremiumOnly = false,
+})
+local r15_0 = r14_0:AddSection({
+  Name = "Auto",
+})
+local r16_0 = 5
+r14_0:AddToggle({
+  Name = "Auto Parry",
+  Default = true,
+  Callback = function(r0_17)
+    -- line: [0, 0] id: 17
+    r9_0.Flags.autoParryToggle = {
+      Value = r0_17,
+    }
+    getgenv().autoparry = r0_17
+    local r1_17 = game:GetService("VirtualInputManager")
+    local r2_17 = game:GetService("Stats")
+    local r3_17 = game:GetService("Players")
+    local r4_17 = r3_17.LocalPlayer or r3_17.PlayerAdded:Wait()
+    local r5_17 = game:GetService("RunService")
+    local r6_17 = loadstring(game:HttpGet("https://raw.githubusercontent.com/TripleScript/TripleHub/main/helper_.lua"))()
+    local r7_17 = false
+    task.spawn(function()
+      -- line: [0, 0] id: 18
+      r5_17.PreRender:Connect(function()
+        -- line: [0, 0] id: 19
+        if not getgenv().autoparry then
+          r7_17 = false
+          return 
+        end
+        local r0_19 = r6_17.FindTargetBall()
+        if not r0_19 then
+          r7_17 = false
+          return 
+        end
+        local r1_19 = r0_19.AssemblyLinearVelocity
+        if r0_19:FindFirstChild("zoomies") then
+          r1_19 = r0_19.zoomies.VectorVelocity
+        end
+        local r2_19 = r0_19.Position
+        local r5_19 = r4_17:DistanceFromCharacter(r2_19)
+        local r6_19 = (r4_17.Character.PrimaryPart.Position - r2_19).Unit:Dot(r1_19.Unit)
+        local r7_19 = r1_19.Magnitude
+        if r6_19 > 0 then
+          local r9_19 = (r5_19 - r16_0) / r7_19
+          if r6_17.IsPlayerTarget(r0_19) and r9_19 <= 0.55 and not r7_17 then
+            r1_17:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            wait(0.01)
+            r7_17 = true
+          end
+        else
+          r7_17 = false
+        end
+      end)
+    end)
+  end,
+})
+local function r17_0()
+  -- line: [0, 0] id: 50
+  return r8_0.TouchEnabled
+end
+local function r18_0()
+  -- line: [0, 0] id: 58
+  if r17_0() and r14_0 then
+    r14_0.Visible = false
+  elseif r14_0 then
+    r14_0.Visible = true
+  end
+end
+r14_0:AddToggle({
+  Name = "Auto Spam Detect",
+  Default = true,
+  Callback = function(r0_33)
+    -- line: [0, 0] id: 33
+    getgenv().AutoDetectSpam = r0_33
+    local r1_33 = getgenv().AutoDetectSpam
+    if r1_33 then
+      getgenv().SpamClickA = true
+      r1_33 = workspace:WaitForChild("Alive", 9000000000)
+      local r3_33 = game:GetService("Players").LocalPlayer
+      local r6_33 = game:GetService("ReplicatedStorage"):WaitForChild("Remotes", 9000000000):WaitForChild("ParryAttempt", 9000000000)
+      local r7_33 = workspace:WaitForChild("Balls", 9000000000)
+      local function r8_33()
+        -- line: [0, 0] id: 35
+        local r0_35 = math.huge
+        local r1_35 = r3_33.Character and r3_33.Character:FindFirstChild("HumanoidRootPart")
+        local r2_35 = nil
+        for r6_35, r7_35 in pairs(r1_33:GetChildren()) do
+          if r7_35:FindFirstChild("Humanoid") and 50 < r7_35.Humanoid.Health and r7_35.Name ~= r3_33.Name and r1_35 and r7_35:FindFirstChild("HumanoidRootPart") then
+            local r8_35 = (r7_35.HumanoidRootPart.Position - r1_35.Position).Magnitude
+            if r8_35 <= r0_35 then
+              r0_35 = r8_35
+              r2_35 = r7_35
+            end
+          end
+        end
+        return r2_35
+      end
+      local function r9_33()
+        -- line: [0, 0] id: 36
+        task.spawn(function()
+          -- line: [0, 0] id: 37
+          if IsAlive() and 1 < #r1_33:GetChildren() then
+            local r0_37 = 0.5
+            local r1_37 = CFrame.new()
+            local r2_37 = {
+              enzo = Vector3.new(),
+            }
+            local r3_37 = {
+              500,
+              500
+            }
+            if r0_37 and r1_37 and r2_37 and r3_37 then
+              r6_33:FireServer(r0_37, r1_37, r2_37, r3_37)
+            end
+          end
+        end)
+      end
+      task.spawn(function()
+        -- line: [0, 0] id: 34
+        while task.wait() do
+          local r0_34 = getgenv().SpamClickA
+          if r0_34 then
+            r0_34 = getgenv().AutoDetectSpam
+            if r0_34 then
+              r9_33()
+            end
+          end
+        end
+      end)
+      local r10_33 = 0
+      local r11_33 = 0
+      local function r12_33(r0_38)
+        -- line: [0, 0] id: 38
+        local r1_38 = ""
+        r0_38:GetPropertyChangedSignal("Position"):Connect(function()
+          -- line: [0, 0] id: 39
+          local r0_39 = r3_33 and r3_33.Character and r3_33.Character.PrimaryPart
+          local r1_39 = r8_33()
+          if r0_38 and r0_39 and r1_39 and r1_39.PrimaryPart then
+            local r2_39 = (r0_39.Position - r1_39.PrimaryPart.Position).Magnitude
+            local r3_39 = (r0_39.Position - r0_38.Position).Magnitude
+            r11_33 = 25 + math.clamp(r10_33 / 3, 0, 25)
+            if 2 < r10_33 and r2_39 < r11_33 and r3_39 < 55 then
+              getgenv().SpamClickA = true
+            else
+              getgenv().SpamClickA = false
+            end
+          end
+        end)
+        r0_38:GetAttributeChangedSignal("target"):Connect(function()
+          -- line: [0, 0] id: 40
+          r1_38 = r0_38:GetAttribute("target")
+          local r0_40 = r8_33()
+          if r0_40 then
+            if r1_38 == r0_40.Name or r1_38 == r3_33.Name then
+              r10_33 = r10_33 + 1
+            else
+              r10_33 = 0
+            end
+          end
+        end)
+      end
+      for r16_33, r17_33 in pairs(r7_33:GetChildren()) do
+        if r17_33 and not r17_33:GetAttribute("realBall") then
+          return 
+        end
+        r12_33(r17_33)
+      end
+      r7_33.ChildAdded:Connect(function(r0_41)
+        -- line: [0, 0] id: 41
+        if not getgenv().AutoDetectSpam then
+          return 
+        end
+        if r0_41 and not r0_41:GetAttribute("realBall") then
+          return 
+        end
+        getgenv().SpamClickA = false
+        r10_33 = 0
+        r12_33(r0_41)
+      end)
+      -- close: r1_33
+    else
+      r1_33 = getgenv
+      r1_33 = r1_33()
+      r1_33.SpamClickA = false
+    end
+  end,
+})
+local r19_0 = nil
+local r20_0 = false
+local function r21_0(r0_29, r1_29)
+  -- line: [0, 0] id: 29
+  local r2_29 = false
+  local r3_29 = false
+  local r4_29 = r0_29.MoveToFinished:Connect(function(r0_30)
+    -- line: [0, 0] id: 30
+    r2_29 = true
+    r3_29 = r0_30
+  end)
+  local r5_29 = 0
+  while not r2_29 and r5_29 < r1_29 do
+    task.wait(0.1)
+    r5_29 = r5_29 + 0.1
+  end
+  r4_29:Disconnect()
+  return r3_29
+end
+local function r22_0()
+  -- line: [0, 0] id: 51
+  local r0_51 = game.Players.LocalPlayer
+  local r1_51 = r0_51.Character or r0_51.CharacterAdded:Wait()
+  if not r1_51.PrimaryPart then
+    r1_51:GetPropertyChangedSignal("PrimaryPart"):Wait()
+  end
+  local r2_51 = r1_51:FindFirstChildOfClass("Humanoid")
+  local r3_51 = r1_51.PrimaryPart
+  local function r4_51(r0_52, r1_52)
+    -- line: [0, 0] id: 52
+    local r2_52 = (r1_52 - r0_52).Unit
+    local r3_52 = (r1_52 - r0_52).Magnitude
+    local r4_52 = RaycastParams.new()
+    r4_52.FilterDescendantsInstances = {
+      r1_51
+    }
+    r4_52.FilterType = Enum.RaycastFilterType.Blacklist
+    local r5_52 = workspace:Raycast(r0_52, r2_52 * r3_52, r4_52)
+    if r5_52 then
+      return false, r5_52.Instance
+    end
+    return true, nil
+  end
+  r19_0 = task.spawn(function()
+    -- line: [0, 0] id: 53
+    while r20_0 do
+      local r0_53 = r2_51
+      if r0_53 then
+        r0_53 = r3_51
+        if r0_53 then
+          r0_53 = r3_51.Position
+          local r1_53 = nil
+          local r2_53 = false
+          local r3_53 = false
+          local r4_53 = 0
+          while true do
+            r1_53 = r0_53 + Vector3.new(math.random(-50, 50), 0, math.random(-50, 50))
+            r3_53, _ = r4_51(r0_53, r1_53)
+            r4_53 = r4_53 + 1
+            if not r3_53 and 5 >= r4_53 then
+              goto label_41	-- block#5 is visited secondly
+            else
+              break
+            end
+          end
+          if r3_53 then
+            r2_51:MoveTo(r1_53)
+            r21_0(r2_51, 10)
+          else
+            task.wait(1)
+          end
+          task.wait(math.random(1, 3))
+        else
+          break
+        end
+      else
+        break
+      end
+    end
+  end)
+end
+game.Players.LocalPlayer.CharacterAdded:Connect(function(r0_9)
+  -- line: [0, 0] id: 9
+  if r20_0 then
+    if r19_0 then
+      task.cancel(r19_0)
+      r19_0 = nil
+    end
+    r22_0()
+  end
+end)
+r14_0:AddToggle({
+  Name = "Auto Play",
+  Default = false,
+  Callback = function(r0_42)
+    -- line: [0, 0] id: 42
+    r20_0 = r0_42
+    if r20_0 then
+      r22_0()
+    else
+      if r19_0 then
+        task.cancel(r19_0)
+        r19_0 = nil
+      end
+      local r2_42 = game.Players.LocalPlayer.Character
+      if r2_42 then
+        local r3_42 = r2_42:FindFirstChildOfClass("Humanoid")
+        if r3_42 then
+          r3_42:Move(Vector3.new(0, 0, 0), true)
+        end
+      end
+    end
+  end,
+})
+local r23_0 = 0.1
+r14_0:AddToggle({
+  Name = "Teleport Randomly",
+  Default = false,
+  Callback = function(r0_54)
+    -- line: [0, 0] id: 54
+    getgenv().teleportRandomly = r0_54
+    local r1_54 = game:GetService("Players")
+    local r2_54 = r1_54.LocalPlayer or r1_54.PlayerAdded:Wait()
+    local r3_54 = game:GetService("RunService")
+    local function r4_54()
+      -- line: [0, 0] id: 57
+      while getgenv().teleportRandomly do
+        local r0_57 = r2_54.Character
+        if r0_57 then
+          r0_57 = r2_54.Character:FindFirstChild("Humanoid")
+          if r0_57 then
+            r0_57 = r2_54.Character.Humanoid.Health
+            if r0_57 > 0 then
+              r0_57 = r2_54.Character
+              if r0_57 and r0_57.PrimaryPart then
+                r0_57:SetPrimaryPartCFrame(CFrame.new(Vector3.new(math.random(-200, 200), 100, math.random(-200, 200))))
+              end
+            end
+          end
+        end
+        wait(r23_0)
+      end
+    end
+    r2_54.CharacterAdded:Connect(function(r0_55)
+      -- line: [0, 0] id: 55
+      if getgenv().teleportRandomly then
+        task.spawn(r4_54)
+      end
+      r0_55:WaitForChild("Humanoid").Died:Connect(function()
+        -- line: [0, 0] id: 56
+      end)
+    end)
+    if r0_54 then
+      task.spawn(r4_54)
+    else
+      getgenv().teleportRandomly = false
+    end
+  end,
+})
+r14_0:AddBind({
+  Name = "Spam",
+  IsMobile = true,
+  Default = r4_0,
+  Hold = false,
+  Callback = function()
+    -- line: [0, 0] id: 73
+    r1_0 = not r1_0
+    if r1_0 then
+      r9_0:MakeNotification({
+        Name = "The spam is working now ✅",
+        Content = "If you want to turn it off just press the hootkey again!",
+        Image = "rbxassetid://11242915823",
+        Time = 2,
+      })
+      task.spawn(function()
+        -- line: [0, 0] id: 74
+        while r1_0 do
+          local r0_74 = r2_0.Target
+          if r0_74 then
+            r0_74 = r2_0.Target:IsDescendantOf(game.Players.LocalPlayer.PlayerGui)
+            if not r0_74 then
+              mouse1click()
+            end
+          end
+          task.wait(r3_0)
+        end
+      end)
+    else
+      r9_0:MakeNotification({
+        Name = "The spam is turned off now ❌",
+        Content = "Spam is now turned off.",
+        Image = "rbxassetid://15928769960",
+        Time = 2,
+      })
+    end
+  end,
+})
+r18_0()
+r14_0:AddToggle({
+  Name = "Spam",
+  IsPC = true,
+  Default = false,
+  Callback = function(r0_65)
+    -- line: [0, 0] id: 65
+    r1_0 = r0_65
+    if r1_0 then
+      r9_0:MakeNotification({
+        Name = "The spam is working now ✅",
+        Content = "",
+        Image = "rbxassetid://11242915823",
+        Time = 2,
+      })
+      task.spawn(function()
+        -- line: [0, 0] id: 66
+        while r1_0 do
+          local r0_66 = r8_0.TouchEnabled
+          if r0_66 then
+            r0_66 = game:GetService("Workspace").CurrentCamera.ViewportSize.X
+            local r2_66 = r0_66 * 0.95
+            local r3_66 = game:GetService("Workspace").CurrentCamera.ViewportSize.Y * 0.95
+            game:GetService("VirtualInputManager"):SendMouseButtonEvent(r2_66, r3_66, 0, true, game, 0)
+            game:GetService("VirtualInputManager"):SendMouseButtonEvent(r2_66, r3_66, 0, false, game, 0)
+          else
+            r0_66 = r2_0.Target
+            if r0_66 then
+              r0_66 = r2_0.Target:IsDescendantOf(game.Players.LocalPlayer.PlayerGui)
+              if not r0_66 then
+                mouse1click()
+              end
+            end
+          end
+          task.wait(r3_0)
+        end
+      end)
+    else
+      r9_0:MakeNotification({
+        Name = "The spam is turned off now ❌",
+        Content = "Spam is now turned off.",
+        Image = "rbxassetid://15928769960",
+        Time = 2,
+      })
+    end
+  end,
+})
+local r24_0 = r14_0:AddSection({
+  Name = "Ball",
+})
+r14_0:AddToggle({
+  Name = "ESP Ball",
+  Default = false,
+  Callback = function(r0_2)
+    -- line: [0, 0] id: 2
+    local r1_2 = game.Workspace:FindFirstChild("Balls")
+    local function r2_2(r0_4)
+      -- line: [0, 0] id: 4
+      if r0_4:IsA("Part") and not r0_4:FindFirstChild("BallHighlight") then
+        local r1_4 = Instance.new("Highlight", r0_4)
+        r1_4.Name = "BallHighlight"
+        r1_4.FillTransparency = 0
+        r1_4.OutlineTransparency = 0
+        r1_4.FillColor = Color3.fromRGB(0, 0, 255)
+        local r2_4 = Instance.new("BillboardGui")
+        r2_4.Name = "BallNameBar"
+        r2_4.AlwaysOnTop = true
+        r2_4.Size = UDim2.new(0, 100, 0, 25)
+        r2_4.StudsOffset = Vector3.new(0, 2, 0)
+        r2_4.Adornee = r0_4
+        local r3_4 = Instance.new("TextLabel")
+        r3_4.Parent = r2_4
+        r3_4.BackgroundTransparency = 1
+        r3_4.Text = "Ball"
+        r3_4.Size = UDim2.new(1, 0, 1, 0)
+        r3_4.TextStrokeTransparency = 0
+        r3_4.TextScaled = true
+        r3_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+        r2_4.Parent = r0_4
+      end
+    end
+    if r0_2 then
+      for r6_2, r7_2 in pairs(r1_2:GetChildren()) do
+        r2_2(r7_2)
+      end
+      r1_2.ChildAdded:Connect(function(r0_3)
+        -- line: [0, 0] id: 3
+        task.wait(0.1)
+        r2_2(r0_3)
+      end)
+    else
+      for r6_2, r7_2 in pairs(r1_2:GetChildren()) do
+        if r7_2:IsA("Part") then
+          if r7_2:FindFirstChild("BallHighlight") then
+            r7_2.BallHighlight:Destroy()
+          end
+          if r7_2:FindFirstChild("BallNameBar") then
+            r7_2.BallNameBar:Destroy()
+          end
+        end
+      end
+    end
+  end,
+})
+local r25_0 = nil
+local r26_0 = false
+r14_0:AddToggle({
+  Name = "Follow Ball",
+  Default = false,
+  Callback = function(r0_62)
+    -- line: [0, 0] id: 62
+    r26_0 = r0_62
+    local r1_62 = game.Workspace:FindFirstChild("Balls")
+    local r2_62 = game.Players.LocalPlayer
+    local r3_62 = r2_62.Character or r2_62.CharacterAdded:Wait()
+    local r4_62 = r3_62:FindFirstChildOfClass("Humanoid")
+    local r5_62 = r26_0
+    if r5_62 then
+      function r5_62()
+        -- line: [0, 0] id: 64
+        while r26_0 do
+          local r0_64 = r1_62:FindFirstChildWhichIsA("Part")
+          if r0_64 and r4_62 then
+            r4_62:MoveTo(r0_64.Position + ((r0_64.Position - r3_62.PrimaryPart.Position)).unit * -5)
+          end
+          task.wait(0.5)
+        end
+      end
+      r25_0 = task.spawn(r5_62)
+      r1_62.ChildAdded:Connect(function(r0_63)
+        -- line: [0, 0] id: 63
+        if r26_0 and r0_63:IsA("Part") then
+          task.wait(0.1)
+          r5_62()
+        end
+      end)
+      -- close: r5_62
+    else
+      r5_62 = false
+      r26_0 = r5_62
+      r5_62 = r25_0
+      if r5_62 then
+        r5_62 = task
+        r5_62 = r5_62.cancel
+        r5_62(r25_0)
+      end
+      if r4_62 then
+        r4_62:Move(Vector3.new(0, 0, 0), true)
+      end
+    end
+  end,
+})
+local r27_0 = 15
+local r28_0 = false
+r14_0:AddToggle({
+  Name = "Fly To Ball",
+  Default = false,
+  Callback = function(r0_16)
+    -- line: [0, 0] id: 16
+    r28_0 = r0_16
+  end,
+})
+game:GetService("RunService").Heartbeat:Connect(function()
+  -- line: [0, 0] id: 49
+  if r28_0 then
+    local r0_49 = game.Players.LocalPlayer
+    local r2_49 = (r0_49.Character or r0_49.CharacterAdded:Wait()).PrimaryPart
+    local r3_49 = game.Workspace:FindFirstChild("Balls")
+    local r4_49 = r3_49 and r3_49:FindFirstChildWhichIsA("Part")
+    if r4_49 and r2_49 then
+      local r5_49 = r4_49.Position + Vector3.new(0, 10, r27_0)
+      r2_49.CFrame = r2_49.CFrame:Lerp(CFrame.new(r5_49), math.clamp(((r5_49 - r2_49.Position)).Magnitude / 25, 1, 5) * 0.01)
+    end
+  end
+end)
+r14_0:AddToggle({
+  Name = "Teleport Away",
+  Default = false,
+  Callback = function(r0_7)
+    -- line: [0, 0] id: 7
+    getgenv().runAwayFromBall = r0_7
+    local r1_7 = game:GetService("Players")
+    local r3_7 = (r1_7.LocalPlayer or r1_7.PlayerAdded:Wait()).Character
+    if r3_7 and r3_7.PrimaryPart then
+      local r4_7 = r3_7.PrimaryPart.Position
+      local r5_7 = CFrame.new(9999, 9999, 9999)
+      if r0_7 then
+        r3_7:SetPrimaryPartCFrame(r5_7)
+        task.spawn(function()
+          -- line: [0, 0] id: 8
+          while getgenv().runAwayFromBall do
+            local r0_8 = (r3_7.PrimaryPart.Position - r5_7.Position).Magnitude
+            if r0_8 > 1 then
+              r3_7:SetPrimaryPartCFrame(r5_7)
+            end
+            wait(0.1)
+          end
+          if r3_7 and r3_7.PrimaryPart then
+            r3_7:SetPrimaryPartCFrame(CFrame.new(r4_7))
+          end
+        end)
+      elseif r3_7 and r3_7.PrimaryPart then
+        r3_7:SetPrimaryPartCFrame(CFrame.new(r4_7))
+      end
+      -- close: r4_7
+    end
+  end,
+})
+local r29_0 = r10_0:MakeTab({
+  Name = "Player",
+  Icon = "rbxassetid://2795572800",
+  PremiumOnly = false,
+})
+local r30_0 = r29_0:AddSection({
+  Name = "Features",
+})
+local r31_0 = Color3.fromRGB(255, 0, 0)
+local r32_0 = game:GetService("Players").LocalPlayer
+local r33_0 = {}
+local function r34_0(r0_5)
+  -- line: [0, 0] id: 5
+  if r0_5 ~= r32_0 and r0_5.Character and not r0_5.Character:FindFirstChild("Highlight") then
+    local r1_5 = Instance.new("Highlight")
+    r1_5.FillTransparency = 0
+    r1_5.OutlineTransparency = 0
+    r1_5.FillColor = r31_0
+    r1_5.Parent = r0_5.Character
+    local r2_5 = r0_5.Character:FindFirstChild("Head")
+    if r2_5 and not r2_5:FindFirstChild("PlayerNameBar") then
+      local r3_5 = Instance.new("BillboardGui")
+      r3_5.Name = "PlayerNameBar"
+      r3_5.Size = UDim2.new(0, 100, 0, 25)
+      r3_5.StudsOffset = Vector3.new(0, 2, 0)
+      r3_5.AlwaysOnTop = true
+      r3_5.Adornee = r2_5
+      local r4_5 = Instance.new("TextLabel")
+      r4_5.BackgroundTransparency = 1
+      r4_5.Size = UDim2.new(1, 0, 1, 0)
+      r4_5.TextColor3 = Color3.fromRGB(255, 255, 255)
+      r4_5.TextStrokeTransparency = 0
+      r4_5.TextScaled = true
+      r4_5.Text = r0_5.Name
+      r4_5.Parent = r3_5
+      r3_5.Parent = r2_5
+    end
+  end
+end
+local function r35_0(r0_68)
+  -- line: [0, 0] id: 68
+  if r0_68.Character then
+    if r0_68.Character:FindFirstChild("Highlight") then
+      r0_68.Character.Highlight:Destroy()
+    end
+    local r1_68 = r0_68.Character:FindFirstChild("Head")
+    if r1_68 and r1_68:FindFirstChild("PlayerNameBar") then
+      r1_68.PlayerNameBar:Destroy()
+    end
+  end
+end
+r29_0:AddToggle({
+  Name = "ESP All",
+  Default = false,
+  Callback = function(r0_69)
+    -- line: [0, 0] id: 69
+    if r0_69 then
+      for r4_69, r5_69 in ipairs(game.Players:GetPlayers()) do
+        if r5_69 ~= r32_0 then
+          r34_0(r5_69)
+        end
+      end
+      r33_0.PlayerAdded = game.Players.PlayerAdded:Connect(function(r0_70)
+        -- line: [0, 0] id: 70
+        r33_0[r0_70] = r0_70.CharacterAdded:Connect(function()
+          -- line: [0, 0] id: 71
+          wait(1)
+          if r0_70 ~= r32_0 then
+            r34_0(r0_70)
+          end
+        end)
+      end)
+    else
+      for r4_69, r5_69 in ipairs(game.Players:GetPlayers()) do
+        r35_0(r5_69)
+      end
+      for r4_69, r5_69 in pairs(r33_0) do
+        if r5_69 then
+          r5_69:Disconnect()
+        end
+      end
+      r33_0 = {}
+    end
+  end,
+})
+r29_0:AddButton({
+  Name = "Fly",
+  Callback = function()
+    -- line: [0, 0] id: 60
+    local r0_60 = "https://raw.githubusercontent.com/as6cd0/RandomScripts/refs/heads/main/Fly"
+    local r1_60, r2_60 = pcall(function()
+      -- line: [0, 0] id: 61
+      loadstring(game:HttpGet(r0_60))()
+    end)
+    if not r1_60 then
+    end
+  end,
+})
+r29_0:AddButton({
+  Name = "FPS Boost",
+  Callback = function()
+    -- line: [0, 0] id: 20
+    local r0_20 = "https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/FPSBooster.lua"
+    local r1_20, r2_20 = pcall(function()
+      -- line: [0, 0] id: 21
+      loadstring(game:HttpGet(r0_20))()
+    end)
+    if not r1_20 then
+    end
+  end,
+})
+local r36_0 = r29_0:AddSection({
+  Name = "Player",
+})
+local r37_0 = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed
+local r38_0 = r29_0:AddSlider({
+  Name = "Player Speed",
+  Min = r37_0,
+  Max = 1000,
+  Default = r37_0,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 1,
+  ValueName = "Speed",
+  Callback = function(r0_28)
+    -- line: [0, 0] id: 28
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = r0_28
+  end,
+})
+game.Players.LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+  -- line: [0, 0] id: 26
+  r38_0:Set(game.Players.LocalPlayer.Character.Humanoid.WalkSpeed)
+end)
+r29_0:AddButton({
+  Name = "Default Speed",
+  Callback = function()
+    -- line: [0, 0] id: 72
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = r37_0
+    r38_0:Set(r37_0)
+  end,
+})
+local r39_0 = game.Players.LocalPlayer.Character.Humanoid.JumpPower
+local r40_0 = r29_0:AddSlider({
+  Name = "Jump Power",
+  Min = r39_0,
+  Max = 1000,
+  Default = r39_0,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 1,
+  ValueName = "Power",
+  Callback = function(r0_75)
+    -- line: [0, 0] id: 75
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = r0_75
+  end,
+})
+game.Players.LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
+  -- line: [0, 0] id: 1
+  r40_0:Set(game.Players.LocalPlayer.Character.Humanoid.JumpPower)
+end)
+r29_0:AddButton({
+  Name = "Default Power",
+  Callback = function()
+    -- line: [0, 0] id: 43
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = r39_0
+    r40_0:Set(r39_0)
+  end,
+})
+local r41_0 = 70
+local r42_0 = r29_0:AddSlider({
+  Name = "Fov",
+  Min = 1,
+  Max = 150,
+  Default = r41_0,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 1,
+  ValueName = "Fov",
+  Callback = function(r0_59)
+    -- line: [0, 0] id: 59
+    workspace.CurrentCamera.FieldOfView = r0_59
+  end,
+})
+r29_0:AddButton({
+  Name = "Default Fov",
+  Callback = function()
+    -- line: [0, 0] id: 79
+    workspace.CurrentCamera.FieldOfView = r41_0
+    r42_0:Set(r41_0)
+  end,
+})
+local r43_0 = r10_0:MakeTab({
+  Name = "Shop",
+  Icon = "rbxassetid://11385419674",
+  PremiumOnly = false,
+})
+local r44_0 = r43_0:AddSection({
+  Name = "Sword And Explosion Crate",
+})
+function SwordCrateManual()
+  -- line: [0, 0] id: 48
+  game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer("PromptPurchaseCrate", workspace.Spawn.Crates.NormalSwordCrate)
+end
+r43_0:AddButton({
+  Name = "Normal Sword Crate (80 Coins)",
+  Callback = function()
+    -- line: [0, 0] id: 10
+    SwordCrateManual()
+  end,
+})
+function ExplosionCrateManual()
+  -- line: [0, 0] id: 15
+  game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer("PromptPurchaseCrate", workspace.Spawn.Crates.NormalExplosionCrate)
+end
+r43_0:AddButton({
+  Name = "Explosion Crate (80 Coins)",
+  Callback = function()
+    -- line: [0, 0] id: 80
+    ExplosionCrateManual()
+  end,
+})
+r43_0:AddButton({
+  Name = "Open Spin",
+  Callback = function()
+    -- line: [0, 0] id: 67
+    game:GetService("ReplicatedStorage").Remote.RemoteFunction:InvokeServer(unpack({
+      [1] = "SpinWheel",
+    }))
+  end,
+})
+local r45_0 = r43_0:AddSection({
+  Name = "Auto Buy",
+})
+r43_0:AddToggle({
+  Name = "Auto Buy Sword Crate",
+  Default = false,
+  Callback = function(r0_46)
+    -- line: [0, 0] id: 46
+    r5_0 = r0_46
+    if r5_0 then
+      task.spawn(function()
+        -- line: [0, 0] id: 47
+        while r5_0 do
+          SwordCrateManual()
+          task.wait(0.5)
+        end
+      end)
+    end
+  end,
+})
+r43_0:AddToggle({
+  Name = "Auto Buy Explosion Crate",
+  Default = false,
+  Callback = function(r0_31)
+    -- line: [0, 0] id: 31
+    r6_0 = r0_31
+    if r6_0 then
+      task.spawn(function()
+        -- line: [0, 0] id: 32
+        while r6_0 do
+          ExplosionCrateManual()
+          task.wait(1)
+        end
+      end)
+    end
+  end,
+})
+local r46_0 = r10_0:MakeTab({
+  Name = "Setting",
+  Icon = "rbxassetid://11385220704",
+  PremiumOnly = false,
+})
+r45_0 = r46_0:AddSection({
+  Name = "Edit Functions",
+})
+r46_0:AddSlider({
+  Name = "Spam Click Speed",
+  Min = 0.001,
+  Max = 1,
+  Default = 0.1,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 0.005,
+  ValueName = "Speed",
+  Callback = function(r0_11)
+    -- line: [0, 0] id: 11
+    r3_0 = r0_11
+  end,
+})
+local r47_0 = r46_0:AddSlider({
+  Name = "Fly To Ball Distanc",
+  Min = 1,
+  Max = 250,
+  Default = r27_0,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 1,
+  ValueName = "Distanc",
+  Callback = function(r0_6)
+    -- line: [0, 0] id: 6
+    r27_0 = r0_6
+  end,
+})
+r46_0:AddSlider({
+  Name = "Parry Distance",
+  Min = 1,
+  Max = 15,
+  Color = Color3.fromRGB(255, 255, 255),
+  Default = 5,
+  Increment = 1,
+  ValueName = "Distanc",
+  Callback = function(r0_44)
+    -- line: [0, 0] id: 44
+    r16_0 = r0_44
+  end,
+})
+r46_0:AddSlider({
+  Name = "Teleport Randomly Speed",
+  Min = 0.001,
+  Max = 5,
+  Default = 0.1,
+  Color = Color3.fromRGB(255, 255, 255),
+  Increment = 0.005,
+  ValueName = "Speed",
+  Callback = function(r0_77)
+    -- line: [0, 0] id: 77
+    r23_0 = r0_77
+  end,
+})
+local r48_0 = r46_0:AddSection({
+  Name = "Auto",
+})
+r46_0:AddToggle({
+  Name = "Auto Collect Daily Reward",
+  Default = true,
+  Callback = function(r0_24)
+    -- line: [0, 0] id: 24
+    local r1_24 = r0_24
+    spawn(function()
+      -- line: [0, 0] id: 25
+      -- notice: unreachable block#3
+      while true do
+        if r1_24 then
+          local r0_25 = {
+            [1] = "ClaimLoginReward",
+          }
+          game:GetService("ReplicatedStorage").Remote.RemoteEvent:FireServer(unpack(r0_25))
+        end
+        wait(5)
+      end
+    end)
+  end,
+})
+r46_0:AddToggle({
+  Name = "Auto Collect Time Played Reward",
+  Default = true,
+  Callback = function(r0_12)
+    -- line: [0, 0] id: 12
+    local r1_12 = r0_12
+    local function r2_12(r0_14)
+      -- line: [0, 0] id: 14
+      game:GetService("ReplicatedStorage").Packages._Index:FindFirstChild("sleitnick_net@0.1.0").net:FindFirstChild("RF/ClaimPlaytimeReward"):InvokeServer(unpack({
+        [1] = r0_14,
+      }))
+    end
+    local function r3_12()
+      -- line: [0, 0] id: 13
+      local r0_13 = 1
+      while r1_12 do
+        r2_12(r0_13)
+        r0_13 = r0_13 + 1
+        if r0_13 > 6 then
+          r0_13 = 1
+        end
+        wait(1)
+      end
+    end
+    if r0_12 then
+      r3_12()
+    end
+  end,
+})
+r9_0:Init()

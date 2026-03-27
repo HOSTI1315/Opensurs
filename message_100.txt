@@ -1,0 +1,249 @@
+local Players = game:GetService("Players")
+
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+gui.Name = "UnwalkGui"
+
+gui.ResetOnSpawn = false
+
+local button = Instance.new("TextButton")
+
+button.Size = UDim2.new(0, 200, 0, 50)
+
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+
+button.Text = "Unwalk Animation"
+
+button.BackgroundTransparency = 0.15
+
+button.AutoButtonColor = true
+
+button.Parent = gui
+
+local dragging = false
+
+local dragStart, startPos, activeInput
+
+button.InputBegan:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then		local pos = input.Position
+
+		local absPos, absSize = button.AbsolutePosition, button.AbsoluteSize
+
+		if pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y then
+
+			dragging = true
+
+			activeInput = input
+
+			dragStart = input.Position
+
+			startPos = button.Position
+
+			input.Changed:Connect(function()
+
+				if input.UserInputState == Enum.UserInputState.End then
+
+					dragging = false
+
+					activeInput = nil
+
+				end
+
+			end)
+
+		end
+
+	end
+
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+	if dragging and input == activeInput and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+
+		local delta = input.Position - dragStart
+
+		button.Position = UDim2.new(
+
+			startPos.X.Scale,
+
+			startPos.X.Offset + delta.X,
+
+			startPos.Y.Scale,
+
+			startPos.Y.Offset + delta.Y
+
+		)
+
+	end
+
+end)
+
+local unwalk = false
+
+local savedAnims = {}
+
+local watcher
+
+local function isWalkAnim(anim)
+
+	return anim and anim:IsA("Animation") and anim.Name:lower():find("walk")
+
+end
+
+local function stopWalks(hum)
+
+	if not hum then return end
+
+	for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+
+		if t.Name:lower():find("walk") then
+
+			t:Stop()
+
+		end
+
+	end
+
+end
+
+local function saveAndClear(anim)
+
+	for _, v in ipairs(savedAnims) do
+
+		if v.instance == anim then return end
+
+	end
+
+	table.insert(savedAnims, {instance = anim, id = anim.AnimationId})
+
+	anim.AnimationId = ""
+
+end
+
+local function restoreAnims()
+
+	for _, v in ipairs(savedAnims) do
+
+		if v.instance then
+
+			v.instance.AnimationId = v.id
+
+		end
+
+	end
+
+end
+
+local function added(desc)
+
+	if unwalk and isWalkAnim(desc) then
+
+		saveAndClear(desc)
+
+	end
+
+end
+
+local function scan(character)
+
+	local animate = character and character:FindFirstChild("Animate")
+
+	if not animate then return end
+
+	local function clear(folder, name)
+
+		local anim = folder and folder:FindFirstChild(name)
+
+		if anim and anim:IsA("Animation") then
+
+			saveAndClear(anim)
+
+		end
+
+	end
+
+	clear(animate:FindFirstChild("walk"), "WalkAnim")
+
+	clear(animate:FindFirstChild("run"), "RunAnim")
+
+	local hum = character:FindFirstChildOfClass("Humanoid")
+
+	if hum then stopWalks(hum) end
+
+end
+
+local function enable()
+
+	local char = player.Character
+
+	if not char then return end
+
+	button.Text = "Restore Walk"
+
+	unwalk = true
+
+	savedAnims = {}
+
+	task.spawn(function()
+
+		scan(char)
+
+		if watcher then watcher:Disconnect() end
+
+		watcher = char.DescendantAdded:Connect(added)
+
+	end)
+
+end
+
+local function disable()
+
+	if watcher then watcher:Disconnect() watcher = nil end
+
+	restoreAnims()
+
+	savedAnims = {}
+
+	button.Text = "Unwalk Animation"
+
+	unwalk = false
+
+end
+
+button.MouseButton1Click:Connect(function()
+
+	if unwalk then
+
+		disable()
+
+	else
+
+		enable()
+
+	end
+
+end)
+
+player.CharacterAdded:Connect(function(c)
+
+	if unwalk then
+
+		task.spawn(function()
+
+			scan(c)
+
+			if watcher then watcher:Disconnect() end
+
+			watcher = c.DescendantAdded:Connect(added)
+
+		end)
+
+	end
+
+end)

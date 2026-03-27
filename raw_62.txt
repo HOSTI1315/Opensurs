@@ -1,0 +1,423 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IAmJamal10/Library/refs/heads/main/New"))()
+
+local Window = Library.CreateLib("Build An Island! | Legend HandlesYT", "BloodTheme")
+
+local Tab = Window:NewTab("Main-Features")
+
+local Tab22 = Window:NewTab("Player-Features")
+
+local Tab1 = Window:NewTab("Settings")
+
+local Section = Tab:NewSection("Main-Features")
+
+local Section20 = Tab22:NewSection("Player-Features")
+
+local CredSection = Tab1:NewSection("Credits")
+
+local autoFarmEnabled = false
+
+Section:NewToggle("Auto Farm Everything", "Auto Hits everything", function(Value)
+    autoFarmEnabled = Value
+    task.spawn(function()
+        while autoFarmEnabled do
+            task.wait()
+            pcall(function()
+                local Players = game:GetService("Players")
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local Communication = ReplicatedStorage:WaitForChild("Communication")
+                local HitResource = Communication:WaitForChild("HitResource")
+
+                local player = Players.LocalPlayer
+                local playerPlot = workspace:WaitForChild("Plots"):WaitForChild(player.Name):WaitForChild("Resources")
+
+                for _, resource in ipairs(playerPlot:GetChildren()) do
+                    if resource:IsA("Model") then
+                        HitResource:FireServer(resource)
+                    end
+                end
+            end)
+        end
+    end)
+end)
+
+local sellAllEnabled = false
+
+Section:NewToggle("Sell All", "Automatically sells all to merchant", function(Value)
+    sellAllEnabled = Value
+    task.spawn(function()
+        while sellAllEnabled do
+            task.wait()
+            pcall(function()
+                local args = {
+                    true,
+                    {}
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("SellToMerchant"):FireServer(unpack(args))
+            end)
+        end
+    end)
+end)
+
+   local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Communication = ReplicatedStorage:WaitForChild("Communication")
+local BuyFromMerchant = Communication:WaitForChild("BuyFromMerchant")
+
+local enabled = false
+local selectedItem = "Corn Seeds"
+
+local itemList = {
+    "Corn Seeds",
+    "Coal Crate",
+    "Honey Bee",
+    "Busy Bee Potion",
+    "Growth Potion",
+    "Strawberry Seeds",
+    "Autochopper",
+    "Autominer",
+    "Blueberry Seeds",
+    "Apple Seeds",
+    "Tomato Seeds",
+    "Watermelon Seeds",
+    "Strength Potion",
+    "Galaxy Potion",
+    "Resource Potion",
+    "Magic Durian Seeds",
+    "Peach Seeds",
+    "Pumpkin Seeds",
+    "Cherry Seeds",
+    "Starfruit Seeds"
+}
+
+-- Dropdown
+Section:NewDropdown("Auto Buy", "Auto Buy", itemList, function(currentOption)
+    selectedItem = currentOption
+end)
+
+-- Toggle
+Section:NewToggle("Enable Auto Buy (OP Sold Out = Work)", "Toggle to auto-buy selected item", function(Value)
+    enabled = Value
+end)
+
+-- Loop
+task.spawn(function()
+    while true do
+        task.wait(0.5) -- 1 second delay to prevent spamming
+        if enabled and selectedItem then
+            local args = {selectedItem, false}
+            BuyFromMerchant:FireServer(unpack(args))
+        end
+    end
+end)
+
+local giveCoalEnabled = false
+
+Section:NewToggle("Auto Give Coal To Mine", "Gives Coal", function(Value)
+    giveCoalEnabled = Value
+    task.spawn(function()
+        while giveCoalEnabled do
+            task.wait()
+            pcall(function()
+                local args = {
+                    "S8", -- Mine ID
+                    1     -- Action ID for giving coal
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Goldmine"):FireServer(unpack(args))
+            end)
+        end
+    end)
+end)
+
+
+local collectCoinEnabled = false
+
+Section:NewToggle("Auto Collect Coin From Gold Mine", "Collects coins from the mine", function(Value)
+    collectCoinEnabled = Value
+    task.spawn(function()
+        while collectCoinEnabled do
+            task.wait()
+            pcall(function()
+                local args = {
+                    "S8", -- Mine ID
+                    2     -- Action ID for collecting coins
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Goldmine"):FireServer(unpack(args))
+            end)
+        end
+    end)
+end)
+
+
+local craftEnabled = false
+
+Section:NewToggle("Auto Craft Planks", "Continuously crafts using your crafter", function(Value)
+    craftEnabled = Value
+    task.spawn(function()
+        while craftEnabled do
+            task.wait() -- Delay to prevent spamming, adjust as needed
+            pcall(function()
+                local Players = game:GetService("Players")
+                local player = Players.LocalPlayer
+                local args = {
+                    workspace:WaitForChild("Plots")
+                        :WaitForChild(player.Name)
+                        :WaitForChild("Land")
+                        :WaitForChild("S13")
+                        :WaitForChild("Crafter")
+                        :WaitForChild("Attachment")
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Craft"):FireServer(unpack(args))
+            end)
+        end
+    end)
+end)
+
+Section20:NewToggle("CFrame Speed", "CFrame Speed Toggle", function(Value)
+    getgenv().CFrameSpeedEnabled = Value  -- This stores the toggle state (true/false)
+    if CFrameSpeedEnabled then
+        startCFrameSpeed() -- Starts moving when the toggle is enabled
+    else
+        stopCFrameSpeed() -- Stops moving when the toggle is disabled
+    end
+end)
+
+repeat
+    wait()
+until game:IsLoaded()
+
+local Players = game:service('Players')
+local LocalPlayer = Players.LocalPlayer
+repeat
+    wait()
+until LocalPlayer.Character
+
+local UserInputService = game:service('UserInputService')
+local RunService = game:service('RunService')
+
+getgenv().Multiplier = 0.5
+local movementConnection = nil  -- Used to store the movement loop connection
+
+-- Function to start CFrame movement
+function startCFrameSpeed()
+    if movementConnection == nil then
+        movementConnection = RunService.Stepped:Connect(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+        end)
+    end
+end
+
+-- Function to stop CFrame movement
+function stopCFrameSpeed()
+    if movementConnection then
+        movementConnection:Disconnect()
+        movementConnection = nil
+    end
+end
+
+-- Key bindings for increasing and decreasing speed multiplier
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftBracket then
+        Multiplier = Multiplier + 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.LeftBracket) do
+            wait()
+            Multiplier = Multiplier + 0.01
+            print(Multiplier)
+        end
+    elseif input.KeyCode == Enum.KeyCode.RightBracket then
+        Multiplier = Multiplier - 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.RightBracket) do
+            wait()
+            Multiplier = Multiplier - 0.01
+            print(Multiplier)
+        end
+    end
+end)
+
+-- Slider for adjusting speed multiplier
+Section20:NewSlider("CFrame Speed", "Speed", 20, 0, function(s)
+    getgenv().Multiplier = s
+end)
+
+Section20:NewButton("Boost FPS", "FPS Booster", function()
+        for _,v in pairs(workspace:GetDescendants()) do
+if v.ClassName == "Part"
+or v.ClassName == "SpawnLocation"
+or v.ClassName == "WedgePart"
+or v.ClassName == "Terrain"
+or v.ClassName == "MeshPart" then
+v.Material = "Plastic"
+end
+end
+end)
+
+Section20:NewToggle("Infinite Jump", "Infinite Jump", function(state)
+if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+            end)
+
+Section20:NewToggle("Noclip", "Noclip", function()
+ local Noclip = nil
+local Clip = nil
+
+function noclip()
+	Clip = false
+	local function Nocl()
+		if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+					v.CanCollide = false
+				end
+			end
+		end
+		wait(0.21) -- basic optimization
+	end
+	Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+	if Noclip then Noclip:Disconnect() end
+	Clip = true
+end
+
+noclip()
+end)
+
+
+
+CredSection:NewLabel("Made By Legend HandlesYT")
+
+
+CredSection:NewKeybind("Toggle UI", "Toggle The UI", Enum.KeyCode.L, function()
+	Library:ToggleUI()
+end)
+
+CredSection:NewButton("Mobile Keyboard", "Mobile Players", function(state)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", true))()
+end)
+wait(0.1)
+local player = game.Players.LocalPlayer
+
+local function createTutorialGui()
+    -- Create the GUI
+    local Turtorial = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local JoinButton = Instance.new("TextButton")
+    local UICorner_Join = Instance.new("UICorner")
+    local shadow = Instance.new("Frame")
+
+    Turtorial.Name = "Turtorial"
+    Turtorial.Parent = player:WaitForChild("PlayerGui")
+    Turtorial.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    main.Name = "main"
+    main.Parent = Turtorial
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.AnchorPoint = Vector2.new(0, 0)
+
+    -- Function to position the GUI just below the top-left corner of the screen
+    local function setPositionBelowTopLeft()
+        local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+        main.Position = UDim2.new(0, 10, 0, 10)  -- Just below the top-left with a slight offset
+        main.Size = UDim2.new(0.15, 0, 0.10, 0)  -- Standard size for both devices
+    end
+
+    setPositionBelowTopLeft()
+
+    main.Active = true
+    main.Draggable = true
+
+    -- Shadow effect for main frame
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    JoinButton.Name = "JoinButton"
+    JoinButton.Parent = main
+    JoinButton.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+    -- Adjust button size based on device type
+    if game:GetService("UserInputService").TouchEnabled then
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    else
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    end
+
+    JoinButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+    JoinButton.Font = Enum.Font.Highway
+    JoinButton.Text = "Toggle Gui"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = 25
+    JoinButton.TextStrokeTransparency = 0.7
+    JoinButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    UICorner_Join.CornerRadius = UDim.new(0.15, 0)
+    UICorner_Join.Parent = JoinButton
+
+    -- Toggle the visibility of ScreenGuis
+    JoinButton.MouseButton1Down:Connect(function()
+        local CoreGui = game:GetService("CoreGui")
+        local function containsNumber(name)
+            return name:match("%d") ~= nil
+        end
+
+        local function toggleScreenGuisWithNumbers()
+            for _, gui in ipairs(CoreGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and containsNumber(gui.Name) and gui.Name ~= "Turtorial" then
+                    gui.Enabled = not gui.Enabled
+                    print((gui.Enabled and "Enabled" or "Disabled") .. " ScreenGui:", gui.Name)
+                end
+            end
+        end
+
+        toggleScreenGuisWithNumbers()
+
+        CoreGui.ChildAdded:Connect(function(child)
+            if child:IsA("ScreenGui") then
+                task.wait(0.1)
+                if containsNumber(child.Name) and child.Name ~= "Turtorial" then
+                    child.Enabled = false
+                    print("Disabled new ScreenGui:", child.Name)
+                end
+            end
+        end)
+    end)
+end
+
+-- Connect to CharacterAdded to ensure GUI is created again after respawn
+player.CharacterAdded:Connect(function()
+    -- Wait for the PlayerGui to load in case it's reset
+    player:WaitForChild("PlayerGui")
+    -- Create the GUI again after respawn
+    createTutorialGui()
+end)
+
+-- Initial creation of the GUI when the player first joins
+createTutorialGui()

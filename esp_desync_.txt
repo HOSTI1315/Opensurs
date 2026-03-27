@@ -1,0 +1,125 @@
+ local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local fflags = {
+    ["NextGenReplicatorEnabledWrite4"] = "True",
+    
+}
+local logService = game:GetService("LogService")
+logService.MessageOut:Connect(function(message, messageType)
+    if messageType == Enum.MessageType.MessageOutput then
+        local msg = tostring(message)
+        if string.find(msg, "FFlag") then
+            LocalPlayer:Kick("FFlag detected")
+        end
+    end
+end)
+
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "DesyncESP"
+ESPFolder.Parent = Workspace
+
+local fakePosESP = nil
+local serverPosition = nil
+local positionUpdateConnection = nil
+
+local function createESPPart(name, color)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Size = Vector3.new(2, 5, 2)
+    part.Anchored = true
+    part.CanCollide = false
+    part.Material = Enum.Material.Neon
+    part.Color = color
+    part.Transparency = 0.3
+    part.Parent = ESPFolder
+    
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = color
+    highlight.OutlineColor = color
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = part
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 100, 0, 40)
+    billboard.Adornee = part
+    billboard.AlwaysOnTop = true
+    billboard.Parent = part
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = name
+    textLabel.TextColor3 = color
+    textLabel.TextStrokeTransparency = 0.5
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.Parent = billboard
+    
+    return part
+end
+
+local function updateESP()
+    if fakePosESP and serverPosition then
+        fakePosESP.CFrame = CFrame.new(serverPosition)
+    end
+end
+
+local function setupPositionTracking(hrp)
+    if positionUpdateConnection then
+        positionUpdateConnection:Disconnect()
+    end
+    
+    serverPosition = hrp.Position
+    
+    positionUpdateConnection = hrp:GetPropertyChangedSignal("Position"):Connect(function()
+        task.wait(0.15)
+        local char = LocalPlayer.Character
+        if char then
+            local currentHRP = char:FindFirstChild("HumanoidRootPart")
+            if currentHRP then
+                serverPosition = currentHRP.Position
+            end
+        end
+    end)
+end
+
+local function initializeESP()
+    ESPFolder:ClearAllChildren()
+    
+    fakePosESP = createESPPart("Server Position", Color3.fromRGB(255, 0, 0))
+    
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            setupPositionTracking(hrp)
+            fakePosESP.CFrame = CFrame.new(serverPosition)
+        end
+    end
+end
+
+local function applyFlags()
+    for name, value in pairs(fflags) do
+        pcall(setfflag, name, value)
+    end
+end
+
+applyFlags()
+
+if LocalPlayer.Character then
+    initializeESP()
+end
+
+RunService.RenderStepped:Connect(function()
+    updateESP()
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.5)
+    initializeESP()
+end)

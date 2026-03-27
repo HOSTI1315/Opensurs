@@ -1,0 +1,1521 @@
+-- cracked by catnap's luarmor and luraph env logger
+
+--== 👑 REZZY HUB PREMIUM: ACCESO ABIERTO Y FUNCIONALIDAD COMPLETA PARA PRUEBAS DE ANTICHEAT ==--
+
+-- 🛑 CONFIGURACIÓN WEBHOOK
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1445869135845392394/6MjiYGblvERvmZpOKGxO_OBqxiRW3yEXFe01epohjl4dDB56fpPMas1YusspIm8G3de" 
+
+-- ---------------------------------------------
+-- ⭐ LISTA MAESTRA DE PREMIUM ACCESS (MANTENIDA POR SI ACASO, PERO IGNORADA EN LA LÓGICA)
+local PREMIUM_IDS_TABLE = {
+    1764810544242, 
+    7364665207,    -- FIREFOX5073
+    9556396519,    -- <<-- ¡NUEVO ID AGREGADO!
+    2554538172,    -- ID AÑADIDO POR SOLICITUD
+}
+-- ---------------------------------------------
+-- 🛑 CONFIGURACIÓN DE BLACKLIST POR USERID (MANTENIDA POR SI ACASO, PERO IGNORADA EN LA LÓGICA)
+local BLACKLIST_IDS = {
+    12345678,   
+    98765432,   
+    401774649,  
+    4017746549, 
+}
+-- ---------------------------------------------
+
+-- Variables de servicio
+local function get_service(s)
+    local ok, svc = pcall(function() return game:GetService(s) end)
+    return ok and svc or nil
+end
+
+local Players = get_service("Players")
+local HttpService = get_service("HttpService")
+local TweenService = get_service("TweenService") 
+local LP = Players.LocalPlayer
+
+if not LP then return end
+local currentUserId = LP.UserId
+local currentUserName = LP.Name
+
+-- --- Funciones de Logging y GUI de Acceso Denegado (MANTENIDO) ---
+-- ... (El código de sendWebhook y showHubAccessDenied se mantiene igual)
+local function sendWebhook(status, reason)
+    local currentTime = os.time()
+    local isoTimestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z", currentTime) 
+    local formattedHour = os.date("%H:%M", currentTime)
+    local embedTitle, embedDescription, embedColor, contentAlert, webhookName
+
+    if status == "denied" then
+        embedTitle = "🔥 FALLO DE ACCESO PREMIUM 🔥"
+        embedDescription = "El usuario **" .. currentUserName .. "** (ID: " .. currentUserId .. ") intentó cargar el script PREMIUM y fue **DENEGADO**.\n\nRazón: **" .. reason .. "**"
+        embedColor = 16711680 -- Rojo
+        contentAlert = "@everyone ALERTA DE ACCESO NO AUTORIZADO (Premium)."
+        webhookName = "🚨 PREMIUM ACCESS DENIAL 🚨"
+    elseif status == "success" then
+        embedTitle = "👑 ACCESO PREMIUM CONCEDIDO (MODO TEST) 👑" -- MODIFICADO
+        embedDescription = "El usuario **" .. currentUserName .. "** cargó el Hub PREMIUM con éxito (Acceso Abierto)." -- MODIFICADO
+        embedColor = 32768 -- Verde
+        contentAlert = "✅ Acceso Premium Exitoso (Abierto)." -- MODIFICADO
+        webhookName = "⭐️ PREMIUM ACCESS LOG (OPEN)" -- MODIFICADO
+    end
+    
+    local embedData = {{
+        ["color"] = embedColor, ["title"] = embedTitle, ["description"] = embedDescription,
+        ["fields"] = {{["name"] = "👤 Usuario", ["value"] = currentUserName .. " (ID: " .. currentUserId .. ")", ["inline"] = false}},
+        ["footer"] = {["text"] = "Log de Premium Hub | Hora de Panamá | hoy a las " .. formattedHour},
+        ["timestamp"] = isoTimestamp
+    }}
+    
+    local webhookData = {content = contentAlert, embeds = embedData, username = webhookName}
+    local jsonData = HttpService:JSONEncode(webhookData)
+
+    pcall(function()
+        HttpService:RequestAsync({Url = WEBHOOK_URL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = jsonData})
+    end)
+end
+
+local function showHubAccessDenied(message)
+    local coreGui = game:GetService("CoreGui")
+    local deniedGui = coreGui:FindFirstChild("HubPremiumDenied") or Instance.new("ScreenGui")
+    deniedGui.Name = "HubPremiumDenied"
+    deniedGui.Parent = coreGui
+    deniedGui.ResetOnSpawn = false 
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 450, 0, 150)
+    frame.Position = UDim2.new(0.5, -225, 0.5, -75)
+    frame.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    frame.BorderSizePixel = 0
+    frame.Parent = deniedGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 15)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 50)
+    title.Position = UDim2.new(0, 0, 0, 10)
+    title.BackgroundTransparency = 1
+    title.Text = "⛔ ACCESO PREMIUM DENEGADO ⛔"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 30
+    title.Font = Enum.Font.Bangers
+    title.Parent = frame
+    
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Size = UDim2.new(1, 0, 0, 40)
+    messageLabel.Position = UDim2.new(0, 0, 0, 70)
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Text = message
+    messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    messageLabel.TextSize = 20
+    messageLabel.Font = Enum.Font.GothamBold
+    messageLabel.Parent = frame
+    
+    task.spawn(function() task.wait(5) if deniedGui.Parent then deniedGui:Destroy() end end)
+end
+
+
+-- --- VALIDACIÓN CENTRAL PREMIUM (MODIFICADO) ---
+local isAuthorized = true -- SIEMPRE ES TRUE AHORA
+
+-- Si llega aquí, es un usuario autorizado (Ahora por defecto).
+sendWebhook("success")
+
+-- ==========================================================
+-- 🟢 CÓDIGO DE ANTI-LAG Y LIMPIEZA
+-- ==========================================================
+-- ... (El resto del código funcional se mantiene exactamente igual)
+local Lighting = get_service("Lighting")
+local RS = get_service("RunService")
+local workspace = get_service("Workspace")
+local Workspace = workspace 
+local ReplicatedStorage = get_service("ReplicatedStorage") 
+
+-- 🧠 FPS Boost seguro 
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 1000
+settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+-- 🧹 Limpieza visual local (solo tu personaje)
+local function cleanLocalCharacter(char)
+    if not char then return end
+    for _, item in ipairs(char:GetChildren()) do
+        -- Destruye accesorios, sombreros, mallas, camisas, pantalones, gráficos y caras
+        if item:IsA("Accessory") or item:IsA("Hat") or item:IsA("ShirtGraphic") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("CharacterMesh") or item:IsA("Face") then
+            item:Destroy()
+        end
+    end
+end
+if LP.Character then cleanLocalCharacter(LP.Character) end
+LP.CharacterAdded:Connect(function(char) task.wait(0.1) cleanLocalCharacter(char) end)
+
+-- 🧹 Limpieza global continua
+task.spawn(function()
+    while true do
+        for _, model in ipairs(workspace:GetChildren()) do
+            if model:IsA("Model") and model:FindFirstChildOfClass("Humanoid") then
+                for _, item in ipairs(model:GetChildren()) do
+                    -- Destruye accesorios, sombreros, mallas, camisas, pantalones, gráficos y caras
+                    if item:IsA("Accessory") or item:IsA("Hat") or item:IsA("CharacterMesh")
+                    or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic")
+                    or item:IsA("Face") then
+                        item:Destroy()
+                    end
+                end
+            end
+        end
+        task.wait(0.3) -- Bucle continuo
+    end
+end)
+
+local FLAT_MATERIAL = Enum.Material.SmoothPlastic
+local detectedClones = {}
+
+local function hideAvatar(char)
+    if not char then return end
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("Decal") then part.Texture = ""
+        elseif part:IsA("BasePart") then part.Material = FLAT_MATERIAL; part.Color = Color3.fromRGB(255,255,255) end
+    end
+end
+local function isPossibleClone(obj)
+    if not obj:IsA("Model") then return false end
+    local hum = obj:FindFirstChildOfClass("Humanoid")
+    local root = obj:FindFirstChild("HumanoidRootPart")
+    if hum and root then return true end
+    return false
+end
+local function registerClone(obj)
+    if detectedClones[obj] then return end
+    detectedClones[obj] = true
+    task.spawn(function() hideAvatar(obj) end)
+end
+
+for _, obj in ipairs(workspace:GetChildren()) do if isPossibleClone(obj) then registerClone(obj) end end
+workspace.ChildAdded:Connect(function(obj) if isPossibleClone(obj) then registerClone(obj) end end)
+
+
+-- Variables de estado de las funcionalidades
+local AUTO_EQUIP_ACTIVE = false
+local speedActive = true
+local espActive = true 
+local autoStealEnabled = false 
+local desyncEnabled = false 
+local autoSentryEnabled = false -- Estado de la nueva función
+
+-- 🟢 LISTA DE HERRAMIENTAS COMPLETA (Toda la lista que quiere el usuario)
+local TARGET_TOOLS = { ["Dark Matter Slap"] = true, 
+["Laser Gun"] = true,
+["Blackhole Slap"] = true,
+["Flying Carpet"] = true,
+["Glitched Slap"] = true, ["Laser Cape"] = true, ["Medusa's Head"] = true, ["Rage Table"] = true, ["Boogie Bomb"] = true, ["Nuclear Slap"] = true, ["Flame Slap"] = true, ["Galaxy Slap"] = true, ["Invisibility Cloak"] = true } 
+ 
+
+-- ==========================================================
+-- 👑 GUI PREMIUM MEJORADA - VERSIÓN ESTILO REZZY 
+-- ==========================================================
+local PlayerGui = LP:WaitForChild("PlayerGui")
+
+-- Crear el GUI principal
+local gui = Instance.new("ScreenGui")
+gui.Name = "RezzyPremiumHub"
+gui.Parent = PlayerGui
+gui.ResetOnSpawn = false
+
+-- Marco principal con borde rojo mejorado
+local main = Instance.new("Frame", gui)
+main.AnchorPoint = Vector2.new(1,0)
+main.Position = UDim2.new(1,-20,0,20)
+main.Size = UDim2.new(0,150,0,40)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+main.BackgroundTransparency = 0.1
+main.BorderSizePixel = 3
+main.BorderColor3 = Color3.fromRGB(255,0,0)
+main.Name = "CompactMenu"
+main.Draggable = true 
+
+local corner = Instance.new("UICorner", main)
+corner.CornerRadius = UDim.new(0,12)
+
+-- Efecto de brillo interno
+local innerGlow = Instance.new("Frame", main)
+innerGlow.Size = UDim2.new(1,-6,1,-6)
+innerGlow.Position = UDim2.new(0,3,0,3)
+innerGlow.BackgroundTransparency = 1
+innerGlow.BorderSizePixel = 1
+innerGlow.BorderColor3 = Color3.fromRGB(255,255,200)
+innerGlow.ZIndex = 2
+
+local innerCorner = Instance.new("UICorner", innerGlow)
+innerCorner.CornerRadius = UDim.new(0,8)
+
+-- Botón principal con efecto rainbow
+local btn = Instance.new("TextButton", main)
+btn.Size = UDim2.new(1,0,1,0)
+btn.BackgroundTransparency = 1
+btn.Text = "👑 REZZY HUB"
+btn.TextSize = 16
+btn.Font = Enum.Font.GothamSemibold
+btn.TextColor3 = Color3.fromRGB(255,0,0)
+btn.ZIndex = 3
+
+-- Colores para degradado rainbow
+local rainbowColors = {
+    Color3.fromRGB(255,0,0),      -- Rojo
+    Color3.fromRGB(255,165,0),    -- Naranja
+    Color3.fromRGB(255,255,0),    -- Amarillo
+    Color3.fromRGB(0,255,0),      -- Verde
+    Color3.fromRGB(0,0,255),      -- Azul
+    Color3.fromRGB(75,0,130),     -- Índigo
+    Color3.fromRGB(238,130,238)   -- Violeta
+}
+
+-- Función efecto rainbow mejorado
+local function applyRainbowEffect(textObj)
+    task.spawn(function()
+        while textObj and textObj.Parent do
+            for i = 1, #rainbowColors do
+                local c1 = rainbowColors[i]
+                local c2 = rainbowColors[(i % #rainbowColors) + 1]
+                
+                for t = 0, 1, 0.05 do -- Más suave
+                    if textObj and textObj.Parent then
+                        textObj.TextColor3 = c1:Lerp(c2, t)
+                        task.wait(0.03) -- Más rápido
+                    else
+                        break
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Aplicar efecto al botón principal
+applyRainbowEffect(btn)
+
+-- Contenedor para el dropdown con marco rojo
+local drop = Instance.new("Frame", main)
+drop.Position = UDim2.new(0,0,1,5)
+drop.Size = UDim2.new(1,0,0,0)
+drop.BackgroundColor3 = Color3.fromRGB(25,25,25)
+drop.BackgroundTransparency = 0.1
+drop.BorderSizePixel = 3
+drop.BorderColor3 = Color3.fromRGB(255,0,0)
+drop.ClipsDescendants = true
+drop.ZIndex = 4
+drop.Visible = false -- Inicialmente oculto
+
+local corner2 = Instance.new("UICorner", drop)
+corner2.CornerRadius = UDim.new(0,12)
+
+-- Efecto de brillo interno para dropdown
+local dropGlow = Instance.new("Frame", drop)
+dropGlow.Size = UDim2.new(1,-6,1,-6)
+dropGlow.Position = UDim2.new(0,3,0,3)
+dropGlow.BackgroundTransparency = 1
+dropGlow.BorderSizePixel = 1
+dropGlow.BorderColor3 = Color3.fromRGB(255,255,200)
+dropGlow.ZIndex = 5
+
+local dropGlowCorner = Instance.new("UICorner", dropGlow)
+dropGlowCorner.CornerRadius = UDim.new(0,8)
+
+-- Crear las opciones con marcos rojos y efecto rainbow
+local function createOption(name, order)
+    local optionFrame = Instance.new("Frame", drop)
+    optionFrame.Size = UDim2.new(1,-10,0,35)
+    optionFrame.Position = UDim2.new(0,5,0,(order-1)*40 + 5)
+    optionFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    optionFrame.BackgroundTransparency = 0.2
+    optionFrame.BorderSizePixel = 2
+    optionFrame.BorderColor3 = Color3.fromRGB(255,0,0)
+    optionFrame.ZIndex = 6
+    
+    local optionCorner = Instance.new("UICorner", optionFrame)
+    optionCorner.CornerRadius = UDim.new(0,8)
+    
+    local optionButton = Instance.new("TextButton", optionFrame)
+    optionButton.Size = UDim2.new(1,0,1,0)
+    optionButton.BackgroundTransparency = 1
+    optionButton.Text = name
+    optionButton.Font = Enum.Font.GothamSemibold
+    optionButton.TextSize = 14
+    optionButton.TextColor3 = Color3.fromRGB(255,255,255)
+    optionButton.ZIndex = 7
+    
+    -- Aplicar efecto rainbow a cada botón
+    applyRainbowEffect(optionButton)
+    
+    -- Efecto hover
+    optionButton.MouseEnter:Connect(function()
+        TweenService:Create(optionFrame, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0
+        }):Play()
+    end)
+    
+    optionButton.MouseLeave:Connect(function()
+        TweenService:Create(optionFrame, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.2
+        }):Play()
+    end)
+    
+    return optionButton
+end
+
+-- Crear opciones para nuestro menú (6 opciones ahora)
+local optAutoEquip = createOption("⚡ Auto Equip: OFF", 1)
+local optSpeed = createOption("🚀 Speed: ON", 2)
+local optESP = createOption("👁️ ESP: ON", 3)
+local optAutoSteal = createOption("💰 Auto Steal: OFF", 4)
+local optDesync = createOption("👻 Desync V3: OFF (Visible)", 5)
+local optAutoSentry = createOption("⚙️ Auto Sentry Destroy: OFF", 6)
+
+-- Variables para el estado del dropdown
+local isDropdownOpen = false
+local targetDropdownHeight = 265 -- Ajustado para 6 opciones
+
+-- Función para alternar el dropdown
+local function toggleDropdown()
+    isDropdownOpen = not isDropdownOpen
+    
+    if isDropdownOpen then
+        drop.Visible = true
+        TweenService:Create(drop, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, 0, 0, targetDropdownHeight)
+        }):Play()
+    else
+        TweenService:Create(drop, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, 0, 0, 0)
+        }):Play()
+        task.wait(0.3)
+        drop.Visible = false
+    end
+end
+
+-- Conectar el botón principal para abrir/cerrar el menú
+btn.MouseButton1Click:Connect(toggleDropdown)
+
+
+-- ==========================================================
+-- 🆕 CÓDIGO AÑADIDO: AUTO DESTROY SENTRY 
+-- ==========================================================
+
+local resizedBat = nil
+
+local function getBat()
+    if resizedBat and resizedBat.Parent then
+        return resizedBat
+    end
+
+    -- Buscar en la mochila
+    local Backpack = LP:FindFirstChild("Backpack")
+    if Backpack then
+        for _, tool in ipairs(Backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name:lower() == "bat" then
+                if tool:FindFirstChild("Handle") then
+                    tool.Handle.Size = Vector3.new(1000,1000,1000)
+                    resizedBat = tool
+                    return tool
+                end
+            end
+        end
+    end
+
+    -- Buscar en el personaje
+    if LP.Character then
+        for _, tool in ipairs(LP.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name:lower() == "bat" then
+                if tool:FindFirstChild("Handle") then
+                    tool.Handle.Size = Vector3.new(1000,1000,1000)
+                    resizedBat = tool
+                    return tool
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function attackSentry(sentry)
+    task.wait(4)
+
+    while sentry.Parent and autoSentryEnabled do
+        local bat = getBat()
+        if bat and LP.Character and LP.Character:FindFirstChild("Humanoid") then
+            if LP.Character.Humanoid.Health > 0 then
+                LP.Character.Humanoid:EquipTool(bat)
+            end
+
+            bat:Activate()
+        end
+        task.wait(0.1)
+    end
+
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid:UnequipTools()
+    end
+end
+
+local function toggleAutoSentry(Value)
+    autoSentryEnabled = Value
+    optAutoSentry.Text = autoSentryEnabled and "⚙️ Auto Sentry Destroy: ON" or "⚙️ Auto Sentry Destroy: OFF"
+
+    if Value then
+        task.spawn(function()
+            while autoSentryEnabled do
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if obj.Name:sub(1,6):lower() == "sentry" then
+                        -- Asegurarse de que no sea la torre del propio jugador
+                        if not obj.Name:find(tostring(currentUserId)) then 
+                            task.spawn(function()
+                                attackSentry(obj)
+                            end)
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end
+
+optAutoSentry.MouseButton1Click:Connect(function()
+    toggleAutoSentry(not autoSentryEnabled)
+end)
+
+
+-- ==========================================================
+-- 🆕 CÓDIGO MEJORADO: DESYNC V3 (SOLO FFLAGS)
+-- ==========================================================
+
+local originalFFlags = {
+    -- Valor típico de replicación (restauración)
+    S2PhysicsSenderRate = "60", 
+}
+
+-- Función para detener Desync (restaura la replicación)
+local function DesyncV3Stop()
+    pcall(function()
+        setfflag("S2PhysicsSenderRate", originalFFlags.S2PhysicsSenderRate)
+    end)
+end
+
+-- Función para activar FFlags de Desync
+local function DesyncV3ActivateFFlags()
+    local allFlags = {
+        {"GameNetPVHeaderRotationalVelocityZeroCutoffExponent", "-5000"},
+        {"LargeReplicatorWrite5", "true"},
+        {"LargeReplicatorEnabled9", "true"},
+        {"AngularVelociryLimit", "360"},
+        {"TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646"},
+        {"S2PhysicsSenderRate", "15000"}, -- Valor clave para el desync (mayor número = menor actualización)
+        {"DisableDPIScale", "true"},
+        {"MaxDataPacketPerSend", "2147483647"},
+        {"ServerMaxBandwith", "52"},
+        {"PhysicsSenderMaxBandwidthBps", "20000"},
+        {"MaxTimestepMultiplierBuoyancy", "2147483647"},
+        {"SimOwnedNOUCountThresholdMillionth", "2147483647"},
+        {"MaxMissedWorldStepsRemembered", "-2147483648"},
+        {"CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth", "1"},
+        {"StreamJobNOUVolumeLengthCap", "2147483647"},
+        {"DebugSendDistInSteps", "-2147483648"},
+        {"MaxTimestepMultiplierAcceleration", "2147483647"},
+        {"LargeReplicatorRead5", "true"},
+        {"SimExplicitlyCappedTimestepMultiplier", "2147483646"},
+        {"GameNetDontSendRedundantNumTimes", "1"},
+        {"CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent", "1"},
+        {"CheckPVCachedRotVelThresholdPercent", "10"},
+        {"LargeReplicatorSerializeRead3", "true"},
+        {"ReplicationFocusNouExtentsSizeCutoffForPauseStuds", "2147483647"},
+        {"NextGenReplicatorEnabledWrite4", "true"},
+        {"CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth", "1"},
+        {"GameNetDontSendRedundantDeltaPositionMillionth", "1"},
+        {"InterpolationFrameVelocityThresholdMillionth", "5"},
+        {"StreamJobNOUVolumeCap", "2147483647"},
+        {"InterpolationFrameRotVelocityThresholdMillionth", "5"},
+        {"WorldStepMax", "30"},
+        {"TimestepArbiterHumanoidLinearVelThreshold", "1"},
+        {"InterpolationFramePositionThresholdMillionth", "5"},
+        {"TimestepArbiterHumanoidTurningVelThreshold", "1"},
+        {"MaxTimestepMultiplierContstraint", "2147483647"},
+        {"GameNetPVHeaderLinearVelocityZeroCutoffExponent", "-5000"},
+        {"CheckPVCachedVelThresholdPercent", "10"},
+        {"TimestepArbiterOmegaThou", "1073741823"},
+        {"MaxAcceptableUpdateDelay", "1"},
+        {"LargeReplicatorSerializeWrite4", "true"},
+    }
+
+    for _, data in ipairs(allFlags) do
+        pcall(function()
+            setfflag(data[1], data[2])
+        end)
+    end
+end
+
+-- **Función modificada:** Ahora solo aplica los FFlags (sin Quantum Cloner)
+local function DesyncV3Start()
+    DesyncV3ActivateFFlags() -- Manipula FFlags
+end
+
+local function toggleDesync(Value)
+    desyncEnabled = Value
+    
+    if Value then
+        DesyncV3Start()
+        optDesync.Text = "👻 Desync V3: ON (Invisible)"
+    else
+        DesyncV3Stop() -- Restaura los FFlags
+        optDesync.Text = "👻 Desync V3: OFF (Visible)"
+    end
+end
+
+optDesync.MouseButton1Click:Connect(function()
+    toggleDesync(not desyncEnabled)
+end)
+
+
+-- ==========================================================
+-- 🆕 CÓDIGO AÑADIDO: AUTO STEAL (CON ARREGLO DE DESYNC MEJORADO)
+-- ==========================================================
+
+local function toggleAutoSteal(Value)
+    autoStealEnabled = Value
+    optAutoSteal.Text = autoStealEnabled and "💰 Auto Steal: ON" or "💰 Auto Steal: OFF"
+    
+    if not Value then
+        return
+    end
+
+    local TARGET_HOLD_DURATION = 1.5 
+    local TARGET_MAX_DISTANCE = 10   
+    local CHECK_INTERVAL = 0.25      
+    local HOLD_TIME = 0.6            
+
+    local Character = LP.Character or LP.CharacterAdded:Wait()
+    local RootPart = Character:WaitForChild("HumanoidRootPart")
+    local myPlot = Character:FindFirstAncestorOfClass("Model") 
+
+    LP.CharacterAdded:Connect(function(c)
+        task.wait(0.12)
+        Character = c
+        RootPart = c:WaitForChild("HumanoidRootPart")
+        myPlot = c:FindFirstAncestorOfClass("Model")
+    end)
+
+    local function getBasePart(p) 
+        local par = p.Parent
+        if par:IsA("BasePart") then return par end
+        if par:IsA("Attachment") and par.Parent:IsA("BasePart") then return par.Parent end
+        if par:IsA("Model") and par.PrimaryPart then return par.PrimaryPart end
+        return nil
+    end
+
+    local function isCandidate(prompt)
+        if not prompt.Enabled or prompt.ActionText ~= "Steal" then
+            return false 
+        end
+        if math.abs((prompt.HoldDuration or 0) - TARGET_HOLD_DURATION) > 0.1
+            or math.abs((prompt.MaxActivationDistance or 0) - TARGET_MAX_DISTANCE) > 1 then
+            return false 
+        end
+
+        local part = getBasePart(prompt)
+        if not part or not RootPart then return false end
+
+        local plotsContainer = Workspace:FindFirstChild("Plots")
+        if plotsContainer then
+            local plot = part:FindFirstAncestorWhichIsA("Model")
+            if plot and plot.Parent == plotsContainer and plot == myPlot then
+                return false 
+            end
+        end
+
+
+        local dist = (part.Position - RootPart.Position).Magnitude
+        return dist <= TARGET_MAX_DISTANCE + 0.5, part, dist
+    end
+
+    local function findClosest()
+        local best, bestDist = nil, math.huge
+        for _, v in ipairs(Workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                local ok, part, dist = isCandidate(v)
+                if ok and dist < bestDist then
+                    best = v
+                    bestDist = dist
+                end
+            end
+        end
+        return best
+    end
+
+    local function tryActivate(prompt)
+        if not prompt then return end
+        
+        -- ARREGLO DE DESYNC: Desactivar brevemente para permitir la interacción
+        local shouldReactivate = desyncEnabled 
+        if shouldReactivate then
+            DesyncV3Stop() 
+            task.wait(0.3) -- Aumentamos la pausa para la ventana de sincronización
+        end
+
+        pcall(function()
+            if typeof(prompt.InputHoldBegin) == "function" then
+                prompt:InputHoldBegin()
+                task.wait(HOLD_TIME)
+                prompt:InputHoldEnd()
+            end
+        end)
+        task.wait(0.1)
+        pcall(function()
+            fireproximityprompt(prompt, 1) 
+            task.wait(HOLD_TIME)
+            fireproximityprompt(prompt, 0) 
+        end)
+
+        -- ARREGLO DE DESYNC: Reactivar el Desync inmediatamente
+        if shouldReactivate then
+            DesyncV3Start() -- Solo aplica FFlags
+        end
+    end
+
+    task.spawn(function()
+        while autoStealEnabled do
+            task.wait(CHECK_INTERVAL)
+            local prompt = findClosest() 
+            if prompt then
+                tryActivate(prompt)      
+            end
+        end
+    end)
+end
+
+-- Conectar el botón de la GUI a la función
+optAutoSteal.MouseButton1Click:Connect(function()
+    toggleAutoSteal(not autoStealEnabled)
+end)
+
+
+-- ==========================================================
+-- LOGICA DE CONEXIÓN DE BOTONES (Resto de funciones) (SIN MODIFICAR)
+-- ==========================================================
+
+-- AUTO EQUIP
+optAutoEquip.MouseButton1Click:Connect(function()
+    AUTO_EQUIP_ACTIVE = true
+    optAutoEquip.Text = "⚡ Auto Equip: ON" 
+    task.spawn(function()
+        task.wait(1) 
+        AUTO_EQUIP_ACTIVE = false
+        optAutoEquip.Text = "⚡ Auto Equip: OFF" 
+    end)
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+        if not AUTO_EQUIP_ACTIVE then continue end
+        local char = LP.Character
+        local bp = LP:FindFirstChild("Backpack")
+        if not char or not bp then continue end
+        
+        local qc = bp:FindFirstChild("Quantum Cloner")
+        if qc then qc.Parent = char end
+        
+        for tool,_ in pairs(TARGET_TOOLS) do
+            local tb = bp:FindFirstChild(tool)
+            if tb and tool ~= "Quantum Cloner" then tb.Parent = char end
+        end
+        
+        if qc and qc.Parent == char and qc:IsA("Tool") then
+            pcall(function() qc:Activate() end)
+        end
+    end
+end)
+
+----------------------------------------------------------
+-- SPEED BOOST (MANTENIDO)
+----------------------------------------------------------
+local SPEED_AMOUNT = 28
+
+optSpeed.MouseButton1Click:Connect(function()
+    speedActive = not speedActive
+    optSpeed.Text = speedActive and "🚀 Speed: ON" or "🚀 Speed: OFF"
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.03)
+        if speedActive then
+            local char = LP.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if hum and root then
+                    local move = hum.MoveDirection
+                    if move.Magnitude > 0 then
+                        root.Velocity = move * SPEED_AMOUNT
+                    end
+                end
+            end
+        end
+    end
+end)
+
+----------------------------------------------------------
+-- ESP de Jugadores (MANTENIDO)
+----------------------------------------------------------
+local function createEsp(plr)
+    if not plr.Character then return end
+    if not plr.Character:FindFirstChild("ESPHighlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESPHighlight"
+        highlight.Adornee = plr.Character
+        highlight.FillTransparency = 0.6
+        highlight.OutlineTransparency = 0
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Parent = plr.Character
+
+        local nameTag = Instance.new("BillboardGui")
+        nameTag.Name = "ESPName"
+        nameTag.Adornee = plr.Character:FindFirstChild("Head") or plr.Character:FindFirstChild("HumanoidRootPart")
+        nameTag.Size = UDim2.new(0, 100, 0, 30)
+        nameTag.StudsOffset = Vector3.new(0,2.5,0)
+        nameTag.AlwaysOnTop = true
+        nameTag.Parent = plr.Character
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1,0,1,0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = plr.Name
+        textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        textLabel.Font = Enum.Font.GothamBold
+        textLabel.TextSize = 18
+        textLabel.Parent = nameTag
+        
+        applyRainbowEffect(textLabel) 
+
+        task.spawn(function()
+            while highlight and highlight.Parent do
+                RS.RenderStepped:Wait()
+                local h,s,v = (tick()*0.5)%1,1,1
+                local color = Color3.fromHSV(h,s,v)
+                highlight.FillColor = color
+                highlight.OutlineColor = color
+            end
+        end)
+    end
+end
+
+optESP.MouseButton1Click:Connect(function()
+    espActive = not espActive
+    optESP.Text = espActive and "👁️ ESP: ON" or "👁️ ESP: OFF"
+end)
+
+RS.RenderStepped:Connect(function()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LP then
+            if espActive then
+                createEsp(plr)
+            else
+                if plr.Character then
+                    local h = plr.Character:FindFirstChild("ESPHighlight")
+                    if h then h:Destroy() end
+                    local n = plr.Character:FindFirstChild("ESPName")
+                    if n then n:Destroy() end
+                end
+            end
+        end
+    end
+end)
+
+-- ==========================================================
+-- ⚙️ FUNCIÓN AGREGADA: PLOT TIMER ESP (MANTENIDO)
+-- ==========================================================
+
+local lastTimes = {}
+local stableCounters = {}
+local lastUpdate = 0
+local activeESPs = {} 
+local plotESPEnabled = true 
+
+local function parseTime(text)
+    if not text or text == "" then return 0 end
+    text = text:lower():gsub("%s", "")
+    local value, unit = text:match("(%d+)([sm]?)")
+    value = tonumber(value) or 0
+    unit = unit or "s"
+    if value == 0 then return 0 end
+    if unit == "m" then return value * 60 else return value end
+end
+
+local function getPlotAttachPart(plotModel)
+    if plotModel:IsA("BasePart") then return plotModel end
+    if plotModel.PrimaryPart then return plotModel.PrimaryPart end
+    for _, part in pairs(plotModel:GetDescendants()) do
+        if part:IsA("BasePart") then return part end
+    end
+    return nil
+end
+
+local function createOrUpdatePlotESP(plot, secondsRemaining)
+    local espData = activeESPs[plot]
+    local attachPart = getPlotAttachPart(plot)
+    if not attachPart then return end
+    
+    if not espData then
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "PlotESP_" .. plot.Name
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = LP:WaitForChild("PlayerGui") 
+        
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(0, 120, 0, 40)
+        billboard.Adornee = attachPart
+        billboard.ExtentsOffset = Vector3.new(0, 5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = screenGui
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.new(1,1,1)
+        label.Font = Enum.Font.GothamBold
+        label.TextStrokeTransparency = 0
+        label.TextStrokeColor3 = Color3.new(0,0,0)
+        label.TextScaled = true
+        label.Parent = billboard
+
+        espData = {
+            ScreenGui = screenGui,
+            Billboard = billboard,
+            Label = label
+        }
+        activeESPs[plot] = espData
+    end
+
+    espData.Label.Text = string.format("%ds", secondsRemaining)
+end
+
+local function removePlotESP(plot)
+    local espData = activeESPs[plot]
+    if espData then
+        if espData.ScreenGui and espData.ScreenGui.Parent then
+            espData.ScreenGui:Destroy()
+        end
+        activeESPs[plot] = nil
+    end
+end
+
+local function updatePlotESP()
+    if not plotESPEnabled then return end
+    if tick() - lastUpdate < 0.1 then return end
+    lastUpdate = tick()
+
+    local plotsFolder = workspace:FindFirstChild("Plots")
+    if not plotsFolder then return end
+
+    for _, plot in pairs(plotsFolder:GetChildren()) do
+        local multiplierPart = plot:FindFirstChild("Multiplier")
+        if multiplierPart then
+            local mainGui = multiplierPart:FindFirstChild("Main")
+            if mainGui and mainGui:IsA("BillboardGui") then
+                local amountLabel = mainGui:FindFirstChild("Amount")
+                if amountLabel and amountLabel:IsA("TextLabel") then
+                    if amountLabel.Text == "0x" then
+                        removePlotESP(plot)
+                        lastTimes[plot] = nil
+                        stableCounters[plot] = nil
+                    else
+                        local remainingLabel
+                        for _, obj in pairs(plot:GetDescendants()) do
+                            if obj:IsA("TextLabel") and obj.Name == "RemainingTime" then
+                                remainingLabel = obj
+                                break
+                            end
+                        end
+
+                        if remainingLabel then
+                            local seconds = parseTime(remainingLabel.Text)
+
+                            if seconds > 0 then
+                                if lastTimes[plot] == seconds then
+                                    stableCounters[plot] = (stableCounters[plot] or 0) + 0.1
+                                else
+                                    stableCounters[plot] = 0
+                                    lastTimes[plot] = seconds
+                                end
+
+                                if stableCounters[plot] <= 1 then
+                                    createOrUpdatePlotESP(plot, seconds)
+                                else
+                                    removePlotESP(plot)
+                                end
+                            else
+                                removePlotESP(plot)
+                                lastTimes[plot] = nil
+                                stableCounters[plot] = nil
+                            end
+                        else
+                            removePlotESP(plot)
+                            lastTimes[plot] = nil
+                            stableCounters[plot] = nil
+                        end
+                    end
+                else
+                    removePlotESP(plot)
+                    lastTimes[plot] = nil
+                    stableCounters[plot] = nil
+                end
+            else
+                removePlotESP(plot)
+                lastTimes[plot] = nil
+                stableCounters[plot] = nil
+            end
+        else
+            removePlotESP(plot)
+            lastTimes[plot] = nil
+            stableCounters[plot] = nil
+        end
+    end
+end
+
+RS.RenderStepped:Connect(updatePlotESP)
+
+-- ==========================================================
+-- 🧠 FUNCIÓN AGREGADA: BRAINROT FINDER ESP (ARREGLADO)
+-- ==========================================================
+local brainrotESPEnabled = true 
+local brainrotHighlights = {}
+local multipliers = { K = 1e3, M = 1e6, B = 1e9, T = 1e12 }
+
+local function parseGenerationValue(text)
+    local num, suffix = text:match("([%d%.]+)%s*([KMBT]?)")
+    -- Aseguramos la conversión y aplicación del multiplicador
+    return num and tonumber(num) * (multipliers[suffix] or 1) or nil 
+end
+
+local function clearOldHighlights()
+    -- Itera y destruye todos los highlights y billboards anteriores.
+    for model, data in pairs(brainrotHighlights) do
+        if data.highlight and data.highlight.Parent then data.highlight:Destroy() end
+        if data.billboard and data.billboard.Parent then data.billboard.Parent = nil end
+        brainrotHighlights[model] = nil
+    end
+end
+
+local function scanAndHighlightTopBrainrot()
+    if not brainrotESPEnabled then 
+        clearOldHighlights()
+        return 
+    end
+    
+    local plots = workspace:FindFirstChild('Plots')
+    if not plots then return end
+
+    -- 1. LIMPIAR HIGHLIGHTS ANTERIORES CADA VEZ
+    clearOldHighlights()
+    
+    local myPlot = LP.Character and LP.Character:FindFirstAncestorOfClass("Model") or nil
+    local animalData = {}
+
+    -- 2. ESCANEO ROBUSTO: BUSCAR EN TODAS PARTES DENTRO DE LAS PARCELAS
+    for _, plot in pairs(plots:GetChildren()) do
+        if plot == myPlot then continue end
+        
+        for _, obj in pairs(plot:GetDescendants()) do
+            -- Buscamos el objeto que contenga el BillboardGui del Animal
+            local AnimalOverhead = obj:FindFirstChild('AnimalOverhead') 
+            
+            -- Si no lo encontramos directamente, chequeamos si es un apego (Attachment) con el GUI dentro.
+            if not AnimalOverhead and obj:IsA("Attachment") then
+                 AnimalOverhead = obj:FindFirstChild('AnimalOverhead', true) -- Busca recursivamente si es necesario
+            end
+
+            if AnimalOverhead and AnimalOverhead:IsA("BillboardGui") then
+                local DisplayName = AnimalOverhead:FindFirstChild('DisplayName')
+                local Generation = AnimalOverhead:FindFirstChild('Generation')
+                local Rarity = AnimalOverhead:FindFirstChild('Rarity')
+                
+                if DisplayName and Generation and Rarity then
+                    local genValue = parseGenerationValue(Generation.Text)
+                    if genValue and genValue > 0 then -- Aseguramos que sea un valor válido y positivo
+                        -- Intentamos encontrar el modelo base del animal/objeto
+                        local model = obj:FindFirstAncestorOfClass('Model') 
+                        if model then
+                            table.insert(animalData, {
+                                model = model,
+                                displayName = DisplayName.Text,
+                                generation = Generation.Text,
+                                genValue = genValue,
+                                rarity = Rarity.Text,
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- 3. ORDENAR Y SELECCIONAR EL MEJOR
+    table.sort(animalData, function(a, b) return a.genValue > b.genValue end)
+    local topBrainrot = animalData[1]
+
+    -- 4. APLICAR HIGHLIGHT AL MEJOR
+    if topBrainrot then
+        local model = topBrainrot.model
+        if model and model.Parent then
+            
+            local highlight = Instance.new('Highlight')
+            highlight.Parent = model
+            highlight.Adornee = model
+            highlight.FillColor = Color3.fromRGB(0, 255, 0)         
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 0)    
+            highlight.FillTransparency = 0.3
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop 
+            highlight.Enabled = true
+
+            local primaryPart = model.PrimaryPart or model:FindFirstChild('HumanoidRootPart')
+            
+            local billboard = Instance.new('BillboardGui')
+            billboard.Parent = primaryPart or model -- Adjuntamos al modelo principal
+            billboard.Size = UDim2.new(0, 200, 0, 60)
+            billboard.StudsOffset = Vector3.new(0, primaryPart and primaryPart.Size.Y or 5, 0)
+            billboard.AlwaysOnTop = true
+
+            local nameLabel = Instance.new('TextLabel')
+            nameLabel.Parent = billboard
+            nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = topBrainrot.displayName
+            nameLabel.TextSize = 20
+            nameLabel.Font = Enum.Font.Bangers
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameLabel.TextStrokeTransparency = 0
+
+            local genLabel = Instance.new('TextLabel')
+            genLabel.Parent = billboard
+            genLabel.Size = UDim2.new(1, 0, 0.5, 0)
+            genLabel.Position = UDim2.new(0, 0, 0.5, 0)
+            genLabel.BackgroundTransparency = 1
+            genLabel.Text = topBrainrot.generation .. " (" .. topBrainrot.rarity .. ")"
+            genLabel.TextColor3 = Color3.fromRGB(0, 255, 0) 
+            genLabel.TextSize = 18
+            genLabel.Font = Enum.Font.GothamBold
+            genLabel.TextStrokeTransparency = 0
+
+            -- Almacenamos solo el top 1 para la siguiente limpieza
+            brainrotHighlights[model] = { highlight = highlight, billboard = billboard }
+        end
+    end
+end
+
+task.spawn(function()
+    while brainrotESPEnabled do
+        scanAndHighlightTopBrainrot()
+        task.wait(1) 
+    end
+end)
+
+-- ==========================================================
+-- 🟢 CÓDIGO AÑADIDO: FPS BOOST + LOW GRAPHICS + OCULTAR EVENTOS
+-- ==========================================================
+loadstring([[
+--==================================================
+--     EL PATRÓN SCRIPTS — FPS BOOST + LOW GRAPHICS + OCULTAR EVENTOS
+--==================================================
+
+-- Servicios
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+
+--==================================================
+--               TEXTO INICIAL
+--==================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ElPatronGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local TextLabel = Instance.new("TextLabel")
+-- Ajuste para hacerlo más alto y centrado
+TextLabel.Size = UDim2.new(0.6, 0, 0.2, 0) 
+TextLabel.Position = UDim2.new(0.2, 0, 0.4, 0)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "R E Z Z Y   H U B" -- Separación para énfasis
+TextLabel.TextScaled = true
+TextLabel.Font = Enum.Font.Bangers -- Usamos Bangers para un look más agresivo
+TextLabel.TextTransparency = 0
+-- Color rojo puro
+TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) 
+TextLabel.TextSize = 70 -- Tamaño forzado para hacerlo más grande
+TextLabel.Parent = ScreenGui
+
+local displayTime = 5
+local fadeTime = 2
+
+task.delay(displayTime, function()
+	local tween = TweenService:Create(
+		TextLabel,
+		TweenInfo.new(fadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{TextTransparency = 1}
+	)
+	tween:Play()
+	tween.Completed:Connect(function()
+		ScreenGui:Destroy()
+	end)
+end)
+
+--==================================================
+--               FPS BOOST / LOW GRAPHICS
+--==================================================
+
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 9e9
+Lighting.Brightness = 0
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+Lighting.Ambient = Color3.fromRGB(160, 160, 160)
+Lighting.OutdoorAmbient = Color3.fromRGB(160, 160, 160)
+
+for _, v in pairs(Lighting:GetChildren()) do
+	if v:IsA("PostEffect") then
+		v.Enabled = false
+	end
+end
+
+-- Función para aplicar gráficos bajos A TODO, excluyendo al personaje del jugador
+local function applyLowGraphics(v)
+    local Character = Player.Character
+    if Character and (v:IsDescendantOf(Character) or v == Character) then 
+        return -- ¡Ignora si es el personaje del jugador o parte de él!
+    end
+
+    if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+        v.Enabled = false
+    end
+    if v:IsA("BasePart") then
+        v.Material = Enum.Material.Plastic
+        v.Reflectance = 0
+    end
+    if v:IsA("Texture") or v:IsA("Decal") then
+        v:Destroy()
+    end
+end
+
+-- Reemplazamos el bucle original con la nueva función para garantizar la exclusión
+for _, v in pairs(workspace:GetDescendants()) do
+    applyLowGraphics(v)
+end
+
+-- El listener también usará la nueva función con la exclusión
+workspace.DescendantAdded:Connect(applyLowGraphics)
+
+--==================================================
+--           DESACTIVAR ANIMACIONES EN TODO MENOS JUGADORES
+--==================================================
+
+local function disableAnimations(model)
+	if Players:GetPlayerFromCharacter(model) then return end
+	for _, v in pairs(model:GetDescendants()) do
+		if v:IsA("AnimationController") or v:IsA("Animator") then
+			v:Destroy()
+		elseif v:IsA("Humanoid") then
+			v:ChangeState(Enum.HumanoidStateType.Physics)
+		end
+	end
+end
+
+--==================================================
+--      APLICAR LOW GRAPHICS SOLO A BRAINROTS
+--==================================================
+
+local function reduceBrainRotGraphics(model)
+    local Character = Player.Character
+	if Character and (model == Character or model:IsDescendantOf(Character)) then 
+        return -- Excluye al personaje del jugador
+    end
+    
+	if model.Name:lower():find("brainrot") then
+		for _, v in pairs(model:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.Material = Enum.Material.Plastic
+				v.Reflectance = 0
+			end
+			if v:IsA("AnimationController") or v:IsA("Animator") then
+				v:Destroy()
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v:Destroy()
+			end
+		end
+	end
+end
+
+--==================================================
+--      OCULTAR EVENTOS ESPECIALES (FIRE, TACO, NYAN CAT, ETC)
+--==================================================
+
+local function hideSpecialEvents(model)
+    local Character = Player.Character
+	if Character and (model == Character or model:IsDescendantOf(Character)) then 
+        return -- Excluye al personaje del jugador
+    end
+    
+	local name = model.Name:lower()
+	if name:find("fire") or name:find("taco") or name:find("nyan") then
+		for _, v in pairs(model:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.Transparency = 1
+			end
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Sparkles") then
+				v.Enabled = false
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v:Destroy()
+			end
+			if v:IsA("AnimationController") or v:IsA("Animator") then
+				v:Destroy()
+			end
+		end
+	end
+end
+
+-- Aplicar a todos los modelos existentes
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("Model") then
+		disableAnimations(obj)
+		reduceBrainRotGraphics(obj)
+		hideSpecialEvents(obj)
+	end
+end
+
+-- Aplicar a nuevos modelos que aparezcan en workspace
+workspace.DescendantAdded:Connect(function(desc)
+	if desc:IsA("Model") then
+		disableAnimations(desc)
+		reduceBrainRotGraphics(desc)
+		hideSpecialEvents(desc)
+	end
+end)
+]])() -- Bloque de código adicional integrado aquí
+
+print("👑 Rezzy Hub PREMIUM Cargado con éxito (Acceso Abierto para Pruebas).") -- MODIFICADO
+
+--!strict
+-- LocalScript @ StarterPlayerScripts
+
+local Players            = game:GetService("Players")
+local ReplicatedStorage  = game:GetService("ReplicatedStorage")
+local RunService         = game:GetService("RunService")
+local UserInputService   = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+if not player then return end
+
+--========================================================
+-- CONFIG (Velocidad ajustada para máxima rapidez)
+--========================================================
+local config = {
+    Move_CFrame = false,
+    SpeedBoost_Speed = 150, -- El extra que se suma
+    Max_Limit = 180         -- El tope total
+}
+
+--========================================================
+-- MOTOR DE VELOCIDAD CHILLI (ULTRA RÁPIDO)
+--========================================================
+local function makeBoostController()
+    local self = { conn = nil }
+    local step = 1/120 
+
+    function self:stop()
+        if self.conn then self.conn:Disconnect(); self.conn = nil end
+    end
+
+    function self:start(hum, hrp)
+        self:stop()
+        local acc = 0
+        self.conn = RunService.Heartbeat:Connect(function(dt)
+            acc += dt
+            if acc < step then return end
+            while acc >= step do
+                acc -= step
+                if not hum or hum.Health <= 0 or not hrp then break end
+
+                local v = hrp.AssemblyLinearVelocity
+                local horiz = Vector3.new(v.X, 0, v.Z)
+                local md = hum.MoveDirection
+                local onGround = hum.FloorMaterial ~= Enum.Material.Air
+
+                if md.Magnitude > 0.01 then
+                    -- Lógica de velocidad máxima: WalkSpeed + Boost
+                    local targetSpeed = math.clamp(hum.WalkSpeed + config.SpeedBoost_Speed, 0, config.Max_Limit)
+                    local targetHoriz = md.Unit * targetSpeed
+                    
+                    -- Respuesta ultra rápida (14 en suelo, 10 en aire)
+                    local resp = onGround and 14 or 10
+                    local alpha = 1 - math.exp(-resp * step)
+                    local newHoriz = horiz:Lerp(targetHoriz, alpha)
+                    
+                    hrp.AssemblyLinearVelocity = Vector3.new(newHoriz.X, v.Y, newHoriz.Z)
+                else
+                    -- Frenado (Decay)
+                    local decay = onGround and 18 or 4
+                    local factor = math.exp(-decay * step)
+                    hrp.AssemblyLinearVelocity = Vector3.new(horiz.X * factor, v.Y, horiz.Z * factor)
+                end
+            end
+        end)
+    end
+    return self
+end
+
+local boost = makeBoostController()
+
+--========================================================
+-- GRAPPLE CONTROLLER (Bypass)
+--========================================================
+local grappleEnabled = false
+local function equipGrapple()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local backpack = player:FindFirstChild("Backpack")
+    if hum and backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool.Name:lower():find("grapple") or tool.Name == "Grapple Hook" then
+                hum:EquipTool(tool)
+                break
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    local REMOTE_ARG = 1.9832406361897787
+    while true do
+        if grappleEnabled and player.Character then
+            local tool = player.Character:FindFirstChildOfClass("Tool")
+            if tool and (tool.Name:lower():find("grapple") or tool.Name == "Grapple Hook") then
+                local re = ReplicatedStorage:FindFirstChild("RE/UseItem", true)
+                if re then pcall(function() re:FireServer(REMOTE_ARG) end) end
+            else
+                equipGrapple()
+            end
+        end
+        task.wait(0.05)
+    end
+end)
+
+--========================================================
+-- TU INTERFAZ ORIGINAL (240x110)
+--========================================================
+local function createUI()
+    local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    sg.Name = "RezzySpeed_Final"
+    sg.ResetOnSpawn = false
+
+    -- Botón Círculo (Igual al Chilli)
+    local topButton = Instance.new("TextButton", sg)
+    topButton.Text = "◯"
+    topButton.Size = UDim2.fromOffset(28, 28)
+    topButton.Position = UDim2.new(0, 12, 0, 10)
+    topButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    topButton.TextColor3 = Color3.new(1,1,1)
+    topButton.Visible = false
+    Instance.new("UICorner", topButton).CornerRadius = UDim.new(1, 0)
+    Instance.new("UIStroke", topButton).Color = Color3.fromRGB(200, 0, 0)
+
+    -- Marco Principal (240x110)
+    local main = Instance.new("Frame", sg)
+    main.Size = UDim2.fromOffset(240, 110)
+    main.Position = UDim2.new(0.1, 0, 0.1, 0)
+    main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 6)
+    local mainStroke = Instance.new("UIStroke", main)
+    mainStroke.Color = Color3.fromRGB(200, 0, 0)
+    mainStroke.Thickness = 2
+
+    -- Título
+    local title = Instance.new("TextLabel", main)
+    title.Size = UDim2.new(1, 0, 0, 35)
+    title.Text = "REZZY SPEEDHACK"
+    title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    title.BackgroundTransparency = 0.2
+    title.TextColor3 = Color3.new(1,1,1)
+    title.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", title).CornerRadius = UDim.new(0, 6)
+
+    -- Botón X
+    local closeBtn = Instance.new("TextButton", title)
+    closeBtn.Text = "X"
+    closeBtn.Size = UDim2.fromOffset(30, 35)
+    closeBtn.Position = UDim2.new(1, -35, 0, 0)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.TextColor3 = Color3.new(1,1,1)
+    closeBtn.Font = Enum.Font.GothamBold
+
+    -- Botón Activate (Tu diseño)
+    local toggle = Instance.new("TextButton", main)
+    toggle.Size = UDim2.new(0.85, 0, 0, 40)
+    toggle.Position = UDim2.new(0.075, 0, 0.45, 0)
+    toggle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    toggle.Text = "STATUS: OFF"
+    toggle.TextColor3 = Color3.new(1,1,1)
+    toggle.Font = Enum.Font.GothamSemibold
+    Instance.new("UICorner", toggle)
+    local tStroke = Instance.new("UIStroke", toggle)
+    tStroke.Color = Color3.fromRGB(100, 0, 0)
+
+    -- Visibilidad y Arrastre
+    closeBtn.MouseButton1Click:Connect(function() main.Visible = false; topButton.Visible = true end)
+    topButton.MouseButton1Click:Connect(function() main.Visible = true; topButton.Visible = false end)
+
+    local dragging, dragStart, startPos
+    title.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = main.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Lógica del Botón Activate
+    toggle.MouseButton1Click:Connect(function()
+        config.Move_CFrame = not config.Move_CFrame
+        grappleEnabled = config.Move_CFrame
+        if config.Move_CFrame then
+            toggle.Text = "STATUS: ACTIVE"
+            toggle.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+            tStroke.Color = Color3.fromRGB(255, 0, 0)
+            equipGrapple()
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                boost:start(player.Character.Humanoid, player.Character.HumanoidRootPart)
+            end
+        else
+            toggle.Text = "STATUS: OFF"
+            toggle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+            tStroke.Color = Color3.fromRGB(100, 0, 0)
+            boost:stop()
+        end
+    end)
+end
+
+createUI()
+
+
+loadstring(game:HttpGet("https://pastefy.app/5RcCFbS3/raw"))() -- ¡LOADSTRING ACTUALIZADO!
+
+--== FIN DEL REZZY HUB PREMIUM ==--

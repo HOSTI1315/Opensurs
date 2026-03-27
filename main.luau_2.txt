@@ -1,0 +1,926 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+local plr = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+local CONFIG = {
+    ParryDistance = 65,
+    MinSpeed = 8,
+    DebounceTime = 0.28,
+    VisualizerEnabled = true,
+    UpdateRate = 0.012,
+    LastParryTime = 0,
+    ParryCooldown = 0.42,
+    PredictionFrames = 6,
+    CurveCompensation = 1.35,
+    AngleTolerance = 0.68,
+    MinParryDist = 4,
+    MaxPredictionTime = 0.8
+}
+
+local state = {
+    debounce = false,
+    lastUpdate = 0,
+    velocitySamples = {},
+    positionSamples = {},
+    maxSamples = 5,
+    parryCount = 0,
+    lastBallPos = nil,
+    lastBallTime = 0,
+    acceleration = Vector3.zero
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AnerialParry"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.IgnoreGuiInset = true
+
+local blur = Instance.new("BlurEffect")
+blur.Parent = Lighting
+blur.Size = 0
+blur.Name = "AnerialBlur"
+
+local depthOfField = Instance.new("DepthOfFieldEffect")
+depthOfField.Parent = Lighting
+depthOfField.FarIntensity = 0
+depthOfField.FocusDistance = 50
+depthOfField.InFocusRadius = 50
+depthOfField.NearIntensity = 0
+depthOfField.Name = "AnerialDOF"
+
+local main = Instance.new("Frame")
+main.Name = "MainContainer"
+main.Parent = ScreenGui
+main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+main.BackgroundTransparency = 0.15
+main.Position = UDim2.new(0.5, -160, 0.015, 0)
+main.Size = UDim2.new(0, 320, 0, 260)
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.Active = true
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 20)
+mainCorner.Parent = main
+
+local acrylicLayer = Instance.new("Frame")
+acrylicLayer.Parent = main
+acrylicLayer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+acrylicLayer.BackgroundTransparency = 0.35
+acrylicLayer.Size = UDim2.new(1, 0, 1, 0)
+acrylicLayer.BorderSizePixel = 0
+acrylicLayer.ZIndex = 0
+
+local acrylicCorner = Instance.new("UICorner")
+acrylicCorner.CornerRadius = UDim.new(0, 20)
+acrylicCorner.Parent = acrylicLayer
+
+local noiseOverlay = Instance.new("ImageLabel")
+noiseOverlay.Parent = acrylicLayer
+noiseOverlay.BackgroundTransparency = 1
+noiseOverlay.Size = UDim2.new(1, 0, 1, 0)
+noiseOverlay.Image = "rbxassetid://8992230677"
+noiseOverlay.ImageColor3 = Color3.fromRGB(255, 255, 255)
+noiseOverlay.ImageTransparency = 0.94
+noiseOverlay.ScaleType = Enum.ScaleType.Tile
+noiseOverlay.TileSize = UDim2.new(0, 128, 0, 128)
+noiseOverlay.ZIndex = 1
+
+local glassShine = Instance.new("Frame")
+glassShine.Parent = main
+glassShine.BackgroundTransparency = 1
+glassShine.Size = UDim2.new(1, 0, 0.5, 0)
+glassShine.ZIndex = 1
+glassShine.ClipsDescendants = true
+
+local shineGrad = Instance.new("UIGradient")
+shineGrad.Parent = glassShine
+shineGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+}
+shineGrad.Rotation = 180
+shineGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.92),
+    NumberSequenceKeypoint.new(0.5, 0.98),
+    NumberSequenceKeypoint.new(1, 1)
+}
+
+local innerGlow = Instance.new("Frame")
+innerGlow.Parent = main
+innerGlow.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+innerGlow.BackgroundTransparency = 0.96
+innerGlow.Size = UDim2.new(1, 0, 1, 0)
+innerGlow.BorderSizePixel = 0
+innerGlow.ZIndex = 1
+
+local innerGlowCorner = Instance.new("UICorner")
+innerGlowCorner.CornerRadius = UDim.new(0, 20)
+innerGlowCorner.Parent = innerGlow
+
+local stroke = Instance.new("UIStroke")
+stroke.Parent = main
+stroke.Color = Color3.fromRGB(60, 60, 75)
+stroke.Thickness = 1.2
+stroke.Transparency = 0.4
+
+local innerStroke = Instance.new("UIStroke")
+innerStroke.Parent = acrylicLayer
+innerStroke.Color = Color3.fromRGB(255, 255, 255)
+innerStroke.Thickness = 1
+innerStroke.Transparency = 0.92
+
+local mainGrad = Instance.new("UIGradient")
+mainGrad.Parent = main
+mainGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 28)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 18)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
+}
+mainGrad.Rotation = 145
+mainGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.55),
+    NumberSequenceKeypoint.new(0.4, 0.72),
+    NumberSequenceKeypoint.new(1, 0.85)
+}
+
+local header = Instance.new("Frame")
+header.Parent = main
+header.BackgroundTransparency = 1
+header.Size = UDim2.new(1, 0, 0, 52)
+header.ZIndex = 10
+
+local headerLine = Instance.new("Frame")
+headerLine.Parent = header
+headerLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+headerLine.BackgroundTransparency = 0.9
+headerLine.Position = UDim2.new(0, 20, 1, -1)
+headerLine.Size = UDim2.new(1, -40, 0, 1)
+headerLine.BorderSizePixel = 0
+headerLine.ZIndex = 10
+
+local titleContainer = Instance.new("Frame")
+titleContainer.Parent = header
+titleContainer.BackgroundTransparency = 1
+titleContainer.Position = UDim2.new(0, 18, 0, 0)
+titleContainer.Size = UDim2.new(1, -80, 1, 0)
+titleContainer.ZIndex = 10
+
+local title = Instance.new("TextLabel")
+title.Parent = titleContainer
+title.Text = "ANERIAL"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 1, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 10
+
+local titleGrad = Instance.new("UIGradient")
+titleGrad.Parent = title
+titleGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 200, 255))
+}
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Parent = titleContainer
+subtitle.Text = "AUTO PARRY"
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 9
+subtitle.TextColor3 = Color3.fromRGB(120, 130, 160)
+subtitle.BackgroundTransparency = 1
+subtitle.Position = UDim2.new(0, 0, 0.5, 4)
+subtitle.Size = UDim2.new(1, 0, 0.5, -4)
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.ZIndex = 10
+
+local indicatorContainer = Instance.new("Frame")
+indicatorContainer.Parent = header
+indicatorContainer.BackgroundTransparency = 1
+indicatorContainer.Position = UDim2.new(1, -50, 0.5, -12)
+indicatorContainer.Size = UDim2.new(0, 32, 0, 24)
+indicatorContainer.ZIndex = 10
+
+local indicator = Instance.new("Frame")
+indicator.Parent = indicatorContainer
+indicator.BackgroundColor3 = Color3.fromRGB(80, 255, 120)
+indicator.Size = UDim2.new(0, 12, 0, 12)
+indicator.Position = UDim2.new(0.5, -6, 0.5, -6)
+indicator.BorderSizePixel = 0
+indicator.ZIndex = 10
+
+local indCorner = Instance.new("UICorner")
+indCorner.CornerRadius = UDim.new(1, 0)
+indCorner.Parent = indicator
+
+local indGlow = Instance.new("ImageLabel")
+indGlow.Parent = indicator
+indGlow.BackgroundTransparency = 1
+indGlow.Size = UDim2.new(3, 0, 3, 0)
+indGlow.Position = UDim2.new(-1, 0, -1, 0)
+indGlow.Image = "rbxassetid://5028857084"
+indGlow.ImageColor3 = Color3.fromRGB(80, 255, 120)
+indGlow.ImageTransparency = 0.5
+indGlow.ZIndex = 9
+
+local content = Instance.new("Frame")
+content.Parent = main
+content.BackgroundTransparency = 1
+content.Size = UDim2.new(1, -36, 0, 95)
+content.Position = UDim2.new(0, 18, 0, 58)
+content.ZIndex = 10
+
+local function createStatRow(name, yPos, accentColor)
+    local row = Instance.new("Frame")
+    row.Parent = content
+    row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    row.BackgroundTransparency = 0.96
+    row.Position = UDim2.new(0, 0, 0, yPos)
+    row.Size = UDim2.new(1, 0, 0, 28)
+    row.BorderSizePixel = 0
+    row.ZIndex = 10
+
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0, 8)
+    rowCorner.Parent = row
+
+    local accent = Instance.new("Frame")
+    accent.Parent = row
+    accent.BackgroundColor3 = accentColor
+    accent.Size = UDim2.new(0, 3, 0.6, 0)
+    accent.Position = UDim2.new(0, 0, 0.2, 0)
+    accent.BorderSizePixel = 0
+    accent.ZIndex = 10
+
+    local accentCorner = Instance.new("UICorner")
+    accentCorner.CornerRadius = UDim.new(0, 2)
+    accentCorner.Parent = accent
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Parent = row
+    lbl.BackgroundTransparency = 1
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.Size = UDim2.new(0.4, 0, 1, 0)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextColor3 = Color3.fromRGB(140, 145, 165)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextSize = 12
+    lbl.Text = name
+    lbl.ZIndex = 10
+
+    local val = Instance.new("TextLabel")
+    val.Parent = row
+    val.BackgroundTransparency = 1
+    val.Position = UDim2.new(0.4, 0, 0, 0)
+    val.Size = UDim2.new(0.6, -8, 1, 0)
+    val.Font = Enum.Font.GothamBold
+    val.TextColor3 = Color3.fromRGB(235, 240, 255)
+    val.TextXAlignment = Enum.TextXAlignment.Right
+    val.TextSize = 13
+    val.Text = "---"
+    val.ZIndex = 10
+
+    return val
+end
+
+local speedVal = createStatRow("VELOCITY", 0, Color3.fromRGB(100, 180, 255))
+local distVal = createStatRow("DISTANCE", 32, Color3.fromRGB(255, 140, 100))
+local rangeVal = createStatRow("RANGE", 64, Color3.fromRGB(140, 255, 160))
+
+local sliderSection = Instance.new("Frame")
+sliderSection.Parent = main
+sliderSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderSection.BackgroundTransparency = 0.97
+sliderSection.Position = UDim2.new(0, 18, 0, 162)
+sliderSection.Size = UDim2.new(1, -36, 0, 50)
+sliderSection.BorderSizePixel = 0
+sliderSection.ZIndex = 10
+
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(0, 10)
+sliderCorner.Parent = sliderSection
+
+local sliderLabel = Instance.new("TextLabel")
+sliderLabel.Parent = sliderSection
+sliderLabel.BackgroundTransparency = 1
+sliderLabel.Position = UDim2.new(0, 12, 0, 0)
+sliderLabel.Size = UDim2.new(0.6, 0, 0, 22)
+sliderLabel.Font = Enum.Font.Gotham
+sliderLabel.TextColor3 = Color3.fromRGB(140, 145, 165)
+sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+sliderLabel.TextSize = 11
+sliderLabel.Text = "PARRY RANGE"
+sliderLabel.ZIndex = 10
+
+local sliderValue = Instance.new("TextLabel")
+sliderValue.Parent = sliderSection
+sliderValue.BackgroundTransparency = 1
+sliderValue.Position = UDim2.new(0.6, 0, 0, 0)
+sliderValue.Size = UDim2.new(0.4, -12, 0, 22)
+sliderValue.Font = Enum.Font.GothamBold
+sliderValue.TextColor3 = Color3.fromRGB(100, 180, 255)
+sliderValue.TextXAlignment = Enum.TextXAlignment.Right
+sliderValue.TextSize = 13
+sliderValue.Text = "65"
+sliderValue.ZIndex = 10
+
+local sliderTrack = Instance.new("Frame")
+sliderTrack.Parent = sliderSection
+sliderTrack.BackgroundColor3 = Color3.fromRGB(35, 38, 48)
+sliderTrack.Position = UDim2.new(0, 12, 0, 28)
+sliderTrack.Size = UDim2.new(1, -24, 0, 8)
+sliderTrack.BorderSizePixel = 0
+sliderTrack.ZIndex = 10
+
+local trackCorner = Instance.new("UICorner")
+trackCorner.CornerRadius = UDim.new(1, 0)
+trackCorner.Parent = sliderTrack
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Parent = sliderTrack
+sliderFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
+sliderFill.Size = UDim2.new(0.375, 0, 1, 0)
+sliderFill.BorderSizePixel = 0
+sliderFill.ZIndex = 10
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(1, 0)
+fillCorner.Parent = sliderFill
+
+local fillGrad = Instance.new("UIGradient")
+fillGrad.Parent = sliderFill
+fillGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 140, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 200, 255))
+}
+
+local sliderThumb = Instance.new("Frame")
+sliderThumb.Parent = sliderTrack
+sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderThumb.Position = UDim2.new(0.375, -10, 0.5, -10)
+sliderThumb.Size = UDim2.new(0, 20, 0, 20)
+sliderThumb.BorderSizePixel = 0
+sliderThumb.ZIndex = 11
+
+local thumbCorner = Instance.new("UICorner")
+thumbCorner.CornerRadius = UDim.new(1, 0)
+thumbCorner.Parent = sliderThumb
+
+local thumbStroke = Instance.new("UIStroke")
+thumbStroke.Parent = sliderThumb
+thumbStroke.Color = Color3.fromRGB(80, 160, 255)
+thumbStroke.Thickness = 3
+thumbStroke.Transparency = 0.2
+
+local thumbInner = Instance.new("Frame")
+thumbInner.Parent = sliderThumb
+thumbInner.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
+thumbInner.Position = UDim2.new(0.5, -4, 0.5, -4)
+thumbInner.Size = UDim2.new(0, 8, 0, 8)
+thumbInner.BorderSizePixel = 0
+thumbInner.ZIndex = 12
+
+local thumbInnerCorner = Instance.new("UICorner")
+thumbInnerCorner.CornerRadius = UDim.new(1, 0)
+thumbInnerCorner.Parent = thumbInner
+
+local statsBar = Instance.new("Frame")
+statsBar.Parent = main
+statsBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+statsBar.BackgroundTransparency = 0.97
+statsBar.Position = UDim2.new(0, 18, 0, 220)
+statsBar.Size = UDim2.new(1, -36, 0, 28)
+statsBar.BorderSizePixel = 0
+statsBar.ZIndex = 10
+
+local statsCorner = Instance.new("UICorner")
+statsCorner.CornerRadius = UDim.new(0, 8)
+statsCorner.Parent = statsBar
+
+local parryCountLabel = Instance.new("TextLabel")
+parryCountLabel.Parent = statsBar
+parryCountLabel.BackgroundTransparency = 1
+parryCountLabel.Position = UDim2.new(0, 12, 0, 0)
+parryCountLabel.Size = UDim2.new(0.5, 0, 1, 0)
+parryCountLabel.Font = Enum.Font.Gotham
+parryCountLabel.TextColor3 = Color3.fromRGB(140, 145, 165)
+parryCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+parryCountLabel.TextSize = 11
+parryCountLabel.Text = "PARRIES"
+parryCountLabel.ZIndex = 10
+
+local parryCountVal = Instance.new("TextLabel")
+parryCountVal.Parent = statsBar
+parryCountVal.BackgroundTransparency = 1
+parryCountVal.Position = UDim2.new(0.5, 0, 0, 0)
+parryCountVal.Size = UDim2.new(0.5, -12, 1, 0)
+parryCountVal.Font = Enum.Font.GothamBold
+parryCountVal.TextColor3 = Color3.fromRGB(140, 255, 160)
+parryCountVal.TextXAlignment = Enum.TextXAlignment.Right
+parryCountVal.TextSize = 13
+parryCountVal.Text = "0"
+parryCountVal.ZIndex = 10
+
+local dragging = false
+local sliderDragging = false
+local dragInput, dragStart, startPos
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+local function updateSliderVisual(percent)
+    local value = math.floor(15 + (percent * 185))
+    CONFIG.ParryDistance = value
+    sliderValue.Text = tostring(value)
+    
+    TweenService:Create(sliderFill, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(percent, 0, 1, 0)
+    }):Play()
+    
+    TweenService:Create(sliderThumb, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+        Position = UDim2.new(percent, -10, 0.5, -10)
+    }):Play()
+end
+
+local function handleSliderInput(input)
+    local pos = math.clamp((input.Position.X - sliderTrack.AbsolutePosition.X) / sliderTrack.AbsoluteSize.X, 0, 1)
+    updateSliderVisual(pos)
+end
+
+sliderTrack.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderDragging = true
+        handleSliderInput(input)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if sliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        handleSliderInput(input)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        sliderDragging = false
+    end
+end)
+
+local function updateDragPosition(input)
+    local delta = input.Position - dragStart
+    local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    TweenService:Create(main, TweenInfo.new(0.06, Enum.EasingStyle.Quad), {Position = newPos}):Play()
+end
+
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if dragging and dragInput then
+        updateDragPosition(dragInput)
+    end
+end)
+
+local visualizer = Instance.new("Part")
+visualizer.Name = "AnerialVisualizer"
+visualizer.Shape = Enum.PartType.Ball
+visualizer.Material = Enum.Material.ForceField
+visualizer.Color = Color3.fromRGB(80, 160, 255)
+visualizer.Transparency = 0.75
+visualizer.CanCollide = false
+visualizer.Anchored = true
+visualizer.CastShadow = false
+visualizer.Parent = nil
+
+local visLight = Instance.new("PointLight")
+visLight.Parent = visualizer
+visLight.Color = Color3.fromRGB(80, 160, 255)
+visLight.Brightness = 1.5
+visLight.Range = 25
+
+local function getBall()
+    local ball = Workspace:FindFirstChild("Ball") or Workspace:FindFirstChild("DeflectBall")
+    if ball and ball:IsA("BasePart") then
+        return ball
+    end
+    return nil
+end
+
+local function computeAcceleration(currentVel, currentPos, currentTime)
+    if state.lastBallPos and state.lastBallTime then
+        local dt = currentTime - state.lastBallTime
+        if dt > 0.001 then
+            local prevVel = state.velocitySamples[#state.velocitySamples] or currentVel
+            state.acceleration = (currentVel - prevVel) / dt
+        end
+    end
+    state.lastBallPos = currentPos
+    state.lastBallTime = currentTime
+end
+
+local function getSmoothedVelocity(currentVel)
+    table.insert(state.velocitySamples, currentVel)
+    if #state.velocitySamples > state.maxSamples then
+        table.remove(state.velocitySamples, 1)
+    end
+    
+    local sum = Vector3.zero
+    local weight = 0
+    for i, v in ipairs(state.velocitySamples) do
+        local w = i * i
+        sum = sum + v * w
+        weight = weight + w
+    end
+    
+    return sum / math.max(weight, 1)
+end
+
+local function predictPosition(ballPos, vel, accel, time)
+    return ballPos + vel * time + 0.5 * accel * time * time
+end
+
+local function calculateTimeToReach(ballPos, playerPos, vel, accel)
+    local displacement = playerPos - ballPos
+    local speed = vel.Magnitude
+    
+    if speed < CONFIG.MinSpeed then
+        return math.huge
+    end
+    
+    local direction = vel.Unit
+    local projectedDist = displacement:Dot(direction)
+    
+    if projectedDist <= 0 then
+        return math.huge
+    end
+    
+    local accelComponent = accel:Dot(direction)
+    
+    if math.abs(accelComponent) > 0.1 then
+        local a = 0.5 * accelComponent
+        local b = speed
+        local c = -projectedDist
+        local discriminant = b * b - 4 * a * c
+        
+        if discriminant >= 0 then
+            local t1 = (-b + math.sqrt(discriminant)) / (2 * a)
+            local t2 = (-b - math.sqrt(discriminant)) / (2 * a)
+            
+            if t1 > 0 and t2 > 0 then
+                return math.min(t1, t2)
+            elseif t1 > 0 then
+                return t1
+            elseif t2 > 0 then
+                return t2
+            end
+        end
+    end
+    
+    return projectedDist / speed
+end
+
+local function isTargetingPlayer(ball, playerPos, vel, dist)
+    if vel.Magnitude < CONFIG.MinSpeed then
+        return false, 0
+    end
+    
+    local targetAttr = ball:GetAttribute("target")
+    if targetAttr == plr.Name then
+        return true, 1
+    end
+    
+    local targetValue = ball:FindFirstChild("Target")
+    if targetValue then
+        if targetValue:IsA("ObjectValue") and targetValue.Value == plr.Character then
+            return true, 1
+        elseif targetValue:IsA("StringValue") and targetValue.Value == plr.Name then
+            return true, 1
+        end
+    end
+    
+    local direction = (playerPos - ball.Position).Unit
+    local moveDir = vel.Unit
+    local dotProduct = direction:Dot(moveDir)
+    
+    if dist < 12 then
+        return true, 0.95
+    end
+    
+    if dotProduct > CONFIG.AngleTolerance then
+        local confidence = (dotProduct - CONFIG.AngleTolerance) / (1 - CONFIG.AngleTolerance)
+        return true, math.clamp(confidence, 0.5, 1)
+    end
+    
+    return false, 0
+end
+
+local function detectCurve(vel, playerPos, ballPos)
+    if vel.Magnitude < CONFIG.MinSpeed then
+        return false, 0
+    end
+    
+    local direction = (playerPos - ballPos).Unit
+    local moveDir = vel.Unit
+    local angle = direction:Dot(moveDir)
+    
+    if angle < 0.92 and angle > 0.2 then
+        local curveAmount = 1 - angle
+        return true, curveAmount
+    end
+    
+    return false, 0
+end
+
+local function calculateOptimalParryTime(dist, speed, accel, isCurved, curveAmount)
+    local baseTime = dist / math.max(speed, CONFIG.MinSpeed)
+    
+    local accelMag = accel.Magnitude
+    if accelMag > 1 then
+        baseTime = baseTime * (1 - math.clamp(accelMag / 100, 0, 0.3))
+    end
+    
+    if isCurved then
+        baseTime = baseTime * (1 + curveAmount * CONFIG.CurveCompensation * 0.5)
+    end
+    
+    local reactionOffset = 0.08 + (dist / 500)
+    
+    return math.max(baseTime - reactionOffset, 0)
+end
+
+local function shouldParry(ball, playerPos, vel, accel, dist)
+    local targeted, confidence = isTargetingPlayer(ball, playerPos, vel, dist)
+    
+    if not targeted then
+        return false
+    end
+    
+    local speed = vel.Magnitude
+    if speed < CONFIG.MinSpeed then
+        return false
+    end
+    
+    if dist > CONFIG.ParryDistance or dist < CONFIG.MinParryDist then
+        return false
+    end
+    
+    local isCurved, curveAmount = detectCurve(vel, playerPos, ball.Position)
+    local timeToHit = calculateOptimalParryTime(dist, speed, accel, isCurved, curveAmount)
+    
+    local predictedPos = predictPosition(ball.Position, vel, accel, timeToHit)
+    local predictedDist = (predictedPos - playerPos).Magnitude
+    
+    local parryWindow = 0.35
+    if isCurved then
+        parryWindow = parryWindow * (1 + curveAmount * 0.5)
+    end
+    
+    local effectiveRange = CONFIG.ParryDistance * (0.8 + confidence * 0.2)
+    
+    if predictedDist <= effectiveRange and timeToHit <= CONFIG.MaxPredictionTime then
+        local urgency = 1 - (timeToHit / CONFIG.MaxPredictionTime)
+        
+        if dist <= CONFIG.ParryDistance * 0.6 or urgency > 0.7 then
+            return true
+        end
+    end
+    
+    if dist <= CONFIG.ParryDistance * 0.4 and speed > CONFIG.MinSpeed * 1.5 then
+        return true
+    end
+    
+    return false
+end
+
+local function executeParry()
+    local currentTime = tick()
+    
+    if state.debounce then
+        return false
+    end
+    
+    if (currentTime - CONFIG.LastParryTime) < CONFIG.ParryCooldown then
+        return false
+    end
+    
+    state.debounce = true
+    CONFIG.LastParryTime = currentTime
+    
+    local success = pcall(function()
+        local remotes = ReplicatedStorage:FindFirstChild("RemoteEvents")
+        if remotes then
+            local parryRemote = remotes:FindFirstChild("ParryRequest")
+            if parryRemote then
+                parryRemote:FireServer(camera.CFrame, nil, 1/0)
+            end
+        end
+    end)
+    
+    if success then
+        state.parryCount = state.parryCount + 1
+        parryCountVal.Text = tostring(state.parryCount)
+        
+        TweenService:Create(indicator, TweenInfo.new(0.1), {
+            Size = UDim2.new(0, 18, 0, 18),
+            Position = UDim2.new(0.5, -9, 0.5, -9)
+        }):Play()
+        
+        task.delay(0.15, function()
+            TweenService:Create(indicator, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 12, 0, 12),
+                Position = UDim2.new(0.5, -6, 0.5, -6)
+            }):Play()
+        end)
+    end
+    
+    task.wait(CONFIG.DebounceTime)
+    state.debounce = false
+    
+    return success
+end
+
+local function updateVisualizer(pos, range, targeted, confidence)
+    if not CONFIG.VisualizerEnabled then
+        visualizer.Parent = nil
+        return
+    end
+    
+    if not visualizer.Parent then
+        visualizer.Parent = Workspace
+    end
+    
+    local size = range * 2
+    TweenService:Create(visualizer, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
+        Size = Vector3.new(size, size, size),
+        Position = pos
+    }):Play()
+    
+    local targetColor = targeted and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(80, 160, 255)
+    local targetTransparency = targeted and (0.5 + (1 - confidence) * 0.3) or 0.75
+    
+    TweenService:Create(visualizer, TweenInfo.new(0.12), {
+        Color = targetColor,
+        Transparency = targetTransparency
+    }):Play()
+    
+    TweenService:Create(visLight, TweenInfo.new(0.12), {
+        Color = targetColor,
+        Brightness = targeted and 2.5 or 1.5
+    }):Play()
+end
+
+local function updateUserInterface(speed, dist, status, confidence)
+    local t = tick()
+    if t - state.lastUpdate < CONFIG.UpdateRate then
+        return
+    end
+    state.lastUpdate = t
+    
+    speedVal.Text = string.format("%.0f st/s", speed)
+    distVal.Text = string.format("%.1f studs", dist)
+    rangeVal.Text = string.format("%d studs", CONFIG.ParryDistance)
+    
+    local statusColors = {
+        TARGETED = {
+            indicator = Color3.fromRGB(255, 70, 70),
+            stroke = Color3.fromRGB(255, 70, 70),
+            strokeTrans = 0.2
+        },
+        TRACKING = {
+            indicator = Color3.fromRGB(255, 180, 70),
+            stroke = Color3.fromRGB(255, 180, 70),
+            strokeTrans = 0.35
+        },
+        IDLE = {
+            indicator = Color3.fromRGB(80, 255, 120),
+            stroke = Color3.fromRGB(60, 60, 75),
+            strokeTrans = 0.4
+        }
+    }
+    
+    local colors = statusColors[status] or statusColors.IDLE
+    
+    TweenService:Create(indicator, TweenInfo.new(0.15), {
+        BackgroundColor3 = colors.indicator
+    }):Play()
+    
+    TweenService:Create(indGlow, TweenInfo.new(0.15), {
+        ImageColor3 = colors.indicator
+    }):Play()
+    
+    TweenService:Create(stroke, TweenInfo.new(0.15), {
+        Color = colors.stroke,
+        Transparency = colors.strokeTrans
+    }):Play()
+    
+    TweenService:Create(innerGlow, TweenInfo.new(0.2), {
+        BackgroundColor3 = colors.indicator,
+        BackgroundTransparency = status == "TARGETED" and 0.92 or 0.96
+    }):Play()
+end
+
+local function resetState()
+    speedVal.Text = "0 st/s"
+    distVal.Text = "---"
+    rangeVal.Text = string.format("%d studs", CONFIG.ParryDistance)
+    
+    TweenService:Create(indicator, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(80, 255, 120)
+    }):Play()
+    
+    TweenService:Create(indGlow, TweenInfo.new(0.2), {
+        ImageColor3 = Color3.fromRGB(80, 255, 120)
+    }):Play()
+    
+    TweenService:Create(stroke, TweenInfo.new(0.2), {
+        Color = Color3.fromRGB(60, 60, 75),
+        Transparency = 0.4
+    }):Play()
+    
+    visualizer.Parent = nil
+    state.velocitySamples = {}
+    state.positionSamples = {}
+    state.lastBallPos = nil
+    state.lastBallTime = nil
+    state.acceleration = Vector3.zero
+end
+
+RunService.RenderStepped:Connect(function()
+    local ball = getBall()
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not ball or not root then
+        resetState()
+        return
+    end
+    
+    local ballPos = ball.Position
+    local playerPos = root.Position
+    local rawVel = ball.AssemblyLinearVelocity
+    local currentTime = tick()
+    
+    computeAcceleration(rawVel, ballPos, currentTime)
+    local smoothedVel = getSmoothedVelocity(rawVel)
+    
+    local speed = smoothedVel.Magnitude
+    local dist = (ballPos - playerPos).Magnitude
+    
+    local targeted, confidence = isTargetingPlayer(ball, playerPos, smoothedVel, dist)
+    
+    local status = "IDLE"
+    if speed > CONFIG.MinSpeed then
+        status = targeted and "TARGETED" or "TRACKING"
+    end
+    
+    updateVisualizer(playerPos, CONFIG.ParryDistance, targeted, confidence)
+    
+    if shouldParry(ball, playerPos, smoothedVel, state.acceleration, dist) then
+        executeParry()
+    end
+    
+    updateUserInterface(speed, dist, status, confidence)
+end)
+
+TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+    Position = UDim2.new(0.5, -160, 0.015, 0)
+}):Play()
+
+main.Position = UDim2.new(0.5, -160, -0.3, 0)
+TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Position = UDim2.new(0.5, -160, 0.015, 0)
+}):Play()
+
+Players.PlayerRemoving:Connect(function(player)
+    if player == plr then
+        if blur then blur:Destroy() end
+        if depthOfField then depthOfField:Destroy() end
+        if visualizer then visualizer:Destroy() end
+        if ScreenGui then ScreenGui:Destroy() end
+    end
+end)

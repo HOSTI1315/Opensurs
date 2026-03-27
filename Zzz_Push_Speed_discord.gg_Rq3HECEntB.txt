@@ -1,0 +1,102 @@
+-- Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Create the platform part that follows the player
+local PlatformPart = Instance.new("Part")
+PlatformPart.Size = Vector3.new(12, 8, 0.5)
+PlatformPart.Transparency = 1
+PlatformPart.CanCollide = false
+PlatformPart.Anchored = true
+PlatformPart.Parent = workspace
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+-- Main frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 180, 0, 80)
+MainFrame.Position = UDim2.new(0.01, 0, 0.25, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.Parent = MainFrame
+MainCorner.CornerRadius = UDim.new(0, 12)
+
+-- Speed toggle button
+local SpeedButton = Instance.new("TextButton")
+SpeedButton.Size = UDim2.new(0, 160, 0, 40)
+SpeedButton.Position = UDim2.new(0, 10, 0, 10)
+SpeedButton.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+SpeedButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+SpeedButton.Text = "Speed: OFF"
+SpeedButton.TextSize = 20
+SpeedButton.Font = Enum.Font.GothamBold
+SpeedButton.Parent = MainFrame
+
+local SpeedButtonCorner = Instance.new("UICorner")
+SpeedButtonCorner.Parent = SpeedButton
+SpeedButtonCorner.CornerRadius = UDim.new(0, 10)
+
+-- Discord link label
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Size = UDim2.new(0, 160, 0, 20)
+DiscordLabel.Position = UDim2.new(0, 10, 0, 55)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordLabel.TextScaled = true
+DiscordLabel.Text = "discord.gg/a4Z6gDu4Be"
+DiscordLabel.Font = Enum.Font.GothamBold
+DiscordLabel.Parent = MainFrame
+
+-- Speed toggle state
+local isSpeedEnabled = false
+
+-- Speed button click handler
+SpeedButton.MouseButton1Click:Connect(function()
+    isSpeedEnabled = not isSpeedEnabled
+    
+    if isSpeedEnabled then
+        SpeedButton.Text = "Speed: ON"
+        SpeedButton.BackgroundColor3 = Color3.fromRGB(0, 40, 0)
+        SpeedButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        SpeedButton.Text = "Speed: OFF"
+        SpeedButton.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+        SpeedButton.TextColor3 = Color3.fromRGB(255, 70, 70)
+    end
+end)
+
+-- Copy discord link to clipboard on load
+task.delay(0.2, function()
+    setclipboard("https://discord.gg/a4Z6gDu4Be")
+    StarterGui:SetCore("SendNotification", {
+        Text = "Discord link copied to clipboard",
+        Title = "Copied!",
+        Duration = 4,
+    })
+end)
+
+-- Update platform position every frame
+RunService.Heartbeat:Connect(function(deltaTime)
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    -- Position the platform behind the player
+    local behindPosition = hrp.Position - hrp.CFrame.LookVector * 3.5
+    PlatformPart.CFrame = CFrame.new(behindPosition, hrp.Position)
+end)

@@ -1,0 +1,487 @@
+-- Load Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Bot Settings
+local clickOffsets = Vector2.new(0,50)
+local maxEnergyMove = 20
+local ended = false
+local eject = false
+
+-- Keep Rare/Hard to Obtain/Legendary Pokemon list
+local KeepPokemon = {
+    -- Legendary/Mythical Pokémon
+    ["articuno"]=true, ["zapdos"]=true, ["moltres"]=true, ["mewtwo"]=true, ["mew"]=true,
+    ["raikou"]=true, ["entei"]=true, ["suicune"]=true, ["lugia"]=true, ["ho-oh"]=true,
+    ["celebi"]=true, ["regirock"]=true, ["regice"]=true, ["registeel"]=true, ["latias"]=true,
+    ["latios"]=true, ["kyogre"]=true, ["groudon"]=true, ["rayquaza"]=true, ["jirachi"]=true,
+    ["deoxys"]=true, ["uxie"]=true, ["mesprit"]=true, ["azelf"]=true, ["dialga"]=true,
+    ["palkia"]=true, ["heatran"]=true, ["regigigas"]=true, ["giratina"]=true, ["cresselia"]=true,
+    ["phione"]=true, ["manaphy"]=true, ["darkrai"]=true, ["shaymin"]=true, ["arceus"]=true,
+    ["victini"]=true, ["reshiram"]=true, ["zekrom"]=true, ["kyurem"]=true, ["keldeo"]=true,
+    ["meloetta"]=true, ["genesect"]=true, ["xerneas"]=true, ["yveltal"]=true, ["zygarde"]=true,
+    ["diancie"]=true, ["hoopa"]=true, ["volcanion"]=true, ["cosmog"]=true, ["cosmoem"]=true,
+    ["solgaleo"]=true, ["lunala"]=true, ["necrozma"]=true, ["zeraora"]=true, ["calyrex"]=true,
+    
+    -- Rare/Hard-to-Obtain Pokémon
+    ["unown"]=true, ["feebas"]=true, ["beldum"]=true, ["dratini"]=true, ["larvitar"]=true,
+    ["tyrogue"]=true, ["luvdisc"]=true, ["bonsly"]=true, ["happiny"]=true, ["mantyke"]=true,
+    ["rotom"]=true, ["axew"]=true, ["tirtouga"]=true, ["archen"]=true, ["gible"]=true,
+    ["riolu"]=true, ["heracross"]=true, ["teddiursa"]=true, ["sableye"]=true, ["absol"]=true,
+    ["banette"]=true, ["spheal"]=true, ["seviper"]=true, ["lunatone"]=true, ["solrock"]=true,
+    ["swablu"]=true, ["meditite"]=true, ["gorebyss"]=true, ["claydol"]=true, ["glaceon"]=true,
+}
+
+-- Services
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local uis = game:GetService("UserInputService")
+local VIM = game:GetService("VirtualInputManager")
+
+-- Main Battle Table (DataManager)
+local Main
+for _,v in pairs(getgc(true)) do
+    if typeof(v) == "table" and rawget(v,"DataManager") then
+        Main = v
+        break
+    end
+end
+
+-- GUI Buttons
+local clickFight, restFight
+local clickMove1, clickMove2, clickMove3, clickMove4
+local clickRun
+
+-- Helper: Virtual Click
+local function virtualClick(x,y)
+    if not x or not y then return end
+    pcall(function()
+        VIM:SendMouseButtonEvent(x,y,0,true,game,0)
+        task.wait(0.02)
+        VIM:SendMouseButtonEvent(x,y,0,false,game,0)
+    end)
+end
+
+-- Helper: Center of GuiObject
+local function getCenterPosition(button)
+    if not button then return 0,0 end
+    local absPos = button.AbsolutePosition
+    local absSize = button.AbsoluteSize
+    return absPos.X + absSize.X/2 + clickOffsets.X, absPos.Y + absSize.Y/2 + clickOffsets.Y
+end
+
+-- Start a wild battle
+local function startBattle()
+    task.spawn(function()
+        ended = false
+        Main.Battle.doWildBattle(Main.Battle, Main.DataManager.currentChunk.regionData.Grass,{})
+        ended = true
+    end)
+end
+
+-- Current Pokémon Energy
+local function getEnergy()
+    if not Main or not Main.Battle or not Main.Battle.currentBattle then return 0 end
+    return Main.Battle.currentBattle.p1.active[1].energy
+end
+
+-- Check energy
+local function energyCheck()
+    return getEnergy() >= maxEnergyMove
+end
+
+-- Check if should catch
+local function shouldCatch()
+    if not Main or not Main.Battle or not Main.Battle.currentBattle then return false end
+    local name = string.lower(Main.Battle.currentBattle.p1.foe.active[1].species or "")
+    return KeepPokemon[name] == true
+end
+
+-- --- PP Reading ---
+local function getDigitFromImage(imgLabel)
+    if not imgLabel or not imgLabel.ImageRectOffset or not imgLabel.ImageRectSize then return 0 end
+    local digitWidth = imgLabel.ImageRectSize.X
+    if digitWidth == 0 then return 0 end
+    local offsetX = imgLabel.ImageRectOffset.X
+    local digit = offsetX / digitWidth
+    return math.floor(digit + 0.5)
+end
+
+local function getPP(moveGui)
+    if not moveGui then return 0,0 end
+    local ppContainer = moveGui:FindFirstChild("PPContainer", true)
+    if not ppContainer then return 0,0 end
+    local ppFrame = ppContainer:FindFirstChild("Frame") or ppContainer
+    if not ppFrame then return 0,0 end
+
+    local function readDigitByName(n)
+        local child = ppFrame:FindFirstChild(tostring(n))
+        if not child or not child:IsA("ImageLabel") then return 0 end
+        return getDigitFromImage(child)
+    end
+
+    local numFrames = 0
+    for _,c in ipairs(ppFrame:GetChildren()) do
+        if c:IsA("ImageLabel") or c:IsA("ImageButton") then
+            numFrames = numFrames + 1
+        end
+    end
+
+    local currentPP, maxPP = 0,0
+    if numFrames == 7 then
+        local d3 = readDigitByName(3)
+        local d4 = readDigitByName(4)
+        local d6 = readDigitByName(6)
+        local d7 = readDigitByName(7)
+        currentPP = d3 * 10 + d4
+        maxPP     = d6 * 10 + d7
+    elseif numFrames == 6 then
+        local d3 = readDigitByName(3)
+        local d5 = readDigitByName(5)
+        local d6 = readDigitByName(6)
+        currentPP = d3
+        maxPP     = d5 * 10 + d6
+    elseif numFrames == 5 then
+        local d3 = readDigitByName(3)
+        local d5 = readDigitByName(5)
+        currentPP = d3
+        maxPP     = d5
+    else
+        currentPP = readDigitByName(3) * 10 + readDigitByName(4)
+        maxPP     = readDigitByName(6) * 10 + readDigitByName(7)
+    end
+
+    return currentPP, maxPP
+end
+
+-- --- Effectiveness Reading ---
+-- Tier system:
+-- 5 = never use
+-- 4 = if have to
+-- 3 = regular
+-- 2 = prefer use
+-- 1 = always use
+local function getEffectivenessTier(moveGui)
+    if not moveGui then return 5 end
+    local eff = moveGui:FindFirstChild("Effectiveness", true)
+    if eff and eff.Visible then
+        local ox = eff.ImageRectOffset.X
+        local oy = eff.ImageRectOffset.Y
+        if math.abs(ox - 300) < 1 and math.abs(oy - 0) < 1 then
+            return 3 -- regular
+        elseif math.abs(ox) < 1 and math.abs(oy) < 1 then
+            return 1 -- always use
+        else
+            return 2 -- prefer use
+        end
+    else
+        -- Effectiveness frame not visible: treat as tier 3
+        return 3
+    end
+end
+
+-- --- Pokémon Name Reading ---
+local LetterMap = {}
+local function keyForOffset(ox, oy)
+    return string.format("%d,%d", math.floor(ox+0.5), math.floor(oy+0.5))
+end
+-- Lowercase letters
+LetterMap[keyForOffset(2,84)]   = "a"
+LetterMap[keyForOffset(27,83)]  = "b"
+LetterMap[keyForOffset(55,84)]  = "c"
+LetterMap[keyForOffset(77,83)]  = "d"
+LetterMap[keyForOffset(106,84)] = "e"
+LetterMap[keyForOffset(131,84)] = "f"
+LetterMap[keyForOffset(150,84)] = "g"
+LetterMap[keyForOffset(177,84)] = "h"
+LetterMap[keyForOffset(204,84)] = "i"
+LetterMap[keyForOffset(228,84)] = "k"
+LetterMap[keyForOffset(253,84)] = "l"
+LetterMap[keyForOffset(264,84)] = "m"
+LetterMap[keyForOffset(304,84)] = "n"
+LetterMap[keyForOffset(331,84)] = "o"
+LetterMap[keyForOffset(359,84)] = "p"
+LetterMap[keyForOffset(415,84)] = "r"
+LetterMap[keyForOffset(434,84)] = "s"
+LetterMap[keyForOffset(455,84)] = "t"
+LetterMap[keyForOffset(474,84)] = "u"
+LetterMap[keyForOffset(498,84)] = "v"
+LetterMap[keyForOffset(525,84)] = "w"
+LetterMap[keyForOffset(589,84)] = "y"
+LetterMap[keyForOffset(613,84)] = "z"
+LetterMap[keyForOffset(248,84)] = "j"
+LetterMap[keyForOffset(387,84)] = "q"
+LetterMap[keyForOffset(551,84)] = "x"
+-- Uppercase letters
+LetterMap[keyForOffset(3,14)]   = "A"
+LetterMap[keyForOffset(38,14)]  = "B"
+LetterMap[keyForOffset(66,14)]  = "C"
+LetterMap[keyForOffset(99,14)]  = "D"
+LetterMap[keyForOffset(132,14)] = "E"
+LetterMap[keyForOffset(161,14)] = "F"
+LetterMap[keyForOffset(188,14)] = "G"
+LetterMap[keyForOffset(224,14)] = "H"
+LetterMap[keyForOffset(258,14)] = "I"
+LetterMap[keyForOffset(269,14)] = "J"
+LetterMap[keyForOffset(295,14)] = "K"
+LetterMap[keyForOffset(328,14)] = "L"
+LetterMap[keyForOffset(352,14)] = "M"
+LetterMap[keyForOffset(395,14)] = "N"
+LetterMap[keyForOffset(432,14)] = "O"
+LetterMap[keyForOffset(470,14)] = "P"
+LetterMap[keyForOffset(497,14)] = "Q"
+LetterMap[keyForOffset(537,14)] = "R"
+LetterMap[keyForOffset(566,14)] = "S"
+LetterMap[keyForOffset(591,14)] = "T"
+LetterMap[keyForOffset(622,14)] = "U"
+LetterMap[keyForOffset(651,14)] = "V"
+LetterMap[keyForOffset(684,14)] = "W"
+LetterMap[keyForOffset(718,14)] = "X"
+LetterMap[keyForOffset(756,14)] = "Y"
+LetterMap[keyForOffset(793,14)] = "Z"
+-- Special characters
+LetterMap[keyForOffset(273,153)] = "♂"
+LetterMap[keyForOffset(307,152)] = "♀"
+LetterMap[keyForOffset(121,222)] = "'"
+
+local function getPokemonName()
+    local backGui = PlayerGui:FindFirstChild("BackGui", true)
+    if not backGui then return "unknown" end
+    local foeHealth = backGui:FindFirstChild("FoeHealthGui", true)
+    if not foeHealth then return "unknown" end
+    local nameContainer = foeHealth:FindFirstChild("NameContainer", true)
+    if not nameContainer then return "unknown" end
+    local frame = nameContainer:FindFirstChild("Frame", true)
+    if not frame then return "unknown" end
+
+    local name = ""
+    for _,v in ipairs(frame:GetChildren()) do
+        if v:IsA("ImageLabel") and v.ImageRectOffset then
+            local k = keyForOffset(v.ImageRectOffset.X, v.ImageRectOffset.Y)
+            name = name .. (LetterMap[k] or "?")
+        end
+    end
+    if name == "" then return "unknown" end
+    return name
+end
+
+-- --- Rayfield GUI ---
+local Window = Rayfield:CreateWindow({
+    Name = "Pokemon Battle Bot",
+    LoadingTitle = "Loading Battle Bot...",
+    LoadingSubtitle = "Sirius UI",
+    Theme = "Default",
+    ToggleUIKeybind = "K"
+})
+
+local Tab = Window:CreateTab("Bot Settings", "rewind")
+local Section = Tab:CreateSection("Battle Controls")
+
+-- Enable/Disable Bot Toggle
+local BotToggle = Tab:CreateToggle({
+    Name = "Enable Bot",
+    CurrentValue = false,
+    Flag = "BotToggle",
+    Callback = function(Value)
+        eject = not Value
+    end
+})
+
+-- Move Selector Multi-Dropdown
+local selectedMoves = {1}
+local MoveDropdown = Tab:CreateDropdown({
+    Name = "Select Moves",
+    Options = {"Move 1","Move 2","Move 3","Move 4"},
+    CurrentOption = {"Move 1"},
+    MultipleOptions = true,
+    Flag = "MoveSelector",
+    Callback = function(Options)
+        selectedMoves = {}
+        for _, sel in ipairs(Options) do
+            if sel == "Move 1" then table.insert(selectedMoves,1)
+            elseif sel == "Move 2" then table.insert(selectedMoves,2)
+            elseif sel == "Move 3" then table.insert(selectedMoves,3)
+            elseif sel == "Move 4" then table.insert(selectedMoves,4)
+            end
+        end
+    end
+})
+
+-- PP Labels
+local PPLbl1 = Tab:CreateLabel("Move 1 - 0/0")
+local PPLbl2 = Tab:CreateLabel("Move 2 - 0/0")
+local PPLbl3 = Tab:CreateLabel("Move 3 - 0/0")
+local PPLbl4 = Tab:CreateLabel("Move 4 - 0/0")
+
+-- Encounters
+local totalEncounters = 0
+local desiredEncounters = 0
+local LastBattleDetected = false
+local CurPokemonLbl = Tab:CreateLabel("Current Pokemon: ???")
+local TotalEncLbl = Tab:CreateLabel("Total Encounters: 0")
+local DesiredEncLbl = Tab:CreateLabel("Desired Encounters: 0")
+
+-- Eject with key
+uis.InputBegan:Connect(function(key,proc)
+    if key.KeyCode == Enum.KeyCode.E and not proc then
+        eject = true
+        BotToggle:Set(false)
+    end
+end)
+
+-- --- MAIN BOT LOOP ---
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if not BotToggle.CurrentValue then continue end
+
+        startBattle()
+
+        -- Wait for BattleGui
+        local BattleGui
+        repeat
+            BattleGui = PlayerGui:FindFirstChild("MainGui", true)
+            if BattleGui then
+                BattleGui = BattleGui:FindFirstChild("BattleGui")
+            end
+            task.wait()
+        until BattleGui
+
+        -- Count encounters only once per appearance
+        if not LastBattleDetected then
+            totalEncounters = totalEncounters + 1
+            LastBattleDetected = true
+            TotalEncLbl:Set("Total Encounters: " .. totalEncounters)
+        end
+
+        -- read current pokemon name (lowercase)
+        local curPokemonRaw = string.lower(getPokemonName())
+        CurPokemonLbl:Set("Current Pokemon: " .. curPokemonRaw)
+
+        -- Wait 1 second if keep pokemon
+        if KeepPokemon[curPokemonRaw] then
+            task.wait(1)
+            continue
+        end
+
+        -- Assign fight/rest/run buttons
+        restFight = nil
+        clickFight = nil
+        clickRun = nil
+        for _,v in ipairs(BattleGui:GetChildren()) do
+            if v.ClassName == "ImageLabel" then
+                if v.ImageColor3 == Color3.fromRGB(218,83,255) then
+                    restFight = v:FindFirstChild("Button")
+                elseif v.ImageColor3 == Color3.fromRGB(255,102,102) then
+                    clickFight = v:FindFirstChild("Button")
+                end
+            elseif v.Name == "Run" then
+                clickRun = v:FindFirstChild("Button") or v
+            end
+        end
+
+        -- Click Fight until moves appear
+        repeat
+            if clickFight then
+                local x,y = getCenterPosition(clickFight)
+                virtualClick(x,y)
+            end
+            task.wait(0.15)
+        until BattleGui:FindFirstChild("Move1",true)
+
+        -- Assign move buttons
+        clickMove1 = BattleGui:FindFirstChild("Move1",true) and BattleGui:FindFirstChild("Move1",true):FindFirstChild("Button")
+        clickMove2 = BattleGui:FindFirstChild("Move2",true) and BattleGui:FindFirstChild("Move2",true):FindFirstChild("Button")
+        clickMove3 = BattleGui:FindFirstChild("Move3",true) and BattleGui:FindFirstChild("Move3",true):FindFirstChild("Button")
+        clickMove4 = BattleGui:FindFirstChild("Move4",true) and BattleGui:FindFirstChild("Move4",true):FindFirstChild("Button")
+
+        -- Wait short moment to ensure PP frames are created
+        task.wait(0.05)
+
+        -- Main battle loop
+        while not ended and not eject do
+            task.wait(0.08)
+
+            pcall(function()
+                Main.Battle.currentBattle.fastForward = true
+            end)
+
+            -- Update PP
+            local m1c,m1m = getPP(BattleGui:FindFirstChild("Move1",true))
+            local m2c,m2m = getPP(BattleGui:FindFirstChild("Move2",true))
+            local m3c,m3m = getPP(BattleGui:FindFirstChild("Move3",true))
+            local m4c,m4m = getPP(BattleGui:FindFirstChild("Move4",true))
+            PPLbl1:Set(string.format("Move 1 - %d/%d", m1c, m1m))
+            PPLbl2:Set(string.format("Move 2 - %d/%d", m2c, m2m))
+            PPLbl3:Set(string.format("Move 3 - %d/%d", m3c, m3m))
+            PPLbl4:Set(string.format("Move 4 - %d/%d", m4c, m4m))
+
+            -- If fight button still there and move buttons not visible -> press fight
+            if clickFight and clickFight.Parent and clickFight.Parent.Visible and (not clickMove1 or not clickMove1.Parent.Visible) then
+                local x,y = getCenterPosition(clickFight)
+                virtualClick(x,y)
+                task.wait(0.12)
+                continue
+            end
+
+            -- Choose move based on effectiveness then PP
+            local moveCandidates = {}
+            for _,m in ipairs(selectedMoves) do
+                local moveBtn = nil
+                local moveGui = BattleGui:FindFirstChild("Move"..m,true)
+                if m == 1 then moveBtn = clickMove1
+                elseif m == 2 then moveBtn = clickMove2
+                elseif m == 3 then moveBtn = clickMove3
+                elseif m == 4 then moveBtn = clickMove4
+                end
+                local curPP,_ = getPP(moveGui)
+                local effTier = getEffectivenessTier(moveGui)
+                if curPP > 0 then
+                    table.insert(moveCandidates,{btn=moveBtn, pp=curPP, eff=effTier})
+                end
+            end
+
+            -- Sort candidates: effectiveness first, then PP
+            table.sort(moveCandidates,function(a,b)
+                if a.eff ~= b.eff then
+                    return a.eff < b.eff
+                else
+                    return a.pp > b.pp
+                end
+            end)
+
+            -- Click the chosen move 3 times
+            if #moveCandidates > 0 then
+                for i=1,3 do
+                    local bx,by = getCenterPosition(moveCandidates[1].btn)
+                    virtualClick(bx,by)
+                    task.wait(0.05)
+                end
+            else
+                -- No usable move -> attempt to run
+                if clickRun then
+                    local rx,ry = getCenterPosition(clickRun)
+                    virtualClick(rx,ry)
+                    task.wait(0.12)
+                elseif restFight then
+                    local rx,ry = getCenterPosition(restFight)
+                    virtualClick(rx,ry)
+                    task.wait(0.12)
+                end
+                break
+            end
+
+            -- Break if battle GUI disappears
+            if not PlayerGui:FindFirstChild("MainGui", true) or not PlayerGui:FindFirstChild("MainGui", true):FindFirstChild("BattleGui", true) then
+                break
+            end
+        end
+
+        -- Wait for battle to end
+        repeat
+            task.wait(0.1)
+        until not PlayerGui:FindFirstChild("MainGui", true) or not PlayerGui:FindFirstChild("MainGui", true):FindFirstChild("BattleGui", true)
+
+        LastBattleDetected = false
+    end
+end)

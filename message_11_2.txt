@@ -1,0 +1,121 @@
+-- Constants
+local FOV = 80
+local FOV_COLOR = Color3.fromRGB(20, 20, 20) -- Purple color
+local TARGET_PART = "Head"
+local UNBIND_KEY = Enum.KeyCode.C
+local TeamCheck = true -- Set this to true to enable team check
+local WallCheckEnabled = true -- Set this to true to enable wall check
+
+-- Services
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Cam = workspace.CurrentCamera
+
+-- Drawing for FOV Circle
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = true
+FOVring.Thickness = 2
+FOVring.Color = FOV_COLOR
+FOVring.Filled = false
+FOVring.Radius = FOV
+FOVring.Position = Cam.ViewportSize / 2
+
+-- Function to update FOV drawing position
+local function updateFOVring()
+    FOVring.Position = Cam.ViewportSize / 2
+end
+
+-- Function to handle key down events
+local function onKeyDown(input)
+    if input.KeyCode == UNBIND_KEY then
+        RunService:UnbindFromRenderStep("FOVUpdate")
+        FOVring:Remove()
+    end
+end
+
+UserInputService.InputBegan:Connect(onKeyDown)
+
+-- Function to set camera to look at target position
+local function lookAt(targetPosition)
+    local lookVector = (targetPosition - Cam.CFrame.Position).unit
+    local newCFrame = CFrame.new(Cam.CFrame.Position, Cam.CFrame.Position + lookVector)
+    Cam.CFrame = newCFrame
+end
+
+-- Wall check function
+local function WallCheck(Pos, PartDescendant)
+    if not WallCheckEnabled then
+        return true -- Wall check disabled, return true
+    end
+    
+    local Character = Players.LocalPlayer.Character
+    local Origin = Cam.CFrame.Position
+
+    local RayCastParams = RaycastParams.new()
+    RayCastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    RayCastParams.FilterDescendantsInstances = {Character, Cam}
+
+    local Result = workspace:Raycast(Origin, Pos - Origin, RayCastParams)
+    
+    if Result then
+        local PartHit = Result.Instance
+        local Visible = (not PartHit or Instance.new("Part").IsDescendantOf(PartHit, PartDescendant))
+        
+        return Visible
+    end
+    return false
+end
+
+-- Function to get closest player within FOV
+local function getClosestPlayerInFOV(targetPartName)
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local screenCenter = Cam.ViewportSize / 2
+    local client = Players.LocalPlayer
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= client then
+            local character = player.Character
+            local targetPart = character and character:FindFirstChild(targetPartName)
+            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+            if targetPart and humanoid and humanoid.Health > 0 then
+                -- Team check logic
+                if TeamCheck and client.Team ~= nil and player.Team ~= nil and player.Team == client.Team then
+                    continue
+                end
+
+                local screenPosition, isVisible = Cam:WorldToViewportPoint(targetPart.Position)
+                local distance = (Vector2.new(screenPosition.X, screenPosition.Y) - screenCenter).Magnitude
+
+                if distance < shortestDistance and isVisible and distance < FOV then
+                    -- Wall check before considering the player
+                    if WallCheck(targetPart.Position, character) then
+                        shortestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Render step connection
+RunService.RenderStepped:Connect(function()
+    updateFOVring()
+    local closestPlayer = getClosestPlayerInFOV(TARGET_PART)
+    if closestPlayer and closestPlayer.Character then
+        local targetPart = closestPlayer.Character:FindFirstChild(TARGET_PART)
+        local humanoid = closestPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+        if targetPart and humanoid and humanoid.Health > 0 then
+            -- Check if there's a wall in front of the target before looking at it
+            if WallCheck(targetPart.Position, closestPlayer.Character) then
+                lookAt(targetPart.Position)
+            end
+        end
+    end
+end)

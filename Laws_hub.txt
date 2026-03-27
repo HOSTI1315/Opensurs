@@ -1,0 +1,359 @@
+
+-- Wait for game to load
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer.Character
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+Player.CharacterAdded:Connect(function(char)
+    Character = char
+    HumanoidRootPart = char:WaitForChild("HumanoidRootPart")
+end)
+
+-- Config
+_G.BondFarmEnabled = false
+_G.BondCount = 0
+
+-- Remove old GUI
+if CoreGui:FindFirstChild("BondFarmGUI") then
+    CoreGui:FindFirstChild("BondFarmGUI"):Destroy()
+end
+
+-- Create GUI
+local SG = Instance.new("ScreenGui", CoreGui)
+SG.Name = "laws hub"
+SG.ResetOnSpawn = false
+
+-- Main Frame
+local MF = Instance.new("Frame", SG)
+MF.Size = UDim2.new(0, 380, 0, 280)
+MF.Position = UDim2.new(0.5, -190, 0.5, -140)
+MF.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MF.BorderSizePixel = 0
+MF.Active = true
+MF.Draggable = true
+
+Instance.new("UICorner", MF).CornerRadius = UDim.new(0, 12)
+local stroke = Instance.new("UIStroke", MF)
+stroke.Color = Color3.fromRGB(138, 43, 226)
+stroke.Thickness = 2
+
+-- Top Bar
+local TB = Instance.new("Frame", MF)
+TB.Size = UDim2.new(1, 0, 0, 45)
+TB.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+TB.BorderSizePixel = 0
+
+Instance.new("UICorner", TB).CornerRadius = UDim.new(0, 12)
+
+-- Logo
+local Logo = Instance.new("ImageLabel", TB)
+Logo.Size = UDim2.new(0, 35, 0, 35)
+Logo.Position = UDim2.new(0, 5, 0, 5)
+Logo.BackgroundTransparency = 1
+Logo.Image = "rbxassetid://119629543947699"
+Logo.ScaleType = Enum.ScaleType.Fit
+
+Instance.new("UICorner", Logo).CornerRadius = UDim.new(1, 0)
+
+-- Title
+local Title = Instance.new("TextLabel", TB)
+Title.Size = UDim2.new(0, 240, 1, 0)
+Title.Position = UDim2.new(0, 45, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "laws hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local grad = Instance.new("UIGradient", Title)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 105, 180))
+}
+
+-- Close Button
+local CB = Instance.new("TextButton", TB)
+CB.Size = UDim2.new(0, 32, 0, 32)
+CB.Position = UDim2.new(1, -38, 0, 6)
+CB.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CB.Text = "X"
+CB.TextColor3 = Color3.new(1, 1, 1)
+CB.TextSize = 16
+CB.Font = Enum.Font.GothamBold
+CB.BorderSizePixel = 0
+
+Instance.new("UICorner", CB).CornerRadius = UDim.new(1, 0)
+
+CB.MouseButton1Click:Connect(function()
+    _G.BondFarmEnabled = false
+    SG:Destroy()
+end)
+
+-- Counter Display
+local CF = Instance.new("Frame", MF)
+CF.Size = UDim2.new(1, -20, 0, 70)
+CF.Position = UDim2.new(0, 10, 0, 55)
+CF.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+CF.BorderSizePixel = 0
+
+Instance.new("UICorner", CF).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", CF).Color = Color3.fromRGB(138, 43, 226)
+
+local CL = Instance.new("TextLabel", CF)
+CL.Size = UDim2.new(1, 0, 0, 25)
+CL.Position = UDim2.new(0, 0, 0, 8)
+CL.BackgroundTransparency = 1
+CL.Text = "💸Bonds Collected"
+CL.TextColor3 = Color3.fromRGB(200, 200, 200)
+CL.TextSize = 14
+CL.Font = Enum.Font.Gotham
+
+local CV = Instance.new("TextLabel", CF)
+CV.Size = UDim2.new(1, 0, 0, 30)
+CV.Position = UDim2.new(0, 0, 0, 35)
+CV.BackgroundTransparency = 1
+CV.Text = "0"
+CV.TextColor3 = Color3.fromRGB(138, 43, 226)
+CV.TextSize = 28
+CV.Font = Enum.Font.GothamBold
+
+-- Status
+local ST = Instance.new("TextLabel", MF)
+ST.Size = UDim2.new(1, -20, 0, 25)
+ST.Position = UDim2.new(0, 10, 0, 135)
+ST.BackgroundTransparency = 1
+ST.Text = "Status: Idle"
+ST.TextColor3 = Color3.fromRGB(150, 150, 150)
+ST.TextSize = 13
+ST.Font = Enum.Font.Gotham
+ST.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Start Button
+local SB = Instance.new("TextButton", MF)
+SB.Size = UDim2.new(1, -20, 0, 45)
+SB.Position = UDim2.new(0, 10, 0, 170)
+SB.BackgroundColor3 = Color3.fromRGB(46, 213, 115)
+SB.Text = "🍌  START FARMING"
+SB.TextColor3 = Color3.new(1, 1, 1)
+SB.TextSize = 16
+SB.Font = Enum.Font.GothamBold
+SB.BorderSizePixel = 0
+
+Instance.new("UICorner", SB).CornerRadius = UDim.new(0, 10)
+
+-- Stop Button
+local STB = Instance.new("TextButton", MF)
+STB.Size = UDim2.new(1, -20, 0, 45)
+STB.Position = UDim2.new(0, 10, 0, 225)
+STB.BackgroundColor3 = Color3.fromRGB(255, 71, 87)
+STB.Text = "🤓STOP FARMING"
+STB.TextColor3 = Color3.new(1, 1, 1)
+STB.TextSize = 16
+STB.Font = Enum.Font.GothamBold
+STB.BorderSizePixel = 0
+
+Instance.new("UICorner", STB).CornerRadius = UDim.new(0, 10)
+
+-- Corner Tracker
+local TF = Instance.new("Frame", SG)
+TF.Size = UDim2.new(0, 140, 0, 45)
+TF.Position = UDim2.new(0, 10, 0, 60)
+TF.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+TF.BackgroundTransparency = 0.3
+TF.BorderSizePixel = 0
+TF.Active = true
+TF.Draggable = true
+
+Instance.new("UICorner", TF).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", TF).Color = Color3.fromRGB(138, 43, 226)
+
+local TT = Instance.new("TextLabel", TF)
+TT.Size = UDim2.new(1, 0, 1, 0)
+TT.BackgroundTransparency = 1
+TT.Text = "Bonds: 0"
+TT.TextColor3 = Color3.new(1, 1, 1)
+TT.TextSize = 16
+TT.Font = Enum.Font.GothamBold
+
+-- Update function
+local function UpdateCount()
+    CV.Text = tostring(_G.BondCount)
+    TT.Text = "Bonds: " .. tostring(_G.BondCount)
+end
+
+-- Track bonds
+Workspace.RuntimeItems.ChildAdded:Connect(function(v)
+    if v.Name:find("Bond") and v:FindFirstChild("Part") then
+        v.Destroying:Connect(function()
+            _G.BondCount += 1
+            UpdateCount()
+        end)
+    end
+end)
+
+-- Status function
+local function SetStatus(txt, clr)
+    ST.Text = "Status: " .. txt
+    ST.TextColor3 = clr or Color3.fromRGB(150, 150, 150)
+end
+
+-- Main Farm Function
+local function Farm()
+    _G.BondFarmEnabled = true
+    SetStatus("Starting...", Color3.fromRGB(255, 200, 0))
+    
+    wait(1)
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("EndDecision"):FireServer(false)
+    
+    if Player.Character:FindFirstChild("Humanoid") then
+        Workspace.CurrentCamera.CameraSubject = Player.Character:FindFirstChild("Humanoid")
+    end
+    Player.CameraMode = "Classic"
+    Player.CameraMaxZoomDistance = math.huge
+    Player.CameraMinZoomDistance = 30
+    
+    HumanoidRootPart.Anchored = true
+    wait(0.5)
+    
+    SetStatus("Teleporting...", Color3.fromRGB(255, 200, 0))
+    
+    repeat 
+        if not _G.BondFarmEnabled then return end
+        HumanoidRootPart.Anchored = true
+        wait(0.5)
+        HumanoidRootPart.CFrame = CFrame.new(80, 3, -9000)
+        repeat task.wait() until Workspace.RuntimeItems:FindFirstChild("MaximGun") or not _G.BondFarmEnabled
+        wait(0.3)
+        
+        SetStatus("Finding gun...", Color3.fromRGB(255, 200, 0))
+        
+        for i, v in pairs(Workspace.RuntimeItems:GetChildren()) do
+            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
+                v.VehicleSeat.Disabled = false
+                v.VehicleSeat:SetAttribute("Disabled", false)
+                v.VehicleSeat:Sit(Player.Character:FindFirstChild("Humanoid"))
+            end
+        end
+        
+        wait(0.5)
+        for i, v in pairs(Workspace.RuntimeItems:GetChildren()) do
+            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") and (HumanoidRootPart.Position - v.VehicleSeat.Position).Magnitude < 400 then
+                HumanoidRootPart.CFrame = v.VehicleSeat.CFrame
+            end
+        end
+        
+        wait(1)
+        HumanoidRootPart.Anchored = false
+    until Player.Character:FindFirstChild("Humanoid").Sit == true or not _G.BondFarmEnabled
+    
+    if not _G.BondFarmEnabled then return end
+    
+    wait(0.5)
+    Player.Character:FindFirstChild("Humanoid").Sit = false
+    wait(0.5)
+    
+    repeat task.wait()
+        if not _G.BondFarmEnabled then return end
+        for i, v in pairs(Workspace.RuntimeItems:GetChildren()) do
+            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") and (HumanoidRootPart.Position - v.VehicleSeat.Position).Magnitude < 400 then
+                HumanoidRootPart.CFrame = v.VehicleSeat.CFrame
+            end
+        end
+    until Player.Character:FindFirstChild("Humanoid").Sit == true or not _G.BondFarmEnabled
+    
+    if not _G.BondFarmEnabled then return end
+    
+    wait(0.9)
+    
+    SetStatus("Finding train...", Color3.fromRGB(255, 200, 0))
+    
+    for i, v in pairs(Workspace:GetChildren()) do
+        if v:IsA("Model") and v:FindFirstChild("RequiredComponents") then
+            if v.RequiredComponents:FindFirstChild("Controls") and v.RequiredComponents.Controls:FindFirstChild("ConductorSeat") and v.RequiredComponents.Controls.ConductorSeat:FindFirstChild("VehicleSeat") then
+                local tp = TweenService:Create(HumanoidRootPart, TweenInfo.new(25, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = v.RequiredComponents.Controls.ConductorSeat:FindFirstChild("VehicleSeat").CFrame * CFrame.new(0, 20, 0)})
+                tp:Play()
+                
+                if HumanoidRootPart:FindFirstChild("VelocityHandler") == nil then
+                    local bv = Instance.new("BodyVelocity", HumanoidRootPart)
+                    bv.Name = "VelocityHandler"
+                    bv.MaxForce = Vector3.new(100000, 100000, 100000)
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                end
+                tp.Completed:Wait()
+            end
+        end
+    end
+    
+    wait(1)
+    
+    SetStatus("Farming!", Color3.fromRGB(46, 213, 115))
+    
+    while _G.BondFarmEnabled do
+        if Player.Character:FindFirstChild("Humanoid").Sit == true then
+            local tp2 = TweenService:Create(HumanoidRootPart, TweenInfo.new(17, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = CFrame.new(0.5, -78, -49429)})
+            tp2:Play()
+            
+            if HumanoidRootPart:FindFirstChild("VelocityHandler") == nil then
+                local bv = Instance.new("BodyVelocity", HumanoidRootPart)
+                bv.Name = "VelocityHandler"
+                bv.MaxForce = Vector3.new(100000, 100000, 100000)
+                bv.Velocity = Vector3.new(0, 0, 0)
+            end
+            
+            repeat task.wait() until Workspace.RuntimeItems:FindFirstChild("Bond") or not _G.BondFarmEnabled
+            
+            if not _G.BondFarmEnabled then break end
+            
+            tp2:Cancel()
+            
+            for i, v in pairs(Workspace.RuntimeItems:GetChildren()) do
+                if not _G.BondFarmEnabled then break end
+                if v.Name:find("Bond") and v:FindFirstChild("Part") then
+                    repeat task.wait()
+                        if not _G.BondFarmEnabled then break end
+                        if v:FindFirstChild("Part") then
+                            HumanoidRootPart.CFrame = v:FindFirstChild("Part").CFrame
+                            ReplicatedStorage.Shared.Network.RemotePromise.Remotes.C_ActivateObject:FireServer(v)
+                        end
+                    until v:FindFirstChild("Part") == nil or not _G.BondFarmEnabled
+                end
+            end
+        end
+        task.wait()
+    end
+    
+    SetStatus("Stopped", Color3.fromRGB(255, 71, 87))
+end
+
+-- Buttons
+SB.MouseButton1Click:Connect(function()
+    if not _G.BondFarmEnabled then
+        spawn(Farm)
+    end
+end)
+
+STB.MouseButton1Click:Connect(function()
+    _G.BondFarmEnabled = false
+    SetStatus("Stopped", Color3.fromRGB(255, 71, 87))
+    if HumanoidRootPart:FindFirstChild("VelocityHandler") then
+        HumanoidRootPart:FindFirstChild("VelocityHandler"):Destroy()
+    end
+end)
+
+-- Anti-AFK
+Player.Idled:Connect(function()
+    game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
+

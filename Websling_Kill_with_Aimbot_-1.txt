@@ -1,0 +1,155 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Backpack = Players.LocalPlayer:WaitForChild("Backpack")
+
+local REUseItem = ReplicatedStorage.Packages.Net["RE/UseItem"]
+
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SilentHub"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 240, 0, 140)
+Frame.Position = UDim2.new(0.75, 0, 0.05, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 0, 50)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 16)
+
+local Shadow = Instance.new("UIStroke", Frame)
+Shadow.Thickness = 2
+Shadow.Color = Color3.fromRGB(180, 0, 255)
+Shadow.Transparency = 0.3
+
+local hue = 0
+RunService.Heartbeat:Connect(function(dt)
+    hue = hue + dt
+    local r = 120 + 60 * math.sin(hue * 2)
+    local g = 0
+    local b = 255 - 30 * math.sin(hue * 2)
+    Shadow.Color = Color3.fromRGB(r, g, b)
+    Shadow.Thickness = 2 + math.sin(hue * 3)
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(60, 0, 120)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+Title.Text = "SilentHub"
+Title.Parent = Frame
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 16)
+
+local teleportButton = Instance.new("TextButton")
+teleportButton.Size = UDim2.new(0.9, 0, 0.35, 0)
+teleportButton.Position = UDim2.new(0.05, 0, 0.35, 0)
+teleportButton.BackgroundColor3 = Color3.fromRGB(120, 0, 220)
+teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleportButton.Font = Enum.Font.GothamBold
+teleportButton.TextScaled = true
+teleportButton.Text = "Teleport Loop"
+teleportButton.Parent = Frame
+Instance.new("UICorner", teleportButton).CornerRadius = UDim.new(0, 12)
+local ButtonStroke1 = Instance.new("UIStroke", teleportButton)
+ButtonStroke1.Thickness = 2
+ButtonStroke1.Color = Color3.fromRGB(180, 0, 255)
+ButtonStroke1.Transparency = 0.3
+
+local shootButton = Instance.new("TextButton")
+shootButton.Size = UDim2.new(0.9, 0, 0.25, 0)
+shootButton.Position = UDim2.new(0.05, 0, 0.75, 0)
+shootButton.BackgroundColor3 = Color3.fromRGB(80, 0, 180)
+shootButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+shootButton.Font = Enum.Font.GothamBold
+shootButton.TextScaled = true
+shootButton.Text = "Shoot Nearest"
+shootButton.Parent = Frame
+Instance.new("UICorner", shootButton).CornerRadius = UDim.new(0, 12)
+local ButtonStroke2 = Instance.new("UIStroke", shootButton)
+ButtonStroke2.Thickness = 2
+ButtonStroke2.Color = Color3.fromRGB(120, 0, 255)
+ButtonStroke2.Transparency = 0.3
+
+local toggled = false
+local teleportLoop
+
+local function getNearestPlayer()
+	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return nil end
+	local closest, distance = nil, math.huge
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local part = player.Character.HumanoidRootPart
+			local mag = (part.Position - hrp.Position).Magnitude
+			if mag < distance then
+				distance = mag
+				closest = player
+			end
+		end
+	end
+	return closest
+end
+
+local function startTeleportLoop()
+	local target = getNearestPlayer()
+	if not target or not target.Character then return end
+	local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	if teleportLoop then teleportLoop:Disconnect() end
+	local above = true
+	teleportLoop = RunService.Heartbeat:Connect(function()
+		if target.Character and hrp then
+			hrp.CFrame = hrp.CFrame + Vector3.new(0, above and 20 or -20, 0)
+			above = not above
+		end
+		task.wait(0.5)
+	end)
+end
+
+local function stopTeleportLoop()
+	if teleportLoop then
+		teleportLoop:Disconnect()
+		teleportLoop = nil
+	end
+end
+
+teleportButton.MouseButton1Click:Connect(function()
+	toggled = not toggled
+	teleportButton.Text = toggled and "Stop" or "Teleport Loop"
+	if toggled then startTeleportLoop() else stopTeleportLoop() end
+end)
+
+local function equipItem(itemName)
+	local backpackItem = Backpack:FindFirstChild(itemName)
+	if backpackItem then
+		backpackItem.Parent = LocalPlayer.Character
+		return true
+	end
+	return false
+end
+
+local function shootNearest()
+	if not equipItem("Web Slinger") then
+		warn("Web Slinger not found in inventory!")
+		return
+	end
+	local targetPlayer = getNearestPlayer()
+	if not targetPlayer or not targetPlayer.Character then return end
+	local character = targetPlayer.Character
+	local leftUpperLeg = character:FindFirstChild("LeftUpperLeg")
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if leftUpperLeg and hrp then
+		REUseItem:FireServer(hrp.Position, leftUpperLeg)
+		print("Fired Web Slinger at " .. targetPlayer.Name)
+	end
+end
+
+shootButton.MouseButton1Click:Connect(shootNearest)

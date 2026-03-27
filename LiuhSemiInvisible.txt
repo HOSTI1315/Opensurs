@@ -1,0 +1,285 @@
+local connections = {
+    SemiInvisible = {}
+}
+
+local isInvisible = false
+local clone, oldRoot, hip, animTrack, connection, characterConnection
+
+local function semiInvisibleFunction()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local Workspace = game:GetService("Workspace")
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    local LocalPlayer = Players.LocalPlayer
+
+    local DEPTH_OFFSET = 0.09  
+
+    local function removeFolders()  
+        local playerName = LocalPlayer.Name  
+        local playerFolder = Workspace:FindFirstChild(playerName)  
+        if not playerFolder then  
+            return  
+        end  
+
+        local doubleRig = playerFolder:FindFirstChild("DoubleRig")  
+        if doubleRig then  
+            doubleRig:Destroy()  
+        end  
+
+        local constraints = playerFolder:FindFirstChild("Constraints")  
+        if constraints then  
+            constraints:Destroy()  
+        end  
+
+        local childAddedConn = playerFolder.ChildAdded:Connect(function(child)  
+            if child.Name == "DoubleRig" or child.Name == "Constraints" then  
+                child:Destroy()  
+            end  
+        end)  
+        table.insert(connections.SemiInvisible, childAddedConn)  
+    end  
+
+    local function doClone()  
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0 then  
+            hip = LocalPlayer.Character.Humanoid.HipHeight  
+            oldRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")  
+            if not oldRoot or not oldRoot.Parent then  
+                return false  
+            end  
+
+            local tempParent = Instance.new("Model")  
+            tempParent.Parent = game  
+            LocalPlayer.Character.Parent = tempParent  
+
+            clone = oldRoot:Clone()  
+            clone.Parent = LocalPlayer.Character  
+            oldRoot.Parent = game.Workspace.CurrentCamera  
+            clone.CFrame = oldRoot.CFrame  
+
+            LocalPlayer.Character.PrimaryPart = clone  
+            LocalPlayer.Character.Parent = game.Workspace  
+
+            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do  
+                if v:IsA("Weld") or v:IsA("Motor6D") then  
+                    if v.Part0 == oldRoot then  
+                        v.Part0 = clone  
+                    end  
+                    if v.Part1 == oldRoot then  
+                        v.Part1 = clone  
+                    end  
+                end  
+            end  
+
+            tempParent:Destroy()  
+            return true  
+        end  
+        return false  
+    end  
+
+    local function revertClone()  
+        if not oldRoot or not oldRoot:IsDescendantOf(game.Workspace) or not LocalPlayer.Character or LocalPlayer.Character.Humanoid.Health <= 0 then  
+            return false  
+        end  
+
+        local tempParent = Instance.new("Model")  
+        tempParent.Parent = game  
+        LocalPlayer.Character.Parent = tempParent  
+
+        oldRoot.Parent = LocalPlayer.Character  
+        LocalPlayer.Character.PrimaryPart = oldRoot  
+        LocalPlayer.Character.Parent = game.Workspace  
+        oldRoot.CanCollide = true  
+
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do  
+            if v:IsA("Weld") or v:IsA("Motor6D") then  
+                if v.Part0 == clone then  
+                    v.Part0 = oldRoot  
+                end  
+                if v.Part1 == clone then  
+                    v.Part1 = oldRoot  
+                end  
+            end  
+        end  
+
+        if clone then  
+            local oldPos = clone.CFrame  
+            clone:Destroy()  
+            clone = nil  
+            oldRoot.CFrame = oldPos  
+        end  
+
+        oldRoot = nil  
+        if LocalPlayer.Character and LocalPlayer.Character.Humanoid then  
+            LocalPlayer.Character.Humanoid.HipHeight = hip  
+        end  
+    end  
+
+    local function animationTrickery()  
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0 then  
+            local anim = Instance.new("Animation")  
+            anim.AnimationId = "http://www.roblox.com/asset/?id=18537363391"  
+            local humanoid = LocalPlayer.Character.Humanoid  
+            local animator = humanoid:FindFirstChild("Animator") or Instance.new("Animator", humanoid)  
+            animTrack = animator:LoadAnimation(anim)  
+            animTrack.Priority = Enum.AnimationPriority.Action4  
+            animTrack:Play(0, 1, 0)  
+            anim:Destroy()  
+
+            local animStoppedConn = animTrack.Stopped:Connect(function()  
+                if isInvisible then  
+                    animationTrickery()  
+                end  
+            end)  
+            table.insert(connections.SemiInvisible, animStoppedConn)  
+
+            task.delay(0, function()  
+                animTrack.TimePosition = 0.7  
+                task.delay(1, function()  
+                    animTrack:AdjustSpeed(math.huge)  
+                end)  
+            end)  
+        end  
+    end  
+
+    local function enableInvisibility()  
+        if not LocalPlayer.Character or LocalPlayer.Character.Humanoid.Health <= 0 then  
+            return false
+        end  
+
+        removeFolders()  
+        local success = doClone()  
+        if success then  
+            task.wait(0.1)  
+            animationTrickery()  
+            connection = RunService.PreSimulation:Connect(function(dt)  
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health > 0 and oldRoot then  
+                    local root = LocalPlayer.Character.PrimaryPart or LocalPlayer.Character:FindFirstChild("HumanoidRootPart")  
+                    if root then  
+                        local cf = root.CFrame - Vector3.new(0, LocalPlayer.Character.Humanoid.HipHeight + (root.Size.Y / 2) - 1 + DEPTH_OFFSET, 0)  
+                        oldRoot.CFrame = cf * CFrame.Angles(math.rad(180), 0, 0)  
+                        oldRoot.Velocity = root.Velocity  
+                        oldRoot.CanCollide = false  
+                    end  
+                end  
+            end)  
+            table.insert(connections.SemiInvisible, connection)  
+
+            characterConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
+                if isInvisible then
+                    if animTrack then  
+                        animTrack:Stop()  
+                        animTrack:Destroy()  
+                        animTrack = nil  
+                    end  
+                    if connection then connection:Disconnect() end  
+                    revertClone()
+                    removeFolders()
+                    isInvisible = false
+                    
+                    for _, conn in ipairs(connections.SemiInvisible) do  
+                        if conn then conn:Disconnect() end  
+                    end  
+                    connections.SemiInvisible = {}
+                end
+            end)
+            table.insert(connections.SemiInvisible, characterConnection)
+            
+            return true
+        end  
+        return false
+    end  
+
+    local function disableInvisibility()  
+        if animTrack then  
+            animTrack:Stop()  
+            animTrack:Destroy()  
+            animTrack = nil  
+        end  
+        if connection then connection:Disconnect() end  
+        if characterConnection then characterConnection:Disconnect() end  
+        revertClone()  
+        removeFolders()  
+    end
+
+    local function setupGodmode()  
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()  
+        local hum = char:WaitForChild("Humanoid")  
+        local mt = getrawmetatable(game)  
+        local oldNC = mt.__namecall  
+        local oldNI = mt.__newindex  
+
+        setreadonly(mt, false)  
+
+        mt.__namecall = newcclosure(function(self, ...)  
+            local m = getnamecallmethod()  
+            if self == hum then  
+                if m == "ChangeState" and select(1, ...) == Enum.HumanoidStateType.Dead then  
+                    return
+                end
+                if m == "SetStateEnabled" then
+                    local st, en = ...
+                    if st == Enum.HumanoidStateType.Dead and en == true then
+                        return
+                    end
+                end
+                if m == "Destroy" then
+                    return
+                end
+            end
+
+            if self == char and m == "BreakJoints" then  
+                return  
+            end  
+
+            return oldNC(self, ...)  
+        end)  
+
+        mt.__newindex = newcclosure(function(self, k, v)  
+            if self == hum then  
+                if k == "Health" and type(v) == "number" and v <= 0 then  
+                    return  
+                end  
+                if k == "MaxHealth" and type(v) == "number" and v < hum.MaxHealth then  
+                    return  
+                end  
+                if k == "BreakJointsOnDeath" and v == true then  
+                    return  
+                end  
+                if k == "Parent" and v == nil then  
+                    return  
+                end  
+            end  
+
+            return oldNI(self, k, v)  
+        end)  
+
+        setreadonly(mt, true)  
+    end  
+
+    if not isInvisible then
+        removeFolders()  
+        setupGodmode()  
+        if enableInvisibility() then
+            isInvisible = true
+        end
+    else
+        disableInvisibility()
+        isInvisible = false
+        
+        pcall(function()  
+            local oldGui = LocalPlayer.PlayerGui:FindFirstChild("InvisibleGui")  
+            if oldGui then oldGui:Destroy() end  
+        end)  
+        for _, conn in ipairs(connections.SemiInvisible) do  
+            if conn then conn:Disconnect() end  
+        end  
+        connections.SemiInvisible = {}  
+    end
+end
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.F and not gameProcessed then
+        semiInvisibleFunction()
+    end
+end)

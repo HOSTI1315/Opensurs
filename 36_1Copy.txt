@@ -1,0 +1,947 @@
+---------------- Services / Remotes ----------------
+
+local RS  = game:GetService("ReplicatedStorage")
+local CG  = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local RunS = game:GetService("RunService")
+local CONCH  = RS:WaitForChild("conch_networking", 5)
+local INVOKE = CONCH and CONCH:WaitForChild("invoke_server_command", 5)
+local INVOKE_ID = {
+
+    spawnbrainrot     = 1,
+    executeallevents  = 1,
+    executeevent      = 2,
+    setmoney          = 3,
+    setrebirth        = 4,
+    spawnluckyblock   = 5,
+}
+
+local EVENT_LIST = {
+"10B Visits","4th of July","Bombardiro Crocodilo","Chicleteira Bicicleteira","Crab Rave",
+"La Vacca Saturno Saturnita","Los Matteos","Nyan Cats","Phase 1: Sleepy","Phase 2: Galaxy Introduction",
+"Phase 3: Sammy's Base","Phase 4: Mygame43","Phase 5: Sammy Snap","Raining Tacos","Rap Concert",
+"Sammyni Spyderini","Solar Flare","Tung Tung Attack","1MEvent","300K","Brazil","Bubblegum","Candy",
+"Concert","DulDulDul","Extinct","FatSammy","Galaxy","Glitch","Matteo","Mexico","Molten","Pinata",
+"Rain","Rainbow","Snow","Starfall","Stock","Strawberry","UFO","Water","YinYang","x4Event","x6Event","x8Event"
+}
+
+-- Invoke helper
+
+local function sendInvokeExact(name, args_tbl)
+    if not INVOKE then return false, "invoke_remote_not_found" end
+    local payload = { invoke_id = INVOKE_ID[name] or 1, name = name, args = args_tbl or {} }
+    local ok, err = pcall(function() INVOKE:FireServer(payload) end)
+    return ok, ok and "invoke" or tostring(err)
+end
+
+local function r(o, rad)
+    local c=Instance.new("UICorner",o)
+    c.CornerRadius=UDim.new(0, rad or 8)
+    return c
+end
+
+local function parseNumber(txt)
+    txt=tostring(txt or ""):gsub("[^%d%-%.]","")
+    return tonumber(txt)
+end
+
+-- Destroy old GUI
+
+pcall(function() if CG:FindFirstChild("Admin Panel Sab") then CG.SpvScriptUI:Destroy() end end)
+
+-- Main GUI
+
+local gui = Instance.new("ScreenGui", CG)
+gui.Name="Admin Panel Sab"
+gui.IgnoreGuiInset = false
+gui.ResetOnSpawn=false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Toggle button
+
+local toggle = Instance.new("TextButton", gui)
+toggle.Size=UDim2.fromOffset(45,45)
+toggle.Position=UDim2.new(0,10,0.5,-22)
+toggle.BackgroundColor3=Color3.fromRGB(88,101,242)
+toggle.BorderSizePixel=0
+toggle.Text="⚙️"
+toggle.Font=Enum.Font.Arcade
+toggle.TextSize=13
+toggle.TextColor3=Color3.new(1,1,1)
+toggle.AutoButtonColor=false
+r(toggle, 22)
+
+-- Drag function
+
+local function addDrag(handle, target)
+    handle.Active, target.Active = true, true
+    local dragging = false
+    local dragStart, startPos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+
+            local delta = input.Position - dragStart
+
+            target.Position = UDim2.new(
+
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+
+            )
+
+        end
+
+    end)
+
+end
+
+addDrag(toggle, toggle)
+
+-- Main frame
+
+local main = Instance.new("Frame", gui)
+
+main.Size=UDim2.fromOffset(420, 300)
+
+main.Position=UDim2.new(0.5,-210,0.5,-150)
+
+main.BackgroundColor3=Color3.fromRGB(18,20,26)
+
+main.BorderSizePixel=0
+
+main.ClipsDescendants=true
+
+r(main, 10)
+
+-- Title bar
+
+local titleBar = Instance.new("Frame", main)
+
+titleBar.Size=UDim2.new(1,0,0,35)
+
+titleBar.BackgroundColor3=Color3.fromRGB(25,27,35)
+
+titleBar.BorderSizePixel=0
+
+addDrag(titleBar, main)
+
+r(titleBar,10)
+
+local title = Instance.new("TextLabel", titleBar)
+
+title.Size=UDim2.new(0,150,1,0)
+
+title.Position=UDim2.fromOffset(12,0)
+
+title.BackgroundTransparency=1
+
+title.Text="Admin Panel Sab"
+
+title.Font=Enum.Font.Arcade
+
+title.TextSize=14
+
+title.TextColor3=Color3.fromRGB(88,101,242)
+
+title.TextXAlignment=Enum.TextXAlignment.Left
+
+local closeBtn = Instance.new("TextButton", titleBar)
+
+closeBtn.Size=UDim2.fromOffset(28,28)
+
+closeBtn.Position=UDim2.new(1,-32,0,3)
+
+closeBtn.Text="×"
+
+closeBtn.Font=Enum.Font.Arcade
+
+closeBtn.TextSize=18
+
+closeBtn.TextColor3=Color3.fromRGB(255,100,100)
+
+closeBtn.BackgroundColor3=Color3.fromRGB(35,37,45)
+
+closeBtn.BorderSizePixel=0
+
+r(closeBtn, 6)
+
+closeBtn.MouseButton1Click:Connect(function() main.Visible = false end)
+
+-- Status bar
+
+local statusBar = Instance.new("Frame", main)
+
+statusBar.Size=UDim2.new(1,0,0,22)
+
+statusBar.Position=UDim2.fromOffset(0,35)
+
+statusBar.BackgroundColor3=Color3.fromRGB(22,24,32)
+
+statusBar.BorderSizePixel=0
+
+local status = Instance.new("TextLabel", statusBar)
+
+status.Size=UDim2.new(1,-16,1,0)
+
+status.Position=UDim2.fromOffset(10,0)
+
+status.BackgroundTransparency=1
+
+status.Font=Enum.Font.Code
+
+status.TextSize=9
+
+status.TextXAlignment=Enum.TextXAlignment.Left
+
+status.TextColor3=Color3.fromRGB(130,140,160)
+
+status.Text = INVOKE and "Made by phongvietsub" or "Status: Missing Remote❌"
+
+local function ok(m) status.TextColor3=Color3.fromRGB(100,220,120); status.Text=m end
+
+local function er(m) status.TextColor3=Color3.fromRGB(255,110,110); status.Text=m end
+
+-- Side tabs
+
+local sideTab = Instance.new("Frame", main)
+
+sideTab.Size=UDim2.new(0,80,1,-57)
+
+sideTab.Position=UDim2.fromOffset(0,57)
+
+sideTab.BackgroundColor3=Color3.fromRGB(20,22,30)
+
+sideTab.BorderSizePixel=0
+
+local sideLayout = Instance.new("UIListLayout", sideTab)
+
+sideLayout.Padding=UDim.new(0,4)
+
+sideLayout.SortOrder=Enum.SortOrder.LayoutOrder
+
+sideLayout.HorizontalAlignment=Enum.HorizontalAlignment.Center
+
+local contentContainer = Instance.new("Frame", main)
+
+contentContainer.Size=UDim2.new(1,-80,1,-57)
+
+contentContainer.Position=UDim2.fromOffset(80,57)
+
+contentContainer.BackgroundTransparency=1
+
+contentContainer.BorderSizePixel=0
+
+-- Tab system
+
+local tabBtns = {}
+
+local tabFrames = {}
+
+local function createTab(name, icon, order)
+
+    local btn = Instance.new("TextButton", sideTab)
+
+    btn.Size=UDim2.new(1,0,0,36)
+
+    btn.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+    btn.Text=icon.."\n"..name
+
+    btn.Font=Enum.Font.Arcade
+
+    btn.TextSize=10
+
+    btn.TextColor3=Color3.fromRGB(160,170,190)
+
+    btn.AutoButtonColor=false
+
+    btn.BorderSizePixel=0
+
+    btn.LayoutOrder=order
+
+    r(btn,6)
+
+    local frame = Instance.new("ScrollingFrame", contentContainer)
+
+    frame.Size=UDim2.new(1,-10,1,-6)
+
+    frame.Position=UDim2.fromOffset(5,3)
+
+    frame.BackgroundTransparency=1
+
+    frame.BorderSizePixel=0
+
+    frame.ScrollBarThickness=3
+
+    frame.ScrollBarImageColor3=Color3.fromRGB(88,101,242)
+
+    frame.CanvasSize=UDim2.new(0,0,0,0)
+
+    frame.Visible=false
+
+    local layout = Instance.new("UIListLayout", frame)
+
+    layout.Padding=UDim.new(0,6)
+
+    layout.SortOrder=Enum.SortOrder.LayoutOrder
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+
+        frame.CanvasSize=UDim2.new(0,0,0,layout.AbsoluteContentSize.Y+6)
+
+    end)
+
+    tabBtns[name]=btn
+
+    tabFrames[name]=frame
+
+    btn.MouseButton1Click:Connect(function()
+
+        for n,b in pairs(tabBtns) do
+
+            b.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+            b.TextColor3=Color3.fromRGB(160,170,190)
+
+            tabFrames[n].Visible=false
+
+        end
+
+        btn.BackgroundColor3=Color3.fromRGB(88,101,242)
+
+        btn.TextColor3=Color3.new(1,1,1)
+
+        frame.Visible=true
+
+    end)
+
+    return frame
+
+end
+
+-- Create tabs
+
+local spawnerTab = createTab("Pet","🧠",1)
+
+local eventTab   = createTab("Event","🎉",2)
+
+local moneyTab   = createTab("Money","💰",3)
+
+local rebirthTab = createTab("Rebirth","🔄",4)
+
+local luckyTab   = createTab("Lucky","🍀",5)
+
+------------------- PET SPAWNER -------------------
+
+do
+
+    local frame = spawnerTab
+
+    local nameBox = Instance.new("TextBox", frame)
+
+    nameBox.Size=UDim2.new(1,0,0,28)
+
+    nameBox.PlaceholderText="Pet Name"
+
+    nameBox.Text="Strawberry Elephant"
+
+    nameBox.TextColor3=Color3.fromRGB(220,225,240)
+
+    nameBox.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+    r(nameBox,6)
+
+    nameBox.ClearTextOnFocus=false
+
+    nameBox.Font=Enum.Font.Arcade
+
+    nameBox.TextSize=10
+
+    nameBox.Position=UDim2.fromOffset(0,0)
+
+    local mutBox = Instance.new("TextBox", frame)
+
+    mutBox.Size=UDim2.new(1,0,0,28)
+
+    mutBox.PlaceholderText="Mutation (optional)"
+
+    mutBox.Text=""
+
+    mutBox.TextColor3=Color3.fromRGB(220,225,240)
+
+    mutBox.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+    r(mutBox,6)
+
+    mutBox.ClearTextOnFocus=false
+
+    mutBox.Font=Enum.Font.Arcade
+
+    mutBox.TextSize=10
+
+    mutBox.Position=UDim2.fromOffset(0,36)
+
+    local function getTraitsString()
+
+        -- Nếu bạn có traits UI khác, ghép chuỗi ở đây. Hiện bỏ trống.
+
+        return ""
+
+    end
+
+    local looping = false
+
+    local loopThread
+
+    local loopBtn = Instance.new("TextButton", frame)
+
+    loopBtn.Size=UDim2.new(1,0,0,28)
+
+    loopBtn.Text="Loop: OFF"
+
+    loopBtn.BackgroundColor3=Color3.fromRGB(55,65,80)
+
+    loopBtn.TextColor3=Color3.new(1,1,1)
+
+    r(loopBtn,6)
+
+    loopBtn.Position=UDim2.fromOffset(0,72)
+
+    local spawnBtn = Instance.new("TextButton", frame)
+
+    spawnBtn.Size=UDim2.new(1,0,0,28)
+
+    spawnBtn.Text="SPAWN BRAINROT🧠"
+
+    spawnBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
+
+    spawnBtn.TextColor3=Color3.new(1,1,1)
+
+    r(spawnBtn,6)
+
+    spawnBtn.Position=UDim2.fromOffset(0,108)
+
+    -- Special Event function
+
+    local function runSpecialStartEvent(brainrotName)
+
+        local args
+
+        if brainrotName=="Meowl" then
+
+            args={[1]="Meowl"}
+
+        elseif brainrotName=="Elephant" or brainrotName=="Strawberry Elephant" then
+
+            args={[1]="Strawberry"}
+
+        else return end
+
+        pcall(function()
+
+            RS.Packages.Net:FindFirstChild("RF/AdminService/StartEvent"):InvokeServer(unpack(args))
+
+        end)
+
+    end
+
+    local function spawnPet()
+
+        local name = tostring(nameBox.Text or "")
+
+        if name=="" then return er("⚠️ Enter Pet Name") end
+
+        local mutation = tostring(mutBox.Text or "")
+
+        local mutArg = (mutation=="" or mutation=="Mutation (optional)") and "" or mutation
+
+        local traitsArg = getTraitsString()
+
+        local args = {
+
+            [1]=name,
+
+            [2]=mutArg~="" and mutArg or "",
+
+            [3]=traitsArg~="" and traitsArg or ""
+
+        }
+
+        local ok_, res = pcall(function()
+
+            RS.Packages.Net:FindFirstChild("RF/AdminService/SpawnBrainrot"):InvokeServer(unpack(args))
+
+            runSpecialStartEvent(name)
+
+        end)
+
+        if ok_ then ok("✅ Spawned: "..name) else er("❌ "..tostring(res)) end
+
+    end
+
+    spawnBtn.MouseButton1Click:Connect(spawnPet)
+
+    loopBtn.MouseButton1Click:Connect(function()
+
+        looping = not looping
+
+        loopBtn.Text = looping and "Loop: ON" or "Loop: OFF"
+
+        loopBtn.BackgroundColor3 = looping and Color3.fromRGB(100,255,100) or Color3.fromRGB(55,65,80)
+
+        if looping then
+
+            if loopThread and coroutine.status(loopThread)~="dead" then return end
+
+            loopThread=coroutine.create(function()
+
+                while looping do
+
+                    spawnPet()
+
+                    task.wait(0.1)
+
+                end
+
+            end)
+
+            coroutine.resume(loopThread)
+
+        end
+
+    end)
+
+end
+
+------------------- LUCKY BLOCK -------------------
+
+do
+
+    local frame = luckyTab
+
+    local nameBox = Instance.new("TextBox", frame)
+
+    nameBox.Size=UDim2.new(1,0,0,28)
+
+    nameBox.PlaceholderText="🍀Lucky Block Spawner"
+
+    nameBox.Text="Secret Lucky Block"
+
+    nameBox.TextColor3=Color3.fromRGB(220,225,240)
+
+    nameBox.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+    r(nameBox,6)
+
+    nameBox.ClearTextOnFocus=false
+
+    nameBox.Font=Enum.Font.Arcade
+
+    nameBox.TextSize=10
+
+    nameBox.Position=UDim2.fromOffset(0,0)
+
+    local mutBox = Instance.new("TextBox", frame)
+
+    mutBox.Size=UDim2.new(1,0,0,28)
+
+    mutBox.PlaceholderText="Mutation (optional)"
+
+    mutBox.Text=""
+
+    mutBox.TextColor3=Color3.fromRGB(220,225,240)
+
+    mutBox.BackgroundColor3=Color3.fromRGB(28,30,38)
+
+    r(mutBox,6)
+
+    mutBox.ClearTextOnFocus=false
+
+    mutBox.Font=Enum.Font.Arcade
+
+    mutBox.TextSize=10
+
+    mutBox.Position=UDim2.fromOffset(0,36)
+
+    local looping = false
+
+    local loopThread
+
+    local loopBtn = Instance.new("TextButton", frame)
+
+    loopBtn.Size=UDim2.new(1,0,0,28)
+
+    loopBtn.Text="Loop: OFF"
+
+    loopBtn.BackgroundColor3=Color3.fromRGB(55,65,80)
+
+    loopBtn.TextColor3=Color3.new(1,1,1)
+
+    r(loopBtn,6)
+
+    loopBtn.Position=UDim2.fromOffset(0,72)
+
+    local spawnBtn = Instance.new("TextButton", frame)
+
+    spawnBtn.Size=UDim2.new(1,0,0,28)
+
+    spawnBtn.Text="SPAWN LUCKY BLOCK🍀"
+
+    spawnBtn.BackgroundColor3=Color3.fromRGB(55,165,110)
+
+    spawnBtn.TextColor3=Color3.new(1,1,1)
+
+    r(spawnBtn,6)
+
+    spawnBtn.Position=UDim2.fromOffset(0,108)
+
+    local function spawnBlock()
+
+        local name = tostring(nameBox.Text or "")
+
+        if name=="" then return er("⚠️ Enter Name") end
+
+        local mutation = tostring(mutBox.Text or "")
+
+        local mutArg = (mutation=="" or mutation=="Mutation (optional)") and "" or mutation
+
+        local args = {
+
+            [1]=name,
+
+            [2]=mutArg~="" and mutArg or "",
+
+            [3]=""
+
+        }
+
+        local ok_, res = pcall(function()
+
+            RS.Packages.Net:FindFirstChild("RF/AdminService/SpawnBrainrot"):InvokeServer(unpack(args))
+
+        end)
+
+        if ok_ then ok("✅ Spawned: "..name) else er("❌ "..tostring(res)) end
+
+    end
+
+    spawnBtn.MouseButton1Click:Connect(spawnBlock)
+
+    loopBtn.MouseButton1Click:Connect(function()
+
+        looping = not looping
+
+        loopBtn.Text = looping and "Loop: ON" or "Loop: OFF"
+
+        loopBtn.BackgroundColor3 = looping and Color3.fromRGB(100,255,100) or Color3.fromRGB(55,65,80)
+
+        if looping then
+
+            if loopThread and coroutine.status(loopThread)~="dead" then return end
+
+            loopThread=coroutine.create(function()
+
+                while looping do
+
+                    spawnBlock()
+
+                    task.wait(0.1)
+
+                end
+
+            end)
+
+            coroutine.resume(loopThread)
+
+        end
+
+    end)
+
+end
+
+------------------- EVENT EXECUTOR -------------------
+
+do
+
+    local frame = eventTab
+
+    local selectedEvent
+
+    local dropBtn = Instance.new("TextButton", frame)
+
+    dropBtn.Size=UDim2.new(1,0,0,28)
+
+    dropBtn.Text="Choose Event 👇"
+
+    dropBtn.BackgroundColor3=Color3.fromRGB(55,65,80)
+
+    dropBtn.TextColor3=Color3.new(1,1,1)
+
+    r(dropBtn,6)
+
+    dropBtn.Position=UDim2.fromOffset(0,0)
+
+    dropBtn.TextXAlignment=Enum.TextXAlignment.Left
+
+    local dropFrame = Instance.new("Frame", gui)
+
+    dropFrame.Size=UDim2.new(0,260,0,180)
+
+    dropFrame.BackgroundColor3=Color3.fromRGB(25,27,35)
+
+    dropFrame.BorderSizePixel=0
+
+    dropFrame.Visible=false
+
+    dropFrame.ZIndex=100
+
+    r(dropFrame,8)
+
+    local dropScroll = Instance.new("ScrollingFrame", dropFrame)
+
+    dropScroll.Size=UDim2.new(1,-6,1,-6)
+
+    dropScroll.Position=UDim2.fromOffset(3,3)
+
+    dropScroll.BackgroundTransparency=1
+
+    dropScroll.BorderSizePixel=0
+
+    dropScroll.ScrollBarThickness=3
+
+    dropScroll.ScrollBarImageColor3=Color3.fromRGB(88,101,242)
+
+    dropScroll.ZIndex=101
+
+    local dropLayout = Instance.new("UIListLayout", dropScroll)
+
+    dropLayout.Padding=UDim.new(0,2)
+
+    for _, evtName in ipairs(EVENT_LIST) do
+
+        local item = Instance.new("TextButton", dropScroll)
+
+        item.Size=UDim2.new(1,-4,0,26)
+
+        item.BackgroundColor3=Color3.fromRGB(35,37,45)
+
+        item.Text=evtName
+
+        item.Font=Enum.Font.Gotham
+
+        item.TextSize=9
+
+        item.TextColor3=Color3.fromRGB(220,225,240)
+
+        item.TextXAlignment=Enum.TextXAlignment.Left
+
+        item.BorderSizePixel=0
+
+        item.ZIndex=102
+
+        r(item,5)
+
+        item.Position=UDim2.fromOffset(0,0)
+
+        item.MouseButton1Click:Connect(function()
+
+            selectedEvent = evtName
+
+            dropBtn.Text = evtName.." ▾"
+
+            dropFrame.Visible=false
+
+        end)
+
+    end
+
+    dropLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+
+        dropScroll.CanvasSize=UDim2.new(0,0,0,dropLayout.AbsoluteContentSize.Y+4)
+
+    end)
+
+    dropBtn.MouseButton1Click:Connect(function()
+
+        dropFrame.Visible = not dropFrame.Visible
+
+        if dropFrame.Visible then
+
+            local pos = dropBtn.AbsolutePosition
+
+            dropFrame.Position = UDim2.fromOffset(pos.X,pos.Y+dropBtn.AbsoluteSize.Y+5)
+
+        end
+
+    end)
+
+    local execAllBtn = Instance.new("TextButton", frame)
+
+    execAllBtn.Size=UDim2.new(1,0,0,28)
+
+    execAllBtn.Text="⚡ EXECUTE ALL EVENT"
+
+    execAllBtn.BackgroundColor3=Color3.fromRGB(140,70,190)
+
+    execAllBtn.TextColor3=Color3.new(1,1,1)
+
+    r(execAllBtn,6)
+
+    execAllBtn.Position=UDim2.fromOffset(0,36)
+
+    execAllBtn.MouseButton1Click:Connect(function()
+
+        local phases = "Phase 5: Sammy Snap,Phase 1: Sleepy,Phase 2: Galaxy Introduction,Phase 3: Sammy's Base,Phase 4: Mygame43"
+
+        local args = {[1]=phases}
+
+        pcall(function()
+
+            RS.Packages.Net:FindFirstChild("RF/AdminService/StartEvent"):InvokeServer(unpack(args))
+
+        end)
+
+        ok("✅ Executed All Events")
+
+    end)
+
+    local execBtn = Instance.new("TextButton", frame)
+
+    execBtn.Size=UDim2.new(1,0,0,28)
+
+    execBtn.Text="EXECUTE SELECTED"
+
+    execBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
+
+    execBtn.TextColor3=Color3.new(1,1,1)
+
+    r(execBtn,6)
+
+    execBtn.Position=UDim2.fromOffset(0,72)
+
+    execBtn.MouseButton1Click:Connect(function()
+
+        if not selectedEvent then return er("⚠️ Choose Event First") end
+
+        local args={[1]=selectedEvent}
+
+        pcall(function()
+
+            RS.Packages.Net:FindFirstChild("RF/AdminService/StartEvent"):InvokeServer(unpack(args))
+
+        end)
+
+        ok("✅ Executed: "..selectedEvent)
+
+    end)
+
+end
+
+------------------- MONEY -------------------
+
+do
+    local frame = moneyTab
+
+    -- TextBox nhập số tiền, mặc định 36
+    local moneyBox = Instance.new("TextBox", frame)
+    moneyBox.Size = UDim2.new(1,0,0,28)
+    moneyBox.PlaceholderText = "Money Amount"
+    moneyBox.Text = "67" -- giá trị mặc định
+    moneyBox.TextColor3 = Color3.fromRGB(220,225,240)
+    moneyBox.BackgroundColor3 = Color3.fromRGB(28,30,38)
+    r(moneyBox,6)
+    moneyBox.Font = Enum.Font.Arcade
+    moneyBox.TextSize = 10
+    moneyBox.Position = UDim2.fromOffset(0,0)
+    moneyBox.ClearTextOnFocus = false
+
+    -- Button SET MONEY
+    local setBtn = Instance.new("TextButton", frame)
+    setBtn.Size = UDim2.new(1,0,0,28)
+    setBtn.Text = "SET MONEY"
+    setBtn.BackgroundColor3 = Color3.fromRGB(60,140,75)
+    setBtn.TextColor3 = Color3.new(1,1,1)
+    r(setBtn,6)
+    setBtn.Position = UDim2.fromOffset(0,36)
+
+    setBtn.MouseButton1Click:Connect(function()
+        local val = parseNumber(moneyBox.Text)
+        if not val then return er("⚠️ Invalid Amount") end
+
+        -- Gọi GiveMoney từ server
+        local args = {
+            [1] = val
+        }
+        local success, result = pcall(function()
+            return game:GetService("ReplicatedStorage")
+                .Packages.Net:FindFirstChild("RF/AdminService/GiveMoney")
+                :InvokeServer(unpack(args))
+        end)
+        if success then
+            ok("💰 GiveMoney Success ✅: "..val)
+        else
+            er("❌ GiveMoney Failed: "..tostring(result))
+        end
+    end)
+end
+
+------------------- REBIRTH -------------------
+
+do
+    local frame = rebirthTab
+
+    -- TextBox nhập số Rebirth, mặc định 17
+    local rebirthBox = Instance.new("TextBox", frame)
+    rebirthBox.Size = UDim2.new(1,0,0,28)
+    rebirthBox.PlaceholderText = "Rebirth Amount"
+    rebirthBox.Text = "17" -- giá trị mặc định
+    rebirthBox.TextColor3 = Color3.fromRGB(220,225,240)
+    rebirthBox.BackgroundColor3 = Color3.fromRGB(28,30,38)
+    r(rebirthBox,6)
+    rebirthBox.Font = Enum.Font.Arcade
+    rebirthBox.TextSize = 10
+    rebirthBox.Position = UDim2.fromOffset(0,0)
+    rebirthBox.ClearTextOnFocus = false
+
+    -- Button SET REBIRTH
+    local setBtn = Instance.new("TextButton", frame)
+    setBtn.Size = UDim2.new(1,0,0,28)
+    setBtn.Text = "SET REBIRTH"
+    setBtn.BackgroundColor3 = Color3.fromRGB(60,140,75)
+    setBtn.TextColor3 = Color3.new(1,1,1)
+    r(setBtn,6)
+    setBtn.Position = UDim2.fromOffset(0,36)
+
+    setBtn.MouseButton1Click:Connect(function()
+        local val = parseNumber(rebirthBox.Text)
+        if not val then return er("⚠️ Invalid Rebirth Amount") end
+
+        -- Gọi GiveRebirth từ server
+        local args = {
+            [1] = val
+        }
+        local success, result = pcall(function()
+            return game:GetService("ReplicatedStorage")
+                .Packages.Net:FindFirstChild("RF/AdminService/GiveRebirth")
+                :InvokeServer(unpack(args))
+        end)
+        if success then
+            ok("✨ GiveRebirth Success ✅: "..val)
+        else
+            er("❌ GiveRebirth Failed: "..tostring(result))
+        end
+    end)
+end

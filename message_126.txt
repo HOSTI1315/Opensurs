@@ -1,0 +1,453 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Net = require(Packages.Net)
+local RagdollModule = require(ReplicatedStorage.Packages.Ragdoll)
+
+local sentryDebounce = {}
+local playerSentryDebounce = {}
+local activeSentries = {}
+local sentryTargets = {}
+local ragdollImmunity = {}
+
+local SENTRY_DURATION = 59
+local PLACEMENT_COUNTDOWN = 3
+local DETECTION_RANGE = 50
+local SHOOT_RANGE = 40
+local RAGDOLL_DURATION = 3
+local SHOOT_COOLDOWN = 2 
+local IMPULSE_FORCE = 50
+local RAGDOLL_IMMUNITY_TIME = 5
+
+local DEBUG_MODE = false
+
+local function getSentryModel()
+	local models = ReplicatedStorage:FindFirstChild("Models")
+	if not models then return nil end
+
+	local toolsExtras = models:FindFirstChild("ToolsExtras")
+	if not toolsExtras then return nil end
+
+	return toolsExtras:FindFirstChild("Sentry")
+end
+
+local function getOverheadTemplate()
+	local overheads = ReplicatedStorage:FindFirstChild("Overheads")
+	if overheads then
+		return overheads:FindFirstChild("AnimalOverhead")
+	end
+	return nil
+end
+
+local function findCharacterAncestor(hit)
+	local character = hit.Parent
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		return character, humanoid
+	end
+	return nil, nil
+end
+
+local function createSentryGUI(sentry)
+	local overheadTemplate = getOverheadTemplate()
+	if not overheadTemplate then return nil end
+
+	local rotationGroup = sentry:FindFirstChild("RotationGroup")
+	local headPart = nil
+	if rotationGroup then
+		headPart = rotationGroup:FindFirstChild("Head")
+	else
+		headPart = sentry:FindFirstChild("Head")
+	end
+	if not headPart then return nil end
+
+	local overheadAttachment = Instance.new("Attachment")
+	overheadAttachment.Name = "SentryOverhead"
+	overheadAttachment.CFrame = CFrame.new(0, 0, 0)
+	overheadAttachment.Parent = headPart
+
+	local sentryOverhead = overheadTemplate:Clone()
+	sentryOverhead.DisplayName.Text = SENTRY_DURATION .. "s!"
+	sentryOverhead.DisplayName.TextColor3 = Color3.fromRGB(255, 0, 0)
+	sentryOverhead.DisplayName.TextStrokeTransparency = 0
+	sentryOverhead.DisplayName.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+	sentryOverhead.Generation.Visible = false
+	sentryOverhead.Price.Visible = false
+	sentryOverhead.Rarity.Visible = false
+	sentryOverhead.Mutation.Visible = false
+
+	sentryOverhead.Parent = overheadAttachment
+	return sentryOverhead, overheadAttachment
+end
+
+local function updateCountdown(gui, timeLeft)
+	if gui and gui.Parent then
+		gui.DisplayName.Text = math.ceil(timeLeft) .. "s!"
+		gui.DisplayName.TextColor3 = Color3.fromRGB(255, 0, 0)
+	end
+end
+
+local function sendNotification(player, message, duration)
+	local NotificationEvent = Net:RemoteEvent("NotificationService/Notify")
+	if NotificationEvent and player then
+		NotificationEvent:FireClient(player, message, duration or 3)
+	end
+end
+
+local function ragdollPlayer(character, direction)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local player = Players:GetPlayerFromCharacter(character)
+		if player then
+			local currentTime = tick()
+			if ragdollImmunity[player] and currentTime - ragdollImmunity[player] < RAGDOLL_IMMUNITY_TIME then
+				return
+			end
+			ragdollImmunity[player] = currentTime
+		end
+
+		RagdollModule.TimedRagdoll(character, RAGDOLL_DURATION)
+	end
+end
+
+local function createBeam(startPart, targetPosition, owner)
+	local startPosition = startPart.Position
+	local direction = (targetPosition - startPosition).Unit
+	local distance = (targetPosition - startPosition).Magnitude
+	local speed = 80
+	local travelTime = distance / speed
+
+	local beam = Instance.new("Part")
+	beam.Name = "SentryBeam"
+	beam.Anchored = true
+	beam.CanCollide = false
+	beam.Material = Enum.Material.Neon
+	beam.BrickColor = BrickColor.new("Bright red")
+	beam.Size = Vector3.new(0.5, 0.5, 1)
+	beam.CFrame = CFrame.lookAt(startPosition, targetPosition)
+	beam.Parent = workspace
+
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	local filterInstances = {workspace.CurrentCamera, beam}
+
+	if not DEBUG_MODE then
+		table.insert(filterInstances, owner.Character)
+	end
+	raycastParams.FilterDescendantsInstances = filterInstances
+
+	local startTime = tick()
+	local lastPosition = startPosition
+	local connection
+	connection = game:GetService("RunService").Heartbeat:Connect(function(dt)
+		local elapsed = tick() - startTime
+		local progress = math.clamp(elapsed / travelTime, 0, 1)
+		local currentPosition = startPosition:Lerp(targetPosition, progress)
+		beam.CFrame = CFrame.lookAt(currentPosition, currentPosition + direction)
+
+		local rayDirection = currentPosition - lastPosition
+		if rayDirection.Magnitude > 0 then
+			local raycast = workspace:Raycast(lastPosition, rayDirection, raycastParams)
+			if raycast then
+				local character = raycast.Instance.Parent
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				if humanoid and (DEBUG_MODE or character ~= owner.Character) then
+					ragdollPlayer(character, direction)
+					beam:Destroy()
+					connection:Disconnect()
+					return
+				end
+			end
+		end
+
+		lastPosition = currentPosition
+
+		if progress >= 1 then
+			beam:Destroy()
+			connection:Disconnect()
+		end
+	end)
+
+	game:GetService("Debris"):AddItem(beam, 3)
+end
+
+local function lookAtTarget(sentry, targetPosition)
+	local rotationGroup = sentry:FindFirstChild("RotationGroup")
+	if not rotationGroup then return end
+
+	local primaryPart = rotationGroup.PrimaryPart or rotationGroup:FindFirstChild("Base")
+	if not primaryPart then return end
+
+	local direction = (targetPosition - primaryPart.Position).Unit
+	local yRotation = math.atan2(-direction.X, -direction.Z)
+
+	local currentCFrame = primaryPart.CFrame
+	local newCFrame = CFrame.new(currentCFrame.Position) * CFrame.Angles(0, yRotation, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+	rotationGroup:PivotTo(newCFrame)
+end
+
+local function predictTargetPosition(target, shooterPosition, projectileSpeed)
+	local currentPos = target.Position
+	local character = target.Parent
+	if not character then return currentPos end
+
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return currentPos end
+
+	local velocity = rootPart.AssemblyLinearVelocity
+	local distance = (currentPos - shooterPosition).Magnitude
+	local timeToHit = distance / projectileSpeed
+
+	local predictionTime = math.min(timeToHit, 0.5)
+
+	if velocity.Magnitude < 2 then
+		return currentPos
+	end
+
+	local predictedPosition = currentPos + (velocity * predictionTime)
+
+	local spread = Vector3.new(
+		math.random(-1, 1),
+		0, 
+		math.random(-1, 1)
+	)
+
+	return predictedPosition + spread
+end
+
+local function shootAtTarget(sentry, target, owner, useBarrel1)
+	local rotationGroup = sentry:FindFirstChild("RotationGroup")
+	if not rotationGroup then return end
+
+	local barrel1 = rotationGroup:FindFirstChild("Barrel1", true)
+	local barrel2 = rotationGroup:FindFirstChild("Barrel2", true)
+
+	if barrel1 and barrel2 and target then
+		local shooterPosition = sentry.PrimaryPart.Position
+		local projectileSpeed = 80
+
+		local predictedPosition = predictTargetPosition(target, shooterPosition, projectileSpeed)
+
+		if useBarrel1 then
+			createBeam(barrel1, predictedPosition, owner)
+		else
+			createBeam(barrel2, predictedPosition, owner)
+		end
+	end
+end
+
+local function manageSentry(sentry, owner, sentryGUI, sentryAttachment)
+	local sentryData = activeSentries[sentry]
+	if not sentryData then return end
+
+	local lastShot = 0
+	local useBarrel1 = true
+	local lastAimPosition = nil
+
+	local connection
+	connection = RunService.Heartbeat:Connect(function()
+		if not sentry.Parent or not activeSentries[sentry] then
+			connection:Disconnect()
+			return
+		end
+
+		local currentTime = tick()
+		local timeLeft = SENTRY_DURATION - (currentTime - sentryData.startTime)
+
+		if sentryData.gui then
+			updateCountdown(sentryData.gui, timeLeft)
+		end
+
+		if timeLeft <= 0 then
+			if sentryData.attachment then
+				sentryData.attachment:Destroy()
+			end
+			sentry:Destroy()
+			activeSentries[sentry] = nil
+			connection:Disconnect()
+			return
+		end
+
+		local sentryPosition = sentry.PrimaryPart.Position
+		local nearestTarget = nil
+		local nearestDistance = math.huge
+
+		for _, player in pairs(Players:GetPlayers()) do
+			if (DEBUG_MODE or player ~= owner) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+				local distance = (player.Character.HumanoidRootPart.Position - sentryPosition).Magnitude
+				if distance <= DETECTION_RANGE and distance < nearestDistance then
+					nearestTarget = player.Character.HumanoidRootPart
+					nearestDistance = distance
+				end
+			end
+		end
+
+		if nearestTarget then
+			local shooterPosition = sentry.PrimaryPart.Position
+			local predictedPos = predictTargetPosition(nearestTarget, shooterPosition, 80)
+
+			if lastAimPosition then
+				predictedPos = lastAimPosition:lerp(predictedPos, 0.3)
+			end
+			lastAimPosition = predictedPos
+
+			lookAtTarget(sentry, predictedPos)
+
+			if nearestDistance <= SHOOT_RANGE and currentTime - lastShot >= SHOOT_COOLDOWN then
+				shootAtTarget(sentry, nearestTarget, owner, useBarrel1)
+				useBarrel1 = not useBarrel1
+				lastShot = currentTime
+			end
+		else
+			lastAimPosition = nil
+		end
+	end)
+end
+
+Net:RemoteEvent("Sentry/Place").OnServerEvent:Connect(function(player)
+	if sentryDebounce[player] and tick() - sentryDebounce[player] < 2 then
+		return
+	end
+	sentryDebounce[player] = tick()
+
+	local character = player.Character
+	if not character then return end
+
+	local tool = character:FindFirstChild("All Seeing Sentry")
+	if not tool or tool.Name ~= "All Seeing Sentry" then return end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then return end
+
+	sendNotification(player, "Sentry placed!", 2)
+
+	local sentryTemplate = getSentryModel()
+	if not sentryTemplate then
+		sendNotification(player, "Sentry model not found!", 3)
+		return
+	end
+
+	local sentry = sentryTemplate:Clone()
+	sentry.Name = "PlacedSentry"
+
+	local forwardDirection = humanoidRootPart.CFrame.LookVector
+	local sentryPosition = humanoidRootPart.Position + forwardDirection * 5
+
+	local sentrySize = sentry:GetExtentsSize()
+
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	raycastParams.FilterDescendantsInstances = {player.Character, sentry}
+
+	local raycastStart = Vector3.new(sentryPosition.X, sentryPosition.Y + 50, sentryPosition.Z)
+	local raycastDirection = Vector3.new(0, -100, 0)
+	local raycast = workspace:Raycast(raycastStart, raycastDirection, raycastParams)
+
+	local groundY
+	if raycast then
+		local primaryPart = sentry.PrimaryPart or sentry:FindFirstChildWhichIsA("BasePart")
+		if not sentry.PrimaryPart then
+			sentry.PrimaryPart = primaryPart
+		end
+		local minY = math.huge
+		for _, part in ipairs(sentry:GetDescendants()) do
+			if part:IsA("BasePart") then
+				local localY = (primaryPart.CFrame:PointToObjectSpace(part.Position)).Y - (part.Size.Y / 2)
+				if localY < minY then
+					minY = localY
+				end
+			end
+		end
+		groundY = raycast.Position.Y - minY
+	else
+		groundY = sentryPosition.Y
+	end
+
+	sentryPosition = Vector3.new(sentryPosition.X, groundY, sentryPosition.Z)
+
+	local playerRotation = humanoidRootPart.CFrame - humanoidRootPart.CFrame.Position
+	local xRotation = CFrame.Angles(math.rad(-90), 0, 0)
+	local sentryCFrame = CFrame.new(sentryPosition) * playerRotation * xRotation
+
+	if sentry.PrimaryPart then
+		sentry:PivotTo(sentryCFrame)
+	else
+		for _, part in pairs(sentry:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				break
+			end
+		end
+	end
+
+	sentry.Parent = workspace
+
+	local sentryGUI, sentryAttachment = createSentryGUI(sentry)
+	if not sentryGUI or not sentryAttachment then
+		sentry:Destroy()
+		return
+	end
+
+	activeSentries[sentry] = {
+		owner = player,
+		startTime = nil,
+		gui = sentryGUI,
+		attachment = sentryAttachment
+	}
+
+	task.spawn(function()
+		for i = PLACEMENT_COUNTDOWN, 1, -1 do
+			if sentryGUI and sentryGUI.Parent then
+				sentryGUI.DisplayName.Text = "Sentry will be placed in " .. i .. "s"
+				sentryGUI.DisplayName.TextColor3 = Color3.fromRGB(255, 255, 255)
+				sentryGUI.DisplayName.RichText = false
+			end
+			task.wait(1)
+		end
+
+		if activeSentries[sentry] then
+			activeSentries[sentry].startTime = tick()
+		end
+
+		manageSentry(sentry, player, sentryGUI, sentryAttachment)
+	end)
+
+	local backpack = player:FindFirstChild("Backpack")
+	if backpack then
+		local sentryTool = backpack:FindFirstChild("All Seeing Sentry")
+		if sentryTool then
+			sentryTool:Destroy()
+		end
+	end
+
+	local character = player.Character
+	if character then
+		local equippedTool = character:FindFirstChild("All Seeing Sentry")
+		if equippedTool then
+			equippedTool:Destroy()
+		end
+	end
+
+
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	sentryDebounce[player] = nil
+	playerSentryDebounce[player] = nil
+	ragdollImmunity[player] = nil
+
+	for sentry, data in pairs(activeSentries) do
+		if data.owner == player then
+			if data.attachment then
+				data.attachment:Destroy()
+			end
+			sentry:Destroy()
+			activeSentries[sentry] = nil
+		end
+	end
+end)

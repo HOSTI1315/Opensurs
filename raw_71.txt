@@ -1,0 +1,1495 @@
+-- Kasumi's Case Rolling Controller - Case Rolling RNG Only
+-- Game validation first
+local CASE_ROLLING_RNG_ID = 128886701132186
+
+if game.PlaceId ~= CASE_ROLLING_RNG_ID then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Wrong Game!";
+        Text = "This script only works in Case Rolling RNG";
+        Duration = 5;
+    })
+    return
+end
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local NetworkClient = game:GetService("NetworkClient")
+
+local localPlayer = Players.LocalPlayer
+
+-- Script Version
+local SCRIPT_VERSION = "v1.7"
+
+-- ✅ FIXED: Configuration system with ALL toggles (like Plants vs Brainrot)
+local CONFIG_FILE = "Kasumi/KasumiHub_Config.json"
+local SETTINGS_FILE = "Kasumi/KasumiHub_Settings.json"
+local defaultConfig = {
+    selectedCase = "Weapon Case",
+    openInterval = 1000,
+    animationSpeed = 1000,
+    theme = "Dark",
+    obbyInterval = 3000,
+    antiAFKEnabled = false,
+    autoReconnectEnabled = false,
+    autoApplyAnimSpeed = true,
+    autoTeleportZone9 = false,
+    autoOpenEnabled = false,
+    obbyEnabled = false
+}
+
+local defaultSettings = {
+    autoLoadConfig = "None",
+    autoLoadEnabled = false
+}
+
+local currentConfig = {}
+local currentSettings = {}
+
+-- Variables
+local autoOpenEnabled = false
+local selectedCase = defaultConfig.selectedCase
+local openAmount = 1
+local openInterval = defaultConfig.openInterval
+local caseDropdown = nil
+local animationSpeedInput = nil
+local intervalInput = nil
+local themeDropdown = nil
+local darkModeToggle = nil
+local configFile = nil
+local canChangeTheme = true
+local canChangeDropdown = true
+local Window = nil
+local autoLoadDropdown = nil
+local autoLoadToggle = nil
+local ConfigNameInput = nil
+
+-- Auto Farm variables
+local obbyEnabled = false
+local obbyInterval = 3000
+local obbyIntervalInput = nil
+
+-- UI References for keybinds
+local autoOpenToggle = nil
+local autoFarmToggle = nil
+
+-- Anti-AFK & Auto-Reconnect
+local antiAFKEnabled = false
+local autoReconnectEnabled = false
+local antiAFKToggle = nil
+local autoReconnectToggle = nil
+local idledConnection = nil
+local antiAFKLoop = nil
+
+-- Auto-reconnect variables
+local reconnectAttempts = 0
+local MAX_RECONNECT_ATTEMPTS = 30
+local RECONNECT_INTERVAL = 6
+local lastDisconnectTime = 0
+local lastPingTime = tick()
+local consecutiveTimeouts = 0
+
+-- Auto-apply animation speed
+local autoApplyAnimSpeed = true
+local autoApplyAnimSpeedToggle = nil
+local lastAppliedAnimSpeed = nil
+
+-- Zone 9 Auto-Teleport
+local autoTeleportZone9 = false
+local autoTeleportZone9Toggle = nil
+local zone9Coordinates = Vector3.new(-237, 5, 2376)
+
+-- Obby coordinates
+local obbyCoordinates = {
+    x = 160,
+    y = 564,
+    z = -845
+}
+
+local availableCases = {
+    "2013 Case", "2013 Winter Case", "2014 Summer Case", "2015 Cobblestone Collection",
+    "Chroma Case", "Clutch Case", "Dreams & Nightmares Case", "Fever Case",
+    "Fracture Case", "Free Case", "Gamma 2 Case", "Huntsman Weapon Case",
+    "Katowice 2014 Challengers Capsule", "Katowice 2014 Legends Capsule",
+    "Operation Bravo Case", "Operation Breakout Case", "Operation Hydra Case",
+    "Prisma 2 Case", "Recoil Case", "Revolver Case", "St. Marc Collection",
+    "VIP Case", "Weapon Case", "Weapon Case 3"
+}
+
+-- ====== CORE FUNCTIONS FIRST (MUST BE DEFINED BEFORE LOOPS) ======
+
+-- Get case open slots
+local function getCaseOpenSlots()
+    local possibleLocations = {
+        localPlayer:FindFirstChild("SettingsFolder"),
+        localPlayer:FindFirstChild("Settings"),
+        localPlayer:FindFirstChild("PlayerSettings")
+    }
+    
+    local possibleNames = {
+        "Case Open Slots",
+        "CaseOpenSlots", 
+        "OpenSlots",
+        "CaseSlots"
+    }
+    
+    for _, location in pairs(possibleLocations) do
+        if location then
+            for _, name in pairs(possibleNames) do
+                local slots = location:FindFirstChild(name)
+                if slots and slots:IsA("NumberValue") then
+                    return slots.Value
+                end
+            end
+        end
+    end
+    
+    return 1
+end
+
+-- Open cases
+local function openCase(caseName, amount)
+    local success = false
+    pcall(function()
+        local remotes = ReplicatedStorage:WaitForChild("Remotes", 5)
+        if remotes then
+            local mainEvent = remotes:WaitForChild("MainEvent", 5)
+            if mainEvent then
+                mainEvent:FireServer("OpenCase", caseName, amount)
+                success = true
+            end
+        end
+    end)
+    return success
+end
+
+-- Core obby teleport function
+local function teleportToObby()
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(obbyCoordinates.x, obbyCoordinates.y + 5, obbyCoordinates.z)
+        return true
+    end
+    return false
+end
+
+-- Simulate spacebar jump function
+local function spamJumpKeypress()
+    task.spawn(function()
+        while obbyEnabled do
+            local success = pcall(function()
+                keypress(0x20)
+                task.wait(0.05)
+                keyrelease(0x20)
+            end)
+            
+            if not success then
+                if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+                    local humanoid = localPlayer.Character.Humanoid
+                    if humanoid.FloorMaterial ~= Enum.Material.Air then
+                        humanoid.Jump = true
+                    end
+                end
+            end
+            
+            task.wait(0.5)
+        end
+    end)
+end
+
+-- ====== ZONE 9 TELEPORT FUNCTION ======
+local function teleportToZone9()
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(zone9Coordinates)
+        return true
+    end
+    return false
+end
+
+-- ====== IMPROVED ANTI-AFK SYSTEM ======
+local function startAntiAFK()
+    local VirtualUser = game:GetService("VirtualUser")
+    
+    if not idledConnection then
+        idledConnection = localPlayer.Idled:Connect(function()
+            if antiAFKEnabled then
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+                print("🛡️ Anti-AFK: Prevented idle kick")
+            end
+        end)
+    end
+    
+    if not antiAFKLoop then
+        antiAFKLoop = task.spawn(function()
+            while true do
+                if antiAFKEnabled then
+                    VirtualUser:CaptureController()
+                    VirtualUser:Button1Down(Vector2.new(0, 0))
+                    task.wait(0.1)
+                    VirtualUser:Button1Up(Vector2.new(0, 0))
+                end
+                task.wait(600)
+            end
+        end)
+    end
+end
+
+-- ====== IMPROVED AUTO-RECONNECT SYSTEM ======
+local function setupAutoReconnect()
+    print("🌐 Initializing 3-minute auto-reconnect with network monitoring...")
+    
+    pcall(function()
+        local RobloxPromptGui = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui")
+        if RobloxPromptGui then
+            local promptOverlay = RobloxPromptGui:FindFirstChild("promptOverlay")
+            if promptOverlay then
+                promptOverlay.ChildAdded:Connect(function(child)
+                    if child.Name == "ErrorPrompt" and autoReconnectEnabled then
+                        task.wait(0.5)
+                        
+                        local errorMessage = child:FindFirstChild("MessageArea")
+                        if errorMessage then
+                            local messageText = errorMessage:FindFirstChild("ErrorMessage")
+                            if messageText then
+                                local text = messageText.Text:lower()
+                                
+                                if string.find(text, "disconnect") or
+                                   string.find(text, "connection") or
+                                   string.find(text, "lost") or
+                                   string.find(text, "error") or
+                                   string.find(text, "kicked") or
+                                   string.find(text, "unable") or
+                                   string.find(text, "timeout") or
+                                   string.find(text, "network") or
+                                   string.find(text, "failed") or
+                                   string.find(text, "id=17") then
+                                    
+                                    reconnectAttempts = reconnectAttempts + 1
+                                    
+                                    if reconnectAttempts <= MAX_RECONNECT_ATTEMPTS then
+                                        local timeRemaining = (MAX_RECONNECT_ATTEMPTS - reconnectAttempts) * RECONNECT_INTERVAL
+                                        print(string.format("🔄 Network issue - reconnecting (attempt %d/%d, %ds remaining)", 
+                                            reconnectAttempts, MAX_RECONNECT_ATTEMPTS, timeRemaining))
+                                        
+                                        task.wait(RECONNECT_INTERVAL)
+                                        
+                                        local success = pcall(function()
+                                            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
+                                        end)
+                                        
+                                        if not success then
+                                            pcall(function()
+                                                TeleportService:Teleport(game.PlaceId, localPlayer)
+                                            end)
+                                        end
+                                    else
+                                        print("❌ Max reconnect attempts reached (3 minutes elapsed)")
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+    
+    pcall(function()
+        NetworkClient.ChildRemoved:Connect(function()
+            if autoReconnectEnabled then
+                local currentTime = tick()
+                
+                if currentTime - lastDisconnectTime > 5 then
+                    lastDisconnectTime = currentTime
+                    reconnectAttempts = reconnectAttempts + 1
+                    
+                    if reconnectAttempts <= MAX_RECONNECT_ATTEMPTS then
+                        local timeRemaining = (MAX_RECONNECT_ATTEMPTS - reconnectAttempts) * RECONNECT_INTERVAL
+                        print(string.format("🔄 NetworkClient disconnect (attempt %d/%d, %ds left)", 
+                            reconnectAttempts, MAX_RECONNECT_ATTEMPTS, timeRemaining))
+                        
+                        task.wait(RECONNECT_INTERVAL)
+                        
+                        pcall(function()
+                            TeleportService:Teleport(game.PlaceId, localPlayer)
+                        end)
+                    end
+                end
+            end
+        end)
+    end)
+    
+    task.spawn(function()
+        while true do
+            task.wait(8)
+            
+            if autoReconnectEnabled then
+                local pingStart = tick()
+                local pingSuccess = pcall(function()
+                    local test = game:GetService("Players"):GetPlayers()
+                    return test ~= nil
+                end)
+                local pingTime = tick() - pingStart
+                
+                if not pingSuccess or pingTime > 4 then
+                    consecutiveTimeouts = consecutiveTimeouts + 1
+                    
+                    if consecutiveTimeouts >= 4 then
+                        print("🔴 Connection lost - poor network quality")
+                        reconnectAttempts = reconnectAttempts + 1
+                        
+                        if reconnectAttempts <= MAX_RECONNECT_ATTEMPTS then
+                            task.wait(RECONNECT_INTERVAL)
+                            pcall(function()
+                                TeleportService:Teleport(game.PlaceId, localPlayer)
+                            end)
+                        end
+                        
+                        consecutiveTimeouts = 0
+                    end
+                else
+                    consecutiveTimeouts = 0
+                end
+                
+                lastPingTime = tick()
+            end
+        end
+    end)
+    
+    print("✅ 3-minute auto-reconnect initialized (30 attempts × 6 seconds)")
+end
+
+-- ✅ CRITICAL: Auto-start loop functions (DEFINED AFTER CORE FUNCTIONS)
+local function startAutoOpenLoop()
+    task.spawn(function()
+        print("🔄 Starting Auto Open Cases loop...")
+        while autoOpenEnabled do
+            local success = openCase(selectedCase, openAmount)
+            if not success then
+                task.wait(2)
+            end
+            task.wait(openInterval / 1000)
+        end
+    end)
+end
+
+local function startAutoFarmLoop()
+    task.spawn(function()
+        print("🔄 Starting Auto Farm loop...")
+        while obbyEnabled do
+            local success = teleportToObby()
+            if not success then
+                task.wait(2)
+            end
+            task.wait(obbyInterval / 1000)
+        end
+    end)
+    spamJumpKeypress()
+end
+
+-- ====== KEYBIND SYSTEM ======
+local function setupKeybinds()
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        
+        local isCtrlPressed = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
+        
+        if isCtrlPressed then
+            if input.KeyCode == Enum.KeyCode.R then
+                autoOpenEnabled = not autoOpenEnabled
+                
+                if autoOpenToggle then
+                    pcall(function()
+                        if autoOpenToggle.Set then
+                            autoOpenToggle:Set(autoOpenEnabled)
+                        end
+                    end)
+                end
+                
+                if autoOpenEnabled then
+                    startAutoOpenLoop()
+                end
+            
+            elseif input.KeyCode == Enum.KeyCode.F then
+                obbyEnabled = not obbyEnabled
+                
+                if autoFarmToggle then
+                    pcall(function()
+                        if autoFarmToggle.Set then
+                            autoFarmToggle:Set(obbyEnabled)
+                        end
+                    end)
+                end
+                
+                if obbyEnabled then
+                    startAutoFarmLoop()
+                end
+            end
+        end
+    end)
+end
+
+-- Apply obby interval function
+local function applyObbyInterval()
+    if obbyIntervalInput then
+        local value = obbyIntervalInput.Get and obbyIntervalInput:Get() or obbyIntervalInput.Value or "3000"
+        local num = tonumber(value)
+        if num and num > 0 then
+            obbyInterval = num
+            return true
+        end
+    end
+    return false
+end
+
+-- Settings management
+local function saveSettings()
+    local settings = {
+        autoLoadConfig = currentSettings.autoLoadConfig or defaultSettings.autoLoadConfig,
+        autoLoadEnabled = currentSettings.autoLoadEnabled or defaultSettings.autoLoadEnabled
+    }
+    
+    if not isfolder("Kasumi") then
+        makefolder("Kasumi")
+    end
+    
+    local success = pcall(function()
+        writefile(SETTINGS_FILE, game:GetService("HttpService"):JSONEncode(settings))
+    end)
+    
+    return success
+end
+
+local function loadSettings()
+    local success, result = pcall(function()
+        if isfile(SETTINGS_FILE) then
+            local data = readfile(SETTINGS_FILE)
+            return game:GetService("HttpService"):JSONDecode(data)
+        end
+        return nil
+    end)
+    
+    if success and result then
+        currentSettings = result
+    else
+        currentSettings = table.clone(defaultSettings)
+        saveSettings()
+    end
+    
+    return currentSettings
+end
+
+-- Get available config files
+local function getAvailableConfigs()
+    local configs = {"None"}
+    
+    pcall(function()
+        if isfolder("Kasumi") then
+            local files = listfiles("Kasumi")
+            for _, file in pairs(files) do
+                if file:match("%.json$") and not file:match("Settings") then
+                    local fileName = file:match("Kasumi/(.+)%.json$") or file:match("([^/\\]+)%.json$")
+                    if fileName and fileName ~= "KasumiHub_Settings" then
+                        if not table.find(configs, fileName) then
+                            table.insert(configs, fileName)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    
+    return configs
+end
+
+-- Save config
+local function saveConfig(customName)
+    if not isfolder("Kasumi") then
+        makefolder("Kasumi")
+    end
+    
+    local fileName = customName and ("Kasumi/" .. customName .. ".json") or CONFIG_FILE
+    
+    local animSpeed = animationSpeedInput and (tonumber(animationSpeedInput.Get and animationSpeedInput:Get() or animationSpeedInput.Value) or 1000) or 1000
+    local interval = intervalInput and (tonumber(intervalInput.Get and intervalInput:Get() or intervalInput.Value) or 1000) or 1000
+    local obbyInt = obbyIntervalInput and (tonumber(obbyIntervalInput.Get and obbyIntervalInput:Get() or obbyIntervalInput.Value) or 3000) or 3000
+    
+    currentConfig = {
+        selectedCase = selectedCase,
+        openInterval = interval,
+        animationSpeed = animSpeed,
+        theme = WindUI:GetCurrentTheme() or "Dark",
+        obbyInterval = obbyInt,
+        antiAFKEnabled = antiAFKEnabled,
+        autoReconnectEnabled = autoReconnectEnabled,
+        autoApplyAnimSpeed = autoApplyAnimSpeed,
+        autoTeleportZone9 = autoTeleportZone9,
+        autoOpenEnabled = autoOpenEnabled,
+        obbyEnabled = obbyEnabled
+    }
+    
+    local success = pcall(function()
+        writefile(fileName, game:GetService("HttpService"):JSONEncode(currentConfig))
+    end)
+    
+    if success then
+        WindUI:Notify({
+            Title = "Config Saved",
+            Content = "Configuration saved as: " .. (customName or "KasumiHub_Config"),
+            Duration = 3
+        })
+    end
+    
+    return success
+end
+
+-- Load config
+local function loadConfig(configName)
+    configName = configName or "KasumiHub_Config"
+    
+    local filesToTry = {
+        "Kasumi/" .. configName .. ".json",
+        configName .. ".json",
+        configName == "KasumiHub_Config" and CONFIG_FILE or nil
+    }
+    
+    local success, result = false, nil
+    
+    for _, file in pairs(filesToTry) do
+        if file and isfile(file) then
+            success, result = pcall(function()
+                local data = readfile(file)
+                return game:GetService("HttpService"):JSONDecode(data)
+            end)
+            if success and result then
+                break
+            end
+        end
+    end
+    
+    if success and result then
+        currentConfig = result
+        selectedCase = currentConfig.selectedCase or defaultConfig.selectedCase
+        openInterval = currentConfig.openInterval or defaultConfig.openInterval
+        obbyInterval = currentConfig.obbyInterval or defaultConfig.obbyInterval
+        antiAFKEnabled = currentConfig.antiAFKEnabled or false
+        autoReconnectEnabled = currentConfig.autoReconnectEnabled or false
+        autoApplyAnimSpeed = currentConfig.autoApplyAnimSpeed ~= nil and currentConfig.autoApplyAnimSpeed or true
+        autoTeleportZone9 = currentConfig.autoTeleportZone9 or false
+        autoOpenEnabled = currentConfig.autoOpenEnabled or false
+        obbyEnabled = currentConfig.obbyEnabled or false
+        
+        return true
+    else
+        currentConfig = table.clone(defaultConfig)
+        selectedCase = defaultConfig.selectedCase
+        openInterval = defaultConfig.openInterval
+        obbyInterval = defaultConfig.obbyInterval
+        antiAFKEnabled = false
+        autoReconnectEnabled = false
+        autoApplyAnimSpeed = true
+        autoTeleportZone9 = false
+        autoOpenEnabled = false
+        obbyEnabled = false
+        return false
+    end
+end
+
+-- Update case dropdown
+local function updateCaseDropdownProperly()
+    if caseDropdown then
+        task.spawn(function()
+            if not table.find(availableCases, selectedCase) then
+                selectedCase = availableCases[1] or defaultConfig.selectedCase
+            end
+            
+            task.wait(0.3)
+            
+            pcall(function()
+                if caseDropdown.Set then
+                    caseDropdown:Set(selectedCase)
+                end
+                
+                if caseDropdown.Value ~= nil then
+                    caseDropdown.Value = selectedCase
+                end
+                
+                if Window and Window.Flags and Window.Flags.CaseSelection ~= nil then
+                    Window.Flags.CaseSelection = selectedCase
+                end
+                
+                task.wait(0.1)
+                if caseDropdown.Refresh then
+                    caseDropdown:Refresh(availableCases, selectedCase)
+                end
+            end)
+        end)
+    end
+end
+
+-- Update UI toggles
+local function updateAllUI()
+    task.spawn(function()
+        task.wait(0.3)
+        
+        updateCaseDropdownProperly()
+        
+        if intervalInput and intervalInput.Set then
+            pcall(function() intervalInput:Set(tostring(openInterval)) end)
+        end
+        
+        if obbyIntervalInput and obbyIntervalInput.Set then
+            pcall(function() obbyIntervalInput:Set(tostring(obbyInterval)) end)
+        end
+        
+        if animationSpeedInput and animationSpeedInput.Set and currentConfig.animationSpeed then
+            pcall(function() animationSpeedInput:Set(tostring(currentConfig.animationSpeed)) end)
+        end
+        
+        if currentConfig.theme then
+            pcall(function()
+                WindUI:SetTheme(currentConfig.theme)
+                if themeDropdown and themeDropdown.Set then
+                    themeDropdown:Set(currentConfig.theme)
+                end
+                if darkModeToggle and darkModeToggle.Set then
+                    darkModeToggle:Set(currentConfig.theme == "Dark")
+                end
+            end)
+        end
+        
+        if autoOpenToggle then 
+            pcall(function() 
+                autoOpenToggle.Value = autoOpenEnabled
+                if autoOpenToggle.Set then autoOpenToggle:Set(autoOpenEnabled) end
+            end) 
+        end
+        if autoFarmToggle then 
+            pcall(function() 
+                autoFarmToggle.Value = obbyEnabled
+                if autoFarmToggle.Set then autoFarmToggle:Set(obbyEnabled) end
+            end) 
+        end
+        if antiAFKToggle then 
+            pcall(function() 
+                antiAFKToggle.Value = antiAFKEnabled
+                if antiAFKToggle.Set then antiAFKToggle:Set(antiAFKEnabled) end
+            end) 
+        end
+        if autoReconnectToggle then 
+            pcall(function() 
+                autoReconnectToggle.Value = autoReconnectEnabled
+                if autoReconnectToggle.Set then autoReconnectToggle:Set(autoReconnectEnabled) end
+            end) 
+        end
+        if autoApplyAnimSpeedToggle then 
+            pcall(function() 
+                autoApplyAnimSpeedToggle.Value = autoApplyAnimSpeed
+                if autoApplyAnimSpeedToggle.Set then autoApplyAnimSpeedToggle:Set(autoApplyAnimSpeed) end
+            end) 
+        end
+        if autoTeleportZone9Toggle then 
+            pcall(function() 
+                autoTeleportZone9Toggle.Value = autoTeleportZone9
+                if autoTeleportZone9Toggle.Set then autoTeleportZone9Toggle:Set(autoTeleportZone9) end
+            end) 
+        end
+        if autoLoadToggle then 
+            pcall(function() 
+                autoLoadToggle.Value = currentSettings.autoLoadEnabled
+                if autoLoadToggle.Set then autoLoadToggle:Set(currentSettings.autoLoadEnabled) end
+            end) 
+        end
+    end)
+end
+
+-- Load config with sync
+local function loadConfigWithProperSync(configName)
+    local success = loadConfig(configName)
+    if success then
+        task.spawn(function()
+            task.wait(0.2)
+            updateCaseDropdownProperly()
+            updateAllUI()
+        end)
+        return true
+    end
+    return false
+end
+
+-- Reset to default
+local function resetToDefault()
+    selectedCase = defaultConfig.selectedCase
+    openInterval = defaultConfig.openInterval
+    obbyInterval = defaultConfig.obbyInterval
+    antiAFKEnabled = false
+    autoReconnectEnabled = false
+    autoApplyAnimSpeed = true
+    autoTeleportZone9 = false
+    autoOpenEnabled = false
+    obbyEnabled = false
+    
+    task.spawn(function()
+        task.wait(0.2)
+        updateCaseDropdownProperly()
+        updateAllUI()
+    end)
+    
+    WindUI:Notify({
+        Title = "Reset Complete",
+        Content = "All settings reset to default values",
+        Duration = 3
+    })
+end
+
+-- Get available cases from game
+local function getAvailableCases()
+    local cases = {}
+    local foundFromGame = false
+    
+    local caseSources = {
+        ReplicatedStorage:FindFirstChild("Cases"),
+        ReplicatedStorage:FindFirstChild("CasesFolder"),
+        ReplicatedStorage:FindFirstChild("Items") and ReplicatedStorage.Items:FindFirstChild("Cases"),
+        workspace:FindFirstChild("Cases"),
+        ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("Cases"),
+        game:GetService("ServerStorage"):FindFirstChild("Cases")
+    }
+    
+    for _, caseSource in pairs(caseSources) do
+        if caseSource then
+            pcall(function()
+                for _, case in pairs(caseSource:GetChildren()) do
+                    if case.Name and case.Name ~= "" and not table.find(cases, case.Name) then
+                        table.insert(cases, case.Name)
+                    end
+                end
+            end)
+            if #cases > 0 then
+                foundFromGame = true
+                break
+            end
+        end
+    end
+    
+    if #cases == 0 then
+        cases = availableCases
+        foundFromGame = false
+    end
+    
+    return cases, foundFromGame
+end
+
+-- Convert input to animation speed
+local function inputToAnimationSpeed(input)
+    if input <= 0 then
+        return 1
+    end
+    return input / 100
+end
+
+-- Set animation speed
+local function setAnimationSpeed(speed)
+    local settings = localPlayer:FindFirstChild("SettingsFolder") or localPlayer:FindFirstChild("Settings")
+    if settings then
+        local animSpeed = settings:FindFirstChild("Animation Speed")
+        if animSpeed and animSpeed:IsA("NumberValue") then
+            animSpeed.Value = speed
+            return true
+        end
+    end
+    return false
+end
+
+-- Apply interval
+local function applyInterval()
+    if intervalInput then
+        local value = intervalInput.Get and intervalInput:Get() or intervalInput.Value or "1000"
+        local num = tonumber(value)
+        if num and num > 0 then
+            openInterval = num
+            return true
+        end
+    end
+    return false
+end
+
+-- ✅ CRITICAL FIX: Load settings and config BEFORE UI creation
+loadSettings()
+
+if currentSettings.autoLoadEnabled and currentSettings.autoLoadConfig ~= "None" then
+    local configName = currentSettings.autoLoadConfig
+    local filesToTry = {
+        "Kasumi/" .. configName .. ".json",
+        configName .. ".json"
+    }
+    
+    for _, file in pairs(filesToTry) do
+        if file and isfile(file) then
+            local success, result = pcall(function()
+                return game:GetService("HttpService"):JSONDecode(readfile(file))
+            end)
+            
+            if success and result then
+                currentConfig = result
+                selectedCase = currentConfig.selectedCase or defaultConfig.selectedCase
+                openInterval = currentConfig.openInterval or defaultConfig.openInterval
+                obbyInterval = currentConfig.obbyInterval or defaultConfig.obbyInterval
+                antiAFKEnabled = currentConfig.antiAFKEnabled or false
+                autoReconnectEnabled = currentConfig.autoReconnectEnabled or false
+                autoApplyAnimSpeed = currentConfig.autoApplyAnimSpeed ~= nil and currentConfig.autoApplyAnimSpeed or true
+                autoTeleportZone9 = currentConfig.autoTeleportZone9 or false
+                autoOpenEnabled = currentConfig.autoOpenEnabled or false
+                obbyEnabled = currentConfig.obbyEnabled or false
+                
+                -- ✅ CRITICAL: Start systems immediately (FUNCTIONS ARE NOW DEFINED)
+                if antiAFKEnabled then startAntiAFK() end
+                if autoReconnectEnabled then setupAutoReconnect() end
+                if autoOpenEnabled then startAutoOpenLoop() end
+                if obbyEnabled then startAutoFarmLoop() end
+                
+                print("✅ Pre-loaded config before UI:", configName)
+                break
+            end
+        end
+    end
+end
+
+-- Set theme
+WindUI:SetTheme(currentConfig.theme or defaultConfig.theme)
+
+Window = WindUI:CreateWindow({
+    Title = "Kasumi Hub",
+    Icon = "zap",
+    Author = "@kasumichwan",
+    Folder = "Kasumi",
+    Size = UDim2.fromOffset(580, 490),
+    Theme = currentConfig.theme or defaultConfig.theme,
+    SideBarWidth = 180,
+})
+
+Window:SetToggleKey(Enum.KeyCode.G)
+
+Window:CreateTopbarButton("theme-switcher", "moon", function()
+    local newTheme = WindUI:GetCurrentTheme() == "Dark" and "Light" or "Dark"
+    WindUI:SetTheme(newTheme)
+    if canChangeTheme and darkModeToggle then
+        darkModeToggle:Set(newTheme == "Dark")
+    end
+    if canChangeDropdown and themeDropdown then
+        themeDropdown:Set(newTheme)
+    end
+end, 990)
+
+Window:EditOpenButton({
+    Title = "Open Kasumi Hub",
+    Icon = "zap",
+    CornerRadius = UDim.new(0,12),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+-- Create tabs
+local InformationTab = Window:Tab({
+    Title = "Information",
+    Icon = "info",
+    Locked = false
+})
+
+local AutoOpenTab = Window:Tab({
+    Title = "Auto Open Cases",
+    Icon = "package",
+    Locked = false
+})
+
+local AnimationTab = Window:Tab({
+    Title = "Case Opening Speed",
+    Icon = "zap",
+    Locked = false
+})
+
+local AutoFarmTab = Window:Tab({
+    Title = "Auto Farm",
+    Icon = "dollar-sign",
+    Locked = false
+})
+
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings",
+    Locked = false
+})
+
+Window:SelectTab(1)
+
+-- Information Tab
+InformationTab:Paragraph({
+    Title = "Case Rolling RNG",
+    Desc = string.format([[Kasumi Hub %s
+
+Key will auto load and work forever until I changed it so if it ask for key it means I changed it but you can get the key always. (You can share the key to your friends but don't leak it in the public or else I'll change key :<)
+
+FEATURES:
+
+• Auto buy seeds
+• Auto buy gears
+• Sell all brainrot and Plants (Favorite not included)
+• Auto equip your best brainrot and auto collects all money
+• Anti-AFK protection (NEW)
+• Auto-reconnect on disconnect (NEW)
+• Save and load config
+• Auto-load your preferred setup on startup
+• Multiple theme options for personalization
+
+CONTROLS:
+
+• G = Show/Hide Interface
+• Ctrl + B = Toggle Seed Auto-Buy
+• Ctrl + N = Toggle Gear Auto-Buy
+• Ctrl + E = Toggle Auto Equipment + Auto Collect Money
+
+CHANGELOGS:
+
+v1.1
+• Added Anti-AFK system
+• Added Auto-reconnect feature
+• Improved config save/load
+
+Made for you with love <3]], SCRIPT_VERSION)
+})
+
+InformationTab:Button({
+    Title = "Refresh Game Data",
+    Icon = "refresh-cw",
+    Callback = function()
+        local newCases, fromGame = getAvailableCases()
+        availableCases = newCases
+        openAmount = getCaseOpenSlots()
+        
+        if caseDropdown then
+            caseDropdown:Refresh(availableCases)
+            updateCaseDropdownProperly()
+        end
+        
+        WindUI:Notify({
+            Title = "Data Refreshed",
+            Content = string.format("Cases: %d (%s), Slots: %d", 
+                #availableCases, 
+                fromGame and "from game" or "fallback", 
+                openAmount),
+            Duration = 4
+        })
+    end
+})
+
+-- Auto Open Tab
+caseDropdown = AutoOpenTab:Dropdown({
+    Title = "Select Case to Open",
+    Values = availableCases,
+    Value = selectedCase,
+    SearchBarEnabled = true,
+    MenuWidth = 400,
+    Flag = "CaseSelection",
+    Callback = function(value)
+        selectedCase = value
+    end
+})
+
+intervalInput = AutoOpenTab:Input({
+    Title = "Opening Interval (ms)",
+    Desc = "Time between case opening attempts (best: 100ms to 1000ms)",
+    Value = tostring(openInterval)
+})
+
+AutoOpenTab:Button({
+    Title = "Apply Interval",
+    Icon = "clock",
+    Variant = "Secondary",
+    Callback = function()
+        applyInterval()
+    end
+})
+
+autoOpenToggle = AutoOpenTab:Toggle({
+    Title = "Enable Auto Opening",
+    Desc = "Continuously open selected cases (Ctrl+R to toggle)",
+    Value = autoOpenEnabled,
+    Callback = function(enabled)
+        if enabled ~= autoOpenEnabled then
+            autoOpenEnabled = enabled
+            
+            if enabled then            
+                startAutoOpenLoop()
+            end
+        end
+    end
+})
+
+AutoOpenTab:Button({
+    Title = "Open Cases Once",
+    Icon = "package",
+    Callback = function()
+        local success = openCase(selectedCase, openAmount)
+        if success then
+            WindUI:Notify({
+                Title = "Manual Opening",
+                Content = string.format("Opened %d x %s", openAmount, selectedCase),
+                Duration = 2
+            })
+        end
+    end
+})
+
+-- Animation Speed Tab
+animationSpeedInput = AnimationTab:Input({
+    Title = "Case Opening Animation Speed",
+    Desc = "Auto-applies as you type! (best: 1000 to 10000+)",
+    Value = tostring(currentConfig.animationSpeed or defaultConfig.animationSpeed),
+    Callback = function(value)
+        if autoApplyAnimSpeed then
+            local inputValue = tonumber(value)
+            if inputValue and inputValue > 0 and inputValue ~= lastAppliedAnimSpeed then
+                task.spawn(function()
+                    task.wait(0.5)
+                    local currentValue = animationSpeedInput.Get and animationSpeedInput:Get() or value
+                    local finalValue = tonumber(currentValue)
+                    
+                    if finalValue and finalValue > 0 and finalValue == inputValue then
+                        local convertedSpeed = inputToAnimationSpeed(finalValue)
+                        local success = setAnimationSpeed(convertedSpeed)
+                        if success then
+                            lastAppliedAnimSpeed = finalValue
+                        end
+                    end
+                end)
+            end
+        end
+    end
+})
+
+autoApplyAnimSpeedToggle = AnimationTab:Toggle({
+    Title = "Enable Auto-Apply Speed",
+    Desc = "Automatically apply animation speed as you type",
+    Value = autoApplyAnimSpeed,
+    Callback = function(state)
+        autoApplyAnimSpeed = state
+    end
+})
+
+AnimationTab:Button({
+    Title = "Apply Speed Manually",
+    Icon = "check",
+    Variant = "Primary",
+    Callback = function()
+        local value = animationSpeedInput.Get and animationSpeedInput:Get() or animationSpeedInput.Value or "1000"
+        local inputValue = tonumber(value)
+        if inputValue and inputValue > 0 then
+            local convertedSpeed = inputToAnimationSpeed(inputValue)
+            local success = setAnimationSpeed(convertedSpeed)
+            if success then
+                lastAppliedAnimSpeed = inputValue
+                WindUI:Notify({
+                    Title = "Speed Applied",
+                    Content = "Animation speed set to: " .. inputValue,
+                    Duration = 2
+                })
+            else
+                WindUI:Notify({
+                    Title = "Failed",
+                    Content = "Failed to set animation speed",
+                    Duration = 4
+                })
+            end
+        end
+    end
+})
+
+AnimationTab:Divider()
+
+AnimationTab:Paragraph({
+    Title = "Recommended Settings",
+    Desc = [[
+• 100 = Normal speed
+• 500 = 5x faster 
+• 1000 = 10x faster
+• 10000 = 100x faster
+
+You can set it higher!]]
+})
+
+-- Auto Farm Tab
+AutoFarmTab:Paragraph({
+    Title = "Obby Cash Farming",
+    Desc = [[Automatically complete obbies to earn cash!
+
+This feature will:
+• Teleport to obby completion platform
+• Automatically collect cash rewards
+• Spam jump for better platform detection
+
+Set your interval and enable to start farming.]]
+})
+
+obbyIntervalInput = AutoFarmTab:Input({
+    Title = "Farm Interval (ms)",
+    Desc = "Time between obby completions (recommended: 3000ms+)",
+    Value = tostring(obbyInterval)
+})
+
+AutoFarmTab:Button({
+    Title = "Apply Interval",
+    Icon = "clock",
+    Variant = "Secondary",
+    Callback = function()
+        applyObbyInterval()
+    end
+})
+
+autoFarmToggle = AutoFarmTab:Toggle({
+    Title = "Enable Auto Farm",
+    Desc = "Automatically complete obbies with spam jumping (Ctrl+F to toggle)",
+    Value = obbyEnabled,
+    Callback = function(enabled)
+        if enabled ~= obbyEnabled then
+            obbyEnabled = enabled
+            
+            if enabled then
+                startAutoFarmLoop()
+            end
+        end
+    end
+})
+
+AutoFarmTab:Button({
+    Title = "Complete Once",
+    Icon = "dollar-sign",
+    Variant = "Primary",
+    Callback = function()
+        teleportToObby()
+    end
+})
+
+AutoFarmTab:Divider()
+
+-- Settings Tab
+SettingsTab:Paragraph({
+    Title = "Customize Interface",
+    Desc = "Personalize your Kasumi Hub experience",
+    Image = "palette",
+    ImageSize = 20,
+    Color = "White"
+})
+
+local themes = {}
+for themeName, _ in pairs(WindUI:GetThemes()) do
+    table.insert(themes, themeName)
+end
+table.sort(themes)
+
+themeDropdown = SettingsTab:Dropdown({
+    Title = "Select Theme",
+    Values = themes,
+    SearchBarEnabled = true,
+    MenuWidth = 280,
+    Value = WindUI:GetCurrentTheme(),
+    Callback = function(theme)
+        canChangeDropdown = false
+        WindUI:SetTheme(theme)
+        canChangeDropdown = true
+    end
+})
+
+darkModeToggle = SettingsTab:Toggle({
+    Title = "Enable Dark Mode",
+    Desc = "Use dark color scheme",
+    Value = WindUI:GetCurrentTheme() == "Dark",
+    Callback = function(state)
+        if canChangeTheme then
+            WindUI:SetTheme(state and "Dark" or "Light")
+            if canChangeDropdown then
+                themeDropdown:Set(state and "Dark" or "Light")
+            end
+        end
+    end
+})
+
+WindUI:OnThemeChange(function(theme)
+    canChangeTheme = false
+    if darkModeToggle then
+        darkModeToggle:Set(theme == "Dark")
+    end
+    canChangeTheme = true
+end)
+
+SettingsTab:Divider()
+
+-- Anti-AFK & Auto-Reconnect
+SettingsTab:Paragraph({
+    Title = "Connection & Activity",
+    Desc = "Manage anti-AFK and auto-reconnect features",
+    Image = "wifi",
+    ImageSize = 20,
+    Color = "White"
+})
+
+antiAFKToggle = SettingsTab:Toggle({
+    Title = "Enable Anti-AFK",
+    Desc = "Prevents idle kick with improved detection",
+    Value = antiAFKEnabled,
+    Callback = function(state)
+        antiAFKEnabled = state
+        if antiAFKEnabled then
+            startAntiAFK()
+        end
+    end
+})
+
+autoReconnectToggle = SettingsTab:Toggle({
+    Title = "Enable Auto-Reconnect",
+    Desc = "6 detection methods - 30 tries, 6s interval = 3min total (IMPROVED)",
+    Value = autoReconnectEnabled,
+    Callback = function(state)
+        autoReconnectEnabled = state
+        reconnectAttempts = 0
+        if autoReconnectEnabled then
+            setupAutoReconnect()
+        end
+    end
+})
+
+SettingsTab:Divider()
+
+-- Zone 9 Auto-Teleport
+SettingsTab:Paragraph({
+    Title = "Zone 9 Auto-Teleport",
+    Desc = "Automatically teleport to Zone 9 when script loads",
+    Image = "map-pin",
+    ImageSize = 20,
+    Color = "White"
+})
+
+autoTeleportZone9Toggle = SettingsTab:Toggle({
+    Title = "Enable Zone 9 Teleport",
+    Desc = "Teleports to Zone 9 twice on startup (3s delay, then 1s delay)",
+    Value = autoTeleportZone9,
+    Callback = function(state)
+        autoTeleportZone9 = state
+    end
+})
+
+SettingsTab:Button({
+    Title = "Teleport to Zone 9 Now",
+    Icon = "navigation",
+    Variant = "Secondary",
+    Callback = function()
+        local success = teleportToZone9()
+        if success then
+            WindUI:Notify({
+                Title = "Teleported",
+                Content = "Moved to Zone 9",
+                Duration = 2
+            })
+        else
+            WindUI:Notify({
+                Title = "Teleport Failed",
+                Content = "Character not found",
+                Duration = 3
+            })
+        end
+    end
+})
+
+SettingsTab:Divider()
+
+-- Auto-load Configuration
+SettingsTab:Paragraph({
+    Title = "Auto-load Settings",
+    Desc = "Configure which config to automatically load on startup",
+    Image = "settings-2",
+    ImageSize = 20,
+    Color = "White"
+})
+
+autoLoadToggle = SettingsTab:Toggle({
+    Title = "Enable Auto-load Config",
+    Desc = "Automatically load selected config on startup",
+    Value = currentSettings.autoLoadEnabled or false,
+    Callback = function(state)
+        currentSettings.autoLoadEnabled = state
+        saveSettings()
+    end
+})
+
+local availableConfigs = getAvailableConfigs()
+autoLoadDropdown = SettingsTab:Dropdown({
+    Title = "Auto-load Config",
+    Values = availableConfigs,
+    Value = currentSettings.autoLoadConfig or "None",
+    SearchBarEnabled = true,
+    MenuWidth = 280,
+    Callback = function(config)
+        currentSettings.autoLoadConfig = config
+        saveSettings()
+    end
+})
+
+SettingsTab:Button({
+    Title = "Refresh Config List",
+    Icon = "refresh-cw",
+    Callback = function()
+        local newConfigs = getAvailableConfigs()
+        if autoLoadDropdown and autoLoadDropdown.Refresh then
+            autoLoadDropdown:Refresh(newConfigs)
+        end
+    end
+})
+
+SettingsTab:Divider()
+
+-- Configuration Management
+SettingsTab:Paragraph({
+    Title = "Configuration Manager",
+    Desc = "Save and load your settings",
+    Image = "save",
+    ImageSize = 20,
+    Color = "White"
+})
+
+local configName = "kasumi-config"
+
+ConfigNameInput = SettingsTab:Input({
+    Title = "Config Name",
+    Value = configName,
+    Callback = function(value)
+        configName = value or "kasumi-config"
+    end
+})
+
+SettingsTab:Button({
+    Title = "Save Configuration",
+    Icon = "save",
+    Variant = "Primary",
+    Callback = function()
+        local name = ConfigNameInput.Get and ConfigNameInput:Get() or configName
+        saveConfig(name)
+    end
+})
+
+SettingsTab:Button({
+    Title = "Load Configuration",
+    Icon = "folder-open",
+    Variant = "Secondary",
+    Callback = function()
+        local name = ConfigNameInput.Get and ConfigNameInput:Get() or configName
+        
+        if loadConfigWithProperSync(name) then
+            -- ✅ Start loops after manual load
+            if antiAFKEnabled then startAntiAFK() end
+            if autoReconnectEnabled then setupAutoReconnect() end
+            if autoOpenEnabled then startAutoOpenLoop() end
+            if obbyEnabled then startAutoFarmLoop() end
+            
+            WindUI:Notify({
+                Title = "Config Loaded",
+                Content = name .. " loaded - Case: " .. selectedCase,
+                Duration = 3
+            })
+        else
+            WindUI:Notify({
+                Title = "Load Error", 
+                Content = "Failed to load config: " .. name,
+                Icon = "x",
+                Duration = 3
+            })
+        end
+    end
+})
+
+SettingsTab:Button({
+    Title = "Reset to Default",
+    Icon = "rotate-ccw",
+    Variant = "Destructive",
+    Callback = function()
+        resetToDefault()
+    end
+})
+
+SettingsTab:Divider()
+
+-- Initialize keybinds
+setupKeybinds()
+
+-- Initialize data on startup
+task.spawn(function()
+    task.wait(2)
+    
+    local newCases, fromGame = getAvailableCases()
+    availableCases = newCases
+    openAmount = getCaseOpenSlots()
+    
+    if caseDropdown then
+        caseDropdown:Refresh(availableCases)
+    end
+    
+    -- Zone 9 Auto-Teleport on Startup
+    if autoTeleportZone9 then
+        task.spawn(function()
+            task.wait(3)
+            local success1 = teleportToZone9()
+            if success1 then
+                print("✅ Teleported to Zone 9 (1/2)")
+            end
+            
+            task.wait(1)
+            local success2 = teleportToZone9()
+            if success2 then
+                print("✅ Teleported to Zone 9 (2/2)")
+            end
+        end)
+    end
+    
+    if currentSettings.autoLoadEnabled and currentSettings.autoLoadConfig ~= "None" then
+        task.spawn(function()
+            task.wait(0.5)
+            updateCaseDropdownProperly()
+            updateAllUI()
+        end)
+        
+        WindUI:Notify({
+            Title = "Kasumi Hub " .. SCRIPT_VERSION,
+            Content = string.format("Auto-loaded: %s\nCase: %s (%d cases, %d slots)", 
+                currentSettings.autoLoadConfig,
+                selectedCase,
+                #availableCases, 
+                openAmount),
+            Duration = 6
+        })
+    else
+        if not table.find(availableCases, selectedCase) then
+            selectedCase = availableCases[1] or defaultConfig.selectedCase
+        end
+        
+        task.spawn(function()
+            task.wait(0.5)
+            updateCaseDropdownProperly()
+            updateAllUI()
+        end)
+        
+        WindUI:Notify({
+            Title = "Kasumi Hub " .. SCRIPT_VERSION,
+            Content = string.format("Ready! Case: %s\n%d cases, %d slots\nCtrl+R/F for keybinds", 
+                selectedCase,
+                #availableCases, 
+                openAmount),
+            Duration = 6
+        })
+    end
+end)

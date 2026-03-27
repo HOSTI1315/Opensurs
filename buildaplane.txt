@@ -1,0 +1,92 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create window
+local Window = Rayfield:CreateWindow({
+    Name = "ScriptsRBX.Com",
+    LoadingTitle = "Loading ScriptsRBX.Com",
+    LoadingSubtitle = "by ScriptsRBX.Com",
+    ShowText = "Press K to Toggle UI",
+    Theme = "Default",
+    ToggleUIKeybind = Enum.KeyCode.K,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "ScriptsRBXComSettings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = false
+    },
+    KeySystem = false
+})
+
+local MainTab = Window:CreateTab("Main", "server")
+MainTab:CreateSection("Main Actions")
+
+-- Default launch distance
+local launchDistance = 10000000000
+
+-- Input box for custom launch distance
+MainTab:CreateInput({
+    Name = "Launch Distance",
+    PlaceholderText = "Enter a number (e.g. 1000000)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(input)
+        local num = tonumber(input)
+        if num then
+            launchDistance = num
+        else
+            Rayfield:Notify({
+                Title = "Invalid Input",
+                Content = "Please enter a valid number",
+                Duration = 4,
+                Image = "alert-triangle"
+            })
+        end
+    end,
+})
+
+-- Infinite Money Button
+MainTab:CreateButton({
+    Name = "Launch with Distance",
+    Callback = function()
+        local ReplicatedStorage = game:GetService('ReplicatedStorage')
+        local Players = game:GetService('Players')
+        local player = Players.LocalPlayer
+
+        local launchRemote = ReplicatedStorage
+            :WaitForChild('Remotes')
+            :WaitForChild('LaunchEvents')
+            :WaitForChild('Launch')
+        launchRemote:FireServer()
+        task.wait(2)
+
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass('Humanoid')
+        local seat = humanoid and humanoid.SeatPart
+
+        if seat then
+            local forwardVector = seat.CFrame.LookVector
+            local targetCFrame = seat.CFrame + forwardVector * launchDistance
+
+            seat.CFrame = targetCFrame
+
+            local rootPart = character.PrimaryPart or character:FindFirstChild('HumanoidRootPart')
+            if rootPart then
+                character:SetPrimaryPartCFrame(targetCFrame)
+            end
+        end
+    end,
+})
+
+-- Rejoin Button
+MainTab:CreateButton({
+    Name = "Rejoin Game",
+    Callback = function()
+        local TeleportService = game:GetService("TeleportService")
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+        TeleportService:Teleport(game.PlaceId, player)
+    end,
+})

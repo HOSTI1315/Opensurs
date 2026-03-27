@@ -1,0 +1,136 @@
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local enabled = false
+local currentSpeed = 165
+local DEFAULT_SPEED = 16
+local itemID = "Grapple Hook"
+local useItemRE = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+local args = {1.9832406361897787}
+
+local character, humanoid, hrp
+local speedConnection, smoothLoop, equipLoop
+
+local function createStatusText()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "SpeedHackStatus"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    
+    local textLabel = Instance.new("TextLabel", screenGui)
+    textLabel.Size = UDim2.new(0, 200, 0, 30)
+    textLabel.Position = UDim2.new(0.5, -100, 0, 10)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Text = "Speed key: F"
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 14
+    return textLabel
+end
+
+local statusText = createStatusText()
+
+local function updateCharacter()
+    character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    humanoid = character:WaitForChild("Humanoid", 5)
+    hrp = character:WaitForChild("HumanoidRootPart", 5)
+end
+
+local function startSpeedHack()
+    if speedConnection then speedConnection:Disconnect() end
+    speedConnection = RunService.Heartbeat:Connect(function()
+        if not enabled or not humanoid or not hrp then return end
+        local dir = humanoid.MoveDirection
+        hrp.AssemblyLinearVelocity = Vector3.new(dir.X * currentSpeed, hrp.AssemblyLinearVelocity.Y, dir.Z * currentSpeed)
+    end)
+end
+
+local function stopSpeedHack()
+    if speedConnection then speedConnection:Disconnect() end
+end
+
+local function buyItem()
+    pcall(function()
+        game:GetService("ReplicatedStorage").Packages.Net["RF/CoinsShopService/RequestBuy"]:InvokeServer(itemID)
+    end)
+end
+
+local function autoEquip()
+    if not character then return end
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    local tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if tool and tool.Parent ~= character then
+        tool.Parent = character
+    end
+end
+
+local function fakeUse()
+    if not character then return end
+    local tool = character:FindFirstChild(itemID)
+    if tool then
+        pcall(function() useItemRE:FireServer(unpack(args)) end)
+    end
+end
+
+local function ensureGrapple()
+    if not character then return end
+    if not character:FindFirstChild(itemID) and not LocalPlayer.Backpack:FindFirstChild(itemID) then
+        buyItem()
+    end
+    autoEquip()
+end
+
+local function startSmoothLoop()
+    if smoothLoop then smoothLoop:Disconnect() end
+    smoothLoop = RunService.RenderStepped:Connect(function()
+        if enabled then fakeUse() end
+    end)
+end
+
+local function startEquipLoop()
+    if equipLoop then equipLoop:Disconnect() end
+    equipLoop = RunService.Heartbeat:Connect(function()
+        if enabled then ensureGrapple() end
+    end)
+end
+
+local function cleanupSpeed()
+    enabled = false
+    stopSpeedHack()
+    if smoothLoop then smoothLoop:Disconnect() end
+    if equipLoop then equipLoop:Disconnect() end
+    if humanoid then humanoid.WalkSpeed = DEFAULT_SPEED end
+    if statusText then
+        statusText.Text = "Speed key: F"
+        statusText.TextColor3 = Color3.new(1, 1, 1)
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.F then
+        enabled = not enabled
+        if enabled then
+            updateCharacter()
+            startSpeedHack()
+            buyItem()
+            autoEquip()
+            startSmoothLoop()
+            startEquipLoop()
+            if statusText then
+                statusText.Text = "Speed: Enabled"
+                statusText.TextColor3 = Color3.new(0, 1, 0)
+            end
+        else
+            cleanupSpeed()
+            if statusText then
+                statusText.Text = "SpeedKeyBind: F"
+                statusText.TextColor3 = Color3.new(1, 1, 1)
+            end
+        end
+    end
+end)
+
+updateCharacter()

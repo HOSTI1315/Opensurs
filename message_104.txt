@@ -1,0 +1,288 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Arise Crossover")
+local r2_0 = nil
+r1_0:AddList({
+  text = "Action",
+  flag = "list",
+  value = "==Select Action==",
+  values = {
+    "Arise",
+    "Destroy"
+  },
+  callback = function(r0_18)
+    -- line: [0, 0] id: 18
+    if r0_18 == "Arise" then
+      r2_0 = "EnemyCapture"
+    elseif r0_18 == "Destroy" then
+      r2_0 = "EnemyDestroy"
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Attack",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_5)
+    -- line: [0, 0] id: 5
+    _G.Attack = r0_5
+    print("Attack: ", r0_5)
+    if r0_5 then
+      Attack()
+    end
+  end,
+})
+function Attack()
+  -- line: [0, 0] id: 10
+  spawn(function()
+    -- line: [0, 0] id: 11
+    _G.Attack = true
+    local r0_11 = nil
+    while _G.Attack do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 12
+        local r1_12 = game:GetService("Players").LocalPlayer
+        local r3_12 = {}
+        for r7_12, r8_12 in ipairs(workspace.__Main.__Pets[r1_12.UserId]:GetChildren()) do
+          if r8_12:IsA("Model") and r8_12:FindFirstChild("PrimaryPart") then
+            r3_12[r8_12.Name] = r8_12.PrimaryPart.Position
+          end
+        end
+        local function r4_12()
+          -- line: [0, 0] id: 13
+          local r1_13 = math.huge
+          local r0_13 = nil	-- notice: implicit variable refs by block#[7]
+          for r5_13, r6_13 in pairs(workspace.__Main.__Enemies.Server:GetDescendants()) do
+            if r6_13:IsA("Part") and r6_13:GetAttribute("HP") and 0 < r6_13:GetAttribute("HP") then
+              local r7_13 = r1_12:DistanceFromCharacter(r6_13.CFrame.p)
+              if r7_13 < r1_13 then
+                r0_13 = r6_13
+                r1_13 = r7_13
+              end
+            end
+          end
+          return r0_13
+        end
+        local r5_12 = r4_12()
+        if r0_11 and r0_11:GetAttribute("HP") and r0_11:GetAttribute("HP") <= 0 then
+          local r6_12 = {}
+          r6_12[1] = {
+            [1] = {
+              Event = r2_0,
+              Enemy = r0_11.Name,
+            },
+            [2] = "\u{4}",
+          }
+          game:GetService("ReplicatedStorage").BridgeNet2.dataRemoteEvent:FireServer(unpack(r6_12))
+          r0_11 = nil
+          r5_12 = r4_12()
+          task.wait(0.5)
+        end
+        if r5_12 and r5_12 ~= r0_11 then
+          task.wait(1)
+          for r9_12 = 1, 2, 1 do
+            local r10_12 = {}
+            r10_12[1] = {
+              [1] = {
+                PetPos = r3_12,
+                AttackType = "All",
+                Event = "Attack",
+                Enemy = r5_12.Name,
+              },
+              [2] = "\u{7}",
+            }
+            game:GetService("ReplicatedStorage").BridgeNet2.dataRemoteEvent:FireServer(unpack(r10_12))
+            wait(1)
+          end
+          r0_11 = r5_12
+        end
+        if r0_11 then
+          local r6_12 = {}
+          r6_12[1] = {
+            [1] = {
+              Event = "PunchAttack",
+              Enemy = r0_11.Name,
+            },
+            [2] = "\u{4}",
+          }
+          game:GetService("ReplicatedStorage").BridgeNet2.dataRemoteEvent:FireServer(unpack(r6_12))
+        end
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Auto Mobs (Nearest)",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_20)
+    -- line: [0, 0] id: 20
+    _G.Mobs = r0_20
+    print("Mobs: ", r0_20)
+    if r0_20 then
+      Mobs()
+    end
+  end,
+})
+function Mobs()
+  -- line: [0, 0] id: 6
+  spawn(function()
+    -- line: [0, 0] id: 7
+    _G.Mobs = true
+    local r0_7 = nil
+    while _G.Mobs do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 8
+        local r1_8 = game:GetService("Players").LocalPlayer
+        local r3_8 = {}
+        for r7_8, r8_8 in ipairs(workspace.__Main.__Pets[r1_8.UserId]:GetChildren()) do
+          if r8_8:IsA("Model") and r8_8:FindFirstChild("PrimaryPart") then
+            r3_8[r8_8.Name] = r8_8.PrimaryPart.Position
+          end
+        end
+        local function r4_8()
+          -- line: [0, 0] id: 9
+          local r1_9 = math.huge
+          local r0_9 = nil	-- notice: implicit variable refs by block#[7]
+          for r5_9, r6_9 in pairs(workspace.__Main.__Enemies.Server:GetDescendants()) do
+            if r6_9:IsA("Part") and r6_9:GetAttribute("HP") and 0 < r6_9:GetAttribute("HP") then
+              local r7_9 = r1_8:DistanceFromCharacter(r6_9.CFrame.p)
+              if r7_9 < r1_9 then
+                r0_9 = r6_9
+                r1_9 = r7_9
+              end
+            end
+          end
+          return r0_9
+        end
+        local r5_8 = r4_8()
+        if r0_7 and r0_7:GetAttribute("HP") and r0_7:GetAttribute("HP") <= 0 then
+          local r6_8 = {}
+          r6_8[1] = {
+            [1] = {
+              Event = r2_0,
+              Enemy = r0_7.Name,
+            },
+            [2] = "\u{4}",
+          }
+          game:GetService("ReplicatedStorage").BridgeNet2.dataRemoteEvent:FireServer(unpack(r6_8))
+          r0_7 = nil
+          r5_8 = r4_8()
+          task.wait(0.5)
+        end
+        if r5_8 and r5_8 ~= r0_7 then
+          task.wait(0.5)
+          r1_8.Character:FindFirstChildOfClass("Humanoid").RootPart.CFrame = r5_8.CFrame * CFrame.new(0, 3, -5) * CFrame.Angles(0, math.rad(180), 0)
+          r0_7 = r5_8
+        end
+        if r0_7 then
+          local r6_8 = {}
+          r6_8[1] = {
+            [1] = {
+              Event = "PunchAttack",
+              Enemy = r0_7.Name,
+            },
+            [2] = "\u{4}",
+          }
+          game:GetService("ReplicatedStorage").BridgeNet2.dataRemoteEvent:FireServer(unpack(r6_8))
+        end
+      end)
+    end
+  end)
+end
+r1_0:AddBox({
+  text = "Select Mobs",
+  flag = "box",
+  value = "Mobs Name",
+  callback = function(r0_17)
+    -- line: [0, 0] id: 17
+    mobsname = r0_17
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Mobs (Select)",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_14)
+    -- line: [0, 0] id: 14
+    _G.Mobs2 = r0_14
+    print("Mobs2: ", r0_14)
+    if r0_14 then
+      Mobs2()
+    end
+  end,
+})
+function Mobs2()
+  -- line: [0, 0] id: 1
+  spawn(function()
+    -- line: [0, 0] id: 2
+    _G.Mobs2 = true
+    local r0_2 = 0
+    local r1_2 = nil
+    while _G.Mobs2 do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 3
+        local r1_3 = game:GetService("Players").LocalPlayer
+        local r3_3 = (function()
+          -- line: [0, 0] id: 4
+          local r1_4 = math.huge
+          local r0_4 = nil	-- notice: implicit variable refs by block#[9]
+          for r5_4, r6_4 in pairs(workspace.__Main.__Enemies.Client:GetDescendants()) do
+            if r6_4.Name == "HealthBar" and r6_4.Main.Title.Text == mobsname then
+              local r7_4 = r6_4.Main.Bar.Amount.Text
+              if r7_4 ~= "0 HP" then
+                local r8_4 = r1_3:DistanceFromCharacter(r6_4.Parent.HumanoidRootPart.CFrame.p)
+                if r8_4 < r1_4 then
+                  r0_4 = r6_4
+                  r1_4 = r8_4
+                end
+              elseif r7_4 == "0 HP" then
+                wait(1)
+              end
+            end
+          end
+          return r0_4
+        end)()
+        if r3_3 and r3_3 ~= r1_2 then
+          r1_2 = r3_3
+          r0_2 = tick()
+          r1_3.Character:FindFirstChildOfClass("Humanoid").RootPart.CFrame = r3_3.Parent.HumanoidRootPart.CFrame * CFrame.new(0, 3, -5) * CFrame.Angles(0, math.rad(180), 0)
+        end
+      end)
+    end
+  end)
+end
+r1_0:AddSlider({
+  text = "Walk Speed",
+  flag = "slider1",
+  value = 16,
+  min = 16,
+  max = 300,
+  callback = function(r0_19)
+    -- line: [0, 0] id: 19
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = r0_19
+  end,
+})
+r1_0:AddButton({
+  text = "Inf Jump",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 15
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+      -- line: [0, 0] id: 16
+      game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end)
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()

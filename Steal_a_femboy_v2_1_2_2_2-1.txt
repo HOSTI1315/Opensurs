@@ -1,0 +1,1645 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+WindUI:SetTheme("Violet")
+
+local Confirmed = false
+
+function gradient(text, startColor, endColor)
+    local result = ""
+    local length = #text
+    for i = 1, length do
+        local t = (i - 1) / math.max(length - 1, 1)
+        local r = math.floor((startColor.R + (endColor.R - startColor.R) * t) * 255)
+        local g = math.floor((startColor.G + (endColor.G - startColor.G) * t) * 255)
+        local b = math.floor((startColor.B + (endColor.B - startColor.B) * t) * 255)
+        local char = text:sub(i, i)
+        result = result .. "<font color=\"rgb(" .. r .. ", " .. g .. ", " .. b .. ")\">" .. char .. "</font>"
+    end
+    return result
+end
+
+WindUI:Popup({
+    Title = "Welcome!",
+    Icon = "sparkles",
+    IconThemed = true,
+    Content = "Welcome to " .. gradient("Codex Hub", Color3.fromHex("#4FC3F7"), Color3.fromHex("#0288D1")) .. ".",
+    Buttons = {
+        {
+            Title = "Continue",
+            Icon = "arrow-right",
+            Variant = "Primary",
+            Callback = function()
+                Confirmed = true
+            end
+        }
+    }
+})
+
+repeat task.wait() until Confirmed
+
+local Window = WindUI:CreateWindow({
+    Title = "@codexxscripts",
+    Icon = "sparkles",
+    IconThemed = true,
+    Size = UDim2.fromOffset(600, 400),
+    Background = "rbxassetid://85878831310179",
+    Folder = "LightingWare",
+    --[[KeySystem = {
+        Key = { "TheGoonBack" },
+        Note = "Key is on discord server! click get key to copy discord link!",
+        Thumbnail = {
+            Image = "rbxassetid://79199183782805",
+            
+        },
+        URL = "https://discord.gg/Rfk6knQBvY",
+        SaveKey = false
+    }]]
+})
+local Tabs = {}
+
+
+Tabs.Imp = Window:Section({
+    Title = "important",
+    Icon = "bell-ring",
+    Opened = true,
+})
+
+
+Tabs.Main = Window:Section({
+    Title = "Main",
+    Icon = "zap",
+    Opened = false,
+})
+
+Tabs.Customise = Window:Section({
+    Title = "Appearance",
+    Icon = "paintbrush",
+    Opened = false,
+})
+local CredTab = Tabs.Imp:Tab({ Title = "Credits", Icon = "newspaper" })
+local UpadTab = Tabs.Imp:Tab({ Title = "Update Log", Icon = "scroll-text" })
+local VisualsTab = Tabs.Main:Tab({ Title = "Visuals", Icon = "eye" })
+local MainTab = Tabs.Main:Tab({ Title = "Actions", Icon = "star" })
+local WindowTab = Tabs.Customise:Tab({ Title = "Window and File Configuration", Icon = "settings" })
+
+CredTab:Paragraph({
+    Title = "Credits idk man",
+    Desc = "Adjustment by Vuk\nVisuals by Vuk\nGui library by Footagesus",
+    Thumbnail = "https://wallpapers.com/images/high/widescreen-darling-in-the-franxx-02-uzmizm4y7lhahvy1.webp",
+    ThumbnailSize = 150
+})
+CredTab:Paragraph({
+      Title = "Join our discord server!",
+     Desc = "Why waiting? join now!",
+    Buttons = {
+        {
+            Title = "Copy Discord Link",
+            Variant = "Primary",
+            Icon = "copy",
+            Callback = function()
+                setclipboard("https://discord.gg/QUaWcAK8bx")
+                WindUI:Notify({
+                    Title = "Copied!",
+                    Content = "Discord link copied to clipboard.",
+                    Duration = 2
+                })
+            end
+        }
+    }
+})
+
+local autoRespawnMethod = nil
+local respawnConnection
+local lastSavedPosition
+
+local autoRespawnToggle = VisualsTab:Toggle({
+    Title = "Automatic Respawn",
+    Value = false,
+    Callback = function(state)
+        getgenv().AutoRespawnEnabled = state
+
+        if respawnConnection then
+            respawnConnection:Disconnect()
+            respawnConnection = nil
+        end
+
+        if state then
+            local player = game:GetService("Players").LocalPlayer
+
+            task.defer(function()
+                while not player.Character do
+                    task.wait()
+                end
+
+                respawnConnection = player.CharacterAdded:Connect(function(character)
+                    task.defer(function()
+                        character:WaitForChild("HumanoidRootPart", 5)
+                        character:WaitForChild("Humanoid", 5)
+
+                        character:GetAttributeChangedSignal("Downed"):Connect(function()
+                            if not getgenv().AutoRespawnEnabled then return end
+                            if character:GetAttribute("Downed") ~= true then return end
+                            if autoRespawnMethod ~= "Fake Revive" then return end
+
+                            local hrp = character:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                lastSavedPosition = hrp.Position
+                            end
+
+                            task.wait(3)
+
+                            local start = tick()
+                            repeat
+                                game:GetService("ReplicatedStorage"):WaitForChild("Events", 9e9)
+                                    :WaitForChild("Player", 9e9)
+                                    :WaitForChild("ChangePlayerMode", 9e9)
+                                    :FireServer(true)
+                                task.wait(1)
+                            until character:GetAttribute("Downed") ~= true or tick() - start > 1
+
+                            local newChar
+                            repeat
+                                newChar = player.Character
+                                task.wait()
+                            until newChar and newChar:FindFirstChild("HumanoidRootPart")
+
+                            local newHRP = newChar:FindFirstChild("HumanoidRootPart")
+                            if lastSavedPosition and newHRP then
+                                newHRP.CFrame = CFrame.new(lastSavedPosition)
+                                task.wait(0.5)
+
+                                local moved = (newHRP.Position - lastSavedPosition).Magnitude > 1
+                                if moved then return end
+                            end
+                        end)
+                    end)
+                end)
+
+
+                player.CharacterAdded:Fire(player.Character)
+            end)
+        end
+    end
+})
+
+local respawnMethodDropdown = VisualsTab:Dropdown({
+    Title = "Choose Respawn Method",
+    Values = { "Random", "Fake Revive" },
+    Multi = false,
+    Default = "Random",
+    Callback = function(value)
+        autoRespawnMethod = value
+    end
+})
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LightningWareTimer"
+screenGui.Parent = PlayerGui
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Enabled = false -- start hidden
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0, 100, 0, 40)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.fromRGB(135, 206, 250)
+textLabel.TextStrokeColor3 = Color3.fromRGB(0, 191, 255)
+textLabel.TextStrokeTransparency = 0
+textLabel.Font = Enum.Font.GothamBlack
+textLabel.TextScaled = true
+textLabel.Text = "0"
+textLabel.AnchorPoint = Vector2.new(0.5, 0)
+textLabel.Position = UDim2.new(0.5, 0, 0, 10)
+textLabel.Parent = screenGui
+
+local statsFolder = workspace:WaitForChild("Game"):WaitForChild("Stats")
+
+RunService.Heartbeat:Connect(function()
+    if screenGui.Enabled then
+        local timerValue = statsFolder:GetAttribute("Timer")
+        textLabel.Text = timerValue and tostring(timerValue) or "0"
+    end
+end)
+
+VisualsTab:Toggle({
+    Title = "Game Timer Display",
+    Value = false,
+    Callback = function(state)
+        screenGui.Enabled = state
+    end,
+})
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local playerESPThread
+
+VisualsTab:Toggle({
+    Title = "Esp Player",
+    Value = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function getDistance(pos)
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            return hrp and (pos - hrp.Position).Magnitude or nil
+        end
+
+        local function createPlayerESP(part)
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "PlayerESP"
+            billboard.Adornee = part
+            billboard.Size = UDim2.new(0, 180, 0, 25)
+            billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+            billboard.AlwaysOnTop = true
+            billboard.LightInfluence = 0
+            billboard.Parent = part
+
+            local label = Instance.new("TextLabel")
+            label.Name = "Label"
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.TextStrokeTransparency = 0.25
+            label.TextScaled = true
+            label.RichText = true
+            label.Font = Enum.Font.GothamSemibold
+            label.Text = ""
+            label.TextColor3 = Color3.fromRGB(100, 180, 255)
+            label.Parent = billboard
+
+            return label
+        end
+
+        local function removeAllESPs()
+            local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+            if folder then
+                for _, char in ipairs(folder:GetChildren()) do
+                    if char:IsA("Model") then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            local existing = hrp:FindFirstChild("PlayerESP")
+                            if existing then
+                                existing:Destroy()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if state then
+            if playerESPThread and coroutine.status(playerESPThread) == "suspended" then
+                coroutine.close(playerESPThread)
+            end
+
+            playerESPThread = coroutine.create(function()
+                while true do
+                    local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+                    if folder then
+                        for _, char in ipairs(folder:GetChildren()) do
+                            if char:IsA("Model") then
+                                local team = char:GetAttribute("Team")
+                                if team ~= "Nextbot" and char.Name ~= Players.LocalPlayer.Name then
+                                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        local espGui = hrp:FindFirstChild("PlayerESP")
+                                        local label = espGui and espGui:FindFirstChild("Label")
+
+                                        if not label then
+                                            label = createPlayerESP(hrp)
+                                        end
+
+                                        if label then
+                                            local dist = getDistance(hrp.Position) or 0
+                                            local downed = char:GetAttribute("Downed")
+                                            local downedTime = tonumber(char:GetAttribute("DownedTimeLeft")) or 0
+                                            local name = char.Name
+
+                                            local displayText
+                                            local color
+
+                                            if downed == true then
+                                                color = Color3.fromRGB(255, 60, 60)
+                                                displayText = string.format('%s <font size="16">(Downed %.0f)</font>', name, downedTime)
+                                            elseif downed == false then
+                                                color = Color3.fromRGB(100, 255, 100)
+                                                displayText = string.format('%s\n%.0f studs', name, dist)
+                                            else
+                                                color = Color3.fromRGB(100, 180, 255)
+                                                displayText = string.format('%s\n%.0f studs', name, dist)
+                                            end
+
+                                            if label.Text ~= displayText or label.TextColor3 ~= color then
+                                                label.Text = displayText
+                                                label.TextColor3 = color
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+
+            coroutine.resume(playerESPThread)
+        else
+            removeAllESPs()
+            if playerESPThread and coroutine.status(playerESPThread) == "suspended" then
+                coroutine.close(playerESPThread)
+                playerESPThread = nil
+            end
+        end
+    end
+})
+
+local ticketESPThread
+
+VisualsTab:Toggle({
+    Title = "Esp Ticket",
+    Value = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function getDistance(pos)
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            return hrp and (pos - hrp.Position).Magnitude or nil
+        end
+
+        local function createESP(part)
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "TicketESP"
+            billboard.Adornee = part
+            billboard.Size = UDim2.new(0, 180, 0, 25)
+            billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+            billboard.AlwaysOnTop = true
+            billboard.LightInfluence = 0
+            billboard.Parent = part
+
+            local label = Instance.new("TextLabel")
+            label.Name = "Ticket"
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.TextStrokeTransparency = 0.25
+            label.TextScaled = true
+            label.Font = Enum.Font.GothamSemibold
+            label.TextColor3 = Color3.fromRGB(255, 255, 100)
+            label.Text = "Ticket"
+            label.Parent = billboard
+
+            return billboard
+        end
+
+        local function removeAllTicketESP()
+            local ticketFolder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Effects") and workspace.Game.Effects:FindFirstChild("Tickets")
+
+            if ticketFolder then
+                for _, ticketModel in ipairs(ticketFolder:GetChildren()) do
+                    if ticketModel:IsA("Model") then
+                        local part = ticketModel:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            local existing = part:FindFirstChild("TicketESP")
+                            if existing then
+                                existing:Destroy()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if state then
+            if ticketESPThread and coroutine.status(ticketESPThread) == "suspended" then
+                coroutine.close(ticketESPThread)
+            end
+
+            ticketESPThread = coroutine.create(function()
+                while true do
+                    local ticketFolder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Effects") and workspace.Game.Effects:FindFirstChild("Tickets")
+
+                    if ticketFolder then
+                        for _, ticketModel in ipairs(ticketFolder:GetChildren()) do
+                            if ticketModel:IsA("Model") then
+                                local part = ticketModel:FindFirstChildWhichIsA("BasePart")
+                                if part then
+                                    local billboard = part:FindFirstChild("TicketESP") or createESP(part)
+                                    local label = billboard and billboard:FindFirstChild("Label")
+                                    if label then
+                                        local dist = getDistance(part.Position)
+                                        if dist then
+                                            label.Text = string.format("%s\n%.0f studs", ticketModel.Name, dist)
+                                        else
+                                            label.Text = ticketModel.Name
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    task.wait(0.5)
+                end
+            end)
+
+            coroutine.resume(ticketESPThread)
+        else
+            removeAllTicketESP()
+            if ticketESPThread and coroutine.status(ticketESPThread) == "suspended" then
+                coroutine.close(ticketESPThread)
+                ticketESPThread = nil
+            end
+        end
+    end
+})
+
+
+local nextbotESPThread
+VisualsTab:Toggle({
+    Title = "Esp Nextbot",
+    Value = false,
+    Callback = function(state)
+        local function getDistance(pos)
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            return hrp and (pos - hrp.Position).Magnitude or nil
+        end
+
+        local function getESPPart(obj)
+            if obj:IsA("BasePart") then
+                return obj
+            elseif obj:IsA("Model") then
+                return obj:FindFirstChild("Root") or obj:FindFirstChild("Head") or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+            end
+        end
+
+        local function lerpColor(c1, c2, t)
+            return Color3.new(
+                c1.R + (c2.R - c1.R) * t,
+                c1.G + (c2.G - c1.G) * t,
+                c1.B + (c2.B - c1.B) * t
+            )
+        end
+
+        local function getColorByDistance(dist)
+    if dist <= 12 then
+        return Color3.fromRGB(0, 0, 0) -- black 
+    elseif dist <= 60 then
+        local t = (dist - 6) / 14
+        return Color3.new(
+            255 / 255,
+            (60 + (255 - 60) * t) / 255,
+            60 / 255
+        ) -- red n yellow
+    else
+        return Color3.fromRGB(200, 100, 255) -- Purple 
+    end
+end
+
+        local function createESP(part)
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "NextbotESP"
+            billboard.Adornee = part
+            billboard.Size = UDim2.new(0, 180, 0, 25)
+            billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+            billboard.AlwaysOnTop = true
+            billboard.LightInfluence = 0
+            billboard.Parent = part
+
+            local label = Instance.new("TextLabel")
+            label.Name = "Label"
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.TextStrokeTransparency = 0.25
+            label.TextScaled = true
+            label.Font = Enum.Font.GothamSemibold
+            label.Text = ""
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.Parent = billboard
+
+            return billboard
+        end
+
+        local function removeAllNextbotESP()
+            local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+            if folder then
+                for _, npc in ipairs(folder:GetChildren()) do
+                    local part = getESPPart(npc)
+                    if part then
+                        local existing = part:FindFirstChild("NextbotESP")
+                        if existing then
+                            existing:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+
+        if state then
+            if nextbotESPThread and coroutine.status(nextbotESPThread) == "suspended" then
+                coroutine.close(nextbotESPThread)
+            end
+            nextbotESPThread = coroutine.create(function()
+                while true do
+                    local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+                    if folder then
+                        for _, npc in ipairs(folder:GetChildren()) do
+                            if npc:GetAttribute("Team") == "Nextbot" then
+                                local part = getESPPart(npc)
+                                if part then
+                                    local billboard = part:FindFirstChild("NextbotESP") or createESP(part)
+                                    local label = billboard and billboard:FindFirstChild("Label")
+                                    if label then
+                                        local dist = getDistance(part.Position)
+                                        if dist then
+                                            label.Text = string.format("%s\n%.0f studs", npc.Name, dist)
+                                            label.TextColor3 = getColorByDistance(dist)
+                                        else
+                                            label.Text = npc.Name
+                                            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+            coroutine.resume(nextbotESPThread)
+        else
+            removeAllNextbotESP()
+            if nextbotESPThread and coroutine.status(nextbotESPThread) == "suspended" then
+                coroutine.close(nextbotESPThread)
+                nextbotESPThread = nil
+            end
+        end
+    end
+})
+
+local tracerThread = nil
+local tracerLines = {}
+
+VisualsTab:Toggle({
+    Title = "Tracer Downed Players",
+    Value = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local Camera = workspace.CurrentCamera
+
+        local function cleanup()
+            for _, line in ipairs(tracerLines) do
+                if line and line.Remove then
+                    line:Remove()
+                elseif line then
+                    line.Visible = false
+                end
+            end
+            tracerLines = {}
+        end
+
+        if state then
+            tracerThread = coroutine.create(function()
+                while true do
+                    cleanup()
+
+                    local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+                    if folder then
+                        for _, char in ipairs(folder:GetChildren()) do
+                            if char:IsA("Model") then
+                                local team = char:GetAttribute("Team")
+                                local downed = char:GetAttribute("Downed")
+                                if team ~= "Nextbot" and char.Name ~= LocalPlayer.Name and downed == true then
+                                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                                    if hrp and Camera then
+                                        local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                                        if onScreen then
+                                            local tracer = Drawing.new("Line")
+                                            tracer.Color = Color3.fromRGB(255, 60, 60)
+                                            tracer.Thickness = 2
+                                            tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                                            tracer.To = Vector2.new(pos.X, pos.Y)
+                                            tracer.ZIndex = 1
+                                            tracer.Visible = true
+                                            table.insert(tracerLines, tracer)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    task.wait(0.05)
+                end
+            end)
+            coroutine.resume(tracerThread)
+        else
+            if tracerThread and coroutine.status(tracerThread) == "suspended" then
+                coroutine.close(tracerThread)
+                tracerThread = nil
+            end
+            cleanup()
+        end
+    end
+})
+
+MainTab:Section({ Title = "Modifications" })
+
+local requiredFields = {
+    Friction = true,
+    AirStrafeAcceleration = true,
+    JumpHeight = true,
+    RunDeaccel = true,
+    JumpSpeedMultiplier = true,
+    JumpCap = true,
+    SprintCap = true,
+    WalkSpeedMultiplier = true,
+    BhopEnabled = true,
+    Speed = true,
+    AirAcceleration = true,
+    RunAccel = true,
+    SprintAcceleration = true,
+}
+
+getgenv().ApplyMode = "Not Optimized"
+local appliedOnce = false
+local gameStatsPath = workspace.Game.Stats
+local playersPath = workspace.Game.Players
+local playerModelPresent = false
+
+local currentSettings = {
+    Speed = "1500",
+    JumpCap = "1",
+    AirStrafeAcceleration = "187"
+}
+
+local function isPlayerModelPresent()
+    local player = game.Players.LocalPlayer
+    if not player then return false end
+    
+    for _, model in pairs(playersPath:GetChildren()) do
+        if model.Name == player.Name then
+            return true
+        end
+    end
+    return false
+end
+
+local function shouldApplySettings()
+    if not gameStatsPath then return false end
+    
+    local roundStarted = gameStatsPath:GetAttribute("RoundStarted")
+    local timer = gameStatsPath:GetAttribute("Timer")
+    
+    return roundStarted == false and timer == 3
+end
+
+local function getMatchingTables()
+    local matched = {}
+    for _, obj in pairs(getgc(true)) do
+        if typeof(obj) == "table" then
+            local ok = true
+            for field in pairs(requiredFields) do
+                if rawget(obj, field) == nil then
+                    ok = false
+                    break
+                end
+            end
+            if ok then
+                table.insert(matched, obj)
+            end
+        end
+    end
+    return matched
+end
+
+local function applyToTables(callback)
+    if not isPlayerModelPresent() then
+        return
+    end
+    
+    local targets = getMatchingTables()
+    
+    if #targets == 0 then
+        return
+    end
+    
+    if getgenv().ApplyMode == "Optimized" then
+        task.spawn(function()
+            for i, tableObj in ipairs(targets) do
+                if tableObj and typeof(tableObj) == "table" then
+                    pcall(callback, tableObj)
+                end
+                
+                if i % 3 == 0 then
+                    task.wait()
+                end
+            end
+        end)
+    else
+        for i, tableObj in ipairs(targets) do
+            if tableObj and typeof(tableObj) == "table" then
+                pcall(callback, tableObj)
+            end
+        end
+    end
+end
+
+local function applyStoredSettings()
+    local settings = {
+        {field = "Speed", value = tonumber(currentSettings.Speed)},
+        {field = "JumpCap", value = tonumber(currentSettings.JumpCap)},
+        {field = "AirStrafeAcceleration", value = tonumber(currentSettings.AirStrafeAcceleration)}
+    }
+    
+    for _, setting in ipairs(settings) do
+        if setting.value and tostring(setting.value) ~= "1500" and tostring(setting.value) ~= "1" and tostring(setting.value) ~= "187" then
+            applyToTables(function(obj)
+                obj[setting.field] = setting.value
+            end)
+        end
+    end
+end
+
+local function applySettingsWithDelay()
+    if not shouldApplySettings() or appliedOnce then
+        return
+    end
+    
+    appliedOnce = true
+    
+    local settings = {
+        {field = "Speed", value = tonumber(currentSettings.Speed), delay = math.random(1, 14)},
+        {field = "JumpCap", value = tonumber(currentSettings.JumpCap), delay = math.random(1, 14)},
+        {field = "AirStrafeAcceleration", value = tonumber(currentSettings.AirStrafeAcceleration), delay = math.random(1, 14)}
+    }
+    
+    for _, setting in ipairs(settings) do
+        if setting.value and tostring(setting.value) ~= "1500" and tostring(setting.value) ~= "1" and tostring(setting.value) ~= "187" then
+            task.spawn(function()
+                task.wait(setting.delay)
+                applyToTables(function(obj)
+                    obj[setting.field] = setting.value
+                end)
+            end)
+        end
+    end
+end
+
+local roundStartedConnection
+local timerConnection
+
+local function setupAttributeConnections()
+    if roundStartedConnection then
+        roundStartedConnection:Disconnect()
+    end
+    if timerConnection then
+        timerConnection:Disconnect()
+    end
+    
+    if gameStatsPath then
+        roundStartedConnection = gameStatsPath:GetAttributeChangedSignal("RoundStarted"):Connect(function()
+            local roundStarted = gameStatsPath:GetAttribute("RoundStarted")
+            if roundStarted == true then
+                appliedOnce = false
+            end
+        end)
+        
+        timerConnection = gameStatsPath:GetAttributeChangedSignal("Timer"):Connect(function()
+            if shouldApplySettings() and not appliedOnce then
+                applySettingsWithDelay()
+            end
+        end)
+    end
+end
+
+setupAttributeConnections()
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        local currentlyPresent = isPlayerModelPresent()
+        
+        if currentlyPresent and not playerModelPresent then
+            playerModelPresent = true
+            applyStoredSettings()
+        elseif not currentlyPresent and playerModelPresent then
+            playerModelPresent = false
+        end
+    end
+end)
+
+local function createValidatedInput(config)
+    return function(input)
+        local val = tonumber(input)
+        if not val then
+            return
+        end
+        
+        if config.min and val < config.min then
+            return
+        end
+        
+        if config.max and val > config.max then
+            return
+        end
+        
+        currentSettings[config.field] = input
+        
+        applyToTables(function(obj)
+            obj[config.field] = val
+        end)
+    end
+end
+
+MainTab:Input({
+    Title = "Set Speed",
+    Icon = "speedometer",
+    Placeholder = "Default 1500",
+    Value = "1500",
+    Callback = createValidatedInput({
+        field = "Speed",
+        min = 1450,
+        max = 100008888
+    })
+})
+
+MainTab:Input({
+    Title = "Set Jump Cap",
+    Icon = "chevrons-up",
+    Placeholder = "Default 1",
+    Value = "1",
+    Callback = createValidatedInput({
+        field = "JumpCap",
+        min = 0.1,
+        max = 5088888
+    })
+})
+
+MainTab:Input({
+    Title = "Strafe Acceleration",
+    Icon = "wind",
+    Placeholder = "Set Strafe Acceleration",
+    Value = "187",
+    Callback = createValidatedInput({
+        field = "AirStrafeAcceleration",
+        min = 1,
+        max = 1000888888
+    })
+})
+
+MainTab:Dropdown({
+    Title = "Select Apply Method",
+    Values = { "Not Optimized", "Optimized" },
+    Multi = false,
+    Default = "Not Optimized",
+    Callback = function(value)
+        getgenv().ApplyMode = value
+    end,
+})
+
+
+
+MainTab:Section({ Title = "Automation" })
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+getgenv().autoCarryEnabled = false
+getgenv().autoReviveEnabled = false
+getgenv().autoJumpEnabled = false
+
+local function makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+local function createToggleGui(name, varName, yOffset)
+	local gui = playerGui:FindFirstChild(name.."Gui")
+	if gui then gui:Destroy() end
+	gui = Instance.new("ScreenGui", playerGui)
+	gui.Name = name.."Gui"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Enabled = false
+
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 190, 0, 30)
+	frame.Position = UDim2.new(0.5, -95, 0.12 + yOffset, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+	frame.BackgroundTransparency = 0.35
+	frame.BorderSizePixel = 0
+	makeDraggable(frame)
+
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(1, 0)
+
+	local stroke = Instance.new("UIStroke", frame)
+	stroke.Color = Color3.fromRGB(100, 160, 255)
+	stroke.Thickness = 2
+
+	local label = Instance.new("TextLabel", frame)
+	label.Text = name
+	label.Size = UDim2.new(0.55, 0, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(220, 240, 255)
+	label.Font = Enum.Font.Roboto
+	label.TextSize = 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+
+	local toggleBtn = Instance.new("TextButton", frame)
+	toggleBtn.Name = "ToggleButton"
+	toggleBtn.Text = getgenv()[varName] and "On" or "Off"
+	toggleBtn.Size = UDim2.new(0.3, 0, 0.75, 0)
+	toggleBtn.Position = UDim2.new(0.65, 0, 0.13, 0)
+	toggleBtn.BackgroundColor3 = getgenv()[varName] and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(40, 40, 45)
+	toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+	toggleBtn.Font = Enum.Font.Roboto
+	toggleBtn.TextSize = 13
+
+	local buttonCorner = Instance.new("UICorner", toggleBtn)
+	buttonCorner.CornerRadius = UDim.new(1, 0)
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		getgenv()[varName] = not getgenv()[varName]
+		toggleBtn.Text = getgenv()[varName] and "On" or "Off"
+		toggleBtn.BackgroundColor3 = getgenv()[varName] and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(40, 40, 45)
+	end)
+
+	return gui
+end
+
+local carryGui, reviveGui, jumpGui
+
+MainTab:Toggle({
+	Title = "Auto Carry",
+	Value = false,
+	Callback = function(state)
+		if not carryGui then
+			carryGui = createToggleGui("Auto Carry", "autoCarryEnabled", 0.00)
+		end
+		carryGui.Enabled = state
+	end
+})
+MainTab:Section({ Title = "" })
+local infiniteSlideEnabled = false
+local slideFrictionValue = -8
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local keys = {
+    "Friction","AirStrafeAcceleration","JumpHeight","RunDeaccel",
+    "JumpSpeedMultiplier","JumpCap","SprintCap","WalkSpeedMultiplier",
+    "BhopEnabled","Speed","AirAcceleration","RunAccel","SprintAcceleration"
+}
+
+local function hasAll(tbl)
+    if type(tbl) ~= "table" then return false end
+    for _, k in ipairs(keys) do
+        if rawget(tbl, k) == nil then return false end
+    end
+    return true
+end
+
+local cachedTables = nil
+local plrModel = nil
+local slideConnection = nil
+
+local function getConfigTables()
+    local tables = {}
+    for _, obj in ipairs(getgc(true)) do
+        local success, result = pcall(function()
+            if hasAll(obj) then return obj end
+        end)
+        if success and result then
+            table.insert(tables, obj)
+        end
+    end
+    return tables
+end
+
+local function setFriction(value)
+    if not cachedTables then return end
+    for _, t in ipairs(cachedTables) do
+        pcall(function()
+            t.Friction = value
+        end)
+    end
+end
+
+local function updatePlayerModel()
+    local GameFolder = workspace:FindFirstChild("Game")
+    local PlayersFolder = GameFolder and GameFolder:FindFirstChild("Players")
+    if PlayersFolder then
+        plrModel = PlayersFolder:FindFirstChild(LocalPlayer.Name)
+    else
+        plrModel = nil
+    end
+end
+
+local function onHeartbeat()
+    if not plrModel then
+        setFriction(5)
+        return
+    end
+
+    local success, currentState = pcall(function()
+        return plrModel:GetAttribute("State")
+    end)
+
+    if success and currentState then
+        if currentState == "Slide" then
+            pcall(function()
+                plrModel:SetAttribute("State", "EmotingSlide")
+            end)
+        elseif currentState == "EmotingSlide" then
+            setFriction(slideFrictionValue)
+        else
+            setFriction(5)
+        end
+    else
+        setFriction(5)
+    end
+end
+
+MainTab:Toggle({
+    Title = "Infinite Slide",
+    Value = false,
+    Callback = function(state)
+        infiniteSlideEnabled = state
+
+        if slideConnection then
+            slideConnection:Disconnect()
+            slideConnection = nil
+        end
+
+        if state then
+            cachedTables = getConfigTables()
+            updatePlayerModel()
+
+            slideConnection = RunService.Heartbeat:Connect(onHeartbeat)
+
+            LocalPlayer.CharacterAdded:Connect(function()
+                wait(0.1)
+                updatePlayerModel()
+            end)
+        else
+            cachedTables = nil
+            plrModel = nil
+            setFriction(5)
+        end
+    end,
+})
+
+MainTab:Input({
+    Title = "Set Infinite Slide Speed (Negative Only)",
+    Value = tostring(slideFrictionValue),
+    Placeholder = "-8 (negative only)",
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num < 0 then
+            slideFrictionValue = num
+        end
+    end,
+})
+
+MainTab:Section({ Title = "" })
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
+
+getgenv().autoJumpEnabled = false
+getgenv().bhopMode = "Acceleration"
+getgenv().bhopAccelValue = -0.1
+
+local function makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+local function createToggleGui(name, varName, yOffset)
+	local gui = playerGui:FindFirstChild(name.."Gui")
+	if gui then gui:Destroy() end
+	gui = Instance.new("ScreenGui", playerGui)
+	gui.Name = name.."Gui"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Enabled = false
+
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 190, 0, 30)
+	frame.Position = UDim2.new(0.5, -95, 0.12 + yOffset, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+	frame.BackgroundTransparency = 0.35
+	frame.BorderSizePixel = 0
+	makeDraggable(frame)
+
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(1, 0)
+
+	local stroke = Instance.new("UIStroke", frame)
+	stroke.Color = Color3.fromRGB(100, 160, 255)
+	stroke.Thickness = 2
+
+	local label = Instance.new("TextLabel", frame)
+	label.Text = name
+	label.Size = UDim2.new(0.55, 0, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(220, 240, 255)
+	label.Font = Enum.Font.Roboto
+	label.TextSize = 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+
+	local toggleBtn = Instance.new("TextButton", frame)
+	toggleBtn.Name = "ToggleButton"
+	toggleBtn.Text = getgenv()[varName] and "On" or "Off"
+	toggleBtn.Size = UDim2.new(0.3, 0, 0.75, 0)
+	toggleBtn.Position = UDim2.new(0.65, 0, 0.13, 0)
+	toggleBtn.BackgroundColor3 = getgenv()[varName] and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(40, 40, 45)
+	toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+	toggleBtn.Font = Enum.Font.Roboto
+	toggleBtn.TextSize = 13
+
+	local buttonCorner = Instance.new("UICorner", toggleBtn)
+	buttonCorner.CornerRadius = UDim.new(1, 0)
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		getgenv()[varName] = not getgenv()[varName]
+		toggleBtn.Text = getgenv()[varName] and "On" or "Off"
+		toggleBtn.BackgroundColor3 = getgenv()[varName] and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(40, 40, 45)
+	end)
+
+	return gui
+end
+
+MainTab:Toggle({
+	Title = "Bhop",
+	Value = false,
+	Callback = function(state)
+		if not jumpGui then
+			jumpGui = createToggleGui("Bhop", "autoJumpEnabled", 0.12)
+		end
+		jumpGui.Enabled = state
+	end
+})
+
+MainTab:Dropdown({
+	Title = "Bhop Mode",
+	Values = {"Acceleration", "No Acceleration"},
+	Multi = false,
+	Default = 1,
+	Callback = function(value)
+		getgenv().bhopMode = value
+	end
+})
+
+MainTab:Input({
+	Title = "Bhop Acceleration (Negative Only)",
+	Placeholder = "-0.5",
+	Numeric = true,
+	Callback = function(value)
+		if tostring(value):sub(1, 1) == "-" then
+			getgenv().bhopAccelValue = tonumber(value)
+		end
+	end
+})
+
+task.spawn(function()
+	while true do
+		local friction = 5
+		if getgenv().autoJumpEnabled and getgenv().bhopMode == "Acceleration" then
+			friction = getgenv().bhopAccelValue or -5
+		end
+		if getgenv().autoJumpEnabled == false then
+			friction = 5
+		end
+
+		for _, t in pairs(getgc(true)) do
+			if type(t) == "table" and rawget(t, "Friction") then
+				if getgenv().bhopMode == "No Acceleration" then
+				else
+					t.Friction = friction
+				end
+			end
+		end
+		task.wait(0.15)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		if getgenv().autoJumpEnabled and getgenv().bhopMode == "Acceleration" then
+			local character = player.Character
+			if character and character:FindFirstChild("Humanoid") then
+				local humanoid = character.Humanoid
+				if humanoid:GetState() ~= Enum.HumanoidStateType.Jumping and humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end
+		end
+		if getgenv().autoJumpEnabled and getgenv().bhopMode == "No Acceleration" then
+			local character = player.Character
+			if character and character:FindFirstChild("Humanoid") then
+				local humanoid = character.Humanoid
+				if humanoid:GetState() ~= Enum.HumanoidStateType.Jumping and humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end
+			task.wait(0.05)
+		else
+			task.wait()
+		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		if getgenv().autoCarryEnabled then
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				for _, other in ipairs(game:GetService("Players"):GetPlayers()) do
+					if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+						local dist = (hrp.Position - other.Character.HumanoidRootPart.Position).Magnitude
+						if dist <= 20 then
+							local args = { "Carry", [3] = other.Name }
+							pcall(function()
+								ReplicatedStorage:WaitForChild("Events"):WaitForChild("Character"):WaitForChild("Interact"):FireServer(unpack(args))
+							end)
+							task.wait(0.01)
+						end
+					end
+				end
+			end
+		end
+		task.wait(0.1)
+	end
+end)
+
+
+
+
+MainTab:Section({ Title = "" })
+
+
+local emoteList = {}
+
+local success, emotesFolder = pcall(function()
+    return game:GetService("ReplicatedStorage").Items.Emotes
+end)
+
+if success and typeof(emotesFolder) == "Instance" then
+    for _, emote in ipairs(emotesFolder:GetChildren()) do
+        if emote:IsA("ModuleScript") or emote:IsA("LocalScript") or emote:IsA("Script") then
+            table.insert(emoteList, emote.Name)
+        end
+    end
+end
+
+table.sort(emoteList)
+
+getgenv().SelectedEmote = nil
+MainTab:Dropdown({
+    Title = "Select Emote",
+    Values = emoteList,
+    Multi = false,
+    Callback = function(option)
+        getgenv().SelectedEmote = option
+    end
+})
+
+getgenv().EmoteEnabled = false
+MainTab:Toggle({
+    Title = "Enable Emote (Hold Crouch Button)",
+    Default = false,
+    Callback = function(state)
+        getgenv().EmoteEnabled = state
+    end
+})
+
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local guiPath = { "PlayerGui", "Shared", "HUD", "Mobile", "Right", "Mobile", "CrouchButton" }
+
+    local function waitForDescendant(parent, name)
+        local found = parent:FindFirstChild(name, true)
+        while not found do
+            parent.DescendantAdded:Wait()
+            found = parent:FindFirstChild(name, true)
+        end
+        return found
+    end
+
+    local function connectCrouchButton()
+        local gui = player:WaitForChild(guiPath[1])
+        for i = 2, #guiPath do
+            gui = waitForDescendant(gui, guiPath[i])
+        end
+        local button = gui
+
+        local holding = false
+        local validHold = false
+
+        button.MouseButton1Down:Connect(function()
+            holding = true
+            validHold = true
+            task.delay(0.5, function()
+                if holding and validHold and getgenv().EmoteEnabled and getgenv().SelectedEmote then
+                    local args = { [1] = getgenv().SelectedEmote }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Events", 9e9):WaitForChild("Character", 9e9):WaitForChild("Emote", 9e9):FireServer(unpack(args))
+                end
+            end)
+        end)
+
+        button.MouseButton1Up:Connect(function()
+            holding = false
+            validHold = false
+        end)
+    end
+
+    while true do
+        pcall(connectCrouchButton)
+        task.wait(1)
+    end
+end)
+-- dumb ass lag switch
+MainTab:Section({ Title = "Utility" })
+
+local function createLagGui()
+    if lagGui then
+        lagGui:Destroy()
+    end
+
+    lagGui = Instance.new("ScreenGui", playerGui)
+    lagGui.Name = "LagSwitchGui"
+    lagGui.IgnoreGuiInset = true
+    lagGui.ResetOnSpawn = false
+    lagGui.Enabled = getgenv().lagSwitchEnabled
+
+    local frame = Instance.new("Frame", lagGui)
+    frame.Size = UDim2.new(0, 190, 0, 30)
+    frame.Position = UDim2.new(0.5, -95, 0.35, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
+    frame.BackgroundTransparency = 0.35
+    frame.BorderSizePixel = 0
+    makeDraggable(frame)
+
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(1, 0)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(100, 160, 255)
+    stroke.Thickness = 2
+
+    local label = Instance.new("TextLabel", frame)
+    label.Text = "Lag Switch"
+    label.Size = UDim2.new(0.55, 0, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(220, 240, 255)
+    label.Font = Enum.Font.Roboto
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    lagGuiButton = Instance.new("TextButton", frame)
+    lagGuiButton.Name = "ToggleButton"
+    lagGuiButton.Text = "Trigger"
+    lagGuiButton.Size = UDim2.new(0.3, 0, 0.75, 0)
+    lagGuiButton.Position = UDim2.new(0.65, 0, 0.13, 0)
+    lagGuiButton.BackgroundColor3 = Color3.fromRGB(0, 120, 80)
+    lagGuiButton.TextColor3 = Color3.new(1, 1, 1)
+    lagGuiButton.Font = Enum.Font.Roboto
+    lagGuiButton.TextSize = 13
+
+    local buttonCorner = Instance.new("UICorner", lagGuiButton)
+    buttonCorner.CornerRadius = UDim.new(1, 0)
+
+    lagGuiButton.MouseButton1Click:Connect(
+        function()
+            task.spawn(
+                function()
+                    local start = tick()
+                    while tick() - start < (getgenv().lagDuration or 0.5) do
+                        local a = math.random(1, 1000000) * math.random(1, 1000000)
+                        a = a / math.random(1, 10000)
+                    end
+                end
+            )
+        end
+    )
+end
+
+MainTab:Toggle(
+    {
+        Title = "Lag Switch",
+        Icon = "zap",
+        Default = false,
+        Callback = function(state)
+            getgenv().lagSwitchEnabled = state
+            if state then
+                if not lagGui then
+                    createLagGui()
+                else
+                    lagGui.Enabled = true
+                end
+            else
+                if lagGui then
+                    lagGui.Enabled = false
+                end
+            end
+        end
+    }
+)
+
+MainTab:Input(
+    {
+        Title = "Lag Duration (seconds)",
+        Default = tostring(getgenv().lagDuration),
+        Placeholder = "Enter seconds",
+        NumbersOnly = true,
+        Callback = function(text)
+            local n = tonumber(text)
+            if n and n > 0 then
+                getgenv().lagDuration = n
+            end
+        end
+    }
+)
+
+WindowTab:Section({ Title = "Window" })
+local themeValues = {}
+for name, _ in pairs(WindUI:GetThemes()) do
+    table.insert(themeValues, name)
+end
+
+local themeDropdown = WindowTab:Dropdown({
+    Title = "Select Theme",
+    Multi = false,
+    AllowNone = false,
+    Values = themeValues,
+    Callback = function(theme)
+        WindUI:SetTheme(theme)
+    end
+})
+themeDropdown:Select(WindUI:GetCurrentTheme())
+
+local currentBackground = "rbxassetid://1234"
+
+local function applyBackground(value)
+    -- Detect video links and auto-prefix if needed
+    if value:match("^https?://") and value:match("%.webm") then
+        currentBackground = "video:" .. value
+    elseif value:match("^video:") or value:match("^rbxassetid://") then
+        currentBackground = value
+    elseif value:match("^%d+$") then
+        currentBackground = "rbxassetid://" .. value
+    else
+        currentBackground = ""
+    end
+
+    Window:SetBackgroundImage(currentBackground)
+end
+
+local BackgroundInput = WindowTab:Input({
+    Title = "Background Image/Video",
+    Value = currentBackground:match("%d+") or "",
+    Placeholder = "Asset ID or Video Link",
+    Callback = function(input)
+        applyBackground(input)
+    end
+})
+
+local RecommendBackgroundDropdown = WindowTab:Dropdown({
+    Title = "Recommended Backgrounds",
+    Values = {
+        "79199183782805",
+        "85878831310179",
+        "easter egg ig >:3"
+    },
+    Default = currentBackground:match("%d+"),
+    Callback = function(option)
+        applyBackground(option)
+        local tb = BackgroundInput._TextBox
+        if tb then
+            if option:match("^rbxassetid://") then
+                tb.Text = option:match("%d+")
+            elseif option:match("^video:") then
+                tb.Text = option:gsub("^video:", "")
+            else
+                tb.Text = option
+            end
+        end
+    end
+})
+
+local RemoveBackgroundButton = WindowTab:Button({
+    Title = "Remove Background",
+    Callback = function()
+        applyBackground("")
+        local tb = BackgroundInput._TextBox
+        if tb then tb.Text = "" end
+        RecommendBackgroundDropdown:Select(nil)
+    end
+})
+
+local ToggleTransparency = WindowTab:Toggle({
+    Title = "Toggle Window Transparency",
+    Callback = function(e)
+        Window:ToggleTransparency(e)
+    end,
+    Value = WindUI:GetTransparency()
+})
+
+local ConfigManager = Window.ConfigManager
+local myConfig = ConfigManager:CreateConfig("LightingWareConfig")
+
+myConfig:Register("speed", speedInput)
+myConfig:Register("jumpCap", jumpCapInput)
+myConfig:Register("strafe", strafeInput)
+myConfig:Register("autoCarry", autoCarryToggle)
+myConfig:Register("autoRevive", autoReviveToggle)
+myConfig:Register("autoJump", autoJumpToggle)
+myConfig:Register("background", BackgroundInput)
+myConfig:Register("theme", themeDropdown)
+myConfig:Register("transparency", ToggleTransparency)
+
+WindowTab:Section({ Title = "Configuration" })
+
+WindowTab:Button({
+    Title = "Save Configuration",
+    Callback = function()
+        myConfig:Save()
+    end
+})
+
+WindowTab:Button({
+    Title = "Load Configuration",
+    Callback = function()
+        myConfig:Load()
+    end
+})
+
+Window:SelectTab(1)

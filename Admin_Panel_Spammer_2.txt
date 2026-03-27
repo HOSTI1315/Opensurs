@@ -1,0 +1,190 @@
+
+local env = getgenv and getgenv() or _G
+if env.__XD_SPAM_PANEL__ then return end
+env.__XD_SPAM_PANEL__ = true
+
+
+repeat task.wait() until game:IsLoaded()
+
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+
+local SHOW_NOTIFICATIONS = false
+local COMMANDS = { "rocket", "balloon", "inverse", "tiny" }
+
+
+local function notify(title, text, duration)
+	if not SHOW_NOTIFICATIONS then return end
+	pcall(function()
+		StarterGui:SetCore("SendNotification", {
+			Title = title,
+			Text = text,
+			Duration = duration or 3
+		})
+	end)
+end
+
+
+local function findRemote(timeout)
+	timeout = timeout or 6
+	local start = os.clock()
+
+	while os.clock() - start < timeout do
+		local packages = ReplicatedStorage:FindFirstChild("Packages")
+		if packages then
+			local net = packages:FindFirstChild("Net")
+			if net then
+				local remote = net:FindFirstChild("RE/AdminPanelService/ExecuteCommand")
+				if remote and remote:IsA("RemoteEvent") then
+					return remote
+				end
+			end
+		end
+		task.wait(0.1)
+	end
+
+	return nil
+end
+
+local ExecuteCommand = findRemote(6)
+if not ExecuteCommand then
+	notify("Missing Remote", "ExecuteCommand not found", 5)
+	return
+end
+
+
+local function formatPlayer(player)
+	if player.DisplayName and player.DisplayName ~= player.Name then
+		return string.format("%s (@%s)", player.DisplayName, player.Name)
+	end
+	return "@" .. player.Name
+end
+
+
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "xd_spam_gui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = CoreGui
+
+local Root = Instance.new("Frame")
+Root.Size = UDim2.fromOffset(300, 380)
+Root.Position = UDim2.fromOffset(40, 120)
+Root.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Root.BackgroundTransparency = 0.08
+Root.BorderSizePixel = 0
+Root.Parent = ScreenGui
+
+Instance.new("UICorner", Root).CornerRadius = UDim.new(0, 12)
+
+
+
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 36)
+TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Root
+
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.fromOffset(12, 0)
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Text = "xd spam"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Left
+Title.TextColor3 = Color3.fromRGB(235,235,235)
+Title.Parent = TopBar
+
+local Refresh = Instance.new("TextButton")
+Refresh.Text = "Refresh"
+Refresh.Size = UDim2.fromOffset(80, 26)
+Refresh.Position = UDim2.new(1, -86, 0, 5)
+Refresh.BackgroundColor3 = Color3.fromRGB(42,42,42)
+Refresh.TextColor3 = Color3.fromRGB(235,235,235)
+Refresh.Font = Enum.Font.Gotham
+Refresh.TextSize = 14
+Refresh.Parent = TopBar
+
+Instance.new("UICorner", Refresh).CornerRadius = UDim.new(0, 
+
+
+local ListFrame = Instance.new("ScrollingFrame")
+ListFrame.Position = UDim2.fromOffset(8, 44)
+ListFrame.Size = UDim2.new(1, -16, 1, -52)
+ListFrame.CanvasSize = UDim2.new()
+ListFrame.ScrollBarThickness = 6
+ListFrame.BackgroundTransparency = 1
+ListFrame.BorderSizePixel = 0
+ListFrame.Parent = Root
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 6)
+Layout.Parent = ListFrame
+
+Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	ListFrame.CanvasSize = UDim2.fromOffset(0, Layout.AbsoluteContentSize.Y + 16)
+end)
+
+
+
+local function runCommands(player)
+	if not player or player == LocalPlayer then return end
+
+	task.spawn(function()
+		for _, cmd in ipairs(COMMANDS) do
+			pcall(function()
+				ExecuteCommand:FireServer(player, cmd)
+			end)
+		end
+		notify("Sent", "→ " .. player.Name, 2)
+	end)
+end
+
+local function createPlayerButton(player)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -6, 0, 34)
+	btn.BackgroundColor3 = Color3.fromRGB(38,38,38)
+	btn.TextColor3 = Color3.fromRGB(235,235,235)
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 14
+	btn.TextXAlignment = Left
+	btn.Text = "  " .. formatPlayer(player)
+
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+	btn.Activated:Connect(function()
+		runCommands(player)
+	end)
+
+	return btn
+end
+
+local function refreshList()
+	ListFrame:ClearAllChildren()
+	Layout.Parent = ListFrame
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer then
+			createPlayerButton(player).Parent = ListFrame
+		end
+	end
+end
+
+
+
+Refresh.MouseButton1Click:Connect(refreshList)
+Players.PlayerAdded:Connect(refreshList)
+Players.PlayerRemoving:Connect(refreshList)
+
+refreshList()
+notify("xd spam ready", "Click a player to run commands", 4)

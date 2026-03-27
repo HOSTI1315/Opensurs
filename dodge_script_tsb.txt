@@ -1,0 +1,388 @@
+local playersService = game:GetService('Players')
+local replicatedStorage = game:GetService('ReplicatedStorage')
+local userInputService = game:GetService('UserInputService')
+
+game:GetService('RunService')
+
+local debrisService = game:GetService('Debris')
+local localPlayer = playersService.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoid = character:WaitForChild('Humanoid')
+local animator = humanoid:WaitForChild('Animator')
+local humanoidRootPart = character:WaitForChild('HumanoidRootPart')
+local config = {
+    DODGE_SOUND_ID = 'rbxassetid://7129427798',
+    PARTICLE_EFFECTS_FOLDER_PATH = 'Resources/Brother',
+    PARTICLE_EFFECT_DURATION = 0.07,
+    PARTICLE_DEBRIS_DELAY = 0.07,
+}
+local dodgeSound = nil
+local particleFolder = replicatedStorage:WaitForChild(config.PARTICLE_EFFECTS_FOLDER_PATH:match('([^/]+)'), 10)
+
+if particleFolder then
+    particleFolder = particleFolder:WaitForChild(config.PARTICLE_EFFECTS_FOLDER_PATH:match('/(.*)'), 10)
+end
+
+local selectionAreaConfig = {
+    RADIUS = 10,
+    DISK_THICKNESS = 0.2,
+    CYLINDER_TRANSPARENCY = 0.75,
+    CYLINDER_COLOR = Color3.fromRGB(0, 200, 100),
+}
+local teleportConfig = {
+    TARGET_BEHIND_DISTANCE = 10,
+    MAX_TARGET_Y_DIFFERENCE = 10,
+    RAYCAST_VERTICAL_OFFSET = 50,
+    RAYCAST_FALL_DISTANCE = 100,
+}
+local dodgeAnimations = {
+    {
+        Name = 'DodgeLeft1',
+        Id = 'rbxassetid://133094662049155',
+    },
+    {
+        Name = 'DodgeLeft2',
+        Id = 'rbxassetid://134711731729986',
+    },
+    {
+        Name = 'DodgeLeft3',
+        Id = 'rbxassetid://128188725134114',
+    },
+    {
+        Name = 'DodgeLeft4',
+        Id = 'rbxassetid://109088632860488',
+    },
+    {
+        Name = 'DodgeRight',
+        Id = 'rbxassetid://78339272602733',
+    },
+    {
+        Name = 'DodgeRight4',
+        Id = 'rbxassetid://127015697036075',
+    },
+}
+local cooldownConfig = {COOLDOWN = 0.04}
+local currentDodgeTrack = nil
+local dodgeTrackStoppedConnection = nil
+local lastDodgeTime = 0
+local selectionPart = nil
+var selectedPosition = nil
+local isSelectionActive = false
+
+local function createSelectionArea()
+    if character and (humanoidRootPart and humanoid) then
+        selectedPosition = humanoidRootPart.Position
+
+        if not selectionPart then
+            selectionPart = Instance.new('Part')
+            selectionPart.Name = 'TeleportSelectionArea'
+            selectionPart.Shape = Enum.PartType.Cylinder
+            selectionPart.Material = Enum.Material.ForceField
+            selectionPart.Anchored = true
+            selectionPart.CanCollide = false
+            selectionPart.CanTouch = false
+            selectionPart.CanQuery = false
+            selectionPart.CastShadow = false
+            selectionPart.Parent = workspace
+        end
+
+        selectionPart.Color = selectionAreaConfig.CYLINDER_COLOR
+        selectionPart.Transparency = selectionAreaConfig.CYLINDER_TRANSPARENCY
+        selectionPart.Size = Vector3.new(selectionAreaConfig.RADIUS * 2, selectionAreaConfig.DISK_THICKNESS, selectionAreaConfig.RADIUS * 2)
+
+        local yPos = humanoidRootPart.Position.Y - humanoid.HipHeight + selectionAreaConfig.DISK_THICKNESS / 2
+
+        selectionPart.CFrame = CFrame.new(selectedPosition.X, yPos, selectedPosition.Z)
+        isSelectionActive = true
+    end
+end
+
+local function destroySelectionArea()
+    if selectionPart then
+        selectionPart:Destroy()
+        selectionPart = nil
+    end
+
+    isSelectionActive = false
+    selectedPosition = nil
+end
+
+local function findClosestCharacterInRadius(centerPosition, radius)
+    local closestDistance = math.huge
+    local players = playersService
+    local playerList = players:GetPlayers()
+    local closestCharacter = nil
+
+    for _, player in ipairs(playerList) do
+        if player ~= localPlayer then
+            local targetChar = player.Character
+
+            if targetChar then
+                local targetHumanoid = targetChar:FindFirstChildOfClass('Humanoid')
+                local targetRoot = targetChar:FindFirstChild('HumanoidRootPart')
+
+                if targetHumanoid and (targetHumanoid.Health > 0 and targetRoot) then
+                    local targetPos = targetRoot.Position
+                    local horizontalDistanceSq = (targetPos.X - centerPosition.X)^2 + (targetPos.Z - centerPosition.Z)^2
+                    local verticalDistance = math.abs(targetPos.Y - centerPosition.Y)
+
+                    if horizontalDistanceSq <= radius^2 and verticalDistance <= teleportConfig.MAX_TARGET_Y_DIFFERENCE then
+                        if horizontalDistanceSq < closestDistance then
+                            closestCharacter = targetChar
+                            closestDistance = horizontalDistanceSq
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return closestCharacter
+end
+
+local function playDodgeEffects()
+    if dodgeSound and dodgeSound.Parent then
+        dodgeSound:Play()
+    end
+
+    local torso = character:FindFirstChild('Torso') or character:FindFirstChild('UpperTorso')
+
+    if torso then
+        if particleFolder then
+            for _, child in ipairs(particleFolder:GetChildren()) do
+                if child:IsA('ParticleEmitter') then
+                    local clone = child:Clone()
+
+                    clone.Parent = torso
+                    clone.Enabled = true
+
+                    task.delay(config.PARTICLE_EFFECT_DURATION, function()
+                        if clone and clone.Parent then
+                            clone.Enabled = false
+
+                            debrisService:AddItem(clone, config.PARTICLE_DEBRIS_DELAY)
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end
+
+local function performTeleportDodge()
+    if isSelectionActive and selectedPosition then
+        if os.clock() - lastDodgeTime >= cooldownConfig.COOLDOWN then
+            if character and (humanoid and (animator and (humanoidRootPart and humanoid.Health > 0))) then
+                if #dodgeAnimations ~= 0 then
+                    lastDodgeTime = os.clock()
+
+                    local oldTrack = currentDodgeTrack
+                    local oldTrackAnim
+
+                    if oldTrack then
+                        oldTrackAnim = oldTrack.Animation
+                    end
+
+                    local oldConnection = dodgeTrackStoppedConnection
+                    local randomAnimData = dodgeAnimations[math.random(1, #dodgeAnimations)]
+                    local newAnimation = Instance.new('Animation')
+
+                    newAnimation.Name = randomAnimData.Name
+                    newAnimation.AnimationId = randomAnimData.Id
+
+                    local playerAnimator = humanoid:FindFirstChildOfClass('Animator')
+
+                    if playerAnimator then
+                        local success, newTrack = pcall(function()
+                            return playerAnimator:LoadAnimation(newAnimation)
+                        end)
+
+                        if success and newTrack then
+                            currentDodgeTrack = newTrack
+                            dodgeTrackStoppedConnection = newTrack.Stopped:Connect(function()
+                                if newAnimation then
+                                    newAnimation:Destroy()
+                                end
+                                if currentDodgeTrack and currentDodgeTrack.Animation == newAnimation then
+                                    currentDodgeTrack = nil
+                                end
+                                if dodgeTrackStoppedConnection then
+                                    dodgeTrackStoppedConnection:Disconnect()
+                                    dodgeTrackStoppedConnection = nil
+                                end
+                            end)
+
+                            if oldTrack then
+                                oldTrack:Stop()
+
+                                if oldConnection then
+                                    oldConnection:Disconnect()
+                                end
+                                if oldTrackAnim and (oldTrackAnim.Parent == playerAnimator or (oldTrackAnim.Parent == nil or not oldTrackAnim.Parent)) then
+                                    oldTrackAnim:Destroy()
+                                end
+                            end
+
+                            newTrack:Play()
+                            playDodgeEffects()
+
+                            local teleportPos = nil
+                            local foundTarget = false
+                            local targetChar = findClosestCharacterInRadius(selectedPosition, selectionAreaConfig.RADIUS)
+
+                            if targetChar then
+                                local targetRoot = targetChar:FindFirstChild('HumanoidRootPart')
+
+                                if targetRoot then
+                                    local targetLook = targetRoot.CFrame.LookVector
+
+                                    teleportPos = targetRoot.Position - targetLook * teleportConfig.TARGET_BEHIND_DISTANCE
+                                    foundTarget = true
+                                end
+                            end
+                            if not foundTarget then
+                                local angle = math.random() * 2 * math.pi
+                                local distance = math.random() * selectionAreaConfig.RADIUS
+                                local dx = math.cos(angle) * distance
+                                local dz = math.sin(angle) * distance
+
+                                teleportPos = selectedPosition + Vector3.new(dx, 0, dz)
+                            end
+
+                            local rayStart = teleportPos + Vector3.new(0, teleportConfig.RAYCAST_VERTICAL_OFFSET, 0)
+                            local rayDirection = Vector3.new(0, -teleportConfig.RAYCAST_FALL_DISTANCE, 0)
+                            local rayParams = RaycastParams.new()
+
+                            rayParams.FilterDescendantsInstances = {character, selectionPart}
+
+                            if targetChar then
+                                table.insert(rayParams.FilterDescendantsInstances, targetChar)
+                            end
+
+                            rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+                            local rayResult = workspace:Raycast(rayStart, rayDirection, rayParams)
+                            local finalPosition
+
+                            if rayResult and rayResult.Position then
+                                finalPosition = rayResult.Position + Vector3.new(0, humanoid.HipHeight + 0.1, 0)
+                            else
+                                finalPosition = Vector3.new(teleportPos.X, humanoidRootPart.Position.Y, teleportPos.Z)
+                            end
+
+                            humanoidRootPart.CFrame = CFrame.new(finalPosition) * (humanoidRootPart.CFrame - humanoidRootPart.CFrame.Position)
+                        else
+                            newAnimation:Destroy()
+                        end
+                    else
+                        newAnimation:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function onCharacterAdded(newCharacter)
+    character = newCharacter
+    humanoid = character:WaitForChild('Humanoid', 10)
+    humanoidRootPart = character:WaitForChild('HumanoidRootPart', 10)
+
+    if humanoid and humanoidRootPart then
+        animator = humanoid:WaitForChild('Animator', 10)
+
+        if not animator then
+            animator = Instance.new('Animator')
+            animator.Parent = humanoid
+        end
+        if dodgeSound then
+            dodgeSound:Destroy()
+        end
+
+        dodgeSound = Instance.new('Sound')
+        dodgeSound.SoundId = config.DODGE_SOUND_ID
+        dodgeSound.Parent = humanoidRootPart
+
+        if currentDodgeTrack then
+            currentDodgeTrack:Stop()
+
+            if dodgeTrackStoppedConnection then
+                dodgeTrackStoppedConnection:Disconnect()
+                dodgeTrackStoppedConnection = nil
+            end
+            if currentDodgeTrack.Animation then
+                currentDodgeTrack.Animation:Destroy()
+            end
+
+            currentDodgeTrack = nil
+        end
+
+        lastDodgeTime = 0
+    end
+end
+
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then
+        return
+    elseif character and (humanoid and humanoid.Health > 0) then
+        if input.KeyCode == Enum.KeyCode.E then
+            if isSelectionActive then
+                destroySelectionArea()
+            else
+                createSelectionArea()
+            end
+        end
+        if input.KeyCode == Enum.KeyCode.R then
+            performTeleportDodge()
+        end
+    end
+end)
+
+localPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+if localPlayer.Character then
+    task.wait()
+    onCharacterAdded(localPlayer.Character)
+end
+
+playersService.PlayerRemoving:Connect(function(leavingPlayer)
+    if leavingPlayer == localPlayer then
+        destroySelectionArea()
+
+        if currentDodgeTrack then
+            currentDodgeTrack:Stop()
+
+            if dodgeTrackStoppedConnection then
+                dodgeTrackStoppedConnection:Disconnect()
+            end
+            if currentDodgeTrack.Animation then
+                currentDodgeTrack.Animation:Destroy()
+            end
+
+            currentDodgeTrack = nil
+            dodgeTrackStoppedConnection = nil
+        end
+        if dodgeSound then
+            dodgeSound:Destroy()
+            dodgeSound = nil
+        end
+    end
+end)
+
+script.Destroying:Connect(function()
+    destroySelectionArea()
+
+    if currentDodgeTrack then
+        currentDodgeTrack:Stop()
+
+        if dodgeTrackStoppedConnection then
+            dodgeTrackStoppedConnection:Disconnect()
+        end
+        if currentDodgeTrack.Animation then
+            currentDodgeTrack.Animation:Destroy()
+        end
+    end
+    if dodgeSound then
+        dodgeSound:Destroy()
+    end
+end)

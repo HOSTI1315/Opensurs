@@ -1,0 +1,205 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+local r0_0 = game:GetService("Players")
+local r1_0 = game:GetService("TweenService")
+local r2_0 = game:GetService("RunService")
+local r3_0 = game:GetService("UserInputService")
+local r4_0 = game:GetService("ReplicatedStorage")
+local r5_0 = r0_0.LocalPlayer
+local r6_0 = Instance.new("ScreenGui")
+r6_0.Name = "FlyToggleGui"
+r6_0.ResetOnSpawn = false
+r6_0.Parent = r5_0:WaitForChild("PlayerGui")
+local r7_0 = Instance.new("Frame")
+r7_0.Size = UDim2.new(0, 140, 0, 90)
+r7_0.Position = UDim2.new(0.6, 0, 0.4, 0)
+r7_0.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+r7_0.BorderSizePixel = 0
+r7_0.Active = true
+r7_0.Draggable = true
+r7_0.Parent = r6_0
+Instance.new("UICorner", r7_0).CornerRadius = UDim.new(0, 16)
+local r8_0 = Instance.new("TextLabel")
+r8_0.Size = UDim2.new(1, 0, 0.35, 0)
+r8_0.Position = UDim2.new(0, 0, 0, 6)
+r8_0.BackgroundTransparency = 1
+r8_0.Font = Enum.Font.GothamBold
+r8_0.Text = "CW Fly"
+r8_0.TextSize = 14
+r8_0.TextColor3 = Color3.fromRGB(180, 180, 180)
+r8_0.TextStrokeTransparency = 0.4
+r8_0.Parent = r7_0
+local r9_0 = Instance.new("Frame")
+r9_0.Size = UDim2.new(0, 50, 0, 26)
+r9_0.Position = UDim2.new(0.5, -25, 0.6, 0)
+r9_0.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+r9_0.Parent = r7_0
+Instance.new("UICorner", r9_0).CornerRadius = UDim.new(0, 13)
+local r10_0 = Instance.new("Frame")
+r10_0.Size = UDim2.new(0, 22, 0, 22)
+r10_0.Position = UDim2.new(0, 2, 0, 2)
+r10_0.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+r10_0.Parent = r9_0
+Instance.new("UICorner", r10_0).CornerRadius = UDim.new(0, 11)
+local r11_0 = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local function r12_0(r0_5)
+  -- line: [0, 0] id: 5
+  if r0_5 then
+    r1_0:Create(r10_0, r11_0, {
+      Position = UDim2.new(1, -26, 0, 2),
+    }):Play()
+    r1_0:Create(r10_0, r11_0, {
+      BackgroundColor3 = Color3.fromRGB(255, 0, 0),
+    }):Play()
+    r1_0:Create(r9_0, r11_0, {
+      BackgroundColor3 = Color3.fromRGB(70, 70, 70),
+    }):Play()
+  else
+    r1_0:Create(r10_0, r11_0, {
+      Position = UDim2.new(0, 2, 0, 2),
+    }):Play()
+    r1_0:Create(r10_0, r11_0, {
+      BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+    }):Play()
+    r1_0:Create(r9_0, r11_0, {
+      BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+    }):Play()
+  end
+end
+local r13_0 = false
+local r14_0 = {
+  F = 0,
+  B = 0,
+  L = 0,
+  R = 0,
+  Q = 0,
+  E = 0,
+}
+local r15_0 = 50
+local function r16_0()
+  -- line: [0, 0] id: 6
+  local r0_6 = r5_0.Character
+  if not r0_6 then
+    return 
+  end
+  local r1_6 = r0_6:FindFirstChild("HumanoidRootPart")
+  if not r1_6 then
+    return 
+  end
+  local r2_6 = r1_6:FindFirstChild("FlyBodyVelocity")
+  if not r2_6 then
+    r2_6 = Instance.new("BodyVelocity")
+    r2_6.Name = "FlyBodyVelocity"
+    r2_6.MaxForce = Vector3.new(100000, 100000, 100000)
+    r2_6.Velocity = Vector3.new(0, 0, 0)
+    r2_6.Parent = r1_6
+  end
+  r2_0:BindToRenderStep("FlyStep", Enum.RenderPriority.Character.Value, function()
+    -- line: [0, 0] id: 7
+    if r13_0 then
+      local r0_7 = workspace.CurrentCamera
+      local r1_7 = r0_7.CFrame.LookVector * (r14_0.F - r14_0.B) + r0_7.CFrame.RightVector * (r14_0.R - r14_0.L) + Vector3.new(0, 1, 0) * (r14_0.E - r14_0.Q)
+      if r1_7.Magnitude > 0 then
+        r2_6.Velocity = r1_7.Unit * r15_0
+      else
+        r2_6.Velocity = Vector3.new(0, 0, 0)
+      end
+    else
+      r2_6.Velocity = Vector3.new(0, 0, 0)
+      r2_0:UnbindFromRenderStep("FlyStep")
+    end
+  end)
+end
+r3_0.InputBegan:Connect(function(r0_10)
+  -- line: [0, 0] id: 10
+  if r0_10.UserInputType == Enum.UserInputType.Keyboard then
+    if r0_10.KeyCode == Enum.KeyCode.W then
+      r14_0.F = 1
+    elseif r0_10.KeyCode == Enum.KeyCode.S then
+      r14_0.B = 1
+    elseif r0_10.KeyCode == Enum.KeyCode.A then
+      r14_0.L = 1
+    elseif r0_10.KeyCode == Enum.KeyCode.D then
+      r14_0.R = 1
+    elseif r0_10.KeyCode == Enum.KeyCode.E then
+      r14_0.E = 1
+    elseif r0_10.KeyCode == Enum.KeyCode.Q then
+      r14_0.Q = 1
+    end
+  end
+end)
+r3_0.InputEnded:Connect(function(r0_1)
+  -- line: [0, 0] id: 1
+  if r0_1.UserInputType == Enum.UserInputType.Keyboard then
+    if r0_1.KeyCode == Enum.KeyCode.W then
+      r14_0.F = 0
+    elseif r0_1.KeyCode == Enum.KeyCode.S then
+      r14_0.B = 0
+    elseif r0_1.KeyCode == Enum.KeyCode.A then
+      r14_0.L = 0
+    elseif r0_1.KeyCode == Enum.KeyCode.D then
+      r14_0.R = 0
+    elseif r0_1.KeyCode == Enum.KeyCode.E then
+      r14_0.E = 0
+    elseif r0_1.KeyCode == Enum.KeyCode.Q then
+      r14_0.Q = 0
+    end
+  end
+end)
+local function r17_0()
+  -- line: [0, 0] id: 9
+  r13_0 = true
+  r16_0()
+end
+local function r18_0()
+  -- line: [0, 0] id: 3
+  r13_0 = false
+  local r0_3 = r5_0.Character
+  if not r0_3 then
+    return 
+  end
+  local r1_3 = r0_3:FindFirstChild("HumanoidRootPart")
+  if r1_3 then
+    local r2_3 = r1_3:FindFirstChild("FlyBodyVelocity")
+    if r2_3 then
+      r2_3:Destroy()
+    end
+  end
+  r2_0:UnbindFromRenderStep("FlyStep")
+end
+local r19_0 = false
+r9_0.InputBegan:Connect(function(r0_2)
+  -- line: [0, 0] id: 2
+  if r0_2.UserInputType == Enum.UserInputType.MouseButton1 then
+    r19_0 = not r19_0
+    r12_0(r19_0)
+    if r19_0 then
+      r17_0()
+    else
+      r18_0()
+    end
+  end
+end)
+r5_0.CharacterAdded:Connect(function()
+  -- line: [0, 0] id: 8
+  r19_0 = false
+  r12_0(false)
+  r18_0()
+end)
+r12_0(false)
+local r20_0 = require(r4_0:WaitForChild("Client"):WaitForChild("Source"):WaitForChild("AntiCheat"):WaitForChild("AntiFlyClient"))
+local r21_0 = r20_0.connectCharacter
+function r20_0.connectCharacter(r0_4)
+  -- line: [0, 0] id: 4
+  local r1_4 = r21_0(r0_4)
+  if r1_4 and r1_4.destroyTask and r1_4.destroyTask.tasks then
+    for r5_4, r6_4 in pairs(r1_4.destroyTask.tasks) do
+      if typeof(r6_4) == "RBXScriptConnection" then
+        r6_4:Disconnect()
+        print("[AntiFly Bypass]: Velocity connection disconnected")
+      end
+    end
+  end
+  return r1_4
+end

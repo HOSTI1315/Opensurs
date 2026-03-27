@@ -1,0 +1,92 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+local infiniteJumpEnabled = false
+local infiniteJumpConnection = nil
+local infiniteJumpPart = nil
+local lastJump = 0
+local jumpPower = 50
+cooldown = 0.1
+
+local function doInfiniteJump()
+    local char = player.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
+
+    if tick() - lastJump < cooldown then return end
+    lastJump = tick()
+
+    if not infiniteJumpPart or not infiniteJumpPart.Parent then
+        infiniteJumpPart = Instance.new("Part")
+        infiniteJumpPart.Size = Vector3.new(1, 1, 1)
+        infiniteJumpPart.Transparency = 1
+        infiniteJumpPart.Anchored = false
+        infiniteJumpPart.CanCollide = false
+        infiniteJumpPart.Massless = true
+        infiniteJumpPart.Parent = workspace
+
+        local weld = Instance.new("Weld")
+        weld.Part0 = root
+        weld.Part1 = infiniteJumpPart
+        weld.C0 = CFrame.new(0, 0, 0)
+        weld.Parent = infiniteJumpPart
+    end
+
+    local bodyVel = infiniteJumpPart:FindFirstChild("InfiniteJumpBoost") or Instance.new("BodyVelocity")
+    bodyVel.Name = "InfiniteJumpBoost"
+    bodyVel.MaxForce = Vector3.new(0, math.huge, 0)
+    bodyVel.Velocity = Vector3.new(0, jumpPower, 0)
+    bodyVel.P = 5000
+    bodyVel.Parent = infiniteJumpPart
+
+    humanoid.Jump = true
+
+    task.delay(0.1, function()
+        if bodyVel and bodyVel.Parent then bodyVel:Destroy() end
+        if humanoid then humanoid.Jump = false end
+    end)
+end
+
+local function enableInfiniteJump()
+    if infiniteJumpEnabled then return end
+    infiniteJumpEnabled = true
+
+    infiniteJumpConnection = RunService.Heartbeat:Connect(function()
+        local char = player.Character
+        if not char then return end
+
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+
+        local isJumping = false
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            isJumping = true
+        end
+
+        if humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+            isJumping = true
+        end
+
+        if humanoid.Jump then
+            isJumping = true
+        end
+
+        if isJumping then
+            doInfiniteJump()
+        end
+    end)
+end
+
+local function disableInfiniteJump()
+cooldown = 99e99
+end
+
+enableInfiniteJump()
+
+disableInfiniteJump()

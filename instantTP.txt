@@ -1,0 +1,51 @@
+
+local plr = game:GetService("Players").LocalPlayer
+
+if not getgenv().MTAPIMutex then
+loadstring(game:HttpGet("https://pastebin.com/raw/1NcuWJa9", true))()
+end
+
+local clientChar = plr.Character
+local human = clientChar and clientChar:FindFirstChildOfClass("Humanoid")
+local torso = clientChar and (clientChar:FindFirstChild("Torso") or clientChar:FindFirstChild("UpperTorso"))
+local root = clientChar and clientChar:FindFirstChild("HumanoidRootPart")
+
+local signals = {
+plr.Backpack.ChildAdded;
+root and root:GetPropertyChangedSignal("CFrame");
+root and root:GetPropertyChangedSignal("Position");
+root and root:GetPropertyChangedSignal("Velocity");
+root and root.ChildAdded;
+root and root.DescendantAdded;
+torso and torso:GetPropertyChangedSignal("Velocity");
+torso and torso:GetPropertyChangedSignal("CFrame");
+torso and torso:GetPropertyChangedSignal("Position");
+torso and torso.ChildAdded;
+torso and torso.DescendantAdded;
+human and human:GetPropertyChangedSignal("WalkSpeed");
+human and human:GetPropertyChangedSignal("JumpPower");
+human and human:GetPropertyChangedSignal("HipHeight");
+}
+
+for i, signal in next, signals do
+pcall(function()
+for i, connection in next, getconnections(signal) do
+if not checkcaller() then
+connection:Disable()
+end
+end
+end)
+end
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function teleportTo(pos)
+local char = player.Character
+if char and char:FindFirstChild("HumanoidRootPart") then
+char.HumanoidRootPart.CFrame = CFrame.new(pos)
+end
+end
+
+teleportTo(Vector3.new(2615, -3, 12))

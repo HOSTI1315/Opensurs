@@ -1,0 +1,1337 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+if getgenv().ChopYourTree then
+    pcall(function() getgenv().ChopYourTree.Unload() end)
+    task.wait(0.3)
+end
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+
+if not Remotes then
+    warn("[ChopTree] Remotes folder not found")
+    return
+end
+
+local TapButtonClick = Remotes:FindFirstChild("TapButtonClick")
+local TreeClick = Remotes:FindFirstChild("TreeClick")
+local AxeSwing = Remotes:FindFirstChild("AxeSwing")
+local CollectCoin = Remotes:FindFirstChild("CollectCoin")
+local Prestige = Remotes:FindFirstChild("Prestige")
+local ClickWateringCan = Remotes:FindFirstChild("ClickWateringCan")
+local ClaimWaterPurifier = Remotes:FindFirstChild("ClaimWaterPurifier")
+local WaterPurifier = Remotes:FindFirstChild("WaterPurifier")
+
+local TIMING = {
+    TAP_SPEED = 0.01,
+    MUTATION_HIT_DELAY = 0.02,
+    MUTATION_LOOP_DELAY = 0.05,
+    COIN_COLLECT_DELAY = 0.03,
+    COIN_LOOP_DELAY = 0.2,
+    PRESTIGE_INTERVAL = 5,
+    USE_CANS_KEY_DELAY = 0.3,
+    USE_CANS_CLICK_DELAY = 0.4,
+    USE_CANS_INTERVAL = 5,
+    PICKUP_CANS_DELAY = 0.3,
+    PICKUP_CANS_INTERVAL = 8,
+    CLAIM_PURIFIER_INTERVAL = 10,
+    FILL_PURIFIER_INTERVAL = 5,
+    FILL_PURIFIER_DELAY = 2,
+    STATS_UPDATE_INTERVAL = 1,
+    KEY_PRESS_DURATION = 0.05,
+    CLICK_DURATION = 0.05,
+    STEAL_DELAY = 0.5,
+    STEAL_LOOP_INTERVAL = 3,
+}
+
+local Config = {
+    AutoTap = false,
+    TapThreads = 5,
+    AutoMutations = false,
+    AutoCollectCoins = false,
+    AutoPrestige = false,
+    SpeedHack = false,
+    SpeedAmount = 100,
+    AutoUseCans = false,
+    AutoPickupCans = false,
+    AutoClaimPurifier = false,
+    AutoFillPurifier = false,
+    AutoSteal = false,
+    WaterLevelThreshold = 3,
+}
+
+local State = {
+    Running = true,
+    Tapping = false,
+    HittingTrees = false,
+    CollectingCoins = false,
+    UsingCans = false,
+    PickingUpCans = false,
+    Prestiging = false,
+    ClaimingPurifier = false,
+    FillingPurifier = false,
+    Stealing = false,
+}
+
+local Connections = {}
+local Threads = {}
+local ScreenGui = nil
+
+local function SafeDisconnect(name)
+    if Connections[name] then
+        pcall(function() Connections[name]:Disconnect() end)
+        Connections[name] = nil
+    end
+end
+
+local function SafeCancel(name)
+    if Threads[name] then
+        pcall(function() task.cancel(Threads[name]) end)
+        Threads[name] = nil
+    end
+end
+
+local function DisconnectAll()
+    for name in pairs(Connections) do
+        SafeDisconnect(name)
+    end
+end
+
+local function CancelAllThreads()
+    for name in pairs(Threads) do
+        SafeCancel(name)
+    end
+end
+
+local function Unload()
+    State.Running = false
+    
+    for k, v in pairs(Config) do
+        if type(v) == "boolean" then
+            Config[k] = false
+        end
+    end
+    
+    for k, v in pairs(State) do
+        if type(v) == "boolean" and k ~= "Running" then
+            State[k] = false
+        end
+    end
+    
+    task.wait(0.1)
+    
+    DisconnectAll()
+    CancelAllThreads()
+    
+    if ScreenGui then
+        pcall(function() ScreenGui:Destroy() end)
+        ScreenGui = nil
+    end
+    
+    getgenv().ChopYourTree = nil
+end
+
+local function GetPlayerPlot()
+    local plotVal = LocalPlayer:FindFirstChild("Plot")
+    if plotVal and plotVal:IsA("ObjectValue") and plotVal.Value then
+        return plotVal.Value
+    end
+    
+    local plots = Workspace:FindFirstChild("Plots")
+    if plots then
+        for _, plot in ipairs(plots:GetChildren()) do
+            if plot:GetAttribute("Plr") == LocalPlayer.Name then
+                return plot
+            end
+        end
+    end
+    
+    return nil
+end
+
+local function GetMutations()
+    local mutations = {}
+    local seen = {}
+    
+    local plot = GetPlayerPlot()
+    if plot then
+        for _, child in ipairs(plot:GetChildren()) do
+            if child.Name == "TreeValue" and child:IsA("ObjectValue") then
+                local tree = child.Value
+                if tree and tree.Parent and not seen[tree] then
+                    seen[tree] = true
+                    table.insert(mutations, tree)
+                end
+            end
+        end
+    end
+    
+    return mutations
+end
+
+local function GetWateringCans()
+    local cans = {}
+    local seen = {}
+    
+    local plot = GetPlayerPlot()
+    if plot then
+        for _, desc in ipairs(plot:GetDescendants()) do
+            if desc.Name == "WateringCanValue" and desc:IsA("ObjectValue") then
+                local can = desc.Value
+                if can and can.Parent and not seen[can] then
+                    seen[can] = true
+                    table.insert(cans, can)
+                end
+            end
+        end
+    end
+    
+    return cans
+end
+
+local function GetStealableCans()
+    local stealable = {}
+    local myPlot = GetPlayerPlot()
+    local plots = Workspace:FindFirstChild("Plots")
+    
+    if not plots then return stealable end
+    
+    for _, plot in ipairs(plots:GetChildren()) do
+        if plot ~= myPlot then
+            for _, desc in ipairs(plot:GetDescendants()) do
+                if desc.Name == "WateringCanValue" and desc:IsA("ObjectValue") then
+                    local can = desc.Value
+                    if can and can.Parent then
+                        local canSteal = can:GetAttribute("CanSteal") or can:GetAttribute("Stealable")
+                        if canSteal == nil or canSteal == true then
+                            table.insert(stealable, can)
+                        end
+                    end
+                end
+                
+                if desc:IsA("Model") or desc:IsA("BasePart") then
+                    local name = desc.Name:lower()
+                    if name:find("water") and name:find("can") then
+                        local canSteal = desc:GetAttribute("CanSteal") or desc:GetAttribute("Stealable")
+                        if canSteal == nil or canSteal == true then
+                            table.insert(stealable, desc)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return stealable
+end
+
+local function StealCan(can)
+    if not can or not can.Parent then return end
+    if ClickWateringCan then
+        pcall(function() ClickWateringCan:FireServer(can) end)
+    end
+end
+
+local function StealAllCans()
+    local cans = GetStealableCans()
+    for _, can in ipairs(cans) do
+        if not Config.AutoSteal or not State.Running then break end
+        StealCan(can)
+        task.wait(TIMING.STEAL_DELAY)
+    end
+    return #cans
+end
+
+local function GetMainTree()
+    local plot = GetPlayerPlot()
+    if plot then
+        local contents = plot:FindFirstChild("PlotContents")
+        if contents then
+            return contents:FindFirstChild("Tree")
+        end
+    end
+    return nil
+end
+
+local function GetWateringCanLevels()
+    local levels = {}
+    local data = LocalPlayer:FindFirstChild("Data")
+    if data then
+        local tapCans = data:FindFirstChild("TapWateringCans")
+        if tapCans then
+            for _, slot in ipairs(tapCans:GetChildren()) do
+                local levelVal = slot:FindFirstChild("Level")
+                if levelVal then
+                    levels[slot.Name] = levelVal.Value
+                end
+            end
+        end
+    end
+    return levels
+end
+
+local function GetHighestWaterLevel()
+    local highest = 0
+    for _, level in pairs(GetWateringCanLevels()) do
+        if level > highest then
+            highest = level
+        end
+    end
+    return highest
+end
+
+local function ShouldAutoWater()
+    return GetHighestWaterLevel() >= Config.WaterLevelThreshold
+end
+
+local function GetLowestLevelCanSlot()
+    local lowestSlot, lowestLevel = nil, 999
+    local data = LocalPlayer:FindFirstChild("Data")
+    if data then
+        local tapCans = data:FindFirstChild("TapWateringCans")
+        if tapCans then
+            for _, slot in ipairs(tapCans:GetChildren()) do
+                local levelVal = slot:FindFirstChild("Level")
+                if levelVal and levelVal.Value < lowestLevel then
+                    lowestLevel = levelVal.Value
+                    lowestSlot = tonumber(slot.Name)
+                end
+            end
+        end
+    end
+    return lowestSlot, lowestLevel
+end
+
+local function IsPurifierEmpty()
+    local plot = GetPlayerPlot()
+    if plot then
+        local contents = plot:FindFirstChild("PlotContents")
+        if contents then
+            local purifier = contents:FindFirstChild("Water Purifier")
+            if purifier then
+                return not (purifier:FindFirstChild("WateringCan") or purifier:FindFirstChild("Can"))
+            end
+        end
+    end
+    return true
+end
+
+local function GetCoinsValue()
+    local ls = LocalPlayer:FindFirstChild("leaderstats")
+    if ls then
+        local coins = ls:FindFirstChild("💵 Coins")
+        if coins then return tostring(coins.Value) end
+    end
+    return "0"
+end
+
+local function GetPrestigesValue()
+    local ls = LocalPlayer:FindFirstChild("leaderstats")
+    if ls then
+        local prestiges = ls:FindFirstChild("👑 Prestiges")
+        if prestiges then return prestiges.Value end
+    end
+    return 0
+end
+
+local function HasWateringCans()
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local char = LocalPlayer.Character
+    
+    if backpack then
+        for _, item in ipairs(backpack:GetChildren()) do
+            local name = item.Name:lower()
+            if name:find("water") or name:find("can") then
+                return true
+            end
+        end
+    end
+    
+    if char then
+        for _, item in ipairs(char:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = item.Name:lower()
+                if name:find("water") or name:find("can") then
+                    return true
+                end
+            end
+        end
+    end
+    
+    return false
+end
+
+local function PressKey(keyCode)
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+        task.wait(TIMING.KEY_PRESS_DURATION)
+        VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+    end)
+end
+
+local function ClickMouse()
+    pcall(function()
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+        task.wait(TIMING.CLICK_DURATION)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+    end)
+end
+
+local HotbarKeys = {
+    Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four,
+    Enum.KeyCode.Five, Enum.KeyCode.Six, Enum.KeyCode.Seven,
+    Enum.KeyCode.Eight, Enum.KeyCode.Nine,
+}
+
+local function TapTree()
+    if not TapButtonClick then return end
+    local plot = GetPlayerPlot()
+    if plot then
+        pcall(function() TapButtonClick:FireServer(plot) end)
+    end
+end
+
+local function HitMutation(mutation)
+    if not mutation or not mutation.Parent then return end
+    if TreeClick then
+        pcall(function() TreeClick:InvokeServer(mutation) end)
+    end
+    if AxeSwing then
+        pcall(function() AxeSwing:FireServer() end)
+    end
+end
+
+local function HitAllMutations()
+    local mutations = GetMutations()
+    for _, mutation in ipairs(mutations) do
+        if not Config.AutoMutations or not State.Running then break end
+        HitMutation(mutation)
+        task.wait(TIMING.MUTATION_HIT_DELAY)
+    end
+end
+
+local function CollectAllCoins()
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    local originalCFrame = root.CFrame
+    local orbsFolder = Workspace:FindFirstChild("Orbs")
+    
+    if orbsFolder then
+        for _, coin in ipairs(orbsFolder:GetChildren()) do
+            if not Config.AutoCollectCoins or not State.Running then break end
+            if coin and coin.Parent and coin:IsA("BasePart") and coin:GetAttribute("CanCollect") then
+                pcall(function() root.CFrame = coin.CFrame end)
+                
+                if firetouchinterest then
+                    pcall(function()
+                        firetouchinterest(root, coin, 0)
+                        firetouchinterest(root, coin, 1)
+                    end)
+                end
+                
+                if CollectCoin then
+                    pcall(function() CollectCoin:FireServer(coin) end)
+                end
+                
+                task.wait(TIMING.COIN_COLLECT_DELAY)
+            end
+        end
+    end
+    
+    pcall(function() root.CFrame = originalCFrame end)
+end
+
+local function UseCans()
+    if State.UsingCans then return end
+    State.UsingCans = true
+    
+    if not HasWateringCans() then
+        PressKey(Enum.KeyCode.One)
+        State.UsingCans = false
+        return
+    end
+    
+    for _, keyCode in ipairs(HotbarKeys) do
+        if not Config.AutoUseCans or not State.Running then break end
+        PressKey(keyCode)
+        task.wait(TIMING.USE_CANS_KEY_DELAY)
+        ClickMouse()
+        task.wait(TIMING.USE_CANS_CLICK_DELAY)
+    end
+    
+    PressKey(Enum.KeyCode.One)
+    State.UsingCans = false
+end
+
+local function PickupCans()
+    if State.PickingUpCans then return end
+    State.PickingUpCans = true
+    
+    local cans = GetWateringCans()
+    if #cans == 0 then
+        PressKey(Enum.KeyCode.One)
+        State.PickingUpCans = false
+        return
+    end
+    
+    for _, can in ipairs(cans) do
+        if not Config.AutoPickupCans or not State.Running then break end
+        if ClickWateringCan then
+            pcall(function() ClickWateringCan:FireServer(can) end)
+        end
+        task.wait(TIMING.PICKUP_CANS_DELAY)
+    end
+    
+    local tree = GetMainTree()
+    if tree and ClickWateringCan then
+        pcall(function() ClickWateringCan:FireServer(tree) end)
+    end
+    
+    local plot = GetPlayerPlot()
+    if plot and ClickWateringCan then
+        pcall(function() ClickWateringCan:FireServer(plot) end)
+    end
+    
+    PressKey(Enum.KeyCode.One)
+    State.PickingUpCans = false
+end
+
+local function ClaimPurifier()
+    if ClaimWaterPurifier then
+        pcall(function() ClaimWaterPurifier:InvokeServer() end)
+    end
+end
+
+local function FillPurifier()
+    local slot, level = GetLowestLevelCanSlot()
+    if slot and level < 100 and WaterPurifier then
+        pcall(function() WaterPurifier:InvokeServer(slot) end)
+    end
+end
+
+local function DoPrestige()
+    if Prestige then
+        pcall(function() Prestige:InvokeServer() end)
+    end
+end
+
+local function SetSpeed(speed)
+    local char = LocalPlayer.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            pcall(function() humanoid.WalkSpeed = speed end)
+        end
+    end
+end
+
+local function StartAutoTap()
+    if State.Tapping then return end
+    State.Tapping = true
+    
+    for i = 1, Config.TapThreads do
+        Threads["Tap_" .. i] = task.spawn(function()
+            while Config.AutoTap and State.Running do
+                TapTree()
+                task.wait(TIMING.TAP_SPEED)
+            end
+        end)
+    end
+    
+    Threads["TapMonitor"] = task.spawn(function()
+        while Config.AutoTap and State.Running do
+            task.wait(0.1)
+        end
+        State.Tapping = false
+    end)
+end
+
+local function StopAutoTap()
+    Config.AutoTap = false
+    for i = 1, Config.TapThreads do
+        SafeCancel("Tap_" .. i)
+    end
+    SafeCancel("TapMonitor")
+    State.Tapping = false
+end
+
+local function StartAutoMutations()
+    if State.HittingTrees then return end
+    State.HittingTrees = true
+    
+    Threads["Mutations"] = task.spawn(function()
+        while Config.AutoMutations and State.Running do
+            HitAllMutations()
+            task.wait(TIMING.MUTATION_LOOP_DELAY)
+        end
+        State.HittingTrees = false
+    end)
+end
+
+local function StopAutoMutations()
+    Config.AutoMutations = false
+    SafeCancel("Mutations")
+    State.HittingTrees = false
+end
+
+local function StartAutoCollect()
+    if State.CollectingCoins then return end
+    State.CollectingCoins = true
+    
+    Threads["Collect"] = task.spawn(function()
+        while Config.AutoCollectCoins and State.Running do
+            CollectAllCoins()
+            task.wait(TIMING.COIN_LOOP_DELAY)
+        end
+        State.CollectingCoins = false
+    end)
+end
+
+local function StopAutoCollect()
+    Config.AutoCollectCoins = false
+    SafeCancel("Collect")
+    State.CollectingCoins = false
+end
+
+local function StartAutoPrestige()
+    if State.Prestiging then return end
+    State.Prestiging = true
+    
+    Threads["Prestige"] = task.spawn(function()
+        while Config.AutoPrestige and State.Running do
+            DoPrestige()
+            task.wait(TIMING.PRESTIGE_INTERVAL)
+        end
+        State.Prestiging = false
+    end)
+end
+
+local function StopAutoPrestige()
+    Config.AutoPrestige = false
+    SafeCancel("Prestige")
+    State.Prestiging = false
+end
+
+local function StartAutoUseCans()
+    Threads["UseCans"] = task.spawn(function()
+        while Config.AutoUseCans and State.Running do
+            if ShouldAutoWater() then
+                task.spawn(UseCans)
+            end
+            task.wait(TIMING.USE_CANS_INTERVAL)
+        end
+    end)
+end
+
+local function StopAutoUseCans()
+    Config.AutoUseCans = false
+    SafeCancel("UseCans")
+end
+
+local function StartAutoPickupCans()
+    Threads["PickupCans"] = task.spawn(function()
+        while Config.AutoPickupCans and State.Running do
+            if ShouldAutoWater() then
+                task.spawn(PickupCans)
+            end
+            task.wait(TIMING.PICKUP_CANS_INTERVAL)
+        end
+    end)
+end
+
+local function StopAutoPickupCans()
+    Config.AutoPickupCans = false
+    SafeCancel("PickupCans")
+end
+
+local function StartAutoClaimPurifier()
+    Threads["ClaimPurifier"] = task.spawn(function()
+        while Config.AutoClaimPurifier and State.Running do
+            ClaimPurifier()
+            task.wait(TIMING.CLAIM_PURIFIER_INTERVAL)
+        end
+    end)
+end
+
+local function StopAutoClaimPurifier()
+    Config.AutoClaimPurifier = false
+    SafeCancel("ClaimPurifier")
+end
+
+local function StartAutoFillPurifier()
+    Threads["FillPurifier"] = task.spawn(function()
+        while Config.AutoFillPurifier and State.Running do
+            if IsPurifierEmpty() then
+                FillPurifier()
+                task.wait(TIMING.FILL_PURIFIER_DELAY)
+            end
+            task.wait(TIMING.FILL_PURIFIER_INTERVAL)
+        end
+    end)
+end
+
+local function StopAutoFillPurifier()
+    Config.AutoFillPurifier = false
+    SafeCancel("FillPurifier")
+end
+
+local function StartAutoSteal()
+    if State.Stealing then return end
+    State.Stealing = true
+    
+    Threads["Steal"] = task.spawn(function()
+        while Config.AutoSteal and State.Running do
+            local stolen = StealAllCans()
+            task.wait(TIMING.STEAL_LOOP_INTERVAL)
+        end
+        State.Stealing = false
+    end)
+end
+
+local function StopAutoSteal()
+    Config.AutoSteal = false
+    SafeCancel("Steal")
+    State.Stealing = false
+end
+
+local function StartSpeedHack()
+    SafeDisconnect("SpeedHack")
+    Connections.SpeedHack = RunService.Heartbeat:Connect(function()
+        if Config.SpeedHack and State.Running then
+            SetSpeed(Config.SpeedAmount)
+        end
+    end)
+end
+
+local function StopSpeedHack()
+    Config.SpeedHack = false
+    SafeDisconnect("SpeedHack")
+    SetSpeed(16)
+end
+
+local function CreateGUI()
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+    
+    ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "ChopYourTreeGUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.IgnoreGuiInset = true
+    
+    pcall(function()
+        if syn then
+            syn.protect_gui(ScreenGui)
+        elseif gethui then
+            ScreenGui.Parent = gethui()
+            return
+        end
+    end)
+    
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    
+    local Icons = {
+        Power = "rbxassetid://97421363782839",
+    }
+    
+    local Accent = Color3.fromRGB(0, 170, 255)
+    local GlassBg = Color3.fromRGB(40, 44, 52)
+    local GlassCard = Color3.fromRGB(55, 60, 70)
+    local TextPrimary = Color3.fromRGB(255, 255, 255)
+    local TextSecondary = Color3.fromRGB(140, 145, 155)
+    
+    local MainContainer = Instance.new("Frame")
+    MainContainer.Name = "MainContainer"
+    MainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+    MainContainer.Size = isMobile and UDim2.new(0.75, 0, 0, 280) or UDim2.new(0, 480, 0, 210)
+    MainContainer.BackgroundColor3 = GlassBg
+    MainContainer.BackgroundTransparency = 0.05
+    MainContainer.BorderSizePixel = 0
+    MainContainer.ClipsDescendants = true
+    MainContainer.Parent = ScreenGui
+    
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 16)
+    MainCorner.Parent = MainContainer
+    
+    local TopBar = Instance.new("Frame")
+    TopBar.Size = UDim2.new(1, 0, 0, 44)
+    TopBar.BackgroundColor3 = Color3.fromRGB(35, 38, 46)
+    TopBar.BackgroundTransparency = 0.3
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = MainContainer
+    
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.CornerRadius = UDim.new(0, 16)
+    TopCorner.Parent = TopBar
+    
+    local FarmingTab = Instance.new("TextButton")
+    FarmingTab.Size = UDim2.new(0, 80, 0, 30)
+    FarmingTab.Position = UDim2.new(0, 12, 0.5, -15)
+    FarmingTab.BackgroundColor3 = Accent
+    FarmingTab.BackgroundTransparency = 0.7
+    FarmingTab.BorderSizePixel = 0
+    FarmingTab.Text = "Farming"
+    FarmingTab.TextSize = 12
+    FarmingTab.Font = Enum.Font.GothamBold
+    FarmingTab.TextColor3 = TextPrimary
+    FarmingTab.Parent = TopBar
+    
+    local FarmCorner = Instance.new("UICorner")
+    FarmCorner.CornerRadius = UDim.new(0, 8)
+    FarmCorner.Parent = FarmingTab
+    
+    local PlayerTab = Instance.new("TextButton")
+    PlayerTab.Size = UDim2.new(0, 70, 0, 30)
+    PlayerTab.Position = UDim2.new(0, 100, 0.5, -15)
+    PlayerTab.BackgroundTransparency = 1
+    PlayerTab.BorderSizePixel = 0
+    PlayerTab.Text = "Player"
+    PlayerTab.TextSize = 12
+    PlayerTab.Font = Enum.Font.GothamMedium
+    PlayerTab.TextColor3 = TextSecondary
+    PlayerTab.Parent = TopBar
+    
+    local PlayerCorner = Instance.new("UICorner")
+    PlayerCorner.CornerRadius = UDim.new(0, 8)
+    PlayerCorner.Parent = PlayerTab
+    
+    local PowerBtn = Instance.new("ImageButton")
+    PowerBtn.Size = UDim2.new(0, 28, 0, 28)
+    PowerBtn.Position = UDim2.new(1, -42, 0.5, -14)
+    PowerBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    PowerBtn.BackgroundTransparency = 0.6
+    PowerBtn.BorderSizePixel = 0
+    PowerBtn.Image = Icons.Power
+    PowerBtn.ImageColor3 = TextPrimary
+    PowerBtn.Parent = TopBar
+    
+    local PowerCorner = Instance.new("UICorner")
+    PowerCorner.CornerRadius = UDim.new(0, 8)
+    PowerCorner.Parent = PowerBtn
+    
+    PowerBtn.MouseButton1Click:Connect(Unload)
+    
+    local AvatarFrame = Instance.new("Frame")
+    AvatarFrame.Size = UDim2.new(0, 32, 0, 32)
+    AvatarFrame.Position = UDim2.new(1, -80, 0.5, -16)
+    AvatarFrame.BackgroundColor3 = GlassCard
+    AvatarFrame.BorderSizePixel = 0
+    AvatarFrame.Parent = TopBar
+    
+    local AvatarCorner = Instance.new("UICorner")
+    AvatarCorner.CornerRadius = UDim.new(1, 0)
+    AvatarCorner.Parent = AvatarFrame
+    
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Size = UDim2.new(1, 0, 1, 0)
+    AvatarImg.BackgroundTransparency = 1
+    AvatarImg.Parent = AvatarFrame
+    
+    task.spawn(function()
+        local ok, img = pcall(function()
+            return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+        end)
+        if ok then AvatarImg.Image = img end
+    end)
+    
+    local AvatarImgCorner = Instance.new("UICorner")
+    AvatarImgCorner.CornerRadius = UDim.new(1, 0)
+    AvatarImgCorner.Parent = AvatarImg
+    
+    local FarmingPanel = Instance.new("Frame")
+    FarmingPanel.Name = "FarmingPanel"
+    FarmingPanel.Size = UDim2.new(1, -16, 1, -52)
+    FarmingPanel.Position = UDim2.new(0, 8, 0, 48)
+    FarmingPanel.BackgroundTransparency = 1
+    FarmingPanel.Parent = MainContainer
+    
+    local PlayerPanel = Instance.new("Frame")
+    PlayerPanel.Name = "PlayerPanel"
+    PlayerPanel.Size = UDim2.new(1, -16, 1, -52)
+    PlayerPanel.Position = UDim2.new(0, 8, 0, 48)
+    PlayerPanel.BackgroundTransparency = 1
+    PlayerPanel.Visible = false
+    PlayerPanel.Parent = MainContainer
+    
+    FarmingTab.MouseButton1Click:Connect(function()
+        FarmingPanel.Visible = true
+        PlayerPanel.Visible = false
+        FarmingTab.BackgroundTransparency = 0.7
+        FarmingTab.TextColor3 = TextPrimary
+        PlayerTab.BackgroundTransparency = 1
+        PlayerTab.TextColor3 = TextSecondary
+    end)
+    
+    PlayerTab.MouseButton1Click:Connect(function()
+        FarmingPanel.Visible = false
+        PlayerPanel.Visible = true
+        FarmingTab.BackgroundTransparency = 1
+        FarmingTab.TextColor3 = TextSecondary
+        PlayerTab.BackgroundTransparency = 0.7
+        PlayerTab.BackgroundColor3 = Accent
+        PlayerTab.TextColor3 = TextPrimary
+    end)
+    
+    local function CreateToggle(parent, pos, size, label, default, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Size = size
+        Frame.Position = pos
+        Frame.BackgroundColor3 = GlassCard
+        Frame.BackgroundTransparency = 0.4
+        Frame.BorderSizePixel = 0
+        Frame.Parent = parent
+        
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 12)
+        Corner.Parent = Frame
+        
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, -60, 1, 0)
+        Label.Position = UDim2.new(0, 12, 0, 0)
+        Label.BackgroundTransparency = 1
+        Label.Text = label
+        Label.TextSize = 11
+        Label.Font = Enum.Font.GothamMedium
+        Label.TextColor3 = TextPrimary
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = Frame
+        
+        local ToggleBg = Instance.new("Frame")
+        ToggleBg.Size = UDim2.new(0, 40, 0, 22)
+        ToggleBg.Position = UDim2.new(1, -50, 0.5, -11)
+        ToggleBg.BackgroundColor3 = default and Accent or Color3.fromRGB(60, 65, 75)
+        ToggleBg.BorderSizePixel = 0
+        ToggleBg.Parent = Frame
+        
+        local BgCorner = Instance.new("UICorner")
+        BgCorner.CornerRadius = UDim.new(1, 0)
+        BgCorner.Parent = ToggleBg
+        
+        local Circle = Instance.new("Frame")
+        Circle.Size = UDim2.new(0, 16, 0, 16)
+        Circle.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+        Circle.BackgroundColor3 = TextPrimary
+        Circle.BorderSizePixel = 0
+        Circle.Parent = ToggleBg
+        
+        local CircleCorner = Instance.new("UICorner")
+        CircleCorner.CornerRadius = UDim.new(1, 0)
+        CircleCorner.Parent = Circle
+        
+        local enabled = default
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(1, 0, 1, 0)
+        Btn.BackgroundTransparency = 1
+        Btn.Text = ""
+        Btn.Parent = Frame
+        
+        Btn.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            TweenService:Create(ToggleBg, TweenInfo.new(0.2), {
+                BackgroundColor3 = enabled and Accent or Color3.fromRGB(60, 65, 75)
+            }):Play()
+            TweenService:Create(Circle, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+                Position = enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+            }):Play()
+            callback(enabled)
+        end)
+        
+        return Frame
+    end
+    
+    local function CreateSlider(parent, pos, size, label, min, max, default, callback)
+        min = math.min(min, max)
+        default = math.clamp(default, min, max)
+        
+        local Frame = Instance.new("Frame")
+        Frame.Size = size
+        Frame.Position = pos
+        Frame.BackgroundColor3 = GlassCard
+        Frame.BackgroundTransparency = 0.4
+        Frame.BorderSizePixel = 0
+        Frame.Parent = parent
+        
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 12)
+        Corner.Parent = Frame
+        
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(0.6, 0, 0, 18)
+        Label.Position = UDim2.new(0, 12, 0, 6)
+        Label.BackgroundTransparency = 1
+        Label.Text = label
+        Label.TextSize = 11
+        Label.Font = Enum.Font.GothamMedium
+        Label.TextColor3 = TextPrimary
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = Frame
+        
+        local Value = Instance.new("TextLabel")
+        Value.Size = UDim2.new(0.3, 0, 0, 18)
+        Value.Position = UDim2.new(0.7, -12, 0, 6)
+        Value.BackgroundTransparency = 1
+        Value.Text = tostring(default)
+        Value.TextSize = 11
+        Value.Font = Enum.Font.GothamBold
+        Value.TextColor3 = Accent
+        Value.TextXAlignment = Enum.TextXAlignment.Right
+        Value.Parent = Frame
+        
+        local SliderBg = Instance.new("Frame")
+        SliderBg.Size = UDim2.new(1, -24, 0, 6)
+        SliderBg.Position = UDim2.new(0, 12, 0, 32)
+        SliderBg.BackgroundColor3 = Color3.fromRGB(50, 55, 65)
+        SliderBg.BorderSizePixel = 0
+        SliderBg.Parent = Frame
+        
+        local BgCorner = Instance.new("UICorner")
+        BgCorner.CornerRadius = UDim.new(1, 0)
+        BgCorner.Parent = SliderBg
+        
+        local Fill = Instance.new("Frame")
+        Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        Fill.BackgroundColor3 = Accent
+        Fill.BorderSizePixel = 0
+        Fill.Parent = SliderBg
+        
+        local FillCorner = Instance.new("UICorner")
+        FillCorner.CornerRadius = UDim.new(1, 0)
+        FillCorner.Parent = Fill
+        
+        local currentValue = default
+        local dragging = false
+        
+        local SliderBtn = Instance.new("TextButton")
+        SliderBtn.Size = UDim2.new(1, 0, 0, 20)
+        SliderBtn.Position = UDim2.new(0, 0, 0, 24)
+        SliderBtn.BackgroundTransparency = 1
+        SliderBtn.Text = ""
+        SliderBtn.Parent = Frame
+        
+        local function UpdateSlider(inputPos)
+            local pct = math.clamp((inputPos - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
+            currentValue = math.floor(min + (max - min) * pct)
+            Fill.Size = UDim2.new(pct, 0, 1, 0)
+            Value.Text = tostring(currentValue)
+            callback(currentValue)
+        end
+        
+        SliderBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                UpdateSlider(input.Position.X)
+            end
+        end)
+        
+        SliderBtn.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+        
+        Connections["Slider_" .. label] = UserInputService.InputChanged:Connect(function(input)
+            if dragging and State.Running and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                UpdateSlider(input.Position.X)
+            end
+        end)
+        
+        return Frame
+    end
+    
+    CreateToggle(FarmingPanel, UDim2.new(0, 0, 0, 0), UDim2.new(0.32, -4, 0, 40), "Auto Tap", false, function(v)
+        Config.AutoTap = v
+        if v then StartAutoTap() else StopAutoTap() end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0.34, 0, 0, 0), UDim2.new(0.32, -4, 0, 40), "Hit Trees", false, function(v)
+        Config.AutoMutations = v
+        if v then StartAutoMutations() else StopAutoMutations() end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0.68, 0, 0, 0), UDim2.new(0.32, 0, 0, 40), "Collect Coins", false, function(v)
+        Config.AutoCollectCoins = v
+        if v then StartAutoCollect() else StopAutoCollect() end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0, 0, 0, 46), UDim2.new(0.32, -4, 0, 40), "Fill Purifier", false, function(v)
+        Config.AutoFillPurifier = v
+        Config.AutoClaimPurifier = v
+        if v then
+            StartAutoFillPurifier()
+            StartAutoClaimPurifier()
+        else
+            StopAutoFillPurifier()
+            StopAutoClaimPurifier()
+        end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0.34, 0, 0, 46), UDim2.new(0.32, -4, 0, 40), "Use Cans", false, function(v)
+        Config.AutoUseCans = v
+        if v then StartAutoUseCans() else StopAutoUseCans() end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0.68, 0, 0, 46), UDim2.new(0.32, 0, 0, 40), "Pickup Cans", false, function(v)
+        Config.AutoPickupCans = v
+        if v then StartAutoPickupCans() else StopAutoPickupCans() end
+    end)
+    
+    CreateToggle(FarmingPanel, UDim2.new(0, 0, 0, 92), UDim2.new(0.5, -4, 0, 50), "Steal Cans (GP)", false, function(v)
+        Config.AutoSteal = v
+        if v then StartAutoSteal() else StopAutoSteal() end
+    end)
+    
+    CreateSlider(FarmingPanel, UDim2.new(0.5, 4, 0, 92), UDim2.new(0.5, -4, 0, 50), "Min Can Lvl", 1, 100, 3, function(v)
+        Config.WaterLevelThreshold = v
+    end)
+    
+    CreateToggle(PlayerPanel, UDim2.new(0, 0, 0, 0), UDim2.new(0.5, -4, 0, 40), "Speed Hack", false, function(v)
+        Config.SpeedHack = v
+        if v then StartSpeedHack() else StopSpeedHack() end
+    end)
+    
+    CreateToggle(PlayerPanel, UDim2.new(0.5, 4, 0, 0), UDim2.new(0.5, -4, 0, 40), "Auto Prestige", false, function(v)
+        Config.AutoPrestige = v
+        if v then StartAutoPrestige() else StopAutoPrestige() end
+    end)
+    
+    local StatsRow = Instance.new("Frame")
+    StatsRow.Size = UDim2.new(1, 0, 0, 36)
+    StatsRow.Position = UDim2.new(0, 0, 0, 46)
+    StatsRow.BackgroundColor3 = GlassCard
+    StatsRow.BackgroundTransparency = 0.4
+    StatsRow.BorderSizePixel = 0
+    StatsRow.Parent = PlayerPanel
+    
+    local StatsCorner = Instance.new("UICorner")
+    StatsCorner.CornerRadius = UDim.new(0, 8)
+    StatsCorner.Parent = StatsRow
+    
+    local CoinsLabel = Instance.new("TextLabel")
+    CoinsLabel.Size = UDim2.new(0.25, 0, 1, 0)
+    CoinsLabel.Position = UDim2.new(0, 8, 0, 0)
+    CoinsLabel.BackgroundTransparency = 1
+    CoinsLabel.Text = "💰 ..."
+    CoinsLabel.TextSize = 13
+    CoinsLabel.Font = Enum.Font.GothamBold
+    CoinsLabel.TextColor3 = TextPrimary
+    CoinsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    CoinsLabel.Parent = StatsRow
+    
+    local WaterStatLabel = Instance.new("TextLabel")
+    WaterStatLabel.Size = UDim2.new(0.2, 0, 1, 0)
+    WaterStatLabel.Position = UDim2.new(0.28, 0, 0, 0)
+    WaterStatLabel.BackgroundTransparency = 1
+    WaterStatLabel.Text = "💧 ..."
+    WaterStatLabel.TextSize = 13
+    WaterStatLabel.Font = Enum.Font.GothamBold
+    WaterStatLabel.TextColor3 = TextPrimary
+    WaterStatLabel.TextXAlignment = Enum.TextXAlignment.Left
+    WaterStatLabel.Parent = StatsRow
+    
+    local PlotLabel = Instance.new("TextLabel")
+    PlotLabel.Size = UDim2.new(0.2, 0, 1, 0)
+    PlotLabel.Position = UDim2.new(0.52, 0, 0, 0)
+    PlotLabel.BackgroundTransparency = 1
+    PlotLabel.Text = "📍 ..."
+    PlotLabel.TextSize = 13
+    PlotLabel.Font = Enum.Font.GothamBold
+    PlotLabel.TextColor3 = TextPrimary
+    PlotLabel.TextXAlignment = Enum.TextXAlignment.Left
+    PlotLabel.Parent = StatsRow
+    
+    local PrestigeLabel = Instance.new("TextLabel")
+    PrestigeLabel.Size = UDim2.new(0.2, 0, 1, 0)
+    PrestigeLabel.Position = UDim2.new(0.76, 0, 0, 0)
+    PrestigeLabel.BackgroundTransparency = 1
+    PrestigeLabel.Text = "👑 ..."
+    PrestigeLabel.TextSize = 13
+    PrestigeLabel.Font = Enum.Font.GothamBold
+    PrestigeLabel.TextColor3 = TextPrimary
+    PrestigeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    PrestigeLabel.Parent = StatsRow
+    
+    local PrestigeBtn = Instance.new("TextButton")
+    PrestigeBtn.Size = UDim2.new(1, 0, 0, 32)
+    PrestigeBtn.Position = UDim2.new(0, 0, 0, 88)
+    PrestigeBtn.BackgroundColor3 = Accent
+    PrestigeBtn.BackgroundTransparency = 0.2
+    PrestigeBtn.BorderSizePixel = 0
+    PrestigeBtn.Text = "⭐ PRESTIGE NOW"
+    PrestigeBtn.TextSize = 14
+    PrestigeBtn.Font = Enum.Font.GothamBold
+    PrestigeBtn.TextColor3 = TextPrimary
+    PrestigeBtn.Parent = PlayerPanel
+    
+    local PrestigeBtnCorner = Instance.new("UICorner")
+    PrestigeBtnCorner.CornerRadius = UDim.new(0, 8)
+    PrestigeBtnCorner.Parent = PrestigeBtn
+    
+    PrestigeBtn.MouseButton1Click:Connect(DoPrestige)
+    
+    Threads["StatsUpdate"] = task.spawn(function()
+        while State.Running and CoinsLabel and CoinsLabel.Parent do
+            pcall(function()
+                CoinsLabel.Text = "💰 " .. GetCoinsValue()
+                local lvl = GetHighestWaterLevel()
+                local ready = lvl >= Config.WaterLevelThreshold and "✓" or ""
+                WaterStatLabel.Text = "💧 " .. lvl .. ready
+                PrestigeLabel.Text = "👑 " .. tostring(GetPrestigesValue())
+                local plot = GetPlayerPlot()
+                PlotLabel.Text = plot and "📍 ✓" or "📍 ✗"
+            end)
+            task.wait(TIMING.STATS_UPDATE_INTERVAL)
+        end
+    end)
+    
+    local dragging = false
+    local dragStart, startPos
+    
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainContainer.Position
+        end
+    end)
+    
+    TopBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    
+    Connections["Drag"] = UserInputService.InputChanged:Connect(function(input)
+        if dragging and State.Running and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            MainContainer.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    if isMobile then
+        local MobileToggle = Instance.new("TextButton")
+        MobileToggle.Name = "MobileToggle"
+        MobileToggle.Size = UDim2.new(0, 44, 0, 44)
+        MobileToggle.Position = UDim2.new(1, -54, 0, 50)
+        MobileToggle.BackgroundColor3 = GlassBg
+        MobileToggle.BackgroundTransparency = 0.1
+        MobileToggle.BorderSizePixel = 0
+        MobileToggle.Text = "🌴"
+        MobileToggle.TextSize = 20
+        MobileToggle.Font = Enum.Font.GothamBold
+        MobileToggle.Parent = ScreenGui
+        
+        local MobileCorner = Instance.new("UICorner")
+        MobileCorner.CornerRadius = UDim.new(1, 0)
+        MobileCorner.Parent = MobileToggle
+        
+        local MobileStroke = Instance.new("UIStroke")
+        MobileStroke.Color = Accent
+        MobileStroke.Thickness = 2
+        MobileStroke.Parent = MobileToggle
+        
+        local visible = true
+        local mobileDragging = false
+        local mobileDragStart, mobileStartPos
+        
+        MobileToggle.MouseButton1Click:Connect(function()
+            if not mobileDragging then
+                visible = not visible
+                MainContainer.Visible = visible
+            end
+        end)
+        
+        MobileToggle.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                mobileDragging = false
+                mobileDragStart = input.Position
+                mobileStartPos = MobileToggle.Position
+            end
+        end)
+        
+        MobileToggle.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                local delta = input.Position - mobileDragStart
+                if delta.Magnitude > 10 then
+                    mobileDragging = true
+                    local screenSize = ScreenGui.AbsoluteSize
+                    local btnSize = MobileToggle.AbsoluteSize
+                    
+                    local newX = math.clamp(mobileStartPos.X.Offset + delta.X, 10, screenSize.X - btnSize.X - 10)
+                    local newY = math.clamp(mobileStartPos.Y.Offset + delta.Y, 50, screenSize.Y - btnSize.Y - 10)
+                    
+                    MobileToggle.Position = UDim2.new(0, newX, 0, newY)
+                end
+            end
+        end)
+        
+        MobileToggle.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                task.wait(0.1)
+                mobileDragging = false
+            end
+        end)
+    end
+end
+
+CreateGUI()
+StartSpeedHack()
+
+getgenv().ChopYourTree = {
+    Config = Config,
+    State = State,
+    TIMING = TIMING,
+    Unload = Unload,
+    
+    TapTree = TapTree,
+    HitAllMutations = HitAllMutations,
+    CollectAllCoins = CollectAllCoins,
+    UseCans = UseCans,
+    PickupCans = PickupCans,
+    ClaimPurifier = ClaimPurifier,
+    FillPurifier = FillPurifier,
+    DoPrestige = DoPrestige,
+    StealCan = StealCan,
+    StealAllCans = StealAllCans,
+    
+    GetPlayerPlot = GetPlayerPlot,
+    GetMutations = GetMutations,
+    GetWateringCans = GetWateringCans,
+    GetStealableCans = GetStealableCans,
+    GetMainTree = GetMainTree,
+    GetWateringCanLevels = GetWateringCanLevels,
+    GetHighestWaterLevel = GetHighestWaterLevel,
+    GetLowestLevelCanSlot = GetLowestLevelCanSlot,
+    IsPurifierEmpty = IsPurifierEmpty,
+    ShouldAutoWater = ShouldAutoWater,
+    HasWateringCans = HasWateringCans,
+    
+    StartAutoTap = StartAutoTap,
+    StopAutoTap = StopAutoTap,
+    StartAutoMutations = StartAutoMutations,
+    StopAutoMutations = StopAutoMutations,
+    StartAutoCollect = StartAutoCollect,
+    StopAutoCollect = StopAutoCollect,
+    StartAutoPrestige = StartAutoPrestige,
+    StopAutoPrestige = StopAutoPrestige,
+    StartAutoUseCans = StartAutoUseCans,
+    StopAutoUseCans = StopAutoUseCans,
+    StartAutoPickupCans = StartAutoPickupCans,
+    StopAutoPickupCans = StopAutoPickupCans,
+    StartAutoSteal = StartAutoSteal,
+    StopAutoSteal = StopAutoSteal,
+}

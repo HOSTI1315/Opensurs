@@ -1,0 +1,1917 @@
+-- tenacious the forge
+
+
+local vu1 = game:GetService("Players")
+local vu2 = game:GetService("HttpService")
+local vu3 = game:GetService("TweenService")
+local vu4 = game:GetService("RunService")
+local vu5 = game:GetService("ReplicatedStorage")
+if game.GameId ~= 7671049560 then
+    warn("Script only runs on Game ID: 7671049560. Current Game ID: " .. tostring(game.GameId))
+    return
+end
+local vu6 = vu5:WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ProximityService"):WaitForChild("RF"):WaitForChild("Purchase")
+local vu7 = nil
+local v8, v9 = pcall(function()
+    vu7 = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
+end)
+if not (v8 and vu7) then
+    warn("Error loading UI Library (MacLib): " .. tostring(v9))
+    return
+end
+local vu15 = {
+    FileName = "HTHubTheForgeConfig_" .. vu1.LocalPlayer.Name .. ".json",
+    DefaultConfig = {
+        SelectedRockType = nil,
+        AutoMineEnabled = false,
+        SelectedEnemyType = nil,
+        SelectedDistance = 6,
+        AutoFarmEnemyEnabled = false,
+        SelectedMineDistance = 6,
+        SelectedPotionName = nil,
+        AutoBuyAndUsePotionEnabled = false,
+        SelectedItemName = nil,
+        AutoSellItemEnabled = false,
+        AntiAFKEnabled = true
+    },
+    CurrentConfig = {},
+    SaveConfig = function()
+        local v11, v12 = pcall(function()
+            local v10 = vu2
+            writefile(vu15.FileName, v10:JSONEncode(vu15.CurrentConfig))
+        end)
+        if not v11 then
+            warn("Failed to save config:", v12)
+        end
+    end,
+    LoadConfig = function()
+        local v13, v14 = pcall(function()
+            if isfile and isfile(vu15.FileName) then
+                return readfile(vu15.FileName)
+            else
+                return nil
+            end
+        end)
+        if v13 and v14 then
+            vu15.CurrentConfig = vu2:JSONDecode(v14)
+        else
+            vu15.CurrentConfig = table.clone(vu15.DefaultConfig)
+            vu15.SaveConfig()
+        end
+    end
+}
+vu15.LoadConfig()
+local vu16 = vu1.LocalPlayer.Name
+local v17 = vu7
+local vu18 = vu7.Window(v17, {
+    Title = "HT HUB | The Forge",
+    Subtitle = "Hello, " .. vu16,
+    Size = UDim2.fromOffset(720, 500),
+    DragStyle = 1,
+    DisabledWindowControls = {},
+    ShowUserInfo = true,
+    Keybind = Enum.KeyCode.LeftAlt,
+    AcrylicBlur = true
+})
+local function vu22(p19, p20, p21)
+    if vu18 and vu18.Notify then
+        vu18:Notify({
+            Title = p19 or vu18.Settings.Title,
+            Description = p20 or "",
+            Lifetime = p21 or 4
+        })
+    else
+        print("[Notify]", tostring(p19), tostring(p20))
+    end
+end
+local v23 = vu7
+vu7.SetFolder(v23, "HTHubTheForge")
+local v24 = vu18
+local v25 = vu18.TabGroup(v24)
+local v26 = {
+    Farm = v25:Tab({
+        Name = "Farm",
+        Image = "rbxassetid://10734923549"
+    }),
+    Shop = v25:Tab({
+        Name = "Shop",
+        Image = "rbxassetid://10734952273"
+    }),
+    Teleport = v25:Tab({
+        Name = "Teleport",
+        Image = "rbxassetid://10747381992"
+    }),
+    Settings = v25:Tab({
+        Name = "Settings",
+        Image = "rbxassetid://10734950309"
+    })
+}
+local vu27 = vu15.CurrentConfig.AutoMineEnabled
+if type(vu27) ~= "boolean" then
+    vu27 = vu15.DefaultConfig.AutoMineEnabled
+end
+local v28 = vu15.CurrentConfig.SelectedRockType
+local vu29 = type(v28) == "string" and {
+    v28
+} or (type(v28) ~= "table" and {} or v28)
+local vu30 = tonumber(vu15.CurrentConfig.SelectedMineDistance) or vu15.DefaultConfig.SelectedMineDistance
+if vu30 < 1 or 10 < vu30 then
+    vu30 = vu15.DefaultConfig.SelectedMineDistance
+end
+local vu31 = {}
+local vu32 = nil
+local v33 = vu15.CurrentConfig.SelectedEnemyType
+local vu34 = type(v33) ~= "table" and {} or v33
+local vu35 = tonumber(vu15.CurrentConfig.SelectedDistance) or vu15.DefaultConfig.SelectedDistance
+if vu35 < 1 or 10 < vu35 then
+    vu35 = vu15.DefaultConfig.SelectedDistance
+end
+local vu36 = vu15.CurrentConfig.AutoFarmEnemyEnabled
+if type(vu36) ~= "boolean" then
+    vu36 = vu15.DefaultConfig.AutoFarmEnemyEnabled
+end
+local vu37 = vu15.CurrentConfig.AntiAFKEnabled
+if type(vu37) ~= "boolean" then
+    vu37 = vu15.DefaultConfig.AntiAFKEnabled
+end
+local vu38 = {}
+local vu39 = nil
+local vu40 = {}
+local vu41 = vu15.CurrentConfig.SelectedPotionName
+if vu41 ~= nil and type(vu41) ~= "string" then
+    vu41 = nil
+end
+local vu42 = vu15.CurrentConfig.AutoBuyAndUsePotionEnabled
+if type(vu42) ~= "boolean" then
+    vu42 = vu15.DefaultConfig.AutoBuyAndUsePotionEnabled
+end
+local vu43 = false
+local vu44 = {}
+local v45 = vu15.CurrentConfig.SelectedItemName
+local vu46 = type(v45) == "string" and {
+    v45
+} or (type(v45) ~= "table" and {} or v45)
+local vu47 = vu15.CurrentConfig.AutoSellItemEnabled
+if type(vu47) ~= "boolean" then
+    vu47 = vu15.DefaultConfig.AutoSellItemEnabled
+end
+local vu48 = nil
+local vu49 = false
+local vu50 = {}
+local vu51 = nil
+local vu52 = {}
+local vu53 = nil
+local v54 = {
+    Farm = v26.Farm:Section({
+        Side = "Left"
+    }),
+    Enemy = v26.Farm:Section({
+        Side = "Right"
+    }),
+    ShopPotion = v26.Shop:Section({
+        Side = "Left"
+    }),
+    SellItem = v26.Shop:Section({
+        Side = "Right"
+    }),
+    TeleportNPC = v26.Teleport:Section({
+        Side = "Left"
+    }),
+    TeleportShop = v26.Teleport:Section({
+        Side = "Right"
+    }),
+    SettingsInfo = v26.Settings:Section({
+        Side = "Left"
+    }),
+    SettingsMisc = v26.Settings:Section({
+        Side = "Right"
+    })
+}
+v54.Farm:Header({
+    Name = "Mine"
+})
+local function vu63()
+    vu31 = {}
+    local v55 = {}
+    local v56 = vu5:FindFirstChild("Assets")
+    if not v56 then
+        return vu31
+    end
+    local v57 = v56:FindFirstChild("Rocks")
+    if not v57 then
+        return vu31
+    end
+    local v58, v59, v60 = ipairs(v57:GetDescendants())
+    while true do
+        local v61
+        v60, v61 = v58(v59, v60)
+        if v60 == nil then
+            break
+        end
+        if v61:IsA("Model") then
+            local v62 = v61.Name
+            if typeof(v62) == "string" and (v62 ~= "" and not (v62:match("^%d+$") or v55[v62])) then
+                v55[v62] = true
+                table.insert(vu31, v62)
+            end
+        end
+    end
+    table.sort(vu31)
+    return vu31
+end
+local function vu72(p64)
+    local v65 = {}
+    if not p64 or p64 == "" then
+        return v65
+    end
+    local v66 = workspace:FindFirstChild("Rocks")
+    if not v66 then
+        return v65
+    end
+    local v67, v68, v69 = ipairs(v66:GetDescendants())
+    while true do
+        local v70
+        v69, v70 = v67(v68, v69)
+        if v69 == nil then
+            break
+        end
+        if v70:IsA("BasePart") then
+            local v71 = v70:FindFirstAncestorWhichIsA("Model")
+            if v71 and v71.Name == p64 then
+                table.insert(v65, v70)
+            end
+        end
+    end
+    return v65
+end
+local function vu93(p73)
+    if not p73 or # p73 == 0 then
+        return nil
+    end
+    local v74 = vu1.LocalPlayer.Character
+    if not v74 then
+        return nil
+    end
+    local v75 = v74:FindFirstChild("HumanoidRootPart")
+    if not v75 then
+        return nil
+    end
+    local v76, v77, v78 = ipairs(p73)
+    local v79 = false
+    while true do
+        local v80
+        v78, v80 = v76(v77, v78)
+        if v78 == nil then
+            break
+        end
+        if v80 == "All" then
+            v79 = true
+            break
+        end
+    end
+    if v79 then
+        p73 = vu31
+    end
+    local v81 = math.huge
+    local v82, v83, v84 = ipairs(p73)
+    local v85 = nil
+    while true do
+        local v86
+        v84, v86 = v82(v83, v84)
+        if v84 == nil then
+            break
+        end
+        local v87 = vu72(v86)
+        local v88, v89, v90 = ipairs(v87)
+        while true do
+            local v91
+            v90, v91 = v88(v89, v90)
+            if v90 == nil then
+                break
+            end
+            if v91 and v91.Parent then
+                local v92 = (v75.Position - v91.Position).Magnitude
+                if v92 < v81 then
+                    v85 = v91
+                    v81 = v92
+                end
+            end
+        end
+    end
+    return v85
+end
+local function vu103(p94)
+    local v95 = vu1.LocalPlayer.Character
+    if not v95 then
+        return false
+    end
+    local v96 = v95:FindFirstChild("HumanoidRootPart")
+    if not (v96 and (p94 and p94.Parent)) then
+        return false
+    end
+    local v97 = - (vu30 or 3)
+    local v98 = p94.Position + Vector3.new(0, v97, 0)
+    local v99 = (v96.Position - v98).Magnitude
+    local v100
+    if v99 <= 100 then
+        v100 = math.clamp(v99 / 20, 0.4, 4)
+    else
+        v100 = math.clamp(v99 / 4, 2, 12)
+    end
+    local v101 = p94.Position + Vector3.new(0, 5, 0)
+    local v102 = vu3:Create(v96, TweenInfo.new(v100, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+        CFrame = CFrame.new(v98, v101)
+    })
+    v102:Play()
+    v102.Completed:Wait()
+    return true
+end
+local function vu120(pu104, p105)
+    if pu104 and (p105 and p105 ~= "") then
+        local vu106 = pu104:FindFirstAncestorWhichIsA("Model")
+        if vu106 and vu106.Name == p105 then
+            local vu107 = {
+                "Pickaxe"
+            }
+            local vu108 = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RF"):WaitForChild("ToolActivated")
+            local v109 = vu1.LocalPlayer.Character
+            if v109 then
+                local vu110 = v109:FindFirstChild("HumanoidRootPart")
+                if vu110 then
+                    local vu111 = v109
+                    local v112 = vu110.AssemblyAngularVelocity
+                    vu110.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    local vu113 = vu110:FindFirstChild("BodyVelocity")
+                    if not vu113 then
+                        vu113 = Instance.new("BodyVelocity")
+                        vu113.MaxForce = Vector3.new(4000, 4000, 4000)
+                        vu113.Velocity = Vector3.new(0, 0, 0)
+                        vu113.Parent = vu110
+                    end
+                    local vu114 = nil
+                    vu114 = vu4.Heartbeat:Connect(function()
+                        if vu27 and (vu106 and (vu106.Parent and (vu1.LocalPlayer.Character == vu111 and (vu110 and (vu110.Parent and not vu43))))) then
+                            local v115 = pu104
+                            if v115 and v115.Parent then
+                                local v116 = - (vu30 or 3)
+                                local v117 = v115.Position + Vector3.new(0, v116, 0)
+                                local v118 = v115.Position + Vector3.new(0, 5, 0)
+                                vu110.CFrame = CFrame.new(v117, v118)
+                                if vu113 then
+                                    vu113.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end
+                        elseif vu114 then
+                            vu114:Disconnect()
+                        end
+                    end)
+                    local v119 = vu114
+                    while vu27 and (vu1.LocalPlayer.Character == vu111 and (vu110 and (vu110.Parent and (not vu43 and (vu106 and vu106.Parent))))) do
+                        pcall(function()
+                            vu108:InvokeServer(unpack(vu107))
+                        end)
+                        task.wait(0.15)
+                    end
+                    if v119 then
+                        v119:Disconnect()
+                    end
+                    if vu113 and vu113.Parent then
+                        vu113:Destroy()
+                    end
+                    if vu110 and vu110.Parent then
+                        vu110.AssemblyAngularVelocity = v112
+                    end
+                end
+            else
+                return
+            end
+        else
+            return
+        end
+    else
+        return
+    end
+end
+local v121 = vu63()
+local v122, v123, v124 = ipairs(v121)
+local vu125 = vu18
+local v126 = vu7
+local vu127 = v121
+local v128 = {
+    "All"
+}
+while true do
+    local v129
+    v124, v129 = v122(v123, v124)
+    if v124 == nil then
+        break
+    end
+    table.insert(v128, v129)
+end
+local vu140 = v54.Farm:Dropdown({
+    Name = "Select Rock",
+    Multi = true,
+    Required = false,
+    Options = v128,
+    Default = vu29,
+    Callback = function(p130)
+        if typeof(p130) == "table" then
+            vu29 = {}
+            local v131, v132, v133 = pairs(p130)
+            local v134 = false
+            while true do
+                local v135
+                v133, v135 = v131(v132, v133)
+                if v133 == nil then
+                    break
+                end
+                if v135 then
+                    if v133 == "All" then
+                        v134 = true
+                    else
+                        table.insert(vu29, v133)
+                    end
+                end
+            end
+            if v134 then
+                vu29 = {}
+                local v136, v137, v138 = ipairs(vu127)
+                while true do
+                    local v139
+                    v138, v139 = v136(v137, v138)
+                    if v138 == nil then
+                        break
+                    end
+                    table.insert(vu29, v139)
+                end
+                if vu32 and vu32.UpdateSelection then
+                    vu32:UpdateSelection(vu29)
+                end
+            end
+        end
+        if vu29 and # vu29 ~= 0 then
+            vu15.CurrentConfig.SelectedRockType = vu29
+        else
+            vu29 = {}
+            vu15.CurrentConfig.SelectedRockType = {}
+        end
+        vu15.SaveConfig()
+    end
+}, "SelectRockDropdown")
+if vu29 and (vu140 and vu140.UpdateSelection) then
+    local v141 = vu140
+    vu140.UpdateSelection(v141, vu29)
+end
+v54.Farm:Button({
+    Name = "Refresh Rock List",
+    Callback = function()
+        vu127 = vu63()
+        local v142, v143, v144 = ipairs(vu127)
+        local v145 = {
+            "All"
+        }
+        while true do
+            local v146
+            v144, v146 = v142(v143, v144)
+            if v144 == nil then
+                break
+            end
+            table.insert(v145, v146)
+        end
+        if vu140 then
+            if vu140.ClearOptions then
+                vu140:ClearOptions()
+            end
+            if vu140.InsertOptions then
+                vu140:InsertOptions(v145)
+            end
+            if vu29 and vu140.UpdateSelection then
+                vu140:UpdateSelection(vu29)
+            end
+        end
+    end
+}, "RefreshRockListButton")
+local v153 = v54.Farm:Dropdown({
+    Name = "Select Distance",
+    Multi = false,
+    Required = false,
+    Options = {
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+    },
+    Default = tostring(vu30),
+    Callback = function(p147)
+        local v148
+        if typeof(p147) ~= "table" then
+            v148 = p147
+        else
+            local v149, v150
+            v149, v150, v148 = pairs(p147)
+            while true do
+                local v151
+                v148, v151 = v149(v150, v148)
+                if v148 == nil then
+                    v148 = p147
+                    break
+                end
+                if v151 then
+                    break
+                end
+            end
+        end
+        local v152 = tonumber(v148)
+        if v152 and (1 <= v152 and v152 <= 10) then
+            vu30 = v152
+            vu15.CurrentConfig.SelectedMineDistance = vu30
+            vu15.SaveConfig()
+        end
+    end
+}, "SelectMineDistanceDropdown")
+if vu30 and (v153 and v153.UpdateSelection) then
+    v153:UpdateSelection(tostring(vu30))
+end
+v54.Farm:Toggle({
+    Name = "Auto Mine",
+    Default = vu27,
+    Callback = function(p154)
+        vu27 = p154
+        vu15.CurrentConfig.AutoMineEnabled = p154
+        vu15.SaveConfig()
+        if p154 and (not vu29 or # vu29 == 0) then
+            vu22("Mine", "Please select a rock type!", 4)
+        end
+    end
+}, "AutoMineToggle")
+task.spawn(function()
+    while task.wait(0.3) do
+        if vu27 and (vu29 and (# vu29 > 0 and not vu43)) then
+            local v155 = vu1.LocalPlayer.Character
+            local v156
+            if v155 then
+                v156 = v155:FindFirstChild("HumanoidRootPart")
+            else
+                v156 = v155
+            end
+            local v157 = v155 and (v156 and vu93(vu29))
+            if v157 then
+                vu103(v157)
+                local v158 = v157:FindFirstAncestorWhichIsA("Model")
+                vu120(v157, v158 and v158.Name or nil)
+            end
+        end
+    end
+end)
+v54.Enemy:Header({
+    Name = "Enemy"
+})
+local function vu161(p159)
+    if p159 and p159 ~= "" then
+        local v160 = p159:gsub("%d+$", "")
+        if v160 == "" then
+            return nil
+        else
+            return v160:gsub("%s+$", "")
+        end
+    else
+        return nil
+    end
+end
+local function vu170()
+    vu38 = {}
+    local v162 = {}
+    local v163 = vu5:FindFirstChild("Assets")
+    if not v163 then
+        return vu38
+    end
+    local v164 = v163:FindFirstChild("Mobs")
+    if not v164 then
+        return vu38
+    end
+    local v165, v166, v167 = ipairs(v164:GetDescendants())
+    while true do
+        local v168
+        v167, v168 = v165(v166, v167)
+        if v167 == nil then
+            break
+        end
+        if v168:IsA("Model") and v168.Name ~= "Model" then
+            local v169 = vu161(v168.Name)
+            if v169 and (v169 ~= "" and not v162[v169]) then
+                v162[v169] = true
+                table.insert(vu38, v169)
+            end
+        end
+    end
+    table.sort(vu38)
+    return vu38
+end
+local function vu178()
+    vu40 = {}
+    local v171 = vu5:FindFirstChild("Assets")
+    if not v171 then
+        return vu40
+    end
+    local v172 = v171:FindFirstChild("Extras")
+    if not v172 then
+        return vu40
+    end
+    local v173 = v172:FindFirstChild("Potion")
+    if not v173 then
+        return vu40
+    end
+    local v174, v175, v176 = ipairs(v173:GetChildren())
+    while true do
+        local v177
+        v176, v177 = v174(v175, v176)
+        if v176 == nil then
+            break
+        end
+        if v177:IsA("Model") then
+            table.insert(vu40, v177.Name)
+        end
+    end
+    table.sort(vu40)
+    return vu40
+end
+local function vu186(p179)
+    local v180 = {}
+    if not p179 or p179 == "" then
+        return v180
+    end
+    local v181 = workspace:FindFirstChild("Living")
+    if not v181 then
+        return v180
+    end
+    local v182, v183, v184 = ipairs(v181:GetChildren())
+    while true do
+        local v185
+        v184, v185 = v182(v183, v184)
+        if v184 == nil then
+            break
+        end
+        if v185:IsA("Model") and vu161(v185.Name) == p179 then
+            table.insert(v180, v185)
+        end
+    end
+    return v180
+end
+local function vu189(p187)
+    if not (p187 and p187.Parent) then
+        return true
+    end
+    local v188 = p187:FindFirstChild("Status")
+    return v188 and v188:FindFirstChild("Dead") and true or false
+end
+local function vu202(p190)
+    local v191 = vu1.LocalPlayer.Character
+    if not v191 then
+        return nil
+    end
+    local v192 = v191:FindFirstChild("HumanoidRootPart")
+    if not v192 then
+        return nil
+    end
+    local v193 = vu186(p190)
+    local v194 = math.huge
+    local v195, v196, v197 = ipairs(v193)
+    local v198 = nil
+    while true do
+        local v199
+        v197, v199 = v195(v196, v197)
+        if v197 == nil then
+            break
+        end
+        if not vu189(v199) and (v199 and v199.Parent) then
+            local v200 = v199:FindFirstChild("HumanoidRootPart") or (v199.PrimaryPart or v199:FindFirstChildWhichIsA("BasePart", true))
+            if v200 then
+                local v201 = (v192.Position - v200.Position).Magnitude
+                if v201 < v194 then
+                    v198 = v199
+                    v194 = v201
+                end
+            end
+        end
+    end
+    return v198
+end
+local function vu205(p203)
+    if not (p203 and p203.Parent) then
+        return true
+    end
+    local v204 = p203:FindFirstChild("Status")
+    return v204 and v204:FindFirstChild("Dead") and true or false
+end
+local vu206 = nil
+local function vu217(p207, p208)
+    local v209 = vu1.LocalPlayer.Character
+    if not v209 then
+        return false
+    end
+    local v210 = v209:FindFirstChild("HumanoidRootPart")
+    if not (v210 and (p207 and p207.Parent)) then
+        return false
+    end
+    local v211 = p207:FindFirstChild("HumanoidRootPart") or (p207.PrimaryPart or p207:FindFirstChildWhichIsA("BasePart", true))
+    if not v211 then
+        return false
+    end
+    if vu206 then
+        pcall(function()
+            vu206:Cancel()
+        end)
+    end
+    local v212 = v211.Position + Vector3.new(0, p208, 0)
+    local v213 = (v210.Position - v212).Magnitude
+    local v214
+    if v213 <= 100 then
+        v214 = math.clamp(v213 / 20, 0.4, 4)
+    else
+        v214 = math.clamp(v213 / 8, 0.8, 7)
+    end
+    local v215 = vu3
+    local v216 = {
+        CFrame = CFrame.new(v212, v211.Position)
+    }
+    vu206 = v215:Create(v210, TweenInfo.new(v214, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), v216)
+    vu206:Play()
+    return true
+end
+local function vu232(pu218, p219)
+    if pu218 and (p219 and p219 ~= "") then
+        if pu218 and pu218.Parent then
+            local vu220 = {
+                "Weapon"
+            }
+            local vu221 = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RF"):WaitForChild("ToolActivated")
+            local v222 = vu1.LocalPlayer.Character
+            if v222 then
+                local vu223 = v222:FindFirstChild("HumanoidRootPart")
+                if vu223 then
+                    local vu224 = v222
+                    local v225 = vu223.AssemblyAngularVelocity
+                    vu223.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    local vu226 = vu223:FindFirstChild("BodyVelocity")
+                    if not vu226 then
+                        vu226 = Instance.new("BodyVelocity")
+                        vu226.MaxForce = Vector3.new(4000, 4000, 4000)
+                        vu226.Velocity = Vector3.new(0, 0, 0)
+                        vu226.Parent = vu223
+                    end
+                    local vu227 = false
+                    if vu206 then
+                        task.spawn(function()
+                            pcall(function()
+                                vu206.Completed:Wait()
+                            end)
+                            vu227 = true
+                        end)
+                    else
+                        vu227 = true
+                    end
+                    local vu228 = nil
+                    vu228 = vu4.Heartbeat:Connect(function()
+                        if vu227 then
+                            if vu36 and (pu218 and (pu218.Parent and (not vu205(pu218) and (vu1.LocalPlayer.Character == vu224 and (vu223 and (vu223.Parent and not vu43)))))) then
+                                local v229 = pu218:FindFirstChild("HumanoidRootPart") or pu218.PrimaryPart or pu218:FindFirstChildWhichIsA("BasePart", true)
+                                if v229 and (vu223 and vu223.Parent) then
+                                    local v230 = v229.Position + Vector3.new(0, vu35, 0)
+                                    vu223.CFrame = CFrame.new(v230, v229.Position)
+                                    if vu226 then
+                                        vu226.Velocity = Vector3.new(0, 0, 0)
+                                    end
+                                end
+                            elseif vu228 then
+                                vu228:Disconnect()
+                            end
+                        else
+                            return
+                        end
+                    end)
+                    local v231 = vu228
+                    while vu36 and (vu1.LocalPlayer.Character == vu224 and (vu223 and (vu223.Parent and (not vu43 and (not vu205(pu218) and (pu218 and pu218.Parent)))))) do
+                        pcall(function()
+                            vu221:InvokeServer(unpack(vu220))
+                        end)
+                        task.wait(0.15)
+                    end
+                    if vu206 then
+                        pcall(function()
+                            vu206:Cancel()
+                        end)
+                        vu206 = nil
+                    end
+                    if v231 then
+                        v231:Disconnect()
+                    end
+                    if vu226 and vu226.Parent then
+                        vu226:Destroy()
+                    end
+                    if vu223 and vu223.Parent then
+                        vu223.AssemblyAngularVelocity = v225
+                    end
+                end
+            else
+                return
+            end
+        else
+            return
+        end
+    else
+        return
+    end
+end
+local vu233 = vu170()
+local v234, v235, v236 = ipairs(vu233)
+local vu237 = vu161
+local vu238 = vu205
+local v239 = {
+    "All"
+}
+while true do
+    local v240
+    v236, v240 = v234(v235, v236)
+    if v236 == nil then
+        break
+    end
+    table.insert(v239, v240)
+end
+local vu251 = v54.Enemy:Dropdown({
+    Name = "Select Enemy",
+    Multi = true,
+    Required = false,
+    Options = v239,
+    Default = vu34,
+    Callback = function(p241)
+        if typeof(p241) == "table" then
+            vu34 = {}
+            local v242, v243, v244 = pairs(p241)
+            local v245 = false
+            while true do
+                local v246
+                v244, v246 = v242(v243, v244)
+                if v244 == nil then
+                    break
+                end
+                if v246 then
+                    if v244 == "All" then
+                        v245 = true
+                    else
+                        table.insert(vu34, v244)
+                    end
+                end
+            end
+            if v245 then
+                vu34 = {}
+                local v247, v248, v249 = ipairs(vu233)
+                while true do
+                    local v250
+                    v249, v250 = v247(v248, v249)
+                    if v249 == nil then
+                        break
+                    end
+                    table.insert(vu34, v250)
+                end
+                if vu39 and vu39.UpdateSelection then
+                    vu39:UpdateSelection(vu34)
+                end
+            end
+        end
+        if vu34 and # vu34 ~= 0 then
+            vu15.CurrentConfig.SelectedEnemyType = vu34
+        else
+            vu34 = {}
+            vu15.CurrentConfig.SelectedEnemyType = {}
+        end
+        vu15.SaveConfig()
+    end
+}, "SelectEnemyDropdown")
+if vu34 and (vu251 and vu251.UpdateSelection) then
+    local v252, v253, v254 = ipairs(vu233)
+    while true do
+        local v255
+        v254, v255 = v252(v253, v254)
+        if v254 == nil then
+            break
+        end
+        if v255 == vu34 then
+            vu251:UpdateSelection(vu34)
+            break
+        end
+    end
+end
+v54.Enemy:Button({
+    Name = "Refresh Enemy List",
+    Callback = function()
+        vu233 = vu170()
+        local v256, v257, v258 = ipairs(vu233)
+        local v259 = {
+            "All"
+        }
+        while true do
+            local v260
+            v258, v260 = v256(v257, v258)
+            if v258 == nil then
+                break
+            end
+            table.insert(v259, v260)
+        end
+        if vu251 then
+            if vu251.ClearOptions then
+                vu251:ClearOptions()
+            end
+            if vu251.InsertOptions then
+                vu251:InsertOptions(v259)
+            end
+            if vu34 and vu251.UpdateSelection then
+                vu251:UpdateSelection(vu34)
+            end
+        end
+    end
+}, "RefreshEnemyListButton")
+local v267 = v54.Enemy:Dropdown({
+    Name = "Select Distance",
+    Multi = false,
+    Required = false,
+    Options = {
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+    },
+    Default = tostring(vu35),
+    Callback = function(p261)
+        local v262
+        if typeof(p261) ~= "table" then
+            v262 = p261
+        else
+            local v263, v264
+            v263, v264, v262 = pairs(p261)
+            while true do
+                local v265
+                v262, v265 = v263(v264, v262)
+                if v262 == nil then
+                    v262 = p261
+                    break
+                end
+                if v265 then
+                    break
+                end
+            end
+        end
+        local v266 = tonumber(v262)
+        if v266 and (1 <= v266 and v266 <= 10) then
+            vu35 = v266
+            vu15.CurrentConfig.SelectedDistance = vu35
+            vu15.SaveConfig()
+        end
+    end
+}, "SelectDistanceDropdown")
+if vu35 and (v267 and v267.UpdateSelection) then
+    v267:UpdateSelection(tostring(vu35))
+end
+v54.Enemy:Toggle({
+    Name = "Auto Farm Enemy",
+    Default = vu36,
+    Callback = function(p268)
+        vu36 = p268
+        vu15.CurrentConfig.AutoFarmEnemyEnabled = p268
+        vu15.SaveConfig()
+        if p268 and not vu34 then
+            vu22("Enemy", "Please select an enemy type!", 4)
+        end
+    end
+}, "AutoFarmEnemyToggle")
+task.spawn(function()
+    while not vu36 or (not vu34 or (# vu34 <= 0 or vu43)) do
+        task.wait(0.3)
+    end
+    local v269 = nil
+    local v270 = math.huge
+    local v271 = vu1.LocalPlayer.Character
+    if v271 then
+        v271 = vu1.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    end
+    local v272 = vu34
+    local v273, v274, v275 = ipairs(vu34)
+    local v276 = false
+    while true do
+        local v277
+        v275, v277 = v273(v274, v275)
+        if v275 == nil then
+            break
+        end
+        if v277 == "All" then
+            v276 = true
+        end
+    end
+    if v276 then
+        v272 = vu233
+    end
+    local v278, v279, v280 = ipairs(v272)
+    local v281 = vu202(v284)
+    if v281 and v271 then
+        local v282 = v281:FindFirstChild("HumanoidRootPart") or (v281.PrimaryPart or v281:FindFirstChildWhichIsA("BasePart", true))
+        if v282 then
+            local v283 = (v271.Position - v282.Position).Magnitude
+            if v283 < v270 then
+                v269 = v281
+                v270 = v283
+            end
+        end
+    end
+    local v284
+    v280, v284 = v278(v279, v280)
+    if v280 ~= nil then
+    else
+    end
+    if v269 then
+        if vu238(v269) then
+            task.wait(0.1)
+        else
+            vu217(v269, vu35)
+            vu232(v269, vu237(v269.Name))
+        end
+    else
+        task.wait(0.1)
+    end
+	
+end)
+v54.ShopPotion:Header({
+    Name = "Shop Potion"
+})
+local vu285 = nil
+local function vu295()
+    local v286 = vu1.LocalPlayer.Character
+    if not v286 then
+        return false
+    end
+    local v287 = v286:FindFirstChild("HumanoidRootPart")
+    if not v287 then
+        return false
+    end
+    local v288 = game.PlaceId
+    local v289
+    if v288 == 76558904092080 then
+        v289 = Vector3.new(- 153.73959721191406, 27.377073287963867, 116.34660339355469)
+    elseif v288 == 129009554587176 then
+        v289 = Vector3.new(- 96.84030151367188, 20.6254825592041, - 43.52947235107422)
+    else
+        v289 = Vector3.new(- 153.73959721191406, 27.377073287963867, 116.34660339355469)
+    end
+    local v290 = (v287.Position - v289).Magnitude
+    local v291 = math.clamp(v290 / 8, 1.2, 12)
+    local v292 = CFrame.new(v289, v289 + v287.CFrame.LookVector * Vector3.new(1, 0, 1))
+    if vu285 then
+        pcall(function()
+            vu285:Cancel()
+        end)
+        vu285 = nil
+    end
+    local vu293 = vu3:Create(v287, TweenInfo.new(v291, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+        CFrame = v292
+    })
+    vu285 = vu293
+    vu293:Play()
+    local vu294 = false
+    vu293.Completed:Connect(function()
+        vu294 = true
+    end)
+    while not vu294 do
+        if not vu42 then
+            pcall(function()
+                vu293:Cancel()
+            end)
+            vu285 = nil
+            return false
+        end
+        task.wait(0.05)
+    end
+    vu285 = nil
+    return true
+end
+local v296 = vu178()
+local vu302 = v54.ShopPotion:Dropdown({
+    Name = "Select Potion",
+    Multi = false,
+    Required = false,
+    Options = v296,
+    Default = vu41,
+    Callback = function(p297)
+        local v298
+        if typeof(p297) ~= "table" then
+            v298 = p297
+        else
+            local v299, v300
+            v299, v300, v298 = pairs(p297)
+            while true do
+                local v301
+                v298, v301 = v299(v300, v298)
+                if v298 == nil then
+                    v298 = p297
+                    break
+                end
+                if v301 then
+                    break
+                end
+            end
+        end
+        if v298 and v298 ~= "" then
+            vu41 = v298
+            vu15.CurrentConfig.SelectedPotionName = v298
+        else
+            vu41 = nil
+            vu15.CurrentConfig.SelectedPotionName = nil
+        end
+        vu15.SaveConfig()
+    end
+}, "SelectPotionDropdown")
+if vu41 and (vu302 and vu302.UpdateSelection) then
+    vu302:UpdateSelection(vu41)
+end
+v54.ShopPotion:Button({
+    Name = "Refresh Potion List",
+    Callback = function()
+        local v303 = vu178()
+        if vu302 then
+            if vu302.ClearOptions then
+                vu302:ClearOptions()
+            end
+            if vu302.InsertOptions then
+                vu302:InsertOptions(v303)
+            end
+            if vu41 and vu302.UpdateSelection then
+                vu302:UpdateSelection(vu41)
+            end
+        end
+        vu22("Shop Potion", "\239\191\189\195\163 c\225\186\173p nh\225\186\173t danh s\195\161ch potion.", 3)
+    end
+}, "RefreshPotionListButton")
+v54.ShopPotion:Toggle({
+    Name = "Auto Buy And Use",
+    Default = vu42,
+    Callback = function(p304)
+        vu42 = p304
+        vu15.CurrentConfig.AutoBuyAndUsePotionEnabled = p304
+        vu15.SaveConfig()
+        if p304 and not vu41 then
+            vu22("Shop Potion", "Ch\198\176a ch\225\187\141n potion!", 3)
+        end
+    end
+}, "AutoBuyAndUsePotionToggle")
+local function vu306(p305)
+    if p305 and p305 ~= "" then
+        return ({
+            MovementSpeedPotion1 = "SpeedPotion1",
+            LuckyPotion1 = "LuckPotion1"
+        })[p305] or p305
+    else
+        return nil
+    end
+end
+local function vu312(p307)
+    local v308 = vu1.LocalPlayer
+    if v308 then
+        local v309 = v308:FindFirstChild("PlayerGui")
+        if v309 then
+            local v310 = v309:FindFirstChild("Hotbar")
+            if v310 then
+                local v311 = v310:FindFirstChild("Perks")
+                if v311 then
+                    return v311:FindFirstChild((vu306(p307))) and true or (v311:FindFirstChild(p307) and true or false)
+                else
+                    return false
+                end
+            else
+                return false
+            end
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+task.spawn(function()
+    local vu313 = vu5:WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RF"):WaitForChild("ToolActivated")
+    while true do
+        while true do
+            task.wait(0.5)
+            if vu42 and vu41 then
+                break
+            end
+            vu43 = false
+        end
+        vu43 = true
+        local v314 = vu1.LocalPlayer
+        local v315
+        if v314 then
+            v315 = v314:FindFirstChild("Backpack")
+        else
+            v315 = v314
+        end
+        local v316 = false
+        if v314 then
+            v314 = v314:FindFirstChild("PlayerGui")
+        end
+        if v314 then
+            local v317 = v314:FindFirstChild("Main")
+            if v317 then
+                v317 = v317:FindFirstChild("Screen")
+            end
+            if v317 then
+                v317 = v317:FindFirstChild("Hud")
+            end
+            if v317 then
+                v317 = v317:FindFirstChild("Gold")
+            end
+            if v317 and v317:IsA("TextLabel") then
+                local v318 = (v317.Text or ""):gsub("[^%d%.]", "")
+                v316 = (tonumber(v318) or 0) >= 600 and true or v316
+            end
+        end
+        if vu42 and v316 then
+            if v315 then
+                v315 = v315:FindFirstChild(vu41)
+            end
+            if v315 then
+                if vu42 then
+                    pcall(function()
+                        local v319 = {
+                            vu41
+                        }
+                        vu313:InvokeServer(unpack(v319))
+                    end)
+                end
+            elseif not vu312(vu41) and (vu42 and (vu295() and vu42)) then
+                pcall(function()
+                    local v320 = {
+                        vu41,
+                        3
+                    }
+                    vu6:InvokeServer(unpack(v320))
+                end)
+            end
+        end
+        vu43 = false
+    end
+end)
+v54.SellItem:Header({
+    Name = "Sell Item"
+})
+local function vu327()
+    vu44 = {}
+    local v321 = vu5:FindFirstChild("Assets")
+    if not v321 then
+        return vu44
+    end
+    local v322 = v321:FindFirstChild("Ores")
+    if not v322 then
+        return vu44
+    end
+    local v323, v324, v325 = ipairs(v322:GetChildren())
+    while true do
+        local v326
+        v325, v326 = v323(v324, v325)
+        if v325 == nil then
+            break
+        end
+        if v326:IsA("Model") then
+            table.insert(vu44, v326.Name)
+        end
+    end
+    table.sort(vu44)
+    return vu44
+end
+local function vu341(p328)
+    local v329 = vu1.LocalPlayer
+    if not v329 then
+        return 0
+    end
+    local v330 = v329:FindFirstChild("PlayerGui")
+    if not v330 then
+        return 0
+    end
+    local v331 = v330:FindFirstChild("Menu")
+    if not v331 then
+        return 0
+    end
+    local v332 = v331:FindFirstChild("Frame")
+    if not v332 then
+        return 0
+    end
+    local v333 = v332:FindFirstChild("Frame")
+    if not v333 then
+        return 0
+    end
+    local v334 = v333:FindFirstChild("Menus")
+    if not v334 then
+        return 0
+    end
+    local v335 = v334:FindFirstChild("Stash")
+    if not v335 then
+        return 0
+    end
+    local v336 = v335:FindFirstChild("Background")
+    if not v336 then
+        return 0
+    end
+    local v337 = v336:FindFirstChild(p328)
+    if not v337 then
+        return 0
+    end
+    local v338 = v337:FindFirstChild("Main")
+    if not v338 then
+        return 0
+    end
+    local v339 = v338:FindFirstChild("Quantity")
+    if not (v339 and v339:IsA("TextLabel")) then
+        return 0
+    end
+    local v340 = (v339.Text or ""):gsub("[^%d]", "")
+    return tonumber(v340) or 0
+end
+local function vu348()
+    local v342, v343, v344 = ipairs(vu44)
+    local v345 = {}
+    while true do
+        local v346
+        v344, v346 = v342(v343, v344)
+        if v344 == nil then
+            break
+        end
+        local v347 = vu341(v346)
+        if v347 > 0 then
+            table.insert(v345, v346 .. " (" .. tostring(v347) .. ")")
+        else
+            table.insert(v345, v346)
+        end
+    end
+    return v345
+end
+local vu349 = vu327()
+local function v356()
+    local v350, v351, v352 = ipairs(vu46 or {})
+    local v353 = {}
+    while true do
+        local v354
+        v352, v354 = v350(v351, v352)
+        if v352 == nil then
+            break
+        end
+        local v355 = vu341(v354)
+        if v355 > 0 then
+            table.insert(v353, v354 .. " (" .. tostring(v355) .. ")")
+        else
+            table.insert(v353, v354)
+        end
+    end
+    return v353
+end
+local vu363 = v54.SellItem:Dropdown({
+    Name = "Select Item",
+    Multi = true,
+    Required = false,
+    Options = vu348(),
+    Default = v356(),
+    Callback = function(p357)
+        if typeof(p357) ~= "table" then
+            vu46 = {}
+        else
+            vu46 = {}
+            local v358, v359, v360 = pairs(p357)
+            while true do
+                local v361
+                v360, v361 = v358(v359, v360)
+                if v360 == nil then
+                    break
+                end
+                if v361 then
+                    local v362 = v360:gsub("%s*%(%d+%)", "")
+                    table.insert(vu46, v362)
+                end
+            end
+        end
+        vu15.CurrentConfig.SelectedItemName = vu46
+        vu15.SaveConfig()
+    end
+}, "SelectItemDropdown")
+if vu46 and (# vu46 > 0 and (vu363 and vu363.UpdateSelection)) then
+    local v364 = v356()
+    if # v364 > 0 then
+        vu363:UpdateSelection(v364)
+    end
+end
+v54.SellItem:Button({
+    Name = "Refresh Item List",
+    Callback = function()
+        vu349 = vu327()
+        if vu363 then
+            local v365 = vu348()
+            if vu363.ClearOptions then
+                vu363:ClearOptions()
+            end
+            if vu363.InsertOptions then
+                vu363:InsertOptions(v365)
+            end
+            if vu46 and # vu46 > 0 then
+                local v366, v367, v368 = ipairs(vu46)
+                local v369 = {}
+                while true do
+                    local v370
+                    v368, v370 = v366(v367, v368)
+                    if v368 == nil then
+                        break
+                    end
+                    local v371, v372, v373 = ipairs(v365)
+                    while true do
+                        local v374
+                        v373, v374 = v371(v372, v373)
+                        if v373 == nil then
+                            break
+                        end
+                        if v374:gsub("%s*%(%d+%)", "") == v370 then
+                            table.insert(v369, v374)
+                            break
+                        end
+                    end
+                end
+                if # v369 > 0 and vu363.UpdateSelection then
+                    vu363:UpdateSelection(v369)
+                end
+            end
+        end
+    end
+}, "RefreshItemListButton")
+v54.SellItem:Toggle({
+    Name = "Auto Sell Item",
+    Default = vu47,
+    Callback = function(p375)
+        vu47 = p375
+        vu15.CurrentConfig.AutoSellItemEnabled = p375
+        vu15.SaveConfig()
+        if p375 then
+            if vu46 and # vu46 ~= 0 then
+                vu48 = nil
+                vu49 = false
+            else
+                vu22("Sell Item", "Please select an item!", 3)
+            end
+        else
+            vu48 = nil
+            vu49 = false
+        end
+    end
+}, "AutoSellItemToggle")
+task.spawn(function()
+    local vu376 = vu5:WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("DialogueService"):WaitForChild("RF"):WaitForChild("RunCommand")
+    local vu377 = vu5:WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ProximityService"):WaitForChild("RF"):WaitForChild("ForceDialogue")
+    repeat
+        repeat
+            task.wait(1)
+        until vu47 and (vu46 and # vu46 > 0)
+        if not vu48 then
+            local v378 = workspace:FindFirstChild("Proximity")
+            local v379 = v378 and v378:FindFirstChild("Greedy Cey")
+            if v379 then
+                vu48 = v379
+            end
+        end
+        if vu48 and not vu49 then
+            pcall(function()
+                local v380 = {
+                    vu48,
+                    "SellConfirmMisc"
+                }
+                vu377:InvokeServer(unpack(v380))
+            end)
+            vu49 = true
+            task.wait(0.5)
+        end
+    until vu48 and vu49
+    local v381, v382, v383 = ipairs(vu46)
+    local vu384 = {}
+    local v385 = false
+    local v386 = vu341(v387)
+    if v386 > 0 then
+        vu384[v387] = v386
+        v385 = true
+    end
+    local v387
+    v383, v387 = v381(v382, v383)
+    if v383 ~= nil then
+    end
+    if v385 then
+        pcall(function()
+            local v388 = {
+                "SellConfirm",
+                {
+                    Basket = vu384
+                }
+            }
+            vu376:InvokeServer(unpack(v388))
+        end)
+    end
+	
+end)
+task.spawn(function()
+    repeat
+        repeat
+            task.wait(3)
+        until vu363
+        local v389 = vu348()
+        if vu363.ClearOptions then
+            vu363:ClearOptions()
+        end
+        if vu363.InsertOptions then
+            vu363:InsertOptions(v389)
+        end
+    until vu46 and # vu46 > 0
+    local v390, v391, v392 = ipairs(vu46)
+    local v393 = {}
+    local v394
+    v392, v394 = v390(v391, v392)
+    local v395
+    if v392 ~= nil then
+        local v396, v397
+        v396, v397, v395 = ipairs(v389)
+    end
+    if # v393 > 0 and vu363.UpdateSelection then
+        vu363:UpdateSelection(v393)
+    end
+    while true do
+        local v398
+        v395, v398 = v396(v397, v395)
+        if v395 == nil then
+            break
+        end
+        if v398:gsub("%s*%(%d+%)", "") == v394 then
+            table.insert(v393, v398)
+        end
+    end
+    if true then
+    else
+    end
+end)
+v54.TeleportNPC:Header({
+    Name = "Tween To NPC"
+})
+local function vu404()
+    vu50 = {}
+    local v399 = workspace:FindFirstChild("Proximity")
+    if not v399 then
+        return vu50
+    end
+    local v400, v401, v402 = ipairs(v399:GetChildren())
+    while true do
+        local v403
+        v402, v403 = v400(v401, v402)
+        if v402 == nil then
+            break
+        end
+        if v403:IsA("Model") and not v403.Name:lower():find("potion") then
+            table.insert(vu50, v403.Name)
+        end
+    end
+    table.sort(vu50)
+    return vu50
+end
+local function vu410()
+    vu52 = {}
+    local v405 = workspace:FindFirstChild("Shops")
+    if not v405 then
+        return vu52
+    end
+    local v406, v407, v408 = ipairs(v405:GetChildren())
+    while true do
+        local v409
+        v408, v409 = v406(v407, v408)
+        if v408 == nil then
+            break
+        end
+        if v409:IsA("Model") then
+            table.insert(vu52, v409.Name)
+        end
+    end
+    table.sort(vu52)
+    return vu52
+end
+local function vu424(p411, p412)
+    local v413 = vu1.LocalPlayer.Character
+    if not v413 then
+        vu22("Teleport", "Character not found!", 3)
+        return false
+    end
+    local v414 = v413:FindFirstChild("HumanoidRootPart")
+    if not v414 then
+        vu22("Teleport", "HumanoidRootPart not found!", 3)
+        return false
+    end
+    local v415 = p412 and workspace:FindFirstChild("Proximity") or workspace:FindFirstChild("Shops")
+    if not v415 then
+        vu22("Teleport", "Kh\195\180ng t\195\172m th\225\186\165y folder!", 3)
+        return false
+    end
+    local v416 = v415:FindFirstChild(p411)
+    if not v416 then
+        vu22("Teleport", "Kh\195\180ng t\195\172m th\225\186\165y " .. p411 .. "!", 3)
+        return false
+    end
+    local v417 = v416:FindFirstChild("HumanoidRootPart") or (v416.PrimaryPart or v416:FindFirstChildWhichIsA("BasePart", true))
+    if not v417 then
+        vu22("Teleport", "Kh\195\180ng t\195\172m th\225\186\165y ph\225\186\167n t\225\187\173 c\225\187\167a " .. p411 .. "!", 3)
+        return false
+    end
+    local v418 = v417.Position + Vector3.new(0, 3, 0)
+    local v419 = (v414.Position - v418).Magnitude
+    local v420 = math.clamp(v419 / 10, 1.5, 8)
+    local v421 = vu3
+    local v422 = {
+        CFrame = CFrame.new(v418, v417.Position)
+    }
+    local v423 = v421:Create(v414, TweenInfo.new(v420, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), v422)
+    v423:Play()
+    v423.Completed:Wait()
+    vu22("Teleport", "Tweened to " .. p411, 3)
+    return true
+end
+local vu425 = vu404()
+local vu431 = v54.TeleportNPC:Dropdown({
+    Name = "Select NPC",
+    Multi = false,
+    Required = false,
+    Options = vu425,
+    Default = vu51,
+    Callback = function(p426)
+        local v427
+        if typeof(p426) ~= "table" then
+            v427 = p426
+        else
+            local v428, v429
+            v428, v429, v427 = pairs(p426)
+            while true do
+                local v430
+                v427, v430 = v428(v429, v427)
+                if v427 == nil then
+                    v427 = p426
+                    break
+                end
+                if v430 then
+                    break
+                end
+            end
+        end
+        if v427 and v427 ~= "" then
+            vu51 = v427
+        else
+            vu51 = nil
+        end
+    end
+}, "SelectNPCDropdown")
+v54.TeleportNPC:Button({
+    Name = "Refresh NPC List",
+    Callback = function()
+        local v432 = vu404()
+        vu425 = v432
+        if vu431 then
+            if vu431.ClearOptions then
+                vu431:ClearOptions()
+            end
+            if vu431.InsertOptions then
+                vu431:InsertOptions(v432)
+            end
+            if vu51 and vu431.UpdateSelection then
+                vu431:UpdateSelection(vu51)
+            end
+        end
+        vu22("Teleport", "Updated NPC list.", 3)
+    end
+}, "RefreshNPCListButton")
+v54.TeleportNPC:Button({
+    Name = "Tween To NPC",
+    Callback = function()
+        if vu51 then
+            vu424(vu51, true)
+        else
+            vu22("Teleport", "Please select an NPC!", 3)
+        end
+    end
+}, "TweenToNPCButton")
+v54.TeleportShop:Header({
+    Name = "Tween To Shop"
+})
+local vu433 = vu410()
+local vu439 = v54.TeleportShop:Dropdown({
+    Name = "Select Shop",
+    Multi = false,
+    Required = false,
+    Options = vu433,
+    Default = vu53,
+    Callback = function(p434)
+        local v435
+        if typeof(p434) ~= "table" then
+            v435 = p434
+        else
+            local v436, v437
+            v436, v437, v435 = pairs(p434)
+            while true do
+                local v438
+                v435, v438 = v436(v437, v435)
+                if v435 == nil then
+                    v435 = p434
+                    break
+                end
+                if v438 then
+                    break
+                end
+            end
+        end
+        if v435 and v435 ~= "" then
+            vu53 = v435
+        else
+            vu53 = nil
+        end
+    end
+}, "SelectShopDropdown")
+v54.TeleportShop:Button({
+    Name = "Refresh Shop List",
+    Callback = function()
+        local v440 = vu410()
+        vu433 = v440
+        if vu439 then
+            if vu439.ClearOptions then
+                vu439:ClearOptions()
+            end
+            if vu439.InsertOptions then
+                vu439:InsertOptions(v440)
+            end
+            if vu53 and vu439.UpdateSelection then
+                vu439:UpdateSelection(vu53)
+            end
+        end
+        vu22("Teleport", "Updated shop list.", 3)
+    end
+}, "RefreshShopListButton")
+v54.TeleportShop:Button({
+    Name = "Tween To Shop",
+    Callback = function()
+        if vu53 then
+            vu424(vu53, false)
+        else
+            vu22("Teleport", "Please select a shop!", 3)
+        end
+    end
+}, "TweenToShopButton")
+v54.SettingsInfo:Header({
+    Name = "Script Information"
+})
+v54.SettingsInfo:Label({
+    Text = "The Forge Script\nPlayer: " .. vu16
+})
+v54.SettingsInfo:Button({
+    Name = "Copy Player Name",
+    Callback = function()
+        if setclipboard then
+            setclipboard(vu16)
+            vu22("Notification", "Copied player name.", 3)
+        else
+            vu22("Notification", vu16, 3)
+        end
+    end
+}, "CopyPlayerNameButton")
+v54.SettingsInfo:SubLabel({
+    Text = "Shortcut: Left Alt (or mobile icon) to hide/show UI"
+})
+v54.SettingsMisc:Header({
+    Name = "Misc"
+})
+v54.SettingsMisc:Toggle({
+    Name = "Anti AFK",
+    Default = vu37,
+    Callback = function(p441)
+        vu37 = p441
+        vu15.CurrentConfig.AntiAFKEnabled = p441
+        vu15.SaveConfig()
+        vu22("Anti AFK", (p441 and "Enabled" or "Disabled") .. " Anti AFK", 3)
+    end
+}, "AntiAFKToggle")
+local _ = {
+    UIBlurToggle = vu125:GlobalSetting({
+        Name = "UI Blur",
+        Default = vu125:GetAcrylicBlurState(),
+        Callback = function(p442)
+            vu125:SetAcrylicBlurState(p442)
+            vu22(vu125.Settings.Title, (p442 and "Enabled" or "Disabled") .. " UI Blur", 4)
+        end
+    }),
+    NotificationToggle = vu125:GlobalSetting({
+        Name = "Notifications",
+        Default = vu125:GetNotificationsState(),
+        Callback = function(p443)
+            vu125:SetNotificationsState(p443)
+            vu22(vu125.Settings.Title, (p443 and "Enabled" or "Disabled") .. " Notifications", 4)
+        end
+    }),
+    UserInfoToggle = vu125:GlobalSetting({
+        Name = "Show User Info",
+        Default = vu125:GetUserInfoState(),
+        Callback = function(p444)
+            vu125:SetUserInfoState(p444)
+            vu22(vu125.Settings.Title, (p444 and "Showing" or "Redacted") .. " User Info", 4)
+        end
+    })
+}
+v26.Farm:Select()
+vu125.onUnloaded(function()
+    vu22("HT HUB | The Forge", "UI has been closed.", 3)
+end)
+v126:LoadAutoLoadConfig()
+task.spawn(function()
+    while task.wait(5) do
+        pcall(vu15.SaveConfig)
+    end
+end)
+task.spawn(function()
+    local vu445 = game:GetService("VirtualUser")
+    local _ = vu1.LocalPlayer
+    while true do
+        repeat
+            task.wait(120)
+        until vu37
+        pcall(function()
+            local v446 = workspace.CurrentCamera
+            if v446 then
+                vu445:Button2Down(Vector2.new(0, 0), v446.CFrame)
+                task.wait(1)
+                vu445:Button2Up(Vector2.new(0, 0), v446.CFrame)
+            end
+            print("Anti-AFK running at:", os.time())
+        end)
+    end
+end)
+task.spawn(function()
+    local v450, v451 = pcall(function()
+        if not getgenv().LoadedTheForgeMobileUI == true then
+            getgenv().LoadedTheForgeMobileUI = true
+            local v447 = Instance.new("ScreenGui")
+            local vu448 = Instance.new("ImageButton")
+            local v449 = Instance.new("UICorner")
+            if syn and syn.protect_gui then
+                syn.protect_gui(v447)
+                v447.Parent = game:GetService("CoreGui")
+            elseif gethui then
+                v447.Parent = gethui()
+            else
+                v447.Parent = game:GetService("CoreGui")
+            end
+            v447.Name = "TheForge_MobileUIButton"
+            v447.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            v447.ResetOnSpawn = false
+            vu448.Parent = v447
+            vu448.BackgroundColor3 = Color3.fromRGB(105, 105, 105)
+            vu448.BackgroundTransparency = 0.8
+            vu448.Position = UDim2.new(0.9, 0, 0.1, 0)
+            vu448.Size = UDim2.new(0, 50, 0, 50)
+            vu448.Image = "rbxassetid://90319448802378"
+            vu448.Draggable = true
+            vu448.Transparency = 0.2
+            v449.CornerRadius = UDim.new(0, 200)
+            v449.Parent = vu448
+            vu448.MouseEnter:Connect(function()
+                game:GetService("TweenService"):Create(vu448, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 0.5,
+                    Transparency = 0
+                }):Play()
+            end)
+            vu448.MouseLeave:Connect(function()
+                game:GetService("TweenService"):Create(vu448, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 0.8,
+                    Transparency = 0.2
+                }):Play()
+            end)
+            vu448.MouseButton1Click:Connect(function()
+                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftAlt, false, game)
+                task.wait(0.1)
+                game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.LeftAlt, false, game)
+            end)
+        end
+    end)
+    if not v450 then
+        warn("Error creating mobile UI button (HT HUB | The Forge): " .. tostring(v451))
+    end
+end)
+vu22("HT HUB | The Forge", "Script loaded successfully!\nPress Left Alt or mobile icon to hide/show UI", 5)
+print("HTHubTheForge.lua loaded successfully!")

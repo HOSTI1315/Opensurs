@@ -1,0 +1,201 @@
+local vu1 = game:GetService("Players")
+local v2 = game:GetService("RunService")
+local vu3 = game:GetService("TweenService")
+local v4 = game:GetService("ReplicatedStorage")
+local vu5 = game:GetService("PhysicsService")
+local vu6 = game:GetService("Workspace")
+game:GetService("StarterGui")
+local vu7 = vu1.LocalPlayer
+local vu8 = vu7:WaitForChild("PlayerGui")
+local vu9 = vu7.Character or vu7.CharacterAdded:Wait()
+local v10 = vu9
+local vu11 = vu9.WaitForChild(v10, "HumanoidRootPart")
+require(v4:WaitForChild("Classes"):WaitForChild("PlotClient"))
+require(v4:WaitForChild("Packages"):WaitForChild("Observers"))
+local vu12 = require(v4:WaitForChild("Packages"):WaitForChild("Net"))
+local vu13 = 50
+local vu14 = "Web Slinger"
+local vu15 = "NoCollideGroup"
+pcall(function()
+    vu5:CreateCollisionGroup(vu15)
+    vu5:CollisionGroupSetCollidable(vu15, "Default", false)
+end)
+local function vu21(p16, p17)
+    local vu18 = Instance.new("ScreenGui", vu8)
+    vu18.Name = "AjjanNotification"
+    vu18.ResetOnSpawn = false
+    local v19 = Instance.new("Frame", vu18)
+    v19.Size = UDim2.new(0, 200, 0, 50)
+    v19.Position = UDim2.new(0.5, - 100, 0.2, 0)
+    v19.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+    v19.BackgroundTransparency = 0.2
+    Instance.new("UICorner", v19).CornerRadius = UDim.new(0, 8)
+    local v20 = Instance.new("TextLabel", v19)
+    v20.Size = UDim2.new(1, 0, 1, 0)
+    v20.BackgroundTransparency = 1
+    v20.Text = p16
+    v20.Font = Enum.Font.Arcade
+    v20.TextScaled = true
+    v20.TextColor3 = Color3.fromRGB(255, 255, 255)
+    v20.TextTransparency = 1
+    vu3:Create(v20, TweenInfo.new(0.5), {
+        TextTransparency = 0
+    }):Play()
+    task.wait(p17)
+    vu3:Create(v20, TweenInfo.new(0.5), {
+        TextTransparency = 1
+    }):Play()
+    task.delay(0.5, function()
+        vu18:Destroy()
+    end)
+end
+local function vu25(pu22)
+    if not (function()
+        return vu7.Backpack:FindFirstChild(pu22) or vu9:FindFirstChild(pu22)
+    end)() then
+        pcall(function()
+            vu12:RemoteFunction("CoinsShopService/RequestBuy"):InvokeServer(pu22)
+        end)
+        task.wait(0.1)
+    end
+    local v23 = vu7.Backpack:FindFirstChild(pu22)
+    local v24 = v23 and vu9:FindFirstChildOfClass("Humanoid")
+    if v24 then
+        v24:EquipTool(v23)
+    end
+end
+vu25("Speed Coil")
+vu25(vu14)
+local function vu35()
+    local v26 = vu11.Position
+    local v27 = vu1
+    local v28, v29, v30 = ipairs(v27:GetPlayers())
+    local v31 = nil
+    local v32 = nil
+    while true do
+        local v33
+        v30, v33 = v28(v29, v30)
+        if v30 == nil then
+            break
+        end
+        if v33 ~= vu7 and v33.Character and v33.Character:FindFirstChild("HumanoidRootPart") then
+            local v34 = (v33.Character.HumanoidRootPart.Position - v26).Magnitude
+            if v34 <= vu13 and (not v31 or v34 < v32) then
+                v32 = v34
+                v31 = v33
+            end
+        end
+    end
+    return v31
+end
+local function v38()
+    local v36 = vu35()
+    if not (v36 and v36.Character) then
+        return vu21("No nearby player!", 2)
+    end
+    local v37 = v36.Character:FindFirstChild("Head")
+    if not v37 then
+        return vu21("Target missing head!", 2)
+    end
+    vu25(vu14)
+    vu12:RemoteEvent("UseItem"):FireServer(v37.Position, v37)
+end
+pcall(function()
+    local v39 = vu8:FindFirstChild("AjjanGui")
+    if v39 then
+        v39:Destroy()
+    end
+end)
+local v40 = Instance.new("ScreenGui", vu8)
+v40.Name = "AjjanGui"
+v40.ResetOnSpawn = false
+local vu41 = Instance.new("Frame", v40)
+vu41.Size = UDim2.new(0, 200, 0, 150)
+vu41.Position = UDim2.new(0, 50, 0, 100)
+vu41.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+vu41.Active = true
+vu41.Draggable = true
+Instance.new("UICorner", vu41).CornerRadius = UDim.new(0, 10)
+local v42 = Instance.new("TextLabel", vu41)
+v42.Size = UDim2.new(1, 0, 0, 25)
+v42.Position = UDim2.new(0, 0, 0, 5)
+v42.BackgroundTransparency = 1
+v42.Text = "Ajjan\'s GUI"
+v42.Font = Enum.Font.Arcade
+v42.TextScaled = true
+v42.TextColor3 = Color3.fromRGB(255, 255, 255)
+local function v48(p43, p44, p45, p46)
+    local v47 = Instance.new("TextButton", vu41)
+    v47.Size = UDim2.new(0.9, 0, 0, 40)
+    v47.Position = UDim2.new(0.05, 0, 0, p44)
+    v47.Text = p43
+    v47.Font = Enum.Font.Arcade
+    v47.TextScaled = true
+    v47.TextColor3 = Color3.new(1, 1, 1)
+    v47.BackgroundColor3 = p45
+    Instance.new("UICorner", v47).CornerRadius = UDim.new(0, 8)
+    v47.MouseButton1Click:Connect(p46)
+end
+v48("Control Target", 35, Color3.fromRGB(0, 150, 255), function()
+    local vu49 = vu7.Character
+    if not vu49 then
+        return vu21("No character found!", 2)
+    end
+    local v50 = vu35()
+    if not v50 then
+        return vu21("No nearby player found!", 2)
+    end
+    local v51 = v50.Character
+    if not (v51 and v51:FindFirstChild("HumanoidRootPart")) then
+        return vu21("Target missing parts!", 2)
+    end
+    local vu52 = vu7.PlayerScripts:FindFirstChild("RbxCharacterSounds")
+    if vu52 then
+        vu52.Disabled = true
+    end
+    vu12:RemoteEvent("UseItem"):FireServer(v51.HumanoidRootPart.Position, v51.HumanoidRootPart)
+    v51.HumanoidRootPart:WaitForChild("WebTargetAttch", 5)
+    vu7.Character = v51
+    vu6.CurrentCamera.CameraSubject = v51:FindFirstChildOfClass("Humanoid")
+    if vu6:FindFirstChild("WebRope") then
+        vu6.WebRope.Length = 1000
+    end
+    local vu53 = v51:FindFirstChildOfClass("Humanoid")
+    vu53.WalkSpeed = 100
+    local v54 = vu53
+    local vu55 = vu53.GetPropertyChangedSignal(v54, "WalkSpeed"):Connect(function()
+        vu53.WalkSpeed = 34
+    end)
+    task.delay(10, function()
+        vu55:Disconnect()
+        vu7.Character = vu49
+        local v56 = vu49
+        vu6.CurrentCamera.CameraSubject = v56:FindFirstChildOfClass("Humanoid")
+        if vu52 then
+            vu52.Disabled = false
+        end
+        vu21("Returned to original character!", 2)
+    end)
+    vu21("Controlling " .. v50.Name .. "!", 2)
+end)
+v48("Shoot Nearest Player", 85, Color3.fromRGB(0, 200, 100), v38)
+v2.Heartbeat:Connect(function()
+    local v57 = vu7.Character
+    if v57 then
+        local v58 = v57:FindFirstChildOfClass("Humanoid")
+        local v59 = v57:FindFirstChild("HumanoidRootPart")
+        if v58 then
+            v58.PlatformStand = false
+            v58.Sit = false
+        end
+        if v59 then
+            v59.Anchored = false
+        end
+    end
+end)
+vu7.CharacterAdded:Connect(function(p60)
+    vu9 = p60
+    vu11 = p60:WaitForChild("HumanoidRootPart")
+    task.wait(0.2)
+    vu25(vu14)
+end)

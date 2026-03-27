@@ -1,0 +1,329 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Squid Game X")
+r1_0:AddToggle({
+  text = "RedLight GreenLight",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_33)
+    -- line: [0, 0] id: 33
+    _G.RLGL = r0_33
+    print("RLGL: ", r0_33)
+    if r0_33 then
+      RLGL()
+    end
+  end,
+})
+function RLGL()
+  -- line: [0, 0] id: 30
+  spawn(function()
+    -- line: [0, 0] id: 31
+    _G.RLGL = true
+    while _G.RLGL do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 32
+        local r0_32 = game:GetService("Players").LocalPlayer
+        local r1_32 = r0_32.Character and r0_32.Character:FindFirstChild("Humanoid")
+        local r2_32 = r0_32.PlayerGui:FindFirstChild("RedLightGreenLightGui")
+        if r1_32 and r2_32 then
+          local r3_32 = r2_32.Light.TextLabel
+          if r3_32.Text == "Green Light" then
+            r1_32:MoveTo(workspace.Map.RedLightGreenLight.Map.EndingWall.Position)
+          elseif r3_32.Text == "Red Light" then
+            r1_32:MoveTo(r0_32.Character.HumanoidRootPart.Position)
+          end
+        end
+        wait()
+      end)
+    end
+  end)
+end
+r1_0:AddButton({
+  text = "Remove Rope",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 21
+    workspace.Map.JumpRope.Rope:Destroy()
+  end,
+})
+r1_0:AddToggle({
+  text = "Tug of War",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_26)
+    -- line: [0, 0] id: 26
+    _G.Tug = r0_26
+    print("Tug: ", r0_26)
+    if r0_26 then
+      Tug()
+    end
+  end,
+})
+function Tug()
+  -- line: [0, 0] id: 23
+  spawn(function()
+    -- line: [0, 0] id: 24
+    _G.Tug = true
+    while _G.Tug do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 25
+        workspace:WaitForChild("Map"):WaitForChild("TugOfWar"):WaitForChild("Remotes"):WaitForChild(game.Players.LocalPlayer.Name):FireServer()
+        wait()
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Squid Game (Anti Hit)",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_13)
+    -- line: [0, 0] id: 13
+    _G.Squid = r0_13
+    print("Squid: ", r0_13)
+    local r1_13 = nil	-- notice: implicit variable refs by block#[7]
+    local r2_13 = nil	-- notice: implicit variable refs by block#[7]
+    if r0_13 then
+      r1_13 = game:GetService("Players")
+      r2_13 = r1_13.LocalPlayer
+      local r4_13 = (r2_13.Character or r2_13.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+      local function r5_13()
+        -- line: [0, 0] id: 15
+        local r1_15 = math.huge
+        local r0_15 = nil	-- notice: implicit variable refs by block#[7]
+        for r5_15, r6_15 in pairs(r1_13:GetPlayers()) do
+          if r6_15 ~= r2_13 and r6_15.Character and r6_15.Character:FindFirstChild("HumanoidRootPart") then
+            local r8_15 = (r4_13.Position - r6_15.Character.HumanoidRootPart.Position).Magnitude
+            if r8_15 < r1_15 then
+              r1_15 = r8_15
+              r0_15 = r6_15
+            end
+          end
+        end
+        return r0_15
+      end
+      local function r6_13()
+        -- line: [0, 0] id: 16
+        local r0_16 = r5_13()
+        if r0_16 and r0_16.Character and r0_16.Character:FindFirstChild("HumanoidRootPart") then
+          r4_13.CFrame = CFrame.lookAt(r4_13.Position, r4_13.Position + (r0_16.Character.HumanoidRootPart.Position - r4_13.Position).Unit)
+        end
+      end
+      game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
+      _G.Squid = true
+      while _G.Squid do
+        wait()
+        pcall(function()
+          -- line: [0, 0] id: 14
+          repeat
+            task.wait()
+            game.Players.LocalPlayer.Character:TranslateBy(game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").MoveDirection * tonumber(2) * 0.2 * 1)
+            r6_13()
+            local r0_14 = _G.Squid
+          until r0_14 == false
+          wait(1)
+        end)
+      end
+      -- close: r1_13
+    else
+      r1_13 = _G
+      r1_13.Squid = false
+      r1_13 = wait
+      r2_13 = 0.2
+      r1_13(r2_13)
+      r1_13 = game
+      r1_13 = r1_13.Players
+      r1_13 = r1_13.LocalPlayer
+      r1_13 = r1_13.Character
+      r1_13 = r1_13.HumanoidRootPart
+      r1_13.Anchored = false
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Walk Speed",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_22)
+    -- line: [0, 0] id: 22
+    _G.Speed = r0_22
+    print("Speed: ", r0_22)
+    if r0_22 then
+      Speed()
+    end
+  end,
+})
+function Speed()
+  -- line: [0, 0] id: 27
+  spawn(function()
+    -- line: [0, 0] id: 28
+    _G.Speed = true
+    while _G.Speed do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 29
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+        wait()
+      end)
+    end
+  end)
+end
+local r2_0 = nil
+local r3_0 = nil
+function noclip()
+  -- line: [0, 0] id: 18
+  r3_0 = false
+  r2_0 = game:GetService("RunService").Stepped:Connect(function()
+    -- line: [0, 0] id: 19
+    if r3_0 == false and game.Players.LocalPlayer.Character ~= nil then
+      for r3_19, r4_19 in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+        if r4_19:IsA("BasePart") and r4_19.CanCollide and r4_19.Name ~= floatName then
+          r4_19.CanCollide = false
+        end
+      end
+    end
+    wait()
+  end)
+end
+function clip()
+  -- line: [0, 0] id: 20
+  if r2_0 then
+    r2_0:Disconnect()
+  end
+  r3_0 = true
+end
+r1_0:AddToggle({
+  text = "Noclip",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_17)
+    -- line: [0, 0] id: 17
+    if r0_17 then
+      noclip()
+    else
+      clip()
+    end
+  end,
+})
+r1_0:AddButton({
+  text = "Glass Marker",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 12
+    for r3_12, r4_12 in pairs(workspace.Map.Glass.Glasses:GetDescendants()) do
+      if r4_12.Name == "TouchInterest" and r4_12.Parent.CanCollide == false then
+        r4_12.Parent.Color = Color3.fromRGB(255, 0, 0)
+      end
+    end
+  end,
+})
+r1_0:AddButton({
+  text = "Player ESP",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 1
+    _G.FriendColor = Color3.fromRGB(0, 255, 0)
+    _G.EnemyColor = Color3.fromRGB(255, 0, 0)
+    local r0_1 = Instance.new("Folder", game.CoreGui)
+    r0_1.Name = "ESP"
+    local function r1_1(r0_10)
+      -- line: [0, 0] id: 10
+      repeat
+        wait()
+      until r0_10.Character ~= nil
+      r0_10.Character:WaitForChild("Humanoid")
+      local r1_10 = r0_1:FindFirstChild(r0_10.Name)
+      if not r1_10 then
+        r1_10 = Instance.new("Folder", r0_1)
+        r1_10.Name = r0_10.Name
+      end
+      r1_10:ClearAllChildren()
+      local r2_10 = Instance.new("BoxHandleAdornment")
+      r2_10.Size = Vector3.new(0.5, 3, 0.5)
+      local r3_10 = r0_10.TeamColor.Color
+      if r3_10 == Color3.fromRGB(0, 255, 0) then
+        r3_10 = _G.FriendColor or _G.EnemyColor
+      else
+        goto label_50	-- block#5 is visited secondly
+      end
+      r2_10.Color3 = r3_10
+      r2_10.Transparency = 0.3
+      r2_10.AlwaysOnTop = true
+      r2_10.ZIndex = 0
+      r2_10.Adornee = r0_10.Character:WaitForChild("HumanoidRootPart")
+      r2_10.Parent = r1_10
+    end
+    local function r2_1(r0_11)
+      -- line: [0, 0] id: 11
+      local r1_11 = r0_1:FindFirstChild(r0_11.Name)
+      if r1_11 then
+        r1_11:ClearAllChildren()
+      end
+    end
+    local function r3_1(r0_5)
+      -- line: [0, 0] id: 5
+      Instance.new("Folder", r0_1).Name = r0_5.Name
+      r0_5.CharacterAdded:Connect(function()
+        -- line: [0, 0] id: 7
+        pcall(r1_1, r0_5)
+      end)
+      r0_5.CharacterRemoving:Connect(function()
+        -- line: [0, 0] id: 6
+        pcall(r2_1, r0_5)
+      end)
+      r0_5.Changed:Connect(function(r0_8)
+        -- line: [0, 0] id: 8
+        if r0_8 == "TeamColor" then
+          r2_1(r0_5)
+          wait()
+          r1_1(r0_5)
+        end
+      end)
+      r1_1(r0_5)
+    end
+    local function r4_1(r0_9)
+      -- line: [0, 0] id: 9
+      r2_1(r0_9)
+      local r1_9 = r0_1:FindFirstChild(r0_9.Name)
+      if r1_9 then
+        r1_9:Destroy()
+      end
+    end
+    for r8_1, r9_1 in pairs(game:GetService("Players"):GetPlayers()) do
+      spawn(function()
+        -- line: [0, 0] id: 3
+        pcall(r3_1, r9_1)
+      end)
+      -- close: r8_1
+    end
+    game:GetService("Players").PlayerAdded:Connect(function(r0_2)
+      -- line: [0, 0] id: 2
+      pcall(r3_1, r0_2)
+    end)
+    game:GetService("Players").PlayerRemoving:Connect(function(r0_4)
+      -- line: [0, 0] id: 4
+      pcall(r4_1, r0_4)
+    end)
+    local r5_1 = game:GetService("Players")
+    local r6_1 = r5_1.LocalPlayer
+    while task.wait() do
+      local r7_1 = pairs
+      for r10_1, r11_1 in r7_1(r5_1:GetPlayers()) do
+        if r11_1 ~= r6_1 then
+          r1_1(r11_1)
+        end
+      end
+    end
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()

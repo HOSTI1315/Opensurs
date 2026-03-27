@@ -1,0 +1,500 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IAmJamal10/Library/refs/heads/main/New"))()
+
+local Window = Library.CreateLib("Jump Stars | Legend HandlesYT", "Ocean")
+
+
+local Tab = Window:NewTab("Main-Features")
+
+
+
+local Tab1 = Window:NewTab("Settings")
+
+
+local Section = Tab:NewSection("Main-Features")
+
+local CredSection = Tab1:NewSection("Settings")
+Section:NewToggle(
+    "AutoFarm + Instant Kill",
+    "AutoFarms Mobs in Entities",
+    function(Value)
+        a = Value
+        task.spawn(function()
+            while a do 
+                task.wait()
+                pcall(function()
+                    local player = game.Players.LocalPlayer
+                    local char = player.Character
+                    local char_root = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if not char_root then
+                        char = player.CharacterAdded:Wait()
+                        char_root = char:WaitForChild("HumanoidRootPart")
+                    end
+
+                    local function findNearestHumanoid()
+                        local nearest_hum = math.huge
+                        local target_root
+                        local target_hum
+
+                        for _, v in pairs(workspace["_Characters"]:GetDescendants()) do
+                            if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
+                                local root = v:FindFirstChild("HumanoidRootPart")
+                                local hum = v:FindFirstChildOfClass("Humanoid")
+
+                                if root and hum and v ~= char then
+                                    local mag = (char_root.Position - root.Position).Magnitude
+                                    if mag < 20 and mag < nearest_hum then
+                                        nearest_hum = mag
+                                        target_root = root
+                                        target_hum = hum
+                                    end
+                                end
+                            end
+                        end
+
+                        return target_root, target_hum
+                    end
+
+                    local target_root, target_hum = findNearestHumanoid()
+
+                    if target_root and target_hum then
+                        local behind = (target_root.CFrame * CFrame.new(0, 0, 12.9)).Position
+                        local lookAt = (target_root.Position - char_root.Position).Unit
+
+                        char_root.CFrame = CFrame.new(behind, behind + Vector3.new(lookAt.X, 0, lookAt.Z))
+
+                        if target_hum.Health > 0 then
+                            target_hum:TakeDamage(100)
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+)
+
+Section:NewButton("Auto Score BlueGoalPost", "FPS Booster", function()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Function to search deeply for any part named "BlueGoalPost"
+local function findBlueGoalPost()
+	for _, part in ipairs(workspace:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name == "BlueGoalPost" then
+			return part
+		end
+	end
+	return nil
+end
+
+-- Function to simulate dig (you can replace this with a real animation or sound)
+local function digAction()
+	print("💥 Digging at the BlueGoalPost!")
+	
+	-- Optional: play dig animation or sound here
+	-- Example:
+	-- local digSound = Instance.new("Sound", HumanoidRootPart)
+	-- digSound.SoundId = "rbxassetid://12345678"
+	-- digSound:Play()
+end
+
+-- Main execution
+local target = findBlueGoalPost()
+if target then
+	HumanoidRootPart.CFrame = target.CFrame + Vector3.new(0, 0, 0) -- TP slightly above
+	wait(1)
+	digAction()
+else
+	warn("❌ No part named 'BlueGoalPost' found in workspace.")
+end
+
+    end)
+
+    
+Section:NewButton("Auto Score RedGoalPost", "FPS Booster", function()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Function to search deeply for any part named "RedGoalPost"
+local function findRedGoalPost()
+	for _, part in ipairs(workspace:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name == "RedGoalPost" then
+			return part
+		end
+	end
+	return nil
+end
+
+-- Function to simulate dig (you can replace this with a real animation or sound)
+local function digAction()
+	print("💥 Digging at the RedGoalPost!")
+	
+	-- Optional: play dig animation or sound here
+	-- Example:
+	-- local digSound = Instance.new("Sound", HumanoidRootPart)
+	-- digSound.SoundId = "rbxassetid://12345678"
+	-- digSound:Play()
+end
+
+-- Main execution
+local target = findRedGoalPost()
+if target then
+	HumanoidRootPart.CFrame = target.CFrame + Vector3.new(0, 0, 0) -- TP slightly above
+	wait(1)
+	digAction()
+else
+	warn("❌ No part named 'RedGoalPost' found in workspace.")
+end
+
+    end)
+local AutoSummon = false
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+Section:NewToggle("Auto TP Chests", "Auto", function(Value)
+    AutoSummon = Value
+    if AutoSummon then
+        -- Start the teleport loop in a coroutine so it doesn't block
+        coroutine.wrap(function()
+            local chestsFolder = workspace.CapeCanaveral.Interactable.Chests
+            while AutoSummon and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
+                local chests = chestsFolder:GetChildren()
+                for _, chest in ipairs(chests) do
+                    if not AutoSummon then break end
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local chestHRP = chest:FindFirstChild("HumanoidRootPart")
+                    if hrp and chestHRP then
+                        hrp.CFrame = chestHRP.CFrame + Vector3.new(0, 3, 0) -- teleport slightly above chest to avoid clipping
+                        wait(10) -- wait 10 seconds before next teleport
+                    end
+                end
+                -- Optionally: add a short wait before looping again
+                wait(1)
+            end
+        end)()
+    end
+end)
+
+
+Section:NewToggle(
+    "Auto Summon (1)",
+    "Auto Skips",
+    function(Value)
+     a = Value
+        while a do task.wait()
+        pcall(function()
+local args = {
+	1
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteService/Remotes"):WaitForChild("BuySummons"):WaitForChild("E"):FireServer(unpack(args))
+end)
+end
+end)
+Section:NewToggle(
+    "Auto Summon (10)",
+    "Auto Skips",
+    function(Value)
+     a = Value
+        while a do task.wait()
+        pcall(function()
+local args = {
+	10
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteService/Remotes"):WaitForChild("BuySummons"):WaitForChild("E"):FireServer(unpack(args))
+end)
+end
+end)
+Section:NewToggle(
+    "Kill Aura M1",
+    "Auto Skips",
+    function(Value)
+     a = Value
+        while a do task.wait()
+        pcall(function()
+local args = {
+	"MainAttack",
+	vector.create(0.11723886430263519, -0, -0.9931036829948425)
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteService/Remotes"):WaitForChild("ActivateSkill"):WaitForChild("E"):FireServer(unpack(args))
+
+end)
+end
+end)
+
+Section:NewToggle(
+    "Kill Aura Super",
+    "Auto Skips",
+    function(Value)
+     a = Value
+        while a do task.wait()
+        pcall(function()
+local args = {
+	"SuperAbility",
+	vector.create(0.2845059335231781, -4.876048009805345e-08, -0.9586743116378784)
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteService/Remotes"):WaitForChild("ActivateSkillAttempt"):WaitForChild("E"):FireServer(unpack(args))
+end)
+end
+end)
+
+Section:NewToggle("Enable Speed", "CFrame Speed Toggle", function(Value)
+    getgenv().CFrameSpeedEnabled = Value  -- This stores the toggle state (true/false)
+    if CFrameSpeedEnabled then
+        startCFrameSpeed() -- Starts moving when the toggle is enabled
+    else
+        stopCFrameSpeed() -- Stops moving when the toggle is disabled
+    end
+end)
+
+repeat
+    wait()
+until game:IsLoaded()
+
+local Players = game:service('Players')
+local LocalPlayer = Players.LocalPlayer
+repeat
+    wait()
+until LocalPlayer.Character
+
+local UserInputService = game:service('UserInputService')
+local RunService = game:service('RunService')
+
+getgenv().Multiplier = 0.5
+local movementConnection = nil  -- Used to store the movement loop connection
+
+-- Function to start CFrame movement
+function startCFrameSpeed()
+    if movementConnection == nil then
+        movementConnection = RunService.Stepped:Connect(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+        end)
+    end
+end
+
+-- Function to stop CFrame movement
+function stopCFrameSpeed()
+    if movementConnection then
+        movementConnection:Disconnect()
+        movementConnection = nil
+    end
+end
+
+-- Key bindings for increasing and decreasing speed multiplier
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftBracket then
+        Multiplier = Multiplier + 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.LeftBracket) do
+            wait()
+            Multiplier = Multiplier + 0.01
+            print(Multiplier)
+        end
+    elseif input.KeyCode == Enum.KeyCode.RightBracket then
+        Multiplier = Multiplier - 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.RightBracket) do
+            wait()
+            Multiplier = Multiplier - 0.01
+            print(Multiplier)
+        end
+    end
+end)
+
+-- Slider for adjusting speed multiplier
+Section:NewSlider("Speed", "Speed", 4, 0, function(s)
+    getgenv().Multiplier = s
+end)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local noclip = false
+
+Section:NewToggle("Noclip", "Noclip", function(Value)
+ noclip = Value
+
+	if noclip then
+		-- Enable freecam settings
+		player.CameraMaxZoomDistance = 9e9
+		player.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+		player.DevComputerCameraMode = Enum.DevComputerCameraMovementMode.Classic
+	else
+		-- Reset camera to normal
+		player.CameraMaxZoomDistance = 10
+		player.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Zoom
+		player.DevComputerCameraMode = Enum.DevComputerCameraMovementMode.Follow
+	end
+end)
+
+RunService.Stepped:Connect(function()
+	if noclip and player.Character and player.Character:FindFirstChild("Humanoid") then
+		for _, part in ipairs(player.Character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+	end
+end)
+Section:NewButton("Boost FPS", "FPS Booster", function()
+        for _,v in pairs(workspace:GetDescendants()) do
+if v.ClassName == "Part"
+or v.ClassName == "SpawnLocation"
+or v.ClassName == "WedgePart"
+or v.ClassName == "Terrain"
+or v.ClassName == "MeshPart" then
+v.Material = "Plastic"
+end
+end
+end)
+
+Section:NewToggle("Infinite Jump", "Infinite Jump", function(state)
+if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+            end)
+
+
+
+
+CredSection:NewLabel("Made By Legend HandlesYT")
+
+
+CredSection:NewKeybind("Toggle UI", "Toggle The UI", Enum.KeyCode.L, function()
+	Library:ToggleUI()
+end)
+
+CredSection:NewButton("Mobile Keyboard", "Mobile Players", function(state)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", true))()
+end)
+
+wait(0.1)
+local player = game.Players.LocalPlayer
+
+local function createTutorialGui()
+    -- Create the GUI
+    local Turtorial = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local JoinButton = Instance.new("TextButton")
+    local UICorner_Join = Instance.new("UICorner")
+    local shadow = Instance.new("Frame")
+
+    Turtorial.Name = "Turtorial"
+    Turtorial.Parent = player:WaitForChild("PlayerGui")
+    Turtorial.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    main.Name = "main"
+    main.Parent = Turtorial
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.AnchorPoint = Vector2.new(0, 0)
+
+    -- Function to position the GUI just below the top-left corner of the screen
+    local function setPositionBelowTopLeft()
+        local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+        main.Position = UDim2.new(0, 10, 0, 10)  -- Just below the top-left with a slight offset
+        main.Size = UDim2.new(0.15, 0, 0.10, 0)  -- Standard size for both devices
+    end
+
+    setPositionBelowTopLeft()
+
+    main.Active = true
+    main.Draggable = true
+
+    -- Shadow effect for main frame
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    JoinButton.Name = "JoinButton"
+    JoinButton.Parent = main
+    JoinButton.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+    -- Adjust button size based on device type
+    if game:GetService("UserInputService").TouchEnabled then
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    else
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    end
+
+    JoinButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+    JoinButton.Font = Enum.Font.Highway
+    JoinButton.Text = "Toggle Gui"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = 25
+    JoinButton.TextStrokeTransparency = 0.7
+    JoinButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    UICorner_Join.CornerRadius = UDim.new(0.15, 0)
+    UICorner_Join.Parent = JoinButton
+
+    -- Toggle the visibility of ScreenGuis
+    JoinButton.MouseButton1Down:Connect(function()
+        local CoreGui = game:GetService("CoreGui")
+        local function containsNumber(name)
+            return name:match("%d") ~= nil
+        end
+
+        local function toggleScreenGuisWithNumbers()
+            for _, gui in ipairs(CoreGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and containsNumber(gui.Name) and gui.Name ~= "Turtorial" then
+                    gui.Enabled = not gui.Enabled
+                    print((gui.Enabled and "Enabled" or "Disabled") .. " ScreenGui:", gui.Name)
+                end
+            end
+        end
+
+        toggleScreenGuisWithNumbers()
+
+        CoreGui.ChildAdded:Connect(function(child)
+            if child:IsA("ScreenGui") then
+                task.wait(0.1)
+                if containsNumber(child.Name) and child.Name ~= "Turtorial" then
+                    child.Enabled = false
+                    print("Disabled new ScreenGui:", child.Name)
+                end
+            end
+        end)
+    end)
+end
+
+-- Connect to CharacterAdded to ensure GUI is created again after respawn
+player.CharacterAdded:Connect(function()
+    -- Wait for the PlayerGui to load in case it's reset
+    player:WaitForChild("PlayerGui")
+    -- Create the GUI again after respawn
+    createTutorialGui()
+end)
+
+-- Initial creation of the GUI when the player first joins
+createTutorialGui()

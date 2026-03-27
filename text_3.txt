@@ -1,0 +1,658 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+local v_u_1 = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local v2 = v_u_1:CreateWindow({
+	["Title"] = "Blossom Hub",
+	["Icon"] = "flower",
+	["Author"] = "By Oren",
+	["Folder"] = "Blossom Hub",
+	["Size"] = UDim2.fromOffset(580, 460),
+	["MinSize"] = Vector2.new(560, 350),
+	["MaxSize"] = Vector2.new(850, 560),
+	["Transparent"] = true,
+	["Theme"] = "Dark",
+	["Resizable"] = true,
+	["SideBarWidth"] = 200,
+	["BackgroundImageTransparency"] = 0.42,
+	["HideSearchBar"] = true,
+	["ScrollBarEnabled"] = false,
+	["User"] = {
+		["Enabled"] = true,
+		["Anonymous"] = false
+	}
+})
+v2:EditOpenButton({
+	["Title"] = "Blossom Hub",
+	["Icon"] = "flower",
+	["CornerRadius"] = UDim.new(0, 16),
+	["StrokeThickness"] = 2,
+	["Color"] = ColorSequence.new(Color3.fromHex("FFFFFF"), Color3.fromHex("FF69B4")),
+	["OnlyMobile"] = false,
+	["Enabled"] = true,
+	["Draggable"] = true
+})
+local v3 = {
+	["Home"] = v2:Tab({
+		["Title"] = "Home",
+		["Icon"] = "house",
+		["ShowTabTitle"] = true
+	}),
+	["PrisonEvent"] = v2:Tab({
+		["Title"] = "Prison Event",
+		["Icon"] = "columns-4",
+		["ShowTabTitle"] = true
+	}),
+	["AutoFarm"] = v2:Tab({
+		["Title"] = "AutoFarm",
+		["Icon"] = "scroll-text",
+		["ShowTabTitle"] = true
+	}),
+	["Shop"] = v2:Tab({
+		["Title"] = "Shop",
+		["Icon"] = "shopping-basket",
+		["ShowTabTitle"] = true
+	}),
+	["Inventory"] = v2:Tab({
+		["Title"] = "Inventory",
+		["Icon"] = "backpack",
+		["ShowTabTitle"] = true
+	}),
+	["Other"] = v2:Tab({
+		["Title"] = "Other",
+		["Icon"] = "circle-question-mark",
+		["ShowTabTitle"] = true
+	})
+}
+v3.Home:Select()
+local v_u_4 = game.Players.LocalPlayer
+local v5 = game.HttpService
+local v_u_6 = v_u_4.Backpack
+local v7 = game.ReplicatedStorage
+local v_u_8 = v7.Remotes.Events.Prison.Interact
+local v_u_9 = v7.Remotes.Events.Prison.Interact
+local v_u_10 = false
+local v_u_11 = false
+local v_u_12 = v7.Remotes.AttacksServer.WeaponAttack
+local v_u_13 = v7.Remotes.EquipBestBrainrots
+local v_u_14 = v7.Remotes.FavoriteItem
+local v_u_15 = v7.Remotes.BuyPlatform
+local v_u_16 = game.ReplicatedStorage.Remotes.ItemSell
+local v_u_17 = v7.Remotes.ClaimCode
+local v_u_18 = v7.Remotes.BuyRow
+local v_u_19 = v7.Remotes.Rebirth
+local v_u_20 = v7.Remotes.BuyItem
+local v_u_21 = v7.Remotes.BuyGear
+local v_u_22 = false
+local v_u_23 = false
+local v_u_24 = false
+local v_u_25 = false
+local v_u_26 = false
+local v_u_27 = false
+local v_u_28 = false
+local v_u_29 = false
+local v_u_30 = false
+getgenv().AntiAfk = false
+getgenv().AutoReconnect = false
+local v_u_31 = {
+	"Boss",
+	"Limited",
+	"Secret",
+	"Godly",
+	"Mythic",
+	"Legendary",
+	"Epic",
+	"Rare"
+}
+local v_u_32 = {}
+local v_u_33 = {}
+local v_u_34 = {}
+local v_u_35 = {}
+local v_u_36 = v_u_4:GetAttribute("Plot")
+local v37 = syn and syn.request or (http and http.request or request)
+if v37 then
+	v37({
+		["Url"] = "http://127.0.0.1:6463/rpc?v=1",
+		["Method"] = "POST",
+		["Headers"] = {
+			["Content-Type"] = "application/json",
+			["Origin"] = "https://discord.com"
+		},
+		["Body"] = v5:JSONEncode({
+			["cmd"] = "INVITE_BROWSER",
+			["args"] = {
+				["code"] = "fF5bHJDcZt"
+			},
+			["nonce"] = v5:GenerateGUID(false)
+		})
+	})
+end
+local v38 = v5:JSONDecode(v_u_1.Creator.Request({
+	["Url"] = "https://discord.com/api/v10/invites/fF5bHJDcZt?with_counts=true&with_expiration=true",
+	["Method"] = "GET",
+	["Headers"] = {
+		["User-Agent"] = "RobloxBot/1.0",
+		["Accept"] = "application/json"
+	}
+}).Body)
+v3.Home:Section({
+	["Title"] = "Discord"
+})
+if v38 and v38.guild then
+	v3.Home:Paragraph({
+		["Title"] = v38.guild.name,
+		["Desc"] = " <font color=\"#52525b\">\226\128\162</font> Member Count : " .. tostring(v38.approximate_member_count) .. "\n <font color=\"#16a34a\">\226\128\162</font> Online Count : " .. tostring(v38.approximate_presence_count),
+		["Image"] = "rbxassetid://94611222071979",
+		["ImageSize"] = 50
+	})
+	v3.Home:Button({
+		["Title"] = "Copy<font color=\"#2563eb\"> Discord</font> Invite",
+		["Locked"] = false,
+		["Callback"] = function()
+			-- upvalues: (ref) v_u_1
+			setclipboard("https://discord.gg/mpQw7uuV")
+			v_u_1:Notify({
+				["Title"] = "Copied<font color=\"#2563eb\"> Discord</font> Invite",
+				["Duration"] = 10
+			})
+		end
+	})
+end
+v3.PrisonEvent:Section({
+	["Title"] = "Prison Event AutoFarm"
+})
+v3.PrisonEvent:Toggle({
+	["Title"] = "Auto Turn In Wanted Brainrots",
+	["Type"] = "Checkbox",
+	["Default"] = false,
+	["Callback"] = function(p39)
+		-- upvalues: (ref) v_u_10, (ref) v_u_4, (ref) v_u_6, (ref) v_u_8
+		v_u_10 = p39
+		task.spawn(function()
+			-- upvalues: (ref) v_u_10, (ref) v_u_4, (ref) v_u_6, (ref) v_u_8
+			while v_u_10 do
+				local v40 = v_u_4.PlayerGui.Main.WantedPosterGui.Frame.Main.WantedItem.WantedItem_Title_Shadow.Text
+				local v41 = v_u_6
+				local v42, v43, v44 = pairs(v41:GetChildren())
+				while true do
+					local v45
+					v44, v45 = v42(v43, v44)
+					if v44 == nil then
+						break
+					end
+					if v45:GetAttribute("Brainrot") == v40 then
+						v_u_4.Character.Humanoid:UnequipTools()
+						v45.Parent = v_u_4.Character
+						v_u_8:FireServer("TurnIn")
+					end
+				end
+				task.wait(0.5)
+			end
+		end)
+	end
+})
+v3.PrisonEvent:Toggle({
+	["Title"] = "Auto Restart Event",
+	["Type"] = "Checkbox",
+	["Default"] = false,
+	["Callback"] = function(p46)
+		-- upvalues: (ref) v_u_11, (ref) v_u_4, (ref) v_u_9
+		v_u_11 = p46
+		if v_u_11 then
+			task.spawn(function()
+				-- upvalues: (ref) v_u_11, (ref) v_u_4, (ref) v_u_9
+				while v_u_11 do
+					if v_u_4.PlayerGui.Main.WantedPosterGui.Frame.Main_Complete.Visible == true then
+						v_u_9:FireServer("ResetRequest")
+					end
+					task.wait(1)
+				end
+			end)
+		end
+	end
+})
+v3.AutoFarm:Section({
+	["Title"] = "AutoFarm"
+})
+v3.AutoFarm:Toggle({
+	["Title"] = "Auto Equip Bat",
+	["Default"] = false,
+	["Callback"] = function(p47)
+		-- upvalues: (ref) v_u_22, (ref) v_u_4
+		v_u_22 = p47
+		task.spawn(function()
+			-- upvalues: (ref) v_u_22, (ref) v_u_4
+			::l0::
+			if not v_u_22 then
+				return
+			end
+			local v48, v49, v50 = pairs(v_u_4.Backpack:GetChildren())
+			goto l4
+			::l5::
+			if v51:IsA("Tool") and v51.Name:match("Bat") then
+				v51.Parent = v_u_4.Character
+				break
+			end
+			::l4::
+			local v51
+			v50, v51 = v48(v49, v50)
+			if v50 ~= nil then
+				goto l5
+			else
+				goto l10
+			end
+			::l10::
+			task.wait(1)
+			goto l0
+		end)
+	end
+})
+v3.AutoFarm:Toggle({
+	["Title"] = "Auto Attack Brainrots",
+	["Default"] = false,
+	["Callback"] = function(p52)
+		-- upvalues: (ref) v_u_23, (ref) v_u_22, (ref) v_u_1, (ref) v_u_4, (ref) v_u_31, (ref) v_u_12
+		v_u_23 = p52
+		if p52 and not v_u_22 then
+			v_u_1:Notify({
+				["Title"] = "<font color=\"#FF0000\">Warning</font>",
+				["Content"] = "Please Turn Auto Equip Bat on before using Auto Attack Brainrots.",
+				["Duration"] = 10,
+				["Icon"] = "circle-alert"
+			})
+		end
+		task.spawn(function()
+			-- upvalues: (ref) v_u_23, (ref) v_u_22, (ref) v_u_4, (ref) v_u_31, (ref) v_u_12
+			while true do
+				if not v_u_23 then
+					return
+				end
+				if v_u_22 then
+					local v53 = v_u_4
+					local v54 = tonumber(v53:GetAttribute("Plot"))
+					local v55, v56, v57 = ipairs(v_u_31)
+					local v58 = false
+					while true do
+						local v59
+						v57, v59 = v55(v56, v57)
+						if v57 == nil then
+							break
+						end
+						local v60, v61, v62 = ipairs(workspace.ScriptedMap.Brainrots:GetChildren())
+						while true do
+							local v63
+							v62, v63 = v60(v61, v62)
+							if v62 == nil then
+								break
+							end
+							local v64 = v63:FindFirstChild("BrainrotHitbox")
+							if tonumber(v63:GetAttribute("Plot")) == v54 and v64 and (v59 == "Boss" and v63:GetAttribute("Boss") or v63:GetAttribute("Rarity") == v59) then
+								v_u_4.Character.HumanoidRootPart.CFrame = v64.CFrame
+								v_u_12:FireServer({ v63.Name })
+								v58 = true
+								break
+							end
+						end
+						if v58 then
+							goto l6
+						end
+					end
+				end
+				::l6::
+				task.wait()
+			end
+		end)
+	end
+})
+v3.AutoFarm:Section({
+	["Title"] = "Other"
+})
+v3.AutoFarm:Toggle({
+	["Title"] = "Auto Collect Brainrot $/Equip Best Brainrots",
+	["Default"] = false,
+	["Callback"] = function(p65)
+		-- upvalues: (ref) v_u_24, (ref) v_u_13
+		v_u_24 = p65
+		task.spawn(function()
+			-- upvalues: (ref) v_u_24, (ref) v_u_13
+			while v_u_24 do
+				v_u_13:FireServer()
+				task.wait(20)
+			end
+		end)
+	end
+})
+v3.AutoFarm:Toggle({
+	["Title"] = "Auto Rebirth",
+	["Default"] = false,
+	["Callback"] = function(p66)
+		-- upvalues: (ref) v_u_25, (ref) v_u_19
+		v_u_25 = p66
+		task.spawn(function()
+			-- upvalues: (ref) v_u_25, (ref) v_u_19
+			while v_u_25 do
+				v_u_19:FireServer()
+				task.wait(3)
+			end
+		end)
+	end
+})
+v3.Shop:Section({
+	["Title"] = "Seeds"
+})
+v3.Shop:Dropdown({
+	["Title"] = "Seeds",
+	["Values"] = {
+		"Cactus Seed",
+		"Strawberry Seed",
+		"Pumpkin Seed",
+		"Sunflower Seed",
+		"Dragon Fruit Seed",
+		"Eggplant Seed",
+		"Watermelon Seed",
+		"Grape Seed",
+		"Cocotank Seed",
+		"Carnivorous Plant Seed",
+		"Mr Carrot Seed",
+		"Tomatrio Seed",
+		"Shroombino Seed",
+		"Mango Seed"
+	},
+	["Multi"] = true,
+	["AllowNone"] = true,
+	["Callback"] = function(p67)
+		-- upvalues: (ref) v_u_32
+		v_u_32 = p67
+	end
+})
+v3.Shop:Toggle({
+	["Title"] = "AutoBuy Selected Seeds",
+	["Default"] = false,
+	["Callback"] = function(p68)
+		-- upvalues: (ref) v_u_26, (ref) v_u_32, (ref) v_u_20
+		v_u_26 = p68
+		if p68 then
+			task.spawn(function()
+				-- upvalues: (ref) v_u_26, (ref) v_u_32, (ref) v_u_20
+				while v_u_26 do
+					local v69, v70, v71 = ipairs(v_u_32)
+					while true do
+						local v72
+						v71, v72 = v69(v70, v71)
+						if v71 == nil or not v_u_26 then
+							break
+						end
+						v_u_20:FireServer(v72)
+						task.wait(1)
+					end
+				end
+			end)
+		end
+	end
+})
+v3.Shop:Section({
+	["Title"] = "Gears"
+})
+v3.Shop:Dropdown({
+	["Title"] = "Gears",
+	["Values"] = {
+		"Water Bucket",
+		"Frost Grenade",
+		"Banana Gun",
+		"Frost Blower",
+		"Carrot Launcher"
+	},
+	["Multi"] = true,
+	["AllowNone"] = true,
+	["Callback"] = function(p73)
+		-- upvalues: (ref) v_u_33
+		v_u_33 = p73
+	end
+})
+v3.Shop:Toggle({
+	["Title"] = "AutoBuy Selected Gears",
+	["Default"] = false,
+	["Callback"] = function(p74)
+		-- upvalues: (ref) v_u_27, (ref) v_u_33, (ref) v_u_21
+		v_u_27 = p74
+		if p74 then
+			task.spawn(function()
+				-- upvalues: (ref) v_u_27, (ref) v_u_33, (ref) v_u_21
+				while v_u_27 do
+					local v75, v76, v77 = ipairs(v_u_33)
+					while true do
+						local v78
+						v77, v78 = v75(v76, v77)
+						if v77 == nil or not v_u_27 then
+							break
+						end
+						v_u_21:FireServer(v78)
+						task.wait(1)
+					end
+				end
+			end)
+		end
+	end
+})
+v3.Shop:Section({
+	["Title"] = "Other"
+})
+v3.Shop:Toggle({
+	["Title"] = "AutoBuy Platforms",
+	["Default"] = false,
+	["Callback"] = function(p79)
+		-- upvalues: (ref) v_u_36, (ref) v_u_15
+		AutoBuyPlatforms = p79
+		if p79 then
+			task.spawn(function()
+				-- upvalues: (ref) v_u_36, (ref) v_u_15
+				while AutoBuyPlatforms do
+					local v80, v81, v82 = pairs(workspace.Plots[tostring(v_u_36)].Brainrots:GetChildren())
+					while true do
+						local v83
+						v82, v83 = v80(v81, v82)
+						if v82 == nil then
+							break
+						end
+						if v83:IsA("Model") and not v83:GetAttribute("Enabled") then
+							v_u_15:FireServer(v83.Name)
+						end
+					end
+					task.wait(0.6)
+				end
+			end)
+		end
+	end
+})
+v3.Shop:Toggle({
+	["Title"] = "AutoBuy Grass Rows",
+	["Default"] = false,
+	["Callback"] = function(p84)
+		-- upvalues: (ref) v_u_28, (ref) v_u_36, (ref) v_u_18
+		v_u_28 = p84
+		if p84 then
+			task.spawn(function()
+				-- upvalues: (ref) v_u_28, (ref) v_u_36, (ref) v_u_18
+				while v_u_28 do
+					local v85, v86, v87 = pairs(workspace.Plots[tostring(v_u_36)].Rows:GetChildren())
+					while true do
+						local v88
+						v87, v88 = v85(v86, v87)
+						if v87 == nil then
+							break
+						end
+						if v88:IsA("Folder") and not v88:FindFirstChild("Lawn Mower") then
+							v_u_18:FireServer(tonumber(v88.Name))
+						end
+					end
+					task.wait(0.6)
+				end
+			end)
+		end
+	end
+})
+v3.Inventory:Section({
+	["Title"] = "Auto Favorite"
+})
+v3.Inventory:Dropdown({
+	["Title"] = "Brainrot Rarities",
+	["Values"] = {
+		"Rare",
+		"Epic",
+		"Legendary",
+		"Mythic",
+		"Godly",
+		"Secret",
+		"Limited"
+	},
+	["Multi"] = true,
+	["AllowNone"] = true,
+	["Callback"] = function(p89)
+		-- upvalues: (ref) v_u_34
+		v_u_34 = p89
+	end
+})
+v3.Inventory:Toggle({
+	["Title"] = "Auto Favorite Selected Rarities",
+	["Default"] = false,
+	["Callback"] = function(p90)
+		-- upvalues: (ref) v_u_29, (ref) v_u_34, (ref) v_u_35, (ref) v_u_4, (ref) v_u_6, (ref) v_u_14
+		v_u_29 = p90
+		if v_u_29 then
+			spawn(function()
+				-- upvalues: (ref) v_u_29, (ref) v_u_34, (ref) v_u_35, (ref) v_u_4, (ref) v_u_6, (ref) v_u_14
+				while v_u_29 and #v_u_34 > 0 do
+					v_u_35 = {}
+					local v91, v92, v93 = pairs(v_u_4.PlayerGui.BackpackGui.Backpack.Inventory.ScrollingFrame.UIGridFrame:GetChildren())
+					while true do
+						local v94
+						v93, v94 = v91(v92, v93)
+						if v93 == nil then
+							break
+						end
+						if v94:IsA("TextButton") and (v94:FindFirstChild("HeartIcon") and (v94:GetAttribute("ID") and v94.HeartIcon.Visible)) then
+							v_u_35[v94:GetAttribute("ID")] = true
+						end
+					end
+					local v95, v96, v97 = pairs(v_u_4.PlayerGui.BackpackGui.Backpack.Hotbar:GetChildren())
+					while true do
+						local v98
+						v97, v98 = v95(v96, v97)
+						if v97 == nil then
+							break
+						end
+						if v98:IsA("TextButton") and (v98:FindFirstChild("HeartIcon") and (v98:GetAttribute("ID") and v98.HeartIcon.Visible)) then
+							v_u_35[v98:GetAttribute("ID")] = true
+						end
+					end
+					local v99 = v_u_6
+					local v100, v101, v102 = pairs(v99:GetChildren())
+					while true do
+						local v103
+						v102, v103 = v100(v101, v102)
+						if v102 == nil then
+							break
+						end
+						local v104 = v103:FindFirstChildWhichIsA("Model")
+						if v103:GetAttribute("ID") and v104 then
+							local v105 = v104:GetAttribute("Rarity")
+							if v105 and (table.find(v_u_34, v105) and not v_u_35[v103:GetAttribute("ID")]) then
+								v_u_14:FireServer(v103:GetAttribute("ID"))
+							end
+						end
+					end
+					task.wait(0.5)
+				end
+			end)
+		end
+	end
+})
+v3.Inventory:Section({
+	["Title"] = "Other Stuff"
+})
+v3.Inventory:Toggle({
+	["Title"] = "Auto Sell Brainrots",
+	["Default"] = false,
+	["Callback"] = function(p106)
+		-- upvalues: (ref) v_u_30, (ref) v_u_16
+		v_u_30 = p106
+		task.spawn(function()
+			-- upvalues: (ref) v_u_30, (ref) v_u_16
+			while v_u_30 do
+				v_u_16:FireServer()
+				task.wait(3)
+			end
+		end)
+	end
+})
+v3.Other:Section({
+	["Title"] = "Other Stuff"
+})
+v3.Other:Button({
+	["Title"] = "Redeem All Codes",
+	["Locked"] = false,
+	["Callback"] = function()
+		-- upvalues: (ref) v_u_17, (ref) v_u_1
+		local v107, v108, v109 = ipairs({ "based", "stacks", "frozen" })
+		while true do
+			local v110
+			v109, v110 = v107(v108, v109)
+			if v109 == nil then
+				break
+			end
+			v_u_17:FireServer(v110)
+			task.wait(0.5)
+		end
+		v_u_1:Notify({
+			["Title"] = "Successfully redeemed all codes!",
+			["Duration"] = 7
+		})
+	end
+})
+v3.Other:Button({
+	["Title"] = "Boost Fps",
+	["Locked"] = false,
+	["Callback"] = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/BlossomHub123/FpsBoost/refs/heads/main/.lua", true))()
+	end
+})
+v3.Other:Toggle({
+	["Title"] = "Anti Afk",
+	["Default"] = false,
+	["Callback"] = function(p111)
+		if p111 then
+			if getgenv().AntiAfk then
+				return
+			end
+			getgenv().AntiAfk = game.Players.LocalPlayer.Idled:Connect(function()
+				game.VirtualUser:CaptureController()
+				game.VirtualUser:ClickButton2(Vector2.new())
+			end)
+		elseif getgenv().AntiAfk then
+			getgenv().AntiAfk:Disconnect()
+			getgenv().AntiAfk = false
+		end
+	end
+})
+v3.Other:Toggle({
+	["Title"] = "Auto Reconnect",
+	["Default"] = false,
+	["Callback"] = function(p112)
+		if p112 then
+			repeat
+				wait()
+			until game.CoreGui:FindFirstChild("RobloxPromptGui")
+			getgenv().AutoReconnect = game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(p113)
+				if p113.Name == "ErrorPrompt" then
+					repeat
+						game:GetService("TeleportService"):Teleport(game.PlaceId)
+						wait(2)
+					until false
+				end
+			end)
+		elseif getgenv().AutoReconnect then
+			getgenv().AutoReconnect:Disconnect()
+			getgenv().AutoReconnect = false
+		end
+	end
+})

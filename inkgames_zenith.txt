@@ -1,0 +1,215 @@
+local p = game:GetService("Players")
+local l = p.LocalPlayer
+local r = game:GetService("ReplicatedStorage")
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+
+local g = Instance.new("ScreenGui", game.CoreGui)
+g.Name = "ink game script"
+g.ResetOnSpawn = false
+
+local f = Instance.new("Frame", g)
+f.Size = UDim2.new(0, 300, 0, 420)
+f.Position = UDim2.new(0, 50, 0, 100)
+f.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+f.BorderSizePixel = 0
+f.Active = true
+f.Draggable = true
+
+Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+
+local stroke = Instance.new("UIStroke", f)
+stroke.Thickness = 2
+Instance.new("UIGradient", stroke).Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(1, 1, 1))
+
+local title = Instance.new("TextLabel", f)
+title.Size = UDim2.new(1, -60, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Zenith Hub | Ink Games | V.1.0 | Beta"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local closeBtn = Instance.new("TextButton", f)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 3)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+closeBtn.MouseButton1Click:Connect(function() g:Destroy() end)
+
+local minimizeBtn = Instance.new("TextButton", f)
+minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 3)
+minimizeBtn.Text = "-"
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 18
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 6)
+
+local tabBar = Instance.new("Frame", f)
+tabBar.Size = UDim2.new(1, -20, 0, 30)
+tabBar.Position = UDim2.new(0, 10, 0, 35)
+tabBar.BackgroundTransparency = 1
+
+local tabLayout = Instance.new("UIListLayout", tabBar)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 5)
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local tabContent = Instance.new("Frame", f)
+tabContent.Size = UDim2.new(1, -20, 1, -80)
+tabContent.Position = UDim2.new(0, 10, 0, 70)
+tabContent.BackgroundTransparency = 1
+
+local tabs = {}
+local currentTab = nil
+local minimized = false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _, v in pairs(f:GetChildren()) do
+		if v:IsA("Frame") or v:IsA("TextButton") then
+			if v ~= minimizeBtn and v ~= closeBtn and v ~= title then
+				v.Visible = not minimized
+			end
+		end
+	end
+end)
+
+uis.InputBegan:Connect(function(i, p)
+	if not p and i.KeyCode == Enum.KeyCode.RightShift then
+		f.Visible = not f.Visible
+	end
+end)
+
+local function createTab(name)
+	local button = Instance.new("TextButton", tabBar)
+	button.Size = UDim2.new(0, 90, 1, 0)
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	button.Text = name
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 13
+	button.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+	local content = Instance.new("Frame", tabContent)
+	content.Size = UDim2.new(1, 0, 1, 0)
+	content.BackgroundTransparency = 1
+	content.Visible = false
+
+	local layout = Instance.new("UIListLayout", content)
+	layout.Padding = UDim.new(0, 5)
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	button.MouseButton1Click:Connect(function()
+		if currentTab then currentTab.Visible = false end
+		currentTab = content
+		content.Visible = true
+	end)
+
+	tabs[name] = content
+	return content
+end
+
+local function addBtn(tab, txt, callback)
+	local b = Instance.new("TextButton", tab)
+	b.Size = UDim2.new(0, 260, 0, 30)
+	b.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+	b.Text = txt
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Font = Enum.Font.GothamSemibold
+	b.TextSize = 14
+	b.AutoButtonColor = true
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+	b.MouseButton1Click:Connect(callback)
+end
+
+local mainTab = createTab("Main")
+local visualsTab = createTab("Visuals")
+
+addBtn(mainTab, "Gun Mod (mp5)", function()
+	local mp5 = r:FindFirstChild("Weapons") and r.Weapons:FindFirstChild("Guns") and r.Weapons.Guns:FindFirstChild("MP5")
+	if mp5 then
+		if mp5:FindFirstChild("MaxBullets") then mp5.MaxBullets.Value = 992927727817 end
+		if mp5:FindFirstChild("Spread") then mp5.Spread.Value = 0 end
+		if mp5:FindFirstChild("BulletsPerFire") then mp5.BulletsPerFire.Value = 5 end
+		if mp5:FindFirstChild("FireRateCD") then mp5.FireRateCD.Value = 0 end
+	end
+end)
+
+addBtn(mainTab, "Finish Glass Bridge", function()
+	if workspace:FindFirstChild("GlassBridge") then
+		l.Character.HumanoidRootPart.CFrame = CFrame.new(-214.541122, 520.731689, -1535.03003)
+	end
+end)
+
+addBtn(mainTab, "Finish Red Light Green Light", function()
+	task.spawn(function()
+		if workspace:FindFirstChild("RedLightGreenLight") then
+			l.Character.HumanoidRootPart.CFrame = CFrame.new(-39.7584915, 1027.2583, 123.181976)
+		end
+	end)
+end)
+
+addBtn(mainTab, "Complete Dalgona", function()
+	r:WaitForChild("Replication"):WaitForChild("Event"):FireServer("Clicked")
+	r.Remotes:WaitForChild("DALGONATEMPREMPTE"):FireServer({ Completed = true })
+	r.Remotes:WaitForChild("DALGONATEMPREMPTE"):FireServer({ Success = true })
+end)
+
+addBtn(mainTab, "Auto Tug of War", function()
+	r.Remotes:WaitForChild("TemporaryReachedBindable"):FireServer({ PerfectQTE = true })
+end)
+
+local noclipOn = false
+addBtn(mainTab, "Toggle Noclip", function()
+	noclipOn = not noclipOn
+end)
+
+rs.Stepped:Connect(function()
+	if noclipOn and l.Character then
+		for _, v in pairs(l.Character:GetDescendants()) do
+			if v:IsA("BasePart") then v.CanCollide = false end
+		end
+	end
+end)
+
+addBtn(visualsTab, "Reveal Glass Tiles", function()
+	local ts = game:GetService("TweenService")
+	local h = workspace:FindFirstChild("GlassBridge") and workspace.GlassBridge:FindFirstChild("GlassHolder")
+	if not h then return end
+	for _, pair in pairs(h:GetChildren()) do
+		for _, m in pairs(pair:GetChildren()) do
+			if m:IsA("Model") and m.PrimaryPart then
+				local p = m.PrimaryPart
+				for _, c in ipairs(m:GetChildren()) do
+					if c:IsA("Highlight") then c:Destroy() end
+				end
+				local b = p:GetAttribute("exploitingisevil") == true
+				local color = b and Color3.fromRGB(255,0,0) or Color3.fromRGB(0,255,0)
+				for _, part in pairs(m:GetDescendants()) do
+					if part:IsA("BasePart") then
+						ts:Create(part, TweenInfo.new(0.5, Enum.EasingStyle.Linear), { Transparency = 0.5, Color = color }):Play()
+					end
+				end
+				local h = Instance.new("Highlight")
+				h.FillColor = color
+				h.FillTransparency = 0.7
+				h.OutlineTransparency = 0.5
+				h.Parent = m
+			end
+		end
+	end
+end)
+
+currentTab = mainTab
+mainTab.Visible = true

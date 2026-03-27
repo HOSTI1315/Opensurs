@@ -1,0 +1,897 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/yes1nt/yes/refs/heads/main/CameraFix"))();
+
+function execute()
+    game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
+        Text = '\u{fffd}\u{fffd}\u{5f61} Made by friedpotatomatoe \u{5f61}\u{2605}. \n\n Just find me on Discord, I can make you your own private moveset for some $',
+        Color = Color3.fromRGB(0, 255, 127),
+        Font = Enum.Font.GothamBlack,
+        FontSize = Enum.FontSize.Size48,
+    })
+
+    Players = game:GetService('Players')
+    LocalPlayer = Players.LocalPlayer
+    Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    Backpack = LocalPlayer:WaitForChild('Backpack')
+
+    function ChangePos(p1, p2)
+        p1.CFrame = p1.CFrame - p1.CFrame.Position + Vector3.new(p2.X, p2.Y, p2.Z)
+    end
+    function GetClosestPlayer()
+        local v3 = math.huge
+        local v4 = next
+        local v5, v6 = game.Workspace.Live:GetChildren()
+        local v7 = nil
+
+        while true do
+            local v8
+
+            v6, v8 = v4(v5, v6)
+
+            if v6 == nil then
+                break
+            end
+            if v8.Name ~= LocalPlayer.Name and (v8:FindFirstChild('HumanoidRootPart') ~= nil and (v8:FindFirstChild('Humanoid') ~= nil and v8:FindFirstChild('Humanoid').Health > 0)) then
+                local v9 = (v8.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+
+                if v9 < v3 then
+                    v7 = v8
+                    v3 = v9
+                end
+            end
+        end
+
+        return v7
+    end
+    function FreezeCam(p10)
+        local v11 = Instance.new('Part')
+
+        v11.Parent = workspace
+        v11.CFrame = p10 or Character.Head.CFrame
+        game.Workspace.CurrentCamera.CameraSubject = v11
+
+        v11:destroy()
+    end
+    function UnfreezeCam()
+        game.Workspace.CurrentCamera.CameraSubject = Character.Humanoid
+    end
+    function TaskDestroy(pu12)
+        pcall(function()
+            pu12:destroy()
+        end)
+    end
+    function M1()
+        pcall(function()
+            local function v15(p13)
+                local v14 = {
+                    {
+                        Goal = p13,
+                        Mobile = true,
+                    },
+                }
+
+                game:GetService('Players').LocalPlayer.Character.Communicate:FireServer(unpack(v14))
+            end
+
+            v15('LeftClick')
+            v15('LeftClickRelease')
+        end)
+    end
+    function CubicleParticle(pu16, p17, pu18, p19, p20, p21, pu22)
+        local vu23 = ({
+            'Spin',
+            'Orbital',
+            'Float',
+            'Fall',
+            'Freeze',
+        })[p21]
+        local vu24 = Instance.new('Part')
+
+        vu24.Anchored = true
+        vu24.Material = Enum.Material.Neon
+        vu24.CanCollide = false
+        vu24.CFrame = pu16 * CFrame.Angles(math.random(0, 100), math.random(0, 100), math.random(0, 100))
+        vu24.Color = p17
+        vu24.Size = Vector3.new(pu18, pu18, pu18)
+        vu24.Transparency = p19
+        vu24.Parent = workspace
+
+        local vu25 = Instance.new('PointLight')
+
+        vu25.Brightness = p20
+        vu25.Color = p17
+        vu25.Range = pu18 * 5
+        vu25.Parent = vu24
+
+        local vu26 = true
+
+        task.spawn(function()
+            local vu27 = pu18 / 100
+            local vu28 = pu18 / 100
+            local vu29 = pu18 / 100
+
+            task.spawn(function()
+                pcall(function()
+                    while vu26 do
+                        for _ = 1, 20 do
+                            vu24.CFrame = vu24.CFrame * CFrame.Angles(vu27, vu28, vu29)
+
+                            task.wait()
+                        end
+
+                        vu27 = math.random(1, 2) == 1 and pu18 / 100 or - 1 * pu18 / 50
+                        vu28 = math.random(1, 2) == 1 and pu18 / 100 or - 1 * pu18 / 50
+                        vu29 = math.random(1, 2) == 1 and pu18 / 100 or - 1 * pu18 / 50
+                    end
+                end)
+            end)
+
+            if vu23 ~= 'Spin' then
+                if vu23 ~= 'Orbital' then
+                    if vu23 ~= 'Float' then
+                        if vu23 ~= 'Fall' then
+                            if vu23 == 'Freeze' then
+                                vu26 = false
+                                vu24.CFrame = pu16
+                            end
+                        else
+                            task.spawn(function()
+                                pcall(function()
+                                    while task.wait() do
+                                        vu24.Position = vu24.Position - Vector3.new(0, pu18 / 20, 0)
+                                    end
+                                end)
+                            end)
+                        end
+                    else
+                        task.spawn(function()
+                            pcall(function()
+                                while task.wait() do
+                                    vu24.Position = vu24.Position + Vector3.new(0, pu18 / 20, 0)
+                                end
+                            end)
+                        end)
+                    end
+                else
+                    task.spawn(function()
+                        pcall(function()
+                            local v30 = 0
+
+                            while task.wait() do
+                                v30 = v30 + math.rad(5)
+
+                                local v31 = pu18 * 3 * math.cos(v30)
+                                local v32 = pu18 * 3 * math.sin(v30)
+
+                                vu24.Position = pu16.Position + Vector3.new(v31, 0, v32)
+                            end
+                        end)
+                    end)
+                end
+            end
+        end)
+
+        if pu22 > 0.2 then
+            task.spawn(function()
+                task.wait(pu22 - 0.2)
+
+                vu24.Size = Vector3.new(pu18, pu18, pu18)
+
+                game:GetService('TweenService'):Create(vu24, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                    Size = Vector3.new(0.1, 0.1, 0.1),
+                }):Play()
+            end)
+        else
+            vu24.Size = Vector3.new(pu18, pu18, pu18)
+
+            game:GetService('TweenService'):Create(vu24, TweenInfo.new(pu22, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                Size = Vector3.new(0.1, 0.1, 0.1),
+            }):Play()
+        end
+
+        task.spawn(function()
+            task.wait(pu22)
+            vu24:destroy()
+
+            vu24 = nil
+
+            vu25:destroy()
+
+            vu25 = nil
+        end)
+
+        return vu24
+    end
+    function PlayAnimation(p33, p34, p35, p36)
+        local vu37 = p36 or false
+        local v38 = Instance.new('Animation')
+
+        v38.AnimationId = p33
+
+        local vu39 = Character.Humanoid.Animator:LoadAnimation(v38)
+
+        vu39:Play()
+
+        vu39.TimePosition = p35 or 0
+
+        vu39:AdjustSpeed(p34 or 1)
+
+        if vu37 then
+            task.spawn(function()
+                task.wait(vu37)
+                vu39:Stop()
+            end)
+        end
+
+        return vu39
+    end
+    function StopAnimation(p40)
+        local v41, v42, v43 = ipairs(Character.Humanoid:FindFirstChildOfClass('Animator'):GetPlayingAnimationTracks())
+
+        while true do
+            local v44
+
+            v43, v44 = v41(v42, v43)
+
+            if v43 == nil then
+                break
+            end
+            if v44.Animation.AnimationId == p40 then
+                v44:Stop()
+            end
+        end
+    end
+    function StopAllAnimation()
+        local v45, v46, v47 = pairs(Character.Humanoid:GetPlayingAnimationTracks())
+
+        while true do
+            local v48
+
+            v47, v48 = v45(v46, v47)
+
+            if v47 == nil then
+                break
+            end
+
+            v48:Stop()
+        end
+    end
+    function PlaySound(p49, p50)
+        local vu51 = Instance.new('Sound')
+
+        vu51.Parent = workspace
+        vu51.SoundId = p49
+        vu51.PlaybackSpeed = p50 or 1
+
+        local v52 = vu51
+
+        vu51.Play(v52)
+        vu51.Ended:Connect(function()
+            vu51:Destroy()
+        end)
+    end
+    function Skill(p53, pu54, p55)
+        local vu56 = Instance.new('Tool')
+
+        vu56.Name = p53
+        vu56.RequiresHandle = false
+        vu56.Parent = Backpack
+
+        vu56:SetAttribute('Cooldown', p55)
+
+        local vu57 = nil
+        local vu58 = nil
+        local vu59 = p55 or 0
+        local vu60 = LocalPlayer.PlayerGui.Hotbar.Backpack.LocalScript.Cooldown:Clone()
+
+        if Backpack:GetAttribute('CustomSkills') == nil then
+            Backpack:SetAttribute('CustomSkills', - 1)
+        end
+
+        Backpack:SetAttribute('CustomSkills', Backpack:GetAttribute('CustomSkills') + 1)
+
+        for v61 = 1, 13 do
+            local v62 = v61
+            local v63 = LocalPlayer.PlayerGui.Hotbar.Backpack.Hotbar[tostring(v62)].Base.ToolName.Text
+
+            if v63 == vu56.Name then
+                vu57 = LocalPlayer.PlayerGui.Hotbar.Backpack.Hotbar[tostring(v62)].Base
+                vu56.Name = vu56.Name .. 'ID:' .. tostring(Backpack:GetAttribute('CustomSkills'))
+                LocalPlayer.PlayerGui.Hotbar.Backpack.Hotbar[tostring(v62)].Base.ToolName.Text = v63
+            end
+        end
+
+        vu60.Parent = vu57.Parent
+        vu60.Size = UDim2.new(1, 0, 0, 0)
+
+        if Backpack:GetAttribute('CustomSkills') == nil then
+            Backpack:SetAttribute('CustomSkills', - 1)
+        end
+
+        Backpack:SetAttribute('CustomSkills', Backpack:GetAttribute('CustomSkills') + 1)
+
+        local vu64 = vu57.Activated:Connect(function()
+            if not IPlacedThisForSpacing then
+                vu57.Overlay.Visible = false
+
+                if vu59 == 1234 or vu60.Size ~= UDim2.new(1, 0, 0, 0) then
+                    vu58 = not vu58
+
+                    if vu58 then
+                        vu60.Size = UDim2.new(1, 0, - 1, 0)
+                    else
+                        vu60.Size = UDim2.new(1, 0, 0, 0)
+                    end
+                else
+                    vu60.Size = UDim2.new(1, 0, - 1, 0)
+
+                    game:GetService('TweenService'):Create(vu60, TweenInfo.new(vu59, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, 0),
+                    }):Play()
+                end
+
+                pu54()
+            end
+        end)
+
+        local function vu66(p65)
+            return ({
+                Enum.KeyCode.Zero,
+                Enum.KeyCode.One,
+                Enum.KeyCode.Two,
+                Enum.KeyCode.Three,
+                Enum.KeyCode.Four,
+                Enum.KeyCode.Five,
+                Enum.KeyCode.Six,
+                Enum.KeyCode.Seven,
+                Enum.KeyCode.Eight,
+                Enum.KeyCode.Nine,
+            })[p65 + 1]
+        end
+
+        local vu68 = game:GetService('UserInputService').InputBegan:Connect(function(
+            p67
+        )
+            if p67.KeyCode == vu66(tostring(vu57.Parent)) then
+                vu57.Overlay.Visible = false
+
+                if vu59 == 1234 or vu60.Size ~= UDim2.new(1, 0, 0, 0) then
+                    vu58 = not vu58
+
+                    if vu58 then
+                        vu60.Size = UDim2.new(1, 0, - 1, 0)
+                    else
+                        vu60.Size = UDim2.new(1, 0, 0, 0)
+                    end
+                else
+                    vu60.Size = UDim2.new(1, 0, - 1, 0)
+
+                    game:GetService('TweenService'):Create(vu60, TweenInfo.new(vu59, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, 0),
+                    }):Play()
+                end
+
+                pu54()
+            end
+        end)
+        local vu70 = vu56.AncestryChanged:Connect(function(_, p69)
+            if p69 == nil then
+                vu64:Disconnect()
+                vu68:Disconnect()
+                PlayerDied:Disconnect()
+            elseif p69 == workspace.Live:FindFirstChild(LocalPlayer.Name) then
+                task.wait()
+
+                vu56.Parent = Backpack
+            end
+        end)
+
+        Character.Humanoid.Died:Once(function()
+            vu64:Disconnect()
+            vu68:Disconnect()
+            vu70:Disconnect()
+        end)
+
+        return vu56
+    end
+    function ChangeSkillName(p71, p72)
+        local v73, v74, v75 = pairs(LocalPlayer.PlayerGui.Hotbar.Backpack.Hotbar:GetDescendants())
+
+        while true do
+            local v76
+
+            v75, v76 = v73(v74, v75)
+
+            if v75 == nil then
+                break
+            end
+            if v76:IsA('TextLabel') and v76.Text == p71 then
+                v76.Text = p72
+            end
+        end
+    end
+
+    Character.Humanoid.Animator.AnimationPlayed:Connect(function(p77)
+        local v78 = p77.Animation.AnimationId
+
+        if v78 == 'rbxassetid://13532604085' then
+            BackTP = true
+
+            task.wait(0.3)
+
+            BackTP = false
+        elseif v78 == 'rbxassetid://13294471966' then
+            StopAnimation('rbxassetid://13294471966')
+            PlayAnimation('rbxassetid://14057231976', 1.5, 1)
+        elseif v78 == 'rbxassetid://10470104242' then
+            StopAnimation('rbxassetid://10470104242')
+            StopAnimation('rbxassetid://15957361339')
+            PlayAnimation('rbxassetid://17859015788', 2)
+        elseif v78 ~= 'rbxassetid://12272894215' then
+            if v78 == 'rbxassetid://12273188754' then
+                StopAnimation('rbxassetid://12273188754')
+
+                local v79 = tick()
+
+                task.spawn(function()
+                    PlayAnimation('rbxassetid://13643152947', 1.5)
+                    task.wait(1)
+                    StopAnimation('rbxassetid://13643152947')
+                    PlayAnimation('rbxassetid://13876406148', 0.5)
+                    task.wait(0.9)
+                    StopAnimation('rbxassetid://13876406148')
+                end)
+
+                local v80 = Character.HumanoidRootPart.CFrame
+                local v81 = 1
+
+                while tick() - v79 < v81 do
+                    local v82 = Character.HumanoidRootPart.Position
+
+                    task.wait()
+
+                    if math.abs(Character.HumanoidRootPart.Position.Y - v82.Y) >= 10 then
+                        v80 = Character.HumanoidRootPart.CFrame
+
+                        task.wait()
+                    else
+                        ChangePos(Character.HumanoidRootPart, Character.HumanoidRootPart.CFrame + Vector3.new(0, v80.Y - Character.HumanoidRootPart.Position.Y, 0) + Character.HumanoidRootPart.CFrame.LookVector * 2 * (v81 + 1))
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            elseif v78 ~= 'rbxassetid://12296882427' then
+                if v78 == 'rbxassetid://12296113986' then
+                    local v83 = Character.HumanoidRootPart.CFrame
+                    local v84 = tick()
+
+                    StopAnimation('rbxassetid://12296113986')
+                    PlayAnimation('rbxassetid://116153572280464', 0.5)
+
+                    local v85 = 1
+
+                    while tick() - v84 < v85 do
+                        local v86 = Character.HumanoidRootPart.Position
+
+                        task.wait()
+
+                        if (v86 - Character.HumanoidRootPart.Position).Magnitude >= 3 then
+                            v83 = Character.HumanoidRootPart.CFrame
+
+                            task.wait()
+                        else
+                            ChangePos(Character.HumanoidRootPart, v83)
+
+                            Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end
+
+                    StopAnimation('rbxassetid://116153572280464')
+                    PlayAnimation('rbxassetid://79761806706382', 1, 3)
+
+                    local v87 = os.clock()
+                    local v88 = Character.HumanoidRootPart.CFrame
+                    local v89 = 500
+                    local v90 = 0
+
+                    while os.clock() - v87 < 0.5 do
+                        local v91 = os.clock() - v87
+
+                        if v91 < 0.2 then
+                            ChangePos(Character.HumanoidRootPart, v88 + Vector3.new(0, v89 / 2 * v91, 0))
+                        else
+                            ChangePos(Character.HumanoidRootPart, v88 + Vector3.new(0, v89 / 4, 0))
+
+                            v90 = v90 + 1
+
+                            if v90 == 1 then
+                                PlaySound('rbxassetid://5066021887')
+                            end
+                        end
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+
+                        task.wait()
+                    end
+                elseif v78 ~= 'rbxassetid://12307656616' and (v78 ~= 'rbxassetid://12309835105' and (v78 ~= 'rbxassetid://12351854556' and v78 ~= 'rbxassetid://13603396939')) then
+                    if v78 == 'rbxassetid://93546004428904' then
+                        local v92 = CFrame.new(1074, 410, 22985)
+                        local v93 = CFrame.new(131.97, 440.76, 24.43)
+
+                        ChangePos(Character.HumanoidRootPart, v92 + Vector3.new(0, 500, 0))
+                        PlaySound('rbxassetid://5066021887')
+                        PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+                        task.wait(6.5)
+                        ChangePos(Character.HumanoidRootPart, v93)
+                        PlaySound('rbxassetid://5066021887')
+                        PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+
+                        local v94 = Character.HumanoidRootPart
+
+                        if GetClosestPlayer() then
+                            v94 = GetClosestPlayer().HumanoidRootPart
+                        end
+
+                        local v95 = os.clock()
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+
+                        while os.clock() - v95 < 0.3 do
+                            local v96 = game:GetService('TweenService'):Create(Character.HumanoidRootPart, TweenInfo.new(0.3 - (os.clock() - v95)), {
+                                CFrame = CFrame.new(0, 0, 0) + v94.Position - Character.HumanoidRootPart.CFrame.LookVector * 5 + v94.Parent.Humanoid.MoveDirection * 5,
+                            })
+
+                            v96:Play()
+                            task.wait()
+                            v96:Cancel()
+                        end
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    elseif v78 == 'rbxassetid://131226430469931' then
+                        local v97 = CFrame.new(131.97, 440.76, 24.43)
+                        local v98 = CFrame.new(1074, 410, 22985)
+
+                        task.wait(0.5)
+                        ChangePos(Character.HumanoidRootPart, v98 + Vector3.new(0, 500, 0))
+                        PlaySound('rbxassetid://5066021887')
+                        PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+                        task.wait(2)
+                        ChangePos(Character.HumanoidRootPart, v97)
+                        PlaySound('rbxassetid://5066021887')
+                        PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+
+                        local v99 = Character.HumanoidRootPart
+
+                        if GetClosestPlayer() then
+                            v99 = GetClosestPlayer().HumanoidRootPart
+                        end
+
+                        local v100 = os.clock()
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+
+                        while os.clock() - v100 < 0.3 do
+                            local v101 = game:GetService('TweenService'):Create(Character.HumanoidRootPart, TweenInfo.new(0.3 - (os.clock() - v100)), {
+                                CFrame = CFrame.new(0, 0, 0) + v99.Position - Character.HumanoidRootPart.CFrame.LookVector * 5 + v99.Parent.Humanoid.MoveDirection * 5,
+                            })
+
+                            v101:Play()
+                            task.wait()
+                            v101:Cancel()
+                        end
+
+                        Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+        end
+    end)
+
+    function MakePhantomBlinkSkill()
+        PhantomBlinkSkill = Skill('Phantom Blink', function()
+            PlaySound('rbxassetid://5066021887')
+            PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+
+            if Character.Humanoid.MoveDirection.Magnitude ~= 0 then
+                local v102 = Character.HumanoidRootPart.CFrame + Character.Humanoid.MoveDirection * 50
+
+                game:GetService('TweenService'):Create(Character.HumanoidRootPart, TweenInfo.new(0.3), {
+                    CFrame = v102
+                }):Play()
+                task.wait(0.3)
+
+                Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            elseif BackTP then
+                StopAnimation('rbxassetid://15957361339')
+
+                local v103 = Character.HumanoidRootPart.CFrame - Character.HumanoidRootPart.CFrame.LookVector * 25
+
+                game:GetService('TweenService'):Create(Character.HumanoidRootPart, TweenInfo.new(0.3), {
+                    CFrame = v103
+                }):Play()
+                task.wait(0.3)
+
+                Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            else
+                local v104 = Character.HumanoidRootPart
+
+                if GetClosestPlayer() then
+                    v104 = GetClosestPlayer().HumanoidRootPart
+                end
+
+                local v105 = os.clock()
+
+                while os.clock() - v105 < 0.3 do
+                    local v106 = game:GetService('TweenService'):Create(Character.HumanoidRootPart, TweenInfo.new(0.3 - (os.clock() - v105)), {
+                        CFrame = CFrame.new(0, 0, 0) + v104.Position + v104.Parent.Humanoid.MoveDirection * 5,
+                    })
+
+                    v106:Play()
+                    task.wait()
+                    v106:Cancel()
+                end
+
+                Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end, 0.1)
+    end
+
+    HeadOffset = Character.Head.Position - Character.HumanoidRootPart.Position
+
+    function MakeVibralShiftSkill()
+        Invisible = false
+        VibralShiftSkill = Skill('Vibral Shift', function()
+            if Invisible then
+                Invisible = false
+            else
+                Invisible = true
+            end
+
+            local function vu107()
+                if Invisible then
+                    StopAllAnimation()
+                    PlayAnimation('rbxassetid://136370737633649', 0, 4).Stopped:Once(function(
+                    )
+                        if Invisible then
+                            task.wait()
+                            vu107()
+                        end
+                    end)
+                end
+            end
+
+            if Invisible then
+                vu107()
+
+                local v110 = Character.Humanoid.Animator.AnimationPlayed:Connect(function(
+                    p108
+                )
+                    local v109 = p108.Animation.AnimationId
+
+                    if v109 ~= 'rbxassetid://136370737633649' and Invisible then
+                        StopAnimation(v109)
+                    end
+                end)
+                local v111, v112, v113 = pairs(Character:GetDescendants())
+
+                while true do
+                    local v114
+
+                    v113, v114 = v111(v112, v113)
+
+                    if v113 == nil then
+                        break
+                    end
+                    if v114:IsA('BasePart') then
+                        v114.Massless = true
+
+                        if v114.Name ~= 'Trash Can' then
+                            v114:SetAttribute('OldTransparency', v114.Transparency)
+
+                            v114.Transparency = 1
+                        end
+                    end
+                end
+
+                local v116 = Character.DescendantAdded:Connect(function(p115)
+                    if p115:IsA('BasePart') then
+                        p115.Massless = true
+
+                        if p115.Name ~= 'Trash Can' then
+                            p115:SetAttribute('OldTransparency', p115.Transparency)
+
+                            p115.Transparency = 1
+                        end
+                    end
+                end)
+
+                while task.wait() and Invisible do
+                    local v117 = workspace.CurrentCamera.CFrame.LookVector
+                    local v118 = Vector3.new(v117.X, 0, v117.Z).Unit * 100
+
+                    if not UsingTrashcanSkill then
+                        FreezeCam(Character.HumanoidRootPart.CFrame + HeadOffset)
+                    end
+
+                    Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position, Character.HumanoidRootPart.Position + v118) + Character.Humanoid.MoveDirection * 3
+
+                    CubicleParticle(Character.HumanoidRootPart.CFrame + Vector3.new(math.random(- 20, 20) / 5, math.random(- 20, 40) / 5, math.random(- 20, 20) / 5), Color3.fromRGB(50, 0, math.random(100, 130)), math.random(100, 200) / 120, 0.7, 1, 1, 1)
+                end
+
+                v110:Disconnect()
+                StopAnimation('rbxassetid://136370737633649')
+                task.spawn(function()
+                    for _ = 1, 50 do
+                        local v119 = workspace.CurrentCamera.CFrame.LookVector
+                        local v120 = Vector3.new(v119.X, 0, v119.Z).Unit * 100
+
+                        if not UsingTrashcanSkill then
+                            FreezeCam(Character.HumanoidRootPart.CFrame + HeadOffset)
+                        end
+
+                        Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position, Character.HumanoidRootPart.Position + v120)
+
+                        if Invisible then
+                            break
+                        end
+
+                        task.wait()
+                    end
+
+                    UnfreezeCam()
+                end)
+
+                local v121, v122, v123 = pairs(Character:GetDescendants())
+
+                while true do
+                    local v124
+
+                    v123, v124 = v121(v122, v123)
+
+                    if v123 == nil then
+                        break
+                    end
+                    if v124:IsA('BasePart') then
+                        v124.Transparency = v124:GetAttribute('OldTransparency') or v124.Transparency
+
+                        v124:SetAttribute('OldTransparency', nil)
+                    end
+                end
+
+                local v125 = tick()
+
+                repeat
+                    task.wait(0.5)
+                until tick() - v125 < 10 or Invisible
+
+                if not Invisible then
+                    v116:Disconnect()
+
+                    local v126, v127, v128 = pairs(Character:GetDescendants())
+
+                    while true do
+                        local v129
+
+                        v128, v129 = v126(v127, v128)
+
+                        if v128 == nil then
+                            break
+                        end
+                        if v129:IsA('BasePart') then
+                            v129.Massless = false
+                        end
+                    end
+                end
+            end
+        end, 1234)
+    end
+    function MakeDimensionDrift()
+        local vu130 = {
+            CFrame.new(131.97, 440.76, 24.43),
+            CFrame.new(1074, 410, 22985),
+            CFrame.new(- 77.87, 60, 20354.31),
+            (CFrame.new(1058.87, 135, 23009.31)),
+        }
+        local vu131 = 1
+
+        DimensionDriftSkill = Skill('Dimension Drift', function()
+            vu131 = vu131 + 1
+
+            if vu131 > 4 then
+                vu131 = 1
+            end
+
+            PlaySound('rbxassetid://5066021887')
+            PlayAnimation('rbxassetid://15957361339', 0.5, 0, 0.5)
+            ChangePos(Character.HumanoidRootPart, vu130[vu131])
+        end, 0.1)
+    end
+
+    MakePhantomBlinkSkill()
+    MakeVibralShiftSkill()
+    MakeDimensionDrift()
+    ChangeSkillName('Flowing Water', 'Phantom Pursuit')
+    ChangeSkillName('Lethal Whirlwind Stream', 'Abyssal Slam')
+    ChangeSkillName('Crushed Rock', 'Heaven Bringer')
+    Backpack.ChildAdded:Connect(function(p132)
+        task.wait()
+
+        if table.find({
+            'Flowing Water',
+            'Lethal Whirlwind Stream',
+            'Crushed Rock',
+        }, p132.Name) then
+            ChangeSkillName('Flowing Water', 'Phantom Pursuit')
+            ChangeSkillName('Lethal Whirlwind Stream', 'Abyssal Slam')
+            ChangeSkillName('Crushed Rock', 'Heaven Bringer')
+        end
+    end)
+end
+
+local vu133 = Instance.new('ScreenGui')
+local v134 = Instance.new('Frame')
+local v135 = Instance.new('TextLabel')
+local v136 = Instance.new('TextLabel')
+local v137 = Instance.new('TextButton')
+local v138 = Instance.new('TextButton')
+
+vu133.Parent = game.Players.LocalPlayer:WaitForChild('PlayerGui')
+v134.Name = 'Base'
+v134.Parent = vu133
+v134.BackgroundColor3 = Color3.fromRGB(98, 98, 98)
+v134.BackgroundTransparency = 0.35
+v134.BorderColor3 = Color3.fromRGB(0, 0, 0)
+v134.BorderSizePixel = 0
+v134.AnchorPoint = Vector2.new(0.5, 0.5)
+v134.Position = UDim2.new(0.5, 0, 0.5, 0)
+v134.Size = UDim2.new(0, 328, 0, 97)
+v135.Name = 'Title'
+v135.Parent = v134
+v135.BackgroundColor3 = Color3.fromRGB(95, 95, 95)
+v135.BorderColor3 = Color3.fromRGB(0, 0, 0)
+v135.Size = UDim2.new(0, 328, 0, 19)
+v135.Font = Enum.Font.Highway
+v135.Text = 'Join Discord'
+v135.TextColor3 = Color3.fromRGB(255, 255, 255)
+v135.TextSize = 19
+v136.Name = 'Text'
+v136.Parent = v134
+v136.BackgroundTransparency = 1
+v136.Position = UDim2.new(0, 0, 0.268041223, 0)
+v136.Size = UDim2.new(0, 328, 0, 38)
+v136.Font = Enum.Font.Cartoon
+v136.Text = "For more awesome scripts, Join friedpotato's server."
+v136.TextColor3 = Color3.fromRGB(255, 255, 255)
+v136.TextSize = 19
+v136.TextWrapped = true
+v137.Name = 'Button'
+v137.Parent = v134
+v137.BackgroundColor3 = Color3.fromRGB(111, 111, 111)
+v137.BackgroundTransparency = 0.5
+v137.BorderColor3 = Color3.fromRGB(0, 0, 0)
+v137.Position = UDim2.new(0.195121944, 0, 0.659793794, 0)
+v137.Size = UDim2.new(0, 104, 0, 33)
+v137.Font = Enum.Font.Cartoon
+v137.Text = 'Copy Link'
+v137.TextColor3 = Color3.fromRGB(255, 255, 255)
+v137.TextSize = 14
+
+v137.MouseButton1Click:Connect(function()
+    setclipboard('https://discord.gg/mhFwYE4aG4')
+end)
+
+v138.Name = 'Button'
+v138.Parent = v134
+v138.BackgroundColor3 = Color3.fromRGB(111, 111, 111)
+v138.BackgroundTransparency = 0.5
+v138.BorderColor3 = Color3.fromRGB(0, 0, 0)
+v138.Position = UDim2.new(0.51219511, 0, 0.659793794, 0)
+v138.Size = UDim2.new(0, 96, 0, 33)
+v138.Font = Enum.Font.Cartoon
+v138.Text = 'Close'
+v138.TextColor3 = Color3.fromRGB(255, 255, 255)
+v138.TextSize = 14
+
+v138.MouseButton1Click:Connect(function()
+    vu133:Destroy()
+    execute()
+end)

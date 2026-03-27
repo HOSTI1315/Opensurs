@@ -1,0 +1,301 @@
+-- Made for Executors (e.g., Delta, Fluxus, Arceus X Neo)
+
+-- GUI: Server Founders (Mobile + PC Compatible)
+
+local Players = game:GetService("Players")
+
+local TeleportService = game:GetService("TeleportService")
+
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+
+local placeId = game.PlaceId
+
+-- GUI Setup
+
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+screenGui.Name = "ServerFounders"
+
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screenGui)
+
+frame.Size = UDim2.new(0, 300, 0, 310)
+
+frame.Position = UDim2.new(0.5, -150, 0.5, -155)
+
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+
+frame.BorderSizePixel = 0
+
+frame.Active = true
+
+frame.Draggable = true
+
+-- Title
+
+local title = Instance.new("TextLabel", frame)
+
+title.Size = UDim2.new(1, 0, 0, 30)
+
+title.BackgroundTransparency = 1
+
+title.Text = "Server Founders"
+
+title.TextColor3 = Color3.new(1, 1, 1)
+
+title.Font = Enum.Font.GothamBold
+
+title.TextSize = 20
+
+-- Old Server Button
+
+local oldBtn = Instance.new("TextButton", frame)
+
+oldBtn.Size = UDim2.new(1, -20, 0, 40)
+
+oldBtn.Position = UDim2.new(0, 10, 0, 40)
+
+oldBtn.Text = "Old Server"
+
+oldBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+
+oldBtn.TextColor3 = Color3.new(1, 1, 1)
+
+oldBtn.Font = Enum.Font.Gotham
+
+oldBtn.TextSize = 18
+
+-- New Server Button
+
+local newBtn = Instance.new("TextButton", frame)
+
+newBtn.Size = UDim2.new(1, -20, 0, 40)
+
+newBtn.Position = UDim2.new(0, 10, 0, 90)
+
+newBtn.Text = "New Server"
+
+newBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
+
+newBtn.TextColor3 = Color3.new(1, 1, 1)
+
+newBtn.Font = Enum.Font.Gotham
+
+newBtn.TextSize = 18
+
+-- Normal Server Button
+
+local normalBtn = Instance.new("TextButton", frame)
+
+normalBtn.Size = UDim2.new(1, -20, 0, 40)
+
+normalBtn.Position = UDim2.new(0, 10, 0, 140)
+
+normalBtn.Text = "Normal Server"
+
+normalBtn.BackgroundColor3 = Color3.fromRGB(40, 85, 130)
+
+normalBtn.TextColor3 = Color3.new(1, 1, 1)
+
+normalBtn.Font = Enum.Font.Gotham
+
+normalBtn.TextSize = 18
+
+-- Code Input Box
+
+local inputBox = Instance.new("TextBox", frame)
+
+inputBox.Size = UDim2.new(1, -20, 0, 40)
+
+inputBox.Position = UDim2.new(0, 10, 0, 190)
+
+inputBox.PlaceholderText = "Enter Server Code ID"
+
+inputBox.Text = ""
+
+inputBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+inputBox.TextColor3 = Color3.new(1, 1, 1)
+
+inputBox.Font = Enum.Font.Gotham
+
+inputBox.TextSize = 16
+
+-- Join Code ID Button
+
+local joinBtn = Instance.new("TextButton", frame)
+
+joinBtn.Size = UDim2.new(1, -20, 0, 40)
+
+joinBtn.Position = UDim2.new(0, 10, 0, 240)
+
+joinBtn.Text = "Join Code ID"
+
+joinBtn.BackgroundColor3 = Color3.fromRGB(100, 60, 140)
+
+joinBtn.TextColor3 = Color3.new(1, 1, 1)
+
+joinBtn.Font = Enum.Font.Gotham
+
+joinBtn.TextSize = 18
+
+-- Old Server Search
+
+oldBtn.MouseButton1Click:Connect(function()
+
+	oldBtn.Text = "Searching..."	local success, result = pcall(function()
+
+		return HttpService:JSONDecode(game:HttpGet(
+
+			"https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+
+		))
+
+	end)
+
+	if success and result and result.data then
+
+		for _, server in ipairs(result.data) do
+
+			if server.playing < server.maxPlayers then
+
+				oldBtn.Text = "Joining Old Server..."
+
+				TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
+
+				return
+
+			end
+
+		end
+
+	end
+
+	oldBtn.Text = "No Old Servers Found"
+
+	task.wait(2)
+
+	oldBtn.Text = "Old Server"
+
+end)
+
+-- New Server Search
+
+newBtn.MouseButton1Click:Connect(function()
+
+	newBtn.Text = "Finding New Server..."
+
+	local success, result = pcall(function()
+
+		return HttpService:JSONDecode(game:HttpGet(
+
+			"https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Desc&limit=100"
+
+		))
+
+	end)
+
+	if success and result and result.data then
+
+		for _, server in ipairs(result.data) do
+
+			if server.id ~= game.JobId and server.playing < server.maxPlayers then
+
+				newBtn.Text = "Joining New Server..."
+
+				TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
+
+				return
+
+			end
+
+		end
+
+	end
+
+	newBtn.Text = "No New Servers Found"
+
+	task.wait(2)
+
+	newBtn.Text = "New Server"
+
+end)
+
+-- Normal Server (Random Other Server)
+
+normalBtn.MouseButton1Click:Connect(function()
+
+	normalBtn.Text = "Searching..."
+
+	local success, result = pcall(function()
+
+		return HttpService:JSONDecode(game:HttpGet(
+
+			"https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+
+		))
+
+	end)
+
+	if success and result and result.data and #result.data > 0 then
+
+		local validServers = {}
+
+		for _, server in ipairs(result.data) do
+
+			if server.id ~= game.JobId and server.playing < server.maxPlayers then
+
+				table.insert(validServers, server)
+
+			end
+
+		end
+
+		if #validServers > 0 then
+
+			local chosen = validServers[math.random(1, #validServers)]
+
+			normalBtn.Text = "Joining..."
+
+			TeleportService:TeleportToPlaceInstance(placeId, chosen.id, player)
+
+			return
+
+		end
+
+	end
+
+	normalBtn.Text = "No Servers Found"
+
+	task.wait(2)
+
+	normalBtn.Text = "Normal Server"
+
+end)
+
+-- Join Code ID
+
+joinBtn.MouseButton1Click:Connect(function()
+
+	local jobId = inputBox.Text
+
+	if jobId and #jobId > 10 then
+
+		joinBtn.Text = "Teleporting..."
+
+		TeleportService:TeleportToPlaceInstance(placeId, jobId, player)
+
+	else
+
+		joinBtn.Text = "Invalid ID"
+
+		task.wait(2)
+
+		joinBtn.Text = "Join Code ID"
+
+	end
+
+end)

@@ -1,0 +1,760 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local Connections = {}
+local Highlights = {}
+local ESPConnections = {}
+
+local SprintingModule
+
+local function GetSprintModule()
+    if not SprintingModule then
+        pcall(function()
+            SprintingModule = require(ReplicatedStorage.Systems.Character.Game.Sprinting)
+        end)
+    end
+    return SprintingModule
+end
+
+local function CreateConnection(name, connection)
+    if Connections[name] then
+        Connections[name]:Disconnect()
+    end
+    Connections[name] = connection
+    return connection
+end
+
+local function DisconnectConnection(name)
+    if Connections[name] then
+        Connections[name]:Disconnect()
+        Connections[name] = nil
+    end
+end
+
+local function GetCharacter()
+    return LocalPlayer.Character
+end
+
+local function GetHumanoid()
+    local char = GetCharacter()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function GetHumanoidRootPart()
+    local char = GetCharacter()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function ClearHighlights()
+    for _, highlight in pairs(Highlights) do
+        if highlight then
+            pcall(function() highlight:Destroy() end)
+        end
+    end
+    Highlights = {}
+end
+
+local function CreateKillerESP()
+    ClearHighlights()
+    
+    local playersFolder = Workspace:FindFirstChild("Players")
+    if not playersFolder then return end
+    
+    local killersFolder = playersFolder:FindFirstChild("Killers")
+    if not killersFolder then return end
+    
+    for _, model in ipairs(killersFolder:GetChildren()) do
+        if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = model
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+            highlight.FillTransparency = 0.7
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = model
+            table.insert(Highlights, highlight)
+        end
+    end
+end
+
+local function CreateSurvivorESP()
+    ClearHighlights()
+    
+    local playersFolder = Workspace:FindFirstChild("Players")
+    if not playersFolder then return end
+    
+    local survivorsFolder = playersFolder:FindFirstChild("Survivors")
+    if not survivorsFolder then return end
+    
+    for _, model in ipairs(survivorsFolder:GetChildren()) do
+        if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = model
+            highlight.FillColor = Color3.fromRGB(0, 255, 0)
+            highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+            highlight.FillTransparency = 0.7
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = model
+            table.insert(Highlights, highlight)
+        end
+    end
+end
+
+local Window = WindUI:CreateWindow({
+    Title = "Flash Hub | Forsaken",
+    Icon = "star",
+    Author = "Leakg0d & EesaBoxXD",
+    Folder = "Flash Hub | Forsaken",
+    Size = UDim2.new(0, 500, 0, 420),
+    Theme = "Midnight",
+    HasOutline = true,
+})
+
+Window:EditOpenButton({
+    Title = "Flash Hub - Open",
+    Icon = "monitor",
+    CornerRadius = UDim.new(0, 6),
+    StrokeThickness = 2,
+    Draggable = true,
+})
+
+task.spawn(GetSprintModule)
+
+local StaminaTab = Window:Tab({
+    Title = "Stamina Settings",
+    Icon = "footprints",
+})
+
+StaminaTab:Toggle({
+    Title = "Infinity Stamina",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            CreateConnection("InfiniteStamina", task.spawn(function()
+                while Connections["InfiniteStamina"] do
+                    local module = GetSprintModule()
+                    if module then
+                        module.MaxStamina = module.MaxStamina
+                        module.SprintSpeed = module.SprintSpeed
+                        module.StaminaGain = module.StaminaGain
+                        module.StaminaDrain = module.StaminaDrain
+                        module.StaminaRegenDelay = module.StaminaRegenDelay
+                        module.Stamina = module.MaxStamina
+                    end
+                    task.wait(0.005)
+                end
+            end))
+        else
+            DisconnectConnection("InfiniteStamina")
+        end
+    end,
+})
+
+StaminaTab:Slider({
+    Title = "Max Stamina",
+    Suffix = " Max",
+    Value = {
+        Min = 1,
+        Default = 100,
+        Max = 500,
+    },
+    Step = 1,
+    Callback = function(value)
+        local module = GetSprintModule()
+        if module then
+            module.MaxStamina = tonumber(value) or 1
+        end
+    end,
+})
+
+StaminaTab:Slider({
+    Title = "Sprint Speed",
+    Suffix = " S",
+    Value = {
+        Min = 1,
+        Default = 20,
+        Max = 40,
+    },
+    Step = 1,
+    Callback = function(value)
+        local module = GetSprintModule()
+        if module then
+            module.SprintSpeed = tonumber(value) or 1
+        end
+    end,
+})
+
+StaminaTab:Slider({
+    Title = "Stamina Gain",
+    Suffix = " per sec",
+    Value = {
+        Min = 1,
+        Default = 10,
+        Max = 500,
+    },
+    Step = 1,
+    Callback = function(value)
+        local module = GetSprintModule()
+        if module then
+            module.StaminaGain = tonumber(value) or 1
+        end
+    end,
+})
+
+StaminaTab:Slider({
+    Title = "Stamina Drain",
+    Suffix = " per sec",
+    Value = {
+        Min = 0,
+        Default = 5,
+        Max = 100,
+    },
+    Step = 1,
+    Callback = function(value)
+        local module = GetSprintModule()
+        if module then
+            module.StaminaDrain = tonumber(value) or 0
+        end
+    end,
+})
+
+StaminaTab:Slider({
+    Title = "Regen Delay",
+    Suffix = " sec",
+    Value = {
+        Min = 0,
+        Default = 2,
+        Max = 5,
+    },
+    Step = 0.1,
+    Callback = function(value)
+        local module = GetSprintModule()
+        if module then
+            module.StaminaRegenDelay = tonumber(value) or 0
+        end
+    end,
+})
+
+StaminaTab:Button({
+    Title = "Reset to Default",
+    Callback = function()
+        local module = GetSprintModule()
+        if module then
+            module.MaxStamina = 100
+            module.SprintSpeed = 20
+            module.StaminaGain = 10
+            module.StaminaDrain = 5
+            module.StaminaRegenDelay = 2
+        end
+    end,
+})
+
+local ESPTab = Window:Tab({
+    Title = "ESP Characters",
+    Icon = "eye",
+})
+
+ESPTab:Toggle({
+    Title = "Killers ESP",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            CreateKillerESP()
+            CreateConnection("KillerESP", RunService.Heartbeat:Connect(function()
+                task.wait(5)
+                CreateKillerESP()
+            end))
+        else
+            DisconnectConnection("KillerESP")
+            ClearHighlights()
+        end
+    end,
+})
+
+ESPTab:Toggle({
+    Title = "Survivors ESP",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            CreateSurvivorESP()
+            CreateConnection("SurvivorESP", RunService.Heartbeat:Connect(function()
+                task.wait(5)
+                CreateSurvivorESP()
+            end))
+        else
+            DisconnectConnection("SurvivorESP")
+            ClearHighlights()
+        end
+    end,
+})
+
+local AutoBlockTab = Window:Tab({
+    Title = "Auto Block",
+    Icon = "shield",
+})
+
+AutoBlockTab:Toggle({
+    Title = "Auto Block",
+    Default = false,
+    Desc = "Automatically blocks when killer is near",
+    Callback = function(enabled)
+        if enabled then
+            CreateConnection("AutoBlock", RunService.Heartbeat:Connect(function()
+                local hrp = GetHumanoidRootPart()
+                if not hrp then return end
+                
+                local playersFolder = Workspace:FindFirstChild("Players")
+                if not playersFolder then return end
+                
+                local killersFolder = playersFolder:FindFirstChild("Killers")
+                if not killersFolder then return end
+                
+                for _, killer in ipairs(killersFolder:GetChildren()) do
+                    if killer:IsA("Model") then
+                        local killerHRP = killer:FindFirstChild("HumanoidRootPart")
+                        if killerHRP then
+                            local distance = (killerHRP.Position - hrp.Position).Magnitude
+                            if distance <= 15 then
+                                local vim = game:GetService("VirtualInputManager")
+                                vim:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                                task.wait(0.1)
+                                vim:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+                            end
+                        end
+                    end
+                end
+            end))
+        else
+            DisconnectConnection("AutoBlock")
+        end
+    end,
+})
+
+local MiscTab = Window:Tab({
+    Title = "Misc",
+    Icon = "gift",
+})
+
+MiscTab:Toggle({
+    Title = "Fullbright",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 12
+            Lighting.GlobalShadows = false
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        else
+            Lighting.Brightness = 1
+            Lighting.ClockTime = 14
+            Lighting.GlobalShadows = true
+            Lighting.Ambient = Color3.fromRGB(0, 0, 0)
+            Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+        end
+    end,
+})
+
+MiscTab:Slider({
+    Title = "FOV",
+    Suffix = "°",
+    Value = {
+        Min = 60,
+        Default = 70,
+        Max = 120,
+    },
+    Step = 1,
+    Callback = function(value)
+        Camera.FieldOfView = value
+    end,
+})
+
+MiscTab:Slider({
+    Title = "Walk Speed",
+    Suffix = " Speed",
+    Value = {
+        Min = 16,
+        Default = 16,
+        Max = 100,
+    },
+    Step = 1,
+    Callback = function(value)
+        CreateConnection("WalkSpeed", RunService.Heartbeat:Connect(function()
+            local humanoid = GetHumanoid()
+            if humanoid then
+                humanoid.WalkSpeed = value
+            end
+        end))
+    end,
+})
+
+MiscTab:Button({
+    Title = "No Fog",
+    Callback = function()
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 0
+        
+        WindUI:Notify({
+            Title = "Fog Removed",
+            Content = "Fog has been removed successfully!",
+        })
+    end,
+})
+
+local AutoStunTab = Window:Tab({
+    Title = "Auto Stun",
+    Icon = "zap",
+})
+
+AutoStunTab:Toggle({
+    Title = "Auto Stun Killer",
+    Default = false,
+    Desc = "Automatically stuns killer when in range",
+    Callback = function(enabled)
+        if enabled then
+            CreateConnection("AutoStun", RunService.Heartbeat:Connect(function()
+                local hrp = GetHumanoidRootPart()
+                if not hrp then return end
+                
+                local playersFolder = Workspace:FindFirstChild("Players")
+                if not playersFolder then return end
+                
+                local killersFolder = playersFolder:FindFirstChild("Killers")
+                if not killersFolder then return end
+                
+                for _, killer in ipairs(killersFolder:GetChildren()) do
+                    if killer:IsA("Model") then
+                        local killerHRP = killer:FindFirstChild("HumanoidRootPart")
+                        if killerHRP then
+                            local distance = (killerHRP.Position - hrp.Position).Magnitude
+                            if distance <= 10 then
+                                local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+                                if remotes then
+                                    local stunEvent = remotes:FindFirstChild("Stun")
+                                    if stunEvent then
+                                        stunEvent:FireServer()
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end))
+        else
+            DisconnectConnection("AutoStun")
+        end
+    end,
+})
+
+local RandomTab = Window:Tab({
+    Title = "Random",
+    Icon = "crosshair",
+})
+
+RandomTab:Button({
+    Title = "Remove Doors",
+    Callback = function()
+        local map = Workspace:FindFirstChild("Map")
+        if map then
+            local ingame = map:FindFirstChild("Ingame")
+            if ingame then
+                local mapFolder = ingame:FindFirstChild("Map")
+                if mapFolder then
+                    for _, obj in pairs(mapFolder:GetDescendants()) do
+                        if obj:IsA("BasePart") and obj.Name:lower():find("door") then
+                            obj:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+        
+        WindUI:Notify({
+            Title = "Doors Removed",
+            Content = "All doors have been removed!",
+        })
+    end,
+})
+
+RandomTab:Button({
+    Title = "Anti AFK",
+    Callback = function()
+        local vu = game:GetService("VirtualUser")
+        LocalPlayer.Idled:Connect(function()
+            vu:CaptureController()
+            vu:ClickButton2(Vector2.new())
+        end)
+        
+        WindUI:Notify({
+            Title = "Anti AFK",
+            Content = "Anti AFK enabled!",
+        })
+    end,
+})
+
+RandomTab:Button({
+    Title = "Reset Character",
+    Callback = function()
+        local humanoid = GetHumanoid()
+        if humanoid then
+            humanoid.Health = 0
+        end
+    end,
+})
+
+local HitboxTab = Window:Tab({
+    Title = "Hitbox Expander",
+    Icon = "target",
+})
+
+HitboxTab:Toggle({
+    Title = "Expand Killer Hitboxes",
+    Default = false,
+    Callback = function(enabled)
+        if enabled then
+            CreateConnection("HitboxExpander", RunService.Heartbeat:Connect(function()
+                local playersFolder = Workspace:FindFirstChild("Players")
+                if not playersFolder then return end
+                
+                local killersFolder = playersFolder:FindFirstChild("Killers")
+                if not killersFolder then return end
+                
+                for _, killer in ipairs(killersFolder:GetChildren()) do
+                    if killer:IsA("Model") then
+                        local killerHRP = killer:FindFirstChild("HumanoidRootPart")
+                        if killerHRP then
+                            killerHRP.Size = Vector3.new(10, 10, 10)
+                            killerHRP.Transparency = 0.7
+                            killerHRP.CanCollide = false
+                        end
+                    end
+                end
+            end))
+        else
+            DisconnectConnection("HitboxExpander")
+            
+            local playersFolder = Workspace:FindFirstChild("Players")
+            if playersFolder then
+                local killersFolder = playersFolder:FindFirstChild("Killers")
+                if killersFolder then
+                    for _, killer in ipairs(killersFolder:GetChildren()) do
+                        if killer:IsA("Model") then
+                            local killerHRP = killer:FindFirstChild("HumanoidRootPart")
+                            if killerHRP then
+                                killerHRP.Size = Vector3.new(2, 2, 1)
+                                killerHRP.Transparency = 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end,
+})
+
+HitboxTab:Slider({
+    Title = "Hitbox Size",
+    Suffix = " Studs",
+    Value = {
+        Min = 1,
+        Default = 10,
+        Max = 50,
+    },
+    Step = 1,
+    Callback = function(value)
+        CreateConnection("HitboxSize", RunService.Heartbeat:Connect(function()
+            local playersFolder = Workspace:FindFirstChild("Players")
+            if not playersFolder then return end
+            
+            local killersFolder = playersFolder:FindFirstChild("Killers")
+            if not killersFolder then return end
+            
+            for _, killer in ipairs(killersFolder:GetChildren()) do
+                if killer:IsA("Model") then
+                    local killerHRP = killer:FindFirstChild("HumanoidRootPart")
+                    if killerHRP then
+                        killerHRP.Size = Vector3.new(value, value, value)
+                    end
+                end
+            end
+        end))
+    end,
+})
+
+local GeneratorTab = Window:Tab({
+    Title = "Generator",
+    Icon = "battery-charging",
+})
+
+GeneratorTab:Toggle({
+    Title = "Auto Fix Generators",
+    Default = false,
+    Desc = "Automatically fixes all generators",
+    Callback = function(enabled)
+        if enabled then
+            CreateConnection("AutoFixGen", task.spawn(function()
+                while Connections["AutoFixGen"] do
+                    pcall(function()
+                        local map = Workspace:FindFirstChild("Map")
+                        if map then
+                            local ingame = map:FindFirstChild("Ingame")
+                            if ingame then
+                                local mapFolder = ingame:FindFirstChild("Map")
+                                if mapFolder then
+                                    for _, obj in pairs(mapFolder:GetChildren()) do
+                                        if obj.Name:find("Generator") then
+                                            local hrp = GetHumanoidRootPart()
+                                            if hrp then
+                                                local originalPos = hrp.CFrame
+                                                hrp.CFrame = obj.CFrame
+                                                task.wait(0.5)
+                                                
+                                                local prox = obj:FindFirstChildOfClass("ProximityPrompt")
+                                                if prox then
+                                                    fireproximityprompt(prox)
+                                                end
+                                                
+                                                task.wait(7.5)
+                                                hrp.CFrame = originalPos
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(1)
+                end
+            end))
+            
+            WindUI:Notify({
+                Title = "Auto Fix Generators",
+                Content = "Started auto fixing generators!",
+            })
+        else
+            DisconnectConnection("AutoFixGen")
+        end
+    end,
+})
+
+local TeleportTab = Window:Tab({
+    Title = "Teleport",
+    Icon = "cable",
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Generators",
+    Callback = function()
+        local map = Workspace:FindFirstChild("Map")
+        if map then
+            local ingame = map:FindFirstChild("Ingame")
+            if ingame then
+                local mapFolder = ingame:FindFirstChild("Map")
+                if mapFolder then
+                    for _, obj in pairs(mapFolder:GetChildren()) do
+                        if obj.Name:find("Generator") and obj:FindFirstChild("Part") then
+                            local hrp = GetHumanoidRootPart()
+                            if hrp then
+                                hrp.CFrame = obj.Part.CFrame + Vector3.new(0, 5, 0)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end,
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Exit",
+    Callback = function()
+        local map = Workspace:FindFirstChild("Map")
+        if map then
+            local ingame = map:FindFirstChild("Ingame")
+            if ingame then
+                local mapFolder = ingame:FindFirstChild("Map")
+                if mapFolder then
+                    local exit = mapFolder:FindFirstChild("Exit") or mapFolder:FindFirstChild("Gate")
+                    if exit then
+                        local hrp = GetHumanoidRootPart()
+                        if hrp then
+                            hrp.CFrame = exit.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                end
+            end
+        end
+    end,
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Safe Room",
+    Callback = function()
+        local map = Workspace:FindFirstChild("Map")
+        if map then
+            local ingame = map:FindFirstChild("Ingame")
+            if ingame then
+                local mapFolder = ingame:FindFirstChild("Map")
+                if mapFolder then
+                    local safeRoom = mapFolder:FindFirstChild("SafeRoom")
+                    if safeRoom then
+                        local hrp = GetHumanoidRootPart()
+                        if hrp then
+                            hrp.CFrame = safeRoom.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                end
+            end
+        end
+    end,
+})
+
+local CreditsTab = Window:Tab({
+    Title = "Credits",
+    Icon = "award",
+})
+
+CreditsTab:Section({
+    Title = "Script Information",
+})
+
+CreditsTab:Button({
+    Title = "Join Flash Hub Discord Server (Click to Copy Discord Link)",
+    Description = "Click To Copy The Discord Server Link For Flash Hub!",
+    Callback = function()
+        setclipboard("https://discord.gg/6GdvDKXcmE")
+        
+        WindUI:Notify({
+            Title = "Copied!",
+            Content = "Discord invite copied to clipboard.",
+            Duration = 3,
+        })
+    end,
+})
+
+CreditsTab:Section({
+    Title = "Credits",
+})
+
+CreditsTab:Paragraph({
+    Title = "Developers",
+    Content = "Script created by Leakg0d & EesaBoxXD\nCleaned and optimized by Claude"
+})
+
+WindUI:Notify({
+    Title = "Flash Hub | Forsaken",
+    Content = "Script loaded successfully!",
+    Duration = 5,
+})

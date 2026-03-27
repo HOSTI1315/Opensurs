@@ -1,0 +1,255 @@
+-- Services declaration
+local playersService = game:GetService("Players")
+local lightingService = game:GetService("Lighting")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local materialService = game:GetService("MaterialService")
+local workspaceService = game:GetService("Workspace")
+local statsService = game:GetService("Stats")
+local debrisService = game:GetService("Debris")
+local textChatService = game:GetService("TextChatService")
+
+-- Client references
+local clientPlayer = playersService.LocalPlayer
+local PlayerGui = clientPlayer:WaitForChild("PlayerGui", 10)
+
+-- Load WindUI library
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Create main window
+local Window = WindUI:CreateWindow({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    Author = "By GlovDev",
+    Folder = "GlovSakenScript",
+    Size = UDim2.fromOffset(350, 300),
+    Transparent = false,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+-- Window toggle key
+Window:SetToggleKey(Enum.KeyCode.K)
+
+-- Window text font
+WindUI:SetFont("rbxasset://fonts/families/AccanthisADFStd.json")
+
+-- Mobile open button configuration
+Window:EditOpenButton({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 0,
+    Color = ColorSequence.new(
+        Color3.fromHex("000000"), 
+        Color3.fromHex("000000")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+----------------------------------------------------------------
+-- Support Tab
+----------------------------------------------------------------
+local SupportTab = Window:Tab({
+    Title = "Support",
+    Icon = "activity",
+    Locked = false,
+})
+
+----------------------------------------------------------------
+-- Dusekkar Section
+----------------------------------------------------------------
+local DusekkarSection = SupportTab:Section({
+    Title = "Dusekkar",
+    Opened = true,
+})
+
+-- Variables
+local dusekkarAimbotEnabled = false
+local dusekkarAimMode = "Survivor"
+local dusekkarAnimIds = {"77894750279891", "118933622288262"}
+local dusekkarKillerNames = {"Slasher", "c00lkidd", "JohnDoe", "1x1x1x1", "Noli", "Sixer", "Nosferatu"}
+local dusekkarHealthPenalty = 1000
+local dusekkarAiming = false
+local dusekkarHumanoid = nil
+local dusekkarAimConnection = nil
+
+-- Find nearest target based on mode
+local function dusekkarGetNearestTarget()
+    local lp = playersService.LocalPlayer
+    local char = lp.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local playersFolder = workspaceService:FindFirstChild("Players")
+    local survivorsFolder = playersFolder and playersFolder:FindFirstChild("Survivors")
+    local killersFolder = playersFolder and playersFolder:FindFirstChild("Killers")
+    if not survivorsFolder and not killersFolder then return nil end
+
+    local nearestHRP = nil
+    local bestScore = math.huge
+
+    if dusekkarAimMode == "Survivor" and survivorsFolder then
+        for _, survivor in ipairs(survivorsFolder:GetChildren()) do
+            if survivor:IsA("Model") and survivor ~= char and not table.find(dusekkarKillerNames, survivor.Name) then
+                local targetHRP = survivor:FindFirstChild("HumanoidRootPart")
+                local targetHum = survivor:FindFirstChildOfClass("Humanoid")
+                if targetHRP and targetHum and targetHum.Health > 0 then
+                    local distSq = (targetHRP.Position - hrp.Position).Magnitude^2
+                    local healthRatio = targetHum.Health / math.max(targetHum.MaxHealth, 1)
+                    local score = distSq + dusekkarHealthPenalty * healthRatio
+                    if score < bestScore then
+                        bestScore = score
+                        nearestHRP = targetHRP
+                    end
+                end
+            end
+        end
+    elseif dusekkarAimMode == "Killer" and killersFolder then
+        for _, killer in ipairs(killersFolder:GetChildren()) do
+            if killer:IsA("Model") and table.find(dusekkarKillerNames, killer.Name) then
+                local targetHRP = killer:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    local distSq = (targetHRP.Position - hrp.Position).Magnitude^2
+                    if distSq < bestScore then
+                        bestScore = distSq
+                        nearestHRP = targetHRP
+                    end
+                end
+            end
+        end
+    elseif dusekkarAimMode == "Random" then
+        local folders = {}
+        if survivorsFolder then table.insert(folders, survivorsFolder) end
+        if killersFolder then table.insert(folders, killersFolder) end
+        for _, folder in ipairs(folders) do
+            for _, model in ipairs(folder:GetChildren()) do
+                if model:IsA("Model") and model ~= char then
+                    local targetHRP = model:FindFirstChild("HumanoidRootPart")
+                    if targetHRP then
+                        local distSq = (targetHRP.Position - hrp.Position).Magnitude^2
+                        if distSq < bestScore then
+                            bestScore = distSq
+                            nearestHRP = targetHRP
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return nearestHRP
+end
+
+-- Setup aimbot on character
+local function dusekkarSetupCharacter(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    if not humanoid then return end
+
+    dusekkarHumanoid = humanoid
+
+    if dusekkarAimConnection then
+        pcall(function() dusekkarAimConnection:Disconnect() end)
+    end
+
+    if dusekkarAimbotEnabled then
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if animator then
+            dusekkarAimConnection = animator.AnimationPlayed:Connect(function(track)
+                local animId = track.Animation.AnimationId:match("%d+")
+                if table.find(dusekkarAnimIds, animId) then
+                    task.delay(0.5, function()
+                        if dusekkarAimbotEnabled then
+                            dusekkarAiming = true
+                        end
+                    end)
+                    track.Stopped:Once(function()
+                        dusekkarAiming = false
+                    end)
+                end
+            end)
+        end
+    end
+end
+
+-- Character handling
+if playersService.LocalPlayer.Character then
+    task.spawn(dusekkarSetupCharacter, playersService.LocalPlayer.Character)
+end
+
+playersService.LocalPlayer.CharacterAdded:Connect(function(char)
+    task.delay(1, dusekkarSetupCharacter, char)
+end)
+
+-- Main aimbot loop
+runService.RenderStepped:Connect(function()
+    if not dusekkarAimbotEnabled or not dusekkarAiming or not dusekkarHumanoid then return end
+
+    local targetHRP = dusekkarGetNearestTarget()
+    if targetHRP then
+        workspaceService.CurrentCamera.CFrame = CFrame.new(
+            workspaceService.CurrentCamera.CFrame.Position,
+            targetHRP.Position
+        )
+    end
+end)
+
+-- UI Controls
+DusekkarSection:Toggle({
+    Title = "Aim Plasma Beam",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        dusekkarAimbotEnabled = state
+        if not state then
+            dusekkarAiming = false
+            if dusekkarAimConnection then
+                pcall(function() dusekkarAimConnection:Disconnect() end)
+                dusekkarAimConnection = nil
+            end
+        elseif playersService.LocalPlayer.Character then
+            task.spawn(dusekkarSetupCharacter, playersService.LocalPlayer.Character)
+        end
+    end
+})
+
+DusekkarSection:Dropdown({
+    Title = "Aim Plasma Beam Mode",
+    Values = {"Survivor", "Killer", "Random"},
+    Value = "Survivor",
+    Callback = function(value)
+        dusekkarAimMode = value
+    end
+})
+
+----------------------------------------------------------------
+-- Interface Tab
+----------------------------------------------------------------
+local InterfaceTab = Window:Tab({
+    Title = "Interface",
+    Icon = "scan",
+    Locked = false,
+})
+
+----------------------------------------------------------------
+-- UI Functions Section
+----------------------------------------------------------------
+local UIFunctionsSection = InterfaceTab:Section({ 
+    Title = "UI Functions",
+    Opened = true,
+})
+
+-- Close UI
+InterfaceTab:Button({
+    Title = "Close UI",
+    Locked = false,
+    Callback = function()
+        Window:Destroy()
+    end
+})

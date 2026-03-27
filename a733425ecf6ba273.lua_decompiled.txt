@@ -1,0 +1,1760 @@
+--// Melon Decompiler v1.2 | Discord: @melon.uwu
+--// Resolved: 186 identifiers | 38 functions | 0 strings
+--// Renamed: 38 functions | Connected: 12 callbacks | Dead Code Removed: 24 blocks
+--// [Renamer: ON] [Decompiler: ON]
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+WindUI:SetNotificationLower(true)
+WindUI:GetTransparency(true)
+
+WindUI:AddTheme({
+    Name = "Green-Black Gradient",
+    Accent = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromHex("#00FF7F"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#000000"), Transparency = 0 }
+    }, { Rotation = 0 }),
+    Dialog = Color3.fromHex("#161616"),
+    Outline = Color3.fromHex("#00C060"),
+    Text = Color3.fromHex("#00FF7F"),
+    Placeholder = Color3.fromHex("#018141"),
+    Background = Color3.fromHex("#101010"),
+    Button = Color3.fromHex("#00C060"),
+    Icon = Color3.fromHex("#00FF7F")
+})
+
+WindUI:SetTheme("Green-Black Gradient")
+
+local Window = WindUI:CreateWindow({
+    Title = "Glaco's script",
+    Icon = "rbxassetid://104476591826282",
+    Author = "99 Nights In The Forest",
+    Folder = "Glaco",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Green-Black Gradient",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = false,
+    ScrollBarEnabled = true
+})
+
+Window:SetToggleKey(Enum.KeyCode.K)
+Window:EditOpenButton({
+    Title = "Glaco's script",
+    Icon = "rbxassetid://104476591826282",
+    CornerRadius = UDim.new(0, 16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(Color3.fromHex("00FF7F"), Color3.fromHex("00C060")),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true
+})
+
+Window:Section({ Title = "Main" })
+
+local CombatTab = Window:Tab({ Title = "Combat", Icon = "sword", Locked = false })
+local AutoTab = Window:Tab({ Title = "Auto", Icon = "wrench", Locked = false })
+local BringTab = Window:Tab({ Title = "Bring", Icon = "package", Locked = false })
+local ESPTab = Window:Tab({ Title = "ESP", Icon = "eye", Locked = false })
+
+Window:Section({ Title = "Extra" })
+
+local TeleportTab = Window:Tab({ Title = "Teleport", Icon = "map-pin", Locked = false })
+local PlayerTab = Window:Tab({ Title = "Player", Icon = "user", Locked = false })
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local CAMPFIRE_POSITION = Vector3.new(0, 19, 0)
+local SCRAP_MACHINE_POSITION = Vector3.new(21, 20, -5)
+
+local SelectedFuelItems = {}
+local SelectedScrapItems = {}
+local SelectedFoodToCook = {}
+
+local FoodList = { "Morsel", "Steak", "Ribs", "Salmon", "Mackerel" }
+local FoodCookStates = {}
+
+local AutoCookEnabled = false
+local AutoUpgradeCampfireEnabled = false
+local AutoScrapEnabled = false
+
+local function MoveItemToPosition(item, targetPosition)
+    if not item or not item:IsDescendantOf(workspace) then
+        return
+    end
+    
+    if not (item:IsA("BasePart") or item:IsA("Model")) then
+        return
+    end
+    
+    local primaryPart
+    if item:IsA("Model") then
+        primaryPart = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
+    else
+        primaryPart = item
+    end
+    
+    if not primaryPart or not primaryPart:IsA("BasePart") then
+        return
+    end
+    
+    if item:IsA("Model") and not item.PrimaryPart then
+        pcall(function()
+            item.PrimaryPart = primaryPart
+        end)
+    end
+    
+    pcall(function()
+        ReplicatedStorage.RemoteEvents.RequestStartDraggingItem:FireServer(item)
+        if item:IsA("Model") then
+            item:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+        else
+            primaryPart.CFrame = CFrame.new(targetPosition)
+        end
+        ReplicatedStorage.RemoteEvents.StopDraggingItem:FireServer(item)
+    end)
+end
+
+AutoTab:Section({ Title = "Auto Upgrade Campfire", Icon = "flame" })
+
+AutoTab:Dropdown({
+    Title = "Select Fuel",
+    Desc = "Choose fuel items for campfire",
+    Values = { "Log", "Coal", "Chair", "Fuel Canister", "Oil Barrel", "Biofuel" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedFuelItems = selected
+    end
+})
+
+AutoTab:Toggle({
+    Title = "Auto Upgrade Campfire",
+    Value = false,
+    Callback = function(enabled)
+        AutoUpgradeCampfireEnabled = enabled
+        if enabled then
+            task.spawn(function()
+                while AutoUpgradeCampfireEnabled do
+                    for _, fuelName in ipairs(SelectedFuelItems) do
+                        local itemsFolder = workspace:WaitForChild("Items")
+                        local foundItems = {}
+                        
+                        for _, item in ipairs(itemsFolder:GetChildren()) do
+                            if item.Name == fuelName then
+                                table.insert(foundItems, item)
+                            end
+                        end
+                        
+                        for i = 1, math.min(10, #foundItems) do
+                            MoveItemToPosition(foundItems[i], CAMPFIRE_POSITION)
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+AutoTab:Section({ Title = "Auto Scrap Items", Icon = "cog" })
+
+AutoTab:Dropdown({
+    Title = "Select Scrap Items",
+    Desc = "Choose items to scrap",
+    Values = {
+        "Log", "Chair", "Tyre", "Bolt", "Broken Fan", "Broken Microwave",
+        "Sheet Metal", "Old Radio", "Washing Machine", "Old Car Engine",
+        "Cultist Gem", "Gem of the Forest Fragment"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedScrapItems = selected
+    end
+})
+
+AutoTab:Toggle({
+    Title = "Auto Scrap Items",
+    Value = false,
+    Callback = function(enabled)
+        AutoScrapEnabled = enabled
+        if enabled then
+            task.spawn(function()
+                while AutoScrapEnabled do
+                    for _, itemName in ipairs(SelectedScrapItems) do
+                        local itemsFolder = workspace:WaitForChild("Items")
+                        local foundItems = {}
+                        
+                        for _, item in ipairs(itemsFolder:GetChildren()) do
+                            if item.Name == itemName then
+                                table.insert(foundItems, item)
+                            end
+                        end
+                        
+                        for i = 1, math.min(10, #foundItems) do
+                            MoveItemToPosition(foundItems[i], SCRAP_MACHINE_POSITION)
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+AutoTab:Section({ Title = "Auto Cook Food", Icon = "flame" })
+
+AutoTab:Dropdown({
+    Title = "Select Food to Cook",
+    Desc = "Choose food items to auto cook",
+    Values = FoodList,
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        for _, foodName in ipairs(FoodList) do
+            FoodCookStates[foodName] = table.find(selected, foodName) ~= nil
+        end
+    end
+})
+
+AutoTab:Toggle({
+    Title = "Auto Cook Food",
+    Value = false,
+    Callback = function(enabled)
+        AutoCookEnabled = enabled
+    end
+})
+
+coroutine.wrap(function()
+    while true do
+        if AutoCookEnabled then
+            for foodName, shouldCook in pairs(FoodCookStates) do
+                if shouldCook then
+                    for _, item in ipairs(Workspace:WaitForChild("Items"):GetChildren()) do
+                        if item.Name == foodName then
+                            MoveItemToPosition(item, CAMPFIRE_POSITION)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)()
+
+local SaplingSearchTerm = "sapling"
+local PlantCount = 75
+local PlantSpacing = 44
+local ShowPlantMarkers = true
+local PlantDelay = 0.06
+local MarkerLifetime = 6
+local PlantOrigin = CFrame.new(-1.29994965, 1.99994278, -1.50001144, -0.249999881, 0.432982802, 0.866040468, 0.865997314, 0.500048637, -0.000015437603, -0.43306911, 0.74998486, -0.499974132)
+local PlantPattern = "Circle"
+
+local PlantRemote = (function()
+    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    return remoteEvents and remoteEvents:FindFirstChild("RequestPlantItem") or nil
+end)()
+
+local function FindSapling()
+    local itemsFolder = workspace:FindFirstChild("Items")
+    if itemsFolder then
+        for _, item in ipairs(itemsFolder:GetChildren()) do
+            if item.Name:lower():find(SaplingSearchTerm:lower()) then
+                return item
+            end
+        end
+    end
+    
+    for _, descendant in ipairs(ReplicatedStorage:GetDescendants()) do
+        if (descendant:IsA("Model") or descendant:IsA("Tool")) and descendant.Name:lower():find(SaplingSearchTerm:lower()) then
+            return descendant
+        end
+    end
+    
+    local searchLocations = {
+        LocalPlayer:FindFirstChild("Backpack"),
+        LocalPlayer:FindFirstChild("Inventory")
+    }
+    
+    for _, location in ipairs(searchLocations) do
+        if location then
+            for _, item in ipairs(location:GetChildren()) do
+                if item.Name:lower():find(SaplingSearchTerm:lower()) then
+                    return item
+                end
+            end
+        end
+    end
+    
+    return nil
+end
+
+local function GetGroundHeight(position, fallbackY)
+    local rayOrigin = Vector3.new(position.X, (fallbackY or position.Y) + 50, position.Z)
+    local rayDirection = Vector3.new(0, -200, 0)
+    
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = { LocalPlayer.Character or LocalPlayer }
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    
+    local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+    return rayResult and rayResult.Position and rayResult.Position.Y or (fallbackY or position.Y)
+end
+
+local function CreatePlantMarker(position)
+    if ShowPlantMarkers then
+        local marker = Instance.new("Part")
+        marker.Size = Vector3.new(1, 1, 1)
+        marker.Anchored = true
+        marker.CanCollide = false
+        marker.Transparency = 0.45
+        marker.Color = Color3.fromRGB(45, 200, 45)
+        marker.Name = "SaplingMarker"
+        marker.CFrame = CFrame.new(position + Vector3.new(0, 0.5, 0))
+        marker.Parent = workspace
+        Debris:AddItem(marker, MarkerLifetime)
+    end
+end
+
+local function FireRemote(remote, args)
+    if not remote then
+        return false
+    end
+    
+    local success = false
+    
+    if remote.ClassName == "RemoteFunction" or remote.InvokeServer then
+        success = pcall(function()
+            remote:InvokeServer(table.unpack(args or {}))
+        end)
+    elseif remote.ClassName == "RemoteEvent" or remote.FireServer then
+        success = pcall(function()
+            remote:FireServer(table.unpack(args or {}))
+        end)
+    end
+    
+    return success
+end
+
+local function TryPlantSapling(remote, sapling, position)
+    if not remote then
+        return false
+    end
+    
+    local argCombinations = {
+        { sapling, position },
+        { position, sapling },
+        { tostring(sapling), position },
+        { position, tostring(sapling) }
+    }
+    
+    for _, args in ipairs(argCombinations) do
+        if FireRemote(remote, args) then
+            return true
+        end
+        task.wait(0.03)
+    end
+    
+    return false
+end
+
+local function PlantCirclePattern(center, count, radius)
+    local sapling = FindSapling() or SaplingSearchTerm
+    
+    for i = 1, math.max(1, count) do
+        local angle = 2 * math.pi / count * (i - 1)
+        local x = center.X + math.cos(angle) * radius
+        local z = center.Z + math.sin(angle) * radius
+        local y = GetGroundHeight(Vector3.new(x, center.Y, z), center.Y)
+        local plantPosition = Vector3.new(x, y, z)
+        
+        CreatePlantMarker(plantPosition)
+        TryPlantSapling(PlantRemote, sapling, plantPosition)
+        task.wait(PlantDelay)
+    end
+end
+
+local function PlantSquarePattern(center, count, spacing)
+    local gridSize = math.max(1, math.floor(math.sqrt(count)))
+    local offset = (gridSize - 1) / 2
+    local sapling = FindSapling() or SaplingSearchTerm
+    local planted = 0
+    
+    for row = 0, gridSize - 1 do
+        for col = 0, gridSize - 1 do
+            if planted >= count then
+                break
+            end
+            
+            local x = center.X + (row - offset) * spacing
+            local z = center.Z + (col - offset) * spacing
+            local y = GetGroundHeight(Vector3.new(x, center.Y, z), center.Y)
+            local plantPosition = Vector3.new(x, y, z)
+            
+            CreatePlantMarker(plantPosition)
+            TryPlantSapling(PlantRemote, sapling, plantPosition)
+            planted = planted + 1
+            task.wait(PlantDelay)
+        end
+    end
+end
+
+local function PlantSpiralPattern(center, count, spacing)
+    local sapling = FindSapling() or SaplingSearchTerm
+    local angleStep = math.pi / 4
+    local radiusStep = spacing / (2 * math.pi)
+    local currentAngle = 0
+    local currentRadius = 0
+    
+    for _ = 1, math.max(1, count) do
+        local x = center.X + currentRadius * math.cos(currentAngle)
+        local z = center.Z + currentRadius * math.sin(currentAngle)
+        local y = GetGroundHeight(Vector3.new(x, center.Y, z), center.Y)
+        local plantPosition = Vector3.new(x, y, z)
+        
+        CreatePlantMarker(plantPosition)
+        TryPlantSapling(PlantRemote, sapling, plantPosition)
+        
+        currentAngle = currentAngle + angleStep
+        currentRadius = currentRadius + radiusStep
+        task.wait(PlantDelay)
+    end
+end
+
+local function PlantLinePattern(center, count, spacing)
+    local sapling = FindSapling() or SaplingSearchTerm
+    
+    for i = 0, count - 1 do
+        local x = center.X + i * spacing
+        local z = center.Z
+        local y = GetGroundHeight(Vector3.new(x, center.Y, z), center.Y)
+        local plantPosition = Vector3.new(x, y, z)
+        
+        CreatePlantMarker(plantPosition)
+        TryPlantSapling(PlantRemote, sapling, plantPosition)
+        task.wait(PlantDelay)
+    end
+end
+
+local function PlantStarPattern(center, count, spacing)
+    local sapling = FindSapling() or SaplingSearchTerm
+    local points = 5
+    local angleStep = math.pi / points
+    local planted = 0
+    
+    for i = 0, 2 * points - 1 do
+        if planted >= count then
+            break
+        end
+        
+        local radius = (i % 2 == 0) and spacing or (spacing / 2)
+        local x = center.X + radius * math.cos(i * angleStep)
+        local z = center.Z + radius * math.sin(i * angleStep)
+        local y = GetGroundHeight(Vector3.new(x, center.Y, z), center.Y)
+        local plantPosition = Vector3.new(x, y, z)
+        
+        CreatePlantMarker(plantPosition)
+        TryPlantSapling(PlantRemote, sapling, plantPosition)
+        planted = planted + 1
+        task.wait(PlantDelay)
+    end
+end
+
+local function ExecutePlantPattern(pattern)
+    local center = PlantOrigin.Position
+    
+    if pattern == "Circle" then
+        PlantCirclePattern(center, PlantCount, PlantSpacing)
+    elseif pattern == "Square" then
+        PlantSquarePattern(center, PlantCount, PlantSpacing)
+    elseif pattern == "Spiral" then
+        PlantSpiralPattern(center, PlantCount, PlantSpacing)
+    elseif pattern == "Line" then
+        PlantLinePattern(center, PlantCount, PlantSpacing)
+    elseif pattern == "Star" then
+        PlantStarPattern(center, PlantCount, PlantSpacing)
+    end
+end
+
+local AutoPlantEnabled = false
+
+local function AutoPlantLoop()
+    while AutoPlantEnabled do
+        ExecutePlantPattern(PlantPattern)
+        task.wait(0.5)
+    end
+end
+
+AutoTab:Section({ Title = "Auto Plant", Icon = "tree-deciduous" })
+
+AutoTab:Dropdown({
+    Title = "Plant Pattern",
+    Desc = "Choose planting pattern",
+    Values = { "Circle", "Square", "Spiral", "Line", "Star" },
+    Multi = false,
+    Value = PlantPattern,
+    Callback = function(selected)
+        PlantPattern = selected
+    end
+})
+
+AutoTab:Toggle({
+    Title = "Auto Plant",
+    Value = AutoPlantEnabled,
+    Callback = function(enabled)
+        AutoPlantEnabled = enabled
+        if enabled then
+            task.spawn(AutoPlantLoop)
+        end
+    end
+})
+
+local ItemList = {
+    "Bandage", "Bolt", "Broken Fan", "Broken Microwave", "Cake", "Carrot",
+    "Chair", "Coal", "Coin Stack", "Cooked Morsel", "Cooked Steak",
+    "Fuel Canister", "Iron Body", "Leather Armor", "Log", "MadKit",
+    "Metal Chair", "MedKit", "Old Car Engine", "Old Flashlight", "Old Radio",
+    "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo", "Morsel",
+    "Sheet Metal", "Steak", "Tyre", "Washing Machine", "Cultist Gem",
+    "Gem of the Forest Fragment"
+}
+
+local EntityList = {
+    "Bunny", "Wolf", "Alpha Wolf", "Bear", "Crossbow Cultist", "Alien",
+    "Alien Elite", "Polar Bear", "Arctic Fox", "Mammoth", "Cultist",
+    "Cultist Melee", "Cultist Crossbow", "Cultist Juggernaut"
+}
+
+local ItemESPStates = {}
+local EntityESPStates = {}
+
+for _, item in pairs(ItemList) do
+    ItemESPStates[item] = false
+end
+
+for _, entity in pairs(EntityList) do
+    EntityESPStates[entity] = false
+end
+
+local function CreateESPBillboard(part, text, color)
+    if not part or not part:IsA("BasePart") then
+        return nil
+    end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ProjectYoda_ESP"
+    billboard.Adornee = part
+    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.MaxDistance = 300
+    
+    local label = Instance.new("TextLabel", billboard)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.TextColor3 = color or Color3.new(1, 1, 1)
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+    label.TextStrokeTransparency = 0.5
+    label.Text = text
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    
+    billboard.Parent = part
+    return billboard
+end
+
+local function UpdateItemESP(enabled, itemName)
+    local itemsFolder = Workspace:FindFirstChild("Items")
+    if not itemsFolder then
+        return
+    end
+    
+    for _, item in pairs(itemsFolder:GetChildren()) do
+        if item.Name == itemName then
+            local targetPart = nil
+            
+            if item:IsA("Model") then
+                targetPart = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")
+            elseif item:IsA("BasePart") then
+                targetPart = item
+            end
+            
+            if targetPart then
+                local existingESP = targetPart:FindFirstChild("ProjectYoda_ESP")
+                
+                if enabled and not existingESP then
+                    CreateESPBillboard(targetPart, itemName, Color3.fromRGB(0, 255, 0))
+                elseif not enabled and existingESP then
+                    existingESP:Destroy()
+                end
+            end
+        end
+    end
+end
+
+local function UpdateEntityESP(enabled, entityName)
+    local charactersFolder = Workspace:FindFirstChild("Characters")
+    if not charactersFolder then
+        return
+    end
+    
+    for _, entity in pairs(charactersFolder:GetChildren()) do
+        if entity:IsA("Model") and entity.Name == entityName then
+            local targetPart = entity:FindFirstChild("HumanoidRootPart") or entity.PrimaryPart or entity:FindFirstChildWhichIsA("BasePart")
+            
+            if targetPart then
+                local existingESP = targetPart:FindFirstChild("ProjectYoda_ESP")
+                
+                if enabled and not existingESP then
+                    CreateESPBillboard(targetPart, entityName, Color3.fromRGB(255, 255, 0))
+                elseif not enabled and existingESP then
+                    existingESP:Destroy()
+                end
+            end
+        end
+    end
+end
+
+ESPTab:Section({ Title = "Item ESP", Icon = "box" })
+
+for _, itemName in pairs(ItemList) do
+    ESPTab:Toggle({
+        Title = itemName,
+        Value = false,
+        Callback = function(enabled)
+            ItemESPStates[itemName] = enabled
+            UpdateItemESP(enabled, itemName)
+        end
+    })
+end
+
+ESPTab:Section({ Title = "Entity ESP", Icon = "users" })
+
+for _, entityName in pairs(EntityList) do
+    ESPTab:Toggle({
+        Title = entityName,
+        Value = false,
+        Callback = function(enabled)
+            EntityESPStates[entityName] = enabled
+            UpdateEntityESP(enabled, entityName)
+        end
+    })
+end
+
+local itemsFolder = Workspace:FindFirstChild("Items")
+if itemsFolder then
+    itemsFolder.ChildAdded:Connect(function(newItem)
+        task.wait(0.1)
+        for itemName, enabled in pairs(ItemESPStates) do
+            if enabled and newItem.Name == itemName then
+                UpdateItemESP(true, itemName)
+            end
+        end
+    end)
+end
+
+local charactersFolder = Workspace:FindFirstChild("Characters")
+if charactersFolder then
+    charactersFolder.ChildAdded:Connect(function(newEntity)
+        task.wait(0.1)
+        for entityName, enabled in pairs(EntityESPStates) do
+            if enabled and newEntity.Name == entityName then
+                UpdateEntityESP(true, entityName)
+            end
+        end
+    end)
+end
+
+local SelectedJunkItems = {}
+local SelectedBringFuelItems = {}
+local SelectedBringFoodItems = {}
+local SelectedMedicalItems = {}
+local SelectedEquipmentItems = {}
+local SelectedPelts = {}
+local SelectedBlueprints = {}
+
+local function BringItemsToPlayer(itemNames)
+    local character = LocalPlayer.Character
+    if not character then
+        return
+    end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        return
+    end
+    
+    local targetPosition = rootPart.Position + Vector3.new(2, 0, 0)
+    
+    for _, itemName in ipairs(itemNames) do
+        for _, object in ipairs(workspace:GetDescendants()) do
+            if object.Name == itemName and (object:IsA("BasePart") or object:IsA("Model")) then
+                local primaryPart = nil
+                
+                if object:IsA("Model") then
+                    primaryPart = object.PrimaryPart or object:FindFirstChildWhichIsA("BasePart") or object:FindFirstChild("Handle")
+                elseif object:IsA("BasePart") then
+                    primaryPart = object
+                end
+                
+                if primaryPart then
+                    if object:IsA("Model") and not object.PrimaryPart then
+                        pcall(function()
+                            object.PrimaryPart = primaryPart
+                        end)
+                    end
+                    
+                    pcall(function()
+                        ReplicatedStorage.RemoteEvents.RequestStartDraggingItem:FireServer(object)
+                        if object:IsA("Model") then
+                            object:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+                        else
+                            primaryPart.CFrame = CFrame.new(targetPosition)
+                        end
+                        ReplicatedStorage.RemoteEvents.StopDraggingItem:FireServer(object)
+                    end)
+                end
+            end
+        end
+    end
+end
+
+BringTab:Section({ Title = "Junk Items", Icon = "box" })
+
+BringTab:Dropdown({
+    Title = "Select Junk Items",
+    Desc = "Choose items to bring",
+    Values = { "Tyre", "Bolt", "Broken Fan", "Broken Microwave", "Sheet Metal", "Old Radio", "Washing Machine", "Old Car Engine" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedJunkItems = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Junk Items",
+    Callback = function()
+        BringItemsToPlayer(SelectedJunkItems)
+    end
+})
+
+BringTab:Section({ Title = "Fuel Items", Icon = "flame" })
+
+BringTab:Dropdown({
+    Title = "Select Fuel Items",
+    Desc = "Choose items to bring",
+    Values = { "Log", "Chair", "Coal", "Fuel Canister", "Oil Barrel" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedBringFuelItems = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Fuel Items",
+    Callback = function()
+        BringItemsToPlayer(SelectedBringFuelItems)
+    end
+})
+
+BringTab:Section({ Title = "Food Items", Icon = "utensils" })
+
+BringTab:Dropdown({
+    Title = "Select Food Items",
+    Desc = "Choose items to bring",
+    Values = { "Cake", "Cooked Steak", "Cooked Morsel", "Steak", "Morsel", "Berry", "Carrot" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedBringFoodItems = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Food Items",
+    Callback = function()
+        BringItemsToPlayer(SelectedBringFoodItems)
+    end
+})
+
+BringTab:Section({ Title = "Medical Items", Icon = "bandage" })
+
+BringTab:Dropdown({
+    Title = "Select Medical Items",
+    Desc = "Choose items to bring",
+    Values = { "Bandage", "MedKit" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedMedicalItems = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Medical Items",
+    Callback = function()
+        BringItemsToPlayer(SelectedMedicalItems)
+    end
+})
+
+BringTab:Section({ Title = "Equipment Items", Icon = "sword" })
+
+BringTab:Dropdown({
+    Title = "Select Equipment Items",
+    Desc = "Choose items to bring",
+    Values = { "Revolver", "Rifle", "Leather Body", "Iron Body", "Revolver Ammo", "Rifle Ammo", "Giant Sack", "Good Sack", "Strong Axe", "Good Axe" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedEquipmentItems = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Equipment Items",
+    Callback = function()
+        BringItemsToPlayer(SelectedEquipmentItems)
+    end
+})
+
+BringTab:Section({ Title = "Pelts", Icon = "paw" })
+
+BringTab:Dropdown({
+    Title = "Select Pelts to Bring",
+    Desc = "Choose pelts to bring",
+    Values = { "Bunny Foot", "Wolf Pelt", "Alpha Wolf Pelt", "Bear Pelt", "Arctic Fox Pelt", "Polar Bear Pelt" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedPelts = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Pelts",
+    Callback = function()
+        BringItemsToPlayer(SelectedPelts)
+    end
+})
+
+BringTab:Section({ Title = "Blueprints", Icon = "clipboard" })
+
+BringTab:Dropdown({
+    Title = "Select Blueprints to Bring",
+    Desc = "Choose blueprints to bring",
+    Values = { "Crafting Blueprint", "Defense Blueprint", "Furniture Blueprint" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedBlueprints = selected
+    end
+})
+
+BringTab:Button({
+    Title = "Bring Blueprints",
+    Callback = function()
+        BringItemsToPlayer(SelectedBlueprints)
+    end
+})
+
+local ScanMapEnabled = false
+
+TeleportTab:Toggle({
+    Title = "Scan Map (Essential)",
+    Default = false,
+    Callback = function(enabled)
+        ScanMapEnabled = enabled
+        
+        local character = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait())
+        local rootPart = character:WaitForChild("HumanoidRootPart", 3)
+        
+        if not rootPart then
+            return
+        end
+        
+        local mapFolder = workspace:FindFirstChild("Map")
+        if not mapFolder then
+            return
+        end
+        
+        local foliageFolder = mapFolder:FindFirstChild("Foliage") or mapFolder:FindFirstChild("Landmarks")
+        if not foliageFolder then
+            return
+        end
+        
+        if enabled then
+            task.spawn(function()
+                while ScanMapEnabled do
+                    local trees = {}
+                    
+                    for _, child in ipairs(foliageFolder:GetChildren()) do
+                        if child.Name == "Small Tree" and child:IsA("Model") then
+                            local trunk = child:FindFirstChild("Trunk") or child.PrimaryPart
+                            if trunk then
+                                table.insert(trees, trunk)
+                            end
+                        end
+                    end
+                    
+                    for _, trunk in ipairs(trees) do
+                        if not ScanMapEnabled then
+                            break
+                        end
+                        
+                        if trunk and trunk.Parent then
+                            local trunkCFrame = trunk.CFrame
+                            local rightVector = trunkCFrame.RightVector
+                            local teleportPosition = trunkCFrame.Position + rightVector * 69
+                            rootPart.CFrame = CFrame.new(teleportPosition)
+                            task.wait(0.01)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+TeleportTab:Section({ Title = "Teleport", Icon = "map" })
+
+TeleportTab:Button({
+    Title = "Teleport to Campfire",
+    Callback = function()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(0.43, 15.77, -1.88, -0.27, 0.1, 0.95, 0.63, 0.76, 0.09, -0.71, 0.63, -0.27)
+    end
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Stronghold",
+    Callback = function()
+        local doorModel = workspace:FindFirstChild("Map")
+            and workspace.Map:FindFirstChild("Landmarks")
+            and workspace.Map.Landmarks:FindFirstChild("Stronghold")
+            and workspace.Map.Landmarks.Stronghold:FindFirstChild("Functional")
+            and workspace.Map.Landmarks.Stronghold.Functional:FindFirstChild("EntryDoors")
+            and workspace.Map.Landmarks.Stronghold.Functional.EntryDoors:FindFirstChild("DoorRight")
+        
+        if doorModel then
+            doorModel = doorModel:FindFirstChild("Model")
+        end
+        
+        if doorModel then
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            character:WaitForChild("HumanoidRootPart").CFrame = doorModel.CFrame + Vector3.new(0, 5, 0)
+        end
+    end
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Safe Zone",
+    Callback = function()
+        if not workspace:FindFirstChild("SafeZonePart") then
+            local safeZone = Instance.new("Part")
+            safeZone.Name = "SafeZonePart"
+            safeZone.Size = Vector3.new(50, 50, 50)
+            safeZone.Position = Vector3.new(0, 105, 0)
+            safeZone.Anchored = true
+            safeZone.CanCollide = false
+            safeZone.Transparency = 0.8
+            safeZone.Color = Color3.fromRGB(255, 255, 255)
+            safeZone.Parent = workspace
+        end
+        
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(0, 110, 0)
+    end
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Trader (Bunny Foot)",
+    Callback = function()
+        local traderPosition = Vector3.new(-37.08, 3.98, -16.33)
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(traderPosition)
+    end
+})
+
+TeleportTab:Section({ Title = "Tree", Icon = "tree-deciduous" })
+
+TeleportTab:Button({
+    Title = "Teleport to Random Tree",
+    Callback = function()
+        local rootPart = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart", 3)
+        if not rootPart then
+            return
+        end
+        
+        local mapFolder = workspace:FindFirstChild("Map")
+        if not mapFolder then
+            return
+        end
+        
+        local foliageFolder = mapFolder:FindFirstChild("Foliage") or mapFolder:FindFirstChild("Landmarks")
+        if not foliageFolder then
+            return
+        end
+        
+        local trees = {}
+        for _, child in ipairs(foliageFolder:GetChildren()) do
+            if child.Name == "Small Tree" and child:IsA("Model") then
+                local trunk = child:FindFirstChild("Trunk") or child.PrimaryPart
+                if trunk then
+                    table.insert(trees, trunk)
+                end
+            end
+        end
+        
+        if #trees > 0 then
+            local randomTree = trees[math.random(1, #trees)]
+            local treeCFrame = randomTree.CFrame
+            local rightVector = treeCFrame.RightVector
+            local teleportPosition = treeCFrame.Position + rightVector * 3
+            rootPart.CFrame = CFrame.new(teleportPosition)
+        end
+    end
+})
+
+TeleportTab:Section({ Title = "Children", Icon = "eye" })
+
+local ChildrenList = {}
+local ChildrenNames = {}
+local SelectedChild = nil
+
+local function RefreshChildrenList()
+    ChildrenNames = {}
+    ChildrenList = {}
+    
+    local charactersFolder = workspace:FindFirstChild("Characters")
+    if charactersFolder then
+        for _, entity in pairs(charactersFolder:GetChildren()) do
+            if entity.Name:match("^Lost Child") and entity:GetAttribute("Lost") == true then
+                table.insert(ChildrenList, entity)
+                table.insert(ChildrenNames, entity.Name)
+            end
+        end
+    end
+end
+
+RefreshChildrenList()
+
+local ChildDropdown = TeleportTab:Dropdown({
+    Title = "Select Child",
+    Values = ChildrenNames,
+    Multi = false,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedChild = selected
+    end
+})
+
+TeleportTab:Button({
+    Title = "Refresh List",
+    Callback = function()
+        RefreshChildrenList()
+        if #ChildrenNames <= 0 then
+            SelectedChild = nil
+            ChildDropdown:Refresh({ "No child found" })
+        else
+            SelectedChild = ChildrenNames[1]
+            ChildDropdown:Refresh(ChildrenNames)
+        end
+    end
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Child",
+    Callback = function()
+        if SelectedChild and ChildrenList then
+            for index, name in ipairs(ChildrenNames) do
+                if name == SelectedChild then
+                    local child = ChildrenList[index]
+                    if child then
+                        local targetPart = child.PrimaryPart or child:FindFirstChildWhichIsA("BasePart")
+                        local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        
+                        if targetPart and rootPart then
+                            rootPart.CFrame = targetPart.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                    break
+                end
+            end
+        end
+    end
+})
+
+TeleportTab:Section({ Title = "Chest", Icon = "box" })
+
+local ChestList = {}
+local ChestNames = {}
+local SelectedChest = nil
+
+local function RefreshChestList()
+    ChestNames = {}
+    ChestList = {}
+    
+    local itemsFolder = workspace:FindFirstChild("Items")
+    if itemsFolder then
+        for _, item in pairs(itemsFolder:GetChildren()) do
+            if item.Name:match("^Item Chest") and not item:GetAttribute("8721081708Opened") then
+                table.insert(ChestList, item)
+                table.insert(ChestNames, "Chest " .. #ChestNames + 1)
+            end
+        end
+    end
+end
+
+RefreshChestList()
+
+local ChestDropdown = TeleportTab:Dropdown({
+    Title = "Select Chest",
+    Values = ChestNames,
+    Multi = false,
+    AllowNone = true,
+    Callback = function(selected)
+        SelectedChest = selected
+    end
+})
+
+TeleportTab:Button({
+    Title = "Refresh List",
+    Callback = function()
+        RefreshChestList()
+        if #ChestNames <= 0 then
+            SelectedChest = nil
+            ChestDropdown:Refresh({ "No chests found" })
+        else
+            SelectedChest = ChestNames[1]
+            ChestDropdown:Refresh(ChestNames)
+        end
+    end
+})
+
+TeleportTab:Button({
+    Title = "Teleport to Chest",
+    Callback = function()
+        if SelectedChest and ChestList then
+            for index, name in ipairs(ChestNames) do
+                if name == SelectedChest then
+                    local chest = ChestList[index]
+                    if chest then
+                        local targetPart = chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")
+                        local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        
+                        if targetPart and rootPart then
+                            rootPart.CFrame = targetPart.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                    break
+                end
+            end
+        end
+    end
+})
+
+local FlyEnabled = false
+local FlySpeed = 1
+local IsFlying = false
+local InputBeganConnection = nil
+local InputEndedConnection = nil
+local CharacterAddedConnection = nil
+local RenderSteppedConnection = nil
+
+local function StartFlyPC()
+    repeat task.wait() until LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    repeat task.wait() until UserInputService
+    
+    if InputBeganConnection or InputEndedConnection then
+        InputBeganConnection:Disconnect()
+        InputEndedConnection:Disconnect()
+    end
+    
+    local rootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local movementKeys = { F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0 }
+    local lastMovement = { F = 0, B = 0, L = 0, R = 0 }
+    local currentSpeed = FlySpeed
+    
+    local function InitializeFly()
+        IsFlying = true
+        
+        local bodyGyro = Instance.new("BodyGyro")
+        local bodyVelocity = Instance.new("BodyVelocity")
+        
+        bodyGyro.P = 90000
+        bodyGyro.Parent = rootPart
+        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.CFrame = rootPart.CFrame
+        
+        bodyVelocity.Parent = rootPart
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        
+        task.spawn(function()
+            while IsFlying do
+                task.wait()
+                
+                if not FlyEnabled and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = true
+                end
+                
+                if movementKeys.L + movementKeys.R ~= 0 or movementKeys.F + movementKeys.B ~= 0 or movementKeys.Q + movementKeys.E ~= 0 then
+                    currentSpeed = FlySpeed
+                elseif movementKeys.L + movementKeys.R == 0 and movementKeys.F + movementKeys.B == 0 and movementKeys.Q + movementKeys.E == 0 and currentSpeed ~= 0 then
+                    currentSpeed = 0
+                end
+                
+                local camera = workspace.CurrentCamera
+                
+                if movementKeys.L + movementKeys.R ~= 0 or movementKeys.F + movementKeys.B ~= 0 or movementKeys.Q + movementKeys.E ~= 0 then
+                    bodyVelocity.Velocity = (camera.CoordinateFrame.lookVector * (movementKeys.F + movementKeys.B) + (camera.CoordinateFrame * CFrame.new(movementKeys.L + movementKeys.R, (movementKeys.F + movementKeys.B + movementKeys.Q + movementKeys.E) * 0.2, 0).p - camera.CoordinateFrame.p)) * currentSpeed
+                    lastMovement = { F = movementKeys.F, B = movementKeys.B, L = movementKeys.L, R = movementKeys.R }
+                elseif movementKeys.L + movementKeys.R ~= 0 or movementKeys.F + movementKeys.B ~= 0 or movementKeys.Q + movementKeys.E ~= 0 or currentSpeed == 0 then
+                    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                else
+                    bodyVelocity.Velocity = (camera.CoordinateFrame.lookVector * (lastMovement.F + lastMovement.B) + (camera.CoordinateFrame * CFrame.new(lastMovement.L + lastMovement.R, (lastMovement.F + lastMovement.B + movementKeys.Q + movementKeys.E) * 0.2, 0).p - camera.CoordinateFrame.p)) * currentSpeed
+                end
+                
+                bodyGyro.CFrame = camera.CoordinateFrame
+            end
+            
+            movementKeys = { F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0 }
+            lastMovement = { F = 0, B = 0, L = 0, R = 0 }
+            currentSpeed = 0
+            
+            bodyGyro:Destroy()
+            bodyVelocity:Destroy()
+            
+            if LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+            end
+        end)
+    end
+    
+    InputBeganConnection = UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            local keyName = input.KeyCode.Name
+            
+            if keyName == "W" then
+                movementKeys.F = FlySpeed
+            elseif keyName == "S" then
+                movementKeys.B = -FlySpeed
+            elseif keyName == "A" then
+                movementKeys.L = -FlySpeed
+            elseif keyName == "D" then
+                movementKeys.R = FlySpeed
+            elseif keyName == "E" then
+                movementKeys.Q = FlySpeed * 2
+            elseif keyName == "Q" then
+                movementKeys.E = -FlySpeed * 2
+            end
+            
+            pcall(function()
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Track
+            end)
+        end
+    end)
+    
+    InputEndedConnection = UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            local keyName = input.KeyCode.Name
+            
+            if keyName == "W" then
+                movementKeys.F = 0
+            elseif keyName == "S" then
+                movementKeys.B = 0
+            elseif keyName == "A" then
+                movementKeys.L = 0
+            elseif keyName == "D" then
+                movementKeys.R = 0
+            elseif keyName == "E" then
+                movementKeys.Q = 0
+            elseif keyName == "Q" then
+                movementKeys.E = 0
+            end
+        end
+    end)
+    
+    InitializeFly()
+end
+
+local function StopFly()
+    IsFlying = false
+    
+    if InputBeganConnection then
+        InputBeganConnection:Disconnect()
+    end
+    if InputEndedConnection then
+        InputEndedConnection:Disconnect()
+    end
+    if CharacterAddedConnection then
+        CharacterAddedConnection:Disconnect()
+    end
+    if RenderSteppedConnection then
+        RenderSteppedConnection:Disconnect()
+    end
+    
+    if LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+    
+    pcall(function()
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+    end)
+end
+
+local function CleanupFly()
+    pcall(function()
+        IsFlying = false
+        local rootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        
+        if rootPart:FindFirstChild("BodyVelocity") then
+            rootPart:FindFirstChild("BodyVelocity"):Destroy()
+        end
+        if rootPart:FindFirstChild("BodyGyro") then
+            rootPart:FindFirstChild("BodyGyro"):Destroy()
+        end
+        
+        if LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") then
+            LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").PlatformStand = false
+        end
+        
+        if CharacterAddedConnection then
+            CharacterAddedConnection:Disconnect()
+        end
+        if RenderSteppedConnection then
+            RenderSteppedConnection:Disconnect()
+        end
+    end)
+end
+
+local function StartFlyMobile()
+    CleanupFly()
+    IsFlying = true
+    
+    local rootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local camera = workspace.CurrentCamera
+    local zeroVector = Vector3.new()
+    local maxForce = Vector3.new(9e9, 9e9, 9e9)
+    local ControlModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+    
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Name = "BodyVelocity"
+    bodyVelocity.Parent = rootPart
+    bodyVelocity.MaxForce = zeroVector
+    bodyVelocity.Velocity = zeroVector
+    
+    local bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.Name = "BodyGyro"
+    bodyGyro.Parent = rootPart
+    bodyGyro.MaxTorque = maxForce
+    bodyGyro.P = 1000
+    bodyGyro.D = 50
+    
+    CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function()
+        local newRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        
+        local newBodyVelocity = Instance.new("BodyVelocity")
+        newBodyVelocity.Name = "BodyVelocity"
+        newBodyVelocity.Parent = newRootPart
+        newBodyVelocity.MaxForce = zeroVector
+        newBodyVelocity.Velocity = zeroVector
+        
+        local newBodyGyro = Instance.new("BodyGyro")
+        newBodyGyro.Name = "BodyGyro"
+        newBodyGyro.Parent = newRootPart
+        newBodyGyro.MaxTorque = maxForce
+        newBodyGyro.P = 1000
+        newBodyGyro.D = 50
+    end)
+    
+    RenderSteppedConnection = RunService.RenderStepped:Connect(function()
+        rootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        camera = workspace.CurrentCamera
+        
+        local humanoid = LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        local bv = rootPart:FindFirstChild("BodyVelocity")
+        local bg = rootPart:FindFirstChild("BodyGyro")
+        
+        if humanoid and rootPart and bv and bg then
+            bv.MaxForce = maxForce
+            bg.MaxTorque = maxForce
+            humanoid.PlatformStand = true
+            bg.CFrame = camera.CoordinateFrame
+            bv.Velocity = zeroVector
+            
+            local moveVector = ControlModule:GetMoveVector()
+            
+            if moveVector.X > 0 then
+                bv.Velocity = bv.Velocity + camera.CFrame.RightVector * (moveVector.X * (FlySpeed * 50))
+            end
+            if moveVector.X < 0 then
+                bv.Velocity = bv.Velocity + camera.CFrame.RightVector * (moveVector.X * (FlySpeed * 50))
+            end
+            if moveVector.Z > 0 then
+                bv.Velocity = bv.Velocity - camera.CFrame.LookVector * (moveVector.Z * (FlySpeed * 50))
+            end
+            if moveVector.Z < 0 then
+                bv.Velocity = bv.Velocity - camera.CFrame.LookVector * (moveVector.Z * (FlySpeed * 50))
+            end
+        end
+    end)
+end
+
+PlayerTab:Section({ Title = "Main", Icon = "eye" })
+
+PlayerTab:Slider({
+    Title = "Fly Speed",
+    Value = { Min = 1, Max = 20, Default = 1 },
+    Callback = function(value)
+        FlySpeed = value
+        
+        if IsFlying then
+            task.spawn(function()
+                while IsFlying do
+                    task.wait(0.1)
+                    
+                    if UserInputService.TouchEnabled then
+                        local character = LocalPlayer.Character
+                        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                        local bv = rootPart and rootPart:FindFirstChild("BodyVelocity")
+                        
+                        if bv then
+                            bv.Velocity = bv.Velocity.Unit * (FlySpeed * 50)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+PlayerTab:Toggle({
+    Title = "Enable Fly",
+    Value = false,
+    Callback = function(enabled)
+        FlyEnabled = enabled
+        
+        if FlyEnabled then
+            if UserInputService.TouchEnabled then
+                StartFlyMobile()
+            else
+                StartFlyPC()
+            end
+        else
+            StopFly()
+            CleanupFly()
+        end
+    end
+})
+
+local SpeedValue = 16
+local JumpValue = 50
+
+local function SetWalkSpeed(speed)
+    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = speed
+    end
+end
+
+local function SetJumpPower(power)
+    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.JumpPower = power
+    end
+end
+
+PlayerTab:Slider({
+    Title = "Speed",
+    Value = { Min = 16, Max = 300, Default = 16 },
+    Callback = function(value)
+        SpeedValue = value
+    end
+})
+
+PlayerTab:Toggle({
+    Title = "Enable Speed",
+    Value = false,
+    Callback = function(enabled)
+        SetWalkSpeed(enabled and SpeedValue or 16)
+    end
+})
+
+PlayerTab:Slider({
+    Title = "Jump",
+    Value = { Min = 10, Max = 300, Default = 50 },
+    Callback = function(value)
+        JumpValue = value
+    end
+})
+
+PlayerTab:Toggle({
+    Title = "Enable Jump",
+    Value = false,
+    Callback = function(enabled)
+        SetJumpPower(enabled and JumpValue or 50)
+    end
+})
+
+local NoClipConnection = nil
+
+PlayerTab:Toggle({
+    Title = "No Clip",
+    Value = false,
+    Callback = function(enabled)
+        if enabled then
+            NoClipConnection = RunService.Stepped:Connect(function()
+                local character = LocalPlayer.Character
+                if character then
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        elseif NoClipConnection then
+            NoClipConnection:Disconnect()
+            NoClipConnection = nil
+        end
+    end
+})
+
+local InfiniteJumpConnection = nil
+
+PlayerTab:Toggle({
+    Title = "Infinite Jump",
+    Value = false,
+    Callback = function(enabled)
+        if enabled then
+            InfiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+                local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        elseif InfiniteJumpConnection then
+            InfiniteJumpConnection:Disconnect()
+            InfiniteJumpConnection = nil
+        end
+    end
+})
+
+local KillAuraEnabled = false
+local ChopAuraEnabled = false
+local AuraRadius = 50
+local ChopCounter = 0
+local GodmodeEnabled = false
+
+local ToolIDs = {
+    ["Old Axe"] = "3_7367831688",
+    ["Good Axe"] = "112_7367831688",
+    ["Strong Axe"] = "116_7367831688",
+    ["Chainsaw"] = "647_8992824875",
+    ["Spear"] = "196_8999010016"
+}
+
+local function FindEquippedTool(axeOnly)
+    for toolName, toolId in pairs(ToolIDs) do
+        if not axeOnly or toolName == "Old Axe" or toolName == "Good Axe" or toolName == "Strong Axe" or toolName == "Chainsaw" then
+            local inventory = LocalPlayer:FindFirstChild("Inventory")
+            local tool = inventory and inventory:FindFirstChild(toolName)
+            
+            if tool then
+                return tool, toolId
+            end
+        end
+    end
+    return nil, nil
+end
+
+local function EquipTool(tool)
+    if tool then
+        ReplicatedStorage:WaitForChild("RemoteEvents").EquipItemHandle:FireServer("FireAllClients", tool)
+    end
+end
+
+local function UnequipTool(tool)
+    if tool then
+        ReplicatedStorage:WaitForChild("RemoteEvents").UnequipItemHandle:FireServer("FireAllClients", tool)
+    end
+end
+
+local function KillAuraLoop()
+    while KillAuraEnabled do
+        local rootPart = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            local tool, toolId = FindEquippedTool(false)
+            
+            if tool and toolId then
+                EquipTool(tool)
+                
+                for _, entity in ipairs(Workspace.Characters:GetChildren()) do
+                    if entity:IsA("Model") then
+                        local entityPart = entity:FindFirstChildWhichIsA("BasePart")
+                        
+                        if entityPart and (entityPart.Position - rootPart.Position).Magnitude <= AuraRadius then
+                            pcall(function()
+                                ReplicatedStorage:WaitForChild("RemoteEvents").ToolDamageObject:InvokeServer(entity, tool, toolId, CFrame.new(entityPart.Position))
+                            end)
+                        end
+                    end
+                end
+                
+                task.wait(0.1)
+            else
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+
+local function ChopAuraLoop()
+    while ChopAuraEnabled do
+        local rootPart = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            local tool, toolId = FindEquippedTool(true)
+            
+            if tool and toolId then
+                EquipTool(tool)
+                ChopCounter = ChopCounter + 1
+                
+                local trees = {}
+                local mapFolder = Workspace:FindFirstChild("Map")
+                
+                if mapFolder then
+                    if mapFolder:FindFirstChild("Foliage") then
+                        for _, child in ipairs(mapFolder.Foliage:GetChildren()) do
+                            if child:IsA("Model") and child.Name == "Small Tree" then
+                                table.insert(trees, child)
+                            end
+                        end
+                    end
+                    
+                    if mapFolder:FindFirstChild("Landmarks") then
+                        for _, child in ipairs(mapFolder.Landmarks:GetChildren()) do
+                            if child:IsA("Model") and child.Name == "Small Tree" then
+                                table.insert(trees, child)
+                            end
+                        end
+                    end
+                end
+                
+                for _, tree in ipairs(trees) do
+                    local trunk = tree:FindFirstChild("Trunk")
+                    
+                    if trunk and trunk:IsA("BasePart") and (trunk.Position - rootPart.Position).Magnitude <= AuraRadius then
+                        local isChopping = false
+                        
+                        task.spawn(function()
+                            while ChopAuraEnabled and tree and tree.Parent and not isChopping do
+                                isChopping = true
+                                ChopCounter = ChopCounter + 1
+                                
+                                pcall(function()
+                                    ReplicatedStorage:WaitForChild("RemoteEvents").ToolDamageObject:InvokeServer(
+                                        tree,
+                                        tool,
+                                        tostring(ChopCounter) .. "_7367831688",
+                                        CFrame.new(-2.962610244751, 4.5547881126404, -75.950843811035, 0.89621275663376, -1.3894891459643e-8, 0.44362446665764, -7.994568895775e-10, 1, 3.293635941759e-8, -0.44362446665764, -2.9872644802253e-8, 0.89621275663376)
+                                    )
+                                end)
+                                
+                                task.wait(0.5)
+                            end
+                        end)
+                    end
+                end
+                
+                task.wait(0.1)
+            else
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+
+CombatTab:Section({ Title = "Aura", Icon = "star" })
+
+CombatTab:Toggle({
+    Title = "Kill Aura",
+    Value = false,
+    Callback = function(enabled)
+        KillAuraEnabled = enabled
+        
+        if enabled then
+            task.spawn(KillAuraLoop)
+        else
+            local tool = FindEquippedTool(false)
+            UnequipTool(tool)
+        end
+    end
+})
+
+CombatTab:Toggle({
+    Title = "Chop Aura",
+    Value = false,
+    Callback = function(enabled)
+        ChopAuraEnabled = enabled
+        
+        if enabled then
+            task.spawn(ChopAuraLoop)
+        else
+            local tool = FindEquippedTool(true)
+            UnequipTool(tool)
+        end
+    end
+})
+
+CombatTab:Section({ Title = "Settings", Icon = "settings" })
+
+CombatTab:Slider({
+    Title = "Aura Radius",
+    Value = { Min = 50, Max = 500, Default = 50 },
+    Callback = function(value)
+        AuraRadius = math.clamp(value, 10, 500)
+    end
+})
+
+CombatTab:Section({ Title = "Godmode", Icon = "shield" })
+
+CombatTab:Toggle({
+    Title = "Godmode",
+    Value = false,
+    Callback = function(enabled)
+        GodmodeEnabled = enabled
+        
+        if enabled then
+            task.spawn(function()
+                while GodmodeEnabled do
+                    pcall(function()
+                        ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("DamagePlayer"):FireServer(-(1 / 0))
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+    end
+})

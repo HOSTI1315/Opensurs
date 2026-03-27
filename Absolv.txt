@@ -1,0 +1,1588 @@
+--// Melon Decompiler [Private] v1.1
+--// Resolved: 320+ identifiers | 85+ functions | 0 strings
+
+local BaseURL = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = assert(loadstring(game:HttpGet("https://raw.githubusercontent.com/DerekLuaU/example/refs/heads/main/Library.lua"))(), "Failed to load Library")
+assert(loadstring(game:HttpGet(BaseURL .. "addons/ThemeManager.lua"))(), "Failed to load ThemeManager")
+local SaveManager = assert(loadstring(game:HttpGet(BaseURL .. "addons/SaveManager.lua"))(), "Failed to load SaveManager")
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = false
+Library.ShowToggleFrameInKeybinds = true
+
+local Window = Library:CreateWindow({
+    Title = "DupeSide Hub",
+    Footer = "version: 3.0.5",
+    Icon = 123532668007594,
+    NotifySide = "Right",
+    ShowCustomCursor = true
+})
+
+local Tabs = {
+    Main = Window:AddTab("Main", "layout-dashboard"),
+    Visual = Window:AddTab("Visual", "eye"),
+    Player = Window:AddTab("Movement", "zap"),
+    ["UI Settings"] = Window:AddTab("UI Settings", "settings")
+}
+
+local AutoFarmBox = Tabs.Main:AddLeftGroupbox("Auto Farm Options", "user")
+local QOLBox = Tabs.Main:AddLeftGroupbox("Quality Of Life", "earth")
+local AutoParryBox = Tabs.Main:AddRightGroupbox("Auto Parry [Experimental / Beta]", "shield")
+local DungeonBox = Tabs.Main:AddRightGroupbox("Dungeon", "earth")
+local PlayerESPBox = Tabs.Visual:AddLeftGroupbox("ESP Player", "eye")
+local ItemESPBox = Tabs.Visual:AddLeftGroupbox("ESP Items / Others", "Box")
+local MobESPBox = Tabs.Visual:AddRightGroupbox("ESP Mobs", "monitor")
+local RoomESPBox = Tabs.Visual:AddRightGroupbox("ESP Room", "monitor")
+local MovementBox = Tabs.Player:AddLeftGroupbox("Movement", "navigation")
+local SafePlaceBox = Tabs.Main:AddRightGroupbox("Safe Place Settings", "Setting")
+local PotentialBox = Tabs.Main:AddLeftGroupbox("Auto Potential Card", "Setting")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+getgenv().ItemESPSettings = getgenv().ItemESPSettings or {
+    Enabled = false,
+    ShowBox = false,
+    ShowName = false,
+    ShowDistance = false
+}
+
+getgenv().ESPSettings = getgenv().ESPSettings or {
+    Enabled = false,
+    ShowBox = false,
+    ShowName = false,
+    ShowHealth = false,
+    ShowTracer = false,
+    ShowDistance = false
+}
+
+getgenv().NPCESPSettings = getgenv().NPCESPSettings or {
+    Enabled = false,
+    ShowBox = false,
+    ShowName = false,
+    ShowHealthNumber = false,
+    ShowTracer = false,
+    ShowDistance = false
+}
+
+getgenv().AutoSprint = getgenv().AutoSprint or false
+getgenv().AutoStartDungeon = getgenv().AutoStartDungeon or false
+getgenv().AutoContinueDungeon = getgenv().AutoContinueDungeon or false
+getgenv().TeleportActive = getgenv().TeleportActive or false
+getgenv().AutoAttack = getgenv().AutoAttack or false
+getgenv().AntiKillBricks = getgenv().AntiKillBricks or false
+getgenv().DistanceBehind = getgenv().DistanceBehind or 8
+getgenv().TeleportSmoothness = getgenv().TeleportSmoothness or 0.15
+getgenv().InstantRange = getgenv().InstantRange or 10
+getgenv().AutoParryEnabled = getgenv().AutoParryEnabled or false
+getgenv().ParryRange = getgenv().ParryRange or 30
+getgenv().ParryCooldown = getgenv().ParryCooldown or 0.5
+getgenv().ParryCritDelay = getgenv().ParryCritDelay or 0.2
+getgenv().FlyEnabled = getgenv().FlyEnabled or false
+getgenv().FlySpeed = getgenv().FlySpeed or 20
+getgenv().SpeedActive = getgenv().SpeedActive or false
+getgenv().SpeedValue = getgenv().SpeedValue or 50
+getgenv().NoclipEnabled = getgenv().NoclipEnabled or false
+
+local AutoSprintInitialized = false
+local AutoPotentialActive = false
+local AttackSkill1 = ""
+local AttackSkill2 = ""
+local TeleportMethod = "Above"
+local CurrentTarget = nil
+local LastTeleportTime = 0
+local TeleportInterval = 0.016666666666666666
+
+local NPCsFolder = Workspace:FindFirstChild("NPCs")
+if not NPCsFolder then
+    NPCsFolder = Instance.new("Folder")
+    NPCsFolder.Name = "NPCs"
+    NPCsFolder.Parent = Workspace
+end
+
+local BossKeywords = {
+    "larimar",
+    "rogue",
+    "stonewatcher",
+    "humanoidboss",
+    "boss"
+}
+
+local function IsBoss(Name)
+    local LowerName = Name:lower()
+    for _, Keyword in ipairs(BossKeywords) do
+        if LowerName:find(Keyword) then
+            return true
+        end
+    end
+    return false
+end
+
+local function FindNearestNPC(Position)
+    local NearestBossDistance = math.huge
+    local NearestNPCDistance = math.huge
+    local NearestBoss = nil
+    local NearestNPC = nil
+
+    for _, NPC in ipairs(NPCsFolder:GetChildren()) do
+        if NPC:IsA("Model") then
+            local NPCHRP = NPC:FindFirstChild("HumanoidRootPart")
+            local NPCHumanoid = NPC:FindFirstChildOfClass("Humanoid")
+
+            if NPCHRP and NPCHumanoid and NPCHumanoid.Health > 0 then
+                local Distance = (NPCHRP.Position - Position).Magnitude
+
+                if IsBoss(NPC.Name:lower()) then
+                    if Distance < NearestBossDistance then
+                        NearestBoss = NPC
+                        NearestBossDistance = Distance
+                    end
+                elseif Distance < NearestNPCDistance then
+                    NearestNPC = NPC
+                    NearestNPCDistance = Distance
+                end
+            end
+        end
+    end
+
+    return NearestBoss or NearestNPC
+end
+
+local function TeleportTo(TargetCFrame)
+    if HumanoidRootPart and Character then
+        HumanoidRootPart.Velocity = Vector3.zero
+        HumanoidRootPart.RotVelocity = Vector3.zero
+
+        pcall(function()
+            Character:SetPrimaryPartCFrame(TargetCFrame)
+            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+            if Humanoid then
+                Humanoid.AutoRotate = false
+            end
+        end)
+    end
+end
+
+local function UpdateAutoFarm()
+    if Toggles.TeleportToggle.Value then
+        if HumanoidRootPart then
+            if CurrentTarget and CurrentTarget.Parent then
+                local CurrentTime = time()
+
+                if CurrentTime - LastTeleportTime >= TeleportInterval then
+                    LastTeleportTime = CurrentTime
+                    local TargetHRP = CurrentTarget:FindFirstChild("HumanoidRootPart")
+
+                    if TargetHRP then
+                        local TargetCFrame = TargetHRP.CFrame
+                        local Distance = IsBoss(CurrentTarget.Name:lower()) and Options.TeleportBossDistance.Value or Options.DistanceBehind.Value
+                        local FinalCFrame
+
+                        if TeleportMethod == "Behind" then
+                            local Position = TargetCFrame.Position - TargetCFrame.LookVector * Distance
+                            FinalCFrame = CFrame.lookAt(Position, TargetCFrame.Position, Vector3.new(0, 1, 0))
+                        elseif TeleportMethod == "Above" then
+                            local Position = TargetCFrame.Position + Vector3.new(0, Distance, 0)
+                            FinalCFrame = CFrame.lookAt(Position, TargetCFrame.Position, Vector3.new(0, 1, 0))
+                        elseif TeleportMethod == "Below" then
+                            local Position = TargetCFrame.Position - Vector3.new(0, Distance, 0)
+                            FinalCFrame = CFrame.lookAt(Position, TargetCFrame.Position, Vector3.new(0, 1, 0))
+                        else
+                            local Position = TargetCFrame.Position - TargetCFrame.LookVector * Distance
+                            FinalCFrame = CFrame.lookAt(Position, TargetCFrame.Position, Vector3.new(0, 1, 0))
+                        end
+
+                        TeleportTo(FinalCFrame)
+                    end
+                end
+            else
+                CurrentTarget = FindNearestNPC(HumanoidRootPart.Position)
+            end
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(UpdateAutoFarm)
+
+LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
+    Character = NewCharacter
+    HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+end)
+
+QOLBox:AddToggle("AutoSprint", {
+    Text = "Auto Sprint",
+    Default = getgenv().AutoSprint,
+    Callback = function(Value)
+        if AutoSprintInitialized then
+            getgenv().AutoSprint = Value
+            local Player = Players.LocalPlayer
+
+            if Player then
+                local RequestAction = Player:WaitForChild("Remotes"):WaitForChild("RequestAction")
+
+                if Value then
+                    pcall(function()
+                        RequestAction:InvokeServer("Sprint", Enum.UserInputState.Begin, nil, "Start")
+                    end)
+                else
+                    pcall(function()
+                        RequestAction:InvokeServer("Sprint", Enum.UserInputState.End, nil, "End")
+                    end)
+                end
+            end
+        else
+            AutoSprintInitialized = true
+        end
+    end
+})
+
+PotentialBox:AddToggle("AutoPotentialToggle", {
+    Text = "Auto Potential Orb/Card",
+    Default = false,
+    Callback = function(Value)
+        AutoPotentialActive = Value
+    end
+})
+
+PotentialBox:AddDropdown("ArcaneDropdown", {
+    Values = {
+        "Disease", "Earth", "Fire", "Frost", "Holy",
+        "Lightning", "Nature", "Physical", "Shadow", "Water", "Wind"
+    },
+    Default = 5,
+    Multi = false,
+    Text = "Arcane/Wildcard Type",
+    Tooltip = "Select Your Arcane/WildCard",
+    Searchable = false,
+    Callback = function(Value)
+        SelectedArcane = Value
+        print("WildCard/Arcane:", SelectedArcane)
+    end
+})
+
+SafePlaceBox:AddToggle("SafePlaceToggle", {
+    Text = "Safe Place Toggle",
+    Default = false
+})
+
+SafePlaceBox:AddToggle("HealtSkill", {
+    Text = "Use Healing Skill",
+    Default = false
+})
+
+SafePlaceBox:AddInput("SkillInput", {
+    Default = "Lesser Heal",
+    Numeric = false,
+    Finished = false,
+    ClearTextOnFocus = false,
+    Text = "Skill Name",
+    Tooltip = "Type the name of your healing ability",
+    Placeholder = "Example: Lesser Heal",
+    Callback = function(Value)
+        print("[DupeSide] Healing skill set to:", Value)
+    end
+})
+
+SafePlaceBox:AddSlider("HealtThresholdd", {
+    Text = "Health Threshold",
+    Default = 30,
+    Min = 1,
+    Max = 100,
+    Rounding = 1
+})
+
+SafePlaceBox:AddSlider("healthRegenTargett", {
+    Text = "Health Regen Target",
+    Default = 50,
+    Min = 1,
+    Max = 100,
+    Rounding = 1
+})
+
+AutoFarmBox:AddToggle("TeleportToggle", {
+    Text = "Auto Farm",
+    Default = getgenv().TeleportActive,
+    Callback = function(Value)
+        getgenv().TeleportActive = Value
+    end
+})
+
+AutoFarmBox:AddToggle("AutoCampfire", {
+    Text = "Auto Campfire",
+    Default = false
+})
+
+AutoFarmBox:AddToggle("AutoStartDungeon", {
+    Text = "Auto Start Dungeon",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoStartDungeon = Value
+
+        if Value then
+            task.spawn(function()
+                local AffixUI = Players.LocalPlayer.PlayerGui:WaitForChild("AffixNumSelection")
+                local ReadyUpRemote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("ReadyUp")
+                local HasStarted = false
+
+                while getgenv().AutoStartDungeon do
+                    if AffixUI.Enabled ~= true then
+                        HasStarted = false
+                    elseif not HasStarted then
+                        HasStarted = true
+                        task.wait(3)
+                        ReadyUpRemote:FireServer({})
+                        task.wait(1)
+
+                        if Toggles.TeleportToggle then
+                            Toggles.TeleportToggle:SetValue(true)
+                        end
+
+                        Library:Notify({
+                            Title = "DupeSide",
+                            Description = "Dungeon Started!",
+                            Time = 4
+                        })
+                    end
+
+                    task.wait(0.2)
+                end
+            end)
+        end
+    end
+})
+
+AutoFarmBox:AddToggle("AutoContinueDungeon", {
+    Text = "Auto Continue Dungeon",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoContinueDungeon = Value
+
+        if Value then
+            task.spawn(function()
+                local Player = Players.LocalPlayer
+                local PlayerGui = Player:WaitForChild("PlayerGui")
+                local PreviousState = false
+
+                while getgenv().AutoContinueDungeon do
+                    local LayerComplete = nil
+
+                    if Toggles.TeleportToggle and Toggles.TeleportToggle.Value == true then
+                        LayerComplete = PlayerGui:FindFirstChild("LayerComplete")
+
+                        if LayerComplete then
+                            LayerComplete = LayerComplete.Enabled
+                        end
+
+                        if LayerComplete and not PreviousState then
+                            if Toggles.TeleportToggle then
+                                Toggles.TeleportToggle:SetValue(false)
+                            end
+
+                            task.wait(3)
+
+                            if pcall(function()
+                                return Player:WaitForChild("Remotes"):WaitForChild("DungeonCompleted"):InvokeServer("Continue")
+                            end) then
+                                Library:Notify({
+                                    Title = "DupeSide",
+                                    Description = "Continuing dungeon.",
+                                    Time = 4
+                                })
+                            end
+                        end
+                    else
+                        LayerComplete = PreviousState
+                    end
+
+                    task.wait(0.2)
+                    PreviousState = LayerComplete
+                end
+            end)
+        end
+    end
+})
+
+AutoFarmBox:AddToggle("AutoEquipSword", {
+    Text = "Auto Equip Sword",
+    Default = false,
+    Callback = function(Value)
+        autoEquipSword = Value
+    end
+})
+
+AutoFarmBox:AddToggle("AutoAttack", {
+    Text = "Auto Attack [M1]",
+    Default = getgenv().AutoAttack,
+    Callback = function(Value)
+        getgenv().AutoAttack = Value
+    end
+})
+
+AutoFarmBox:AddToggle("AntiKillBricks", {
+    Text = "Anti Kill Bricks",
+    Default = getgenv().AntiKillBricks,
+    Callback = function(Value)
+        getgenv().AntiKillBricks = Value
+    end
+})
+
+local AutoSkillToggle = AutoFarmBox:AddToggle("AutoUseAttackSkill", {
+    Text = "Auto Use Skill",
+    Default = false
+})
+
+AutoFarmBox:AddInput("SkillAttackinput1", {
+    Default = "",
+    Numeric = false,
+    Finished = false,
+    ClearTextOnFocus = false,
+    Text = "Skill #1",
+    Tooltip = "Type the name of your Attack ability",
+    Placeholder = "Example: Updraft",
+    Callback = function(Value)
+        AttackSkill1 = Value
+        print("[DupeSide] Attack Skill 1 set:", AttackSkill1)
+    end
+})
+
+AutoFarmBox:AddInput("SkillAttackinput2", {
+    Default = "",
+    Numeric = false,
+    Finished = false,
+    ClearTextOnFocus = false,
+    Text = "Skill #2",
+    Tooltip = "Type the name of your Attack ability",
+    Placeholder = "Example: Magentic Pulse",
+    Callback = function(Value)
+        AttackSkill2 = Value
+        print("[DupeSide] Attack Skill 2 set:", AttackSkill2)
+    end
+})
+
+AutoFarmBox:AddDropdown("TeleportMethod", {
+    Values = { "Behind", "Above", "Below" },
+    Default = 1,
+    Multi = false,
+    Text = "Teleport Method",
+    Callback = function(Value)
+        TeleportMethod = Value
+    end
+})
+
+AutoFarmBox:AddSlider("DistanceBehind", {
+    Text = "Teleport Distance",
+    Default = getgenv().DistanceBehind,
+    Min = 1,
+    Max = 50,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().DistanceBehind = Value
+    end
+})
+
+AutoFarmBox:AddSlider("TeleportBossDistance", {
+    Text = "Teleport Boss Distance",
+    Default = 14,
+    Min = 1,
+    Max = 50,
+    Rounding = 0
+})
+
+AutoFarmBox:AddSlider("TeleportSmoothness", {
+    Text = "Teleport Smoothness",
+    Default = getgenv().TeleportSmoothness,
+    Min = 0.01,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(Value)
+        getgenv().TeleportSmoothness = Value
+    end
+})
+
+AutoFarmBox:AddSlider("NearbyDistance", {
+    Text = "Nearby Distance",
+    Default = getgenv().InstantRange,
+    Min = 1,
+    Max = 200,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().InstantRange = Value
+    end
+})
+
+AutoParryBox:AddToggle("AutoParryEnabled", {
+    Text = "Enable [AP]",
+    Default = getgenv().AutoParryEnabled,
+    Callback = function(Value)
+        getgenv().AutoParryEnabled = Value
+    end
+})
+
+AutoParryBox:AddSlider("ParryRange", {
+    Text = "Parry Range",
+    Default = getgenv().ParryRange,
+    Min = 5,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().ParryRange = Value
+    end
+})
+
+AutoParryBox:AddSlider("ParryCooldown", {
+    Text = "Parry Cooldown",
+    Default = getgenv().ParryCooldown,
+    Min = 0.05,
+    Max = 5,
+    Rounding = 2,
+    Callback = function(Value)
+        getgenv().ParryCooldown = Value
+    end
+})
+
+AutoParryBox:AddSlider("ParryCritDelay", {
+    Text = "Parry [Critical] Cooldown",
+    Default = getgenv().ParryCritDelay,
+    Min = 0.01,
+    Max = 5,
+    Rounding = 2,
+    Callback = function(Value)
+        getgenv().ParryCritDelay = Value
+    end
+})
+
+DungeonBox:AddButton({
+    Text = "Potential Teleport",
+    Func = function()
+        local Player = Players.LocalPlayer
+        local PlayerHRP = (Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        local Potentials = workspace:FindFirstChild("Potentials")
+
+        if Potentials then
+            local NearestDistance = math.huge
+            local NearestPotential = nil
+
+            for _, Potential in pairs(Potentials:GetChildren()) do
+                if Potential:IsA("BasePart") and Potential.Name:lower():match("^room") then
+                    local Distance = (PlayerHRP.Position - Potential.Position).Magnitude
+
+                    if Distance < NearestDistance then
+                        NearestPotential = Potential
+                        NearestDistance = Distance
+                    end
+                end
+            end
+
+            if NearestPotential then
+                PlayerHRP.CFrame = NearestPotential.CFrame + Vector3.new(0, 5, 0)
+            end
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = "Teleport to potential"
+})
+
+DungeonBox:AddButton({
+    Text = "Boss Room Teleport",
+    Func = function()
+        local Player = Players.LocalPlayer
+        local PlayerHRP = (Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        local BossDoor = workspace:FindFirstChild("MAP") and workspace.MAP:FindFirstChild("Room999")
+
+        if BossDoor then
+            BossDoor = workspace.MAP.Room999:FindFirstChild("BossDoor")
+        end
+
+        if BossDoor and BossDoor:IsA("BasePart") then
+            PlayerHRP.CFrame = BossDoor.CFrame + Vector3.new(0, 5, 0)
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = "Teleport To Boss Door"
+})
+
+DungeonBox:AddButton({
+    Text = "Item Teleport",
+    Func = function()
+        local Player = Players.LocalPlayer
+        local PlayerHRP = (Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        local OtherChars = workspace:FindFirstChild("OtherChars")
+
+        if OtherChars then
+            local NearestDistance = math.huge
+            local NearestItem = nil
+
+            for _, Item in pairs(OtherChars:GetChildren()) do
+                if Item:IsA("Model") then
+                    local ItemPosition = nil
+
+                    if Item.PrimaryPart then
+                        ItemPosition = Item.PrimaryPart.Position
+                    else
+                        local Descendants = Item:GetDescendants()
+                        local TotalPosition = Vector3.new(0, 0, 0)
+                        local Count = 0
+
+                        for _, Descendant in pairs(Descendants) do
+                            if Descendant:IsA("BasePart") then
+                                TotalPosition = TotalPosition + Descendant.Position
+                                Count = Count + 1
+                            end
+                        end
+
+                        if Count > 0 then
+                            ItemPosition = TotalPosition / Count
+                        end
+                    end
+
+                    if ItemPosition then
+                        local Distance = (PlayerHRP.Position - ItemPosition).Magnitude
+
+                        if Distance < NearestDistance then
+                            NearestItem = Item
+                            NearestDistance = Distance
+                        end
+                    end
+                end
+            end
+
+            if NearestItem then
+                local TargetCFrame = nil
+
+                if NearestItem.PrimaryPart then
+                    TargetCFrame = NearestItem.PrimaryPart.CFrame
+                else
+                    local FirstPart = NearestItem:FindFirstChildWhichIsA("BasePart")
+
+                    if FirstPart then
+                        TargetCFrame = FirstPart.CFrame
+                    end
+                end
+
+                if TargetCFrame then
+                    PlayerHRP.CFrame = TargetCFrame + Vector3.new(0, 5, 0)
+                end
+            end
+        else
+            warn("[DupeSide] workspace.OtherChars not found.")
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = "Teleport To Closest item/otherchar"
+})
+
+PlayerESPBox:AddToggle("ESPEnabled", {
+    Text = "ESP Enable",
+    Default = getgenv().ESPSettings.Enabled,
+    Callback = function(Value)
+        getgenv().ESPSettings.Enabled = Value
+    end
+})
+
+PlayerESPBox:AddToggle("ESPBox", {
+    Text = "ESP Box",
+    Default = getgenv().ESPSettings.ShowBox,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowBox = Value
+    end
+})
+
+PlayerESPBox:AddToggle("ESPName", {
+    Text = "ESP Name",
+    Default = getgenv().ESPSettings.ShowName,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowName = Value
+    end
+})
+
+PlayerESPBox:AddToggle("ESPHealth", {
+    Text = "ESP Health",
+    Default = getgenv().ESPSettings.ShowHealth,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowHealth = Value
+    end
+})
+
+PlayerESPBox:AddToggle("ESPTracer", {
+    Text = "ESP Tracer",
+    Default = getgenv().ESPSettings.ShowTracer,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowTracer = Value
+    end
+})
+
+PlayerESPBox:AddToggle("ESPDistance", {
+    Text = "ESP Distance",
+    Default = getgenv().ESPSettings.ShowDistance,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowDistance = Value
+    end
+})
+
+ItemESPBox:AddToggle("ItemESPEnabled", {
+    Text = "ESP Enable",
+    Default = getgenv().ItemESPSettings.Enabled,
+    Callback = function(Value)
+        getgenv().ItemESPSettings.Enabled = Value
+
+        if ITEMesp and type(ITEMesp.SetEnabled) == "function" then
+            pcall(function()
+                ITEMesp.SetEnabled(Value)
+            end)
+        end
+    end
+})
+
+ItemESPBox:AddToggle("ItemESPBox", {
+    Text = "ESP Box",
+    Default = getgenv().ItemESPSettings.ShowBox,
+    Callback = function(Value)
+        getgenv().ItemESPSettings.ShowBox = Value
+
+        if ITEMesp and type(ITEMesp.SetBoxEnabled) == "function" then
+            pcall(function()
+                ITEMesp.SetBoxEnabled(Value)
+            end)
+        end
+    end
+})
+
+ItemESPBox:AddToggle("ItemESPName", {
+    Text = "ESP Name",
+    Default = getgenv().ItemESPSettings.ShowName,
+    Callback = function(Value)
+        getgenv().ItemESPSettings.ShowName = Value
+
+        if ITEMesp and type(ITEMesp.SetNameEnabled) == "function" then
+            pcall(function()
+                ITEMesp.SetNameEnabled(Value)
+            end)
+        end
+    end
+})
+
+ItemESPBox:AddToggle("ItemESPDistance", {
+    Text = "ESP Distance",
+    Default = getgenv().ItemESPSettings.ShowDistance,
+    Callback = function(Value)
+        getgenv().ItemESPSettings.ShowDistance = Value
+
+        if ITEMesp and type(ITEMesp.SetDistanceEnabled) == "function" then
+            pcall(function()
+                ITEMesp.SetDistanceEnabled(Value)
+            end)
+        end
+    end
+})
+
+MobESPBox:AddToggle("NPCESPEnabled", {
+    Text = "ESP Enable",
+    Default = getgenv().NPCESPSettings.Enabled,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.Enabled = Value
+    end
+})
+
+MobESPBox:AddToggle("NPCESPBox", {
+    Text = "ESP Box",
+    Default = getgenv().NPCESPSettings.ShowBox,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.ShowBox = Value
+    end
+})
+
+MobESPBox:AddToggle("NPCESPName", {
+    Text = "ESP Name",
+    Default = getgenv().NPCESPSettings.ShowName,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.ShowName = Value
+    end
+})
+
+MobESPBox:AddToggle("NPCESPHealth", {
+    Text = "ESP Health",
+    Default = getgenv().NPCESPSettings.ShowHealthNumber,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.ShowHealthNumber = Value
+    end
+})
+
+MobESPBox:AddToggle("NPCESPTracer", {
+    Text = "ESP Tracer",
+    Default = getgenv().NPCESPSettings.ShowTracer,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.ShowTracer = Value
+    end
+})
+
+MobESPBox:AddToggle("NPCESPDistance", {
+    Text = "ESP Distance",
+    Default = getgenv().NPCESPSettings.ShowDistance,
+    Callback = function(Value)
+        getgenv().NPCESPSettings.ShowDistance = Value
+    end
+})
+
+RoomESPBox:AddToggle("BossRoomESP", {
+    Text = "Esp Boss Room",
+    Default = getgenv().BossRoomESP or false,
+    Callback = function(Value)
+        getgenv().BossRoomESP = Value
+
+        if not Value then
+            for _, Descendant in ipairs(workspace:GetDescendants()) do
+                if Descendant.Name == "BossDoor" and Descendant:IsA("BasePart") then
+                    local ESP = Descendant:FindFirstChild("SixSeven")
+
+                    if ESP then
+                        ESP:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+local FlyKey = "K"
+local SpeedKey = "V"
+local NoclipKey = "N"
+
+MovementBox:AddToggle("FlyToggle", {
+    Text = "Fly Toggle",
+    Default = getgenv().FlyEnabled,
+    Callback = function(Value)
+        getgenv().FlyEnabled = Value
+    end
+}):AddKeyPicker("FlyKeyPicker", {
+    Default = "K",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Fly Key",
+    NoUI = false,
+    Callback = function(Value)
+        getgenv().FlyEnabled = Value
+
+        if Toggles and Toggles.FlyToggle then
+            Toggles.FlyToggle:SetValue(Value)
+        end
+    end,
+    ChangedCallback = function(NewKey)
+        if NewKey then
+            FlyKey = tostring(NewKey):gsub("Enum.KeyCode.", "")
+        end
+
+        print("[cb] Fly Keybind changed! ->", FlyKey)
+    end
+})
+
+MovementBox:AddToggle("SpeedActive", {
+    Text = "Speed[B] Toggle",
+    Default = getgenv().SpeedActive,
+    Callback = function(Value)
+        getgenv().SpeedActive = Value
+    end
+}):AddKeyPicker("SpeedKeyPicker", {
+    Default = "V",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Speed Key",
+    NoUI = false,
+    Callback = function(Value)
+        getgenv().SpeedActive = Value
+
+        if Toggles and Toggles.SpeedActive then
+            Toggles.SpeedActive:SetValue(Value)
+        end
+    end,
+    ChangedCallback = function(NewKey)
+        if NewKey then
+            SpeedKey = tostring(NewKey):gsub("Enum.KeyCode.", "")
+        end
+
+        print("[cb] Speed Keybind changed! ->", SpeedKey)
+    end
+})
+
+MovementBox:AddToggle("NoclipToggle", {
+    Text = "Noclip Toggle",
+    Default = getgenv().NoclipEnabled,
+    Callback = function(Value)
+        getgenv().NoclipEnabled = Value
+    end
+}):AddKeyPicker("NoclipKeyPicker", {
+    Default = "N",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Noclip Key",
+    NoUI = false,
+    Callback = function(Value)
+        getgenv().NoclipEnabled = Value
+
+        if Toggles and Toggles.NoclipToggle then
+            Toggles.NoclipToggle:SetValue(Value)
+        end
+    end,
+    ChangedCallback = function(NewKey)
+        if NewKey then
+            NoclipKey = tostring(NewKey):gsub("Enum.KeyCode.", "")
+        end
+
+        print("[cb] Noclip Keybind changed! ->", NoclipKey)
+    end
+})
+
+MovementBox:AddSlider("FlySpeed", {
+    Text = "Fly Speed",
+    Default = getgenv().FlySpeed,
+    Min = 1,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().FlySpeed = Value
+    end
+})
+
+MovementBox:AddSlider("SpeedValue", {
+    Text = "Speed[B] Slider",
+    Default = getgenv().SpeedValue,
+    Min = 1,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().SpeedValue = Value
+    end
+})
+
+local UISettingsBox = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "wrench")
+
+UISettingsBox:AddToggle("KeybindMenuOpen", {
+    Default = Library.KeybindFrame.Visible,
+    Text = "Open Keybind Menu",
+    Callback = function(Value)
+        Library.KeybindFrame.Visible = Value
+    end
+})
+
+UISettingsBox:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Default = true,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end
+})
+
+UISettingsBox:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end
+})
+
+UISettingsBox:AddDropdown("DPIDropdown", {
+    Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+    Default = "100%",
+    Text = "DPI Scale",
+    Callback = function(Value)
+        local Scale = Value:gsub("%%", "")
+        Library:SetDPIScale(tonumber(Scale))
+    end
+})
+
+UISettingsBox:AddDivider()
+
+UISettingsBox:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
+    Default = "RightShift",
+    NoUI = true,
+    Text = "Menu keybind"
+})
+
+UISettingsBox:AddButton("Unload", function()
+    Library:Unload()
+end)
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+SaveManager:SetLibrary(Library)
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+SaveManager:SetFolder("DupeSideHub/Absolv")
+SaveManager:SetSubFolder("specific-place")
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
+
+Library:Notify({
+    Title = "DupeSide UI",
+    Description = "DupeSide Succefully Loaded.",
+    Time = 4
+})
+
+task.wait(1)
+
+task.spawn(function()
+    while true do
+        repeat
+            task.wait(0.1)
+        until Toggles.AutoAttack.Value
+
+        local Remotes = LocalPlayer:FindFirstChild("Remotes")
+
+        if Remotes and Remotes:FindFirstChild("RequestAction") then
+            pcall(function()
+                Remotes.RequestAction:InvokeServer("Weapon", Enum.UserInputState.Begin)
+            end)
+        end
+    end
+end)
+
+local BodyVelocity = nil
+local BodyGyro = nil
+local IsFlying = false
+local FlyRotation = CFrame.new()
+local Camera = workspace.CurrentCamera
+
+local KeysPressed = {
+    W = false,
+    A = false,
+    S = false,
+    D = false,
+    Up = false,
+    Down = false
+}
+
+local function CreateFlyBodies()
+    local BV = Instance.new("BodyVelocity")
+    BV.MaxForce = Vector3.new(100000, 100000, 100000)
+    BV.Velocity = Vector3.new(0, 0, 0)
+    BV.P = 1250
+
+    local BG = Instance.new("BodyGyro")
+    BG.MaxTorque = Vector3.new(100000, 100000, 100000)
+    BG.P = 10000
+
+    return BV, BG
+end
+
+local function AttachFlyBodies(Part)
+    if not (BodyVelocity and BodyGyro) then
+        BodyVelocity, BodyGyro = CreateFlyBodies()
+    end
+
+    BodyVelocity.Parent = Part
+    BodyGyro.Parent = Part
+end
+
+local function DetachFlyBodies()
+    if BodyVelocity then
+        BodyVelocity.Parent = nil
+    end
+
+    if BodyGyro then
+        BodyGyro.Parent = nil
+    end
+end
+
+local function GetCharacterParts()
+    local Char = LocalPlayer.Character
+
+    if Char then
+        local HRP = Char:FindFirstChild("HumanoidRootPart")
+        local Hum = Char:FindFirstChildOfClass("Humanoid")
+
+        if HRP and Hum then
+            return Char, HRP, Hum
+        end
+    end
+end
+
+local function StartFlying()
+    local _, HRP, Humanoid = GetCharacterParts()
+
+    if HRP and Humanoid then
+        IsFlying = true
+        FlyRotation = HRP.CFrame - HRP.CFrame.p
+        AttachFlyBodies(HRP)
+        Humanoid.PlatformStand = false
+
+        pcall(function()
+            Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+        end)
+    end
+end
+
+local function StopFlying()
+    IsFlying = false
+    DetachFlyBodies()
+
+    local _, _, Humanoid = GetCharacterParts()
+
+    if Humanoid then
+        pcall(function()
+            Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+        end)
+    end
+end
+
+local NoclipConnection = nil
+
+local function EnableNoclip()
+    if not NoclipConnection then
+        NoclipConnection = RunService.Stepped:Connect(function()
+            if game.Players.LocalPlayer.Character then
+                for _, Part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                    if Part:IsA("BasePart") and Part.CanCollide then
+                        Part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end
+
+local function DisableNoclip()
+    if NoclipConnection then
+        NoclipConnection:Disconnect()
+        NoclipConnection = nil
+    end
+end
+
+UserInputService.InputBegan:Connect(function(Input, GameProcessed)
+    if not GameProcessed then
+        if Input.UserInputType == Enum.UserInputType.Keyboard then
+            local KeyCode = Input.KeyCode
+
+            if KeyCode == Enum.KeyCode.W then
+                KeysPressed.W = true
+            elseif KeyCode == Enum.KeyCode.A then
+                KeysPressed.A = true
+            elseif KeyCode == Enum.KeyCode.S then
+                KeysPressed.S = true
+            elseif KeyCode == Enum.KeyCode.D then
+                KeysPressed.D = true
+            elseif KeyCode == Enum.KeyCode.Space then
+                KeysPressed.Up = true
+            elseif KeyCode == Enum.KeyCode.LeftControl or KeyCode == Enum.KeyCode.RightControl then
+                KeysPressed.Down = true
+            end
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Keyboard then
+        local KeyCode = Input.KeyCode
+
+        if KeyCode == Enum.KeyCode.W then
+            KeysPressed.W = false
+        elseif KeyCode == Enum.KeyCode.A then
+            KeysPressed.A = false
+        elseif KeyCode == Enum.KeyCode.S then
+            KeysPressed.S = false
+        elseif KeyCode == Enum.KeyCode.D then
+            KeysPressed.D = false
+        elseif KeyCode == Enum.KeyCode.Space then
+            KeysPressed.Up = false
+        elseif KeyCode == Enum.KeyCode.LeftControl or KeyCode == Enum.KeyCode.RightControl then
+            KeysPressed.Down = false
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(DeltaTime)
+    Camera = workspace.CurrentCamera or Camera
+
+    if Toggles.FlyToggle and Toggles.FlyToggle.Value then
+        if not IsFlying then
+            StartFlying()
+        end
+
+        local _, HRP = GetCharacterParts()
+
+        if HRP and BodyVelocity then
+            local Speed = Options.FlySpeed and Options.FlySpeed.Value or (getgenv().FlySpeed or 20)
+            local ForwardBack = (KeysPressed.W and 1 or 0) - (KeysPressed.S and 1 or 0)
+            local LeftRight = (KeysPressed.D and 1 or 0) - (KeysPressed.A and 1 or 0)
+            local UpDown = (KeysPressed.Up and 1 or 0) - (KeysPressed.Down and 1 or 0)
+
+            local CamCFrame = Camera and Camera.CFrame or HRP.CFrame
+            local LookVector = CamCFrame.LookVector
+            local RightVector = CamCFrame.RightVector
+
+            local Direction = LookVector * ForwardBack + RightVector * LeftRight + Vector3.new(0, 1, 0) * UpDown
+
+            if Direction.Magnitude > 0 then
+                Direction = Direction.Unit
+            end
+
+            BodyVelocity.Velocity = Direction * Speed
+
+            if BodyGyro then
+                BodyGyro.CFrame = CFrame.new(HRP.Position) * (FlyRotation or CFrame.new())
+            end
+        end
+    elseif IsFlying then
+        StopFlying()
+    end
+
+    if Toggles.SpeedActive and Toggles.SpeedActive.Value then
+        local Speed = Options.SpeedValue and Options.SpeedValue.Value or (getgenv().SpeedValue or 50)
+        local Char = LocalPlayer.Character
+
+        if Char and Char:FindFirstChild("HumanoidRootPart") then
+            local Humanoid = Char:FindFirstChildOfClass("Humanoid")
+
+            if Humanoid and Humanoid.MoveDirection.Magnitude > 0 then
+                local HRP = Char.HumanoidRootPart
+                HRP.CFrame = HRP.CFrame + Humanoid.MoveDirection * (Speed * DeltaTime)
+            end
+        end
+    end
+
+    if Toggles.NoclipToggle and Toggles.NoclipToggle.Value then
+        EnableNoclip()
+    else
+        DisableNoclip()
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(Input, GameProcessed)
+    if GameProcessed then
+        return
+    end
+
+    if UserInputService and UserInputService:GetFocusedTextBox() then
+        return
+    end
+
+    if Input.UserInputType == Enum.UserInputType.Keyboard then
+        local Key = tostring(Input.KeyCode):gsub("Enum.KeyCode.", "")
+
+        if Key == FlyKey then
+            if Toggles.FlyToggle then
+                Toggles.FlyToggle:SetValue(not Toggles.FlyToggle.Value)
+            end
+        elseif Key == SpeedKey then
+            if Toggles.SpeedActive then
+                Toggles.SpeedActive:SetValue(not Toggles.SpeedActive.Value)
+            end
+        elseif Key == NoclipKey then
+            if Toggles.NoclipToggle then
+                Toggles.NoclipToggle:SetValue(not Toggles.NoclipToggle.Value)
+            end
+        end
+    end
+end)
+
+local function CreateBossRoomESP(Part)
+    if Part and not Part:FindFirstChild("SixSeven") then
+        local Billboard = Instance.new("BillboardGui")
+        Billboard.Name = "SixSeven"
+        Billboard.Size = UDim2.new(0, 120, 0, 40)
+        Billboard.AlwaysOnTop = true
+        Billboard.StudsOffset = Vector3.new(0, 4, 0)
+        Billboard.Adornee = Part
+
+        local Label = Instance.new("TextLabel")
+        Label.BackgroundTransparency = 1
+        Label.Size = UDim2.new(1, 0, 1, 0)
+        Label.Text = "Boss Room"
+        Label.TextColor3 = Color3.fromRGB(255, 140, 0)
+        Label.TextStrokeTransparency = 0.2
+        Label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        Label.TextScaled = true
+        Label.Font = Enum.Font.GothamBold
+        Label.Parent = Billboard
+
+        Billboard.Parent = Part
+    end
+end
+
+task.spawn(function()
+    while true do
+        repeat
+            task.wait(2)
+        until Toggles.BossRoomESP and Toggles.BossRoomESP.Value
+
+        for _, Descendant in ipairs(workspace:GetDescendants()) do
+            if Descendant.Name == "BossDoor" and Descendant:IsA("BasePart") then
+                CreateBossRoomESP(Descendant)
+            end
+        end
+    end
+end)
+
+local ESPLibrarySuccess, ESPLibrary = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/linemaster2/esp-library/main/library.lua"))()
+end)
+
+local NPCESPSuccess, NPCESPLibrary = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/iusedoneyed-hub/example/refs/heads/main/npc_esp.lua"))()
+end)
+
+local _, ItemESPLibrary = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/DerekLuaU/example/refs/heads/main/esp_items.lua"))()
+end)
+
+local PlayerESP = not ESPLibrarySuccess and {
+    Enabled = false,
+    ShowBox = false,
+    ShowName = false,
+    ShowHealth = false,
+    ShowTracer = false,
+    ShowDistance = false
+} or ESPLibrary
+
+local NPCESP = not NPCESPSuccess and {
+    Enabled = false,
+    ShowBox = false,
+    ShowName = false,
+    ShowHealthNumber = false,
+    ShowTracer = false,
+    ShowDistance = false
+} or NPCESPLibrary
+
+task.spawn(function()
+    while true do
+        task.wait(0.6)
+
+        local ESPEnabled = Options.ESPEnabled and Options.ESPEnabled.Value or getgenv().ESPSettings.Enabled
+        local ESPBox = Options.ESPBox and Options.ESPBox.Value or getgenv().ESPSettings.ShowBox
+        local ESPName = Options.ESPName and Options.ESPName.Value or getgenv().ESPSettings.ShowName
+
+        if PlayerESP then
+            PlayerESP.Enabled = ESPEnabled
+            PlayerESP.ShowBox = ESPBox
+            PlayerESP.ShowName = ESPName
+            PlayerESP.ShowHealth = Options.ESPHealth and Options.ESPHealth.Value or getgenv().ESPSettings.ShowHealth
+            PlayerESP.ShowTracer = Options.ESPTracer and Options.ESPTracer.Value or getgenv().ESPSettings.ShowTracer
+            PlayerESP.ShowDistance = Options.ESPDistance and Options.ESPDistance.Value or getgenv().ESPSettings.ShowDistance
+        end
+
+        if NPCESP then
+            NPCESP.Enabled = getgenv().NPCESPSettings.Enabled
+            NPCESP.ShowBox = getgenv().NPCESPSettings.ShowBox
+            NPCESP.ShowName = getgenv().NPCESPSettings.ShowName
+            NPCESP.ShowHealthNumber = getgenv().NPCESPSettings.ShowHealthNumber
+            NPCESP.ShowTracer = getgenv().NPCESPSettings.ShowTracer
+            NPCESP.ShowDistance = getgenv().NPCESPSettings.ShowDistance
+        end
+
+        if ItemESPLibrary then
+            if type(ItemESPLibrary.SetEnabled) == "function" then
+                pcall(function()
+                    ItemESPLibrary.SetEnabled(getgenv().ItemESPSettings.Enabled)
+                end)
+            end
+
+            if type(ItemESPLibrary.SetBoxEnabled) == "function" then
+                pcall(function()
+                    ItemESPLibrary.SetBoxEnabled(getgenv().ItemESPSettings.ShowBox)
+                end)
+            end
+
+            if type(ItemESPLibrary.SetNameEnabled) == "function" then
+                pcall(function()
+                    ItemESPLibrary.SetNameEnabled(getgenv().ItemESPSettings.ShowName)
+                end)
+            end
+
+            if type(ItemESPLibrary.SetDistanceEnabled) == "function" then
+                pcall(function()
+                    ItemESPLibrary.SetDistanceEnabled(getgenv().ItemESPSettings.ShowDistance)
+                end)
+            end
+        end
+    end
+end)
+
+local function UseSkill(SkillName)
+    if SkillName ~= "" then
+        local Args = { SkillName, Enum.UserInputState.Begin }
+        Players.LocalPlayer:WaitForChild("Remotes"):WaitForChild("RequestAction"):InvokeServer(unpack(Args))
+        print("[DupeSide] Used skill:", SkillName)
+    end
+end
+
+local function IsNPCNearby(Range)
+    local Player = game.Players.LocalPlayer
+
+    if not (Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")) then
+        return false
+    end
+
+    local PlayerHRP = Player.Character.HumanoidRootPart
+
+    for _, NPC in pairs(workspace.NPCs:GetChildren()) do
+        if NPC:IsA("Model") and NPC:FindFirstChild("HumanoidRootPart") then
+            if (NPC.HumanoidRootPart.Position - PlayerHRP.Position).Magnitude <= Range then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+spawn(function()
+    while true do
+        while AutoSkillToggle.Value do
+            if IsNPCNearby(20) then
+                UseSkill(AttackSkill1)
+                task.wait(1)
+                UseSkill(AttackSkill2)
+                task.wait(1)
+            else
+                task.wait(0.5)
+            end
+        end
+
+        task.wait(0.5)
+    end
+end)
+
+local LastParryTime = 0
+
+local AttackKeywords = {
+    "attack", "swing", "crit", "skill", "slash", "pierce", "impact",
+    "arrow release", "hit", "kick", "stoneslashes", "projectile",
+    "fireball", "iceblast", "shockwave", "charge", "meteor", "aoe",
+    "fist", "FrozenCore", "Beam", "FrozenCoreBeam", "Explosion"
+}
+
+local function MatchAttackKeyword(Name)
+    local LowerName = Name:lower()
+
+    for _, Keyword in pairs(AttackKeywords) do
+        if string.find(LowerName, Keyword) then
+            return Keyword:upper()
+        end
+    end
+
+    return nil
+end
+
+local function ExecuteParry()
+    local ParryArgs = { "Parry", Enum.UserInputState.Begin }
+
+    if LocalPlayer and LocalPlayer:FindFirstChild("Remotes") and LocalPlayer.Remotes:FindFirstChild("RequestAction") then
+        pcall(function()
+            LocalPlayer.Remotes.RequestAction:InvokeServer(unpack(ParryArgs))
+        end)
+    end
+end
+
+local function HandleAutoParry(Source, AttackType, NPC)
+    if Toggles.AutoParryEnabled and Toggles.AutoParryEnabled.Value then
+        local PlayerHRP = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        local SourcePosition
+
+        if Source:IsA("BasePart") then
+            SourcePosition = Source.Position
+        elseif Source:IsA("Sound") and Source.Parent and Source.Parent:IsA("BasePart") then
+            SourcePosition = Source.Parent.Position
+        elseif Source:IsA("AnimationTrack") and NPC:FindFirstChild("HumanoidRootPart") then
+            SourcePosition = NPC.HumanoidRootPart.Position
+        else
+            return
+        end
+
+        local ParryRange = Options.ParryRange and Options.ParryRange.Value or (getgenv().ParryRange or 30)
+        local ParryCooldown = Options.ParryCooldown and Options.ParryCooldown.Value or (getgenv().ParryCooldown or 0.5)
+        local ParryCritDelay = Options.ParryCritDelay and Options.ParryCritDelay.Value or (getgenv().ParryCritDelay or 0.2)
+
+        if (SourcePosition - PlayerHRP.Position).Magnitude <= ParryRange then
+            local CurrentTime = tick()
+
+            if CurrentTime - LastParryTime >= ParryCooldown then
+                LastParryTime = CurrentTime
+                local Delay = AttackType == "CRIT" and ParryCritDelay or 0
+                task.delay(Delay, ExecuteParry)
+            end
+        end
+    end
+end
+
+local function SetupNPCParryDetection(NPC)
+    local NPCHRP = NPC:FindFirstChild("HumanoidRootPart")
+
+    if NPCHRP then
+        for _, Child in pairs(NPCHRP:GetChildren()) do
+            local AttackType = MatchAttackKeyword(Child.Name)
+
+            if AttackType then
+                HandleAutoParry(Child, AttackType, NPC)
+            end
+        end
+
+        NPCHRP.ChildAdded:Connect(function(NewChild)
+            local AttackType = MatchAttackKeyword(NewChild.Name)
+
+            if AttackType then
+                HandleAutoParry(NewChild, AttackType, NPC)
+            end
+        end)
+
+        local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
+        local Animator = Humanoid and Humanoid:FindFirstChildOfClass("Animator")
+
+        if Animator then
+            Animator.AnimationPlayed:Connect(function(AnimationTrack)
+                local AttackType = MatchAttackKeyword(AnimationTrack.Name)
+
+                if AttackType then
+                    HandleAutoParry(AnimationTrack, AttackType, NPC)
+                end
+            end)
+        end
+    end
+end
+
+for _, NPC in pairs(NPCsFolder:GetChildren()) do
+    if NPC:IsA("Model") then
+        SetupNPCParryDetection(NPC)
+    end
+end
+
+NPCsFolder.ChildAdded:Connect(function(NewNPC)
+    if NewNPC:IsA("Model") then
+        task.wait(0.2)
+        SetupNPCParryDetection(NewNPC)
+    end
+end)
+
+Library:OnUnload(function()
+    DisableNoclip()
+
+    if BodyVelocity then
+        BodyVelocity:Destroy()
+    end
+
+    if BodyGyro then
+        BodyGyro:Destroy()
+    end
+
+    print("DupeSide merged UI unloaded.")
+end)
+
+Library:Notify({
+    Title = "DupeSide",
+    Description = "Succesfully loaded.",
+    Time = 4
+})
+
+task.delay(1, function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "DupeSide Hub",
+        Text = "discord.gg/mcPTS824Fc",
+        Duration = 6
+    })
+end)

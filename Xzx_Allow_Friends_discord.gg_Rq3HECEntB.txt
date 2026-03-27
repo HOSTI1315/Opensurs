@@ -1,0 +1,103 @@
+-- Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Services
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Create main GUI
+local XZX_HUB = Instance.new("ScreenGui")
+XZX_HUB.Name = "XZX_HUB"
+XZX_HUB.ResetOnSpawn = false
+XZX_HUB.IgnoreGuiInset = true
+XZX_HUB.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Intro screen frame (full screen black background)
+local IntroFrame = Instance.new("Frame")
+IntroFrame.Parent = XZX_HUB
+IntroFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+IntroFrame.Size = UDim2.new(1, 0, 1, 0)
+IntroFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+IntroFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+IntroFrame.BackgroundTransparency = 1
+IntroFrame.ZIndex = 100
+
+-- Intro text label
+local IntroText = Instance.new("TextLabel")
+IntroText.Parent = IntroFrame
+IntroText.AnchorPoint = Vector2.new(0.5, 0.5)
+IntroText.Position = UDim2.new(0.5, 0, 0.5, 0)
+IntroText.Size = UDim2.new(1, 0, 0.4, 0)
+IntroText.BackgroundTransparency = 1
+IntroText.TextTransparency = 1
+IntroText.Text = "XZX HUB 👿 discord.gg/PtAcD9Km9n"
+IntroText.Font = Enum.Font.GothamBlack
+IntroText.TextScaled = true
+IntroText.TextColor3 = Color3.fromRGB(255, 255, 255)
+IntroText.ZIndex = 101
+
+-- Fade in animation (1.7 seconds)
+local fadeInFrame = TweenService:Create(
+    IntroFrame,
+    TweenInfo.new(1.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0}
+)
+
+local fadeInText = TweenService:Create(
+    IntroText,
+    TweenInfo.new(1.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {TextTransparency = 0}
+)
+
+fadeInFrame:Play()
+fadeInText:Play()
+
+-- After fade in completes, fade out
+fadeInText.Completed:Connect(function()
+    -- Fade out animation (1.5 seconds)
+    local fadeOutFrame = TweenService:Create(
+        IntroFrame,
+        TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        {BackgroundTransparency = 1}
+    )
+    
+    local fadeOutText = TweenService:Create(
+        IntroText,
+        TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        {TextTransparency = 1}
+    )
+    
+    fadeOutFrame:Play()
+    fadeOutText:Play()
+    
+    -- After fade out completes, show main button
+    fadeOutFrame.Completed:Connect(function()
+        IntroFrame:Destroy()
+        
+        -- Create Allow/Disallow button
+        local AllowButton = Instance.new("TextButton")
+        AllowButton.Parent = XZX_HUB
+        AllowButton.Size = UDim2.new(0, 160, 0, 50)
+        AllowButton.Position = UDim2.new(1, -170, 0, 10)
+        AllowButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        AllowButton.BorderSizePixel = 0
+        AllowButton.Font = Enum.Font.GothamBlack
+        AllowButton.TextScaled = true
+        AllowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        AllowButton.Text = "Allow/Disallow"
+        
+        local ButtonCorner = Instance.new("UICorner")
+        ButtonCorner.Parent = AllowButton
+        ButtonCorner.CornerRadius = UDim.new(0, 10)
+        
+        -- Button click handler
+        AllowButton.MouseButton1Click:Connect(function()
+            local Packages = ReplicatedStorage:WaitForChild("Packages")
+            local Net = Packages:WaitForChild("Net")
+            local ToggleFriendsRemote = Net:WaitForChild("RE/PlotService/ToggleFriends")
+            ToggleFriendsRemote:FireServer()
+        end)
+    end)
+end)

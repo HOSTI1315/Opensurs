@@ -1,0 +1,51 @@
+--!@ Author < @kittycathacker > | FeastHax+ 
+
+local ScreenGui = Instance.new("ScreenGui")
+local TextButton = Instance.new("TextButton")
+local Stroke = Instance.new("UIStroke", TextButton)
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+gethui(ScreenGui)
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Properties
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+TextButton.Parent = ScreenGui
+TextButton.BackgroundColor3 = Color3.new(1, 1, 1)
+TextButton.BackgroundTransparency = 0.25
+TextButton.BorderColor3 = Color3.new(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.4477534, 0, 0, 0)
+TextButton.Size = UDim2.new(0, 200, 0, 50)
+TextButton.Font = Enum.Font.FredokaOne
+TextButton.Text = "Teleport To Base"
+TextButton.TextColor3 = Color3.new(0, 0, 0)
+TextButton.TextSize = 22
+
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Color = Color3.new(0, 0, 0)
+Stroke.Thickness = 3
+
+local function Start()
+	local script = Instance.new('LocalScript', TextButton)
+	local Script = require(game:GetService("Players").LocalPlayer.PlayerScripts.Client.InitModules.GameplayController)
+	local Player = game:GetService("Players").LocalPlayer
+	local Teleport = script.Parent
+	
+	ProximityPromptService.PromptButtonHoldBegan:Connect(function(v)
+		v.HoldDuration = 0
+	end)
+
+	local function local_plot()
+		return Script.GetPlayersPlot(Player)
+	end
+
+	Teleport.MouseButton1Down:Connect(function()
+		Player.Character.HumanoidRootPart.CFrame = local_plot():FindFirstChild("CashMultiDisplay").CFrame * CFrame.new(1, 1, 1)
+	end)
+end
+coroutine.wrap(Start)()

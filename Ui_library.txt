@@ -1,0 +1,261 @@
+--// ======= THEME =========
+local THEME = {
+    FrameBg        = Color3.fromRGB(38, 42, 56),   
+    FrameBg2       = Color3.fromRGB(48, 52, 68),   
+    Accent         = Color3.fromRGB(0, 180, 255),  
+    AccentHover    = Color3.fromRGB(0, 205, 255),
+    TabIdle        = Color3.fromRGB(70, 90, 130),
+    TabActive      = Color3.fromRGB(0, 180, 255),
+    ToggleBg       = Color3.fromRGB(60, 64, 80),
+    ToggleHover    = Color3.fromRGB(70, 74, 95),
+    ToggleOffTrack = Color3.fromRGB(120, 120, 120),
+    ToggleOnTrack  = Color3.fromRGB(0, 200, 150),
+    TextLight      = Color3.fromRGB(240, 240, 240),
+    TitleText      = Color3.fromRGB(255, 255, 255),
+}
+
+--// ======= SERVICES =======
+local CoreGui      = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UIS          = game:GetService("UserInputService")
+
+-- Bersihkan UI lama
+local OLD = CoreGui:FindFirstChild("FaDhenModernMini")
+if OLD then OLD:Destroy() end
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "FaDhenModernMini"
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+-- MAIN FRAME
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 240, 0, 250)
+mainFrame.Position = UDim2.new(0.5, -120, 0.5, -125)
+mainFrame.BackgroundColor3 = THEME.FrameBg
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Visible = false
+mainFrame.Parent = gui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Thickness = 2
+mainStroke.Color = THEME.Accent
+mainStroke.Transparency = 0.15
+mainStroke.Parent = mainFrame
+
+-- Soft Shadow
+local shadow = Instance.new("ImageLabel")
+shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+shadow.Size = UDim2.new(1, 36, 1, 36)
+shadow.ZIndex = 0
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://5028857084"
+shadow.ImageColor3 = Color3.new(0,0,0)
+shadow.ImageTransparency = 0.55
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(24, 24, 276, 276)
+shadow.Parent = mainFrame
+
+-- TITLE BAR
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 32)
+title.BackgroundColor3 = THEME.Accent
+title.Text = "  YT FaDhenGaming"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextColor3 = THEME.TitleText
+title.Parent = mainFrame
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, THEME.Accent),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 60, 255))
+}
+titleGradient.Rotation = 80
+titleGradient.Parent = title
+
+-- TAB CONTAINER
+local tabContainer = Instance.new("Frame")
+tabContainer.Size = UDim2.new(1, -20, 0, 28)
+tabContainer.Position = UDim2.new(0, 10, 0, 42)
+tabContainer.BackgroundTransparency = 1
+tabContainer.Parent = mainFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 6)
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Parent = tabContainer
+
+-- CONTENT FRAME
+local contentFrame = Instance.new("Frame")
+contentFrame.Position = UDim2.new(0, 10, 0, 80)
+contentFrame.Size = UDim2.new(1, -20, 1, -90)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- Tabs
+local tabs, tabButtons = {}, {}
+local function createTab(name)
+    local tab = Instance.new("Frame")
+    tab.Name = name .. "Tab"
+    tab.Size = UDim2.new(1, 0, 1, 0)
+    tab.BackgroundTransparency = 1
+    tab.Visible = false
+    tab.Parent = contentFrame
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.VerticalAlignment = Enum.VerticalAlignment.Top
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = tab
+
+    tabs[name] = tab
+    return tab
+end
+
+local mainTab  = createTab("Main")
+local visualTab = createTab("Visual")
+local miscTab   = createTab("Misc")
+
+local function setActiveTab(name)
+    for tabName, tab in pairs(tabs) do
+        tab.Visible = (tabName == name)
+    end
+    for tabName, btn in pairs(tabButtons) do
+        TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = (tabName == name) and THEME.TabActive or THEME.TabIdle
+        }):Play()
+    end
+end
+
+local function createTabButton(text, tabName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 70, 0, 26)
+    btn.Text = text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 13
+    btn.TextColor3 = THEME.TextLight
+    btn.BackgroundColor3 = THEME.TabIdle
+    btn.AutoButtonColor = false
+    btn.Parent = tabContainer
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function() setActiveTab(tabName) end)
+    btn.MouseEnter:Connect(function() if not tabs[tabName].Visible then TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = THEME.AccentHover}):Play() end end)
+    btn.MouseLeave:Connect(function() if not tabs[tabName].Visible then TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = THEME.TabIdle}):Play() end end)
+    tabButtons[tabName] = btn
+end
+
+createTabButton("Main",   "Main")
+createTabButton("Visual", "Visual")
+createTabButton("Misc",   "Misc")
+setActiveTab("Main")
+
+-- TOGGLE CREATOR (dibuat global agar bisa dipanggil dari luar)
+_G.FaDhenAddToggle = function(tabName, data)
+    local tab = tabs[tabName]
+    if not tab then return warn("[FaDhenUI] Tab '"..tabName.."' tidak ditemukan!") end
+
+    local name     = data.Name or "Toggle"
+    local callback = data.Callback
+    local colorOn  = data.ColorOn or THEME.ToggleOnTrack
+
+    local btn = Instance.new("TextButton")
+    btn.Name = name .. "_Toggle"
+    btn.Parent = tab
+    btn.Size = UDim2.new(1, -10, 0, 32)
+    btn.BackgroundColor3 = THEME.ToggleBg
+    btn.TextColor3 = THEME.TextLight
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 15
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.AutoButtonColor = false
+    btn.Text = "  " .. name
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    local track = Instance.new("Frame")
+    track.Parent = btn
+    track.Size = UDim2.new(0, 32, 0, 14)
+    track.Position = UDim2.new(1, -48, 0.5, -7)
+    track.BackgroundColor3 = THEME.ToggleOffTrack
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+    local dot = Instance.new("Frame")
+    dot.Parent = track
+    dot.Size = UDim2.new(0, 14, 0, 14)
+    dot.Position = UDim2.new(0, 1, 0.5, -7)
+    dot.BackgroundColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+    local state = false
+    local function animate(on)
+        TweenService:Create(dot, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = on and UDim2.new(1, -15, 0.5, -7) or UDim2.new(0, 1, 0.5, -7)}):Play()
+        TweenService:Create(track, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = on and colorOn or THEME.ToggleOffTrack}):Play()
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        animate(state)
+        if callback then pcall(callback, state) end
+    end)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = THEME.ToggleHover}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = THEME.ToggleBg}):Play()
+    end)
+
+    return {Set = function(v) if type(v)=="boolean" and v~=state then state=v animate(state) end end, Get = function() return state end}
+end
+
+-- HOTKEY SHOW/HIDE (RightShift)
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+-- Open Button
+local toggleBtn = Instance.new("ImageButton", gui)
+toggleBtn.Size = UDim2.new(0, 55, 0, 55)
+toggleBtn.Position = UDim2.new(0, 10, 0.2, 0)
+toggleBtn.Image = "rbxassetid://121962590520433"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.BackgroundTransparency = 0.7
+toggleBtn.Active = true
+toggleBtn.Draggable = true
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 9)
+
+local stroke = Instance.new("UIStroke")
+stroke.Parent = toggleBtn
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Transparency = 0.3
+
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+end)
+toggleBtn.MouseLeave:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+
+local isOpen = false
+toggleBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    mainFrame.Visible = isOpen
+end)
+
+-- Tab default tetap Main
+setActiveTab("Main")

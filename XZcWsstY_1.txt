@@ -1,0 +1,115 @@
+-- LocalScript (StarterPlayerScripts)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local RemoteEvent = ReplicatedStorage.Modules.Network.RemoteEvent -- RemoteEvent
+local btn = player.PlayerGui.MainUI.SprintingButton
+
+-- loadstring(game:HttpGet("https://pastebin.com/raw/MzKS5uvm"))()
+
+local function getBehaviorFolder()
+    return ReplicatedStorage:WaitForChild("Assets")
+        :WaitForChild("Survivors")
+        :WaitForChild("Veeronica")
+        :WaitForChild("Behavior")
+end
+
+local behaviorFolder = getBehaviorFolder()
+local monitored = {} -- tracks highlights we've attached to
+
+local function adorneeIsPlayerCharacter(h)
+    if not h then return false end
+    local adornee = h.Adornee
+    local char = player.Character
+    if not adornee or not char then return false end
+    if adornee == char then return true end
+    -- If the adornee is a part inside the character (e.g. a BasePart), also count that
+    if adornee:IsDescendantOf(char) then return true end
+    return false
+end
+
+local function safeConnectPropertyChanged(instance, prop, fn)
+    local ok, signal = pcall(function() return instance:GetPropertyChangedSignal(prop) end)
+    if ok and signal then
+        return signal:Connect(fn)
+    end
+    return nil
+end
+
+local function monitorHighlight(h)
+    if not h or monitored[h] then return end
+    monitored[h] = true
+
+    local prevState = adorneeIsPlayerCharacter(h)
+    local connections = {}
+
+    local function cleanup()
+        for _, conn in ipairs(connections) do
+            if conn and conn.Connected then
+                conn:Disconnect()
+            end
+        end
+        monitored[h] = nil
+    end
+
+    local function onChanged()
+        if not h or not h.Parent then
+            cleanup()
+            return
+        end
+
+        local currState = adorneeIsPlayerCharacter(h)
+        if prevState ~= currState then
+            if currState then
+                print("Highlight's Adornee is PLAYER ->", h:GetFullName())
+                -- your action when highlight is assigned to player's character
+                pcall(function()
+                    keypress(Enum.KeyCode.Space)
+                    wait(0.01)
+                    keyrelease(Enum.KeyCode.Space)
+                end)
+            else
+                print("Highlight's Adornee is NOT player ->", h:GetFullName())
+                -- action for when it stops adorning the player (optional)
+            end
+        end
+        prevState = currState
+    end
+
+    -- watch the Adornee property (and ancestry in case adornee is moved/destroyed)
+    local c = safeConnectPropertyChanged(h, "Adornee", onChanged)
+    if c then table.insert(connections, c) end
+    -- If the adornee itself gets destroyed or moved, AncestryChanged on adornee won't be directly reachable here,
+    -- so re-check when Highlight's parent/ancestry changes
+    table.insert(connections, h.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            cleanup()
+        else
+            -- re-evaluate in case Adornee is now valid/invalid
+            onChanged()
+        end
+    end))
+
+    -- Also re-evaluate when the local player's character changes (CharacterAdded/Removing)
+    table.insert(connections, player.CharacterAdded:Connect(onChanged))
+    table.insert(connections, player.CharacterRemoving:Connect(onChanged))
+
+    -- run once immediately to report current state
+    task.spawn(onChanged)
+end
+
+-- initial scan for existing highlights
+for _, desc in ipairs(behaviorFolder:GetDescendants()) do
+    if desc:IsA("Highlight") then
+        monitorHighlight(desc)
+    end
+end
+
+-- listen for new highlights
+behaviorFolder.DescendantAdded:Connect(function(child)
+    if child:IsA("Highlight") then
+        monitorHighlight(child)
+        print("Highlight added ->", child:GetFullName())
+    end
+end)

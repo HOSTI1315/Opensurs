@@ -1,0 +1,2289 @@
+-- This file was generated with Flash Deobfuscator... @Leakg0d
+
+
+game:GetService("StarterGui")
+local vu1 = game:GetService("Players")
+local vu2 = game:GetService("UserInputService")
+local vu3 = game:GetService("RunService")
+local vu4 = game:GetService("ReplicatedStorage")
+local vu5 = game:GetService("HttpService")
+local vu6 = game:GetService("TeleportService")
+game:GetService("TweenService")
+local vu7 = game:GetService("Lighting")
+local vu8 = game:GetService("Workspace")
+local vu9 = workspace.CurrentCamera
+local vu10 = vu1.LocalPlayer
+local v11 = UserSettings()
+local vu12 = {
+    fly = false,
+    flyspeed = 50
+}
+local vu13 = nil
+local vu14 = nil
+local vu15 = nil
+local vu16 = nil
+local vu17 = nil
+local vu18 = false
+local vu19 = {
+    W = false,
+    S = false,
+    A = false,
+    D = false,
+    Space = false,
+    LeftShift = false,
+    Moving = false
+}
+local function vu30()
+    if vu10.Character and (vu10.Character.Head and not vu18) then
+        vu13 = vu10.Character
+        vu14 = vu13.Humanoid
+        vu14.PlatformStand = true
+        vu17 = vu8:WaitForChild("Camera")
+        vu15 = Instance.new("BodyVelocity")
+        vu16 = Instance.new("BodyAngularVelocity")
+        local v20 = vu15
+        local v21 = vu15
+        local v22 = vu15
+        local v23 = Vector3.new(0, 0, 0)
+        local v24 = Vector3.new(10000, 10000, 10000)
+        v22.P = 1000
+        v21.MaxForce = v24
+        v20.Velocity = v23
+        local v25 = vu16
+        local v26 = vu16
+        local v27 = vu16
+        local v28 = Vector3.new(0, 0, 0)
+        local v29 = Vector3.new(10000, 10000, 10000)
+        v27.P = 1000
+        v26.MaxTorque = v29
+        v25.AngularVelocity = v28
+        vu15.Parent = vu13.Head
+        vu16.Parent = vu13.Head
+        vu18 = true
+        vu14.Died:connect(function()
+            vu18 = false
+        end)
+    end
+end
+local function vu31()
+    if vu10.Character and vu18 then
+        vu14.PlatformStand = false
+        if vu15 then
+            vu15:Destroy()
+        end
+        if vu16 then
+            vu16:Destroy()
+        end
+        vu18 = false
+    end
+end
+vu2.InputBegan:connect(function(p32, p33)
+    if not p33 then
+        local v34, v35, v36 = pairs(vu19)
+        while true do
+            local v37
+            v36, v37 = v34(v35, v36)
+            if v36 == nil then
+                break
+            end
+            if v36 ~= "Moving" and p32.KeyCode == Enum.KeyCode[v36] then
+                vu19[v36] = true
+                vu19.Moving = true
+            end
+        end
+    end
+end)
+vu2.InputEnded:connect(function(p38, p39)
+    if not p39 then
+        local v40, v41, v42 = pairs(vu19)
+        local v43 = false
+        while true do
+            local v44
+            v42, v44 = v40(v41, v42)
+            if v42 == nil then
+                break
+            end
+            if v42 ~= "Moving" then
+                if p38.KeyCode == Enum.KeyCode[v42] then
+                    vu19[v42] = false
+                end
+                if vu19[v42] then
+                    v43 = true
+                end
+            end
+        end
+        vu19.Moving = v43
+    end
+end)
+local function vu46(p45)
+    return p45.Unit * vu12.flyspeed
+end
+vu3.Heartbeat:connect(function(p47)
+    if vu18 and (vu13 and vu13.PrimaryPart) then
+        local v48 = vu13.PrimaryPart.Position
+        local v49 = vu17.CFrame
+        local v50, v51, v52 = v49:toEulerAnglesXYZ()
+        vu13:SetPrimaryPartCFrame(CFrame.new(v48.x, v48.y, v48.z) * CFrame.Angles(v50, v51, v52))
+        if vu19.W or (vu19.S or (vu19.A or (vu19.D or (vu19.Space or vu19.LeftShift)))) then
+            local v53 = Vector3.new()
+            if vu19.W then
+                v53 = v53 + vu46(v49.lookVector)
+            end
+            if vu19.S then
+                v53 = v53 - vu46(v49.lookVector)
+            end
+            if vu19.A then
+                v53 = v53 - vu46(v49.rightVector)
+            end
+            if vu19.D then
+                v53 = v53 + vu46(v49.rightVector)
+            end
+            if vu19.Space then
+                v53 = v53 + Vector3.new(0, vu12.flyspeed, 0)
+            end
+            if vu19.LeftShift then
+                v53 = v53 - Vector3.new(0, vu12.flyspeed, 0)
+            end
+            vu13:TranslateBy(v53 * p47)
+        end
+    end
+end)
+local vu54 = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
+local v55 = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local v56 = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+local v57 = vu54
+local v58 = vu54.CreateWindow(v57, {
+    Title = "Soluna | Arsenal | v2.3",
+    SubTitle = "by Soluna Development",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Resize = true,
+    MinSize = Vector2.new(470, 380),
+    Acrylic = true,
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+local vu59 = {
+    Main = v58:CreateTab({
+        Title = "Combat",
+        Icon = "swords"
+    }),
+    Gun = v58:CreateTab({
+        Title = "Weapon",
+        Icon = "crosshair"
+    }),
+    Player = v58:CreateTab({
+        Title = "Movement",
+        Icon = "user"
+    }),
+    Visuals = v58:CreateTab({
+        Title = "Visuals",
+        Icon = "eye"
+    }),
+    World = v58:CreateTab({
+        Title = "World",
+        Icon = "globe"
+    }),
+    Skins = v58:CreateTab({
+        Title = "Skins",
+        Icon = "palette"
+    }),
+    Extra = v58:CreateTab({
+        Title = "Misc",
+        Icon = "puzzle"
+    }),
+    Settings = v58:CreateTab({
+        Title = "System",
+        Icon = "settings"
+    })
+}
+local vu60 = vu54.Options
+vu59.Main:AddSection("Hitbox")
+local vu61 = false
+local vu62 = {}
+local vu63 = 21
+local vu64 = 6
+local vu65 = "Team-Based"
+local vu66 = nil
+local vu67 = {
+    "UpperTorso",
+    "Head",
+    "HumanoidRootPart"
+}
+local function vu70(p68, p69)
+    if not vu62[p68] then
+        vu62[p68] = {}
+    end
+    if not vu62[p68][p69.Name] then
+        vu62[p68][p69.Name] = {
+            CanCollide = p69.CanCollide,
+            Transparency = p69.Transparency,
+            Size = p69.Size
+        }
+    end
+end
+local function vu78(p71)
+    if vu62[p71] then
+        local v72 = p71.Character
+        if v72 then
+            local v73, v74, v75 = pairs(vu62[p71])
+            while true do
+                local v76
+                v75, v76 = v73(v74, v75)
+                if v75 == nil then
+                    break
+                end
+                local v77 = v72:FindFirstChild(v75)
+                if v77 and v77:IsA("BasePart") then
+                    v77.CanCollide = v76.CanCollide
+                    v77.Transparency = v76.Transparency
+                    v77.Size = v76.Size
+                end
+            end
+        end
+        vu62[p71] = nil
+    end
+end
+local function vu86(p79, p80)
+    if not p79.Character then
+        return nil
+    end
+    local v81 = p79.Character:GetChildren()
+    local v82, v83, v84 = ipairs(v81)
+    while true do
+        local v85
+        v84, v85 = v82(v83, v84)
+        if v84 == nil then
+            break
+        end
+        if v85:IsA("BasePart") and v85.Name:lower():match(p80:lower()) then
+            return v85
+        end
+    end
+    return nil
+end
+local function vu88(p87)
+    if p87 and (p87.Team and vu10.Team) then
+        return (vu65 == "FFA" or vu65 == "Everyone") and true or p87.Team ~= vu10.Team
+    else
+        return false
+    end
+end
+local function vu91(p89)
+    local v90 = p89 and p89.Character and p89.Character:FindFirstChild("HumanoidRootPart")
+    if v90 then
+        v90 = vu88(p89)
+    end
+    return v90
+end
+local function vu106()
+    local v92 = vu1
+    local v93, v94, v95 = ipairs(v92:GetPlayers())
+    local v96 = {}
+    while true do
+        local v97
+        v95, v97 = v93(v94, v95)
+        if v95 == nil then
+            break
+        end
+        if v97 ~= vu10 then
+            v96[v97] = true
+            if vu91(v97) then
+                local v98, v99, v100 = ipairs(vu67)
+                while true do
+                    local v101
+                    v100, v101 = v98(v99, v100)
+                    if v100 == nil then
+                        break
+                    end
+                    local v102 = v97.Character:FindFirstChild(v101) or vu86(v97, v101)
+                    if v102 and v102:IsA("BasePart") then
+                        vu70(v97, v102)
+                        v102.CanCollide = false
+                        v102.Transparency = 1 - vu64 / 10
+                        v102.Size = Vector3.new(vu63, vu63, vu63)
+                    end
+                end
+            elseif vu62[v97] then
+                vu78(v97)
+            end
+        end
+    end
+    local v103, v104, v105 = pairs(vu62)
+    while true do
+        v105 = v103(v104, v105)
+        if v105 == nil then
+            break
+        end
+        if not v96[v105] then
+            vu78(v105)
+        end
+    end
+end
+vu1.PlayerRemoving:Connect(function(p107)
+    if vu62[p107] then
+        vu62[p107] = nil
+    end
+end)
+vu59.Main:CreateToggle("HitboxToggle", {
+    Title = "Enable Hitbox Expander",
+    Description = "Enlarges enemy hitboxes.",
+    Default = false
+}):OnChanged(function()
+    vu61 = vu60.HitboxToggle.Value
+    vu54:Notify({
+        Title = "Hitbox Expander",
+        Content = "Status: " .. (vu61 and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+    if vu61 then
+        if not (vu66 and vu66.Connected) then
+            vu66 = vu3.Heartbeat:Connect(vu106)
+        end
+    else
+        if vu66 then
+            vu66:Disconnect()
+            vu66 = nil
+        end
+        local v108, v109, v110 = pairs(vu62)
+        while true do
+            v110 = v108(v109, v110)
+            if v110 == nil then
+                break
+            end
+            vu78(v110)
+        end
+    end
+end)
+vu59.Main:CreateSlider("HitboxSizeSlider", {
+    Title = "Hitbox Size",
+    Description = "How large the enemy hitboxes will be.",
+    Default = 21,
+    Min = 1,
+    Max = 30,
+    Rounding = 0
+}):OnChanged(function(p111)
+    vu63 = p111
+end)
+vu59.Main:CreateSlider("HitboxTransSlider", {
+    Title = "Hitbox Visibility",
+    Description = "Adjusts hitbox visibility. 0 is fully invisible, 10 is fully visible.",
+    Default = 6,
+    Min = 0,
+    Max = 10,
+    Rounding = 1
+}):OnChanged(function(p112)
+    vu64 = p112
+end)
+vu59.Main:CreateDropdown("HitboxTeamDropdown", {
+    Title = "Team Check",
+    Description = "Choose who the features will target.",
+    Values = {
+        "FFA",
+        "Team-Based",
+        "Everyone"
+    },
+    Default = "Team-Based"
+}):OnChanged(function(p113)
+    vu65 = p113
+end)
+vu59.Main:AddSection("Lock On")
+local vu114 = false
+local vu115 = "Enemies"
+local vu116 = nil
+local vu117 = nil
+local vu118 = 200
+local vu119 = false
+local vu120 = 0.2
+local function vu122(p121)
+    if p121 and (p121 ~= vu10 and (p121.Team and vu10.Team)) then
+        return vu115 == "Everyone" and true or p121.Team ~= vu10.Team
+    else
+        return false
+    end
+end
+local function vu137()
+    local v123 = vu10.Character
+    if not (v123 and v123:FindFirstChild("Head")) then
+        return nil
+    end
+    local v124 = v123.Head.Position
+    local v125 = math.huge
+    local v126 = vu1
+    local v127, v128, v129 = ipairs(v126:GetPlayers())
+    local v130 = nil
+    while true do
+        local v131
+        v129, v131 = v127(v128, v129)
+        if v129 == nil then
+            break
+        end
+        if vu122(v131) and v131.Character and (v131.Character:FindFirstChild("Head") and not v131.Character:FindFirstChild("ForceField")) then
+            local v132 = v131.Character.Head
+            local v133 = (v132.Position - v124).Magnitude
+            if v133 < v125 and v133 <= vu118 then
+                local v134 = (v132.Position - v124).Unit * vu118
+                local v135 = RaycastParams.new()
+                v135.FilterType = Enum.RaycastFilterType.Blacklist
+                v135.FilterDescendantsInstances = {
+                    v123
+                }
+                local v136 = vu8:Raycast(v124, v134, v135)
+                if v136 and v136.Instance then
+                    if v136.Instance:IsDescendantOf(v131.Character) then
+                        v130 = v131
+                        v125 = v133
+                    end
+                end
+            end
+        end
+    end
+    return v130
+end
+local function vu145()
+    if not (vu116 and vu116.Character and vu116.Character:FindFirstChild("Head")) then
+        vu116 = vu137()
+    end
+    if vu116 and vu116.Character and vu116.Character:FindFirstChild("Head") then
+        local v138 = vu116.Character.Head
+        local v139 = vu10.Character
+        if not (v139 and v139:FindFirstChild("Head")) then
+            return
+        end
+        local v140 = v139.Head.Position
+        local v141 = (v138.Position - v140).Unit * vu118
+        local v142 = RaycastParams.new()
+        v142.FilterType = Enum.RaycastFilterType.Blacklist
+        v142.FilterDescendantsInstances = {
+            v139
+        }
+        local v143 = vu8:Raycast(v140, v141, v142)
+        if v143 and v143.Instance and v143.Instance:IsDescendantOf(vu116.Character) then
+            if vu119 then
+                local v144 = CFrame.new(vu9.CFrame.Position, v138.Position)
+                vu9.CFrame = vu9.CFrame:Lerp(v144, vu120)
+            else
+                vu9.CFrame = CFrame.new(vu9.CFrame.Position, v138.Position)
+            end
+        else
+            vu116 = nil
+        end
+    else
+        vu116 = nil
+    end
+end
+vu59.Main:CreateToggle("LockOnToggle", {
+    Title = "Enable Lock On",
+    Description = "Automatically aims the camera at a visible target\'s head.",
+    Default = false
+}):OnChanged(function(p146)
+    vu114 = p146
+    if vu114 then
+        if not vu117 then
+            vu117 = vu3.RenderStepped:Connect(vu145)
+        end
+    else
+        if vu117 then
+            vu117:Disconnect()
+            vu117 = nil
+        end
+        vu116 = nil
+    end
+end)
+vu59.Main:CreateDropdown("LockOnTargetDropdown", {
+    Title = "Lock On Target",
+    Description = "Choose who the Lock On will target.",
+    Values = {
+        "Enemies",
+        "Everyone"
+    },
+    Default = "Enemies"
+}):OnChanged(function(p147)
+    vu115 = p147
+    vu116 = nil
+end)
+vu59.Main:CreateToggle("SmoothLockOnToggle", {
+    Title = "Enable Smooth Lock On",
+    Description = "Smoothly aims the camera instead of instantly snapping.",
+    Default = false
+}):OnChanged(function(p148)
+    vu119 = p148
+end)
+vu59.Main:CreateSlider("SmoothnessSlider", {
+    Title = "Lock On Smoothness",
+    Description = "Controls the smoothing speed. Lower is slower.",
+    Default = 20,
+    Min = 1,
+    Max = 50,
+    Rounding = 0
+}):OnChanged(function(p149)
+    vu120 = p149 / 100
+end)
+vu59.Main:AddSection("Triggerbot")
+getgenv().triggerb = false
+local vu150 = "Team-Based"
+local vu151 = true
+local vu152 = false
+local vu153 = RaycastParams.new()
+vu153.FilterType = Enum.RaycastFilterType.Blacklist
+vu59.Main:CreateToggle("TriggerBotToggle", {
+    Title = "Enable Triggerbot",
+    Description = "Automatically shoots when your crosshair is over an enemy.",
+    Default = false
+}):OnChanged(function(p154)
+    getgenv().triggerb = p154
+    vu54:Notify({
+        Title = "Triggerbot",
+        Content = "Status: " .. (p154 and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+    if not p154 and vu152 then
+        vu152 = false
+        mouse1release()
+    end
+end)
+vu59.Main:CreateDropdown("TriggerTeamDropdown", {
+    Title = "Triggerbot Team Mode",
+    Description = "Determines who the triggerbot will fire at.",
+    Values = {
+        "FFA",
+        "Team-Based",
+        "Everyone"
+    },
+    Default = "Team-Based"
+}):OnChanged(function(p155)
+    vu150 = p155
+end)
+local function vu157(p156)
+    if p156 and (p156.Team and vu10.Team) then
+        if vu150 ~= "FFA" then
+            if vu150 ~= "Everyone" then
+                if vu150 ~= "Team-Based" then
+                    return false
+                else
+                    return p156.Team ~= vu10.Team
+                end
+            else
+                return p156 ~= vu10
+            end
+        else
+            return true
+        end
+    else
+        return false
+    end
+end
+local function v161()
+    local v158 = vu10
+    local v159 = (v158.Character or v158.CharacterAdded:Wait()):FindFirstChildOfClass("Humanoid")
+    if v159 then
+        vu151 = v159.Health > 0
+        v159.HealthChanged:Connect(function(p160)
+            vu151 = p160 > 0
+            if not vu151 and vu152 then
+                vu152 = false
+                mouse1release()
+            end
+        end)
+    end
+end
+vu10.CharacterAdded:Connect(v161)
+v161()
+vu3.RenderStepped:Connect(function()
+    if getgenv().triggerb and vu151 then
+        local v162 = vu10.Character
+        if v162 then
+            vu153.FilterDescendantsInstances = {
+                v162
+            }
+            local v163 = vu9.ViewportSize / 2
+            local v164 = vu9:ViewportPointToRay(v163.X, v163.Y)
+            local v165 = vu8:Raycast(v164.Origin, v164.Direction * 5000, vu153)
+            local v166 = false
+            if v165 and v165.Instance then
+                local v167 = v165.Instance:FindFirstAncestorOfClass("Model")
+                if v167 and v167:FindFirstChild("Humanoid") then
+                    local v168 = vu1:GetPlayerFromCharacter(v167)
+                    v166 = v168 and (vu157(v168) and not v167:FindFirstChild("ForceField")) and true or v166
+                end
+            end
+            if v166 then
+                if not vu152 then
+                    vu152 = true
+                    mouse1press()
+                end
+            elseif vu152 then
+                vu152 = false
+                mouse1release()
+            end
+        end
+    else
+        if vu152 then
+            vu152 = false
+            mouse1release()
+        end
+        return
+    end
+end)
+vu59.Main:AddSection("Ragebot")
+vu59.Main:CreateToggle("AutoFarmToggle", {
+    Title = "Enable Ragebot / Autofarm",
+    Description = "WARNING: Very blatant. Automatically finds and kills enemies.",
+    Default = false
+}):OnChanged(function(p169)
+    getgenv().AutoFarm = p169
+    vu54:Notify({
+        Title = "Ragebot",
+        Content = "Status: " .. (p169 and "Enabled" or "Disabled"),
+        Duration = 3,
+        SubContent = p169 and "WARNING: This is a high-risk feature." or nil
+    })
+    local vu170 = nil
+    local vu171 = false
+    vu4.wkspc.CurrentCurse.Value = p169 and "Infinite Ammo" or ""
+    local function vu173(p172)
+        if p172 and p172 ~= vu10 then
+            if p172:IsA("Player") and vu1:FindFirstChild(p172.Name) then
+                if p172.Character and (p172.Character:FindFirstChild("HumanoidRootPart") and not p172.Character:FindFirstChild("ForceField")) then
+                    if p172:FindFirstChild("Status") and p172.Status.Alive.Value then
+                        if p172.Team and vu10.Team then
+                            if p172.Team ~= vu10.Team then
+                                return p172.Team.Name ~= "Spectator"
+                            else
+                                return false
+                            end
+                        else
+                            return false
+                        end
+                    else
+                        return false
+                    end
+                else
+                    return false
+                end
+            else
+                return false
+            end
+        else
+            return false
+        end
+    end
+    local function vu182()
+        local v174 = math.huge
+        local v175 = vu1
+        local v176, v177, v178 = pairs(v175:GetPlayers())
+        local v179 = nil
+        while true do
+            local v180
+            v178, v180 = v176(v177, v178)
+            if v178 == nil then
+                break
+            end
+            if vu173(v180) then
+                local v181 = (vu10.Character.HumanoidRootPart.Position - v180.Character.HumanoidRootPart.Position).Magnitude
+                if v181 < v174 then
+                    v179 = v180
+                    v174 = v181
+                end
+            end
+        end
+        return v179
+    end
+    local function v187()
+        vu4.wkspc.TimeScale.Value = 12
+        vu170 = vu3.Stepped:Connect(function()
+            if getgenv().AutoFarm then
+                if vu4.wkspc.Status.RoundOver.Value == true then
+                    if vu171 then
+                        mouse1release()
+                        vu171 = false
+                    end
+                    return
+                end
+                if not (vu10:FindFirstChild("Status") and vu10.Status.Alive.Value) then
+                    if vu171 then
+                        mouse1release()
+                        vu171 = false
+                    end
+                    return
+                end
+                local v183 = vu182()
+                if v183 then
+                    local v184 = v183.Character.HumanoidRootPart
+                    local v185 = v184.Position - v184.CFrame.LookVector * 2 + Vector3.new(0, 2, 0)
+                    vu10.Character.HumanoidRootPart.CFrame = CFrame.new(v185)
+                    if v183.Character:FindFirstChild("Head") then
+                        local v186 = v183.Character.Head.Position
+                        camera.CFrame = CFrame.new(camera.CFrame.Position, v186)
+                    end
+                    if not vu171 then
+                        mouse1press()
+                        vu171 = true
+                    end
+                elseif vu171 then
+                    mouse1release()
+                    vu171 = false
+                end
+            else
+                if vu170 then
+                    vu170:Disconnect()
+                    vu170 = nil
+                end
+                if vu171 then
+                    mouse1release()
+                    vu171 = false
+                end
+            end
+        end)
+    end
+    if p169 then
+        task.wait(0.5)
+        if vu10.Character then
+            v187()
+        end
+    else
+        vu4.wkspc.CurrentCurse.Value = ""
+        getgenv().AutoFarm = false
+        vu4.wkspc.TimeScale.Value = 1
+        if vu170 then
+            vu170:Disconnect()
+            local _ = nil
+        end
+        if vu171 then
+            mouse1release()
+            local _ = false
+        end
+    end
+end)
+vu59.Gun:CreateParagraph("WeaponModHeader", {
+    Title = "Gun Mods",
+    Content = "Modify your weapon\'s performance."
+})
+local vu188 = {
+    FireRate = {},
+    ReloadTime = {},
+    EReloadTime = {},
+    Auto = {},
+    Spread = {},
+    Recoil = {}
+}
+vu59.Gun:AddSection("Ammunition")
+vu59.Gun:CreateToggle("InfAmmoV1Toggle", {
+    Title = "Infinite Ammo (Curse)",
+    Description = "Uses the game\'s curse system for infinite ammo.",
+    Default = false
+}):OnChanged(function()
+    vu4.wkspc.CurrentCurse.Value = vu60.InfAmmoV1Toggle.Value and "Infinite Ammo" or ""
+end)
+local vu189 = false
+vu59.Gun:CreateToggle("InfAmmoV2Toggle", {
+    Title = "Infinite Ammo (Override)",
+    Description = "Forces your ammo count to stay full.",
+    Default = false
+}):OnChanged(function()
+    vu189 = vu60.InfAmmoV2Toggle.Value
+    if vu189 then
+        game:GetService("RunService").Stepped:connect(function()
+            pcall(function()
+                if vu189 and vu60.InfAmmoV2Toggle.Value then
+                    local v190 = vu10.PlayerGui
+                    v190.GUI.Client.Variables.ammocount.Value = 99
+                    v190.GUI.Client.Variables.ammocount2.Value = 99
+                end
+            end)
+        end)
+    end
+end)
+vu59.Gun:AddSection("Firing Mechanics")
+vu59.Gun:CreateToggle("FastReloadToggle", {
+    Title = "Instant Reload",
+    Description = "Removes reload times.",
+    Default = false
+}):OnChanged(function()
+    local v191 = vu60.FastReloadToggle.Value
+    local v192, v193, v194 = pairs(vu4.Weapons:GetChildren())
+    while true do
+        local v195
+        v194, v195 = v192(v193, v194)
+        if v194 == nil then
+            break
+        end
+        if v195:FindFirstChild("ReloadTime") then
+            if v191 then
+                if not vu188.ReloadTime[v195] then
+                    vu188.ReloadTime[v195] = v195.ReloadTime.Value
+                end
+                v195.ReloadTime.Value = 0.01
+            elseif vu188.ReloadTime[v195] then
+                v195.ReloadTime.Value = vu188.ReloadTime[v195]
+            end
+        end
+        if v195:FindFirstChild("EReloadTime") then
+            if v191 then
+                if not vu188.EReloadTime[v195] then
+                    vu188.EReloadTime[v195] = v195.EReloadTime.Value
+                end
+                v195.EReloadTime.Value = 0.01
+            elseif vu188.EReloadTime[v195] then
+                v195.EReloadTime.Value = vu188.EReloadTime[v195]
+            end
+        end
+    end
+end)
+vu59.Gun:CreateToggle("FastFireToggle", {
+    Title = "Rapid Fire",
+    Description = "Increases the fire rate of all weapons.",
+    Default = false
+}):OnChanged(function()
+    local v196 = vu60.FastFireToggle.Value
+    local v197, v198, v199 = pairs(vu4.Weapons:GetDescendants())
+    while true do
+        local v200
+        v199, v200 = v197(v198, v199)
+        if v199 == nil then
+            break
+        end
+        if v200.Name == "FireRate" or v200.Name == "BFireRate" then
+            if v196 then
+                if not vu188.FireRate[v200] then
+                    vu188.FireRate[v200] = v200.Value
+                end
+                v200.Value = 0.02
+            elseif vu188.FireRate[v200] then
+                v200.Value = vu188.FireRate[v200]
+            end
+        end
+    end
+end)
+vu59.Gun:CreateToggle("AlwaysAutoToggle", {
+    Title = "Force Auto",
+    Description = "Makes all weapons fully automatic.",
+    Default = false
+}):OnChanged(function()
+    local v201 = vu60.AlwaysAutoToggle.Value
+    local v202, v203, v204 = pairs(vu4.Weapons:GetDescendants())
+    while true do
+        local v205
+        v204, v205 = v202(v203, v204)
+        if v204 == nil then
+            break
+        end
+        if v205.Name == "Auto" or (v205.Name == "AutoFire" or (v205.Name == "Automatic" or (v205.Name == "AutoShoot" or v205.Name == "AutoGun"))) then
+            if v201 then
+                if not vu188.Auto[v205] then
+                    vu188.Auto[v205] = v205.Value
+                end
+                v205.Value = true
+            elseif vu188.Auto[v205] then
+                v205.Value = vu188.Auto[v205]
+            end
+        end
+    end
+end)
+vu59.Gun:AddSection("Weapon Stability")
+vu59.Gun:CreateToggle("NoSpreadToggle", {
+    Title = "No Spread",
+    Description = "Removes all weapon spread.",
+    Default = false
+}):OnChanged(function()
+    local v206 = vu60.NoSpreadToggle.Value
+    local v207, v208, v209 = pairs(vu4.Weapons:GetDescendants())
+    while true do
+        local v210
+        v209, v210 = v207(v208, v209)
+        if v209 == nil then
+            break
+        end
+        if v210.Name == "MaxSpread" or (v210.Name == "Spread" or v210.Name == "SpreadControl") then
+            if v206 then
+                if not vu188.Spread[v210] then
+                    vu188.Spread[v210] = v210.Value
+                end
+                v210.Value = 0
+            elseif vu188.Spread[v210] then
+                v210.Value = vu188.Spread[v210]
+            end
+        end
+    end
+end)
+vu59.Gun:CreateToggle("NoRecoilToggle", {
+    Title = "No Recoil",
+    Description = "Removes all weapon recoil.",
+    Default = false
+}):OnChanged(function()
+    local v211 = vu60.NoRecoilToggle.Value
+    local v212, v213, v214 = pairs(vu4.Weapons:GetDescendants())
+    while true do
+        local v215
+        v214, v215 = v212(v213, v214)
+        if v214 == nil then
+            break
+        end
+        if v215.Name == "RecoilControl" or v215.Name == "Recoil" then
+            if v211 then
+                if not vu188.Recoil[v215] then
+                    vu188.Recoil[v215] = v215.Value
+                end
+                v215.Value = 0
+            elseif vu188.Recoil[v215] then
+                v215.Value = vu188.Recoil[v215]
+            end
+        end
+    end
+end)
+vu59.Player:AddSection("Fly Hacks")
+vu59.Player:CreateToggle("FlyToggle", {
+    Title = "Enable Fly",
+    Description = "Allows you to fly around the map.",
+    Default = false
+}):OnChanged(function()
+    if vu60.FlyToggle.Value then
+        vu30()
+    else
+        vu31()
+    end
+    vu54:Notify({
+        Title = "Fly",
+        Content = "Status: " .. (vu60.FlyToggle.Value and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+end)
+vu59.Player:CreateSlider("FlySpeedSlider", {
+    Title = "Fly Speed",
+    Description = "Controls how fast you move while flying.",
+    Default = 50,
+    Min = 1,
+    Max = 500,
+    Rounding = 0
+}):OnChanged(function(p216)
+    vu12.flyspeed = p216
+end)
+vu59.Player:AddSection("Speed Hacks")
+local vu217 = {
+    WalkSpeed = 16
+}
+local vu218 = false
+vu59.Player:CreateToggle("CustomWalkSpeedToggle", {
+    Title = "Enable Speed",
+    Description = "Allows for custom walk speed.",
+    Default = false
+}):OnChanged(function()
+    vu218 = vu60.CustomWalkSpeedToggle.Value
+end)
+local v219 = {
+    "Velocity",
+    "Vector",
+    "CFrame"
+}
+local vu220 = v219[1]
+vu59.Player:CreateDropdown("WalkMethodDropdown", {
+    Title = "Speed Method",
+    Description = "The physics method used to apply speed.",
+    Values = v219,
+    Default = "Velocity"
+}):OnChanged(function(p221)
+    vu220 = p221
+end)
+vu59.Player:CreateSlider("WalkSpeedSlider", {
+    Title = "Walk Speed",
+    Description = "Sets the desired walk speed.",
+    Default = 16,
+    Min = 16,
+    Max = 500,
+    Rounding = 0
+}):OnChanged(function(p222)
+    vu217.WalkSpeed = p222
+end)
+local function vu228(p223, p224)
+    local v225 = p223.Character
+    local v226
+    if v225 then
+        v226 = v225:FindFirstChildOfClass("Humanoid")
+    else
+        v226 = v225
+    end
+    if v225 then
+        v225 = v225:FindFirstChild("HumanoidRootPart")
+    end
+    if v226 and v225 then
+        local v227 = v226.MoveDirection * vu217.WalkSpeed
+        if vu220 ~= "Velocity" then
+            if vu220 ~= "Vector" then
+                if vu220 ~= "CFrame" then
+                    v226.WalkSpeed = vu217.WalkSpeed
+                else
+                    v225.CFrame = v225.CFrame + v226.MoveDirection * vu217.WalkSpeed * p224 * 0.0001
+                end
+            else
+                v225.CFrame = v225.CFrame + v227 * p224 * 0.0001
+            end
+        else
+            v225.Velocity = Vector3.new(v227.X, v225.Velocity.Y, v227.Z)
+        end
+    end
+end
+vu3.Stepped:Connect(function(p229)
+    if vu218 and (vu10 and vu10.Character) and vu10.Character:FindFirstChild("HumanoidRootPart") then
+        vu228(vu10, p229)
+    end
+end)
+vu59.Player:AddSection("Jump Hacks")
+local vu230 = false
+vu59.Player:CreateToggle("InfJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Description = "Allows you to jump in mid-air.",
+    Default = false
+}):OnChanged(function()
+    vu230 = vu60.InfJumpToggle.Value
+    if vu230 then
+        vu2.JumpRequest:Connect(function()
+            if vu230 and vu60.InfJumpToggle.Value then
+                vu10.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+            end
+        end)
+    end
+end)
+vu59.Player:AddSection("Misc Movement")
+local vu231 = 10
+local vu232 = nil
+vu59.Player:CreateToggle("AntiAimToggle", {
+    Title = "Enable Anti-Aim",
+    Description = "Spins you to make you harder to hit.",
+    Default = false
+}):OnChanged(function()
+    local v233 = vu60.AntiAimToggle.Value
+    vu54:Notify({
+        Title = "Anti-Aim",
+        Content = "Status: " .. (v233 and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+    local v234 = vu10.Character
+    if v234 then
+        v234 = v234:FindFirstChild("HumanoidRootPart")
+    end
+    if v233 then
+        if v234 then
+            local v235 = Instance.new("BodyAngularVelocity")
+            v235.Name = "AntiAimSpin"
+            v235.AngularVelocity = Vector3.new(0, vu231, 0)
+            v235.MaxTorque = Vector3.new(0, math.huge, 0)
+            v235.P = 500000
+            v235.Parent = v234
+            vu232 = Instance.new("BodyGyro")
+            vu232.Name = "AntiAimGyro"
+            vu232.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            vu232.CFrame = v234.CFrame
+            vu232.P = 3000
+            vu232.Parent = v234
+        end
+    elseif v234 then
+        local v236 = v234:FindFirstChild("AntiAimSpin")
+        if v236 then
+            v236:Destroy()
+        end
+        if vu232 then
+            vu232:Destroy()
+            vu232 = nil
+        end
+    end
+end)
+vu59.Player:CreateSlider("SpinSpeedSlider", {
+    Title = "Spin Speed",
+    Description = "Adjusts the rotation speed.",
+    Default = 10,
+    Min = 10,
+    Max = 100,
+    Rounding = 0
+}):OnChanged(function(p237)
+    vu231 = p237
+    local v238 = vu10.Character
+    if v238 then
+        v238 = v238:FindFirstChild("HumanoidRootPart")
+    end
+    local v239 = v238 and v238:FindFirstChild("AntiAimSpin")
+    if v239 then
+        v239.AngularVelocity = Vector3.new(0, vu231, 0)
+    end
+end)
+local vu240 = false
+local function vu252()
+    local v241 = vu10
+    while vu240 and vu60.NoClipToggle.Value do
+        local v242 = v241.Character
+        if v242 then
+            local v243, v244, v245 = pairs(v242:GetDescendants())
+            while true do
+                local v246
+                v245, v246 = v243(v244, v245)
+                if v245 == nil then
+                    break
+                end
+                if v246:IsA("BasePart") then
+                    v246.CanCollide = false
+                end
+            end
+        end
+        vu3.Stepped:Wait()
+    end
+    local v247 = v241.Character
+    if v247 then
+        local v248, v249, v250 = pairs(v247:GetDescendants())
+        while true do
+            local v251
+            v250, v251 = v248(v249, v250)
+            if v250 == nil then
+                break
+            end
+            if v251:IsA("BasePart") then
+                v251.CanCollide = true
+            end
+        end
+    end
+end
+vu59.Player:CreateToggle("NoClipToggle", {
+    Title = "Enable NoClip",
+    Description = "Lets you walk through walls.",
+    Default = false
+}):OnChanged(function()
+    vu240 = vu60.NoClipToggle.Value
+    if vu240 then
+        spawn(vu252)
+    end
+    vu54:Notify({
+        Title = "NoClip",
+        Content = "Status: " .. (vu240 and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+end)
+vu10.CharacterAdded:Connect(function(pu253)
+    if vu240 and vu60.NoClipToggle.Value then
+        task.spawn(function()
+            while vu240 and (vu60.NoClipToggle.Value and pu253.Parent) do
+                local v254 = pu253
+                local v255, v256, v257 = pairs(v254:GetDescendants())
+                while true do
+                    local v258
+                    v257, v258 = v255(v256, v257)
+                    if v257 == nil then
+                        break
+                    end
+                    if v258:IsA("BasePart") then
+                        v258.CanCollide = false
+                    end
+                end
+                vu3.Stepped:Wait()
+            end
+            if pu253 and pu253.Parent then
+                local v259 = pu253
+                local v260, v261, v262 = pairs(v259:GetDescendants())
+                while true do
+                    local v263
+                    v262, v263 = v260(v261, v262)
+                    if v262 == nil then
+                        break
+                    end
+                    if v263:IsA("BasePart") then
+                        v263.CanCollide = true
+                    end
+                end
+            end
+        end)
+    end
+end)
+vu59.Player:AddSection("Item Teleport")
+local vu264 = "Both"
+local vu265 = false
+function managePickups()
+    spawn(function()
+        while vu265 and vu60.CollectDebrisToggle.Value do
+            task.wait(0.1)
+            pcall(function()
+                local v266 = vu10.Character
+                local v267 = v266 and v266:FindFirstChild("HumanoidRootPart")
+                if v267 then
+                    local v268, v269, v270 = pairs(vu8.Debris:GetChildren())
+                    while true do
+                        local v271
+                        v270, v271 = v268(v269, v270)
+                        if v270 == nil then
+                            break
+                        end
+                        if vu264 == "DeadHP" and v271.Name == "DeadHP" or (vu264 == "DeadAmmo" and v271.Name == "DeadAmmo" or vu264 == "Both" and (v271.Name == "DeadHP" or v271.Name == "DeadAmmo")) then
+                            v271.CFrame = v267.CFrame * CFrame.new(0, 0.2, 0)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+end
+vu59.Player:CreateToggle("CollectDebrisToggle", {
+    Title = "Enable Pickup TP",
+    Description = "Teleports items to you.",
+    Default = false
+}):OnChanged(function()
+    vu265 = vu60.CollectDebrisToggle.Value
+    if vu265 then
+        managePickups()
+    end
+end)
+vu59.Player:CreateDropdown("DebrisDropdown", {
+    Title = "Pickup Filter",
+    Description = "Choose which items to teleport.",
+    Values = {
+        "Health",
+        "Ammo",
+        "Both"
+    },
+    Default = "Both"
+}):OnChanged(function(p272)
+    vu264 = ({
+        Health = "DeadHP",
+        Ammo = "DeadAmmo",
+        Both = "Both"
+    })[p272] or "Both"
+end)
+vu59.Visuals:CreateParagraph("PlayerCharmsSection", {
+    Title = "Player Charms",
+    Content = "Makes players visible through walls."
+})
+local vu273 = {
+    Enabled = false,
+    TeamCheck = "Enemies",
+    InnerColor = Color3.fromRGB(0, 150, 255),
+    OutlineColor = Color3.fromRGB(0, 0, 0),
+    InnerTransparency = 0.6,
+    OutlineTransparency = 0.2
+}
+local v274 = vu10
+local vu275 = vu10.WaitForChild(v274, "PlayerGui")
+local vu276 = {}
+local vu277 = nil
+local function vu283(p278)
+    if vu276[p278] then
+        local v279, v280, v281 = pairs(vu276[p278])
+        while true do
+            local v282
+            v281, v282 = v279(v280, v281)
+            if v281 == nil then
+                break
+            end
+            if v282.fill then
+                v282.fill:Destroy()
+            end
+            if v282.outline then
+                v282.outline:Destroy()
+            end
+        end
+        vu276[p278] = nil
+    end
+end
+local function vu297(p284)
+    if p284 and (p284.Character and not vu276[p284]) then
+        vu276[p284] = {}
+        local v285, v286, v287 = pairs(p284.Character:GetChildren())
+        while true do
+            local v288
+            v287, v288 = v285(v286, v287)
+            if v287 == nil then
+                break
+            end
+            if v288:IsA("BasePart") then
+                local v289 = v288.Size
+                if vu61 and (vu62[p284] and vu62[p284][v288.Name]) then
+                    v289 = vu62[p284][v288.Name].Size
+                end
+                local v290 = Instance.new("BoxHandleAdornment")
+                local v291 = vu273.InnerColor
+                local v292 = vu273.InnerTransparency
+                v290.Parent = vu275
+                v290.Transparency = v292
+                v290.Color3 = v291
+                v290.Size = v289
+                v290.ZIndex = 5
+                v290.AlwaysOnTop = true
+                v290.Adornee = v288
+                local v293 = Instance.new("BoxHandleAdornment")
+                local v294 = v289 + Vector3.new(0.1, 0.1, 0.1)
+                local v295 = vu273.OutlineColor
+                local v296 = vu273.OutlineTransparency
+                v293.Parent = vu275
+                v293.Transparency = v296
+                v293.Color3 = v295
+                v293.Size = v294
+                v293.ZIndex = 4
+                v293.AlwaysOnTop = true
+                v293.Adornee = v288
+                vu276[p284][v288] = {
+                    fill = v290,
+                    outline = v293
+                }
+            end
+        end
+    end
+end
+local function vu314(p298)
+    if vu276[p298] and p298.Character then
+        local v299, v300, v301 = pairs(vu276[p298])
+        while true do
+            local v302
+            v301, v302 = v299(v300, v301)
+            if v301 == nil then
+                break
+            end
+            if v301 and v301.Parent == p298.Character then
+                local v303 = v301.Size
+                if vu61 and (vu62[p298] and vu62[p298][v301.Name]) then
+                    v303 = vu62[p298][v301.Name].Size
+                end
+                local v304 = v302.fill
+                local v305 = v302.fill
+                local v306 = v302.fill
+                local v307 = vu273.InnerColor
+                local v308 = vu273.InnerTransparency
+                v306.Size = v303
+                v305.Transparency = v308
+                v304.Color3 = v307
+                local v309 = v302.outline
+                local v310 = v302.outline
+                local v311 = v302.outline
+                local v312 = vu273.OutlineColor
+                local v313 = vu273.OutlineTransparency
+                v311.Size = v303 + Vector3.new(0.1, 0.1, 0.1)
+                v310.Transparency = v313
+                v309.Color3 = v312
+            else
+                v302.fill:Destroy()
+                v302.outline:Destroy()
+                vu276[p298][v301] = nil
+            end
+        end
+    else
+        vu283(p298)
+    end
+end
+local function vu324()
+    if vu273.Enabled then
+        local v315, v316, v317 = pairs(vu276)
+        while true do
+            local v318
+            v317, v318 = v315(v316, v317)
+            if v317 == nil then
+                break
+            end
+            if not (v317 and (v317.Parent and v317.Character)) then
+                vu283(v317)
+            end
+        end
+        local v319 = vu1
+        local v320, v321, v322 = pairs(v319:GetPlayers())
+        while true do
+            local v323
+            v322, v323 = v320(v321, v322)
+            if v322 == nil then
+                break
+            end
+            if v323 ~= vu10 then
+                if (vu273.TeamCheck == "Everyone" or vu273.TeamCheck == "Allies" and vu10.Team == v323.Team) and true or (vu273.TeamCheck == "Enemies" and vu10.Team ~= v323.Team and true or false) then
+                    if vu276[v323] then
+                        vu314(v323)
+                    else
+                        vu297(v323)
+                    end
+                else
+                    vu283(v323)
+                end
+            end
+        end
+    end
+end
+vu59.Visuals:CreateToggle("CharmsToggle", {
+    Title = "Enable Charms",
+    Default = false
+}):OnChanged(function(p325)
+    vu273.Enabled = p325
+    if vu273.Enabled then
+        vu277 = vu3.Heartbeat:Connect(vu324)
+    else
+        if vu277 then
+            vu277:Disconnect()
+            vu277 = nil
+        end
+        local v326, v327, v328 = pairs(vu276)
+        while true do
+            local v329
+            v328, v329 = v326(v327, v328)
+            if v328 == nil then
+                break
+            end
+            vu283(v328)
+        end
+        vu276 = {}
+    end
+end)
+vu59.Visuals:CreateDropdown("CharmsTeamDropdown", {
+    Title = "Team Check",
+    Values = {
+        "Enemies",
+        "Allies",
+        "Everyone"
+    },
+    Default = "Enemies"
+}):OnChanged(function(p330)
+    vu273.TeamCheck = p330
+end)
+vu59.Visuals:CreateColorpicker("CharmsInnerColor", {
+    Title = "Inner Color",
+    Default = vu273.InnerColor
+}):OnChanged(function(p331)
+    vu273.InnerColor = p331
+end)
+vu59.Visuals:CreateColorpicker("CharmsOutlineColor", {
+    Title = "Outline Color",
+    Default = vu273.OutlineColor
+}):OnChanged(function(p332)
+    vu273.OutlineColor = p332
+end)
+vu59.Visuals:CreateSlider("CharmsInnerTransparency", {
+    Title = "Inner Transparency",
+    Min = 0,
+    Max = 1,
+    Default = vu273.InnerTransparency,
+    Rounding = 2
+}):OnChanged(function(p333)
+    vu273.InnerTransparency = p333
+end)
+vu59.Visuals:CreateSlider("CharmsOutlineTransparency", {
+    Title = "Outline Transparency",
+    Min = 0,
+    Max = 1,
+    Default = vu273.OutlineTransparency,
+    Rounding = 2
+}):OnChanged(function(p334)
+    vu273.OutlineTransparency = p334
+end)
+vu1.PlayerRemoving:Connect(vu283)
+vu1.PlayerAdded:Connect(function(pu335)
+    pu335.CharacterRemoving:Connect(function()
+        vu283(pu335)
+    end)
+end)
+vu59.Visuals:AddSection("World ESP")
+local vu336 = {}
+local vu337 = "dontask"
+local function vu342(p338, p339)
+    local v340 = Instance.new("BillboardGui")
+    local v341 = Instance.new("TextLabel")
+    v340.Name = vu337
+    v340.Parent = p338
+    v340.AlwaysOnTop = true
+    v340.Size = UDim2.new(0, 50, 0, 50)
+    v340.StudsOffset = Vector3.new(0, 2, 0)
+    v341.Parent = v340
+    v341.BackgroundColor3 = Color3.new(1, 1, 1)
+    v341.BackgroundTransparency = 1
+    v341.Size = UDim2.new(1, 0, 1, 0)
+    v341.Text = p339
+    v341.TextColor3 = Color3.new(1, 0, 0)
+    v341.TextScaled = false
+    return v340
+end
+local function vu346(p343, p344)
+    if p343:IsA("TouchTransmitter") then
+        local v345 = p343.Parent
+        if not v345:FindFirstChild(vu337) then
+            vu336[v345] = vu342(v345, p344)
+        end
+    end
+end
+local function vu361(p347, pu348, pu349, pu350)
+    if p347 then
+        local v351 = vu8
+        local v352, v353, v354 = ipairs(v351:GetDescendants())
+        while true do
+            local v355
+            v354, v355 = v352(v353, v354)
+            if v354 == nil then
+                break
+            end
+            if v355:IsA("TouchTransmitter") and v355.Parent.Name == pu348 then
+                vu346(v355, pu349)
+            end
+        end
+        game.Workspace.DescendantAdded:Connect(function(p356)
+            if vu60[pu350].Value and (p356:IsA("TouchTransmitter") and p356.Parent.Name == pu348) then
+                vu346(p356, pu349)
+            end
+        end)
+    else
+        local v357, v358, v359 = pairs(vu336)
+        while true do
+            local v360
+            v359, v360 = v357(v358, v359)
+            if v359 == nil then
+                break
+            end
+            if v359 and (v360 and (v360:FindFirstChild("TextLabel") and v360.TextLabel.Text == pu349)) then
+                v360:Destroy()
+                vu336[v359] = nil
+            end
+        end
+    end
+end
+vu59.Visuals:CreateToggle("DeadAmmoESPToggle", {
+    Title = "Ammo ESP",
+    Description = "Shows the location of ammo pickups.",
+    Default = false
+}):OnChanged(function()
+    vu361(vu60.DeadAmmoESPToggle.Value, "DeadAmmo", "Ammo Box", "DeadAmmoESPToggle")
+end)
+vu59.Visuals:CreateToggle("DeadHPESPToggle", {
+    Title = "Health ESP",
+    Description = "Shows the location of health pickups.",
+    Default = false
+}):OnChanged(function()
+    vu361(vu60.DeadHPESPToggle.Value, "DeadHP", "HP Jar", "DeadHPESPToggle")
+end)
+vu59.World:AddSection("Lighting & Effects")
+local vu362 = {
+    Ambient = vu7.Ambient,
+    ColorShift_Top = vu7.ColorShift_Top,
+    ColorShift_Bottom = vu7.ColorShift_Bottom,
+    FogEnd = vu7.FogEnd,
+    GlobalShadows = vu7.GlobalShadows
+}
+vu59.World:CreateToggle("FullBrightToggle", {
+    Title = "Full Bright",
+    Description = "Removes shadows and makes everything bright.",
+    Default = false
+}):OnChanged(function(p363)
+    if p363 then
+        vu7.Ambient = Color3.new(1, 1, 1)
+        vu7.ColorShift_Top = Color3.new(1, 1, 1)
+        vu7.ColorShift_Bottom = Color3.new(1, 1, 1)
+    else
+        vu7.Ambient = vu362.Ambient
+        vu7.ColorShift_Top = vu362.ColorShift_Top
+        vu7.ColorShift_Bottom = vu362.ColorShift_Bottom
+    end
+end)
+vu59.World:CreateToggle("NoFogToggle", {
+    Title = "No Fog",
+    Description = "Removes distance fog.",
+    Default = false
+}):OnChanged(function(p364)
+    if p364 then
+        vu7.FogEnd = 1000000
+    else
+        vu7.FogEnd = vu362.FogEnd
+    end
+end)
+vu59.World:CreateToggle("NoShadowsToggle", {
+    Title = "No Shadows",
+    Description = "Disables global shadows for potential performance gain.",
+    Default = false
+}):OnChanged(function(p365)
+    vu7.GlobalShadows = not p365
+end)
+local vu366 = false
+vu59.World:CreateToggle("XrayToggle", {
+    Title = "Enable X-Ray",
+    Description = "Makes world geometry transparent.",
+    Default = false
+}):OnChanged(function()
+    vu366 = vu60.XrayToggle.Value
+    vu54:Notify({
+        Title = "X-Ray Vision",
+        Content = "Status: " .. (vu366 and "Enabled" or "Disabled"),
+        Duration = 3
+    })
+    if vu366 then
+        local v367 = vu8
+        local v368, v369, v370 = pairs(v367:GetDescendants())
+        while true do
+            local v371
+            v370, v371 = v368(v369, v370)
+            if v370 == nil then
+                break
+            end
+            if v371:IsA("BasePart") then
+                if not v371:FindFirstChild("OriginalTransparency") then
+                    local v372 = Instance.new("NumberValue")
+                    v372.Name = "OriginalTransparency"
+                    v372.Value = v371.Transparency
+                    v372.Parent = v371
+                end
+                v371.Transparency = 0.5
+            end
+        end
+    else
+        local v373 = vu8
+        local v374, v375, v376 = pairs(v373:GetDescendants())
+        while true do
+            local v377
+            v376, v377 = v374(v375, v376)
+            if v376 == nil then
+                break
+            end
+            if v377:IsA("BasePart") and v377:FindFirstChild("OriginalTransparency") then
+                v377.Transparency = v377.OriginalTransparency.Value
+                v377.OriginalTransparency:Destroy()
+            end
+        end
+    end
+end)
+vu59.World:AddSection("Camera")
+vu59.World:CreateSlider("FovSliderWorld", {
+    Title = "Field of View (FOV)",
+    Description = "Adjusts the camera\'s field of view.",
+    Default = 70,
+    Min = 0,
+    Max = 120,
+    Rounding = 0
+}):OnChanged(function(p378)
+    vu10.Settings.FOV.Value = p378
+end)
+vu59.World:AddSection("Performance")
+local vu379 = {}
+local vu380 = {}
+local vu381 = {
+    GlobalShadows = vu7.GlobalShadows,
+    FogEnd = vu7.FogEnd,
+    Brightness = vu7.Brightness
+}
+local vu382 = {
+    WaterWaveSize = vu8.Terrain.WaterWaveSize,
+    WaterWaveSpeed = vu8.Terrain.WaterWaveSpeed,
+    WaterReflectance = vu8.Terrain.WaterReflectance,
+    WaterTransparency = vu8.Terrain.WaterTransparency
+}
+local vu383 = {}
+vu59.World:CreateToggle("AntiLagToggle", {
+    Title = "Anti-Lag",
+    Description = "Reduces textures and materials for better FPS.",
+    Default = false
+}):OnChanged(function()
+    if vu60.AntiLagToggle.Value then
+        local v384 = vu8
+        local v385, v386, v387 = pairs(v384:GetDescendants())
+        while true do
+            local v388
+            v387, v388 = v385(v386, v387)
+            if v387 == nil then
+                break
+            end
+            if v388:IsA("BasePart") and not v388.Parent:FindFirstChild("Humanoid") then
+                vu379[v388] = v388.Material
+                v388.Material = Enum.Material.SmoothPlastic
+                if v388:IsA("Texture") then
+                    table.insert(vu380, v388)
+                    v388:Destroy()
+                end
+            end
+        end
+    else
+        local v389, v390, v391 = pairs(vu379)
+        while true do
+            local v392
+            v391, v392 = v389(v390, v391)
+            if v391 == nil then
+                break
+            end
+            if v391 and v391:IsA("BasePart") then
+                v391.Material = v392
+            end
+        end
+        vu379 = {}
+    end
+end)
+vu59.World:CreateToggle("FPSBoostToggle", {
+    Title = "FPS Boost",
+    Description = "Strips almost all visuals for maximum FPS.",
+    Default = false
+}):OnChanged(function()
+    if vu60.FPSBoostToggle.Value then
+        local v393 = vu8.Terrain
+        v393.WaterWaveSize = 0
+        v393.WaterWaveSpeed = 0
+        v393.WaterReflectance = 0
+        v393.WaterTransparency = 0
+        vu7.GlobalShadows = false
+        vu7.FogEnd = 387420489
+        vu7.Brightness = 0
+        settings().Rendering.QualityLevel = "Level01"
+        local v394, v395, v396 = pairs(game:GetDescendants())
+        while true do
+            local v397
+            v396, v397 = v394(v395, v396)
+            if v396 == nil then
+                break
+            end
+            if v397:IsA("Part") or (v397:IsA("Union") or (v397:IsA("CornerWedgePart") or v397:IsA("TrussPart"))) then
+                vu379[v397] = v397.Material
+                v397.Material = "Plastic"
+                v397.Reflectance = 0
+            elseif v397:IsA("Decal") or v397:IsA("Texture") then
+                table.insert(vu380, v397)
+                v397.Transparency = 1
+            elseif v397:IsA("ParticleEmitter") or v397:IsA("Trail") then
+                v397.Lifetime = NumberRange.new(0)
+            elseif v397:IsA("Explosion") then
+                v397.BlastPressure = 1
+                v397.BlastRadius = 1
+            elseif v397:IsA("Fire") or (v397:IsA("SpotLight") or v397:IsA("Smoke")) then
+                v397.Enabled = false
+            elseif v397:IsA("MeshPart") then
+                vu379[v397] = v397.Material
+                v397.Material = "Plastic"
+                v397.Reflectance = 0
+                v397.TextureID = 1.0385902758728956e16
+            end
+        end
+        local v398 = vu7
+        local v399, v400, v401 = pairs(v398:GetChildren())
+        while true do
+            local v402
+            v401, v402 = v399(v400, v401)
+            if v401 == nil then
+                break
+            end
+            if v402:IsA("BlurEffect") or (v402:IsA("SunRaysEffect") or (v402:IsA("ColorCorrectionEffect") or (v402:IsA("BloomEffect") or v402:IsA("DepthOfFieldEffect")))) then
+                vu383[v402] = v402.Enabled
+                v402.Enabled = false
+            end
+        end
+    else
+        local v403 = vu8.Terrain
+        v403.WaterWaveSize = vu382.WaterWaveSize
+        v403.WaterWaveSpeed = vu382.WaterWaveSpeed
+        v403.WaterReflectance = vu382.WaterReflectance
+        v403.WaterTransparency = vu382.WaterTransparency
+        vu7.GlobalShadows = vu381.GlobalShadows
+        vu7.FogEnd = vu381.FogEnd
+        vu7.Brightness = vu381.Brightness
+        settings().Rendering.QualityLevel = "Automatic"
+        local v404, v405, v406 = pairs(vu379)
+        while true do
+            local v407
+            v406, v407 = v404(v405, v406)
+            if v406 == nil then
+                break
+            end
+            if v406 and v406:IsA("BasePart") then
+                v406.Material = v407
+                v406.Reflectance = 0
+            end
+        end
+        vu379 = {}
+        local v408, v409, v410 = pairs(vu383)
+        while true do
+            local v411
+            v410, v411 = v408(v409, v410)
+            if v410 == nil then
+                break
+            end
+            if v410 then
+                v410.Enabled = v411
+            end
+        end
+        vu383 = {}
+        local v412, v413, v414 = pairs(vu380)
+        while true do
+            local v415
+            v414, v415 = v412(v413, v414)
+            if v414 == nil then
+                break
+            end
+            if v415 and v415.Parent then
+                v415.Transparency = 0
+            end
+        end
+        vu380 = {}
+    end
+end)
+vu59.Skins:AddSection("Arm Skins")
+local function vu417(p416)
+    return Vector3.new(p416.R, p416.G, p416.B)
+end
+local vu418 = "Plastic"
+vu59.Skins:CreateDropdown("ArmMatDropdown", {
+    Title = "Arm Material",
+    Values = {
+        "Plastic",
+        "ForceField",
+        "Wood",
+        "Grass"
+    },
+    Default = "Plastic"
+}):OnChanged(function(p419)
+    vu418 = p419
+end)
+local vu420 = Color3.new(0.19607843137254902, 0.19607843137254902, 0.19607843137254902)
+vu59.Skins:CreateColorpicker("ArmColorPicker", {
+    Title = "Arm Color",
+    Default = Color3.fromRGB(50, 50, 50)
+}):OnChanged(function()
+    vu420 = vu60.ArmColorPicker.Value
+end)
+local vu421 = false
+vu59.Skins:CreateToggle("ArmCharmsToggle", {
+    Title = "Enable Arm Skin",
+    Default = false
+}):OnChanged(function()
+    vu421 = vu60.ArmCharmsToggle.Value
+    if vu421 then
+        spawn(function()
+            while vu421 and vu60.ArmCharmsToggle.Value do
+                task.wait(0.01)
+                local v422 = vu8.Camera:FindFirstChild("Arms")
+                if v422 then
+                    local v423, v424, v425 = pairs(v422:GetDescendants())
+                    while true do
+                        local v426
+                        v425, v426 = v423(v424, v425)
+                        if v425 == nil then
+                            break
+                        end
+                        if v426.Name == "Right Arm" or v426.Name == "Left Arm" then
+                            if v426:IsA("BasePart") then
+                                v426.Material = Enum.Material[vu418]
+                                v426.Color = vu420
+                            end
+                        elseif v426:IsA("SpecialMesh") then
+                            if v426.TextureId == "" then
+                                v426.TextureId = "rbxassetid://0"
+                                v426.VertexColor = vu417(vu420)
+                            end
+                        elseif v426.Name == "L" or v426.Name == "R" then
+                            v426:Destroy()
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+vu59.Skins:AddSection("Gun Skins")
+local vu427 = "Plastic"
+vu59.Skins:CreateDropdown("GunMatDropdown", {
+    Title = "Gun Material",
+    Values = {
+        "Plastic",
+        "ForceField",
+        "Wood",
+        "Grass"
+    },
+    Default = "Plastic"
+}):OnChanged(function(p428)
+    vu427 = p428
+end)
+local vu429 = Color3.new(0.19607843137254902, 0.19607843137254902, 0.19607843137254902)
+vu59.Skins:CreateColorpicker("GunColorPicker", {
+    Title = "Gun Color",
+    Default = Color3.fromRGB(50, 50, 50)
+}):OnChanged(function()
+    vu429 = vu60.GunColorPicker.Value
+end)
+local vu430 = false
+vu59.Skins:CreateToggle("GunCharmsToggle", {
+    Title = "Enable Gun Skin",
+    Default = false
+}):OnChanged(function()
+    vu430 = vu60.GunCharmsToggle.Value
+    if vu430 then
+        spawn(function()
+            while vu430 and vu60.GunCharmsToggle.Value do
+                task.wait(0.01)
+                if vu8.Camera:FindFirstChild("Arms") then
+                    local v431, v432, v433 = pairs(vu8.Camera.Arms:GetDescendants())
+                    while true do
+                        local v434
+                        v433, v434 = v431(v432, v433)
+                        if v433 == nil then
+                            break
+                        end
+                        if v434:IsA("MeshPart") then
+                            v434.Material = Enum.Material[vu427]
+                            v434.Color = vu429
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+vu59.Skins:AddSection("Chroma / Rainbow Gun")
+local vu435 = false
+local vu436 = 1
+function zigzag(p437)
+    return math.acos(math.cos(p437 * math.pi)) / math.pi
+end
+vu59.Skins:CreateToggle("Rainbow1Toggle", {
+    Title = "Rainbow Effect (Wave)",
+    Default = false
+}):OnChanged(function()
+    vu435 = vu60.Rainbow1Toggle.Value
+end)
+vu3.RenderStepped:Connect(function()
+    if vu435 and vu8.Camera:FindFirstChild("Arms") then
+        local v438, v439, v440 = pairs(vu8.Camera.Arms:GetDescendants())
+        while true do
+            local v441
+            v440, v441 = v438(v439, v440)
+            if v440 == nil then
+                break
+            end
+            if v441.ClassName == "MeshPart" then
+                v441.Color = Color3.fromHSV(zigzag(vu436), 1, 1)
+                vu436 = vu436 + 0.0001
+            end
+        end
+    end
+end)
+local vu442 = false
+local vu443 = 0
+local vu444 = 0.1
+vu59.Skins:CreateToggle("Rainbow2Toggle", {
+    Title = "Rainbow Effect (Pulse)",
+    Default = false
+}):OnChanged(function()
+    vu442 = vu60.Rainbow2Toggle.Value
+end)
+vu3.RenderStepped:Connect(function()
+    if vu442 and vu8.Camera:FindFirstChild("Arms") then
+        vu443 = (vu443 + vu444) % 1
+        local v445, v446, v447 = pairs(vu8.Camera.Arms:GetDescendants())
+        while true do
+            local v448
+            v447, v448 = v445(v446, v447)
+            if v447 == nil then
+                break
+            end
+            if v448.ClassName == "MeshPart" then
+                v448.Color = Color3.fromHSV(vu443, 1, 1)
+            end
+        end
+    end
+end)
+vu59.Extra:AddSection("Profile Spoofing")
+local vu449 = {
+    Score = nil,
+    Kills = nil
+}
+vu59.Extra:CreateToggle("MaxLevelToggle", {
+    Title = "Spoof Level",
+    Description = "Visually sets your level and stats to max (client-side).",
+    Default = false
+}):OnChanged(function()
+    local v450 = vu60.MaxLevelToggle.Value
+    local v451 = vu10.CareerStatsCache
+    if v450 then
+        if not vu449.Score then
+            vu449.Score = v451.Score.Value
+        end
+        if not vu449.Kills then
+            vu449.Kills = v451.Kills.Value
+        end
+        v451.Score.Value = 1
+        v451.Kills.Value = 1
+    elseif vu449.Score and vu449.Kills then
+        v451.Score.Value = vu449.Score
+        v451.Kills.Value = vu449.Kills
+    end
+end)
+local vu452 = {
+    GUIName = nil,
+    KillFeed = {},
+    WinnerName = nil,
+    ScorecardName = nil
+}
+local vu453 = false
+local vu454 = false
+local function vu459()
+    local v455 = "Soluna"
+    local v456 = "Soluna User"
+    local v457 = vu10.PlayerGui
+    if v457:FindFirstChild("Menew_Main") and (v457.Menew_Main:FindFirstChild("Container") and v457.Menew_Main.Container:FindFirstChild("PlrName")) then
+        v457.Menew_Main.Container.PlrName.Text = v455
+    end
+    if v457:FindFirstChild("GUI_Scorecard") and v457.GUI_Scorecard:FindFirstChild("Scorecard") then
+        v457.GUI_Scorecard.Scorecard.Scrolling.Visible = false
+        if v457.GUI_Scorecard.Scorecard:FindFirstChild("PlayerCard") and v457.GUI_Scorecard.Scorecard.PlayerCard:FindFirstChild("Username") then
+            v457.GUI_Scorecard.Scorecard.PlayerCard.Username.Text = "Soluna Development"
+        end
+    end
+    for v458 = 1, 6 do
+        if vu8.KillFeed:FindFirstChild(tostring(v458)) then
+            vu8.KillFeed[tostring(v458)].Killer.Value = v456
+        end
+    end
+    if v457:FindFirstChild("GUI") and v457.GUI:FindFirstChild("Winner") then
+        v457.GUI.Winner.Visible = false
+    end
+end
+local function vu465()
+    local v460 = vu10.PlayerGui
+    if vu452.GUIName and v460:FindFirstChild("Menew_Main") and (v460.Menew_Main:FindFirstChild("Container") and v460.Menew_Main.Container:FindFirstChild("PlrName")) then
+        v460.Menew_Main.Container.PlrName.Text = vu452.GUIName
+    end
+    local v461, v462, v463 = pairs(vu452.KillFeed)
+    while true do
+        local v464
+        v463, v464 = v461(v462, v463)
+        if v463 == nil then
+            break
+        end
+        if vu8.KillFeed:FindFirstChild(tostring(v463)) then
+            vu8.KillFeed[tostring(v463)].Killer.Value = v464
+        end
+    end
+    if vu452.WinnerName ~= nil and v460:FindFirstChild("GUI") and v460.GUI:FindFirstChild("Winner") then
+        v460.GUI.Winner.Visible = vu452.WinnerName
+    end
+    if vu452.ScorecardName and v460:FindFirstChild("GUI_Scorecard") and (v460.GUI_Scorecard:FindFirstChild("Scorecard") and (v460.GUI_Scorecard.Scorecard:FindFirstChild("PlayerCard") and v460.GUI_Scorecard.Scorecard.PlayerCard:FindFirstChild("Username"))) then
+        v460.GUI_Scorecard.Scorecard.PlayerCard.Username.Text = vu452.ScorecardName
+    end
+end
+vu59.Extra:CreateToggle("HideNameToggle", {
+    Title = "Spoof Name",
+    Description = "Changes your name on most UI elements (client-side).",
+    Default = false
+}):OnChanged(function()
+    vu453 = vu60.HideNameToggle.Value
+    vu454 = vu453
+    if vu453 then
+        local v466 = vu10.PlayerGui
+        if v466:FindFirstChild("Menew_Main") and (v466.Menew_Main:FindFirstChild("Container") and v466.Menew_Main.Container:FindFirstChild("PlrName")) then
+            vu452.GUIName = v466.Menew_Main.Container.PlrName.Text
+        end
+        if v466:FindFirstChild("GUI") and v466.GUI:FindFirstChild("Winner") then
+            vu452.WinnerName = v466.GUI.Winner.Visible
+        end
+        if v466:FindFirstChild("GUI_Scorecard") and (v466.GUI_Scorecard:FindFirstChild("Scorecard") and (v466.GUI_Scorecard.Scorecard:FindFirstChild("PlayerCard") and v466.GUI_Scorecard.Scorecard.PlayerCard:FindFirstChild("Username"))) then
+            vu452.ScorecardName = v466.GUI_Scorecard.Scorecard.PlayerCard.Username.Text
+        end
+        for v467 = 1, 6 do
+            if vu8.KillFeed:FindFirstChild(tostring(v467)) then
+                vu452.KillFeed[v467] = vu8.KillFeed[tostring(v467)].Killer.Value
+            end
+        end
+        spawn(function()
+            while vu454 and vu60.HideNameToggle.Value do
+                pcall(vu459)
+                task.wait(0.2)
+            end
+        end)
+    else
+        vu454 = false
+        pcall(vu465)
+    end
+end)
+vu59.Extra:AddSection("Chat Badges")
+local function v471(pu468, p469)
+    vu59.Extra:CreateToggle(pu468 .. "TagToggle", {
+        Title = "Enable " .. p469 .. " Badge",
+        Default = false
+    }):OnChanged(function()
+        local v470 = vu10
+        if vu60[pu468 .. "TagToggle"].Value then
+            if not v470:FindFirstChild(pu468) then
+                Instance.new("IntValue", v470).Name = pu468
+            end
+        elseif v470:FindFirstChild(pu468) then
+            v470[pu468]:Destroy()
+        end
+    end)
+end
+v471("IsChad", "Chad")
+v471("VIP", "VIP")
+v471("OldVIP", "Old VIP")
+v471("Romin", "Romin")
+v471("IsAdmin", "Admin")
+vu59.Settings:AddSection("Server Utilities")
+local v472 = vu2.TouchEnabled
+if v472 then
+    v472 = not vu2.KeyboardEnabled
+end
+if v472 then
+    vu59.Settings:AddSection("Persistent Mobile Sensitivity")
+    local vu473 = v11():GetService("UserGameSettings")
+    local vu474 = vu473.TouchCameraMovementSensitivity
+    local vu475 = nil
+    local v476 = vu59.Settings:CreateToggle("MobileSensToggle", {
+        Title = "Enable Persistent Sensitivity",
+        Description = "Aggressively overrides the mobile camera sensitivity. This will not be reset by the game.",
+        Default = false
+    })
+    local v477 = vu59.Settings:CreateSlider("MobileSensSlider", {
+        Title = "Sensitivity Level",
+        Description = "Adjust the camera sensitivity for touch controls.",
+        Default = vu474 * 100,
+        Min = 1,
+        Max = 200,
+        Rounding = 0
+    })
+    local function vu479()
+        if vu473 then
+            if vu60.MobileSensToggle.Value then
+                local v478 = vu60.MobileSensSlider.Value / 100
+                if vu473.TouchCameraMovementSensitivity ~= v478 then
+                    vu473.TouchCameraMovementSensitivity = v478
+                end
+            elseif vu473.TouchCameraMovementSensitivity ~= vu474 then
+                vu473.TouchCameraMovementSensitivity = vu474
+            end
+        end
+    end
+    local function v480()
+        if vu60.MobileSensToggle.Value then
+            if not (vu475 and vu475.Connected) then
+                vu475 = vu3.Heartbeat:Connect(vu479)
+            end
+        else
+            if vu475 and vu475.Connected then
+                vu475:Disconnect()
+                vu475 = nil
+            end
+            vu479()
+        end
+    end
+    v476:OnChanged(v480)
+    v477:OnChanged(vu479)
+    game:BindToClose(function()
+        if vu473 then
+            vu473.TouchCameraMovementSensitivity = vu474
+        end
+    end)
+    task.spawn(v480)
+end
+vu59.Settings:CreateButton({
+    Title = "Server Hop",
+    Description = "Finds and teleports you to a new server.",
+    Callback = function()
+        local vu481 = game.PlaceId
+        local vu482 = {}
+        local vu483 = ""
+        local vu484 = os.date("!*t").hour
+        if not pcall(function()
+            vu482 = vu5:JSONDecode(readfile("NotSameServers.json"))
+        end) then
+            table.insert(vu482, vu484)
+            local v485 = vu5
+            writefile("NotSameServers.json", v485:JSONEncode(vu482))
+        end
+        function teleportReturner()
+            local v486
+            if vu483 ~= "" then
+                v486 = vu5:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. vu481 .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. vu483))
+            else
+                v486 = vu5:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. vu481 .. "/servers/Public?sortOrder=Asc&limit=100"))
+            end
+            if v486.nextPageCursor and (v486.nextPageCursor ~= "null" and v486.nextPageCursor ~= nil) then
+                vu483 = v486.nextPageCursor
+            end
+            local v487, v488, v489 = pairs(v486.data)
+            local v490 = 0
+            while true do
+                local v491
+                v489, v491 = v487(v488, v489)
+                if v489 == nil then
+                    break
+                end
+                local v492 = true
+                local vu493 = tostring(v491.id)
+                if tonumber(v491.maxPlayers) > tonumber(v491.playing) then
+                    local v494, v495, v496 = pairs(vu482)
+                    while true do
+                        local v497
+                        v496, v497 = v494(v495, v496)
+                        if v496 == nil then
+                            break
+                        end
+                        if v490 == 0 then
+                            if tonumber(vu484) ~= tonumber(v497) then
+                                pcall(function()
+                                    delfile("NotSameServers.json")
+                                    vu482 = {}
+                                    table.insert(vu482, vu484)
+                                end)
+                            end
+                        elseif vu493 == tostring(v497) then
+                            v492 = false
+                        end
+                        v490 = v490 + 1
+                    end
+                    if v492 == true then
+                        table.insert(vu482, vu493)
+                        task.wait()
+                        pcall(function()
+                            local v498 = vu5
+                            writefile("NotSameServers.json", v498:JSONEncode(vu482))
+                            task.wait()
+                            vu6:TeleportToPlaceInstance(vu481, vu493, vu10)
+                        end)
+                        task.wait(4)
+                    end
+                end
+            end
+        end
+        function teleport()
+            while task.wait() do
+                pcall(function()
+                    teleportReturner()
+                    if vu483 ~= "" then
+                        teleportReturner()
+                    end
+                end)
+            end
+        end
+        teleport()
+    end
+})
+vu59.Settings:CreateButton({
+    Title = "Rejoin Server",
+    Description = "Teleports you back to the current server.",
+    Callback = function()
+        vu6:Teleport(game.PlaceId, vu10)
+    end
+})
+vu59.Settings:AddSection("Game Settings")
+vu59.Settings:CreateInput("TimeScaleInput", {
+    Title = "Game Speed (Client)",
+    Description = "Adjusts the overall speed of the game. Default is 1.",
+    Default = "1",
+    Numeric = true
+}):OnChanged(function()
+    local v499 = tonumber(vu60.TimeScaleInput.Value)
+    if v499 then
+        vu4.wkspc.TimeScale.Value = v499
+    end
+end)
+vu59.Settings:AddSection("Community")
+vu59.Settings:CreateButton({
+    Title = "Copy Discord Invite",
+    Description = "Join our community for support, updates, and more.",
+    Callback = function()
+        setclipboard("https://discord.gg/gdpCUVj6uS")
+        vu54:Notify({
+            Title = "Link Copied",
+            Content = "The Discord invite has been copied to your clipboard.",
+            Duration = 4
+        })
+    end
+})
+v55:SetLibrary(vu54)
+v56:SetLibrary(vu54)
+v55:IgnoreThemeSettings()
+v55:SetIgnoreIndexes({})
+v56:SetFolder("Soluna")
+v55:SetFolder("Soluna/Arsenal")
+v56:BuildInterfaceSection(vu59.Settings)
+v55:BuildConfigSection(vu59.Settings)
+v58:SelectTab(1)
+local v500 = vu54
+vu54.Notify(v500, {
+    Title = "Soluna",
+    Content = "Script successfully initialized.",
+    Duration = 8
+})
+pcall(v55.LoadAutoloadConfig)

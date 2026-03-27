@@ -1,0 +1,10393 @@
+--®4D Brookhaven
+--By M1zz
+
+
+
+-- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "NotificationGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the notification
+local frame = Instance.new("Frame")
+frame.Name = "NotificationFrame"
+frame.Size = UDim2.new(0.3, 0, 0.3, 0)
+frame.Position = UDim2.new(0.35, 0, 0.4, -80)
+frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+frame.BackgroundTransparency = 1
+frame.Parent = gui
+
+-- Create an ImageLabel for the image
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Name = "NotificationImage"
+imageLabel.Size = UDim2.new(1, 100, 1, 100) -- Increase the size to make the image bigger
+imageLabel.Position = UDim2.new(0.1, -70, 0.1, 0) -- Adjust the position if needed
+imageLabel.BackgroundTransparency = 1
+imageLabel.Image = "rbxassetid://14492716941" -- Replace with your own image asset ID
+imageLabel.Parent = frame
+
+-- Create a TextLabel for the notification message
+local textLabel = Instance.new("TextLabel")
+textLabel.Name = "NotificationText"
+textLabel.Size = UDim2.new(1, 0, 0.3, 0)
+textLabel.Position = UDim2.new(0, 0, 0.7, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = " "
+textLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+textLabel.TextScaled = true
+textLabel.Parent = frame
+
+-- Function to show the notification
+local function showNotification()
+    gui.Enabled = true
+    wait(5) -- Duration for the notification to be displayed (in seconds)
+    gui.Enabled = false
+end
+
+-- Call the function to show the notification
+showNotification()
+
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "®4D BROOKHAVEN",
+            Text = "By M1zz",
+            Duration = 5
+        })
+wait(3)
+-- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "CoolGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the GUI
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 300, 0, 50 + 40 * 14) -- Adjust the height based on the number of buttons
+frame.Position = UDim2.new(0.5, -150, 0.5, -200)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create a TextLabel for the title
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+title.Text = "®4D"
+title.FontSize = Enum.FontSize.Size24
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.Parent = frame
+-- List of specific colors
+local colors = {
+    Color3.fromRGB(255, 0, 0),     -- Red
+    Color3.fromRGB(0, 0, 255),     -- Blue
+    Color3.fromRGB(255, 255, 255), -- White
+    Color3.fromRGB(0, 255, 255),   -- Cyan
+    Color3.fromRGB(128, 0, 128),   -- Purple
+    Color3.fromRGB(0, 255, 0),     -- Green
+    Color3.fromRGB(255, 165, 0),   -- Orange
+}
+
+-- Function to select a random color from the list
+local function getRandomColor()
+    local randomIndex = math.random(1, #colors)
+    return colors[randomIndex]
+end
+
+-- Function to update the title background color
+local function updateTitleColor()
+    while title.Parent do
+        title.BackgroundColor3 = getRandomColor()
+        wait(1) -- Adjust the duration between color changes (in seconds)
+    end
+end
+
+-- Start the color update loop
+spawn(updateTitleColor)
+
+
+
+-- Create a Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 50, 0, 50)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.Text = "X"
+closeButton.FontSize = Enum.FontSize.Size24
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = frame
+
+-- Function to close the GUI
+local function closeGUI()
+    gui:Destroy()
+end
+closeButton.MouseButton1Click:Connect(closeGUI)
+
+-- Create 14 buttons with different functions and custom names
+local buttonFunctions = {
+    [1] = function()
+        --Brookhaven Bright phone 
+--By M1zz
+
+--Change Camera Position 
+    local Camera = game.Workspace.Camera
+Camera.Parent = game.Chat
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(-118.24114990234375, 19.99802589416504, 243.5850830078125)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+wait(1)
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialPlot1Buttons.Commercial1Store1.ClickDetector)
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(1)
+
+i = 1
+repeat
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialStorage1.Store.Tools.Iphone.ClickDetector)
+
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+
+wait()
+  
+  i = i + 1
+until i > 500
+
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+wait(0.1)
+
+local player = game.Players.LocalPlayer
+
+local function dropAllTools()
+    local character = player.Character
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+dropAllTools()
+
+
+--Change Camera To Default Position 
+local cam2 = game.Chat.Camera
+local remove = game.Workspace.Camera
+
+cam2.Parent = game.Workspace
+
+remove:Destroy()
+
+
+
+
+
+    end,
+    [2] = function()
+        --Brookhaven Fire Hand
+--By M1zz
+
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(-347.7337646484375, 2.397120475769043, 98.97232818603516)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+wait(1)
+
+
+fireclickdetector(Workspace.WorkspaceCom["001_Hospital"].PoolClick.ClickDetector)
+
+wait(1)
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+
+    end,
+    [3] = function()
+        
+
+
+-- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame to hold the GUI elements
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true
+
+
+-- Create a TextBox for the player name input
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.8, 0, 0.2, 0)
+textBox.Position = UDim2.new(0.1, 0, 0.1, 0)
+textBox.PlaceholderText = "Enter Player Username"
+textBox.Text = "Enter Player Username"
+textBox.Parent = frame
+
+-- Create Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 25)
+closeButton.Position = UDim2.new(1, -50, 0, -20)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+
+-- Button Function
+closeButton.MouseButton1Click:Connect(function()
+    -- Destroy the GUI
+    gui:Destroy()
+end)
+
+-- Create a Button to run the script
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.6, 0, 0.2, 0)
+button.Position = UDim2.new(0.2, 0, 0.6, 0)
+button.BackgroundColor3 = Color3.new(2, 0, 0)
+button.TextColor3 = Color3.new(0, 0, 0)
+button.Text = "Fling"
+button.Parent = frame
+
+-- Function to run the script
+local function runScript()
+
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Couch",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Stretcher",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+wait(1)
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+wait(0.1)
+
+    -- Replace "PlayerName" with the name entered in the TextBox
+    local playerName = textBox.Text
+    
+    while true do
+        -- Find the player in the game
+        local player = game.Players:FindFirstChild(playerName)
+        
+        -- Check if the player exists and is not nil
+        if player then
+            -- Teleport your character to the player's position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+        end
+        
+        -- Delay the teleportation for a short period of time (change the value to adjust delay)
+        wait()
+    end
+end
+
+-- Connect the button's Click event to run the script
+button.MouseButton1Click:Connect(runScript)
+
+
+    end,
+    [4] = function()
+        
+
+--Brookhaven Kill [FIXED]
+--By M1zz
+
+
+
+
+-- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame to hold the GUI elements
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true
+
+
+-- Create a TextBox for the player name input
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.8, 0, 0.2, 0)
+textBox.Text = "Enter Target Username"
+textBox.Position = UDim2.new(0.1, 0, 0.1, 0)
+textBox.PlaceholderText = "Enter Target Username"
+textBox.Parent = frame
+
+-- Create Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 25)
+closeButton.Position = UDim2.new(1, -50, 0, -20)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+
+-- Button Function
+closeButton.MouseButton1Click:Connect(function()
+    -- Destroy the GUI
+    gui:Destroy()
+end)
+
+-- Create a Button to run the script
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.6, 0, 0.2, 0)
+button.Position = UDim2.new(0.2, 0, 0.6, 0)
+button.BackgroundColor3 = Color3.new(2, 0, 0)
+button.TextColor3 = Color3.new(0, 0, 0)
+button.Text = "Kill"
+button.Parent = frame
+
+-- Function to run the script
+local function runScript()
+
+--Brookhaven Void Player
+--By M1zz 
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+-- define the teleport location
+    local teleportPosition = Vector3.new(0.9995850324630737, -489.0882873535156, 1.0034377574920654)
+    
+    -- create a function to handle the teleport
+    local function teleportPlayer(player)
+        player.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
+    end
+    
+    -- get the current player
+    local player = game.Players.LocalPlayer
+    
+    -- teleport the player immediately
+    teleportPlayer(player)
+
+
+
+--Bring unanchored 
+--By M1zz
+
+-- Find all unanchored parts in the workspace
+local unanchoredParts = workspace:GetDescendants()
+for i = 1, #unanchoredParts do
+    if unanchoredParts[i]:IsA("BasePart") and not unanchoredParts[i].Anchored then
+        -- Create a BodyPosition object for each unanchored part
+        local bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bodyPosition.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        bodyPosition.Parent = unanchoredParts[i]
+    end
+end
+
+game.Players.LocalPlayer.Character.Humanoid.Health = 0
+
+wait(13)
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Couch",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+wait(2)
+--Drop Tools script
+--By M1zz
+
+local player = game.Players.LocalPlayer
+
+local function dropAllTools()
+    local character = player.Character
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+dropAllTools()
+
+
+wait(1)
+
+
+   
+
+    -- Replace "PlayerName" with the name entered in the TextBox
+    local playerName = textBox.Text
+    
+    i = 1
+    repeat
+
+
+        -- Find the player in the game
+        local player = game.Players:FindFirstChild(playerName)
+        
+        -- Check if the player exists and is not nil
+        if player then
+            -- Teleport your character slightly back from the player's position
+            local teleportDistance = 1 -- Adjust this value to determine how far back to teleport
+            local teleportPosition = player.Character.Head.Position - player.Character.HumanoidRootPart.CFrame.LookVector * teleportDistance
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(teleportPosition)
+        end
+     
+
+
+        -- Delay the teleportation for a short period of time (change the value to adjust delay)
+        wait()
+  
+        i = i + 1
+    until i > 90  
+  
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+ 
+end
+
+
+    
+
+-- Connect the button's Click event to run the script
+button.MouseButton1Click:Connect(runScript)
+
+
+
+
+    end,
+    [5] = function()
+    frame.Visible = false
+        --Brookhaven Bright phone (lag server) (Can Lag for a second if unequip & equip too)
+--By M1zz
+
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Lag Server",
+            Text = "Take A Long Time To Lag Players",
+            Duration = 5
+        })
+        
+        local Camera = game.Workspace.Camera
+Camera.Parent = game.Chat
+
+wait(1)
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(-118.24114990234375, 19.99802589416504, 243.5850830078125)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+wait(1)
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialPlot1Buttons.Commercial1Store1.ClickDetector)
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(1)
+
+i = 1
+repeat
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialStorage1.Store.Tools.Iphone.ClickDetector)
+
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+
+wait()
+  
+  i = i + 1
+until i > 5000
+
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+wait(0.1)
+
+local player = game.Players.LocalPlayer
+
+local function dropAllTools()
+    local character = player.Character
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+dropAllTools()
+
+local cam2 = game.Chat.Camera
+local remove = game.Workspace.Camera
+
+cam2.Parent = game.Workspace
+
+remove:Destroy()
+
+    end,
+    [6] = function()
+        --Brookhaven Play Soccer
+--By M1zz
+
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+i = 1
+repeat
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].SoccerBall.ClickDetector)
+
+-- Define the destination position
+local destination = Vector3.new(-498.06549072265625, 3.3999931812286377, 283.2703857421875)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+
+wait()
+  
+  i = i + 1
+until i > 100
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "SoccerBall"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+while wait() do
+
+local player = game.Players.LocalPlayer -- Get the local player
+local backpack = player:WaitForChild("Backpack") -- Get the player's backpack
+
+local tools = {} -- Table to store the tools
+
+-- Function to get all the tools from the backpack
+local function getTools()
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool)
+        end
+    end
+end
+
+-- Function to use tools one by one
+local function useTools()
+    for _, tool in ipairs(tools) do
+        tool.Parent = player.Character -- Move the tool to the player's character
+        tool:Activate() -- Activate the tool
+        
+        wait() -- Wait for 1 second before moving to the next tool
+        
+        tool.Parent = backpack -- Move the tool back to the backpack
+    end
+end
+
+-- Call the functions
+getTools()
+useTools()
+
+
+end
+    end,
+    [7] = function()
+        
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+-- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame to hold the elements
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundTransparency = 0.5
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Parent = gui
+frame.Active = true 
+frame.Draggable = true
+
+-- Create a TextBox for player username
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 150, 0, 20)
+textBox.Position = UDim2.new(0.5, -75, 0.2, -10)
+textBox.Text = "Username"
+textBox.Parent = frame
+
+-- Create Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 25)
+closeButton.Position = UDim2.new(1, -50, 0, -10)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+
+-- Button Function
+closeButton.MouseButton1Click:Connect(function()
+    -- Destroy the GUI
+    gui:Destroy()
+end)
+
+-- Create a TextBox for NUMBER_HERE
+local numberBox = Instance.new("TextBox")
+numberBox.Size = UDim2.new(0, 150, 0, 20)
+numberBox.Position = UDim2.new(0.5, -75, 0.4, -10)
+numberBox.Text = "House Number"
+numberBox.Parent = frame
+
+-- Create a Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 100, 0, 30)
+button.Position = UDim2.new(0.5, -50, 0.75, -15)
+button.Text = "Roomate"
+button.Parent = frame
+
+-- Function to execute the script
+local function runScript()
+    local args = {
+        [1] = "GivePermissionLoopToServer",
+        [2] = Players[textBox.Text],
+        [3] = tonumber(numberBox.Text) -- Convert the text to a number
+    }
+    
+    game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+end
+
+-- Connect the button to the function
+button.MouseButton1Click:Connect(runScript)
+
+
+    end,
+    [8] = function()
+        
+-- Create GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "NotificationGui"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -200)
+frame.BackgroundColor3 = Color3.new(1, 1, 1)
+frame.Parent = gui
+
+-- Create TextLabel
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0, 180, 0, 80)
+textLabel.Position = UDim2.new(0.5, -90, 0.5, -40)
+textLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+textLabel.Text = "(This Script Need Music Gamepass)"
+textLabel.Parent = frame
+
+-- Hide GUI After a Delay
+wait(3) -- Adjust the delay as per your requirement
+gui:Destroy()
+
+
+
+local args = {
+    [1] = "SkateBoard"
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+
+-- Create GUI
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(1, 1, 1)
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true
+
+-- Create Start Button
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 100, 0, 50)
+startButton.Position = UDim2.new(0.5, -50, 0, 25)
+startButton.BackgroundColor3 = Color3.new(0, 1, 0)
+startButton.Text = "Troll"
+startButton.Parent = frame
+
+ -- Create Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 25)
+closeButton.Position = UDim2.new(1, -50, 0, 80)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+
+-- Button Function
+closeButton.MouseButton1Click:Connect(function()
+    -- Destroy the GUI
+    gui:Destroy()
+end)
+
+
+-- Create Text Box
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 180, 0, 20)
+textBox.Position = UDim2.new(0.5, -90, 0, 5)
+textBox.Text = "Enter Sounds Id"
+textBox.Parent = frame
+
+-- Button Function
+startButton.MouseButton1Click:Connect(function()
+    -- Get the text value from the text box
+    local newText = textBox.Text
+    
+    -- Update the args table with the new text value
+    local args = {
+        [1] = "PickingScooterMusicText",
+        [2] = newText
+    }
+    
+    -- Execute the server script with the updated args table
+    game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+end)
+
+    end,
+    [9] = function()
+        --Brookhaven spam basketball
+--By M1zz
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(-136.06002807617188, 3.1599934101104736, 98.5849380493164)
+
+ 
+
+i = 1
+repeat
+
+  -- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Basketball.ClickDetector)
+
+
+
+
+wait()
+  
+  i = i + 1
+until i > 500
+
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Basketball"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+  
+  
+  while wait() do
+
+
+local player = game.Players.LocalPlayer -- Get the local player
+local backpack = player:WaitForChild("Backpack") -- Get the player's backpack
+
+local tools = {} -- Table to store the tools
+
+-- Function to get all the tools from the backpack
+local function getTools()
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool)
+        end
+    end
+end
+
+-- Function to use tools one by one
+local function useTools()
+    for _, tool in ipairs(tools) do
+        tool.Parent = player.Character -- Move the tool to the player's character
+        tool:Activate() -- Activate the tool
+        
+        wait() -- Wait for 1 second before moving to the next tool
+        
+        tool.Parent = backpack -- Move the tool back to the backpack
+    end
+end
+
+-- Call the functions
+getTools()
+useTools()
+
+end
+    end,
+    [10] = function()
+    frame.Visible = false
+        --Brookhaven LagV2 (lag server) (Can Lag for a second if unequip & equip too)
+--By M1zz
+
+    --Change Camera Position 
+    local Camera = game.Workspace.Camera
+Camera.Parent = game.Chat
+
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Server LagV2 Is Now Public!",
+            Text = "Hope You Enjoy The Server Lag",
+            Duration = 5
+        })
+
+        gui:Destroy()
+    
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(-118.24114990234375, 19.99802589416504, 243.5850830078125)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+wait(1)
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialPlot1Buttons.Commercial1Store1.ClickDetector)
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(1)
+
+i = 1
+repeat
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_CommercialStores"].CommercialStorage1.Store.Tools.Iphone.ClickDetector)
+
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+
+wait()
+  
+  i = i + 1
+until i > 1000
+
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Near To Victim If You Want Your Victim More Laggy",
+            Text = "You Can Spam The Lag Button For More Lag",
+            Duration = 5
+        })
+
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "MyGUI"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create a Frame for the draggable window
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create a button inside the frame
+local startButton = Instance.new("TextButton")
+startButton.Name = "StartButton"
+startButton.Size = UDim2.new(0, 100, 0, 50)
+startButton.Position = UDim2.new(0.5, -50, 0.2, 0)
+startButton.BackgroundColor3 = Color3.new(1, 1, 1)
+startButton.Text = "Lag"
+startButton.Parent = frame
+
+-- Create a close button inside the frame
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(0.9, -10, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "X"
+closeButton.Parent = frame
+
+--Change Camera To Default Position 
+local cam2 = game.Chat.Camera
+local remove = game.Workspace.Camera
+
+cam2.Parent = game.Workspace
+
+remove:Destroy()
+
+-- Function to handle the start button click
+local function onStartButtonClicked()
+  
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+wait(0.1) 
+ 
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+
+    
+end
+startButton.MouseButton1Click:Connect(onStartButtonClicked)
+
+-- Function to handle the close button click
+local function onCloseButtonClicked()
+    
+    gui:Destroy()
+
+end
+closeButton.MouseButton1Click:Connect(onCloseButtonClicked)
+
+
+
+
+
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 30, 0, 20)
+closeButton.Position = UDim2.new(0, 260, 0, 7)
+closeButton.TextSize = 10
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeButton.Text = "X"
+closeButton.Parent = Frame
+
+local function onCloseButtonClick()
+    gui:Destroy()
+end
+closeButton.MouseButton1Click:Connect(onCloseButtonClick)
+
+
+
+
+    end,
+    [11] = function()
+        --Brookhaven All Board Text Changer
+--By M1zz
+
+
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "ScriptGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable GUI
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 200)
+frame.Position = UDim2.new(0, 50, 0, 50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Creating the title
+local title = Instance.new("TextLabel")
+title.Name = "ScriptTitle"
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.new(0, 0, 0)
+title.BorderSizePixel = 0
+title.Text = "All Board Text Changer"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 6
+title.Parent = frame
+
+-- Create a TextBox for the user to input text
+local textBox = Instance.new("TextBox")
+textBox.Name = "TextInput"
+textBox.Size = UDim2.new(0, 150, 0, 20)
+textBox.Position = UDim2.new(0, 25, 0, 50)
+textBox.Text = "TextHERE"
+textBox.Parent = frame
+
+-- Create a Button to run the script
+local runButton = Instance.new("TextButton")
+runButton.Name = "RunButton"
+runButton.Size = UDim2.new(0, 100, 0, 50)
+runButton.Position = UDim2.new(0, 50, 0, 100)
+runButton.BackgroundColor3 = Color3.new(0, 1, 0)
+runButton.TextColor3 = Color3.new(1, 1, 1)
+runButton.TextSize = 18
+runButton.Text = "Change"
+
+-- Function to execute the script when the button is clicked
+runButton.MouseButton1Click:Connect(function()
+    -- Get the user input from the TextBox
+    local userInput = textBox.Text
+
+    -- Replace the "TextHERE" placeholder in the script with the user input
+    local script = [[
+        
+
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:wait(0.1)
+local initialPosition = character.HumanoidRootPart.Position
+
+
+
+-- Define the destination position
+local destination = Vector3.new(-238.48960876464844, 88.5223617553711, -549.606689453125)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+wait(0.2)
+local args = {
+    [1] = "ReturningCommercialWords",
+    [2] = 3,
+    [4] = "]] .. userInput .. [["
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "CommercialBackGround",
+    [2] = 3,
+    [3] = Color3.new(0, 0, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "CommercialWordColor",
+    [2] = 3,
+    [3] = Color3.new(1, 0, 0.0461044)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+
+
+wait(1)
+-- Define the destination position
+local destination = Vector3.new(-634.5044555664062, 25.402376174926758, 362.7777404785156)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+wait(0.2)
+local args = {
+    [1] = "ReturningCommercialWords",
+    [2] = 2,
+    [4] = "]] .. userInput .. [["
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "CommercialBackGround",
+    [2] = 2,
+    [3] = Color3.new(0, 0, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "CommercialWordColor",
+    [2] = 2,
+    [3] = Color3.new(1, 0, 0.0461044)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+
+
+wait(1)
+-- Define the destination position
+local destination = Vector3.new(444.73675537109375, 63.137306213378906, 512.9107055664062)
+
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+wait(0.3)
+local args = {
+    [1] = "ReturningCommercialWords",
+    [2] = 1,
+    [4] = "]] .. userInput .. [["
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "CommercialBackGround",
+    [2] = 1,
+    [3] = Color3.new(0, 0, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "CommercialWordColor",
+    [2] = 1,
+    [3] = Color3.new(1, 0, 0.0461044)
+}
+
+game:GetService("ReplicatedStorage").RE["1Cemeter1y"]:FireServer(unpack(args))
+
+
+
+
+wait(1)
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+
+
+
+    ]]
+
+    -- Run the modified script
+    assert(loadstring(script))()
+end)
+
+runButton.Parent = frame
+
+-- Create a Close button to close the GUI
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 50, 0, 30)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3= Color3.new(1, 0, 0)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.TextSize = 18
+closeButton.Text = "X"
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+closeButton.Parent = frame
+
+    end,
+    [12] = function()
+    --Brookhaven Box FireX
+--By M1zz
+
+
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(0.1)
+
+
+
+-- Get the player's character and initial position
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local initialPosition = character.HumanoidRootPart.Position
+
+-- Define the destination position
+local destination = Vector3.new(184.69374084472656, 6.31087064743042, 55.98150634765625)
+
+
+
+i = 1
+repeat
+
+  
+-- Teleport the character to the destination
+character.HumanoidRootPart.CFrame = CFrame.new(destination)
+
+  
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].FireX.ClickDetector)
+
+
+
+wait(1)
+  
+  i = i + 1
+until i > 28
+
+
+-- Teleport the character back to the initial position
+character.HumanoidRootPart.CFrame = CFrame.new(initialPosition)
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -0, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -0, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -0, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -0, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -0, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -0, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -0, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -0, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -0, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -4, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -4, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -4, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -4, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -4, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -4, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -4, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -4, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -4, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -8, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -8, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-0, -8, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -8, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -8, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-7, -8, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -8, 12) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -8, 18) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(7, -8, 24) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+--Equiptools
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+    end,
+    [13] = function()
+    frame.Visible = false
+    game.StarterGui:SetCore("SendNotification", {
+            Title = "Recommended",
+            Text = "Unequip Every Accessories And Hair On Your Actual Roblox Avatar",
+            Duration = 6
+        })
+        wait(2)
+        
+        --Brookhaven R4D Troll
+--By M1zz
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TrollGui"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a draggable Frame to hold the buttons
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BorderColor3 = Color3.new(0, 0, 0) -- Set the outline color to black
+frame.Position = UDim2.new(0, 150, 0, 10)
+frame.Size = UDim2.new(0, 400, 0, 300) -- Increase the size to 400x400 pixels
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+frame.BackgroundTransparency = 0.1
+
+
+
+	local uiStroke = Instance.new("UIStroke")
+
+    uiStroke.Color = Color3.new(1, 1, 1)
+
+    uiStroke.Thickness = 2
+
+    uiStroke.Parent = frame
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Text = "Troll"
+titleLabel.Font = Enum.Font.Cartoon
+titleLabel.TextSize = 34
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Position = UDim2.new(0, 150, 0, 1)
+titleLabel.Size = UDim2.new(0, 100, 0, 30)
+titleLabel.BackgroundTransparency = 1 -- Set the background transparency to 1 (fully transparent)
+titleLabel.Parent = frame
+
+   -- Create the close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "X"
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Position = UDim2.new(1, -43, 0, 3)
+closeButton.Size = UDim2.new(0, 40, 0, 20)
+closeButton.Parent = frame
+
+-- Function to close the GUI
+local function closeGUI()
+    gui:Destroy()
+end
+closeButton.MouseButton1Click:Connect(closeGUI)
+
+ local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Text = "D*ck"
+Button.BackgroundColor3 = Color3.new(1,1,1)
+Button.Position = UDim2.new(0, 20, 0, 40 + 0*45) -- Adjust the position based on the number of buttons
+Button.Size = UDim2.new(0, 100, 0, 27)
+Button.Parent = frame
+
+Button.MouseButton1Click:Connect(function()
+
+--Brookhaven Big D1ck
+--By M1zz
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+
+
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "FireX",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+wait(2)
+
+local previousPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+-- define the teleport location
+local teleportPosition = Vector3.new(1.6787989139556885, 5.775936603546143, -122.77523803710938)
+
+-- create a function to handle the teleport
+local function teleportPlayer(player, position)
+    player.Character:SetPrimaryPartCFrame(CFrame.new(position))
+end
+
+-- get the current player
+local player = game.Players.LocalPlayer
+
+-- teleport the player immediately
+teleportPlayer(player, teleportPosition)
+
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(3)
+
+-- teleport the player back to the previous position
+teleportPlayer(player, previousPosition)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-1, 1, 0) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-1, 1, -1) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(0.8, -2, 0) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("FireX")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripUp = Vector3.new(0,1.110432,0.993884) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+end)
+
+
+local Button1 = Instance.new("TextButton")
+Button1.Name = "Button1"
+Button1.Text = "Gyat"
+Button1.BackgroundColor3 = Color3.new(1,1,1)
+Button1.Position = UDim2.new(0, 20, 0, 80 + 0*45) -- Adjust the position based on the number of Button1s
+Button1.Size = UDim2.new(0, 100, 0, 27)
+Button1.Parent = frame
+
+Button1.MouseButton1Click:Connect(function()
+
+--Brookhaven G y at
+--By M1zz
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local previousPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+-- define the teleport location
+local teleportPosition = Vector3.new(1.6787989139556885, 5.775936603546143, -122.77523803710938)
+
+-- create a function to handle the teleport
+local function teleportPlayer(player, position)
+    player.Character:SetPrimaryPartCFrame(CFrame.new(position))
+end
+
+-- get the current player
+local player = game.Players.LocalPlayer
+
+-- teleport the player immediately
+teleportPlayer(player, teleportPosition)
+
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(3)
+
+-- teleport the player back to the previous position
+teleportPlayer(player, previousPosition)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-2.3, 1, -0.6) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(-2, 1, -1.4) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+end)
+
+local Button2 = Instance.new("TextButton")
+Button2.Name = "Button2"
+Button2.Text = "Big D*ck"
+Button2.BackgroundColor3 = Color3.new(1,1,1)
+Button2.Position = UDim2.new(0, 20, 0, 120 + 0*45) -- Adjust the position based on the number of Button2s
+Button2.Size = UDim2.new(0, 100, 0, 27)
+Button2.Parent = frame
+
+Button2.MouseButton1Click:Connect(function()
+
+--Brookhaven Big Pp V2
+--By M1zz
+
+-- Variables to store previous position
+local previousPosition = nil
+
+-- Function to teleport the character to the specified position
+local function teleportToPosition(position)
+    -- Store the previous position
+    previousPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+    
+    -- Teleport the character to the specified position
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+end
+
+-- Function to teleport the character back to the previous position
+local function teleportBack()
+    -- Check if there is a previous position stored
+    if previousPosition then
+        -- Teleport the character back to the previous position
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(previousPosition)
+        
+        -- Reset the previous position variable
+        previousPosition = nil
+    end
+end
+
+-- Teleport the character to the specified position
+teleportToPosition(Vector3.new(-176.60243225097656, 3.5020477771759033, 264.4655456542969))
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "FireX"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "FireX" item in the backpack
+local backpack = player.Backpack
+local FireXItem = backpack:FindFirstChild("FireX")
+
+if FireXItem then
+    -- Change the GripForward property of the "FireX" item
+    FireXItem.GripForward = Vector3.new(-0.00164012, 6, -0.999999)
+else
+    print("FireX item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "FireX" item in the backpack
+local backpack = player.Backpack
+local FireXItem = backpack:FindFirstChild("FireX")
+
+if FireXItem then
+    -- Change the GripForward property of the "FireX" item
+    FireXItem.GripPos = Vector3.new(2.35383, -4.86481, 1.0177594)
+else
+    print("FireX item not found in backpack!")
+end
+
+wait(0.1)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Box.ClickDetector)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the backpack
+local backpack = player.Backpack
+
+-- Find the "Box" item in the backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Find the "LocalTool" script inside the "Box" item
+    local localToolScript = boxItem:FindFirstChild("LocalTool")
+
+    if localToolScript then
+        -- Delete the "LocalTool" script
+        localToolScript:Destroy()
+        print("Deleted the 'LocalTool' script inside the 'Box' item.")
+    else
+        print("Could not find the 'LocalTool' script inside the 'Box' item.")
+    end
+else
+    print("Could not find the 'Box' item in the backpack.")
+end
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripForward = Vector3.new(0.790883, -0.108758, -6.602226)
+else
+    print("Box item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripPos = Vector3.new(0.78409, 1.92345, -0.72847)
+else
+    print("Box item not found in backpack!")
+end
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the character's backpack
+local backpack = player.Backpack
+
+-- Find tools called "Box" in the backpack and change their names
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name == "Box" then
+        tool.Name = "Dick"
+    end
+end
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+
+
+
+
+wait(0.1)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Box.ClickDetector)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the backpack
+local backpack = player.Backpack
+
+-- Find the "Box" item in the backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Find the "LocalTool" script inside the "Box" item
+    local localToolScript = boxItem:FindFirstChild("LocalTool")
+
+    if localToolScript then
+        -- Delete the "LocalTool" script
+        localToolScript:Destroy()
+        print("Deleted the 'LocalTool' script inside the 'Box' item.")
+    else
+        print("Could not find the 'LocalTool' script inside the 'Box' item.")
+    end
+else
+    print("Could not find the 'Box' item in the backpack.")
+end
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripForward = Vector3.new(0.790883, -0.108758, -6.602226)
+else
+    print("Box item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripPos = Vector3.new(2.1, 1.92345, -0.72847)
+else
+    print("Box item not found in backpack!")
+end
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the character's backpack
+local backpack = player.Backpack
+
+-- Find tools called "Box" in the backpack and change their names
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name == "Box" then
+        tool.Name = "Dick"
+    end
+end
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+
+
+
+
+---Front
+wait(0.1)
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Box.ClickDetector)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the backpack
+local backpack = player.Backpack
+
+-- Find the "Box" item in the backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Find the "LocalTool" script inside the "Box" item
+    local localToolScript = boxItem:FindFirstChild("LocalTool")
+
+    if localToolScript then
+        -- Delete the "LocalTool" script
+        localToolScript:Destroy()
+        print("Deleted the 'LocalTool' script inside the 'Box' item.")
+    else
+        print("Could not find the 'LocalTool' script inside the 'Box' item.")
+    end
+else
+    print("Could not find the 'Box' item in the backpack.")
+end
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripForward = Vector3.new(0.790883, -0.108758, -6.602226)
+else
+    print("Box item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripPos = Vector3.new(1.59999, 0.92345, 0.72847)
+else
+    print("Box item not found in backpack!")
+end
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the character's backpack
+local backpack = player.Backpack
+
+-- Find tools called "Box" in the backpack and change their names
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name == "Box" then
+        tool.Name = "Dick"
+    end
+end
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+
+
+
+
+wait(0.1)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Box.ClickDetector)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the backpack
+local backpack = player.Backpack
+
+-- Find the "Box" item in the backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Find the "LocalTool" script inside the "Box" item
+    local localToolScript = boxItem:FindFirstChild("LocalTool")
+
+    if localToolScript then
+        -- Delete the "LocalTool" script
+        localToolScript:Destroy()
+        print("Deleted the 'LocalTool' script inside the 'Box' item.")
+    else
+        print("Could not find the 'LocalTool' script inside the 'Box' item.")
+    end
+else
+    print("Could not find the 'Box' item in the backpack.")
+end
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripForward = Vector3.new(0.790883, -0.108758, -6.602226)
+else
+    print("Box item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripPos = Vector3.new(1.59999, 0.92345, 2.72847)
+else
+    print("Box item not found in backpack!")
+end
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the character's backpack
+local backpack = player.Backpack
+
+-- Find tools called "Box" in the backpack and change their names
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name == "Box" then
+        tool.Name = "Dick"
+    end
+end
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+
+wait(0.1)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Box.ClickDetector)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the backpack
+local backpack = player.Backpack
+
+-- Find the "Box" item in the backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Find the "LocalTool" script inside the "Box" item
+    local localToolScript = boxItem:FindFirstChild("LocalTool")
+
+    if localToolScript then
+        -- Delete the "LocalTool" script
+        localToolScript:Destroy()
+        print("Deleted the 'LocalTool' script inside the 'Box' item.")
+    else
+        print("Could not find the 'LocalTool' script inside the 'Box' item.")
+    end
+else
+    print("Could not find the 'Box' item in the backpack.")
+end
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripForward = Vector3.new(0.790883, -0.108758, -6.602226)
+else
+    print("Box item not found in backpack!")
+end
+
+
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Box" item in the backpack
+local backpack = player.Backpack
+local boxItem = backpack:FindFirstChild("Box")
+
+if boxItem then
+    -- Change the GripForward property of the "Box" item
+    boxItem.GripPos = Vector3.new(1.59999, 0.92345, 4.72847)
+else
+    print("Box item not found in backpack!")
+end
+
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Get the character's backpack
+local backpack = player.Backpack
+
+-- Find tools called "Box" in the backpack and change their names
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name == "Box" then
+        tool.Name = "Dick"
+    end
+end
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "StopSign"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+wait(0.8)
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+teleportBack()
+
+
+
+
+end)
+
+
+local Button3 = Instance.new("TextButton")
+Button3.Name = "Button3"
+Button3.Text = "Dragon"
+Button3.BackgroundColor3 = Color3.new(1,1,1)
+Button3.Position = UDim2.new(0, 20, 0, 160 + 0*45) -- Adjust the position based on the number of Button3s
+Button3.Size = UDim2.new(0, 100, 0, 27)
+Button3.Parent = frame
+
+Button3.MouseButton1Click:Connect(function()
+gui:Destroy()
+--Brookhaven Dragon
+--By M1zz
+
+
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+
+wait(1)
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 14731377941,
+        [2] = 14731377894,
+        [3] = 14731377875,
+        [4] = 14731384498,
+        [5] = 14731377938,
+        [6] = 0
+    },
+    [3] = "Stick Bug"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(0.9)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Maroon"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(0.9)
+
+
+local args = {
+    [1] = "wear",
+    [2] = 6535484208
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.9)
+
+local args = {
+    [1] = "wear",
+    [2] = 1320955567
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.9)
+
+local args = {
+    [1] = "wear",
+    [2] = 4548993011
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.9)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619528716
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.9)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619528412
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(0.9)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619542203
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+
+---Bypassed Tower Of hell
+---Double Jump
+---By M1zz
+
+-- Define the workspace, player, and jump block variables
+local workspace = game:GetService("Workspace")
+local player = game:GetService("Players").LocalPlayer
+local jumpBlock = nil
+ 
+-- Create a function to spawn the jump block
+function SpawnJumpBlock()
+    -- Check if a jump block already exists on the player
+    if jumpBlock ~= nil then
+        jumpBlock:Destroy()
+    end
+ 
+    -- Create a new jump block and parent it to the player's character
+    jumpBlock = Instance.new("Part", player.Character)
+    jumpBlock.Name = "JumpBlock"
+    jumpBlock.Size = Vector3.new(8, 0.9, 8)
+    jumpBlock.Color = Color3.fromRGB(255, 255, 0)
+    jumpBlock.Transparency = 1
+    jumpBlock.CanCollide = true
+    jumpBlock.Anchored = true
+    jumpBlock.Position = player.Character.HumanoidRootPart.Position + Vector3.new(90, -1, 0)
+end
+ 
+-- Connect the spawn jump block function to the player's jump event
+player.Character.Humanoid.Jumping:Connect(function()
+    SpawnJumpBlock()
+end)
+ 
+ game.StarterGui:SetCore("SendNotification", {
+            Title = "Brookhaven Dragon By M1zz",
+            Text = "Send A Target Shoulder Carry Request To Let Them Ride You",
+            Duration = 20
+        })
+ 
+ -- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Reset"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+    gui:Destroy()
+    local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+    wait(1)
+    local character = game.Players.LocalPlayer.Character
+    character.Humanoid.Health = 0
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClicked)
+
+-- Create a loop to update the jump block position
+while true do
+    if jumpBlock ~= nil then
+        -- Update the jump block's position according to the player's current position
+        jumpBlock.Position = player.Character.HumanoidRootPart.Position + Vector3.new(0, -5, 0)
+    end
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 90
+    
+    -- Check if character's health is 0 and break the loop if true
+    if player.Character.Humanoid.Health <= 0 then
+        break
+    end
+    
+    wait(0.1)
+end
+---By M1zz
+
+
+
+end)
+
+local Button4 = Instance.new("TextButton")
+Button4.Name = "Button4"
+Button4.Text = "Fake Block"
+Button4.BackgroundColor3 = Color3.new(1,1,1)
+Button4.Position = UDim2.new(0, 20, 0, 200 + 0*45) -- Adjust the position based on the number of Button4s
+Button4.Size = UDim2.new(0, 100, 0, 27)
+Button4.Parent = frame
+
+Button4.MouseButton1Click:Connect(function()
+gui:Destroy()
+--Brookhaven Block
+--By M1zz
+
+
+-- Create GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "CustomGUI"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create Frame
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 200)
+frame.Position = UDim2.new(0.5, -100, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create Title Label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Position = UDim2.new(0, 0, 0, -30)
+titleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+titleLabel.Font = Enum.Font.Fantasy
+titleLabel.TextSize = 20
+titleLabel.Text = "BLOCK"
+titleLabel.Parent = frame
+
+-- Create Textboxes
+local textbox1 = Instance.new("TextBox")
+textbox1.Name = "Text1"
+textbox1.PlaceholderText = "Enter Your Text"
+textbox1.Text = "Enter Your Text"
+textbox1.Size = UDim2.new(0, 180, 0, 30)
+textbox1.Position = UDim2.new(0.5, -90, 0.2, -15)
+textbox1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textbox1.Parent = frame
+
+local textbox2 = Instance.new("TextBox")
+textbox2.Name = "Text2"
+textbox2.PlaceholderText = "Enter Your Text"
+textbox2.Text = "Enter Your Text"
+textbox2.Size = UDim2.new(0, 180, 0, 30)
+textbox2.Position = UDim2.new(0.5, -90, 0.4, -15)
+textbox2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textbox2.Parent = frame
+
+-- Create Buttons
+local button1 = Instance.new("TextButton")
+button1.Name = "Button1"
+button1.Size = UDim2.new(0, 80, 0, 30)
+button1.Position = UDim2.new(0.25, -40, 0.6, -15)
+button1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+button1.Text = "Block"
+button1.Parent = frame
+
+local button2 = Instance.new("TextButton")
+button2.Name = "Button2"
+button2.Size = UDim2.new(0, 80, 0, 30)
+button2.Position = UDim2.new(0.75, -40, 0.6, -15)
+button2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+button2.Text = "Change Text"
+button2.Parent = frame
+
+-- Create Button 3
+local button3 = Instance.new("TextButton")
+button3.Name = "Button3"
+button3.Size = UDim2.new(0, 80, 0, 30)
+button3.Position = UDim2.new(0.5, 10, 0.8, -15)
+button3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+button3.Text = "Close"
+button3.Parent = frame
+
+-- Button 3 Function
+button3.MouseButton1Click:Connect(function()
+wait(0.1)
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(1)
+
+   game.Players.LocalPlayer.Character.Humanoid.Health = 0
+wait(7)
+-- Get the model containing the parts
+local model = workspace:FindFirstChild("Model")
+
+
+-- Check if the model exists
+if model then
+    while wait(0.1) do
+        -- Enable collision for each part in the model
+        for _, part in ipairs(model:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+
+        -- Check character health
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health <= 0 then
+                break -- Exit the loop if character health is 0 or below
+            end
+        end
+    end
+else
+    print("Model not found in Workspace")
+end
+   wait(11)
+   game.Players.LocalPlayer.Character.Humanoid.Health = 0
+         
+end)
+
+
+-- Button 1 Function
+button1.MouseButton1Click:Connect(function()
+    
+    --Brookhaven Block
+--By M1zz
+
+
+
+
+
+local character = game.Players.LocalPlayer.Character
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local newPosition = CFrame.new(humanoidRootPart.Position, -2.078467607498169, -20.539081573486328)
+
+humanoidRootPart.CFrame = newPosition
+
+-- Get the player's character
+local character = game.Players.LocalPlayer.Character
+
+if character then
+    -- Check if the character has a Humanoid component
+    local humanoid = character:FindFirstChild("Humanoid")
+    
+    if humanoid then
+        -- Check if the character has an Animator component
+        local animator = humanoid:FindFirstChild("Animator")
+        
+        if animator then
+            -- Remove the Animator component from the character
+            animator:Destroy()
+            print("Animator removed from character.")
+        else
+            print("Animator not found in character.")
+        end
+    else
+        print("Humanoid not found in character.")
+    end
+else
+    print("Character not found.")
+end
+
+-- Get the character of the player
+local character = game.Players.LocalPlayer.Character
+
+-- Create a BodyVelocity object
+local bodyVelocity = Instance.new("BodyVelocity")
+bodyVelocity.Velocity = Vector3.new(0, 0, 0) -- Set the velocity to zero
+bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0) -- Set the max force to prevent any movement
+
+-- Attach the BodyVelocity to the character's HumanoidRootPart
+bodyVelocity.Parent = character.HumanoidRootPart
+
+
+-- Get the character
+local character = game.Players.LocalPlayer.Character
+
+-- Define the distance to teleport down
+local distance = 0 -- You can adjust this value to change how far the character teleports down
+
+
+-- Teleport the character down
+character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.new(0, -distance, 0))
+
+
+local character = game.Players.LocalPlayer.Character
+
+-- Function to disable collision
+local function disableCollision()
+    -- Disable character collision
+    character:SetAttribute("NoCollision", true)
+
+    -- Disable collision with all parts of the character
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+-- Disable collision initially
+disableCollision()
+
+-- Disable collision every frame
+game:GetService("RunService").RenderStepped:Connect(function()
+    disableCollision()
+end)
+
+-- Get the character
+local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+
+-- Get the character's humanoid
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Get the parts in "Workspace.Model"
+local model = game.Workspace.Model
+local parts = model:GetDescendants()
+
+-- Store the initial collision state of each part
+local initialCollisionStates = {}
+for _, part in ipairs(parts) do
+    if part:IsA("BasePart") then
+        initialCollisionStates[part] = part.CanCollide
+    end
+end
+
+-- Function to toggle collision for the parts
+local function toggleCollision(enabled)
+    for part, initialCollisionState in pairs(initialCollisionStates) do
+        part.CanCollide = enabled and initialCollisionState or false
+    end
+end
+
+-- Function to check character's health and toggle collision accordingly
+local function checkHealth()
+    if humanoid.Health <= 0 then
+        toggleCollision(true) -- Enable collision when health reaches 0
+    else
+        toggleCollision(false) -- Disable collision when health is not 0
+    end
+end
+
+-- Connect the checkHealth function to the humanoid's health changed event
+humanoid.HealthChanged:Connect(checkHealth)
+
+-- Call the checkHealth function initially to set the collision state correctly
+checkHealth()
+
+local args = {
+    [1] = "wear",
+    [2] = 12623361503
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "skintone",
+    [2] = "Medium stone grey"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+    
+end)
+
+-- Create Button 3
+local button4 = Instance.new("TextButton")
+button4.Name = "button4"
+button4.Size = UDim2.new(0, 80, 0, 30)
+button4.Position = UDim2.new(0.5, -90, 0.8, -15)
+button4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+button4.Text = "Fake Admin"
+button4.Parent = frame
+
+-- Button 3 Function
+button4.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "RolePlayName",
+    [2] = "ᴄʟɪᴄᴋ ᴛᴏ ɢᴇᴛ ᴀᴅᴍɪɴ!"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "Type ;cmds"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0, 0.52015, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0, 0.638, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+
+
+end)
+-- Button 2 Function
+button2.MouseButton1Click:Connect(function()
+ 
+  
+   local args = {
+    [1] = "RolePlayName",
+    [2] = textbox1.Text
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = textbox2.Text
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RemoteEvent = ReplicatedStorage.RE["1RPNam1eColo1r"]
+
+local character = game.Players.LocalPlayer.Character
+local humanoid = character:WaitForChild("Humanoid")
+
+while humanoid.Health > 0 do
+    local randomColor = Color3.new(math.random(), math.random(), math.random())
+    local args = {
+        [1] = "PickingRPNameColor",
+        [2] = randomColor
+    }
+    RemoteEvent:FireServer(unpack(args))
+    
+    local args = {
+        [1] = "PickingRPBioColor",
+        [2] = randomColor
+    }
+    RemoteEvent:FireServer(unpack(args))
+    wait(1)
+end
+
+end)
+
+
+end)
+
+
+
+local Button5 = Instance.new("TextButton")
+Button5.Name = "Button5"
+Button5.Text = "Smoking"
+Button5.BackgroundColor3 = Color3.new(1,1,1)
+Button5.Position = UDim2.new(0, 20, 0, 240 + 0*45) -- Adjust the position based on the number of Button5s
+Button5.Size = UDim2.new(0, 100, 0, 27)
+Button5.Parent = frame
+
+Button5.MouseButton1Click:Connect(function()
+gui:Destroy()
+--Brookhaven Smoking
+--By M1zz
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Smoke"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Hairbrush"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+
+
+-- Find the player's backpack
+local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+
+-- Check if the player has a Hairbrush in their backpack
+local hairbrush = backpack:FindFirstChild("Hairbrush")
+if hairbrush then
+    -- Find the LocalScript inside the Hairbrush
+    local localScript = hairbrush:FindFirstChild("LocalTool")
+    if localScript then
+        -- Delete the LocalScript
+        localScript:Destroy()
+    end
+
+    -- Change the GripRight property of the Hairbrush
+    hairbrush.GripRight = Vector3.new(1, 0.00010679, 1.1793e-05)
+end
+
+wait(0.8)
+
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+
+--Fe Play animation script
+--By M1zz
+
+   -- Insert your animation ID here
+local animationId = "7551761191"
+
+-- Get the humanoid of the character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variable to store the animation track
+local animationTrack
+
+-- Function to play the animation
+local function playAnimation()
+    -- Load the animation
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    
+    -- Play the animation
+    animationTrack = humanoid:LoadAnimation(animation)
+    animationTrack:Play()
+end
+
+-- Function to stop the animation
+local function stopAnimation()
+    if animationTrack then
+        animationTrack:Stop()
+    end
+end
+
+-- Call the playAnimation function to start the animation
+playAnimation()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.0141017, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "( Smoking )"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "wear",
+    [2] = 6093230512
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+-- Call the stopAnimation function to stop the animation after a certain duration (e.g., 5 seconds)
+wait(1.6)
+stopAnimation()
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151\240\159\146\168"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+local args = {
+    [1] = "wear",
+    [2] = 12350593459
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.3)
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151 \240\159\146\168"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+wait(0.3)
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151  \240\159\146\168"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.3)
+local args = {
+    [1] = "wear",
+    [2] = 6093233760
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+wait(0.8)
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+end
+
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+ -- Create a close button inside the draggable frame
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -20, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "X"
+closeButton.Parent = draggableFrame
+
+-- Function to handle close button click event
+local function onCloseButtonClicked()
+    gui:Destroy()
+end
+
+closeButton.MouseButton1Click:Connect(onCloseButtonClicked)
+
+end)
+
+
+local Button6 = Instance.new("TextButton")
+Button6.Name = "Button6"
+Button6.Text = "Couch Hammer"
+Button6.BackgroundColor3 = Color3.new(1,1,1)
+Button6.Position = UDim2.new(0, 140, 0, 40 + 0*45) -- Adjust the position based on the number of Button6s
+Button6.Size = UDim2.new(0, 100, 0, 27)
+Button6.Parent = frame
+
+Button6.MouseButton1Click:Connect(function()
+
+--Brookhaven Couch Hammer
+--By M1zz
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Couch",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+
+
+local previousPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+-- define the teleport location
+local teleportPosition = Vector3.new(1.6787989139556885, 5.775936603546143, -122.77523803710938)
+
+-- create a function to handle the teleport
+local function teleportPlayer(player, position)
+    player.Character:SetPrimaryPartCFrame(CFrame.new(position))
+end
+
+-- get the current player
+local player = game.Players.LocalPlayer
+
+-- teleport the player immediately
+teleportPlayer(player, teleportPosition)
+
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(0.8)
+
+fireclickdetector(Workspace.WorkspaceCom["001_GiveTools"].Paperbag.ClickDetector)
+
+wait(3)
+
+
+
+
+-- teleport the player back to the previous position
+teleportPlayer(player, previousPosition)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(1, 0, 0) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(1.8, -1.6, -0.3) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Paperbag")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripPos = Vector3.new(3, -3, -0.8) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+wait(1)
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Couch")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "Couch"
+        fireX.GripPos = Vector3.new(0, -0.2, -8) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+--Brookhaven Change FireX position "equip the tools again if u run the script while holding the tools to make it fe"
+--By M1zz
+--FE
+
+-- Get the workspace
+local workspace = game:GetService("Workspace")
+
+-- Find your character
+local character = game.Players.LocalPlayer.Character
+
+-- Check if character exists
+if character then
+    -- Find the "FireX" part in the character
+    local fireX = character:FindFirstChild("Couch")
+
+    -- Check if "FireX" part exists
+    if fireX then
+        -- Change the GripPos of "FireX"
+        fireX.GripUp = Vector3.new(0, 0.110432, 0.993884) -- Change the Vector3 values to your desired position (Left/right,Up/Down,Front/Back)
+    else
+        print("Could not find 'FireX' part in character.")
+    end
+else
+    print("Could not find your character.")
+end
+
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Iphone"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+
+local Couch = backpack:FindFirstChild("Couch")
+    local clickEvent = Couch:FindFirstChild("LocalTool")
+        clickEvent:Destroy()
+         
+   
+   --Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+
+--Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+      
+       local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+
+
+local PaperBagTool = backpack:FindFirstChild("Paperbag")
+    local b = PaperBagTool:FindFirstChild("LocalTool")
+        b:Destroy()
+    wait(1)     
+           --Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+      
+       local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+
+
+local PaperBag = backpack:FindFirstChild("Paperbag")
+    local c = PaperBag:FindFirstChild("LocalTool")
+        c:Destroy()
+         
+         wait(1)     
+           --Equiptool script (work on 50 tools)
+--By M1zz
+
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local equippedTools = 0
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        player.Character.Humanoid:EquipTool(tool)
+        equippedTools = equippedTools + 1
+        if equippedTools >= 50 then
+            break
+        end
+    end
+end
+      
+       local player = game.Players.LocalPlayer
+local backpack = player.Backpack
+
+
+local PaperBagD = backpack:FindFirstChild("Paperbag")
+    local d = PaperBagD:FindFirstChild("LocalTool")
+        d:Destroy()
+         
+         
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+  
+  
+  
+  
+  
+  
+  -- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame to hold the buttons
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create the "Start" button
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 100, 0, 50)
+startButton.Position = UDim2.new(0.5, -50, 0, 25)
+startButton.BackgroundColor3 = Color3.new(0, 1, 0)
+startButton.TextColor3 = Color3.new(1, 0, 0)
+startButton.Text = "Smash"
+startButton.Parent = frame
+
+-- Create the close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 15)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Text = "X"
+closeButton.Parent = frame
+
+-- Function to handle the "Start" button click
+local function onStartButtonClick()
+   -- Insert your animation ID here
+local animationId = "5479999199"
+
+-- Get the humanoid of the character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variable to store the animation track
+local animationTrack
+
+-- Function to play the animation
+local function playAnimation()
+    -- Load the animation
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    
+    -- Play the animation
+    animationTrack = humanoid:LoadAnimation(animation)
+    animationTrack:Play()
+end
+
+-- Function to stop the animation
+local function stopAnimation()
+    if animationTrack then
+        animationTrack:Stop()
+    end
+end
+
+-- Call the playAnimation function to start the animation
+playAnimation()
+
+-- Call the stopAnimation function to stop the animation after a certain duration (e.g., 5 seconds)
+wait(1.6)
+stopAnimation()
+end
+
+-- Function to handle the close button click
+local function onCloseButtonClick()
+    gui:Destroy()
+    
+    local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+end
+
+-- Connect the onStartButtonClick function to the "Start" button's Click event
+startButton.MouseButton1Click:Connect(onStartButtonClick)
+
+-- Connect the onCloseButtonClick function to the close button's Click event
+closeButton.MouseButton1Click:Connect(onCloseButtonClick)
+
+
+end)
+
+
+local Button7 = Instance.new("TextButton")
+Button7.Name = "Button7"
+Button7.Text = "DeleteTool [BETA]"
+Button7.BackgroundColor3 = Color3.new(1,1,1)
+Button7.Position = UDim2.new(0, 140, 0, 80 + 0*45) -- Adjust the position based on the number of Button7s
+Button7.Size = UDim2.new(0, 100, 0, 27)
+Button7.Parent = frame
+
+Button7.MouseButton1Click:Connect(function()
+
+--Fe Delete Unanchored parts (Fire Effect)
+--By M1zz
+
+ -- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "ExampleGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the background
+local background = Instance.new("Frame")
+background.Name = "Background"
+background.Size = UDim2.new(0, 200, 0, 120)
+background.Position = UDim2.new(0.5, -100, 0.5, -60)
+background.BackgroundColor3 = Color3.fromRGB(169, 169, 169) -- Grey color
+background.BorderSizePixel = 0
+background.Parent = gui
+
+-- Create a TextLabel for "IMPORTANT"
+local titleText = Instance.new("TextLabel")
+titleText.Name = "TitleText"
+titleText.Size = UDim2.new(1, 0, 0, 30)
+titleText.Position = UDim2.new(0, 0, 0, 0)
+titleText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+titleText.BorderSizePixel = 0
+titleText.Text = "IMPORTANT"
+titleText.Font = Enum.Font.SourceSansBold
+titleText.TextSize = 20
+titleText.Parent = background
+
+-- Create a TextLabel for "Hello"
+local helloText = Instance.new("TextLabel")
+helloText.Name = "HelloText"
+helloText.Size = UDim2.new(1, 0, 0, 30)
+helloText.Position = UDim2.new(0, 0, 0, 30)
+helloText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+helloText.BorderSizePixel = 0
+helloText.Text = "Only Can Remove Unanchored Parts"
+helloText.Parent = background
+
+-- Create a TextLabel for "Hi"
+local hiText = Instance.new("TextLabel")
+hiText.Name = "HiText"
+hiText.Size = UDim2.new(1, 0, 0, 30)
+hiText.Position = UDim2.new(0, 0, 0, 70)
+hiText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+hiText.BorderSizePixel = 0
+hiText.Text = "-Fire Effect = fail or can't remove"
+hiText.Parent = background
+
+local hText = Instance.new("TextLabel")
+hText.Name = "HText"
+hText.Size = UDim2.new(1, 0, 0, 30)
+hText.Position = UDim2.new(0, 0, 0, 100)
+hText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+hText.BorderSizePixel = 0
+hText.Text = "-Near to the part to make it works"
+hText.Parent = background
+
+local h1Text = Instance.new("TextLabel")
+h1Text.Name = "H1Text"
+h1Text.Size = UDim2.new(1, 0, 0, 30)
+h1Text.Position = UDim2.new(0, 0, 0, 130)
+h1Text.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+h1Text.BorderSizePixel = 0
+h1Text.Text = "-Click The Unanchored Parts To Remove"
+h1Text.Parent = background
+
+local h2Text = Instance.new("TextLabel")
+h2Text.Name = "H2Text"
+h2Text.Size = UDim2.new(1, 0, 0, 30)
+h2Text.Position = UDim2.new(0, 0, 0, 160)
+h2Text.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+h2Text.BorderSizePixel = 0
+h2Text.Text = "-Works while/without using tool"
+h2Text.Parent = background
+
+-- Create a Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 50, 0, 20)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.BorderSizePixel = 0
+closeButton.Text = "Close"
+closeButton.Parent = background
+
+-- Create a DraggerFrame to make the GUI draggable
+local draggerFrame = Instance.new("Frame")
+draggerFrame.Name = "DraggerFrame"
+draggerFrame.Size = UDim2.new(1, 0, 0, 20)
+draggerFrame.Position = UDim2.new(0, 0, 0, -20)
+draggerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+draggerFrame.BackgroundTransparency = 0.5
+draggerFrame.BorderSizePixel = 0
+draggerFrame.Parent = background
+
+-- Enable dragging functionality
+local UIS = game:GetService("UserInputService")
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    background.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+draggerFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = background.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+draggerFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Close button functionality
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Loading",
+            Text = "Please Wait For 60 Seconds",
+            Duration = 60
+        })
+
+
+
+-- Create a tool called "DeleteTool"
+local tool = Instance.new("Tool")
+tool.Name = "Loading"
+tool.RequiresHandle = false
+
+-- Create a local variable to store the mouse
+local mouse = nil
+
+-- Function to check if a part is unanchored
+local function isUnanchored(part)
+    return not part:IsDescendantOf(workspace) or not part:IsDescendantOf(game:GetService("Players").LocalPlayer.Character) or not part.Anchored
+end
+
+-- Function to handle part selection
+local function handlePart(part)
+    if isUnanchored(part) then
+        -- Apply a force to fling the part
+        local flingForce = Instance.new("BodyVelocity")
+        flingForce.Velocity = Vector3.new(9999, 9999, 9999) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        flingForce.P = math.huge
+        flingForce.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flingForce.Parent = part
+
+        -- Create a fire effect
+        local fire = Instance.new("Fire")
+        fire.Size = 20 -- Change the size of the fire as per your requirement
+        fire.Heat = 20 -- Change the heat of the fire as per your requirement
+        fire.Parent = part
+
+        -- Remove the fire effect and force after a short delay
+        wait(0.5) -- Change the delay as per your requirement
+        fire:Destroy()
+        flingForce:Destroy()
+    end
+end
+
+-- Function to handle tool equipped event
+local function onEquipped()
+    -- Get the local player's mouse
+    mouse = game:GetService("Players").LocalPlayer:GetMouse()
+
+    -- Connect the mouse button press event
+    mouse.Button1Down:Connect(function()
+        -- Check if the mouse target is a part
+        if mouse.Target and mouse.Target:IsA("BasePart") then
+            handlePart(mouse.Target)
+        end
+    end)
+end
+
+-- Function to handle tool unequipped event
+local function onUnequipped()
+    -- Disconnect the mouse button press event
+    if mouse then
+        mouse.Button1Down:Disconnect()
+        mouse = nil
+    end
+end
+
+-- Connect the tool equipped and unequipped events
+tool.Equipped:Connect(onEquipped)
+tool.Unequipped:Connect(onUnequipped)
+
+-- Add the tool to the player's backpack
+game:GetService("Players").LocalPlayer.Backpack:ClearAllChildren()
+tool.Parent = game:GetService("Players").LocalPlayer.Backpack
+
+wait(60)
+gui:Destroy()
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+wait(1)
+game.Players.LocalPlayer.Character.Humanoid.Health = 0
+
+wait(1)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Hammer"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+end)
+
+
+local Button8 = Instance.new("TextButton")
+Button8.Name = "Button8"
+Button8.Text = "Jumpscare"
+Button8.BackgroundColor3 = Color3.new(1,1,1)
+Button8.Position = UDim2.new(0, 140, 0, 120 + 0*45) -- Adjust the position based on the number of Button8s
+Button8.Size = UDim2.new(0, 100, 0, 27)
+Button8.Parent = frame
+
+Button8.MouseButton1Click:Connect(function()
+
+--Brookhaven Jumpscare (Need Music Gamepass)
+--By M1zz
+
+
+-- Create GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "NotificationGui"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -200)
+frame.BackgroundColor3 = Color3.new(1, 1, 1)
+frame.Parent = gui
+
+-- Create TextLabel
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0, 180, 0, 80)
+textLabel.Position = UDim2.new(0.5, -90, 0.5, -40)
+textLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+textLabel.Text = "(This Script Need Music Gamepass)"
+textLabel.Parent = frame
+
+-- Hide GUI After a Delay
+wait(3) -- Adjust the delay as per your requirement
+gui:Destroy()
+
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "ExampleGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the GUI
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 250)
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+frame.BackgroundTransparency = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create a title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 200, 0, 50)
+titleLabel.Position = UDim2.new(0.5, -100, 0, -40)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.Font = Enum.Font.Cartoon
+titleLabel.TextColor3 = Color3.new(1, 0, 0)
+titleLabel.TextSize = 30
+titleLabel.Text = "JumpScare Gui"
+titleLabel.Parent = frame
+
+-- Create a Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 25)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.TextColor3 = Color3.new(0, 0, 0)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+
+-- Create a Button 1
+local button1 = Instance.new("TextButton")
+button1.Size = UDim2.new(0, 100, 0, 50)
+button1.Position = UDim2.new(0.5, -50, 0.5, -75)
+button1.BackgroundColor3 = Color3.new(0, 0, 0)
+button1.TextColor3 = Color3.new(1, 1, 1)
+button1.Text = "Thomas Jumpscare"
+button1.Parent = frame
+
+-- Create a Button 2
+local button2 = Instance.new("TextButton")
+button2.Size = UDim2.new(0, 100, 0, 50)
+button2.Position = UDim2.new(0.5, -50, 0.5, 25)
+button2.BackgroundColor3 = Color3.new(0, 0, 0)
+button2.TextColor3 = Color3.new(1, 1, 1)
+button2.Text = "Black Face"
+button2.Parent = frame
+
+-- Define the functions for Button 1 and Button 2
+local function button1Clicked()
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+
+wait(0.9)
+
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 0,
+        [2] = 0,
+        [3] = 0,
+        [4] = 0,
+        [5] = 0,
+        [6] = 0
+    },
+    [3] = "AllBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(1)
+local args = {
+    [1] = "PickingScooterMusicText",
+    [2] = "3900067524"
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "wear",
+    [2] = 12123461033
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "wear",
+    [2] = 15057664957
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(3)
+
+local args = {
+    [1] = "PickingScooterMusicText",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+
+
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+
+    button1.Text = "Please wait..."
+    wait(10)
+    button1.Text = "Thomas Jumpscare"
+    
+end
+
+local function button2Clicked()
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "wear",
+    [2] = 14995001134
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingScooterMusicText",
+    [2] = "892233254"
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+
+
+wait(3)
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingScooterMusicText",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+
+    button2.Text = "Please wait..."
+    wait(10)
+    button2.Text = "Black Face"
+    
+end
+
+-- Connect the button click events to their respective functions
+button1.MouseButton1Click:Connect(button1Clicked)
+button2.MouseButton1Click:Connect(button2Clicked)
+
+-- Define the function for the Close button
+local function closeButtonClicked()
+    gui:Destroy()
+    game.Players.LocalPlayer.Character.Humanoid.Health = 0
+end
+
+-- Connect the Close button click event to the closeButtonClicked function
+closeButton.MouseButton1Click:Connect(closeButtonClicked)
+
+
+local args = {
+    [1] = "SkateBoard"
+}
+
+game:GetService("ReplicatedStorage").RE["1NoMoto1rVehicle1s"]:FireServer(unpack(args))
+
+
+end)
+
+
+local Button9 = Instance.new("TextButton")
+Button9.Name = "Button9"
+Button9.Text = "Lie Detector"
+Button9.BackgroundColor3 = Color3.new(1,1,1)
+Button9.Position = UDim2.new(0, 140, 0, 160 + 0*45) -- Adjust the position based on the number of Button9s
+Button9.Size = UDim2.new(0, 100, 0, 27)
+Button9.Parent = frame
+
+Button9.MouseButton1Click:Connect(function()
+
+--Brookhaven Lie Detector 
+--By M1zz
+
+
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.0438427, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0.0438427, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "[ Lie Detector ]"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "Waiting For Target Player..."
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "ExampleGUI"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create a Frame for the draggable GUI
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Create a Title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Text = "Lie Detector By M1zz"
+titleLabel.Parent = frame
+
+-- Create a TextBox
+local textBox = Instance.new("TextBox")
+textBox.Name = "TextBox"
+textBox.Text = "Enter Target Username"
+textBox.Size = UDim2.new(0, 150, 0, 30)
+textBox.Position = UDim2.new(0.5, -75, 0.2, 0)
+textBox.BackgroundColor3 = Color3.new(1, 1, 1)
+textBox.Parent = frame
+
+-- Create a Button
+local button = Instance.new("TextButton")
+button.Name = "ExampleButton"
+button.Size = UDim2.new(0, 100, 0, 30)
+button.Position = UDim2.new(0.5, -50, 0.4, 0)
+button.BackgroundColor3 = Color3.new(0, 0.5, 1)
+button.Text = "Check"
+button.Parent = frame
+
+-- Create a Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(0.9, -15, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Text = "X"
+closeButton.Parent = frame
+
+-- Function to handle button click event
+local function onButtonClick()
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "[ LIE DETECTOR ]"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "START IN 3"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "START IN 2"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "START IN 1"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0.00174671, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.00174671, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = textBox.Text
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "DETECTOR HERE!"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = math.random() > 0.5 and "Lie" or "Not Lie"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClick)
+
+-- Function to handle close button click event
+local function onCloseButtonClick()
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+    gui:Destroy()
+end
+
+-- Connect the close button click event to the function
+closeButton.MouseButton1Click:Connect(onCloseButtonClick)
+
+
+ 
+
+end)
+
+
+local Button10 = Instance.new("TextButton")
+Button10.Name = "Button10"
+Button10.Text = "Drift RC"
+Button10.BackgroundColor3 = Color3.new(1,1,1)
+Button10.Position = UDim2.new(0, 140, 0, 200 + 0*45) -- Adjust the position based on the number of Button9s
+Button10.Size = UDim2.new(0, 100, 0, 27)
+Button10.Parent = frame
+
+Button10.MouseButton1Click:Connect(function()
+gui:Destroy()
+--Brookhaven Drift RC
+--By M1zz
+
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Drift RC"
+gui.Parent = game:GetService("CoreGui")
+ 
+
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BorderColor3 = Color3.new(0, 0, 0) -- Set the outline color to black
+frame.Position = UDim2.new(0, 100, 0, 100)
+frame.Size = UDim2.new(0, 400, 0, 300) -- Increase the size to 400x400 pixels
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+frame.BackgroundTransparency = 0.1
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Text = "Drift RC"
+title.Font = Enum.Font.GothamSemibold
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 24
+title.Position = UDim2.new(0, 150, 0, -5)
+title.Size = UDim2.new(0, 100, 0, 40)
+title.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "Close"
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Position = UDim2.new(1, -75, 0, 4)
+closeButton.Size = UDim2.new(0, 70, 0, 20)
+closeButton.Parent = frame
+
+-- Function to close the GUI
+local function closeGUI()
+    gui:Destroy()
+end
+
+-- Connect the close button to the closeGUI function
+closeButton.MouseButton1Click:Connect(closeGUI)
+
+
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Text = "Skyline GTR"
+Button.BackgroundColor3 = Color3.new(1,1,1)
+Button.Position = UDim2.new(0, 30, 0, -80 + 1*120) -- Adjust the position based on the number of buttons
+Button.Size = UDim2.new(0, 110, 0, 30)
+Button.Parent = frame
+
+Button.MouseButton1Click:Connect(function()
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local function removeAnimateScript()
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("LocalScript") and child.Name == "Animate" then
+            child:Destroy()
+            print("Animate LocalScript removed from character")
+        end
+    end
+end
+
+removeAnimateScript()
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Really black"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 14731377941,
+        [2] = 14731377894,
+        [3] = 14731377875,
+        [4] = 14731384498,
+        [5] = 14731377938,
+        [6] = 15093053680
+    },
+    [3] = "AllBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.6
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "wear",
+    [2] = 15058217485
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Reset"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+    gui:Destroy()
+    local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+    wait(1)
+    local character = game.Players.LocalPlayer.Character
+    character.Humanoid.Health = 0
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+while wait() do
+
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 80
+
+end
+end)
+
+local Button1 = Instance.new("TextButton")
+Button1.Name = "Button1"
+Button1.Text = "Supra"
+Button1.BackgroundColor3 = Color3.new(1,1,1)
+Button1.Position = UDim2.new(0, 30, 0, -20 + 1*120) -- Adjust the position based on the number of Button1s
+Button1.Size = UDim2.new(0, 110, 0, 30)
+Button1.Parent = frame
+
+Button1.MouseButton1Click:Connect(function()
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local function removeAnimateScript()
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("LocalScript") and child.Name == "Animate" then
+            child:Destroy()
+            print("Animate LocalScript removed from character")
+        end
+    end
+end
+
+removeAnimateScript()
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Really black"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 14731377941,
+        [2] = 14731377894,
+        [3] = 14731377875,
+        [4] = 14731384498,
+        [5] = 14731377938,
+        [6] = 15093053680
+    },
+    [3] = "AllBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.6
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "wear",
+    [2] = 15047641374
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Reset"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+    gui:Destroy()
+    local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+    wait(1)
+    local character = game.Players.LocalPlayer.Character
+    character.Humanoid.Health = 0
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+while wait() do
+
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 80
+
+end
+end)
+
+
+local Button2 = Instance.new("TextButton")
+Button2.Name = "Button2"
+Button2.Text = "Initial D Car JDM"
+Button2.BackgroundColor3 = Color3.new(1,1,1)
+Button2.Position = UDim2.new(0, 30, 0, 40 + 1*120) -- Adjust the position based on the number of Button2s
+Button2.Size = UDim2.new(0, 110, 0, 30)
+Button2.Parent = frame
+
+Button2.MouseButton1Click:Connect(function()
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local function removeAnimateScript()
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("LocalScript") and child.Name == "Animate" then
+            child:Destroy()
+            print("Animate LocalScript removed from character")
+        end
+    end
+end
+
+removeAnimateScript()
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Really black"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 14731377941,
+        [2] = 14731377894,
+        [3] = 14731377875,
+        [4] = 14731384498,
+        [5] = 14731377938,
+        [6] = 15093053680
+    },
+    [3] = "AllBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.6
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "wear",
+    [2] = 16441372992
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Reset"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+    gui:Destroy()
+    local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+    wait(1)
+    local character = game.Players.LocalPlayer.Character
+    character.Humanoid.Health = 0
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+while wait() do
+
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 80
+
+end
+end)
+
+local Button3 = Instance.new("TextButton")
+Button3.Name = "Button3"
+Button3.Text = "Hellcat SRT Car"
+Button3.BackgroundColor3 = Color3.new(1,1,1)
+Button3.Position = UDim2.new(0, 30, 0, 100 + 1*120) -- Adjust the position based on the number of Button3s
+Button3.Size = UDim2.new(0, 110, 0, 30)
+Button3.Parent = frame
+
+Button3.MouseButton1Click:Connect(function()
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local function removeAnimateScript()
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("LocalScript") and child.Name == "Animate" then
+            child:Destroy()
+            print("Animate LocalScript removed from character")
+        end
+    end
+end
+
+removeAnimateScript()
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+wait(1)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Really black"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 14731377941,
+        [2] = 14731377894,
+        [3] = 14731377875,
+        [4] = 14731384498,
+        [5] = 14731377938,
+        [6] = 15093053680
+    },
+    [3] = "AllBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.6
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "wear",
+    [2] = 16440472441
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Reset"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+    gui:Destroy()
+    local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+    wait(1)
+    local character = game.Players.LocalPlayer.Character
+    character.Humanoid.Health = 0
+end
+
+-- Connect the button click event to the function
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+while wait() do
+
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 80
+
+end
+end)
+end)
+
+local Button11 = Instance.new("TextButton")
+Button11.Name = "Button11"
+Button11.Text = "Blind Player"
+Button11.BackgroundColor3 = Color3.new(1,1,1)
+Button11.Position = UDim2.new(0, 140, 0, 240 + 0*45) -- Adjust the position based on the number of Button9s
+Button11.Size = UDim2.new(0, 100, 0, 27)
+Button11.Parent = frame
+
+Button11.MouseButton1Click:Connect(function()
+gui:Destroy()
+
+--Brookhaven Blind Player
+--By M1zz
+
+
+-- Create the GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create the draggable frame
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0, 50, 0, 50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(0, 0, 0)
+Stroke.Thickness = 1
+Stroke.Parent = frame
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 150, 0, 30)
+titleLabel.Position = UDim2.new(0.5, -75, 0, -20)
+titleLabel.Text = "Blind Player"
+titleLabel.Font = Enum.Font.Fantasy
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextScaled = true
+titleLabel.Parent = frame
+
+
+-- Create the textbox
+local textbox = Instance.new("TextBox")
+textbox.Name = "PlayerNameTextbox"
+textbox.Size = UDim2.new(0, 150, 0, 30)
+textbox.Position = UDim2.new(0.5, -75, 0, 20)
+textbox.PlaceholderText = "Victim Username" 
+textbox.Text = "Victim Username"
+textbox.Parent = frame
+textbox.BackgroundColor3 = Color3.new(1, 1, 1)
+
+-- Create the start button
+local startButton = Instance.new("TextButton")
+startButton.Name = "StartButton"
+startButton.Size = UDim2.new(0, 100, 0, 30)
+startButton.Position = UDim2.new(0.5, -50, 0, 70)
+startButton.Text = "Blind"
+startButton.Parent = frame
+startButton.BackgroundColor3 = Color3.new(1, 0, 0)
+
+-- Create the close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 100, 0, 30)
+closeButton.Position = UDim2.new(0.5, -50, 0, 110)
+closeButton.Text = "Close"
+closeButton.Parent = frame
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+
+-- Function to start teleportation
+local function startTeleportation()
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Couch",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+wait(1)
+--Drop Tools script
+--By M1zz
+
+local player = game.Players.LocalPlayer
+
+local function dropAllTools()
+    local character = player.Character
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+dropAllTools()
+
+    local targetPlayerName = textbox.Text
+    local player = game.Players.LocalPlayer
+
+local directions = {"left", "right", "infront", "behind", "Middle"}
+local currentDirectionIndex = 1
+
+local function teleportToDirection()
+    local direction = directions[currentDirectionIndex]
+    local targetPlayer = game.Players:FindFirstChild(targetPlayerName)
+    if targetPlayer then
+        local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+        local teleportOffset = Vector3.new(0, 0, 0) -- Adjust the offset values to position your character as desired
+
+        if direction == "left" then
+            teleportOffset = Vector3.new(-5, 0, 0)
+        elseif direction == "right" then
+            teleportOffset = Vector3.new(5, 0, 0)
+        elseif direction == "infront" then
+            teleportOffset = Vector3.new(0, 0, -5)
+        elseif direction == "behind" then
+            teleportOffset = Vector3.new(0, 0, 5)
+        elseif direction == "Middle" then
+            teleportOffset = Vector3.new(0, 0, 0)
+        end
+
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition + teleportOffset)
+    else
+        print("Player not found!")
+    end
+
+    currentDirectionIndex = currentDirectionIndex + 1
+    if currentDirectionIndex > #directions then
+        currentDirectionIndex = 1
+    end
+end
+
+-- Teleport every second
+ i = 1
+repeat
+-- Get the player's name
+local playerName = textbox.Text -- Replace "PlayerName" with the actual player's name
+
+-- Function to check if the humanoid is sitting
+local function checkIfSitting(humanoid)
+    if humanoid.SeatPart then
+       local args = {
+    [1] = "PickingTools",
+    [2] = "Paperbag"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+game.Players.LocalPlayer.Character.Humanoid.Health = 0
+-- Get the player's character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Find the "Couch" tool in the backpack
+local backpack = player.Backpack
+local couchTool = backpack:FindFirstChild("Couch")
+
+-- Check if the "Couch" tool exists
+if couchTool then
+    -- Find the "Handle" part in the "Couch" tool
+    local handle = couchTool:FindFirstChild("Handle")
+
+    -- Check if the "Handle" part exists
+    if handle then
+        -- Create a BodyForce in the "Handle" part
+        local bodyForce = Instance.new("BodyForce")
+        bodyForce.Force = Vector3.new(0, 9999999999999, 0) -- Set the force to zero initially
+        bodyForce.Parent = handle
+    else
+        print("Handle part not found in the Couch tool.")
+    end
+else
+    print("Couch tool not found in the backpack.")
+end
+
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local backpack = player.Backpack
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = player.Character
+    end
+end
+
+ 
+    end
+end
+
+-- Find the player's character
+local player = game.Players:FindFirstChild(playerName)
+if player then
+    local character = player.Character
+    if character then
+        -- Get the humanoid
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            -- Check if the humanoid is sitting
+            checkIfSitting(humanoid)
+        end
+    end
+end
+  teleportToDirection()
+  
+  wait()
+  i = i + 1
+until i > 9999999
+
+end
+
+-- Function to close the GUI
+local function closeGUI()
+    gui:Destroy()
+    local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+end
+
+-- Connect the button click events
+startButton.MouseButton1Click:Connect(startTeleportation)
+closeButton.MouseButton1Click:Connect(closeGUI)
+
+end)
+
+
+local Button12 = Instance.new("TextButton")
+Button12.Name = "Button12"
+Button12.Text = "R6 Animation"
+Button12.BackgroundColor3 = Color3.new(1,1,1)
+Button12.Position = UDim2.new(0, 260, 0, 40 + 0*45) -- Adjust the position based on the number of Button9s
+Button12.Size = UDim2.new(0, 100, 0, 27)
+Button12.Parent = frame
+
+Button12.MouseButton1Click:Connect(function()
+gui:Destroy()
+--FE Brookhaven R6 Animation
+--By M1zz
+
+local character = game.Players.LocalPlayer.Character 
+
+
+local animationTrack = character.Animate.run.RunAnim
+animationTrack.AnimationId = "rbxassetid://10921244891"
+character.Animate.walk.WalkAnim.AnimationId = "rbxassetid://10921244891"
+character.Animate.jump.JumpAnim.AnimationId = "rbxassetid://10921242013"
+character.Animate.fall.FallAnim.AnimationId = "rbxassetid://"
+character.Animate.idle.Animation1.AnimationId = "rbxassetid://10921230744"
+character.Animate.idle.Animation2.AnimationId = "rbxassetid://10921232093"
+character.Animate.climb.ClimbAnim.AnimationId = "rbxassetid://"
+character.Animate.swim.Swim.AnimationId = "rbxassetid://"
+character.Animate.swimidle.SwimIdle.AnimationId = "rbxassetid://"
+
+
+end)
+
+local Button13 = Instance.new("TextButton")
+Button13.Name = "Button13"
+Button13.Text = "Bio Changer"
+Button13.BackgroundColor3 = Color3.new(1,1,1)
+Button13.Position = UDim2.new(0, 260, 0, 80 + 0*45) -- Adjust the position based on the number of Button9s
+Button13.Size = UDim2.new(0, 100, 0, 27)
+Button13.Parent = frame
+
+Button13.MouseButton1Click:Connect(function()
+gui:Destroy()
+--Brookhaven Bio Changer
+--By M1zz
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 180)
+frame.Position = UDim2.new(0, 250, 0, 50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 0, 0)
+Stroke.Thickness = 1.6
+Stroke.Parent = frame
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 142, 0, 22)
+titleLabel.Position = UDim2.new(0.5, -75, 0, 10)
+titleLabel.Text = "Bio Changer"
+titleLabel.Font = Enum.Font.Fantasy
+titleLabel.TextColor3 = Color3.new(1, 0, 0)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextScaled = true
+titleLabel.Parent = frame
+
+local textboxA = Instance.new("TextBox")
+textboxA.Name = "PlayerNameTextbox"
+textboxA.Size = UDim2.new(0, 150, 0, 30)
+textboxA.Position = UDim2.new(0.5, -75, 0, 42)
+textboxA.PlaceholderText = "Victim Username" 
+textboxA.Text = "Target Username"
+textboxA.Parent = frame
+textboxA.BackgroundColor3 = Color3.new(1, 1, 1)
+
+-- Create the start button
+local startButton = Instance.new("TextButton")
+startButton.Name = "StartButton"
+startButton.Size = UDim2.new(0, 100, 0, 30)
+startButton.Position = UDim2.new(0.5, -50, 0, 80)
+startButton.Text = "Start"
+startButton.TextColor3 = Color3.new(1, 0, 0)
+startButton.Parent = frame
+startButton.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(0.5, 75, 0, 5)
+closeButton.Text = "X"
+closeButton.Parent = frame
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 0, 120)
+Button.Text = "Soon"
+Button.TextColor3 = Color3.new(1, 0, 0)
+Button.Parent = frame
+Button.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local function Button1()
+
+end
+
+
+
+
+
+
+-- Function to start teleportation
+local function startTeleportation()
+gui:Destroy()
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+--Bio changer
+--By M1zz
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportGUI"
+gui.ResetOnSpawn = true
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 280)
+frame.Position = UDim2.new(0, 250, 0, 50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 0, 0)
+Stroke.Thickness = 1.6
+Stroke.Parent = frame
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 142, 0, 22)
+titleLabel.Position = UDim2.new(0.5, -75, 0, 10)
+titleLabel.Text = "Bio Changer"
+titleLabel.Font = Enum.Font.Fantasy
+titleLabel.TextColor3 = Color3.new(1, 0, 0)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextScaled = true
+titleLabel.Parent = frame
+
+local titleLabel1 = Instance.new("TextLabel")
+titleLabel1.Name = "titleLabel1"
+titleLabel1.Size = UDim2.new(0, 136, 0, 16)
+titleLabel1.Position = UDim2.new(0.5, -120, 0, 178)
+titleLabel1.Text = "Choose Color:"
+titleLabel1.Font = Enum.Font.Fantasy
+titleLabel1.TextColor3 = Color3.new(1, 1, 1)
+titleLabel1.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel1.BackgroundTransparency = 1
+titleLabel1.TextStrokeTransparency = 0
+titleLabel1.TextScaled = true
+titleLabel1.Parent = frame
+
+
+local textbox = Instance.new("TextBox")
+textbox.Name = "PlayerNameTextbox"
+textbox.Size = UDim2.new(0, 150, 0, 30)
+textbox.Position = UDim2.new(0.5, -75, 0, 42)
+textbox.PlaceholderText = "Enter RP Name" 
+textbox.Text = "Enter RP Name"
+textbox.Parent = frame
+textbox.BackgroundColor3 = Color3.new(1, 1, 1)
+
+local textbox1 = Instance.new("TextBox")
+textbox1.Name = "PlayerNametextbox1"
+textbox1.Size = UDim2.new(0, 150, 0, 30)
+textbox1.Position = UDim2.new(0.5, -75, 0, 82)
+textbox1.PlaceholderText = "Enter Bio" 
+textbox1.Text = "Enter Bio"
+textbox1.Parent = frame
+textbox1.BackgroundColor3 = Color3.new(1, 1, 1)
+
+
+-- Create the start button
+local startButton = Instance.new("TextButton")
+startButton.Name = "StartButton"
+startButton.Size = UDim2.new(0, 100, 0, 30)
+startButton.Position = UDim2.new(0.5, -50, 0, 116)
+startButton.Text = "Change"
+startButton.TextColor3 = Color3.new(1, 0, 0)
+startButton.Parent = frame
+startButton.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local function startTeleportation()
+local args = {
+    [1] = "RolePlayName",
+    [2] = textbox.Text
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = textbox1.Text
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+end
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 0, 148)
+Button.Text = "Stop"
+Button.TextColor3 = Color3.new(1, 0, 0)
+Button.Parent = frame
+Button.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local function Button1()
+gui:Destroy()
+game.Players.LocalPlayer.Character.Humanoid.Health = 0
+end
+
+startButton.MouseButton1Click:Connect(startTeleportation)
+Button.MouseButton1Click:Connect(Button1)
+
+local ButtonA = Instance.new("TextButton")
+ButtonA.Name = "ButtonA"
+ButtonA.Size = UDim2.new(0, 20, 0, 20)
+ButtonA.Position = UDim2.new(0.5, -97, 0, 198)
+ButtonA.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonA.Text = ""
+ButtonA.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonA.Parent = frame
+
+ButtonA.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0, 0.0164948)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonB = Instance.new("TextButton")
+ButtonB.Name = "ButtonB"
+ButtonB.Size = UDim2.new(0, 20, 0, 20)
+ButtonB.Position = UDim2.new(0.5, -77, 0, 198)
+ButtonB.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+ButtonB.Text = ""
+ButtonB.TextColor3 = Color3.fromRGB(0,0,0)
+ButtonB.Parent = frame
+
+ButtonB.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0.162001, 0, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonC = Instance.new("TextButton")
+ButtonC.Name = "ButtonC"
+ButtonC.Size = UDim2.new(0, 20, 0, 20)
+ButtonC.Position = UDim2.new(0.5, -57, 0, 198)
+ButtonC.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ButtonC.Text = ""
+ButtonC.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonC.Parent = frame
+
+ButtonC.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0, 0, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonD = Instance.new("TextButton")
+ButtonD.Name = "ButtonD"
+ButtonD.Size = UDim2.new(0, 20, 0, 20)
+ButtonD.Position = UDim2.new(0.5, -37, 0, 198)
+ButtonD.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ButtonD.Text = ""
+ButtonD.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonD.Parent = frame
+
+ButtonD.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0, 1, 0.0262835)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonE = Instance.new("TextButton")
+ButtonE.Name = "ButtonE"
+ButtonE.Size = UDim2.new(0, 20, 0, 20)
+ButtonE.Position = UDim2.new(0.5, -17, 0, 198)
+ButtonE.BackgroundColor3 = Color3.fromRGB(228, 0, 228)
+ButtonE.Text = ""
+ButtonE.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonE.Parent = frame
+
+ButtonE.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0.947107, 0, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+
+local ButtonF = Instance.new("TextButton")
+ButtonF.Name = "ButtonF"
+ButtonF.Size = UDim2.new(0, 20, 0, 20)
+ButtonF.Position = UDim2.new(0.5, 4, 0, 198)
+ButtonF.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+ButtonF.Text = ""
+ButtonF.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonF.Parent = frame
+
+ButtonF.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.954485, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonG = Instance.new("TextButton")
+ButtonG.Name = "ButtonG"
+ButtonG.Size = UDim2.new(0, 20, 0, 20)
+ButtonG.Position = UDim2.new(0.5, 24, 0, 198)
+ButtonG.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ButtonG.Text = ""
+ButtonG.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonG.Parent = frame
+
+ButtonG.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.974954, 0.995438)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonH = Instance.new("TextButton")
+ButtonH.Name = "ButtonH"
+ButtonH.Size = UDim2.new(0, 20, 0, 20)
+ButtonH.Position = UDim2.new(0.5, 44, 0, 198)
+ButtonH.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+ButtonH.Text = ""
+ButtonH.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonH.Parent = frame
+
+ButtonH.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(0, 0.8908, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonI = Instance.new("TextButton")
+ButtonI.Name = "ButtonI"
+ButtonI.Size = UDim2.new(0, 20, 0, 20)
+ButtonI.Position = UDim2.new(0.5, 64, 0, 198)
+ButtonI.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+ButtonI.Text = ""
+ButtonI.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonI.Parent = frame
+
+ButtonI.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.536754, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+   local ButtonAA = Instance.new("TextButton")
+ButtonAA.Name = "ButtonAA"
+ButtonAA.Size = UDim2.new(0, 20, 0, 20)
+ButtonAA.Position = UDim2.new(0.5, -97, 0, 230)
+ButtonAA.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ButtonAA.Text = ""
+ButtonAA.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonAA.Parent = frame
+
+ButtonAA.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0, 0.0164948)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonBB = Instance.new("TextButton")
+ButtonBB.Name = "ButtonBB"
+ButtonBB.Size = UDim2.new(0, 20, 0, 20)
+ButtonBB.Position = UDim2.new(0.5, -77, 0, 230)
+ButtonBB.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+ButtonBB.Text = ""
+ButtonBB.TextColor3 = Color3.fromRGB(0,0,0)
+ButtonBB.Parent = frame
+
+ButtonBB.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0.162001, 0, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonCC = Instance.new("TextButton")
+ButtonCC.Name = "ButtonCC"
+ButtonCC.Size = UDim2.new(0, 20, 0, 20)
+ButtonCC.Position = UDim2.new(0.5, -57, 0, 230)
+ButtonCC.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ButtonCC.Text = ""
+ButtonCC.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonCC.Parent = frame
+
+ButtonCC.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0, 0, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonDD = Instance.new("TextButton")
+ButtonDD.Name = "ButtonDD"
+ButtonDD.Size = UDim2.new(0, 20, 0, 20)
+ButtonDD.Position = UDim2.new(0.5, -37, 0, 230)
+ButtonDD.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ButtonDD.Text = ""
+ButtonDD.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonDD.Parent = frame
+
+ButtonDD.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0, 1, 0.0262835)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonEE = Instance.new("TextButton")
+ButtonEE.Name = "ButtonEE"
+ButtonEE.Size = UDim2.new(0, 20, 0, 20)
+ButtonEE.Position = UDim2.new(0.5, -17, 0, 230)
+ButtonEE.BackgroundColor3 = Color3.fromRGB(228, 0, 228)
+ButtonEE.Text = ""
+ButtonEE.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonEE.Parent = frame
+
+ButtonEE.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0.947107, 0, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+
+local ButtonFF = Instance.new("TextButton")
+ButtonFF.Name = "ButtonFF"
+ButtonFF.Size = UDim2.new(0, 20, 0, 20)
+ButtonFF.Position = UDim2.new(0.5, 4, 0, 230)
+ButtonFF.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+ButtonFF.Text = ""
+ButtonFF.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonFF.Parent = frame
+
+ButtonFF.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0.954485, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonGG = Instance.new("TextButton")
+ButtonGG.Name = "ButtonGG"
+ButtonGG.Size = UDim2.new(0, 20, 0, 20)
+ButtonGG.Position = UDim2.new(0.5, 24, 0, 230)
+ButtonGG.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ButtonGG.Text = ""
+ButtonGG.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonGG.Parent = frame
+
+ButtonGG.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0.974954, 0.995438)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonHH = Instance.new("TextButton")
+ButtonHH.Name = "ButtonHH"
+ButtonHH.Size = UDim2.new(0, 20, 0, 20)
+ButtonHH.Position = UDim2.new(0.5, 44, 0, 230)
+ButtonHH.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+ButtonHH.Text = ""
+ButtonHH.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonHH.Parent = frame
+
+ButtonHH.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(0, 0.8908, 1)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonII = Instance.new("TextButton")
+ButtonII.Name = "ButtonII"
+ButtonII.Size = UDim2.new(0, 20, 0, 20)
+ButtonII.Position = UDim2.new(0.5, 64, 0, 230)
+ButtonII.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+ButtonII.Text = ""
+ButtonII.TextColor3 = Color3.fromRGB(1,0,0)
+ButtonII.Parent = frame
+
+ButtonII.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "PickingRPBioColor",
+    [2] = Color3.new(1, 0.536754, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+end)
+
+local ButtonJ = Instance.new("TextButton")
+ButtonJ.Name = "ButtonJ"
+ButtonJ.Size = UDim2.new(0, 100, 0, 20)
+ButtonJ.Position = UDim2.new(0.5, -96, 0, 255)
+ButtonJ.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ButtonJ.Text = "Blue Flame"
+ButtonJ.TextColor3 = Color3.fromRGB(0,0,255)
+ButtonJ.Parent = frame
+
+ButtonJ.MouseButton1Click:Connect(function()
+local args = {
+    [1] = "wear",
+    [2] = 183468963
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+end)
+
+
+
+local character = game.Players.LocalPlayer.Character 
+local Anim = character.Animate
+
+Anim:Destroy()
+
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.99
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+character:WaitForChild("Humanoid").HealthChanged:Connect(function(health)
+    if health == 0 then
+        local character = game.Players.LocalPlayer.Character 
+character.HumanoidRootPart.Anchored = false
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+
+
+wait(6)
+
+local args = {
+    [1] = "CharacterSizeUp",
+    [2] = 1
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+wait(0.9)
+local character = game.Players.LocalPlayer.Character 
+local flame = character.GhostdeeriTheCursed
+if flame then
+local args = {
+    [1] = "wear",
+    [2] = 183468963
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+end
+
+
+    end
+end)
+
+
+
+while wait() do
+-- Change "PlayerName" to the name of the player you want to teleport to
+local playerName = textboxA.Text
+
+-- Find the player's position
+local player = game.Players:FindFirstChild(playerName)
+    local playerPosition = player.Character.Head.Position
+
+local character = game.Players.LocalPlayer.Character
+character.HumanoidRootPart.Size = Vector3.new(2,9,2)
+
+    -- Teleport your character to the player's position
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(playerPosition)
+    
+ 
+end
+end
+
+
+local function closeGUI()
+    gui:Destroy()
+    
+    end
+    
+    
+    startButton.MouseButton1Click:Connect(startTeleportation)
+closeButton.MouseButton1Click:Connect(closeGUI)
+Button1.MouseButton1Click:Connect(Button1)
+
+end)
+
+
+local Button14 = Instance.new("TextButton")
+Button14.Name = "Button14"
+Button14.Text = "Horse-Raid"
+Button14.BackgroundColor3 = Color3.new(1,1,1)
+Button14.Position = UDim2.new(0, 260, 0, 120 + 0*45) -- Adjust the position based on the number of Button9s
+Button14.Size = UDim2.new(0, 100, 0, 27)
+Button14.Parent = frame
+
+Button14.MouseButton1Click:Connect(function()
+gui:Destroy()
+
+--Brookhaven Horse Raid (Most Op Brookhaven Script For Now)
+--By M1zz
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "By M1zz",
+            Duration = 5
+        })
+        
+ -- Create a ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "ExampleGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the background
+local background = Instance.new("Frame")
+background.Name = "Background"
+background.Size = UDim2.new(0, 200, 0, 120)
+background.Position = UDim2.new(0.5, -100, 0.5, -60)
+background.BackgroundColor3 = Color3.fromRGB(169, 169, 169) -- Grey color
+background.BorderSizePixel = 0
+background.Parent = gui
+
+-- Create a TextLabel for "IMPORTANT"
+local titleText = Instance.new("TextLabel")
+titleText.Name = "TitleText"
+titleText.Size = UDim2.new(1, 0, 0, 30)
+titleText.Position = UDim2.new(0, 0, 0, 0)
+titleText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+titleText.BorderSizePixel = 0
+titleText.Text = "HORSE-RAID"
+titleText.Font = Enum.Font.SourceSansBold
+titleText.TextSize = 20
+titleText.Parent = background
+
+-- Create a TextLabel for "Hello"
+local helloText = Instance.new("TextLabel")
+helloText.Name = "HelloText"
+helloText.Size = UDim2.new(1, 0, 0, 30)
+helloText.Position = UDim2.new(0, 0, 0, 30)
+helloText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+helloText.BorderSizePixel = 0
+helloText.Text = "The Horse Will Permanently"
+helloText.Parent = background
+
+-- Create a TextLabel for "Hi"
+local hiText = Instance.new("TextLabel")
+hiText.Name = "HiText"
+hiText.Size = UDim2.new(1, 0, 0, 20)
+hiText.Position = UDim2.new(0, 0, 0, 50)
+hiText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+hiText.BorderSizePixel = 0
+hiText.Text = "Stay In This Server"
+hiText.Parent = background
+
+local hText = Instance.new("TextLabel")
+hText.Name = "HText"
+hText.Size = UDim2.new(1, 0, 0, 10)
+hText.Position = UDim2.new(0, 0, 0, 69)
+hText.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+hText.BorderSizePixel = 0
+hText.Text = "Even When You Leave"
+hText.Parent = background
+
+-- Create a Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 50, 0, 20)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.BorderSizePixel = 0
+closeButton.Text = "Close"
+closeButton.Parent = background
+
+-- Create a DraggerFrame to make the GUI draggable
+local draggerFrame = Instance.new("Frame")
+draggerFrame.Name = "DraggerFrame"
+draggerFrame.Size = UDim2.new(1, 0, 0, 20)
+draggerFrame.Position = UDim2.new(0, 0, 0, -20)
+draggerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+draggerFrame.BackgroundTransparency = 0.5
+draggerFrame.BorderSizePixel = 0
+draggerFrame.Parent = background
+
+-- Enable dragging functionality
+local UIS = game:GetService("UserInputService")
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    background.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+draggerFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = background.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+draggerFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Close button functionality
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+wait(6)
+gui:Destroy()
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Spawning Horse...",
+            Text = "Please Wait!",
+            Duration = 125
+        })
+    
+    
+        
+local character = game.Players.LocalPlayer.Character
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+humanoidRootPart.Anchored = true
+
+i = 1
+repeat
+
+local args = {
+    [1] = "PickingCar",
+    [2] = "Horse"
+}
+
+game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "HorseDismount"
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PlayerReadyForHorse"
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+
+wait(5)
+  
+  i = i + 1
+until i > 10
+
+wait(3)
+
+local args = {
+    [1] = "HorseDismount"
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+
+i = 1
+repeat
+
+local args = {
+    [1] = "PickingCar",
+    [2] = "Horse"
+}
+
+game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer(unpack(args))
+
+wait(8)
+  
+  i = i + 1
+until i > 10
+
+
+humanoidRootPart.Anchored = false
+
+
+
+
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame to hold the buttons
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 1, 1)
+Stroke.Thickness = 1
+Stroke.Parent = frame
+
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = frame
+
+-- Create the "Start" button
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 100, 0, 50)
+startButton.Position = UDim2.new(0.5, -50, 0, 25)
+startButton.BackgroundColor3 = Color3.new(1, 0, 0)
+startButton.TextColor3 = Color3.new(0, 0, 0)
+startButton.Text = "Spawn Horse"
+startButton.Parent = frame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton
+
+
+
+-- Create the close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 15)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.TextColor3 = Color3.new(0, 0, 0)
+closeButton.Text = "X"
+closeButton.Parent = frame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = closeButton
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Only Can Spawn On Street",
+            Text = "You Can Bring Them To Victim House Or Make Them Follow The House Owner",
+            Duration = 10
+        })
+        
+local function onStartButtonClick()
+   gui:Destroy()
+   
+   i = 1
+repeat
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Horse Raid",
+            Text = "Horse Spawned!",
+            Duration = 3
+        })
+        
+local args = {
+    [1] = "PickingCar",
+    [2] = "Horse"
+}
+
+game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer(unpack(args))
+
+
+  
+ wait(8)       
+  i = i + 1
+until i > 10
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Horse Raid",
+            Text = "All Horse Has Been Spawned, Enjoy Trolling!",
+            Duration = 5
+        })
+
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+
+local frame = Instance.new("Frame")
+frame.Name = "DraggableFrame"
+frame.Size = UDim2.new(0, 200, 0, 180)
+frame.Position = UDim2.new(0, 250, 0, 50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = frame
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 0, 0)
+Stroke.Thickness = 1.6
+Stroke.Parent = frame
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 142, 0, 22)
+titleLabel.Position = UDim2.new(0.5, -75, 0, 10)
+titleLabel.Text = "Horse-Raid"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Color3.new(1, 0, 0)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextScaled = true
+titleLabel.Parent = frame
+
+local textboxA = Instance.new("TextBox")
+textboxA.Name = "PlayerNameTextbox"
+textboxA.Size = UDim2.new(0, 150, 0, 30)
+textboxA.Position = UDim2.new(0.5, -75, 0, 42)
+textboxA.PlaceholderText = "Set Horse Owner Username" 
+textboxA.Text = "Set Horse Owner Username"
+textboxA.Parent = frame
+textboxA.BackgroundColor3 = Color3.new(1, 1, 1)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = textboxA
+
+-- Create the start button
+local startButton1 = Instance.new("TextButton")
+startButton1.Name = "startButton1"
+startButton1.Size = UDim2.new(0, 100, 0, 30)
+startButton1.Position = UDim2.new(0.5, -50, 0, 80)
+startButton1.Text = "Follow Owner"
+startButton1.TextColor3 = Color3.new(1, 0, 0)
+startButton1.Parent = frame
+startButton1.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton1
+
+local closeButton1 = Instance.new("TextButton")
+closeButton1.Name = "closeButton1"
+closeButton1.Size = UDim2.new(0, 20, 0, 20)
+closeButton1.Position = UDim2.new(0.5, 75, 0, 5)
+closeButton1.Text = "X"
+closeButton1.Parent = frame
+closeButton1.BackgroundColor3 = Color3.new(1, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = closeButton1
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 0, 120)
+Button.Text = "Setting"
+Button.TextColor3 = Color3.new(1, 0, 0)
+Button.Parent = frame
+Button.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = Button
+
+local function Button1()
+
+frame.Visible = false
+
+local guiA = Instance.new("ScreenGui")
+guiA.Name = "TeleportGUI"
+guiA.ResetOnSpawn = false
+guiA.Parent = game.Players.LocalPlayer.PlayerGui
+
+
+local frameA = Instance.new("Frame")
+frameA.Name = "DraggableFrame"
+frameA.Size = UDim2.new(0, 400, 0, 180)
+frameA.Position = UDim2.new(0, 250, 0, 50)
+frameA.BackgroundColor3 = Color3.new(0, 0, 0)
+frameA.BackgroundTransparency = 0.2
+frameA.Active = true
+frameA.Draggable = true
+frameA.Parent = guiA
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = frameA
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 0, 0)
+Stroke.Thickness = 1.6
+Stroke.Parent = frameA
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 142, 0, 22)
+titleLabel.Position = UDim2.new(0.5, -75, 0, 10)
+titleLabel.Text = "Horse-Raid"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Color3.new(1, 0, 0)
+titleLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextScaled = true
+titleLabel.Parent = frameA
+
+local textboxB = Instance.new("TextBox")
+textboxB.Name = "PlayerNameTextbox"
+textboxB.Size = UDim2.new(0, 150, 0, 30)
+textboxB.Position = UDim2.new(0.5, -75, 0, 42)
+textboxB.PlaceholderText = "Set Horse Name" 
+textboxB.Text = "Set Horse Name"
+textboxB.Parent = frameA
+textboxB.BackgroundColor3 = Color3.new(1, 1, 1)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = textboxB
+
+-- Create the start button
+local startButton1 = Instance.new("TextButton")
+startButton1.Name = "startButton1"
+startButton1.Size = UDim2.new(0, 100, 0, 30)
+startButton1.Position = UDim2.new(0.5, -50, 0, 80)
+startButton1.Text = "Change Name"
+startButton1.TextColor3 = Color3.new(1, 0, 0)
+startButton1.Parent = frameA
+startButton1.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton1
+
+local startButton2 = Instance.new("TextButton")
+startButton2.Name = "startButton2"
+startButton2.Size = UDim2.new(0, 100, 0, 30)
+startButton2.Position = UDim2.new(0.2, -50, 0, 80)
+startButton2.Text = "Remove Raid Horse"
+startButton2.TextColor3 = Color3.new(1, 0, 0)
+startButton2.Parent = frameA
+startButton2.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton2
+
+local function startTeleportation2()
+
+guiA:Destroy()
+
+i = 1
+repeat
+
+  local args = {
+    [1] = "DeleteAllVehicles"
+}
+
+game:GetService("ReplicatedStorage").RE["1Ca1r"]:FireServer(unpack(args))
+
+  wait()
+  i = i + 1
+until i > 16
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "All Raid Horses Has Been Removed!",
+            Duration = 5
+        })  
+
+end
+
+startButton2.MouseButton1Click:Connect(startTeleportation2)
+
+
+local startButton3 = Instance.new("TextButton")
+startButton3.Name = "startButton3"
+startButton3.Size = UDim2.new(0, 100, 0, 30)
+startButton3.Position = UDim2.new(0.2, -50, 0, 120)
+startButton3.Text = "Horse Spin"
+startButton3.TextColor3 = Color3.new(1, 0, 0)
+startButton3.Parent = frameA
+startButton3.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton3
+
+local function startTeleportation3()
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "Get Near To The Horse To Make Horse Spinning ",
+            Duration = 5
+        })
+
+local Name = game.Players.LocalPlayer.Name
+local vehicle = workspace.Vehicles:FindFirstChild("RaidHorse")
+
+if vehicle then
+    workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+    workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+   
+end
+
+--Spin Horse
+
+local Name = game.Players.LocalPlayer.Name
+ 
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"       
+  
+  wait(0.1)
+  
+  local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"  
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 20, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.workspace.Vehicles[Name .. "Horse"].Seat
+
+game.workspace.Vehicles[Name .. "Horse"].Name = "SpinHorse"            
+
+wait(0.1)
+
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["SpinHorse"].Name = Name .. "Horse"
+
+
+end
+
+startButton3.MouseButton1Click:Connect(startTeleportation3)
+
+local startButton4 = Instance.new("TextButton")
+startButton4.Name = "startButton4"
+startButton4.Size = UDim2.new(0, 100, 0, 30)
+startButton4.Position = UDim2.new(0.8, -50, 0, 80)
+startButton4.Text = "Stop Following"
+startButton4.TextColor3 = Color3.new(1, 0, 0)
+startButton4.Parent = frameA
+startButton4.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton4
+
+local function startTeleportation4()
+game.Players.LocalPlayer.Character.Humanoid.Health = 1
+    wait(1)
+    game.Players.LocalPlayer.Character.Humanoid.Health = 100
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "Horse Raid Has Stopped Following The Owner",
+            Duration = 5
+        })
+        
+local Name = game.Players.LocalPlayer.Name
+
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+workspace.Vehicles["RaidHorse"].Name = Name .. "Horse"
+
+
+end
+
+startButton4.MouseButton1Click:Connect(startTeleportation4)
+
+local startButton5 = Instance.new("TextButton")
+startButton5.Name = "startButton5"
+startButton5.Size = UDim2.new(0, 100, 0, 30)
+startButton5.Position = UDim2.new(0.8, -50, 0, 120)
+startButton5.Text = "Stop Spinning"
+startButton5.TextColor3 = Color3.new(1, 0, 0)
+startButton5.Parent = frameA
+startButton5.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = startButton5
+
+local function startTeleportation5()
+--Stop Spin Horse
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "Horse Spin Has Been Stopped",
+            Duration = 5
+        })
+
+
+local Name = game.Players.LocalPlayer.Name
+
+game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+wait(0.1)
+ game.workspace.Vehicles[Name .. "Horse"].Seat.BodyAngularVelocity:Destroy()
+game.workspace.Vehicles[Name .. "Horse"].Name = "NoSpinHorse" 
+
+ wait(0.1)
+
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+workspace.Vehicles["NoSpinHorse"].Name = Name .. "Horse"
+
+
+end
+
+startButton5.MouseButton1Click:Connect(startTeleportation5)
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 0, 120)
+Button.Text = "Spam Skin"
+Button.TextColor3 = Color3.new(1, 0, 0)
+Button.Parent = frameA
+Button.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = Button
+
+local closeButton2 = Instance.new("TextButton")
+closeButton2.Name = "closeButton2"
+closeButton2.Size = UDim2.new(0, 40, 0, 20)
+closeButton2.Position = UDim2.new(0.7, 58, 0, 5)
+closeButton2.Text = "Back"
+closeButton2.Parent = frameA
+closeButton2.BackgroundColor3 = Color3.new(1, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = closeButton2
+
+local function closeGUI1()
+    guiA:Destroy()
+    frame.Visible = true
+    end
+    
+closeButton2.MouseButton1Click:Connect(closeGUI1)
+
+local NextButton = Instance.new("TextButton")
+NextButton.Name = "NextButton"
+NextButton.Size = UDim2.new(0, 40, 0, 20)
+NextButton.Position = UDim2.new(0.7, 58, 0, 155)
+NextButton.Text = "Next"
+NextButton.Parent = frameA
+NextButton.BackgroundColor3 = Color3.new(1, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = NextButton
+
+local function nextGUI()
+    
+    frameA.Visible = false --chnage to next page frame
+    
+     --Second Page Horse Raid Setting 
+ 
+ 
+ 
+local guiB = Instance.new("ScreenGui")
+guiB.Name = "TeleportGUI"
+guiB.ResetOnSpawn = true
+guiB.Parent = game.Players.LocalPlayer.PlayerGui
+
+local frameB = Instance.new("Frame")
+frameB.Name = "DraggableFrame"
+frameB.Size = UDim2.new(0, 400, 0, 180)
+frameB.Position = UDim2.new(0, 250, 0, 50)
+frameB.BackgroundColor3 = Color3.new(0, 0, 0)
+frameB.BackgroundTransparency = 0.2
+frameB.Active = true
+frameB.Draggable = true
+frameB.Parent = guiB
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = frameB
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 0, 0)
+Stroke.Thickness = 1.6
+Stroke.Parent = frameB
+
+
+local NextButton2 = Instance.new("TextButton")
+NextButton2.Name = "NextButton2"
+NextButton2.Size = UDim2.new(0, 40, 0, 20)
+NextButton2.Position = UDim2.new(0.7, 58, 0, 5)
+NextButton2.Text = "Back"
+NextButton2.Parent = frameB
+NextButton2.BackgroundColor3 = Color3.new(1, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = NextButton2
+
+local function closeGUI1()
+    guiB:Destroy()
+    frameA.Visible = true
+    end
+    
+NextButton2.MouseButton1Click:Connect(closeGUI1)
+
+local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Size = UDim2.new(0, 100, 0, 30)
+Button.Position = UDim2.new(0.5, -50, 0, 120)
+Button.Text = "Soon"
+Button.TextColor3 = Color3.new(1, 0, 0)
+Button.Parent = frameB
+Button.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = Button
+
+
+local function ButtonB()
+
+end
+Button.MouseButton1Click:Connect(ButtonB)
+
+
+local ButtonC = Instance.new("TextButton")
+ButtonC.Name = "ButtonC"
+ButtonC.Size = UDim2.new(0, 100, 0, 30)
+ButtonC.Position = UDim2.new(0.2, -50, 0, 120)
+ButtonC.Text = "Soon"
+ButtonC.TextColor3 = Color3.new(1, 0, 0)
+ButtonC.Parent = frameB
+ButtonC.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = ButtonC
+
+
+local function ButtonCC()
+
+end
+ButtonC.MouseButton1Click:Connect(ButtonCC)
+
+
+local ButtonD = Instance.new("TextButton")
+ButtonD.Name = "ButtonD"
+ButtonD.Size = UDim2.new(0, 100, 0, 30)
+ButtonD.Position = UDim2.new(0.2, -50, 0, 80)
+ButtonD.Text = "Soon"
+ButtonD.TextColor3 = Color3.new(1, 0, 0)
+ButtonD.Parent = frameB
+ButtonD.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = ButtonD
+
+
+local function ButtonDD()
+
+end
+ButtonD.MouseButton1Click:Connect(ButtonDD)
+
+local ButtonE = Instance.new("TextButton")
+ButtonE.Name = "ButtonE"
+ButtonE.Size = UDim2.new(0, 100, 0, 30)
+ButtonE.Position = UDim2.new(0.5, -50, 0, 80)
+ButtonE.Text = "Soon"
+ButtonE.TextColor3 = Color3.new(1, 0, 0)
+ButtonE.Parent = frameB
+ButtonE.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = ButtonE
+
+
+local function ButtonEE()
+
+end
+ButtonE.MouseButton1Click:Connect(ButtonEE)
+
+
+local ButtonF = Instance.new("TextButton")
+ButtonF.Name = "ButtonF"
+ButtonF.Size = UDim2.new(0, 100, 0, 30)
+ButtonF.Position = UDim2.new(0.8, -50, 0, 120)
+ButtonF.Text = "Soon"
+ButtonF.TextColor3 = Color3.new(1, 0, 0)
+ButtonF.Parent = frameB
+ButtonF.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = ButtonF
+
+
+local function ButtonFF()
+
+end
+ButtonF.MouseButton1Click:Connect(ButtonFF)
+
+local ButtonG = Instance.new("TextButton")
+ButtonG.Name = "ButtonG"
+ButtonG.Size = UDim2.new(0, 100, 0, 30)
+ButtonG.Position = UDim2.new(0.8, -50, 0, 80)
+ButtonG.Text = "Soon"
+ButtonG.TextColor3 = Color3.new(1, 0, 0)
+ButtonG.Parent = frameB
+ButtonG.BackgroundColor3 = Color3.new(0, 0, 0)
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = ButtonG
+
+
+local function ButtonGG()
+
+end
+ButtonG.MouseButton1Click:Connect(ButtonGG)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    end
+    
+NextButton.MouseButton1Click:Connect(nextGUI)
+
+
+
+
+
+local function ButtonA()
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "Spamming All Horses Skin...",
+            Duration = 5
+        })
+        
+
+while wait(1) do
+local args = {
+    [1] = "BlackHorseFree"
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+wait(1)
+local args = {
+    [1] = "BrownHorseFree"
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+end
+
+end
+
+
+
+
+
+
+-- Function to start teleportation
+local function startTeleportation1()
+guiA:Destroy()
+frame.Visible = true
+local args = {
+    [1] = "HorseName",
+    [2] = textboxB.text
+}
+
+game:GetService("ReplicatedStorage").RE["1Hors1eRemot1e"]:FireServer(unpack(args))
+
+    
+    end
+    
+    
+    startButton1.MouseButton1Click:Connect(startTeleportation1)
+Button.MouseButton1Click:Connect(ButtonA)
+
+
+
+end
+
+
+
+
+
+
+
+
+
+-- Function to start teleportation
+local function startTeleportation()
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "HORSE-RAID",
+            Text = "Press Follow Again If You Want Another Horse Start Following",
+            Duration = 5
+        })
+
+local Name = game.Players.LocalPlayer.Name
+local playerName = textboxA.Text
+local player = game.Players:FindFirstChild(playerName)
+
+local vehicle = workspace.Vehicles[Name .. "Horse"]
+local humanoid = vehicle.Humanoid
+
+vehicle.Name = "RaidHorse"
+
+local player1 = game.Players.LocalPlayer
+local character1 = player1.Character.Humanoid
+
+while true do
+humanoid.WalkToPoint = player.Character.HumanoidRootPart.Position
+if character1.Health == 1 then
+break
+end
+wait(0.8)
+end
+
+
+end
+
+
+local function closeGUI()
+    gui:Destroy()
+    game.Players.LocalPlayer.Character.Humanoid.Health = 1
+    wait(1)
+    game.Players.LocalPlayer.Character.Humanoid.Health = 100
+    end
+    
+    
+    startButton1.MouseButton1Click:Connect(startTeleportation)
+closeButton1.MouseButton1Click:Connect(closeGUI)
+Button.MouseButton1Click:Connect(Button1)
+
+end
+
+local function onCloseButtonClick()
+    gui:Destroy()
+end
+
+-- Connect the onStartButtonClick function to the "Start" button's Click event
+startButton.MouseButton1Click:Connect(onStartButtonClick)
+
+-- Connect the onCloseButtonClick function to the close button's Click event
+closeButton.MouseButton1Click:Connect(onCloseButtonClick)
+
+
+end)
+
+
+local Button15 = Instance.new("TextButton")
+Button15.Name = "Button15"
+Button15.Text = "Ride Pig"
+Button15.BackgroundColor3 = Color3.new(1,1,1)
+Button15.Position = UDim2.new(0, 260, 0, 160 + 0*45) -- Adjust the position based on the number of Button9s
+Button15.Size = UDim2.new(0, 100, 0, 27)
+Button15.Parent = frame
+
+Button15.MouseButton1Click:Connect(function()
+gui:Destroy()
+
+--Brookhaven Ride Pig
+--By M1zz
+
+local player = game.Players.LocalPlayer
+
+local args = {
+    [1] = "wear",
+    [2] = 18591305075
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
+game.Players.LocalPlayer.Character.Humanoid.Sit = true
+wait(1)
+game.Players.LocalPlayer.Character.Animate.Parent = game.Chat
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+wait(0.1)
+game.Players.LocalPlayer.Character.Humanoid.Jump = true
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 0.741558, 0.812742)
+button.Text = "Dismount"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+gui:Destroy()
+local args = {
+    [1] = "wear",
+    [2] = 18591305075
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+game.Players.LocalPlayer.Character.Humanoid.Health = 20
+wait(0.8)
+game.Players.LocalPlayer.Character.Humanoid.Health = 100
+end
+button.MouseButton1Click:Connect(onButtonClicked)
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 60
+if player.Character.Humanoid.Health == 20 then
+game.Chat.Animate.Parent = game.Players.LocalPlayer.Character
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+break
+end
+end
+
+end)
+
+
+local Button16 = Instance.new("TextButton")
+Button16.Name = "Button16"
+Button16.Text = "SpiderBow"
+Button16.BackgroundColor3 = Color3.new(1,1,1)
+Button16.Position = UDim2.new(0, 260, 0, 200 + 0*45) -- Adjust the position based on the number of Button9s
+Button16.Size = UDim2.new(0, 100, 0, 27)
+Button16.Parent = frame
+
+Button16.MouseButton1Click:Connect(function()
+gui:Destroy()
+
+--Brookhaven SpiderBow 
+--By M1zz
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "SpiderBow By M1zz",
+            Text = "Shoot Anywhere",
+            Duration = 5
+        })
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Bow"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+
+while wait() do
+
+if workspace:FindFirstChild("Arrow") and game.Players.LocalPlayer.Character:FindFirstChild("Bow") then
+
+workspace.Arrow.Name = "ArrowA"
+
+local bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.MaxForce = Vector3.new(9999, 9999, 9999) -- Adjust the multiplier for stronger magnet effect
+        bodyPosition.D = 500 -- Adjust the damping value for smoother movement
+        bodyPosition.Position = workspace.ArrowA.Position
+        bodyPosition.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+  
+  wait(1)
+  game.Players.LocalPlayer.Character.HumanoidRootPart.BodyPosition:Destroy()
+  workspace.ArrowA:Destroy()
+end
+
+--Reset To Stop
+if game.Players.LocalPlayer.Character.Humanoid.Health == 0 then
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+ break
+ end
+ 
+end
+
+end)
+
+
+local Button17 = Instance.new("TextButton")
+Button17.Name = "Button17"
+Button17.Text = "FlingV2"
+Button17.BackgroundColor3 = Color3.new(1,1,1)
+Button17.Position = UDim2.new(0, 260, 0, 240 + 0*45) -- Adjust the position based on the number of Button9s
+Button17.Size = UDim2.new(0, 100, 0, 27)
+Button17.Parent = frame
+
+Button17.MouseButton1Click:Connect(function()
+gui:Destroy()
+
+--Brookhaven FlingV2
+--By M1zz
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "AcceptedToolToServer",
+    [2] = "Couch",
+    [3] = game:GetService("Players").LocalPlayer
+}
+
+game:GetService("ReplicatedStorage").RE["1Playe1rTrigge1rEven1t"]:FireServer(unpack(args))
+wait(0.8)
+game.Players.LocalPlayer.Character.Couch.Parent = game.Players.LocalPlayer.Backpack
+
+game.Players.LocalPlayer.Backpack.Couch.LocalTool:Destroy()
+game.Players.LocalPlayer.Backpack.Couch.Handle.CanCollide = false
+game.Players.LocalPlayer.Backpack.Couch.GripRight = Vector3.new(1, 0, 0)
+wait(0.1)
+game.Players.LocalPlayer.Backpack.Couch.GripPos = Vector3.new(0.344791, -5, 0.348648)
+game.Players.LocalPlayer.Backpack.Couch.GripForward = Vector3.new(0, 0.999939, -0.0110616)
+game.Players.LocalPlayer.Backpack.Couch.Parent = game.Players.LocalPlayer.Character
+
+
+--FE Spin Character or Any unanchored part
+ 
+local Spin = Instance.new("BodyAngularVelocity")
+        Spin.AngularVelocity = Vector3.new(0, 100, 0) -- Change the velocity as per your requirement. Change it to this ( 0, 10000, 0) to make it stronger 
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.P = 0
+        Spin.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+  
+  
+    local stopTool = Instance.new("Tool")
+    stopTool.Name = "Stop Fling"
+    stopTool.Parent = game.Players.LocalPlayer.Backpack
+    
+    
+    
+while wait() do
+     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 70
+     game.Players.LocalPlayer.Character.UpperTorso.CanCollide = false
+game.Players.LocalPlayer.Character.LowerTorso.CanCollide = false
+game.Players.LocalPlayer.Character.HumanoidRootPart.CanCollide = false
+if game.Players.LocalPlayer.Character.Humanoid.Health == 30 then 
+wait(0.1)
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character.Humanoid.Health = 100
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+game.Players.LocalPlayer.Character.UpperTorso.CanCollide = true
+game.Players.LocalPlayer.Character.LowerTorso.CanCollide = true
+game.Players.LocalPlayer.Character.HumanoidRootPart.CanCollide = true
+break
+end
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Stop Fling") then
+    game.Players.LocalPlayer.Character.Humanoid.Health = 30
+    game.Players.LocalPlayer.Character["Stop Fling"]:Destroy()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.BodyAngularVelocity:Destroy()
+    
+    end
+end
+
+
+end)
+
+
+--SECOND TROLL PAGE
+
+local nextButton = Instance.new("TextButton")
+nextButton.Name = "NextButton"
+nextButton.Text = "Next"
+nextButton.BackgroundColor3 = Color3.new(1, 1, 1)
+nextButton.Position = UDim2.new(1, -43, 0, 276) 
+nextButton.Size = UDim2.new(0, 40, 0, 20)
+nextButton.Parent = frame
+
+
+local function nextGUI()
+    frame.Visible = false
+    
+  local gui2 = Instance.new("ScreenGui")
+gui2.Name = "Trollgui2"
+gui2.ResetOnSpawn = false
+gui2.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a draggable frame2 to hold the buttons
+local frame2 = Instance.new("Frame")
+frame2.Name = "Draggableframe2"
+frame2.BackgroundColor3 = Color3.new(0, 0, 0)
+frame2.BorderColor3 = Color3.new(0, 0, 0) -- Set the outline color to black
+frame2.Position = UDim2.new(0, 150, 0, 10)
+frame2.Size = UDim2.new(0, 400, 0, 300) -- Increase the size to 400x400 pixels
+frame2.Active = true
+frame2.Draggable = true
+frame2.Parent = gui2
+frame2.BackgroundTransparency = 0.1
+
+
+
+	local uiStroke = Instance.new("UIStroke")
+
+    uiStroke.Color = Color3.new(1, 1, 1)
+
+    uiStroke.Thickness = 2
+
+    uiStroke.Parent = frame2
+
+-- Create the title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Text = "Troll [Page 2]"
+titleLabel.Font = Enum.Font.Cartoon
+titleLabel.TextSize = 34
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Position = UDim2.new(0, 150, 0, 1)
+titleLabel.Size = UDim2.new(0, 100, 0, 30)
+titleLabel.BackgroundTransparency = 1 -- Set the background transparency to 1 (fully transparent)
+titleLabel.Parent = frame2
+
+   -- Create the close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "Back"
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)
+closeButton.Position = UDim2.new(1, -43, 0, 3)
+closeButton.Size = UDim2.new(0, 40, 0, 20)
+closeButton.Parent = frame2
+
+-- Function to close the GUI
+local function closeGUI()
+    gui2:Destroy()
+    frame.Visible = true
+end
+closeButton.MouseButton1Click:Connect(closeGUI)
+
+
+ local Button = Instance.new("TextButton")
+Button.Name = "Button"
+Button.Text = "Be A Baby"
+Button.BackgroundColor3 = Color3.new(1,1,1)
+Button.Position = UDim2.new(0, 20, 0, 40 + 0*45) -- Adjust the position based on the number of buttons
+Button.Size = UDim2.new(0, 100, 0, 27)
+Button.Parent = frame2
+
+Button.MouseButton1Click:Connect(function()
+
+gui2:Destroy()
+
+--Brookhaven Be A Baby
+--By M1zz
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Be A Baby",
+            Text = "By M1zz",
+            Duration = 5
+        })
+        
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local ChangeTool = Instance.new("Tool")
+    ChangeTool.Name = "Baby Boy"
+    ChangeTool.Parent = game.Players.LocalPlayer.Backpack
+
+local ChangeTool1 = Instance.new("Tool")
+    ChangeTool1.Name = "Baby Girl"
+    ChangeTool1.Parent = game.Players.LocalPlayer.Backpack
+    
+    local ChangeTool2 = Instance.new("Tool")
+    ChangeTool2.Name = "Stop"
+    ChangeTool2.Parent = game.Players.LocalPlayer.Backpack
+    
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
+
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 0.99
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+wait(0.8)
+game.Players.LocalPlayer.Character.HumanoidRootPart.Size = Vector3.new(2, 5, 2)
+
+
+local args = {
+    [1] = "CharacterFollowSpawnPlayer",
+    [2] = "BabyBoy"
+}
+
+game:GetService("ReplicatedStorage").RE["1Bab1yFollo1w"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+
+while wait() do
+if game.Players.LocalPlayer.Character:FindFirstChild("Baby Boy") then
+wait(0.1)
+local args = {
+    [1] = "CharacterFollowSpawnPlayer",
+    [2] = "BabyBoy"
+}
+
+game:GetService("ReplicatedStorage").RE["1Bab1yFollo1w"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character["Baby Boy"].Parent = game.Players.LocalPlayer.Backpack
+end
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Baby Girl") then
+wait(0.1)
+local args = {
+    [1] = "CharacterFollowSpawnPlayer",
+    [2] = "BabyGirl"
+}
+
+game:GetService("ReplicatedStorage").RE["1Bab1yFollo1w"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character["Baby Girl"].Parent = game.Players.LocalPlayer.Backpack
+end
+
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Stop") then
+wait(0.1)
+game.Players.LocalPlayer.Character["Stop"].Parent = game.Players.LocalPlayer.Backpack
+local args = {
+    [1] = "DeleteFollowCharacter"
+}
+
+game:GetService("ReplicatedStorage").RE["1Bab1yFollo1w"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+game.Players.LocalPlayer.Backpack["Baby Boy"]:Destroy()
+game.Players.LocalPlayer.Backpack["Baby Girl"]:Destroy()
+game.Players.LocalPlayer.Backpack["Stop"]:Destroy()
+end
+end
+  
+end)  
+ 
+local Button1 = Instance.new("TextButton")
+Button1.Name = "Button1"
+Button1.Text = "Ride Wolf"
+Button1.BackgroundColor3 = Color3.new(1,1,1)
+Button1.Position = UDim2.new(0, 20, 0, 80 + 0*45) -- Adjust the position based on the number of Button1s
+Button1.Size = UDim2.new(0, 100, 0, 27)
+Button1.Parent = frame2
+
+Button1.MouseButton1Click:Connect(function()
+gui2:Destroy()
+--Brookhaven Ride Wolf
+--By M1zz
+
+local player = game.Players.LocalPlayer
+
+local args = {
+    [1] = "wear",
+    [2] = 18735187832
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
+game.Players.LocalPlayer.Character.Humanoid.Sit = true
+wait(1)
+game.Players.LocalPlayer.Character.Animate.Parent = game.Chat
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+wait(0.1)
+game.Players.LocalPlayer.Character.Humanoid.Jump = true
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Dismount"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+gui:Destroy()
+local args = {
+    [1] = "wear",
+    [2] = 18735187832
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+game.Players.LocalPlayer.Character.Humanoid.Health = 20
+wait(0.8)
+game.Players.LocalPlayer.Character.Humanoid.Health = 100
+end
+button.MouseButton1Click:Connect(onButtonClicked)
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+if player.Character.Humanoid.Health == 20 then
+game.Chat.Animate.Parent = game.Players.LocalPlayer.Character
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+break
+end
+end
+
+end)
+
+local Button2 = Instance.new("TextButton")
+Button2.Name = "Button2"
+Button2.Text = "Elytra"
+Button2.BackgroundColor3 = Color3.new(1,1,1)
+Button2.Position = UDim2.new(0, 20, 0, 120 + 0*45) -- Adjust the position based on the number of Button2s
+Button2.Size = UDim2.new(0, 100, 0, 27)
+Button2.Parent = frame2
+
+Button2.MouseButton1Click:Connect(function()
+  gui2:Destroy() 
+   --Brookhaven Elytra
+--By M1zz
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Elytra ( Press Jump )",
+            Text = "By M1zz",
+            Duration = 5
+        })
+        
+
+
+
+local args = {
+    [1] = "wear",
+    [2] = 17257597827
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+game.Players.LocalPlayer.Character.Animate.jump.JumpAnim.AnimationId = "rbxassetid://10921294559"
+game.Players.LocalPlayer.Character.Animate.fall.FallAnim.AnimationId = "rbxassetid://10921324408"
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local ElytraTool = Instance.new("Tool")
+    ElytraTool.Name = "Remove Elytra"
+    ElytraTool.Parent = game.Players.LocalPlayer.Backpack
+    
+
+
+while wait() do
+if game.Players.LocalPlayer.Character.Humanoid.Jump == true then
+wait(0.1)
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = 100
+workspace.Gravity = 10    
+
+local args = {
+    [1] = "wear",
+    [2] = 17257597827
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "wear",
+    [2] = 17257623391
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+wait(6)
+local args = {
+    [1] = "wear",
+    [2] = 17257623391
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+   
+wait(0.1)
+
+local args = {
+    [1] = "wear",
+    [2] = 17257597827
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))     
+        
+      workspace.Gravity = 196.2
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+    
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Avoid Get Kicked",
+            Text = "Please Wait For 12 Second To Use Again Or Remove Elytra",
+            Duration = 12
+        })
+wait(13)
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Your Elytra Was Ready To Use",
+            Text = "Press Jump To Use",
+            Duration = 1
+        })
+
+end
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Remove Elytra") then
+game.Players.LocalPlayer.Character["Remove Elytra"].Parent = game.Players.LocalPlayer.Backpack
+wait(0.1)
+game.Players.LocalPlayer.Backpack["Remove Elytra"]:Destroy()
+wait(0.8)
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 2510236649
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 2510233257
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.6)
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+break
+end
+
+end
+
+   end)
+ 
+local Button3 = Instance.new("TextButton")
+Button3.Name = "Button3"
+Button3.Text = "Gravity Coil"
+Button3.BackgroundColor3 = Color3.new(1,1,1)
+Button3.Position = UDim2.new(0, 20, 0, 160 + 0*45) -- Adjust the position based on the number of Button3s
+Button3.Size = UDim2.new(0, 100, 0, 27)
+Button3.Parent = frame2
+
+Button3.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Fe Gravity Coil 
+--By M1zz
+
+
+local ChangeTool = Instance.new("Tool")
+    ChangeTool.Name = "Gravity Coil"
+    ChangeTool.Parent = game.Players.LocalPlayer.Backpack
+    
+    local part = Instance.new("Part")
+part.Name = "Handle"
+part.Size = Vector3.new(0, 0, 0)
+part.Position = Vector3.new(0, 0, 0)
+part.Transparency = 1
+part.CanCollide = true
+part.Anchored = false
+part.Parent = game.Players.LocalPlayer.Backpack["Gravity Coil"]
+
+game.Players.LocalPlayer.Backpack["Gravity Coil"].Parent = game.Players.LocalPlayer.Character
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18498225545
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+while wait() do
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Gravity Coil") then
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18498225545
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+game.Workspace.Gravity = 196.2
+game.Players.LocalPlayer.Backpack["Gravity Coil"]:Destroy()
+break
+end
+
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Accessory (gravity coil right)") then
+game.workspace.Gravity = 30
+else
+game.Workspace.Gravity = 196.2
+end
+end
+
+
+
+
+end)
+
+
+local Button4 = Instance.new("TextButton")
+Button4.Name = "Button4"
+Button4.Text = "Speed Coil"
+Button4.BackgroundColor3 = Color3.new(1,1,1)
+Button4.Position = UDim2.new(0, 20, 0, 200 + 0*45) -- Adjust the position based on the number of Button4s
+Button4.Size = UDim2.new(0, 100, 0, 27)
+Button4.Parent = frame2
+
+Button4.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Fe Speed Coil 
+--By M1zz
+
+
+local ChangeTool = Instance.new("Tool")
+    ChangeTool.Name = "Speed Coil"
+    ChangeTool.Parent = game.Players.LocalPlayer.Backpack
+    
+    local part = Instance.new("Part")
+part.Name = "Handle"
+part.Size = Vector3.new(0, 0, 0)
+part.Position = Vector3.new(0, 0, 0)
+part.Transparency = 1
+part.CanCollide = true
+part.Anchored = false
+part.Parent = game.Players.LocalPlayer.Backpack["Speed Coil"]
+
+game.Players.LocalPlayer.Backpack["Speed Coil"].Parent = game.Players.LocalPlayer.Character
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18587348637
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 70
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Speed Coil") then
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18587348637
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+game.Players.LocalPlayer.Backpack["Speed Coil"]:Destroy()
+break
+end
+end
+
+
+ end)
+
+
+
+local Button5 = Instance.new("TextButton")
+Button5.Name = "Button5"
+Button5.Text = "Fusion Coil"
+Button5.BackgroundColor3 = Color3.new(1,1,1)
+Button5.Position = UDim2.new(0, 20, 0, 240 + 0*45) -- Adjust the position based on the number of Button5s
+Button5.Size = UDim2.new(0, 100, 0, 27)
+Button5.Parent = frame2
+
+Button5.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Fe Fusion Coil 
+--By M1zz
+
+
+local ChangeTool = Instance.new("Tool")
+    ChangeTool.Name = "Fusion Coil"
+    ChangeTool.Parent = game.Players.LocalPlayer.Backpack
+    
+    local part = Instance.new("Part")
+part.Name = "Handle"
+part.Size = Vector3.new(0, 0, 0)
+part.Position = Vector3.new(0, 0, 0)
+part.Transparency = 1
+part.CanCollide = true
+part.Anchored = false
+part.Parent = game.Players.LocalPlayer.Backpack["Fusion Coil"]
+
+game.Players.LocalPlayer.Backpack["Fusion Coil"].Parent = game.Players.LocalPlayer.Character
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18587610978
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = 90
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Fusion Coil") then
+wait()
+local args = {
+    [1] = "wear",
+    [2] = 18587610978
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+game.Players.LocalPlayer.Backpack["Fusion Coil"]:Destroy()
+break
+end
+end
+
+end)
+
+local Button6 = Instance.new("TextButton")
+Button6.Name = "Button6"
+Button6.Text = "Ride Sussy Cat"
+Button6.BackgroundColor3 = Color3.new(1,1,1)
+Button6.Position = UDim2.new(0, 140, 0, 40 + 0*45) -- Adjust the position based on the number of Button6s
+Button6.Size = UDim2.new(0, 100, 0, 27)
+Button6.Parent = frame2
+
+Button6.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Sussy Cat
+--By M1zz
+
+local player = game.Players.LocalPlayer
+
+local args = {
+    [1] = "wear",
+    [2] = 17715132073
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
+game.Players.LocalPlayer.Character.Humanoid.Sit = true
+wait(1)
+game.Players.LocalPlayer.Character.Animate.Parent = game.Chat
+game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+wait(0.1)
+game.Players.LocalPlayer.Character.Humanoid.Jump = true
+
+-- Create a ScreenGui to hold the GUI elements
+local gui = Instance.new("ScreenGui")
+gui.Name = "DraggableGUI"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 0.121365, 0.914967)
+button.Text = "Dismount"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+gui:Destroy()
+local args = {
+    [1] = "wear",
+    [2] = 17715132073
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+game.Players.LocalPlayer.Character.Humanoid.Health = 20
+wait(0.8)
+game.Players.LocalPlayer.Character.Humanoid.Health = 100
+end
+button.MouseButton1Click:Connect(onButtonClicked)
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 30
+if player.Character.Humanoid.Health == 20 then
+game.Chat.Animate.Parent = game.Players.LocalPlayer.Character
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+break
+end
+end
+
+end)
+
+
+
+local Button7 = Instance.new("TextButton")
+Button7.Name = "Button7"
+Button7.Text = "Jenny Mod"
+Button7.BackgroundColor3 = Color3.new(1,1,1)
+Button7.Position = UDim2.new(0, 140, 0, 80 + 0*45) -- Adjust the position based on the number of Button7s
+Button7.Size = UDim2.new(0, 100, 0, 27)
+Button7.Parent = frame2
+
+Button7.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Jenny Mod
+--By M1zz
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(1)
+local args = {
+    [1] = "CharacterChange",
+    [2] = {
+        [1] = 48474356,
+        [2] = 1,
+        [3] = 0,
+        [4] = 0,
+        [5] = 0,
+        [6] = 0
+    },
+    [3] = "GirlBlocky"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+wait(0.8)
+
+local args = {
+    [1] = "skintone",
+    [2] = "Light orange"
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(0.3)
+local args = {
+    [1] = "wear",
+    [2] = 18875993240
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "wear",
+    [2] = 18698389754
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.3)
+
+local args = {
+    [1] = "wear",
+    [2] = 16456275245
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.3)
+
+local args = {
+    [1] = "wear",
+    [2] = 16456277849
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 1018553897
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619512767
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+
+
+local ChangeTool = Instance.new("Tool")
+    ChangeTool.Name = "Reset"
+    ChangeTool.Parent = game.Players.LocalPlayer.Backpack
+
+local Tool = Instance.new("Tool")
+    Tool.Name = "Get In Please"
+    Tool.Parent = game.Players.LocalPlayer.Backpack
+
+local Tool1 = Instance.new("Tool")
+    Tool1.Name = "Bl*wjob"
+    Tool1.Parent = game.Players.LocalPlayer.Backpack
+    
+    
+    local Tool2 = Instance.new("Tool")
+    Tool2.Name = "Playing T*ts"
+    Tool2.Parent = game.Players.LocalPlayer.Backpack
+    
+    local Tool3 = Instance.new("Tool")
+    Tool3.Name = "Playing T*ts 2"
+    Tool3.Parent = game.Players.LocalPlayer.Backpack
+    
+    local Tool4 = Instance.new("Tool")
+    Tool4.Name = "M*sturbate"
+    Tool4.Parent = game.Players.LocalPlayer.Backpack
+    
+   
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Jenny Mod",
+            Text = "By M1zz",
+            Duration = 5
+        })
+
+ 
+    
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+if game.Players.LocalPlayer.Character:FindFirstChild("Get In Please") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://4896039779"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://4896039779"
+end
+
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Get In Please") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://10921054344"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://10921055107"
+break
+end
+end
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+if game.Players.LocalPlayer.Character:FindFirstChild("Bl*wjob") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://4896189979"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://4896189979"
+end
+
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Bl*wjob") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://10921054344"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://10921055107"
+break
+end
+end
+
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+if game.Players.LocalPlayer.Character:FindFirstChild("Playing T*ts") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://4896166156"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://4896166156"
+end
+
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Playing T*ts") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://10921054344"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://10921055107"
+break
+end
+end
+
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+if game.Players.LocalPlayer.Character:FindFirstChild("M*sturbate") then
+
+
+--Fe Play animation script
+--By M1zz
+
+   -- Insert your animation ID here
+local animationId = "2613540098"
+
+-- Get the humanoid of the character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variable to store the animation track
+local animationTrack
+
+-- Function to play the animation
+local function playAnimation()
+    -- Load the animation
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    
+    -- Play the animation
+    animationTrack = humanoid:LoadAnimation(animation)
+    animationTrack:Play()
+end
+
+-- Function to stop the animation
+local function stopAnimation()
+    if animationTrack then
+        animationTrack:Stop()
+    end
+end
+
+-- Call the playAnimation function to start the animation
+playAnimation()
+
+-- Call the stopAnimation function to stop the animation after a certain duration (e.g., 5 seconds)
+wait(0.2)
+stopAnimation()
+
+
+
+
+
+end
+
+if game.Players.LocalPlayer.Backpack:FindFirstChild("M*sturbate") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://10921054344"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://10921055107"
+break
+end
+end
+
+
+
+
+while wait() do
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 5
+if game.Players.LocalPlayer.Character:FindFirstChild("Playing T*ts 2") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://4896179621"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://4896179621"
+end
+
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Playing T*ts 2") then
+game.Players.LocalPlayer.Character.Animate.idle["Animation1"].AnimationId = "rbxassetid://10921054344"
+game.Players.LocalPlayer.Character.Animate.idle["Animation2"].AnimationId = "rbxassetid://10921055107"
+break
+end
+end
+
+
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Reset") then
+game.Players.LocalPlayer.Backpack["Get In Please"]:Destroy()
+game.Players.LocalPlayer.Backpack["Bl*wjob"]:Destroy()
+game.Players.LocalPlayer.Backpack["Playing T*ts"]:Destroy()
+game.Players.LocalPlayer.Backpack["Playing T*ts 2"]:Destroy()
+game.Players.LocalPlayer.Backpack["M*sturbate"]:Destroy()
+game.Players.LocalPlayer.Character.Reset:Destroy()
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+break
+end
+
+end
+
+
+end)
+ 
+ 
+ local Button8 = Instance.new("TextButton")
+Button8.Name = "Button8"
+Button8.Text = "Invisible Tool"
+Button8.BackgroundColor3 = Color3.new(1,1,1)
+Button8.Position = UDim2.new(0, 140, 0, 120 + 0*45) -- Adjust the position based on the number of Button8s
+Button8.Size = UDim2.new(0, 100, 0, 27)
+Button8.Parent = frame2
+
+Button8.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Invisible 
+--By M1zz
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+
+local Tool = Instance.new("Tool")
+    Tool.Name = "Invisible"
+    Tool.Parent = game.Players.LocalPlayer.Backpack
+
+local Tool1 = Instance.new("Tool")
+    Tool1.Name = "Visible"
+    Tool1.Parent = game.Players.LocalPlayer.Backpack
+    
+ 
+
+while wait() do
+if game.Players.LocalPlayer.Character:FindFirstChild("Invisible") then  
+game.Players.LocalPlayer.Character.Invisible.Parent = game.Players.LocalPlayer.Backpack 
+local args = {
+    [1] = "CharacterSizeDown",
+    [2] = 9
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+wait(0.3)
+game.Players.LocalPlayer.Character.HumanoidRootPart.Size = Vector3.new(2, 6, 2)
+game.Players.LocalPlayer.Character.HumanoidRootPart.Transparency = 0.8
+game.Players.LocalPlayer.Character.HumanoidRootPart.Material = Enum.Material.Rubber
+wait(0.8)
+game.Players.LocalPlayer.Character.UpperTorso.CanCollide = false
+game.Players.LocalPlayer.Character.LowerTorso.CanCollide = false
+end
+
+
+if game.Players.LocalPlayer.Character:FindFirstChild("Visible") then
+game.Players.LocalPlayer.Character.Visible.Parent = game.Players.LocalPlayer.Backpack 
+local args = {
+    [1] = "CharacterSizeUp",
+    [2] = 1
+}
+
+game:GetService("ReplicatedStorage").RE["1Clothe1s"]:FireServer(unpack(args))
+wait(0.3)
+game.Players.LocalPlayer.Character.HumanoidRootPart.Transparency = 1
+game.Players.LocalPlayer.Character.UpperTorso.CanCollide = true
+game.Players.LocalPlayer.Character.LowerTorso.CanCollide = true
+
+end
+end
+
+ end)
+
+
+local Button9 = Instance.new("TextButton")
+Button9.Name = "Button9"
+Button9.Text = "Dr*gs"
+Button9.BackgroundColor3 = Color3.new(1,1,1)
+Button9.Position = UDim2.new(0, 140, 0, 160 + 0*45) -- Adjust the position based on the number of Button9s
+Button9.Size = UDim2.new(0, 100, 0, 27)
+Button9.Parent = frame2
+
+Button9.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Dr*g
+--By M1zz
+
+
+
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(0.1)
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Medicine"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+
+game.Players.LocalPlayer.Backpack.Medicine.LocalTool:Destroy()
+wait(0.8)
+
+game.Players.LocalPlayer.Backpack.Medicine.Parent = game.Players.LocalPlayer.Character
+
+local args = {
+    [1] = "wear",
+    [2] = 6093227972
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.8)
+
+--Fe Play animation script
+--By M1zz
+
+   -- Insert your animation ID here
+local animationId = "4896232037"
+
+-- Get the humanoid of the character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variable to store the animation track
+local animationTrack
+
+-- Function to play the animation
+local function playAnimation()
+    -- Load the animation
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    
+    -- Play the animation
+    animationTrack = humanoid:LoadAnimation(animation)
+    animationTrack:Play()
+end
+
+-- Function to stop the animation
+local function stopAnimation()
+    if animationTrack then
+        animationTrack:Stop()
+    end
+end
+
+-- Call the playAnimation function to start the animation
+playAnimation()
+
+-- Call the stopAnimation function to stop the animation after a certain duration (e.g., 5 seconds)
+wait(2)
+stopAnimation()
+
+
+
+wait(1)
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "\240\159\165\180"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "wear",
+    [2] = 6093226892
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619535834
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(0.8)
+
+local args = {
+    [1] = "wearWalkStyle",
+    [2] = 619537468
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+wait(0.8)
+
+game.Workspace.Camera.FieldOfView = 120
+game.Workspace.Camera.CameraType = Enum.CameraType.Follow
+
+i = 1
+repeat
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 4
+  game.Players.LocalPlayer.Character.Humanoid.Health = 20
+  game.Workspace.Camera.FieldOfView = 90
+  wait(0.1)
+  game.Players.LocalPlayer.Character.Humanoid.Health = 100
+  game.Workspace.Camera.FieldOfView = 50
+  wait()
+  i = i + 1
+until i > 100
+game.Workspace.Camera.CameraType = Enum.CameraType.Custom
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+game.Workspace.Camera.FieldOfView = 70
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "🤢"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "wear",
+    [2] = 6093231015
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+wait(0.1)
+local args = {
+    [1] = "RolePlayName",
+    [2] = "🤮"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+wait(1)
+
+
+
+
+
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "OCA"
+}
+
+game:GetService("ReplicatedStorage").RE["1Avata1rOrigina1l"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+end)
+
+
+local Button10 = Instance.new("TextButton")
+Button10.Name = "Button10"
+Button10.Text = "Vape"
+Button10.BackgroundColor3 = Color3.new(1,1,1)
+Button10.Position = UDim2.new(0, 140, 0, 200 + 0*45) -- Adjust the position based on the number of Button9s
+Button10.Size = UDim2.new(0, 100, 0, 27)
+Button10.Parent = frame2
+
+Button10.MouseButton1Click:Connect(function()
+gui2:Destroy()
+
+--Brookhaven Vape
+--By M1zz
+local args = {
+    [1] = "ClearAllTools"
+}
+
+game:GetService("ReplicatedStorage").RE["1Clea1rTool1s"]:FireServer(unpack(args))
+wait(0.8)
+
+game.StarterGui:SetCore("SendNotification", {
+            Title = "Your Vape Is Ready To Use",
+            Text = "",
+            Duration = 5
+        })
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Taser"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+wait(0.1)
+game.Players.LocalPlayer.Backpack.Taser.GripRight = Vector3.new(0.0121952, 0.993884, 0.109756)
+game.Players.LocalPlayer.Backpack.Taser.GripPos = Vector3.new(0, 0, 0)
+wait(0.8)
+
+while wait() do
+if game.Players.LocalPlayer.Character:FindFirstChild("Taser") then
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "VapeGui"
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the draggable area
+local draggableFrame = Instance.new("Frame")
+draggableFrame.Name = "DraggableFrame"
+draggableFrame.Size = UDim2.new(0, 200, 0, 100)
+draggableFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+draggableFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+draggableFrame.BackgroundTransparency = 0.5
+draggableFrame.Active = true
+draggableFrame.Draggable = true
+draggableFrame.Parent = gui
+
+-- Create a Button inside the draggable frame
+local button = Instance.new("TextButton")
+button.Name = "Button"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.5, -50, 0.5, -25)
+button.BackgroundColor3 = Color3.new(1, 1, 1)
+button.Text = "Vape"
+button.Parent = draggableFrame
+
+-- Function to handle button click event
+local function onButtonClicked()
+
+--Fe Play animation script
+--By M1zz
+
+   -- Insert your animation ID here
+local animationId = "4896232037"
+
+-- Get the humanoid of the character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variable to store the animation track
+local animationTrack
+
+-- Function to play the animation
+local function playAnimation()
+    -- Load the animation
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://" .. animationId
+    
+    -- Play the animation
+    animationTrack = humanoid:LoadAnimation(animation)
+    animationTrack:Play()
+end
+
+-- Function to stop the animation
+local function stopAnimation()
+    if animationTrack then
+        animationTrack:Stop()
+    end
+end
+
+-- Call the playAnimation function to start the animation
+playAnimation()
+
+-- Call the stopAnimation function to stop the animation after a certain duration (e.g., 5 seconds)
+local args = {
+    [1] = "PickingRPNameColor",
+    [2] = Color3.new(1, 0.0447735, 0)
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eColo1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "wear",
+    [2] = 6093230512
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = "\\/4P1NG*"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(3)
+stopAnimation()
+
+local args = {
+    [1] = "wear",
+    [2] = 12350593459
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+wait(0.1)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "😗 💨"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "😗  💨"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+wait(0.8)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151   \240\159\146\168"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+wait(0.8)
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = "\240\159\152\151    \240\159\146\168"
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+wait(0.8)
+
+local args = {
+    [1] = "RolePlayName",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+local args = {
+    [1] = "RolePlayBio",
+    [2] = ""
+}
+
+game:GetService("ReplicatedStorage").RE["1RPNam1eTex1t"]:FireServer(unpack(args))
+
+
+
+wait(0.1)
+
+local args = {
+    [1] = "wear",
+    [2] = 6093233760
+}
+
+game:GetService("ReplicatedStorage").RE["1Updat1eAvata1r"]:FireServer(unpack(args))
+
+
+end
+
+button.MouseButton1Click:Connect(onButtonClicked)
+
+
+break
+end
+end
+
+while wait() do
+if game.Players.LocalPlayer.Backpack:FindFirstChild("Taser") then
+
+local args = {
+    [1] = "PickingTools",
+    [2] = "Taser"
+}
+
+game:GetService("ReplicatedStorage").RE["1Too1l"]:InvokeServer(unpack(args))
+game.Players.LocalPlayer.PlayerGui.VapeGui:Destroy()
+break
+end
+end
+
+
+
+end)
+ 
+ 
+   
+end
+nextButton.MouseButton1Click:Connect(nextGUI)
+
+
+    end,
+    [14] = function()
+    frame.Visible = false
+        --Brookhaven Car Settings
+--By M1zz
+
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Name = "Frame"
+Frame.Size = UDim2.new(0, 400, 0, 220)
+Frame.Position = UDim2.new(0, 150, 0, 50)
+Frame.BackgroundColor3 = Color3.fromRGB(0.4, 0.4, 0.4)
+Frame.BackgroundTransparency = 0.2
+Frame.Active = true
+Frame.Draggable = true 
+Frame.Parent = gui
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.new(1, 1, 1)
+Stroke.Thickness = 2
+Stroke.Parent = Frame
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 5)
+UICorner.Parent = Frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 30, 0, 20)
+closeButton.Position = UDim2.new(0, 360, 0, 6)
+closeButton.TextSize = 10
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.TextColor3 = Color3.fromRGB(0,0,0)
+closeButton.Text = "X"
+closeButton.Parent = Frame
+
+local function onCloseButtonClick()
+    gui:Destroy()
+end
+closeButton.MouseButton1Click:Connect(onCloseButtonClick)
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Parent = Frame
+textLabel.Size = UDim2.new(0, 200, 0, 100)
+textLabel.Position = UDim2.new(0.5, -100, 0.5, -150)
+textLabel.Text = "Vehicle Settings"
+textLabel.TextSize = 24
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.BackgroundTransparency = 1
+textLabel.Font = Enum.Font.SourceSansBold
+
+local textBox = Instance.new("TextBox")
+textBox.Name = "TextBox"
+textBox.Text = "Enter Speed Number"
+textBox.PlaceholderText = "Enter Speed Number"
+textBox.Size = UDim2.new(0, 150, 0, 30)
+textBox.Position = UDim2.new(0, 30, 0, 50)
+textBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textBox.Parent = Frame
+
+local textBox1 = Instance.new("TextBox")
+textBox1.Name = "textBox1"
+textBox1.Text = "Enter Turbo Number"
+textBox1.PlaceholderText = "Enter Turbo Number"
+textBox1.Size = UDim2.new(0, 150, 0, 30)
+textBox1.Position = UDim2.new(0, 220, 0, 50)
+textBox1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textBox1.Parent = Frame
+
+local ButtonA = Instance.new("TextButton")
+ButtonA.Name = "ButtonA"
+ButtonA.Size = UDim2.new(0, 80, 0, 30)
+ButtonA.Position = UDim2.new(0, 60, 0, 90)
+ButtonA.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ButtonA.Text = "Change Speed"
+ButtonA.TextColor3 = Color3.fromRGB(0,0,0)
+ButtonA.Parent = Frame
+
+ButtonA.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local body = car:FindFirstChild("Body").VehicleSeat
+    
+        body.TopSpeed.Value = textBox.Text
+   
+   end)
+
+local ButtonB = Instance.new("TextButton")
+ButtonB.Name = "ButtonB"
+ButtonB.Size = UDim2.new(0, 80, 0, 30)
+ButtonB.Position = UDim2.new(0, 260, 0, 90)
+ButtonB.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ButtonB.Text = "Change Turbo"
+ButtonB.TextColor3 = Color3.fromRGB(0,0,0)
+ButtonB.Parent = Frame
+
+ButtonB.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local body = car:FindFirstChild("Body").VehicleSeat
+    
+        
+   body.Turbo.Value = textBox1.Text
+end)
+
+
+
+
+
+local Button1 = Instance.new("TextButton")
+Button1.Name = "Button1"
+Button1.Size = UDim2.new(0, 80, 0, 30)
+Button1.Position = UDim2.new(0, 30, 0, 130)
+Button1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Button1.Text = "Remove Tire1"
+Button1.TextColor3 = Color3.fromRGB(0,0,0)
+Button1.Parent = Frame
+
+Button1.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local car = car:FindFirstChild("Chassis").Platform.AttachmentFL
+    
+    car:Destroy()
+    
+        
+
+
+end)
+
+local Button2 = Instance.new("TextButton")
+Button2.Name = "Button2"
+Button2.Size = UDim2.new(0, 80, 0, 30)
+Button2.Position = UDim2.new(0, 30, 0, 170)
+Button2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Button2.Text = "Remove Tire3"
+Button2.TextColor3 = Color3.fromRGB(0,0,0)
+Button2.Parent = Frame
+
+Button2.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local car = car:FindFirstChild("Chassis").Platform.AttachmentBL
+    
+    car:Destroy()
+    
+        
+
+
+end)
+
+
+
+local Button3 = Instance.new("TextButton")
+Button3.Name = "Button3"
+Button3.Size = UDim2.new(0, 80, 0, 30)
+Button3.Position = UDim2.new(0, 120, 0, 130)
+Button3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Button3.Text = "Remove Tire2"
+Button3.TextColor3 = Color3.fromRGB(0,0,0)
+Button3.Parent = Frame
+
+Button3.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local car = car:FindFirstChild("Chassis").Platform.AttachmentFR
+    
+    car:Destroy()
+    
+        
+
+
+end)
+
+local Button4 = Instance.new("TextButton")
+Button4.Name = "Button4"
+Button4.Size = UDim2.new(0, 80, 0, 30)
+Button4.Position = UDim2.new(0, 120, 0, 170)
+Button4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Button4.Text = "Remove Tire4"
+Button4.TextColor3 = Color3.fromRGB(0,0,0)
+Button4.Parent = Frame
+
+Button4.MouseButton1Click:Connect(function()
+
+-- Find the player's car and delete its Body
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local car = car:FindFirstChild("Chassis").Platform.AttachmentBR
+    
+    car:Destroy()
+    
+      
+end)
+
+
+local ButtonC = Instance.new("TextButton")
+ButtonC.Name = "ButtonC"
+ButtonC.Size = UDim2.new(0, 100, 0, 30)
+ButtonC.Position = UDim2.new(0, 250, 0, 130)
+ButtonC.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ButtonC.Text = "Race Mode Speed"
+ButtonC.TextColor3 = Color3.fromRGB(0,0,0)
+ButtonC.Parent = Frame
+
+ButtonC.MouseButton1Click:Connect(function()
+
+local player = game.Players.LocalPlayer
+local car = workspace.Vehicles:FindFirstChild(player.Name.."Car")
+
+    local body = car:FindFirstChild("Body").VehicleSeat
+    
+        body.TopSpeed.Value = 99999999
+   body.Turbo.Value = 99
+
+end)
+
+
+
+
+    end,
+    
+    -- Add more button functions here...
+}
+
+local buttonNames = {
+    [1] = "Bright Phone ",
+    [2] = "Fire Hand ",
+    [3] = "Fling ",
+    [4] = "[Fixed] Kill",
+    [5] = "Lag Server",
+    [6] = "Play Soccer ",
+    [7] = "Roomate ",
+    [8] = "Music ID",
+    [9] = "Spam Basketball ",
+    [10] = "Lag ServerV2 ",
+    [11] = "AllTextBoard",
+    [12] = "Box FireX ",
+    [13] = "Troll ",
+    [14] = "Vehicle Settings",  
+    -- Add more button names here...
+}
+
+-- Adjust frame size and position for mobile screens
+local function adjustFrameForMobile()
+    local resolution = game:GetService("GuiService"):GetScreenResolution()
+    local aspectRatio = resolution.X / resolution.Y
+
+    if aspectRatio < 1 then
+        frame.Size = UDim2.new(0.8, 0, 0, 50 + 40 * 14) -- Adjust the width based on the screen resolution
+        frame.Position = UDim2.new(0.1, 0, 0.5, -200)
+    end
+end
+
+-- Call the adjustFrameForMobile function initially and when the screen size changes
+adjustFrameForMobile()
+game:GetService("GuiService").Changed:Connect(adjustFrameForMobile)
+
+for i = 1, 14 do
+    local button = Instance.new("TextButton")
+    button.Name = "Button" .. i
+    button.Size = UDim2.new(0, 200, 0, 30)
+    button.Position = UDim2.new(0.5, -100, 0, 40 * i)
+    button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    button.Text = buttonNames[i] or "Button " .. i
+    button.FontSize = Enum.FontSize.Size18
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = frame
+
+    button.MouseButton1Click:Connect(buttonFunctions[i] or function()
+        print("Button " .. i .. " clicked!")
+    end)
+end
+
+
+
+
+
+
+
+
+
+
+-- Create the open/close button
+local openButton = Instance.new("ImageButton")
+openButton.Image = "rbxassetid://14492716941"
+openButton.Size = UDim2.new(0, 50, 0, 50)
+openButton.Position = UDim2.new(0, 300, 0, 10)
+openButton.Draggable = true
+openButton.Active = true
+openButton.Parent = gui
+
+
+
+	local cornerUI = Instance.new("UICorner")
+
+cornerUI.CornerRadius = UDim.new(0, 5)
+
+cornerUI.Parent = openButton
+
+	
+	
+
+	local uiStroke = Instance.new("UIStroke")
+
+    uiStroke.Color = Color3.new(1, 0, 0)
+
+    uiStroke.Thickness = 2
+
+    uiStroke.Parent = openButton
+
+    
+
+-- Add function to the open/close button
+openButton.MouseButton1Click:Connect(function()
+    if frame.Visible then
+        frame.Visible = false
+    else
+        frame.Visible = true
+    end
+end)

@@ -1,0 +1,149 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local antiTrapEnabled = true
+local BARRIER_OFFSET = 3  
+local processedTraps = {}
+
+local function isTrapPlaced(trapModel)
+    local primaryPart = trapModel.PrimaryPart or trapModel:FindFirstChildWhichIsA("BasePart")
+    if primaryPart and primaryPart.Anchored then
+        return true
+    end
+    
+    for _, part in pairs(trapModel:GetDescendants()) do
+        if part:IsA("BasePart") and part.Anchored then
+            return true
+        end
+    end
+    
+    local parent = trapModel.Parent
+    if parent == Workspace then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local distance = (trapModel:GetPivot().Position - player.Character:GetPivot().Position).Magnitude
+                if distance < 10 then
+                    return false
+                end
+            end
+        end
+        return true
+    end
+    
+    return false
+end
+
+local function createTrapBarrier(trapModel)
+    if processedTraps[trapModel] then return end
+    
+    task.wait(0.5)
+    
+    if not isTrapPlaced(trapModel) then return end
+    
+    processedTraps[trapModel] = true
+    
+    local primaryPart = trapModel.PrimaryPart or trapModel:FindFirstChildWhichIsA("BasePart")
+    if not primaryPart then return end
+    
+    local cf, size = trapModel:GetBoundingBox()
+    
+    local barrier = Instance.new("Part")
+    barrier.Name = "TrapBarrier"
+    barrier.Size = size + Vector3.new(BARRIER_OFFSET * 2, size.Y, BARRIER_OFFSET * 2)
+    barrier.CFrame = cf
+    barrier.Anchored = true
+    barrier.CanCollide = true  
+    barrier.Transparency = 0.8  
+    barrier.Material = Enum.Material.ForceField
+    barrier.Color = Color3.fromRGB(0, 255, 0)
+    barrier.Parent = Workspace  
+    barrier.CanQuery = false
+    barrier.CanTouch = false
+    
+    local outline = Instance.new("SelectionBox")
+    outline.Adornee = barrier
+    outline.LineThickness = 0.1
+    outline.Color3 = Color3.fromRGB(0, 255, 0)
+    outline.SurfaceColor3 = Color3.fromRGB(0, 255, 0)
+    outline.SurfaceTransparency = 0.8
+    outline.Transparency = 0
+    outline.Parent = barrier
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = barrier
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+    highlight.FillTransparency = 0.9
+    highlight.OutlineTransparency = 0.3
+    highlight.Parent = barrier
+    
+    for _, part in pairs(trapModel:GetDescendants()) do
+        if part:IsA("BasePart") and part ~= barrier then
+            part.CanCollide = false
+            part.CanTouch = false
+            part.Transparency = 1  
+        end
+        if part:IsA("TouchTransmitter") then
+            part:Destroy()
+        end
+        if part:IsA("Script") or part:IsA("LocalScript") then
+            part:Destroy()
+        end
+    end
+    
+    trapModel.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            processedTraps[trapModel] = nil
+            if barrier and barrier.Parent then
+                barrier:Destroy()
+            end
+        end
+    end)
+end
+
+local function findTraps(parent)
+    for _, obj in pairs(parent:GetChildren()) do
+        if obj:IsA("Model") and (obj.Name == "Trap" or obj.Name:lower():find("trap")) then
+            if isTrapPlaced(obj) then
+                createTrapBarrier(obj)
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    task.wait(2)  
+    findTraps(Workspace)
+    
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and (obj.Name == "Trap" or obj.Name:lower():find("trap")) then
+            if isTrapPlaced(obj) then
+                createTrapBarrier(obj)
+            end
+        end
+    end
+end)
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if not antiTrapEnabled then return end
+    if obj:IsA("Model") and (obj.Name == "Trap" or obj.Name:lower():find("trap")) then
+        task.spawn(function()
+            task.wait(0.5)
+            if obj.Parent and isTrapPlaced(obj) then
+                createTrapBarrier(obj)
+            end
+        end)
+    end
+end)
+
+Workspace.ChildAdded:Connect(function(obj)
+    if not antiTrapEnabled then return end
+    if obj:IsA("Model") and (obj.Name == "Trap" or obj.Name:lower():find("trap")) then
+        task.spawn(function()
+            task.wait(0.5)
+            if obj.Parent and isTrapPlaced(obj) then
+                createTrapBarrier(obj)
+            end
+        end)
+    end
+end)

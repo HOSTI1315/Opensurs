@@ -1,0 +1,4422 @@
+if not LPH_OBFUSCATED then
+    getfenv().LPH_NO_VIRTUALIZE = function(f) return f end;
+end
+
+local gui = 
+{
+	blazedLoader = Instance.new("ScreenGui"),
+	Frame = Instance.new("Frame"),
+	UICorner = Instance.new("UICorner"),
+	TextLabel = Instance.new("TextLabel"),
+	TextLabel_1 = Instance.new("TextLabel"),
+	signin_load = Instance.new("TextButton"),
+	UICorner_1 = Instance.new("UICorner"),
+	UIStroke = Instance.new("UIStroke"),
+	TextLabel_2 = Instance.new("TextLabel"),
+	fps_checkbox = Instance.new("Frame"),
+	UICorner_2 = Instance.new("UICorner"),
+	UICorner_3 = Instance.new("UICorner"),
+	UIStroke_1 = Instance.new("UIStroke"),
+	ImageLabel = Instance.new("ImageLabel"),
+	fpscheckbox_button = Instance.new("TextButton"),
+	TextLabel_3 = Instance.new("TextLabel"),
+	UICorner_4 = Instance.new("UICorner"),
+	UIStroke_2 = Instance.new("UIStroke"),
+	UIStroke_3 = Instance.new("UIStroke"),
+}
+
+gui.blazedLoader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.blazedLoader.Name = "blazedLoader"
+gui.blazedLoader.Parent = game:GetService("CoreGui")
+
+gui.Frame.BorderSizePixel = 0
+gui.Frame.Size = UDim2.new(0, 396, 0, 249)
+gui.Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.Frame.Name = "Frame"
+gui.Frame.Position = UDim2.new(0.396226, 0, 0.362031, 0)
+gui.Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+gui.Frame.Parent = gui.blazedLoader
+
+gui.UICorner.Name = "UICorner"
+gui.UICorner.CornerRadius = UDim.new(0, 12)
+gui.UICorner.Parent = gui.Frame
+
+gui.TextLabel.BorderSizePixel = 0
+gui.TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+gui.TextLabel.FontFace = Font.new("rbxassetid://11702779517", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+gui.TextLabel.TextSize = 30
+gui.TextLabel.Position = UDim2.new(0.244949, 0, 0.11245, 0)
+gui.TextLabel.Size = UDim2.new(0, 147, 0, 50)
+gui.TextLabel.Name = "TextLabel"
+gui.TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+gui.TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.TextLabel.Text = "Blazed"
+gui.TextLabel.BackgroundTransparency = 1
+gui.TextLabel.Parent = gui.Frame
+
+gui.TextLabel_1.BorderSizePixel = 0
+gui.TextLabel_1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+gui.TextLabel_1.FontFace = Font.new("rbxassetid://11702779517", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+gui.TextLabel_1.TextSize = 20
+gui.TextLabel_1.Position = UDim2.new(0.479798, 0, 0.11245, 0)
+gui.TextLabel_1.Size = UDim2.new(0, 106, 0, 57)
+gui.TextLabel_1.Name = "TextLabel"
+gui.TextLabel_1.TextColor3 = Color3.fromRGB(227, 181, 200)
+gui.TextLabel_1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.TextLabel_1.Text = "v3.1.1"
+gui.TextLabel_1.BackgroundTransparency = 1
+gui.TextLabel_1.Parent = gui.Frame
+
+gui.signin_load.BorderSizePixel = 0
+gui.signin_load.BackgroundColor3 = Color3.fromRGB(157, 125, 138)
+gui.signin_load.FontFace = Font.new("rbxassetid://11702779517", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+gui.signin_load.TextColor3 = Color3.fromRGB(255, 255, 255)
+gui.signin_load.Position = UDim2.new(0.161616, 0, 0.598394, 0)
+gui.signin_load.TextSize = 14
+gui.signin_load.Size = UDim2.new(0, 274, 0, 31)
+gui.signin_load.Name = "signin_load"
+gui.signin_load.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.signin_load.Text = "Sign In"
+gui.signin_load.Active = true
+gui.signin_load.Selectable = true
+gui.signin_load.Parent = gui.Frame
+
+gui.UICorner_1.Name = "UICorner"
+gui.UICorner_1.Parent = gui.signin_load
+
+gui.UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+gui.UIStroke.Name = "UIStroke"
+gui.UIStroke.Thickness = 1.4
+gui.UIStroke.Color = Color3.fromRGB(25, 25, 25)
+gui.UIStroke.Parent = gui.signin_load
+
+gui.TextLabel_2.BorderSizePixel = 0
+gui.TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+gui.TextLabel_2.FontFace = Font.new("rbxassetid://11702779517", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+gui.TextLabel_2.TextSize = 15
+gui.TextLabel_2.Position = UDim2.new(0.290404, 0, 0.690763, 0)
+gui.TextLabel_2.Size = UDim2.new(0, 200, 0, 50)
+gui.TextLabel_2.Name = "TextLabel"
+gui.TextLabel_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+gui.TextLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.TextLabel_2.Text = "Boost FPS"
+gui.TextLabel_2.BackgroundTransparency = 1
+gui.TextLabel_2.Parent = gui.Frame
+
+gui.fps_checkbox.BorderSizePixel = 0
+gui.fps_checkbox.Size = UDim2.new(0, 20, 0, 20)
+gui.fps_checkbox.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.fps_checkbox.Name = "fps_checkbox"
+gui.fps_checkbox.Position = UDim2.new(0.383838, 0, 0.751004, 0)
+gui.fps_checkbox.BackgroundColor3 = Color3.fromRGB(157, 125, 138)
+gui.fps_checkbox.Parent = gui.Frame
+
+gui.UICorner_2.Name = "UICorner"
+gui.UICorner_2.CornerRadius = UDim.new(0, 5)
+gui.UICorner_2.Parent = gui.fps_checkbox
+
+gui.UICorner_3.Name = "UICorner"
+gui.UICorner_3.Parent = gui.fps_checkbox
+
+gui.UIStroke_1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+gui.UIStroke_1.Name = "UIStroke"
+gui.UIStroke_1.Thickness = 1.4
+gui.UIStroke_1.Color = Color3.fromRGB(25, 25, 25)
+gui.UIStroke_1.Parent = gui.fps_checkbox
+
+gui.ImageLabel.BorderSizePixel = 0
+gui.ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+gui.ImageLabel.Image = "http://www.roblox.com/asset/?id=9754130783"
+gui.ImageLabel.Size = UDim2.new(0, 20, 0, 20)
+gui.ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.ImageLabel.Name = "ImageLabel"
+gui.ImageLabel.BackgroundTransparency = 1
+gui.ImageLabel.Parent = gui.fps_checkbox
+
+gui.fpscheckbox_button.BorderSizePixel = 0
+gui.fpscheckbox_button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+gui.fpscheckbox_button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+gui.fpscheckbox_button.TextColor3 = Color3.fromRGB(0, 0, 0)
+gui.fpscheckbox_button.Position = UDim2.new(-2.7, 0, 0, 0)
+gui.fpscheckbox_button.TextSize = 14
+gui.fpscheckbox_button.Size = UDim2.new(0, 200, 0, 20)
+gui.fpscheckbox_button.Name = "fpscheckbox_button"
+gui.fpscheckbox_button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.fpscheckbox_button.Text = ""
+gui.fpscheckbox_button.Active = true
+gui.fpscheckbox_button.BackgroundTransparency = 1
+gui.fpscheckbox_button.Selectable = true
+gui.fpscheckbox_button.Parent = gui.fps_checkbox
+
+gui.TextLabel_3.BorderSizePixel = 0
+gui.TextLabel_3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+gui.TextLabel_3.FontFace = Font.new("rbxassetid://11702779517", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+gui.TextLabel_3.TextSize = 14
+gui.TextLabel_3.Position = UDim2.new(0.161616, 0, 0.425703, 0)
+gui.TextLabel_3.Size = UDim2.new(0, 274, 0, 36)
+gui.TextLabel_3.Name = "TextLabel"
+gui.TextLabel_3.TextColor3 = Color3.fromRGB(50, 50, 50)
+gui.TextLabel_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
+gui.TextLabel_3.Text = "   "..tostring(LRM_LinkedDiscordID)..""
+gui.TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+gui.TextLabel_3.Parent = gui.Frame
+
+gui.UICorner_4.Name = "UICorner"
+gui.UICorner_4.Parent = gui.TextLabel_3
+
+gui.UIStroke_2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+gui.UIStroke_2.Name = "UIStroke"
+gui.UIStroke_2.Thickness = 1.4
+gui.UIStroke_2.Color = Color3.fromRGB(25, 25, 25)
+gui.UIStroke_2.Parent = gui.TextLabel_3
+
+gui.UIStroke_3.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+gui.UIStroke_3.Name = "UIStroke"
+gui.UIStroke_3.Thickness = 1.4
+gui.UIStroke_3.Color = Color3.fromRGB(25, 25, 25)
+gui.UIStroke_3.Parent = gui.Frame
+
+
+
+gui.fpscheckbox_button.MouseButton1Click:Connect(function()
+	if gui.fps_checkbox.BackgroundColor3 == Color3.fromRGB(157, 125, 138) then
+		gui.fps_checkbox.BackgroundColor3 = Color3.fromRGB(20,20,20) 
+		gui.ImageLabel.Visible = false
+		getgenv().boostframes = false
+	elseif gui.fps_checkbox.BackgroundColor3 == Color3.fromRGB(20,20,20) then
+		getgenv().boostframes = true
+		gui.fps_checkbox.BackgroundColor3 = Color3.fromRGB(157, 125, 138)
+		gui.ImageLabel.Visible = true
+		end
+end)
+
+gui.signin_load.MouseButton1Click:Connect(function()
+gui.blazedLoader:Destroy()
+    local loadingtime = tick()
+    local notificationLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/laagginq/ui-libraries/main/xaxas-notification/src.lua"))();
+    local notifications = notificationLibrary.new({            
+        NotificationLifetime = 5, 
+        NotificationPosition = "Middle",
+        
+        TextFont = Enum.Font.Code,
+        TextColor = Color3.fromRGB(255, 255, 255),
+        TextSize = 15,
+        
+        TextStrokeTransparency = 0, 
+        TextStrokeColor = Color3.fromRGB(0, 0, 0)
+    });
+    
+    local AkaliNotif = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Dynissimo/main/Scripts/AkaliNotif.lua"))();
+    local ANotify = AkaliNotif.Notify;
+    
+    
+    function Kick(Reason)
+        game.Players.LocalPlayer:Kick(Reason)
+    end
+    
+    getgenv().NotiMode = "Roblox"
+    
+    function Notifications(NotiINFO)
+        if getgenv().NotiMode == "Roblox" then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Blazed", -- Required
+                Text = NotiINFO, -- Required
+                Icon = "rbxassetid://15115954522" -- Optional
+            })
+        else
+            if getgenv().NotiMode == "Xaxa" then
+                notifications:BuildNotificationUI();
+                notifications:Notify(NotiINFO);
+        else
+            if getgenv().NotiMode == "Akali" then
+                ANotify({
+                    Description = NotiINFO;
+                    Title = "Blazed";
+                    Duration = 1;
+                    });
+                else
+                    Kick('[blazed]: Notification Error, please contact support if this continues.')
+        end
+            end
+                end
+            end
+    
+    
+    if game.PlaceId == 11883610532 or game.PlaceId == 12128125888 or game.PlaceId == 12543953865 then 
+        print("[blazed]: Five Duels Detected")
+        getgenv().fdDetected = true
+    
+    getgenv().AimPart = "HumanoidRootPart" 
+    getgenv().OldAimPart = "HumanoidRootPart"
+    getgenv().AimlockKey = "q"
+    getgenv().AimRadius = 5
+    getgenv().ThirdPerson = true 
+    getgenv().FirstPerson = true
+    getgenv().TeamCheck = false 
+    getgenv().PredictMovement = false
+    getgenv().PredictionVelocity = 7.22
+    
+    getgenv().Smoothness = false
+    getgenv().SmoothnessAmount = 1
+    getgenv().EasingStyle = Enum.EasingStyle.Elastic
+    
+    getgenv().Notifications = false
+    
+    getgenv().AutoPrediction = false
+    getgenv().UnlockOnDeath = false
+    getgenv().Shake = false
+    getgenv().ShakePower = 0
+    
+    local Players, Uis, RService, SGui = game:GetService"Players", game:GetService"UserInputService", game:GetService"RunService", game:GetService"StarterGui";
+    local Client, Mouse, Camera, CF, RNew, Vec3, Vec2 = Players.LocalPlayer, Players.LocalPlayer:GetMouse(), workspace.CurrentCamera, CFrame.new, Ray.new, Vector3.new, Vector2.new;
+    local Aimlock, MousePressed, CanNotify = true, false, false;
+    local AimlockTarget
+    local OldPre;
+    
+    
+    
+    getgenv().WorldToViewportPoint = function(P)
+        return Camera:WorldToViewportPoint(P)
+    end
+    
+    getgenv().WorldToScreenPoint = function(P) 
+        return Camera.WorldToScreenPoint(Camera, P)
+    end
+    
+    getgenv().GetObscuringObjects = function(T)
+        if T and T:FindFirstChild(getgenv().AimPart) and Client and Client.Character:FindFirstChild("Head") then 
+            local RayPos = workspace:FindPartOnRay(RNew(
+                T[getgenv().AimPart].Position, Client.Character.Head.Position)
+            )
+            if RayPos then return RayPos:IsDescendantOf(T) end
+        end
+    end
+    
+    getgenv().GetNearestTarget = function()
+        local players = {}
+        local PLAYER_HOLD  = {}
+        local DISTANCES = {}
+        for i, v in pairs(Players:GetPlayers()) do
+            if v ~= Client then
+                table.insert(players, v)
+            end
+        end
+        for i, v in pairs(players) do
+            if v.Character ~= nil then
+                local AIM = v.Character:FindFirstChild("Head")
+                if getgenv().TeamCheck == true and v.Team ~= Client.Team then
+                    local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                    local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+                    local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                    local DIFF = math.floor((POS - AIM.Position).magnitude)
+                    PLAYER_HOLD[v.Name .. i] = {}
+                    PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+                    PLAYER_HOLD[v.Name .. i].plr = v
+                    PLAYER_HOLD[v.Name .. i].diff = DIFF
+                    table.insert(DISTANCES, DIFF)
+                elseif getgenv().TeamCheck == false and v.Team == Client.Team then 
+                    local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                    local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+                    local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                    local DIFF = math.floor((POS - AIM.Position).magnitude)
+                    PLAYER_HOLD[v.Name .. i] = {}
+                    PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+                    PLAYER_HOLD[v.Name .. i].plr = v
+                    PLAYER_HOLD[v.Name .. i].diff = DIFF
+                    table.insert(DISTANCES, DIFF)
+                end
+            end
+        end
+        
+        if unpack(DISTANCES) == nil then
+            return nil
+        end
+        
+        local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+        if L_DISTANCE > getgenv().AimRadius then
+            return nil
+        end
+        
+        for i, v in pairs(PLAYER_HOLD) do
+            if v.diff == L_DISTANCE then
+                return v.plr
+            end
+        end
+        return nil
+    end
+    
+    
+    
+    RService.RenderStepped:Connect(function()
+        if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 or (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        end
+        if Aimlock == true and MousePressed == true then 
+            if AimlockTarget and AimlockTarget.Character and AimlockTarget.Character:FindFirstChild(getgenv().AimPart) then 
+                if getgenv().FirstPerson == true then
+                    if CanNotify == true then
+                        if getgenv().PredictMovement == true then
+                            if getgenv().Smoothness == true then
+                                --// The part we're going to lerp/smoothen \\--
+                                local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
+                                
+                                --// Making it work \\--
+                                Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                            else
+                                Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
+                            end
+                        elseif getgenv().PredictMovement == false then 
+                            if getgenv().Smoothness == true then
+                                --// The part we're going to lerp/smoothen \\--
+                                local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+    
+                                --// Making it work \\--
+                                Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                            else
+                                Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+       if getgenv().UnlockOnDeath  == true and AimlockTarget and AimlockTarget.Character:FindFirstChild("Humanoid") then
+        if AimlockTarget.StarterPlayer.StarterCharacterScripts.BodyEffects['K.O'] then
+            AimlockTarget = nil
+            
+            if getgenv().Notifications == true then
+                Notify({
+                    Title = BlazedName,
+                    Description = "Unlocked",
+                    Duration = 1
+                })
+            end
+            if getgenv().ChatNotis == true then
+    game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Unlocked","All")
+            end
+        end
+    end
+    
+                if getgenv().Shake == true and AimlockTarget and AimlockTarget.Character then
+                    local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity +
+                    Vector3.new(
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower),
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower),
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower)
+                    ) * 0.1)
+                    Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                end
+    
+       if getgenv().AutoPrediction == true then
+        pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+        split = string.split(pingvalue,'(')
+        ping = tonumber(split[1])
+    if ping < 30 then
+        getgenv().PredictionVelocity = 7.758
+    elseif ping < 40 then
+        getgenv().PredictionVelocity = 7.364
+    elseif ping < 50 then
+        getgenv().PredictionVelocity = 7.456 
+    elseif ping < 60 then
+        getgenv().PredictionVelocity = 7.217
+    elseif ping < 70 then
+        getgenv().PredictionVelocity = 6.972 
+    elseif ping < 80 then
+        getgenv().PredictionVelocity = 6.782
+    elseif ping < 90 then
+        getgenv().PredictionVelocity = 6.597 
+    elseif ping < 100 then
+        getgenv().PredictionVelocity = 3.88
+    elseif ping < 110 then
+        getgenv().PredictionVelocity = 6.099
+    end
+    end
+    
+    end)
+    
+    
+    
+    local repo = 'https://raw.githubusercontent.com/wally-rblx/LinoriaLib/main/'
+    local Library = loadstring(game:HttpGet('https://pastebin.com/raw/7Tk5QM6R'))()
+    local ThemeManager = loadstring(game:HttpGet('https://pastebin.com/raw/WxMCy9be'))()
+    local SaveManager = loadstring(game:HttpGet('https://pastebin.com/raw/rNY1ZdQT'))()
+    
+    local Window = Library:CreateWindow({
+        Title = 'blazed.lol | buyer build | five duels',
+        Center = true, 
+        AutoShow = true,
+        Size = UDim2.fromOffset(550, 560),
+        TabPadding = 4,
+    })
+    
+    
+    
+    local Tabs = {
+        Main = Window:AddTab('Aiming'),
+        ['Settings'] = Window:AddTab('Settings'),
+    }
+    
+    local LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimlock')
+    
+    
+    
+    LeftGroupBox:AddToggle('Aimlock', {
+        Text = 'Enable',
+        Default = false, 
+        Tooltip = 'Enables Aimlock', 
+    })
+    
+    Toggles.Aimlock:OnChanged(function()
+        getgenv().AimlockEnabled = Toggles.Aimlock.Value
+    end)
+    
+    
+    Toggles.Aimlock:AddKeyPicker('AimlockBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Enable', 
+        NoUI = false,
+    })
+    Options.AimlockBind:OnClick(function()
+    if AimlockEnabled then 
+        Target = not Target
+        --
+        if AimlockTarget then
+            AimlockTarget = nil
+            MousePressed = false
+            if getgenv().Notifications then
+                Notifications("Unlocked")
+            end
+        else
+            if AimlockTarget == nil then
+                local Target;Target = GetNearestTarget()
+                if Target ~= nil then 
+                    AimlockTarget = Target
+                    if getgenv().Notifications then
+                        notifications:BuildNotificationUI();
+                        Notifications("Locked Onto"..tostring(Aimlock));
+                    end
+                    MousePressed = true
+                end
+            end
+        end
+            end
+    end)
+    
+    LeftGroupBox:AddInput('CamPrediction', {
+        Default = '7.22',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Prediction',
+        Tooltip = 'Example: 7.22', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().PredictionVelocity = int
+            notifications:BuildNotificationUI();
+            Notifications("Prediction Changed To: "..tostring(int));
+            end 
+    })
+    
+    LeftGroupBox:AddToggle('CamPingBased', {
+        Text = 'Ping Based',
+        Default = false, 
+        Tooltip = 'Autos Configures Prediction', 
+    })
+    
+    Toggles.CamPingBased:OnChanged(function()
+        getgenv().AutoPrediction = Toggles.CamPingBased.Value
+    end)
+    
+    LeftGroupBox:AddDropdown('CamHitpart', {
+        Values = { 'HumanoidRootPart', 'UpperTorso', 'LowerTorso', 'Head' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Hitpart',
+        Tooltip = 'Where your bullets will hit', -- Information shown when you hover over the textbox
+    })
+    
+    Options.CamHitpart:OnChanged(function()
+        getgenv().AimPart = Options.CamHitpart.Value
+    end)
+    
+    LeftGroupBox:AddToggle('CamAlerts', {
+        Text = 'Notifications',
+        Default = false, 
+        Tooltip = 'Notifys Locking/Unlocking', 
+    })
+    
+    Toggles.CamAlerts:OnChanged(function()
+        getgenv().Notifications = Toggles.CamAlerts.Value
+    end)
+    
+    
+    
+    LeftGroupBox:AddToggle('CamUnOnD', {
+        Text = 'Unlock On Death',
+        Default = false, 
+        Tooltip = 'Automatically Unlocks Target On KO', 
+    })
+    
+    Toggles.CamUnOnD:OnChanged(function()
+        getgenv().UnlockOnDeath = Toggles.CamUnOnD.Value
+    end)
+    
+    LeftGroupBox:AddToggle('CamShake', {
+        Text = 'Shake',
+        Default = false, 
+        Tooltip = 'Shakes On The Target', 
+    })
+    
+    Toggles.CamShake:OnChanged(function()
+        getgenv().Shake = Toggles.CamShake.Value
+    end)
+    
+    
+    LeftGroupBox:AddInput('CamShakePower', {
+        Default = '5',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Shake Power',
+        Tooltip = 'Ex: 5', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().ShakePower = int
+            notifications:BuildNotificationUI();
+            Notifications("Shake Power Changed To: "..tostring(int));
+            end 
+    })
+    
+    LeftGroupBox:AddToggle('CamSmoothness', {
+        Text = 'Smoothness',
+        Default = false, 
+        Tooltip = 'Smoothens Camlock', 
+    })
+    
+    Toggles.CamSmoothness:OnChanged(function()
+        getgenv().Smoothness = Toggles.CamSmoothness.Value
+    end)
+    
+    LeftGroupBox:AddInput('CamSmoothnessPWR', {
+        Default = '1',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Smoothness Power',
+        Tooltip = 'Ex: 0.52', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().SmoothnessAmount = int
+            notifications:BuildNotificationUI();
+            Notifications("Smoothness Power Changed To: "..tostring(int));
+            end, 0.01
+    })
+    
+    LeftGroupBox:AddDropdown('CamSmoothingStyle', {
+        Values = { 'Linear', 'Sine', 'Back', 'Quad', 'Quart', 'Quint', 'Bounce', 'Elastic', 'Exponential', 'Circular', 'Cubic' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Smoothing Style',
+        Tooltip = 'Aimlock Smoothing Style', -- Information shown when you hover over the textbox
+    })
+    
+    Options.CamSmoothingStyle:OnChanged(function()
+        if Options.CamSmoothingStyle.Value == "Linear" then
+            getgenv().EasingStyle = Enum.EasingStyle.Linear
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Sine" then
+            getgenv().EasingStyle = Enum.EasingStyle.Sine
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Back" then
+            getgenv().EasingStyle = Enum.EasingStyle.Back
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Quad" then
+            getgenv().EasingStyle = Enum.EasingStyle.Quad
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Quart" then
+            getgenv().EasingStyle = Enum.EasingStyle.Quart
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Quint" then
+            getgenv().EasingStyle = Enum.EasingStyle.Quint
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Bounce" then
+            getgenv().EasingStyle = Enum.EasingStyle.Bounce
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Elastic" then
+            getgenv().EasingStyle = Enum.EasingStyle.Elastic
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Exponential" then
+            getgenv().EasingStyle = Enum.EasingStyle.Exponential
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Circular" then
+            getgenv().EasingStyle = Enum.EasingStyle.Circular
+        end
+    
+        if Options.CamSmoothingStyle.Value == "Cubic" then
+            getgenv().EasingStyle = Enum.EasingStyle.Cubic
+        end
+    end)
+    
+    
+        
+    --[[local MyButton2 = MyButton:AddButton('Sub button', function()
+        print('You clicked a sub button!')
+    end)
+    
+    
+    MyButton:AddTooltip('This is a button')
+    MyButton2:AddTooltip('This is a sub button')
+    
+    LeftGroupBox:AddLabel('This is a label')
+    LeftGroupBox:AddLabel('This is a label\n\nwhich wraps its text!', true)
+    
+    LeftGroupBox:AddDivider()
+    
+    LeftGroupBox:AddSlider('MySlider', {
+        Text = 'This is my slider!',
+        Default = 0,
+        Min = 0,
+        Max = 5,
+        Rounding = 1,
+        Compact = false, 
+    })
+    
+    local Number = Options.MySlider.Value
+    Options.MySlider:OnChanged(function()
+        print('MySlider was changed! New value:', Options.MySlider.Value)
+    end)
+    
+    Options.MySlider:SetValue(3)
+    
+    
+    LeftGroupBox:AddInput('MyTextbox', {
+        Default = 'My textbox!',
+        Numeric = false, 
+        Finished = false,
+    
+        Text = 'This is a textbox',
+        Tooltip = 'This is a tooltip', 
+    
+        Placeholder = 'Placeholder text',
+    })
+    
+    Options.MyTextbox:OnChanged(function()
+        print('Text updated. New text:', Options.MyTextbox.Value)
+    end)
+    
+    LeftGroupBox:AddDropdown('MyDropdown', {
+        Values = { 'This', 'is', 'a', 'dropdown' },
+        Default = 1, 
+        Multi = false,
+    
+        Text = 'A dropdown',
+        Tooltip = 'This is a tooltip',
+    })
+    
+    Options.MyDropdown:OnChanged(function()
+        print('Dropdown got changed. New value:', Options.MyDropdown.Value)
+    end)
+    
+    Options.MyDropdown:SetValue('This')
+    
+    LeftGroupBox:AddDropdown('MyMultiDropdown', {
+        Values = { 'This', 'is', 'a', 'dropdown' },
+        Default = 1, 
+        Multi = true,
+    
+        Text = 'A dropdown',
+        Tooltip = 'This is a tooltip',
+    })
+    
+    Options.MyMultiDropdown:OnChanged(function()
+        -- print('Dropdown got changed. New value:', )
+        print('Multi dropdown got changed:')
+        for key, value in next, Options.MyMultiDropdown.Value do
+            print(key, value) -- should print something like This, true
+        end
+    end)
+    
+    Options.MyMultiDropdown:SetValue({
+        This = true,
+        is = true,
+    })
+    
+    LeftGroupBox:AddLabel('Color'):AddColorPicker('ColorPicker', {
+        Default = Color3.new(0, 1, 0),
+        Title = 'Some color', 
+    })
+    
+    Options.ColorPicker:OnChanged(function()
+        print('Color changed!', Options.ColorPicker.Value)
+    end)
+    
+    Options.ColorPicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
+    
+    LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
+        Default = 'MB2',
+        SyncToggleState = false, 
+        Mode = 'Toggle', 
+        Text = 'Auto lockpick safes', 
+        NoUI = false, 
+    })]]
+    
+    
+    -- Example of dynamically-updating watermark with common traits (fps and ping)
+    local FrameTimer = tick()
+    local FrameCounter = 0;
+    local FPS = 240;
+    
+    local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+        FrameCounter += 1;
+    
+        if (tick() - FrameTimer) >= 1 then
+            FPS = FrameCounter;
+            FrameTimer = tick();
+            FrameCounter = 0;
+        end;
+        Library:SetWatermark(('blazed.lol | %s fps | %s ms'):format(
+            math.floor(FPS),
+            math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+        ));
+    
+    
+    
+    
+    
+    Library:OnUnload(function()
+        Library.Unloaded = true
+    end);
+    end)
+    
+    local MenuGroup = Tabs['Settings']:AddRightGroupbox('Menu')
+    --AddLeftGroupbox
+    
+    
+    
+    MenuGroup:AddLabel('Menu Keybind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' }) 
+    
+    MenuGroup:AddToggle('KeybindList', {
+        Text = 'Keybind List',
+        Default = false, 
+        Tooltip = 'Toggles the Keybind List', 
+    })
+    
+    Toggles.KeybindList:OnChanged(function()
+        Library.KeybindFrame.Visible  = Toggles.KeybindList.Value
+    end)
+    
+    MenuGroup:AddToggle('Watermark', {
+        Text = 'Watermark',
+        Default = false, 
+        Tooltip = 'Toggles the Watermark', 
+    })
+    
+    Toggles.Watermark:OnChanged(function()
+        Library:SetWatermarkVisibility(Toggles.Watermark.Value) 
+    end)
+    
+    
+    
+    MenuGroup:AddDropdown('UINotis', {
+        Values = { 'Xaxa', 'Roblox', 'Akali' },
+        Default = 2, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Notification Type',
+        Tooltip = 'Change What Notifications Show Up', -- Information shown when you hover over the textbox
+    })
+    
+    Options.UINotis:OnChanged(function()
+        getgenv().NotiMode = Options.UINotis.Value
+    end)
+    
+    
+    --
+    local Unload1 = MenuGroup:AddButton({
+        Text = 'Unload',
+        Func = function()
+            Library:Unload()
+        end,
+        DoubleClick = true,
+        Tooltip = 'Unloads The Cheat'
+    })
+    
+    local Unload2 = Unload1:AddButton({
+        Text = 'Join Discord',
+        Func = function()
+            setclipboard("discord.gg/lockers")
+            notifications:BuildNotificationUI();
+            Notifications("discord.gg/lockers");
+            local request = (syn and syn.request) or (http and http.request) or http_request
+            local HttpService = game:GetService("HttpService")
+            if request then
+                request({
+                    Url = 'http://127.0.0.1:6463/rpc?v=1',
+                    Method = 'POST',
+                    Headers = {
+                        ['Content-Type'] = 'application/json',
+                        Origin = 'https://discord.com'
+                    },
+                    Body = HttpService:JSONEncode({
+                        cmd = 'INVITE_BROWSER',
+                        nonce = HttpService:GenerateGUID(false),
+                        args = {code = "lockers"}
+                    })
+                })
+            end
+        end,
+        DoubleClick = false, -- You will have to click this button twice to trigger the callback
+        Tooltip = 'Joins Our Discord'
+    })
+    
+    Library.ToggleKeybind = Options.MenuKeybind
+    
+    ThemeManager:SetLibrary(Library)
+    SaveManager:SetLibrary(Library)
+    
+    --SaveManager:IgnoreThemeSettings() 
+    
+    --SaveManager:SetIgnoreIndexes({ 'MenuKeybind' }) 
+    
+    ThemeManager:SetFolder('blazedlol-thm')
+    SaveManager:SetFolder('blazedlol-fd-cfg')
+    
+    SaveManager:BuildConfigSection(Tabs['Settings']) 
+    
+    ThemeManager:ApplyToTab(Tabs['Settings'])
+    
+    Notifications("Loaded In "..string.format("%.2f", tostring(tick() - loadingtime,nil))..tostring(" Seconds"))
+    loadingtime = nil
+    
+    else
+    
+    
+    Notifications("Blazed is loading!");
+    
+    if game.PlaceId == 2788229376 then
+        local InventoryChanger = { Functions = {}, Selected = {}, Skins = {}, Owned = {} };
+
+        do
+            local Utilities = {};
+        
+            function cout(watermark, message)
+                if not LPH_OBFUSCATED then
+                    return print('['..watermark..']', message);
+                end;
+            end;
+        
+            cout('Inventory Changer', 'Executor initialization test message')
+        
+            if not getgenv().InventoryConnections then
+                getgenv().InventoryConnections = {};
+            end;
+        
+            local players = game:GetService('Players');
+            local client = players.LocalPlayer;
+        
+            local tween_service = game:GetService('TweenService');
+        
+            Utilities.AddConnection = function(signal, func)
+                local connect = signal:Connect(func);
+        
+                table.insert(getgenv().InventoryConnections, { signal = signal, func = func, connect = connect });
+                return connect;
+            end;
+        
+            Utilities.Unload = function()
+                for _, tbl in ipairs(getgenv().InventoryConnections) do
+                    if type(tbl) ~= 'table' then 
+                        tbl:Disconnect();
+                    end
+                end;
+        
+                getgenv().InventoryConnections = {};
+            end;
+        
+            Utilities.Unload();
+        
+            Utilities.Tween = function(args)
+                local obj = args.obj or args.object;
+                local prop = args.prop or args.properties;
+                local duration = args.duration or args.time;
+                local info = args.info or args.tween_info;
+                local callback = args.callback;
+        
+                local tween = tween_service:Create(obj, duration and TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) or info and TweenInfo.new(unpack(info)), prop);
+                tween:Play();
+        
+                if callback then
+                    tween.Completed:Connect(callback);
+                end;
+            end;
+        
+            repeat task.wait() until client.Character:FindFirstChild('FULLY_LOADED_CHAR');
+        
+            local player_gui = client.PlayerGui;
+        
+            local main_gui = player_gui:WaitForChild('MainScreenGui');
+            local crew = main_gui:WaitForChild('Crew');
+            local bottom_left = crew:WaitForChild('BottomLeft').Frame;
+            local skins_button = bottom_left:WaitForChild('Skins');
+        
+            local replicated_storage = game:GetService('ReplicatedStorage');
+            local skin_modules = replicated_storage:WaitForChild('SkinModules');
+            local meshes = skin_modules:WaitForChild('Meshes');
+        
+            local weapon_skins_gui = main_gui:WaitForChild('WeaponSkinsGUI');
+            local gui_body_wrapper = weapon_skins_gui:WaitForChild('Body');
+            local body_wrapper = gui_body_wrapper:WaitForChild('Wrapper');
+            local skin_view = body_wrapper:WaitForChild('SkinView');
+            local skin_view_frame = skin_view:WaitForChild('Frame');
+        
+            local guns = skin_view_frame:WaitForChild('Guns').Contents;
+            local entries = skin_view_frame:WaitForChild('Skins').Contents.Entries;
+        
+            local Ignored = workspace.Ignored;
+            local Siren = Ignored.Siren;
+            local Radius = Siren.Radius;
+        
+            local regex = '%[(.-)%]';
+        
+            local newColorSequence = ColorSequence.new;
+            local Color3fromRGB = Color3.fromRGB;
+            local newCFrame = CFrame.new;
+            local newColorSequenceKeypoint = ColorSequenceKeypoint.new;
+        
+            InventoryChanger.Skins = {
+                ['Mystical'] = {
+                    tween_duration = 0.65,
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3fromRGB(255, 39, 24)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Mystical.Revolver,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14489866118',
+                            C0 = newCFrame(-0.015838623, -0.0802496076, 0.00772094727, 1, 0, 4.37113883e-08, 0, 1, 0, -4.37113883e-08, 0, 1)
+                        }
+                    }
+                },
+                ['CyanPack'] = {
+                    mesh_location = meshes.CyanPack,
+                    guns = {
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.CyanPack.Cloud,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14056055126',
+                            C0 = newCFrame(0.0441589355, -0.0269355774, -0.000701904297, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.CyanPack.DB,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14056053588',
+                            C0 = newCFrame(-0.00828552246, 0.417651355, -0.00537109375, 4.18358377e-06, -1.62920685e-07, 1, 3.4104116e-13, 1, 1.62920685e-07, -1, 3.41041052e-13, -4.18358377e-06)
+                        },
+                        ['[Revolver]'] = {
+                            location = meshes.CyanPack.Devil,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14056056444',
+                            C0 = newCFrame(0.0185699463, 0.293397784, -0.00256347656, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        }
+                    }
+                },
+                ['Cartoon'] = {
+                    guns = {
+                        ['[Flamethrower]'] = {
+                            location = meshes.Cartoon.CartoonFT,
+                            equipped = false,
+                            C0 = newCFrame(-0.272186279, 0.197086751, 0.0440063477, -1, 4.8018768e-07, 8.7078952e-08, 4.80187623e-07, 1, -3.54779985e-07, -8.70791226e-08, -3.54779957e-07, -1)
+                        },
+                        ['[Revolver]'] = {
+                            location = meshes.Cartoon.CartoonRev,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14221101923',
+                            C0 = newCFrame(-0.015411377, 0.0135096312, 0.00338745117, 1.00000095, 3.41326549e-13, 2.84217399e-14, 3.41326549e-13, 1.00000191, -9.89490712e-10, 2.84217399e-14, -9.89490712e-10, 1.00000191)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Cartoon.DBCartoon,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://14220912852',
+                            C0 = newCFrame(0.00927734375, -0.00691050291, 0.000732421875, -1, -2.79396772e-08, -9.31322797e-10, -2.79396772e-08, 1, 1.42607872e-08, 9.31322575e-10, 1.42607872e-08, -1)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.Cartoon.RPGCartoon,
+                            equipped = false,
+                            C0 = newCFrame(-0.0201721191, 0.289476752, -0.0727844238, 4.37113883e-08, 6.58276836e-37, 1, -5.72632016e-14, 1, 2.50305399e-21, -1, 5.72632016e-14, 4.37113883e-08)
+                        },
+                    }
+                },
+                ['Dragon'] = {
+                    color = newColorSequence(Color3.new(1, 0, 0)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Dragon.DragonRev,
+                            equipped = false,
+                            C0 = newCFrame(0.0384216309, 0.0450432301, -0.000671386719, 1.87045402e-31, 4.21188801e-16, -0.99999994, 1.77635684e-15, 1, -4.21188827e-16, 1, 1.77635684e-15, -1.87045413e-31)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Dragon.DBDragon,
+                            equipped = false,
+                            C0 = newCFrame(-0.123794556, 0.0481165648, 0.00048828125, 7.14693442e-07, 3.13283705e-10, 1, -4.56658222e-09, 1, -3.13281678e-10, -1, -4.56658533e-09, 7.14693442e-07)
+                        }
+                    }
+                },
+                ['Tact'] = {
+                    tween_duration = 1.25,
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3.new(1, 0.3725490196, 0.3725490196)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Tact.Rev,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13850086195',
+                            C0 = newCFrame(-0.318634033, -0.055095911, 0.00491333008, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Tact.DB,
+                            equipped = false,
+                            C0 = newCFrame(-0.0701141357, -0.0506889224, -0.0826416016, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.Tact.Tact,
+                            equipped = false,
+                            C0 = newCFrame(-0.0687713623, -0.0684046745, 0.12701416, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[SMG]'] = {
+                            location = meshes.Tact.Uzi,
+                            equipped = false,
+                            C0 = newCFrame(0.0408782959, 0.0827783346, -0.0423583984, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        },
+                        ['[Shotgun]'] = {
+                            location = meshes.Tact.Shotgun,
+                            equipped = false,
+                            C0 = newCFrame(-0.0610046387, 0.171100497, -0.00495910645, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Silencer]'] = {
+                            location = meshes.Tact.Silencer,
+                            equipped = false,
+                            C0 = newCFrame(0.0766601562, -0.0350288749, -0.648864746, 1, 0, -4.37113883e-08, 0, 1, 0, 4.37113883e-08, 0, 1)
+                        }
+                    }
+                },
+                ['Shadow'] = {
+                    color = newColorSequence(Color3.new(0.560784, 0.470588, 1), Color3.new(0.576471, 0.380392, 1)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Shadow.RevolverGhost,
+                            equipped = false,
+                            C0 = newCFrame(1.52587891e-05, 0, 0, 1, 0, 8.74227766e-08, 0, 1, 0, -8.74227766e-08, 0, 1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Shadow.DoubleBGhost,
+                            equipped = false,
+                            C0 = newCFrame(0.0250015259, -0.077037394, 0, 1, 0, 0, 0, 0.999998331, 0, 0, 0, 1)
+                        },
+                        ['[AK47]'] = {
+                            location = meshes.Shadow.AK47Ghost,
+                            equipped = false,
+                            C0 = newCFrame(-0.750015259, 4.76837158e-07, -3.05175781e-05, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[SilencerAR]'] = {
+                            location = meshes.Shadow.ARGhost,
+                            equipped = false,
+                            C0 = newCFrame(0.116256714, 0.0750004649, 6.10351562e-05, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[AUG]'] = {
+                            location = meshes.Shadow.AUGGhost,
+                            equipped = false,
+                            C0 = newCFrame(-7.62939453e-06, 0.0499991775, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[DrumGun]'] = {
+                            location = meshes.Shadow.DrumgunGhost,
+                            equipped = false,
+                            C0 = newCFrame(1.14440918e-05, 0, 0, 1, 0, 8.74227766e-08, 0, 1, 0, -8.74227766e-08, 0, 1)
+                        },
+                        ['[Flamethrower]'] = {
+                            location = meshes.Shadow.FlamethrowerGhost,
+                            equipped = false,
+                            C0 = newCFrame(-0.219947815, 0.339559376, 0.000274658203, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Glock]'] = {
+                            location = meshes.Shadow.GlockGhost,
+                            equipped = false,
+                            C0 = newCFrame(0, 0, -0.200004578, 1, 0, 4.37113883e-08, 0, 1, 0, -4.37113883e-08, 0, 1)
+                        },
+                        ['[LMG]'] = {
+                            location = meshes.Shadow.LMGGhost,
+                            equipped = false,
+                            C0 = newCFrame(0.374502182, -0.25, -0.25, -1, 0, -1.31134158e-07, 0, 1, 0, 1.31134158e-07, 0, -1)
+                        },
+                        ['[P90]'] = {
+                            location = meshes.Shadow.P90Ghost,
+                            equipped = false,
+                            C0 = newCFrame(6.86645508e-05, 0.000218153, 3.05175781e-05, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.Shadow.RPGGhost,
+                            equipped = false,
+                            C0 = newCFrame(0.000122070312, 0.0625389814, 0.00672149658, 1, 0, -8.74227766e-08, 5.00610797e-21, 1, 5.72632016e-14, 8.74227766e-08, 5.72632016e-14, 1)
+                        },
+                        ['[Rifle]'] = {
+                            location = meshes.Shadow.RifleGhost,
+                            equipped = false,
+                            C0 = newCFrame(0.000244140625, -0.100267321, -9.15527344e-05, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[SMG]'] = {
+                            location = meshes.Shadow.SMGGhost,
+                            equipped = false,
+                            C0 = newCFrame(-1.14440918e-05, 1.78813934e-07, -0.0263671875, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Shotgun]'] = {
+                            location = meshes.Shadow.ShotgunGhost,
+                            equipped = false,
+                            C0 = newCFrame(3.05175781e-05, 0.199999928, 3.81469727e-06, -1, 0, -4.37113883e-08, 0, 1, 0, 4.37113883e-08, 0, -1)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.Shadow.TacticalShotgunGhost,
+                            equipped = false,
+                            C0 = newCFrame(-0.148262024, 0, 0, 1, 0, 8.74227766e-08, 0, 1, 0, -8.74227766e-08, 0, 1)
+                        }
+                    }
+                },
+                ['Golden Age'] = {
+                    tween_duration = 1.25,
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3.fromHSV(0.89166666666, 0.24, 1)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.GoldenAge.Revolver,
+                            equipped = false,
+                            C0 = newCFrame(0.0295257568, 0.0725820661, -0.000946044922, 1, -4.89858741e-16, -7.98081238e-23, 4.89858741e-16, 1, 3.2584137e-07, -7.98081238e-23, -3.2584137e-07, 1),
+                            shoot_sound = 'rbxassetid://1898322396'
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.GoldenAge['Double Barrel'],
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://4915503055',
+                            C0 = newCFrame(-0.00664520264, 0.0538104773, 0.0124816895, -1, 4.89858741e-16, 7.98081238e-23, 4.89858741e-16, 1, 3.2584137e-07, 7.98081238e-23, 3.2584137e-07, -1)
+                        }
+                    }
+                },
+                ['Red Skull'] = {
+                    color = newColorSequence(Color3.new(0.917647, 0, 0)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.RedSkull.RedSkullRev,
+                            equipped = false,
+                            C0 = newCFrame(-0.0043258667, 0.0084195137, -0.00238037109, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[Shotgun]'] = {
+                            location = meshes.RedSkull.RedSkullRev,
+                            equipped = false,
+                            C0 = newCFrame(-0.00326538086, 0.0239292979, -0.039352417, -4.37113883e-08, 0, -1, 0, 1, 0, 1, 0, -4.37113883e-08)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.RedSkull.RedSkullRev,
+                            equipped = false,
+                            C0 = newCFrame(-0.0143432617, -0.151709318, 0.00820922852, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.RedSkull.RedSkullRev,
+                            equipped = false,
+                            C0 = newCFrame(-0.00149536133, 0.254377961, 0.804840088, -1, 0, 4.37113883e-08, -2.50305399e-21, 1, -5.72632016e-14, -4.37113883e-08, 5.72632016e-14, -1)
+                        }
+                    }
+                },
+                --[[['Galaxy'] = {
+                    border_color = newColorSequence(Color3.new(0, 0, 1)),
+                    particle = {
+                        properties = {
+                            Color = ColorSequence.new({
+                                ColorSequenceKeypoint.new(0, Color3.new(0.419608, 0.376471, 1)),
+                                ColorSequenceKeypoint.new(1, Color3.new(0.419608, 0.376471, 1))
+                            }),
+                            Name = 'Galaxy',
+                            Size = NumberSequence.new({
+                                NumberSequenceKeypoint.new(0, 0.5),
+                                NumberSequenceKeypoint.new(0.496, 1.2),
+                                NumberSequenceKeypoint.new(1, 0.5)
+                            }),
+                            Squash = NumberSequence.new({
+                                NumberSequenceKeypoint.new(0, 0),
+                                NumberSequenceKeypoint.new(0.173364, 0.525),
+                                NumberSequenceKeypoint.new(0.584386, -1.7625),
+                                NumberSequenceKeypoint.new(0.98163, 0.0749998),
+                                NumberSequenceKeypoint.new(1, 0)
+                            }),
+                            Transparency = NumberSequence.new({
+                                NumberSequenceKeypoint.new(0, 0),
+                                NumberSequenceKeypoint.new(0.107922, 1),
+                                NumberSequenceKeypoint.new(0.391504, 0.25),
+                                NumberSequenceKeypoint.new(0.670494, 0.78125),
+                                NumberSequenceKeypoint.new(0.845006, 0),
+                                NumberSequenceKeypoint.new(1, 1)
+                            }),
+                            Texture = 'rbxassetid://7422600824',
+                            ZOffset = 1,
+                            LightEmission = 0.7,
+                            Lifetime = NumberRange.new(1, 1),
+                            Rate = 3,
+                            Rotation = NumberRange.new(0, 360),
+                            RotSpeed = NumberRange.new(0, 15),
+                            Speed = NumberRange.new(1, 1),
+                            SpreadAngle = Vector2.new(-45, 45)
+                        }
+                    },
+                    guns = {
+                        ['[Revolver]'] = {
+                            texture = 'rbxassetid://9370936730'
+                        },
+                        ['[TacticalShotgun]'] = {
+                            texture = 'rbxassetid://9402279010'
+                        }
+                    }
+                },]]
+                ['Kitty'] = {
+                    tween_duration = 1,
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3.new(1, 0.690196, 0.882353), Color3.new(1, 0.929412, 0.964706)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Kitty.KittyRevolver,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13483022860',
+                            C0 = newCFrame(0.0310440063, 0.0737591386, 0.0226745605, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Flamethrower]'] = {
+                            location = meshes.Kitty.KittyFT,
+                            equipped = false,
+                            C0 = newCFrame(-0.265670776, 0.115545571, 0.00997924805, -1, 9.74078034e-21, 5.47124086e-13, 9.74092898e-21, 1, 3.12638804e-13, -5.47126309e-13, 3.12638804e-13, -1)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.Kitty.KittyRPG,
+                            equipped = false,
+                            C0 = newCFrame(0.0268554688, 0.0252066851, 0.117408752, -1, 2.51111284e-40, 4.37113883e-08, -3.7545812e-20, 1, -8.58948004e-13, -4.37113883e-08, 8.58948004e-13, -1)
+                        },
+                        ['[Shotgun]'] = {
+                            location = meshes.Kitty.KittyShotgun,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13483035672',
+                            C0 = newCFrame(0.0233459473, 0.223892093, -0.0213623047, 4.37118963e-08, -6.53699317e-13, 1, 3.47284736e-20, 1, 7.38964445e-13, -0.999997139, 8.69506734e-21, 4.37119354e-08)
+                        }
+                    }
+                },
+                ['Toy'] = {
+                    mesh_location = meshes.Toy,
+                    tween_duration = 1.25,
+                    color = newColorSequence({newColorSequenceKeypoint(0, Color3.new(0, 1, 0)), ColorSequenceKeypoint.new(0.5, Color3.new(0.666667, 0.333333, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.666667, 0))}),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Toy.RevolverTOY,
+                            equipped = false,
+                            C0 = newCFrame(-0.0250854492, -0.144362092, -0.00266647339, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[LMG]'] = {
+                            location = meshes.Toy.LMGTOY,
+                            equipped = false,
+                            C0 = newCFrame(-0.285247803, -0.0942560434, -0.270412445, 1, 0, 4.37113883e-08, 0, 1, 0, -4.37113883e-08, 0, 1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Toy.DBToy,
+                            equipped = false,
+                            C0 = newCFrame(-0.0484313965, -0.00164616108, -0.0190467834, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.Toy.RPGToy,
+                            equipped = false,
+                            C0 = newCFrame(0.00121307373, 0.261434197, -0.318969727, 1, 2.5768439e-12, -4.37113883e-08, 2.57684412e-12, 1, 6.29895225e-12, 4.37113883e-08, 6.29895225e-12, 1)
+                        }
+                    }
+                },
+                ['Galactic'] = {
+                    mesh_location = meshes.Galactic,
+                    tween_duration = 1.25,
+                    color = newColorSequence(Color3.new(1, 0, 0)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Galactic.galacticRev,
+                            equipped = false,
+                            C0 = newCFrame(-0.049041748, 0.0399398208, -0.00772094727, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.Galactic.TacticalGalactic,
+                            equipped = false,
+                            C0 = newCFrame(-0.0411682129, -0.0281000137, 0.00103759766, 0, 5.68434189e-14, 1, -1.91456822e-13, 1, 5.68434189e-14, -1, 1.91456822e-13, 0)
+                        }
+                    }
+                },
+                ['Water'] = {
+                    tween_duration = 1.25,
+                    tween_type = 'Both',
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3.new(0, 1, 1), Color3.new(0.666667, 1, 1)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Water.WaterGunRevolver,
+                            equipped = false,
+                            C0 = newCFrame(-0.0440063477, 0.028675437, -0.00469970703, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.Water.TactWater,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13814991449',
+                            C0 = newCFrame(0.0238037109, -0.00912904739, 0.00485229492, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Water.DBWater,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13814990235',
+                            C0 = newCFrame(-0.0710754395, 0.00169920921, -0.0888671875, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        },
+                        ['[Flamethrower]'] = {
+                            location = meshes.Water.FTWater,
+                            equipped = false,
+                            C0 = newCFrame(0.0941314697, 0.593509138, 0.0191040039, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        }
+                    }
+                },
+                ['GPO'] = {
+                    color = newColorSequence(Color3.new(1, 0.666667, 0)),
+                    guns = {
+                        ['[RPG]'] = {
+                            location = meshes.GPO.Bazooka,
+                            equipped = false,
+                            C0 = newCFrame(-0.0184631348, 0.0707798004, 0.219360352, 4.37113883e-08, 1.07062025e-23, 1, -5.75081297e-14, 1, 1.14251725e-36, -1, 5.70182736e-14, 4.37113883e-08)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            location = meshes.GPO.MaguTact,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13998711419',
+                            C0 = newCFrame(-0.282501221, 0.0472121239, -0.0065612793, -6.60624482e-06, 1.5649757e-08, -1, -5.68434189e-14, 1, -1.56486806e-08, 1, 5.68434189e-14, -6.60624482e-06)
+                        },
+                        ['[Rifle]'] = {
+                            location = meshes.GPO.Rifle,
+                            equipped = false,
+                            C0 = newCFrame(-0.208007812, 0.185256913, 0.000610351562, -3.37081539e-14, 1.62803403e-07, -1.00000012, -8.74227695e-08, 0.999999881, 1.63036205e-07, 1, 8.74227766e-08, -1.94552524e-14)
+                        }
+                    }
+                },
+                ['BIT8'] = {
+                    tween_duration = 1.25,
+                    tween_type = 'Width',
+                    beam_width = 0.125,
+                    color = newColorSequence(Color3.fromHSV(0.5, 0.9, 1)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.BIT8.RPixel,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13326584088',
+                            C0 = newCFrame(0.0261230469, -0.042888701, 0.00260925293, -1, 1.355249e-20, -3.55271071e-15, 1.355249e-20, 1, -1.81903294e-27, 3.55271071e-15, -1.81903294e-27, -1)
+                        },
+                        ['[Flamethrower]'] = {
+                            location = meshes.BIT8.FTPixel,
+                            equipped = false,
+                            C0 = newCFrame(-0.0906066895, -0.0161985159, -0.0117645264, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.BIT8.DBPixel,
+                            equipped = false,
+                            shoot_sound = 'rbxassetid://13326578563',
+                            C0 = newCFrame(-0.240386963, -0.127295256, -0.00776672363, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[RPG]'] = {
+                            location = meshes.BIT8.RPGPixel,
+                            equipped = false,
+                            C0 = newCFrame(0.0102081299, 0.0659624338, 0.362945557, 4.37113883e-08, 0, 1, -5.72632016e-14, 1, 2.50305399e-21, -1, 5.72632016e-14, 4.37113883e-08)
+                        }
+                    }
+                },
+                ['Electric'] = {
+                    color = newColorSequence(Color3.new(0, 1, 1), Color3.new(0.666667, 1, 1)),
+                    guns = {
+                        ['[Revolver]'] = {
+                            location = meshes.Electric.ElectricRevolver,
+                            equipped = false,
+                            C0 = newCFrame(0.185462952, 0.0312761068, 0.000610351562, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[DrumGun]'] = {
+                            location = meshes.Electric.ElectricDrum,
+                            equipped = false,
+                            C0 = newCFrame(-0.471969604, 0.184426308, 0.075378418, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[SMG]'] = {
+                            location = meshes.Electric.ElectricSMG,
+                            equipped = false,
+                            C0 = newCFrame(-0.0620956421, 0.109580457, 0.00729370117, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Shotgun]'] = {
+                            location = meshes.Electric.ElectricShotgun,
+                            equipped = false,
+                            C0 = newCFrame(6.10351562e-05, 0.180232108, -0.624732971, 1, 0, -4.37113883e-08, 0, 1, 0, 4.37113883e-08, 0, 1)
+                        },
+                        ['[Rifle]'] = {
+                            location = meshes.Electric.ElectricRifle,
+                            equipped = false,
+                            C0 = newCFrame(0.181793213, -0.0415201783, 0.00421142578, 1.8189894e-12, 6.6174449e-24, 1, 7.27595761e-12, 1, 6.6174449e-24, -1, -7.27595761e-12, -1.8189894e-12)
+                        },
+                        ['[P90]'] = {
+                            location = meshes.Electric.ElectricP90,
+                            equipped = false,
+                            C0 = newCFrame(0.166191101, -0.225557804, -0.0075378418, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[LMG]'] = {
+                            location = meshes.Electric.ElectricLMG,
+                            equipped = false,
+                            C0 = newCFrame(0.142379761, 0.104723871, -0.303771973, -1, 0, -4.37113883e-08, 0, 1, 0, 4.37113883e-08, 0, -1)
+                        },
+                        ['[Flamethrower]'] = {
+                            location = meshes.Electric.ElectricFT,
+                            equipped = false,
+                            C0 = newCFrame(-0.158782959, 0.173444271, 0.00640869141, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            location = meshes.Electric.ElectricDB,
+                            equipped = false,
+                            C0 = newCFrame(0.0755996704, -0.0420352221, 0.00543212891, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Glock]'] = {
+                            location = meshes.Electric.ElectricGlock,
+                            equipped = false,
+                            C0 = newCFrame(-0.00207519531, 0.0318723917, 0.0401077271, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[AUG]'] = {
+                            location = meshes.Electric.ElectricAUG,
+                            equipped = false,
+                            C0 = newCFrame(0.331085205, -0.0117390156, 0.00155639648, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[SilencerAR]'] = {
+                            location = meshes.Electric.ElectricAR,
+                            equipped = false,
+                            C0 = newCFrame(-0.16942215, 0.0508521795, 0.0669250488, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[AK47]'] = {
+                            location = meshes.Electric.ElectricAK,
+                            equipped = false,
+                            C0 = newCFrame(0.155792236, 0.18423444, 0.00140380859, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        }
+                    }
+                },
+                --[[['Shadow'] = {
+                    Color = ColorSequence.new(Color3.new(0.560784, 0.470588, 1), Color3.new(0.576471, 0.380392, 1)),
+                    ['Rifle'] = {
+                        Equipped = false
+                    },
+                    ['Shotgun'] = {
+                        Equipped = false,
+                        Location = meshes.Shadow.ShotgunGhost,
+                        CFrame = CFrame.new(3.05175781e-05, 0.199999928, 3.81469727e-06, -1, 0, -4.37113883e-08, 0, 1, 0, 4.37113883e-08, 0, -1)
+                    },
+                    ['Revolver'] = {
+                        Equipped = false,
+                        Location = meshes.Shadow.RevolverGhost,
+                        CFrame = CFrame.new(1.52587891e-05, 0, 0, 1, 0, 8.74227766e-08, 0, 1, 0, -8.74227766e-08, 0, 1)
+                    }
+                }]]
+                ['Halloween23'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Halloween.Rev,
+                            shoot_sound = 'rbxassetid://14924285721',
+                            C0 = newCFrame(-0.0257873535, -0.0117108226, -0.00671386719, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            equipped = false,
+                            location = meshes.Halloween.DB,
+                            shoot_sound = 'rbxassetid://14924282919',
+                            C0 = newCFrame(-0.00271606445, -0.0485508144, 0.000732421875, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        },
+                        ['[Shotgun]'] = {
+                            equipped = false,
+                            location = meshes.Halloween.SG,
+                            shoot_sound = 'rbxassetid://14924268000',
+                            C0 = newCFrame(0.00573730469, 0.294590235, -0.115814209, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            equipped = false,
+                            location = meshes.Halloween.Tact,
+                            shoot_sound = 'rbxassetid://14924256223',
+                            C0 = newCFrame(-0.0715637207, -0.0843618512, 0.00582885742, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        }
+                    }
+                },
+                ['Soul'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Soul.rev,
+                            shoot_sound = 'rbxassetid://14909152822',
+                            C0 = newCFrame(-0.0646362305, 0.2725088, -0.00242614746, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            equipped = false,
+                            location = meshes.Soul.db,
+                            shoot_sound = 'rbxassetid://14909164664',
+                            C0 = newCFrame(0.405822754, 0.0975035429, -0.00506591797, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            equipped = false,
+                            location = meshes.Soul.tact,
+                            shoot_sound = 'rbxassetid://14918188609',
+                            C0 = newCFrame(-0.347473145, 0.0268714428, 0.00553894043, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        }
+                    }
+                },
+                ['Heaven'] = {
+                    color = newColorSequence(Color3.new(1, 1, 1)),
+                    tween_duration = 1.25,
+                    easing_style = Enum.EasingStyle.Quad,
+                    easing_direction = Enum.EasingDirection.Out,
+                    beam_width = 0.13,
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Heaven.Revolver,
+                            C0 = newCFrame(-0.0829315186, -0.0831851959, -0.00296020508, -0.999999881, 2.94089277e-17, 8.27179774e-25, -2.94089277e-17, 0.999999881, 6.85215614e-16, 8.27179922e-25, -6.85215667e-16, -1)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            equipped = false,
+                            location = meshes.Heaven.DB,
+                            shoot_sound = 'rbxassetid://14489852879',
+                            C0 = newCFrame(-0.0303955078, 0.022110641, 0.00296020508, -0.999997139, -7.05812226e-16, 7.85568618e-30, 7.05812226e-16, 0.999997139, -2.06501178e-14, 6.44518474e-30, 2.06501042e-14, -0.999999046)
+                        }
+                    }
+                },
+                ['Void'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Void.rev,
+                            C0 = newCFrame(-0.00503540039, 0.0082899332, -0.00164794922, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[TacticalShotgun]'] = {
+                            equipped = false,
+                            location = meshes.Void.tact,
+                            C0 = newCFrame(0.0505371094, -0.0487936139, 0.00158691406, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        }
+                    }
+                },
+                ['DH-Stars II'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Popular.STARSREV,
+                            C0 = newCFrame(0.0578613281, -0.0479719043, -0.00115966797, -1.00000405, 1.15596135e-16, 1.64267286e-30, -1.15596135e-16, 1, 2.99751983e-14, 1.66683049e-30, -2.99751983e-14, -1.00000405)
+                        }
+                    }
+                },
+                ['DH-Verified'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Popular.VERIFIEDREV,
+                            C0 = newCFrame(0.049407959, -0.0454721451, 0.00158691406, -1, 0, 0, 0, 1, 2.22044605e-15, 0, -2.22044605e-15, -1)
+                        }
+                    }
+                },
+                ['Candy'] = {
+                    guns = {
+                        ['[Revolver]'] = {
+                            equipped = false,
+                            location = meshes.Candy.RevolverCandy,
+                            C0 = newCFrame(-0.106658936, -0.0681198835, 0.00198364258, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        },
+                        ['[Double-Barrel SG]'] = {
+                            equipped = false,
+                            location = meshes.Candy.DBCandy,
+                            C0 = newCFrame(0.0430603027, -0.0375298262, -0.00198364258, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                        }
+                    }
+                }
+            };
+        
+            mkelement = function(class, parent, props)
+                local obj = Instance.new(class);
+        
+                for i, v in next, props do
+                    obj[i] = v;
+                end;
+        
+                obj.Parent = parent;
+                return obj;
+            end;
+        
+            find_gun = (function(gun_name, instance)
+                for i, v in next, instance:GetChildren() do
+                    if v:IsA('Tool') then
+                        if (v.Name == gun_name) then
+                            return v
+                        end
+                    end
+                end
+            end);
+        
+            InventoryChanger.Functions.GameEquip = function(gun, skin)
+                return replicated_storage.MainEvent:FireServer('EquipWeaponSkins', gun, skin);
+            end;
+        
+            InventoryChanger.Functions.AddOwnedSkins = function()
+                for _, v in ipairs(entries:GetChildren()) do
+                    local ext_name = v.Name:match('%[(.-)%]');
+                    local skin_name, _ = v.Name:gsub('%[.-%]', '');
+                    if 
+                        ext_name 
+                        and skin_name 
+                        and InventoryChanger.Skins[skin_name] 
+                        and InventoryChanger.Skins[skin_name].guns 
+                        and InventoryChanger.Skins[skin_name].guns['[' .. ext_name .. ']']
+                    then
+                        local Preview = v:FindFirstChild('Preview');
+        
+                        if Preview and Preview:FindFirstChild('Equipped') and Preview.Equipped.Visible then
+                            table.insert(InventoryChanger.Owned, { frame = v, gun = '[' .. ext_name .. ']' })
+                        end;
+                    end;
+                end;
+            end;
+        
+            InventoryChanger.Functions.UnequipGameSkins = function()
+                for _, v in ipairs(InventoryChanger.Owned) do
+                    local SkinInfo = v.frame.SkinInfo;
+                    local Container = SkinInfo.Container;
+                    local SkinName = Container.SkinName.Text;
+        
+                    InventoryChanger.Functions.GameEquip(v.gun, SkinName)
+                end;
+            end;
+        
+            InventoryChanger.Functions.Unload = function()
+                return Utilities.Unload();
+            end;
+        
+            InventoryChanger.Functions.Reload = function()
+                local function wait_for_child(parent, child)
+                    local child = parent:WaitForChild(child);
+                    while not child do
+                        child = parent:WaitForChild(child);
+                    end;
+                    return child;
+                end;
+                
+                client = players.LocalPlayer;
+                player_gui = client.PlayerGui;
+        
+                repeat task.wait() until player_gui;
+        
+                main_gui = wait_for_child(player_gui, 'MainScreenGui');
+                crew = wait_for_child(main_gui, 'Crew');
+        
+                bottom_left = wait_for_child(crew, 'BottomLeft');
+                bottom_left = bottom_left.Frame;
+        
+                skins_button = wait_for_child(bottom_left, 'Skins');
+        
+                weapon_skins_gui = wait_for_child(main_gui, 'WeaponSkinsGUI');
+                
+                gui_body_wrapper = wait_for_child(weapon_skins_gui, 'Body');
+                body_wrapper = wait_for_child(gui_body_wrapper, 'Wrapper');
+                
+                skin_view = wait_for_child(body_wrapper, 'SkinView');
+                skin_view_frame = wait_for_child(skin_view, 'Frame');
+        
+                guns = wait_for_child(skin_view_frame, 'Guns').Contents;
+                entries = wait_for_child(skin_view_frame, 'Skins').Contents.Entries;
+        
+                InventoryChanger.Functions.Unload();
+        
+                cout('Reload', 'Script successfully reloaded!');
+                cout('Reload', 'Waiting for skins to load...');
+        
+                wait_for_child(entries, '[Revolver]Golden Age');
+        
+                cout('Reload', 'Skins successfully loaded.');
+                InventoryChanger.Functions.AddOwnedSkins();
+                InventoryChanger.Functions.UnequipGameSkins();
+        
+                for i, v in next, guns:GetChildren() do
+                    if v:IsA('Frame') and v.Name ~= 'GunEntry' and v.Name ~= 'Trading' and v.Name ~= '[Mask]' then
+                        Utilities.AddConnection(v.Button.MouseButton1Click, function()
+                            local extracted_name = v.Name:match(regex);
+                            if extracted_name then
+                                InventoryChanger.Functions.Start(extracted_name);
+                            end;
+                        end);
+                    end;
+                end;
+            end;
+        
+            InventoryChanger.Functions.Equip = function(gun_name, skin_name)
+                print('[DEBUG]', 'Equip function has been invoked.', gun_name, skin_name or 'Default')
+                local gun = find_gun(gun_name, client.Backpack) or find_gun(gun_name, client.Character);
+                if not skin_name then
+                    if gun and gun.Name == gun_name then
+                        for _, v in next, gun.Default:GetChildren() do v:Destroy() end;
+                        
+                        gun.Default.Transparency = 0;
+                        --if InventoryChanger.Selected[gun.Name] and not InventoryChanger.Skins[InventoryChanger.Selected[gun.Name]].Location then
+                            --gun.Default.TextureID = 'rbxassetid://8117372147';
+                        --end;
+                        
+                        if gun.Name == '[Silencer]' or gun.Name == '[SilencerAR]' then
+                            gun:FindFirstChild('Part').Transparency = 0;
+                        end;
+        
+                        local skin_name = InventoryChanger.Selected[gun.Name];
+        
+                        if skin_name and InventoryChanger.Skins[skin_name] and InventoryChanger.Skins[skin_name].guns and InventoryChanger.Skins[skin_name].guns[gun.Name] then
+                            if InventoryChanger.Skins[skin_name].guns[gun.Name].TracerLoop then
+                                InventoryChanger.Skins[skin_name].guns[gun.Name].TracerLoop:Disconnect();
+                                InventoryChanger.Skins[skin_name].guns[gun.Name].TracerLoop = nil;
+                            end;
+        
+                            if InventoryChanger.Skins[skin_name].guns[gun.Name].shoot_sound_loop then
+                                InventoryChanger.Skins[skin_name].guns[gun.Name].shoot_sound_loop:Disconnect();
+                                InventoryChanger.Skins[skin_name].guns[gun.Name].shoot_sound_loop = nil;
+                            end;
+                        end;
+                    end;
+        
+                    return;
+                end;
+                
+                if gun and gun.Name == gun_name and skin_name then
+                    cout('DEBUG', 'Has skin name');
+                    local skin_pack = InventoryChanger.Skins[skin_name];
+                    local guns = skin_pack.guns;
+                    if skin_pack and guns and not skin_pack.texture then
+                        cout('DEBUG', 'Changing skin assets');
+                        for _, x in next, gun.Default:GetChildren() do x:Destroy() end;
+                        
+                        local clone = guns[gun_name].location:Clone();
+                        clone.Name = 'Mesh';
+                        clone.Parent = gun.Default;
+                        
+                        local weld = Instance.new('Weld', clone);
+                        weld.Part0 = gun.Default;
+                        weld.Part1 = clone;
+                        weld.C0 = guns[gun_name].C0;
+                        
+                        gun.Default.Transparency = 1;
+        
+                        if guns[gun_name].shoot_sound then
+                            if guns[gun_name].shoot_sound_loop then
+                                guns[gun_name].shoot_sound_loop:Disconnect();
+                                guns[gun_name].shoot_sound_loop = nil;
+                            end;
+                            gun.Handle.ShootSound.SoundId = guns[gun_name].shoot_sound;
+                            guns[gun_name].shoot_sound_loop = gun.Handle.ChildAdded:Connect(function(child)
+                                if child:IsA('Sound') and child.Name == 'ShootSound' then
+                                    child.SoundId = guns[gun_name].shoot_sound;
+                                end;
+                            end);
+                        end;
+                    end;
+                end;
+            end;
+        
+            InventoryChanger.Functions.Start = function(name)
+                for i, v in next, entries:GetChildren() do
+                    local skin_name, _ = v.Name:gsub('%[.-%]', '');
+        
+                    if string.find(v.Name, name, 1, true) and InventoryChanger.Skins[skin_name] and InventoryChanger.Skins[skin_name].guns and InventoryChanger.Skins[skin_name].guns['['..name..']'] and InventoryChanger.Skins[skin_name].guns['['..name..']'].location then
+                        local Preview = v:FindFirstChild('Preview');
+                        local Button = v:FindFirstChild('Button');
+                        local skinInfo = v:FindFirstChild('SkinInfo');
+        
+                        if Preview and Button and skinInfo then
+                            local Label = Preview:FindFirstChild('LockImageLabel');
+                            local AmountValue = Preview:FindFirstChild('AmountValue');
+                            local Equipped = Preview:FindFirstChild('Equipped');
+                            local container = skinInfo:FindFirstChild('Container');
+        
+                            local extracted_name = v.Name:match(regex);
+        
+                            if Equipped and extracted_name then
+                                Equipped.Visible = InventoryChanger.Skins[skin_name] and InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'] and InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'].equipped or false;
+                                InventoryChanger.Functions.Equip('['..extracted_name..']', InventoryChanger.Selected['['..extracted_name..']'])
+        
+                                if Label then
+                                    Label.Visible = false;
+                                end;
+        
+                                if container and container.SellButton then
+                                    container.SellButton.Visible = true;
+                                end;
+                            
+                                if AmountValue then
+                                    AmountValue.Visible = true;
+                                    AmountValue.Text = 'x1';
+                                end;
+                            
+                                if getgenv().InventoryConnections[v.Name] then
+                                    getgenv().InventoryConnections[v.Name]:Disconnect();
+                                    getgenv().InventoryConnections[v.Name] = nil;
+                                end;
+        
+                                v.Button:Destroy();
+                                local props = { Text = '',BackgroundTransparency = 1,Size = UDim2.new(1, 0, 0.7, 0),ZIndex = 5,Name = 'Button',Position = UDim2.new(0, 0, 0, 0)};
+                                local new_btn = mkelement('TextButton', v, props);
+        
+                                getgenv().InventoryConnections[v.Name] = new_btn.MouseButton1Click:Connect(function()
+                                    InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'].equipped = not InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'].equipped;
+                                    InventoryChanger.Selected['['..extracted_name..']'] = InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'].equipped and skin_name or nil;
+                                    Equipped.Visible = InventoryChanger.Skins[skin_name].guns['['..extracted_name..']'].equipped;
+        
+                                    for k, x in ipairs(entries:GetChildren()) do
+                                        if x.Name:match(regex) == extracted_name and x ~= v then
+                                            x.Preview.Equipped.Visible = false;
+        
+                                            for _, l in next, InventoryChanger.Skins do
+                                                if _ ~= skin_name and l['['..extracted_name..']'] and l['['..extracted_name..']'].equipped then
+                                                    l[extracted_name].equipped = false
+                                                end;
+                                            end;
+                                        end;
+                                        
+                                        if x ~= v and string.find(x.Name, name, 1, true) and InventoryChanger.Skins[skin_name] and InventoryChanger.Skins[skin_name].guns and InventoryChanger.Skins[skin_name].guns['['..name..']'] and InventoryChanger.Skins[skin_name].guns['['..name..']'].location then
+                                            local Preview = v:FindFirstChild('Preview');
+                                            local Button = v:FindFirstChild('Button');
+                                            local skinInfo = v:FindFirstChild('SkinInfo');
+                                            
+                                            if Preview and Button and skinInfo then
+                                                local Label = Preview:FindFirstChild('LockImageLabel');
+                                                local AmountValue = Preview:FindFirstChild('AmountValue');
+                                                local Equipped = Preview:FindFirstChild('Equipped');
+                                                local container = skinInfo:FindFirstChild('Container');
+                                                
+                                                if Label then
+                                                    Label.Visible = false;
+                                                end;
+                                
+                                                if container and container.SellButton then
+                                                    container.SellButton.Visible = true;
+                                                end;
+                                                
+                                                if AmountValue then
+                                                    AmountValue.Visible = true;
+                                                    AmountValue.Text = 'x1';
+                                                end;
+                                            end;
+        
+                                            InventoryChanger.Owned = {};
+                                            InventoryChanger.Functions.AddOwnedSkins();
+                                            InventoryChanger.Functions.UnequipGameSkins();
+                                        end;
+                                    end;
+                                end);
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        
+            InventoryChanger.Functions.CharacterAdded = function(character)
+                if getgenv().InventoryConnections.ChildAdded then
+                    getgenv().InventoryConnections.ChildAdded:Disconnect();
+                    getgenv().InventoryConnections.ChildAdded = nil;
+                end;
+        
+                if getgenv().InventoryConnections.ChildRemoved then
+                    getgenv().InventoryConnections.ChildRemoved:Disconnect();
+                    getgenv().InventoryConnections.ChildRemoved = nil;
+                end;
+        
+                getgenv().InventoryConnections.ChildAdded = character.ChildAdded:Connect(function(child)
+                    if child:IsA('Tool') and child:FindFirstChild('GunScript') then
+                        InventoryChanger.Functions.Equip(child.Name, InventoryChanger.Selected[child.Name]);
+                        local skin_name = InventoryChanger.Selected[child.Name];
+                        
+                        if skin_name then
+                            if InventoryChanger.Skins[skin_name].color and InventoryChanger.Skins[skin_name].guns[child.Name].equipped then
+                                if InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop then
+                                    InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop:Disconnect();
+                                    InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop = nil;
+                                end;
+        
+                                InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop = Ignored.DescendantAdded:Connect(function(descendant)
+                                    local gun = find_gun(child.Name, client.Character) or nil;
+        
+                                    if gun and descendant:IsDescendantOf(siren) and descendant:IsA('Beam') then
+                                        local pos1 = (descendant.Attachment0.WorldCFrame.Position.X > gun.Handle.CFrame.Position.X) and descendant.Attachment0.WorldCFrame.Position or gun.Handle.CFrame.Position;
+                                        local pos2 = (descendant.Attachment0.WorldCFrame.Position.X < gun.Handle.CFrame.Position.X) and descendant.Attachment0.WorldCFrame.Position or gun.Handle.CFrame.Position;
+        
+                                        if math.abs(client.Character.HumanoidRootPart.Velocity.X) < 22 and (pos1 - pos2).Magnitude < 5 or (pos1 - pos2).Magnitude < 20 then
+                                            local skin_pack = InventoryChanger.Skins[skin_name];
+                                            local guns = skin_pack and skin_pack.guns or nil
+                                            local tween_duration = skin_pack and (skin_pack.tween_duration or guns and guns[gun.Name] and guns[gun.Name].tween_duration) or nil;
+                                            local width = skin_pack and (skin_pack.beam_width or guns and guns[gun.Name] and guns[gun.Name].beam_width) or nil;
+                                            local color = skin_pack and (skin_pack.color or guns and guns[gun.Name] and guns[gun.Name].color) or nil;
+                                            local easing_direction = skin_pack and (skin_pack.easing_direction or guns and guns[gun.Name] and guns[gun.Name].easing_direction) or nil;
+                                            local easing_style = skin_pack and (skin_pack.easing_style or guns and guns[gun.Name] and guns[gun.Name].easing_style) or nil;
+        
+                                            if skin_pack and tween_duration and color then
+                                                local clonedParent = descendant.Parent:Clone();
+        
+                                                clonedParent.Parent = workspace.Vehicles;
+                                                descendant.Parent:Destroy();
+                                                if width then
+                                                    clonedParent:FindFirstChild('GunBeam').Width1 = width;
+                                                end;
+                                                clonedParent:FindFirstChild('GunBeam').Color = color;
+                                                Utilities.Tween({
+                                                    object = clonedParent:FindFirstChild('GunBeam'),
+                                                    info = { tween_duration, easing_style, easing_direction },
+                                                    properties = { Width1 = 0 },
+                                                    callback = function()
+                                                        clonedParent:Destroy();
+                                                    end
+                                                })
+                                            elseif color then
+                                                descendant.Color = color;
+                                            end;
+                                        end;
+                                    end;
+                                end);
+                            else
+                                if InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop then
+                                    InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop:Disconnect();
+                                    InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop = nil;
+                                end;
+                            end;
+                        end;
+                    end;
+                end);
+        
+                getgenv().InventoryConnections.ChildRemoved = character.ChildRemoved:Connect(function(child)
+                    if child:IsA('Tool') and child:FindFirstChild('GunScript') then
+                        InventoryChanger.Functions.Equip(child.Name, false);
+        
+                        local skin_name = InventoryChanger.Selected[child.Name];
+        
+                        if skin_name then
+                            if InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop then
+                                InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop:Disconnect();
+                                InventoryChanger.Skins[skin_name].guns[child.Name].TracerLoop = nil;
+                            end;
+                        end;
+                    end;
+                end);
+                
+                InventoryChanger.Functions.Reload();
+            end;
+        
+            if getgenv().InventoryConnections.CharacterAdded then
+                getgenv().InventoryConnections.CharacterAdded:Disconnect();
+                getgenv().InventoryConnections.CharacterAdded = nil;
+            end;
+            getgenv().InventoryConnections.CharacterAdded = client.CharacterAdded:Connect(InventoryChanger.Functions.CharacterAdded);    InventoryChanger.Functions.CharacterAdded(client.Character);end;
+        end            
+    
+    --loadstring(game:HttpGet("https://angxlzz.dev/cdn/txt/adonis.txt"))()
+    -- 
+
+    -- Very Sexy variables :^)
+    local InputService, TeleportService, RunService, Workspace, Lighting, Players, HttpService, StarterGui, ReplicatedStorage, TweenService, VirtualUser, PathFindingService, Stats = game:GetService("UserInputService"), game:GetService("TeleportService"), game:GetService("RunService"), game:GetService("Workspace"), game:GetService("Lighting"), game:GetService("Players"), game:GetService("HttpService"), game:GetService("StarterGui"), game:GetService("ReplicatedStorage"), game:GetService("TweenService"), game:GetService("VirtualUser"), game:GetService("PathfindingService"), game:GetService("Stats")
+    local NewVector2, NewVector3, NewCFrame, NewAngle = Vector2.new, Vector3.new, CFrame.new, CFrame.Angles
+    local NewRGB, NewHex = Color3.fromRGB, Color3.fromHex
+    local Find, Clear, Sub, Upper, Lower, Insert = table.find, table.clear, string.sub, string.upper, string.lower, table.insert
+    local Mouse, Camera, LocalPlayer = Players.LocalPlayer:GetMouse(), Workspace.Camera, Players.LocalPlayer
+    local Huge, Pi, Clamp, Round, Abs, Floor, Random, Sin, Cos, Rad, Halfpi = math.huge, math.pi, math.clamp, math.round, math.abs, math.floor, math.random, math.sin, math.cos, math.rad, math.pi/2
+        
+    getgenv().Lock = {
+        Enabled = false, 
+        Mode = "", 
+        Locking = false, 
+        Resolver = false, 
+        LookAt = false, 
+        ViewAt = false, 
+        Target = {Player = nil, Part = nil, Position = nil, Angle = 0}, 
+        ClosetPoint = false,
+        AntiAimViewer = false,
+        AntiCurve = false,
+        UnlockOnDeath = false,
+        ChatAlerts = false,
+        Visualize = {
+            Tracer = {false, nil}, 
+            Highlight = nil,
+            Dot = false, 
+            Hitbox = false,
+            Strafe = false,
+            Notify = false,
+            X = 5,
+            Y = 8,
+            Z = 5,
+            TargetUI = nil,
+        },
+        Target_Strafe = {false, 0, 0, 0},
+        Prediction = {
+            Part = nil, -- Closest bodypart [Make it just {"HumanoidRootPart"} for just hrp]
+            Air = false,
+            Amount = 0.13,
+            PingBased = false, 
+        }, 
+        Drawings = {} 
+    }
+    getgenv().offset = 0.06
+    local offset = getgenv().offset
+    -- Functions and Renders :3
+    function Lock:GetPlayerStatus(Player)
+        if not Player then Player = LocalPlayer end
+        return Player.Character and Player.Character:FindFirstChild("Humanoid") and Player.Character.Humanoid.Health > 0 and true or false
+    end
+    -- 
+    function Lock:GetClosestPlayer()
+        local shortestDistance = math.huge
+        --  
+        local closestPlayer
+        for _, Player in pairs(Players:GetPlayers()) do
+            if Player ~= LocalPlayer and Lock:GetPlayerStatus(Player) then
+                local pos, OnScreen = Camera:WorldToViewportPoint(Player.Character.HumanoidRootPart.Position)
+                local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y + 36)).magnitude
+                --
+                if magnitude < shortestDistance and OnScreen then
+                        closestPlayer = Player
+                        shortestDistance = magnitude
+                    end
+                end
+            end 
+        return closestPlayer
+    end
+    -- 
+    function Lock:newDrawing(type, prop)
+        local obj = Drawing.new(type)
+        --
+        if prop then
+            for i,v in next, prop do
+                obj[i] = v
+            end
+        end
+        return obj  
+    end
+        -- 
+        function Lock:newDrawing(type, prop)
+            local obj = Drawing.new(type)
+            --
+            if prop then
+                for i,v in next, prop do
+                    obj[i] = v
+                end
+            end
+            return obj  
+        end
+        -- 
+        function Lock:CalculateAbsolutePosition(Player)
+            if Lock:GetPlayerStatus(Player) then
+                local root = Player.Character["HumanoidRootPart"]
+                --
+                local currentPosition = root.Position
+                local currentTime = tick() 
+                --
+                Wait()
+                --
+                local newPosition = root.Position
+                local newTime = tick()
+                --
+                local distanceTraveled = (newPosition - currentPosition) 
+                --
+                local timeInterval = newTime - currentTime
+                local velocity = distanceTraveled / timeInterval
+                currentPosition = newPosition
+                currentTime = newTime
+                --
+                return velocity
+            end
+        end 
+        --
+        function Lock:GetTool() 
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Tool") and Lock:GetPlayerStatus() then 
+                return LocalPlayer.Character:FindFirstChildWhichIsA("Tool") 
+            end 
+        end 
+        --
+        function Lock:GetTracerOrigin(Origin) 
+            if Origin == "Head" then 
+                return Camera:WorldToViewportPoint(LocalPlayer.Character.Head.Position) 
+            elseif Origin == "Gun" then
+                local Tool = Lock:GetTool() 
+                if Tool and Tool.Handle ~= nil then 
+                    return Camera:WorldToViewportPoint(Tool.Handle.Position)
+                else 
+                    return nil 
+                end 
+            else 
+                return Vector2.new(Mouse.X, Mouse.Y + 36) --[[ Cause its 36 pixels offset for some odd reason??? ]]
+            end 
+        end 
+        -- Drawing and Rendering Everything
+        Lock.Drawings.Tracer = Lock:newDrawing("Line", {Visible = false, Color = NewRGB(255, 255, 255), Thickness = 1, ZIndex = 2, Transparency = 1})
+        Lock.Drawings.Dot = Lock:newDrawing("Circle", {Filled = true, Visible = false, Color = NewRGB(255, 255, 255), Thickness = 1, ZIndex = 2, Transparency = 1, Radius = 10})
+        Lock.Drawings.FOV = Lock:newDrawing("Circle", {Visible = false, Color = NewRGB(255, 255, 255), Thickness = 1, ZIndex = 2, Transparency = 1, Radius = 2})
+        -- 
+        -- 
+        Lock.Drawings.FakeHitbox = Instance.new("Part")
+        Lock.Drawings.FakeHitbox.Anchored = false 
+        Lock.Drawings.FakeHitbox.CanCollide = false 
+        Lock.Drawings.FakeHitbox.CFrame = CFrame.new(9999,9999,9999)
+        Lock.Drawings.FakeHitbox.Parent = game.Workspace
+        Lock.Drawings.FakeHitbox.Material = Enum.Material.Neon
+        Lock.Drawings.FakeHitbox.Color = Color3.fromRGB(255,255,255)
+        Lock.Drawings.FakeHitbox.Transparency = 0.8
+    
+    
+    
+    local highlight = Instance.new("Highlight")
+    
+    
+    
+    RunService.RenderStepped:Connect(function()
+        if Lock.Locking and Lock.Visualize.Highlight then
+        highlight.Parent = Lock.Target.Player.Character
+        highlight.FillColor = getgenv().fillcolor
+        highlight.OutlineColor = getgenv().outlinecolor
+        else
+            highlight.Parent = game.CoreGui
+        end
+    end)
+    
+    
+        
+    
+    local gui = 
+    {
+        targetui = Instance.new("ScreenGui"),
+        Frame = Instance.new("Frame"),
+        ImageLabel = Instance.new("ImageLabel"),
+        LocalScript = Instance.new("LocalScript"),
+        TextLabel = Instance.new("TextLabel"),
+        LocalScript_1 = Instance.new("LocalScript"),
+        Frame_1 = Instance.new("Frame"),
+        TextLabel_1 = Instance.new("TextLabel"),
+        LocalScript_2 = Instance.new("LocalScript"),
+        Frame_2 = Instance.new("Frame"),
+        TextLabel_2 = Instance.new("TextLabel"),
+        LocalScript_3 = Instance.new("LocalScript"),
+        UIGradient = Instance.new("UIGradient"),
+        Shadow = Instance.new("ImageLabel"),
+        Gradient = Instance.new("UIGradient"),
+    }
+    
+    
+    gui.targetui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.targetui.Name = "targetui"
+    gui.targetui.Parent = game:GetService("CoreGui")
+    
+    gui.Frame.BorderSizePixel = 0
+    gui.Frame.Size = UDim2.new(0, 323, 0, 112)
+    gui.Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.Frame.Name = "Frame"
+    gui.Frame.Position = UDim2.new(0.414371, 0, 0.854945, 0)
+    gui.Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    gui.Frame.Parent = gui.targetui
+    
+    gui.ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    gui.ImageLabel.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    gui.ImageLabel.Size = UDim2.new(0, 75, 0, 75)
+    gui.ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.ImageLabel.Name = "ImageLabel"
+    gui.ImageLabel.BackgroundTransparency = 1
+    gui.ImageLabel.Position = UDim2.new(0.0400908, 0, 0.151078, 0)
+    gui.ImageLabel.Parent = gui.Frame
+    
+    gui.LocalScript.Name = "LocalScript"
+    gui.LocalScript.Parent = gui.ImageLabel
+    
+    gui.TextLabel.TextStrokeTransparency = 0
+    gui.TextLabel.BorderSizePixel = 0
+    gui.TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    gui.TextLabel.Font = Enum.Font.Code
+    gui.TextLabel.TextSize = 13
+    gui.TextLabel.Position = UDim2.new(0.321981, 0, 0.3125, 0)
+    gui.TextLabel.Size = UDim2.new(0, 200, 0, 23)
+    gui.TextLabel.Name = "TextLabel"
+    gui.TextLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    gui.TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.TextLabel.Text = "@nil"
+    gui.TextLabel.BackgroundTransparency = 1
+    gui.TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    gui.TextLabel.Parent = gui.Frame
+    
+    gui.LocalScript_1.Name = "LocalScript"
+    gui.LocalScript_1.Parent = gui.TextLabel
+    
+    gui.Frame_1.BorderSizePixel = 0
+    gui.Frame_1.Size = UDim2.new(0, 211, 0, 22)
+    gui.Frame_1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.Frame_1.Name = "Frame"
+    gui.Frame_1.Position = UDim2.new(0.321981, 0, 0.625, 0)
+    gui.Frame_1.BackgroundColor3 = Color3.fromRGB(227, 181, 200)
+    gui.Frame_1.Parent = gui.Frame
+    
+    gui.TextLabel_1.TextStrokeTransparency = 0
+    gui.TextLabel_1.BorderSizePixel = 0
+    gui.TextLabel_1.BackgroundColor3 = Color3.fromRGB(227, 181, 200)
+    gui.TextLabel_1.Font = Enum.Font.Code
+    gui.TextLabel_1.TextSize = 14
+    gui.TextLabel_1.Position = UDim2.new(0.0584566, 0, 0, 0)
+    gui.TextLabel_1.Size = UDim2.new(0, 185, 0, 20)
+    gui.TextLabel_1.Name = "TextLabel"
+    gui.TextLabel_1.TextColor3 = Color3.fromRGB(255, 255, 255)
+    gui.TextLabel_1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.TextLabel_1.Text = "Health: nan"
+    gui.TextLabel_1.BackgroundTransparency = 1
+    gui.TextLabel_1.Parent = gui.Frame_1
+    
+    gui.LocalScript_2.Name = "LocalScript"
+    gui.LocalScript_2.Parent = gui.TextLabel_1
+    
+    gui.Frame_2.BorderSizePixel = 0
+    gui.Frame_2.Size = UDim2.new(0, 323, 0, 2)
+    gui.Frame_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.Frame_2.Name = "Frame"
+    gui.Frame_2.BackgroundColor3 = Color3.fromRGB(227, 181, 200)
+    gui.Frame_2.Parent = gui.Frame
+    
+    gui.TextLabel_2.TextStrokeTransparency = 0
+    gui.TextLabel_2.BorderSizePixel = 0
+    gui.TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    gui.TextLabel_2.Font = Enum.Font.Code
+    gui.TextLabel_2.TextSize = 18
+    gui.TextLabel_2.Position = UDim2.new(0.321981, 0, 4.07144, 0)
+    gui.TextLabel_2.Size = UDim2.new(0, 200, 0, 43)
+    gui.TextLabel_2.Name = "TextLabel"
+    gui.TextLabel_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    gui.TextLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    gui.TextLabel_2.Text = "nil"
+    gui.TextLabel_2.BackgroundTransparency = 1
+    gui.TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+    gui.TextLabel_2.Parent = gui.Frame_2
+    
+    gui.LocalScript_3.Name = "LocalScript"
+    gui.LocalScript_3.Parent = gui.TextLabel_2
+    
+    gui.UIGradient.Name = "UIGradient"
+    gui.UIGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 50)), ColorSequenceKeypoint.new(1, Color3.fromRGB(170, 170, 170)) }
+    gui.UIGradient.Rotation = 270
+    gui.UIGradient.Parent = gui.Frame
+    
+    gui.Shadow.ImageColor3 = Color3.fromRGB(14, 14, 14)
+    gui.Shadow.ZIndex = 0
+    gui.Shadow.SliceCenter = Rect.new(18, 18, 20, 20)
+    gui.Shadow.ScaleType = Enum.ScaleType.Slice
+    gui.Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    gui.Shadow.Image = "http://www.roblox.com/asset/?id=12194054034"
+    gui.Shadow.Size = UDim2.new(1, 20, 1, 20)
+    gui.Shadow.Name = "Shadow"
+    gui.Shadow.BackgroundTransparency = 1
+    gui.Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    gui.Shadow.Parent = gui.Frame
+    
+    gui.Gradient.Name = "Gradient"
+    gui.Gradient.Rotation = 90
+    gui.Gradient.Parent = gui.Shadow
+    gui.Frame.Visible = false
+    
+        for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if v:IsA("Script") and v.Name ~= "Health" and v.Name ~= "Sound" and v:FindFirstChild("LocalScript") then
+                v:Destroy()
+            end
+        end
+        game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+            repeat
+                wait()
+            until game.Players.LocalPlayer.Character
+            char.ChildAdded:Connect(function(child)
+                if child:IsA("Script") then 
+                    wait(0.1)
+                    if child:FindFirstChild("LocalScript") then
+                        child.LocalScript:FireServer()
+                    end
+                end
+            end)
+        end) 
+                
+    
+                 local Player = game:GetService("Players")["LocalPlayer"];
+     
+         Player["CharacterAdded"]:connect(function(v)
+             repeat wait() until v and v:FindFirstChild("Humanoid")
+         for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+             if v:IsA("Script") and v.Name ~= "Health" and v.Name ~= "Sound" and v:FindFirstChild("LocalScript") then
+                 v:Destroy()
+             end
+         end
+         game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+             repeat
+                 wait()
+             until game.Players.LocalPlayer.Character
+             char.ChildAdded:Connect(function(child)
+                 if child:IsA("Script") then 
+                     wait(0.1)
+                     if child:FindFirstChild("LocalScript") then
+                         child.LocalScript:FireServer()
+                     end
+                 end
+             end)
+         end)
+         end)
+    
+    
+         getgenv().AimPart = "HumanoidRootPart" 
+    getgenv().OldAimPart = "HumanoidRootPart"
+    getgenv().AimlockKey = "q"
+    getgenv().AimRadius = 5
+    getgenv().ThirdPerson = true 
+    getgenv().FirstPerson = true
+    getgenv().TeamCheck = false 
+    getgenv().PredictMovement = false
+    getgenv().PredictionVelocity = 7.22
+    
+    getgenv().Smoothness = false
+    getgenv().SmoothnessAmount = 1
+    getgenv().EasingStyle = Enum.EasingStyle.Elastic
+    
+    getgenv().Notifications = false
+    
+    getgenv().AutoPrediction = false
+    getgenv().UnlockOnDeath = false
+    getgenv().Shake = false
+    getgenv().ShakePower = 0
+    
+    local Players, Uis, RService, SGui = game:GetService"Players", game:GetService"UserInputService", game:GetService"RunService", game:GetService"StarterGui";
+    local Client, Mouse, Camera, CF, RNew, Vec3, Vec2 = Players.LocalPlayer, Players.LocalPlayer:GetMouse(), workspace.CurrentCamera, CFrame.new, Ray.new, Vector3.new, Vector2.new;
+    local Aimlock, MousePressed, CanNotify = true, false, false;
+    local AimlockTarget
+    local OldPre;
+    
+    
+    
+    getgenv().WorldToViewportPoint = function(P)
+        return Camera:WorldToViewportPoint(P)
+    end
+    
+    getgenv().WorldToScreenPoint = function(P) 
+        return Camera.WorldToScreenPoint(Camera, P)
+    end
+    
+    getgenv().GetObscuringObjects = function(T)
+        if T and T:FindFirstChild(getgenv().AimPart) and Client and Client.Character:FindFirstChild("Head") then 
+            local RayPos = workspace:FindPartOnRay(RNew(
+                T[getgenv().AimPart].Position, Client.Character.Head.Position)
+            )
+            if RayPos then return RayPos:IsDescendantOf(T) end
+        end
+    end
+    
+    getgenv().GetNearestTarget = function()
+        local players = {}
+        local PLAYER_HOLD  = {}
+        local DISTANCES = {}
+        for i, v in pairs(Players:GetPlayers()) do
+            if v ~= Client then
+                table.insert(players, v)
+            end
+        end
+        for i, v in pairs(players) do
+            if v.Character ~= nil then
+                local AIM = v.Character:FindFirstChild("Head")
+                if getgenv().TeamCheck == true and v.Team ~= Client.Team then
+                    local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                    local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+                    local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                    local DIFF = math.floor((POS - AIM.Position).magnitude)
+                    PLAYER_HOLD[v.Name .. i] = {}
+                    PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+                    PLAYER_HOLD[v.Name .. i].plr = v
+                    PLAYER_HOLD[v.Name .. i].diff = DIFF
+                    table.insert(DISTANCES, DIFF)
+                elseif getgenv().TeamCheck == false and v.Team == Client.Team then 
+                    local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+                    local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+                    local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                    local DIFF = math.floor((POS - AIM.Position).magnitude)
+                    PLAYER_HOLD[v.Name .. i] = {}
+                    PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+                    PLAYER_HOLD[v.Name .. i].plr = v
+                    PLAYER_HOLD[v.Name .. i].diff = DIFF
+                    table.insert(DISTANCES, DIFF)
+                end
+            end
+        end
+        
+        if unpack(DISTANCES) == nil then
+            return nil
+        end
+        
+        local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+        if L_DISTANCE > getgenv().AimRadius then
+            return nil
+        end
+        
+        for i, v in pairs(PLAYER_HOLD) do
+            if v.diff == L_DISTANCE then
+                return v.plr
+            end
+        end
+        return nil
+    end
+    
+    
+    
+    RService.RenderStepped:Connect(function()
+        if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 or (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        end
+        if Aimlock == true and MousePressed == true then 
+            if AimlockTarget and AimlockTarget.Character and AimlockTarget.Character:FindFirstChild(getgenv().AimPart) then 
+                if getgenv().FirstPerson == true then
+                    if CanNotify == true then
+                        if getgenv().PredictMovement == true then
+                            if getgenv().Smoothness == true then
+                                --// The part we're going to lerp/smoothen \\--
+                                local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
+                                
+                                --// Making it work \\--
+                                Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                            else
+                                Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
+                            end
+                        elseif getgenv().PredictMovement == false then 
+                            if getgenv().Smoothness == true then
+                                --// The part we're going to lerp/smoothen \\--
+                                local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+    
+                                --// Making it work \\--
+                                Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                            else
+                                Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+       if getgenv().UnlockOnDeath  == true and AimlockTarget and AimlockTarget.Character:FindFirstChild("Humanoid") then
+        if AimlockTarget.StarterPlayer.StarterCharacterScripts.BodyEffects['K.O'] then
+            AimlockTarget = nil
+            
+            if getgenv().Notifications == true then
+                Notify({
+                    Title = BlazedName,
+                    Description = "Unlocked",
+                    Duration = 1
+                })
+            end
+            if getgenv().ChatNotis == true then
+    game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Unlocked","All")
+            end
+        end
+    end
+    
+                if getgenv().Shake == true and AimlockTarget and AimlockTarget.Character then
+                    local Main = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity +
+                    Vector3.new(
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower),
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower),
+                        math.random(-getgenv().ShakePower, getgenv().ShakePower)
+                    ) * 0.1)
+                    Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().SmoothnessAmount, getgenv().EasingStyle , Enum.EasingDirection.InOut)
+                end
+    
+       if getgenv().AutoPrediction == true then
+        pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+        split = string.split(pingvalue,'(')
+        ping = tonumber(split[1])
+    if ping < 30 then
+        getgenv().PredictionVelocity = 7.758
+    elseif ping < 40 then
+        getgenv().PredictionVelocity = 7.364
+    elseif ping < 50 then
+        getgenv().PredictionVelocity = 7.456 
+    elseif ping < 60 then
+        getgenv().PredictionVelocity = 7.217
+    elseif ping < 70 then
+        getgenv().PredictionVelocity = 6.972 
+    elseif ping < 80 then
+        getgenv().PredictionVelocity = 6.782
+    elseif ping < 90 then
+        getgenv().PredictionVelocity = 6.597 
+    elseif ping < 100 then
+        getgenv().PredictionVelocity = 3.88
+    elseif ping < 110 then
+        getgenv().PredictionVelocity = 6.099
+    end
+    end
+    
+    end)
+    
+    
+    
+    local repo = 'https://raw.githubusercontent.com/wally-rblx/LinoriaLib/main/'
+    local Library = loadstring(game:HttpGet('https://pastebin.com/raw/7Tk5QM6R'))()
+    local ThemeManager = loadstring(game:HttpGet('https://pastebin.com/raw/WxMCy9be'))()
+    local SaveManager = loadstring(game:HttpGet('https://pastebin.com/raw/rNY1ZdQT'))()
+    
+    local Window = Library:CreateWindow({
+        Title = 'blazed.lol | buyer build',
+        Center = true, 
+        AutoShow = true,
+        Size = UDim2.fromOffset(550, 560),
+        TabPadding = 4,
+    })
+    
+    
+    
+    local Tabs = {
+        Main = Window:AddTab('Legit'), 
+        Rage = Window:AddTab('Rage'), 
+        Visuals = Window:AddTab('Visuals'), 
+        Misc = Window:AddTab('Misc'), 
+        ['Settings'] = Window:AddTab('Settings'),
+    }
+    
+
+    local LeftGroupBox = Tabs.Main:AddLeftGroupbox('Camlock')
+    local Shakebox =Tabs.Main:AddLeftGroupbox('Shake')
+    local SmoothBox = Tabs.Main:AddLeftGroupbox('Smoothing')
+    local SilentAim = Tabs.Main:AddRightGroupbox('Silent Aim')
+    local SilentVisuals = Tabs.Main:AddRightGroupbox('FOV')
+    
+    
+    
+    LeftGroupBox:AddToggle('Aimlock', {
+        Text = 'Enable',
+        Default = false, 
+        Tooltip = 'Enables Aimlock', 
+    })
+    
+    Toggles.Aimlock:OnChanged(function()
+        getgenv().AimlockEnabled = Toggles.Aimlock.Value
+    end)
+    
+    
+    Toggles.Aimlock:AddKeyPicker('AimlockBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Enable', 
+        NoUI = false,
+    })
+    Options.AimlockBind:OnClick(function()
+    if AimlockEnabled then 
+        Target = not Target
+        --
+        if AimlockTarget then
+            AimlockTarget = nil
+            MousePressed = false
+            if getgenv().Notifications then
+                Notifications("Unlocked")
+            end
+        else
+            if AimlockTarget == nil then
+                local Target;Target = GetNearestTarget()
+                if Target ~= nil then 
+                    AimlockTarget = Target
+                    if getgenv().Notifications then
+                        notifications:BuildNotificationUI();
+                        Notifications("Locked Onto"..tostring(Aimlock));
+                    end
+                    MousePressed = true
+                end
+            end
+        end
+            end
+    end)
+    
+    LeftGroupBox:AddInput('CamPrediction', {
+        Default = '7.22',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Prediction',
+        Tooltip = 'Example: 7.22', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().PredictionVelocity = int
+            notifications:BuildNotificationUI();
+            Notifications("Prediction Changed To: "..tostring(int));
+            end 
+    })
+    
+    LeftGroupBox:AddToggle('CamPingBased', {
+        Text = 'Ping Based',
+        Default = false, 
+        Tooltip = 'Autos Configures Prediction', 
+    })
+    
+    Toggles.CamPingBased:OnChanged(function()
+        getgenv().AutoPrediction = Toggles.CamPingBased.Value
+    end)
+    
+    LeftGroupBox:AddDropdown('CamHitpart', {
+        Values = { 'HumanoidRootPart', 'UpperTorso', 'LowerTorso', 'Head' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Hitpart',
+        Tooltip = 'Where your bullets will hit', -- Information shown when you hover over the textbox
+    })
+    
+    Options.CamHitpart:OnChanged(function()
+        getgenv().AimPart = Options.CamHitpart.Value
+    end)
+    
+    LeftGroupBox:AddToggle('CamAlerts', {
+        Text = 'Notifications',
+        Default = false, 
+        Tooltip = 'Notifys Locking/Unlocking', 
+    })
+    
+    Toggles.CamAlerts:OnChanged(function()
+        getgenv().Notifications = Toggles.CamAlerts.Value
+    end)
+    
+    
+    
+    LeftGroupBox:AddToggle('CamUnOnD', {
+        Text = 'Unlock On Death',
+        Default = false, 
+        Tooltip = 'Automatically Unlocks Target On KO', 
+    })
+    
+    Toggles.CamUnOnD:OnChanged(function()
+        getgenv().UnlockOnDeath = Toggles.CamUnOnD.Value
+    end)
+    
+    Shakebox:AddToggle('CamShake', {
+        Text = 'Shake',
+        Default = false, 
+        Tooltip = 'Shakes On The Target', 
+    })
+    
+    Toggles.CamShake:OnChanged(function()
+        getgenv().Shake = Toggles.CamShake.Value
+    end)
+    
+    
+    Shakebox:AddInput('CamShakePower', {
+        Default = '5',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Shake Power',
+        Tooltip = 'Ex: 5', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().ShakePower = int
+            notifications:BuildNotificationUI();
+            Notifications("Shake Power Changed To: "..tostring(int));
+            end 
+    })
+    
+    SmoothBox:AddToggle('CamSmoothness', {
+        Text = 'Smoothness',
+        Default = false, 
+        Tooltip = 'Smoothens Camlock', 
+    })
+    
+    Toggles.CamSmoothness:OnChanged(function()
+        getgenv().Smoothness = Toggles.CamSmoothness.Value
+    end)
+    
+    SmoothBox:AddInput('CamSmoothnessPWR', {
+        Default = '1',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Smoothness Power',
+        Tooltip = 'Ex: 0.52', 
+        Placeholder = '...', 
+        Callback = function(int)
+            getgenv().SmoothnessAmount = int
+            notifications:BuildNotificationUI();
+            Notifications("Smoothness Power Changed To: "..tostring(int));
+            end, 0.01
+    })
+    
+
+    --
+    -- Original link : https://github.com/Stefanuk12/ROBLOX/blob/master/Games/Da%20Hood/SilentAimAimLock.lua
+-- reuploaded so it will be still alive if removed
+getgenv().SilentAim = true -- true or false
+getgenv().AimLock = false -- true or false
+getgenv().Prediction = 0.13544 -- Prediction of Silent Aim and AimLock
+getgenv().AimLockKeybind = Enum.KeyCode.E -- Keybind for AIMLOCK (NOT SILENT AIM)
+
+-- // Dependencies
+local Aiming = loadstring(game:HttpGet("https://pastebin.com/raw/KzV8GRHk"))()
+Aiming.TeamCheck(false)
+Aiming.ShowFOV = false
+
+-- // Services
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- // Vars
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local CurrentCamera = Workspace.CurrentCamera
+
+local DaHoodSettings = {
+    SilentAim = getgenv().SilentAim,
+    AimLock = getgenv().AimLock,
+    Prediction = getgenv().Prediction,
+    AimLockKeybind = Enum.KeyCode.E
+}
+getgenv().DaHoodSettings = DaHoodSettings
+
+-- // Overwrite to account downed
+function Aiming.Check()
+    -- // Check A
+    if not (Aiming.Enabled == true and Aiming.Selected ~= LocalPlayer and Aiming.SelectedPart ~= nil) then
+        return false
+    end
+
+    -- // Check if downed
+    local Character = Aiming.Character(Aiming.Selected)
+    local KOd = Character:WaitForChild("BodyEffects")["K.O"].Value
+    local Grabbed = Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
+
+    -- // Check B
+    if (KOd or Grabbed) then
+        return false
+    end
+
+    -- //
+    return true
+end
+
+
+-- // Hook 
+local __index
+__index = hookmetamethod(game, "__index", function(t, k)
+    -- // Check if it trying to get our mouse's hit or target and see if we can use it
+    if (t:IsA("Mouse") and (k == "Hit" or k == "Target") and Aiming.Check()) then
+        -- // Vars
+        local SelectedPart = Aiming.SelectedPart
+
+        -- // Hit/Target
+        if (DaHoodSettings.SilentAim and (k == "Hit" or k == "Target")) then
+            -- // Hit to account prediction
+            local Hit = SelectedPart.CFrame + (SelectedPart.Velocity * DaHoodSettings.Prediction)
+
+            -- // Return modded val
+            return (k == "Hit" and Hit or SelectedPart)
+        end
+    end
+
+    -- // Return
+    return __index(t, k)
+end)
+--[[ LURAPH HOOK
+
+if not LPH_OBFUSCATED then
+    getfenv().LPH_NO_VIRTUALIZE = function(f) return f end;
+    end
+
+   local Old
+    Old = hookmetamethod(game, "__index", LPH_NO_VIRTUALIZE(function(self, k)
+    -- // Check if it trying to get our mouse's hit or target and see if we can use it
+    if (t:IsA("Mouse") and (k == "Hit" or k == "Target") and Aiming.Check()) then
+        -- // Vars
+        local SelectedPart = Aiming.SelectedPart
+
+        -- // Hit/Target
+        if (DaHoodSettings.SilentAim and (k == "Hit" or k == "Target")) then
+            -- // Hit to account prediction
+            local Hit = SelectedPart.CFrame + (SelectedPart.Velocity * DaHoodSettings.Prediction)
+
+            -- // Return modded val
+            return (k == "Hit" and Hit or SelectedPart)
+        end
+    end
+
+    -- // Return
+    return Old(self, k) 
+end))
+]]
+
+-- // Aimlock
+RunService:BindToRenderStep("AimLock", 0, function()
+    if (DaHoodSettings.AimLock and Aiming.Check() and UserInputService:IsKeyDown(DaHoodSettings.AimLockKeybind)) then
+        -- // Vars
+        local SelectedPart = Aiming.SelectedPart
+
+        -- // Hit to account prediction
+        local Hit = SelectedPart.CFrame + (SelectedPart.Velocity * DaHoodSettings.Prediction)
+
+        -- // Set the camera to face towards the Hit
+        CurrentCamera.CFrame = CFrame.lookAt(CurrentCamera.CFrame.Position, Hit.Position)
+    end
+end)
+
+
+
+--
+    
+    SilentAim:AddToggle('SilentAimt', {
+        Text = 'Enable',
+        Default = false, 
+        Tooltip = 'Enables Silent Aim', 
+    })
+    
+    Toggles.SilentAimt:OnChanged(function()
+        --Aiming.Enabled = Toggles.SilentAimt.Value
+    end)
+
+    SilentAim:AddInput('Prediction', {
+        Default = '0.13544',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Prediction',
+        Tooltip = 'Example: 0.13544', 
+        Placeholder = '...', 
+        Callback = function(int2)
+            getgenv().Prediction = int2
+        end
+    })
+    
+    SilentAim:AddToggle('SAPingBased', {
+        Text = 'Ping Based',
+        Default = false, 
+        Tooltip = 'Autos Configures Prediction', 
+    })
+    
+    Toggles.SAPingBased:OnChanged(function()
+        getgenv().saPingBased = Toggles.SAPingBased.Value
+    end)
+
+    SilentAim:AddSlider('saHitchance', {
+        Text = 'Hitchance',
+        Default = 100,
+        Min = 0,
+        Max = 300,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.saHitchance:OnChanged(function()
+        Aiming.Hitchance = Options.saHitchance.Value
+    end)
+
+    SilentAim:AddDropdown('SilentHitpart', {
+        Values = { 'HumanoidRootPart', 'UpperTorso', 'LowerTorso', 'Head' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Aimpart',
+        Tooltip = 'Where Your Bullets Hit', -- Information shown when you hover over the textbox
+    })
+    
+    Options.SilentHitpart:OnChanged(function()
+        Aiming.TargetPart  = Options.SilentHitpart.Value
+    end)
+
+    SilentAim:AddToggle('saToggleNoti', {
+        Text = 'Silent Aim Toggle',
+        Default = false, 
+        Tooltip = 'Toggles The Silent Aim', 
+    })
+    
+    Toggles.saToggleNoti:OnChanged(function()
+        getgenv().saToggleNoti = Toggles.saToggleNoti.Value
+    end)
+
+    SilentAim:AddToggle('saToggleNoti', {
+        Text = 'Toggle Notifications',
+        Default = false, 
+        Tooltip = 'Notifiys On Toggle', 
+    })
+    
+    Toggles.saToggleNoti:OnChanged(function()
+        getgenv().ToggleSilent = Toggles.saToggleNoti.Value
+    end)
+    
+    
+    Toggles.saToggleNoti:AddKeyPicker('saToggleBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Enable', 
+        NoUI = false,
+    })
+    Options.saToggleBind:OnClick(function()
+        if ToggleSilent then
+            if Aiming.Enabled == true then
+                Aiming.Enabled = false      
+                    if saToggleNoti then
+                        Notifications("Silent Aim Enabled")
+                    end
+            else
+                Aiming.Enabled = true
+                if saToggleNoti then
+                    Notifications("Silent Aim Disabled")
+                end
+            end
+        end
+    end)
+
+    SilentVisuals:AddToggle('FOVEnabled', {
+        Text = 'Enable',
+        Default = false, 
+        Tooltip = 'Adds A Circle To Your Screen (fov = radius)', 
+    })
+    
+    Toggles.FOVEnabled:OnChanged(function()
+        Aiming.ShowFOV = Toggles.FOVEnabled.Value
+    end)
+
+    SilentVisuals:AddToggle('FOVFilled', {
+        Text = 'Filled',
+        Default = false, 
+        Tooltip = 'Fills the FOV', 
+    })
+    
+    Toggles.FOVFilled:OnChanged(function()
+        Aiming.Filled = Toggles.FOVFilled.Value
+    end)
+    
+    
+    
+    Toggles.FOVEnabled:AddColorPicker('FOVColor', {
+        Default = Color3.fromRGB(255,255,255),
+        Title = 'Color'
+    })
+    
+    Options.FOVColor:OnChanged(function()
+        Aiming.FOVColour  = Options.FOVColor.Value
+    end)
+
+    SilentVisuals:AddDivider()
+
+    SilentVisuals:AddSlider('FOVRadius', {
+        Text = 'Size',
+        Default = 100,
+        Min = 3,
+        Max = 250,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.FOVRadius:OnChanged(function()
+        Aiming.FOV = Options.FOVRadius.Value
+    end)
+
+    SilentVisuals:AddSlider('FOVSides', {
+        Text = 'Sides',
+        Default = 100,
+        Min = 3,
+        Max = 250,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.FOVSides:OnChanged(function()
+        Aiming.FOVSides = Options.FOVSides.Value
+    end)
+
+    SilentVisuals:AddDivider()
+
+    SilentVisuals:AddSlider('FOVTransparency', {
+        Text = 'Transparency',
+        Default = 1,
+        Min = 0.1,
+        Max = 1,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.FOVTransparency:OnChanged(function()
+        Aiming.Transparency = Options.FOVTransparency.Value
+    end)
+
+    SilentVisuals:AddSlider('FOVThickness', {
+        Text = 'Thickness',
+        Default = 2,
+        Min = 1,
+        Max = 10,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.FOVThickness:OnChanged(function()
+        Aiming.Thickness  = Options.FOVThickness.Value
+    end)
+
+
+    --
+    
+    local RightGroupBox = Tabs.Rage:AddLeftGroupbox('Target Aim')
+    local Strafe = Tabs.Rage:AddLeftGroupbox('Target Strafe')
+    
+    RightGroupBox:AddToggle('TargetAim', {
+        Text = 'Enable',
+        Default = false, 
+        Tooltip = 'Enables Aimlock', 
+    })
+    
+    Toggles.TargetAim:OnChanged(function()
+        Lock.Enabled = Toggles.TargetAim.Value
+    end)
+    
+    
+    
+    Toggles.TargetAim:AddKeyPicker('TargetBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Target Aim', 
+        NoUI = false,
+    })
+    
+    RightGroupBox:AddDropdown('TargetMode', {
+        Values = { 'Target Aim', 'Silent Aim' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Mode',
+        Tooltip = 'Target Aim Mode', -- Information shown when you hover over the textbox
+    })
+    
+    Options.TargetMode:OnChanged(function()
+        Lock.Mode = Options.TargetMode.Value
+    end)
+    
+    RightGroupBox:AddToggle('TargetResolver', {
+        Text = 'Resolver',
+        Default = false, 
+        Tooltip = 'Disables Anti Locks/Anti Aims', 
+    })
+    
+    Toggles.TargetResolver:OnChanged(function()
+        Lock.Resolver = Toggles.TargetResolver.Value
+    end)
+    
+    -- 
+    RightGroupBox:AddInput('MyTextbox', {
+        Default = '0.09',
+        Numeric = true, 
+        Finished = false,
+        Text = 'Prediction',
+        Tooltip = 'Prediction', 
+        Placeholder = '0.09', 
+        Callback = function(int)
+            Lock.Target.Prediction = int
+            notifications:BuildNotificationUI();
+            Notifications("Prediction Changed To: "..tostring(int));
+            end 
+    })
+    
+    RightGroupBox:AddSlider('TargetRadius', {
+        Text = 'Radius',
+        Default = 50,
+        Min = 5,
+        Max = 200,
+        Rounding = 2,
+        Compact = true, 
+    })
+    
+    Options.TargetRadius:OnChanged(function()
+        Lock.Drawings.FOV.Radius = Options.TargetRadius.Value
+    end)
+    
+    
+    
+    RightGroupBox:AddToggle('TargetNotis', {
+        Text = 'Notifications',
+        Default = false, 
+        Tooltip = 'Notifys On Enabled/Disabled', 
+    })
+    
+    Toggles.TargetNotis:OnChanged(function()
+        Lock.Visualize.Notify = Toggles.TargetNotis.Value
+    end)
+    
+    RightGroupBox:AddToggle('TargetPingBased', {
+        Text = 'Ping Based',
+        Default = false, 
+        Tooltip = 'Auto Configs Prediction', 
+    })
+    
+    Toggles.TargetPingBased:OnChanged(function()
+        Lock.Prediction.PingBased = Toggles.TargetPingBased.Value
+    end)
+    
+    RightGroupBox:AddToggle('TargetAirPred', {
+        Text = 'Air Prediction',
+        Default = false, 
+        Tooltip = 'Predicts Airshots', 
+    })
+    
+    Toggles.TargetAirPred:OnChanged(function()
+        Lock.Prediction.Air = Toggles.TargetAirPred.Value
+    end)
+    
+    
+    RightGroupBox:AddDropdown('TargetAimpart', {
+        Values = { 'HumanoidRootPart', 'UpperTorso', 'LowerTorso', 'Head' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Aimpart',
+        Tooltip = 'Where Your Bullets Hit', -- Information shown when you hover over the textbox
+    })
+    
+    Options.TargetAimpart:OnChanged(function()
+        Lock.Prediction.Part = Options.TargetAimpart.Value
+    end)
+    
+    RightGroupBox:AddToggle('TargetLookAt', {
+        Text = 'Look At',
+        Default = false, 
+        Tooltip = 'Looks At Your Target', 
+    })
+    
+    Toggles.TargetLookAt:OnChanged(function()
+        Lock.LookAt = Toggles.TargetLookAt.Value
+    end)
+    
+    RightGroupBox:AddToggle('TargetViewAt', {
+        Text = 'View At',
+        Default = false, 
+        Tooltip = 'Views Your Target', 
+    })
+    
+    Toggles.TargetViewAt:OnChanged(function()
+        Lock.ViewAt = Toggles.TargetViewAt.Value
+    end)
+    
+    
+    
+    RightGroupBox:AddSlider('TargetOffset', {
+        Text = 'Offset',
+        Default = 0.06,
+        Min = -0.5,
+        Max = 0.5,
+        Rounding = 2,
+        Compact = true, 
+    })
+    
+    Options.TargetOffset:OnChanged(function()
+        getgenv().offset = Options.TargetOffset.Value
+    end)
+    
+    
+    
+    -- Add Tabbox on right side
+    
+    
+    
+    
+    
+    Strafe:AddToggle('TargetStrafe', {
+        Text = 'Target Strafe',
+        Default = false, 
+        Tooltip = 'Strafes Around Your Target', 
+    })
+    
+    Toggles.TargetStrafe:OnChanged(function()
+        Lock.Target_Strafe[1] = Toggles.TargetStrafe.Value
+    end)
+    
+    Strafe:AddToggle('StrafeRotation', {
+        Text = 'Visualize Rotation',
+        Default = false, 
+        Tooltip = 'Visualizes Strafe Rotation', 
+    })
+    
+    Toggles.StrafeRotation:OnChanged(function()
+        Lock.Visualize.Strafe = Toggles.StrafeRotation.Value
+    end)
+    
+    
+    
+    Toggles.StrafeRotation:AddColorPicker('VisualizeRotationColor', {
+        Default = Color3.new(0, 1, 0), -- Bright green
+        Title = 'Visualize Rotation', -- Optional. Allows you to have a custom color picker title (when you open it)
+        Transparency = 1, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    })
+    
+
+    --Lock.Drawings.FakeHitbox.Material = Enum.Material[Option]
+    
+    Strafe:AddSlider('StrafeSpeed', {
+        Text = 'Speed',
+        Default = 5,
+        Min = 1,
+        Max = 20,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.StrafeSpeed:OnChanged(function()
+        Lock.Target_Strafe[2] = Options.StrafeSpeed.Value
+    end)
+    
+    Strafe:AddSlider('StrafeRadius', {
+        Text = 'Radius',
+        Default = 5,
+        Min = 1,
+        Max = 20,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.StrafeRadius:OnChanged(function()
+        Lock.Target_Strafe[3] = Options.StrafeRadius.Value
+    end)
+    
+    
+    Strafe:AddSlider('StrafeHeight', {
+        Text = 'Height',
+        Default = 5,
+        Min = 0,
+        Max = 20,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.StrafeHeight:OnChanged(function()
+        Lock.Target_Strafe[4] = Options.StrafeHeight.Value
+    end)
+    
+    local Misc = Tabs.Misc:AddLeftGroupbox('Player')
+    local Buy = Tabs.Misc:AddLeftGroupbox('AutoBuy')
+    
+    Misc:AddToggle('CFrame', {
+        Text = 'Enable',
+        Default = false,
+        Tooltip = 'Enable CFrame',
+    })
+    getgenv().cfrene = false
+    Toggles.CFrame:OnChanged(function()
+        getgenv().cframe  = Toggles.CFrame.Value
+    end)
+    
+    Toggles.CFrame:AddKeyPicker('CFrameBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'CFrame', 
+        NoUI = false,
+    })
+    
+    Options.CFrameBind:OnClick(function()
+        if getgenv().cframe then
+            getgenv().cfrene = not getgenv().cfrene
+        if getgenv().cfrene == true then
+            repeat
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+                game:GetService("RunService").Stepped:wait()
+            until getgenv().cfrene == false
+    end
+    end
+    end)
+    
+    
+    
+    
+    
+    Misc:AddSlider('CFrameSpeed', {
+        Text = 'CFrame Speed Amount',
+    
+        Default = 1,
+        Min = 0.5,
+        Max = 5,
+        Rounding = 2,
+    
+        Compact = false,
+    })
+    
+    Options.CFrameSpeed:OnChanged(function()
+        getgenv().Multiplier = Options.CFrameSpeed.Value
+    end)
+    
+    local inputManager = game:GetService("VirtualInputManager")
+    local userInputService = game:GetService("UserInputService")
+    
+    Misc:AddToggle('Macro', {
+        Text = 'Macro',
+        Default = false,
+        Tooltip = 'Enable Macro',
+    })
+    getgenv().macro = false
+    Toggles.Macro:OnChanged(function()
+        getgenv().macro  = Toggles.Macro.Value
+    end)
+    
+    Toggles.Macro:AddKeyPicker('MacroBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Macro', 
+        NoUI = false,
+    })
+    
+    Options.MacroBind:OnClick(function()
+        if getgenv().macro then
+            getgenv().mawco = not getgenv().mawco
+        if getgenv().mawco == true then
+            repeat
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                wait()
+            until getgenv().mawco == false
+    end
+    end
+    end)
+    
+    Misc:AddToggle('AutoClick', {
+        Text = 'Auto Click',
+        Default = false,
+        Tooltip = 'Enable Macro',
+    })
+    getgenv().macro = false
+    Toggles.AutoClick:OnChanged(function()
+        getgenv().click  = Toggles.AutoClick.Value
+    end)
+    
+    Toggles.AutoClick:AddKeyPicker('AutoClickBind', {
+        Default = 'None', 
+        SyncToggleState = false, 
+    
+        Mode = 'Toggle',
+    
+        Text = 'Auto Click', 
+        NoUI = false,
+    })
+    
+    getgenv().clickintervaral = 0
+    Options.AutoClickBind:OnClick(function()
+        if getgenv().click then
+            getgenv().click2 = not getgenv().click2
+        if getgenv().click2 == true then
+            repeat
+    mouse1click()
+    wait(getgenv().clickintervaral)
+    until getgenv().click2 == false
+    end
+    end
+    end)
+    
+    Misc:AddSlider('ClickWait', {
+        Text = 'Autoclick Interveral',
+    
+        Default = 0.1,
+        Min = 0.,
+        Max = 0.3,
+        Rounding = 6,
+    
+        Compact = false,
+    })
+    
+    Options.ClickWait:OnChanged(function()
+        getgenv().clickintervaral = Options.ClickWait.Value
+    end)
+    
+    
+    Buy:AddDropdown('BuyGuns', {
+        Values = { '[Revolver]', '[Double Barrel SG]', '[Tactical Shotgun]', '[SMG]', '[Knife]', '[Shotgun]', '[Flame Thrower]', '[RPG]', '[AK-47]'   },
+        Default = 20, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Weapons',
+        Tooltip = 'Auto Buy Weapons', -- Information shown when you hover over the textbox
+    })
+    
+    Options.BuyGuns:OnChanged(function()
+        if Options.BuyGuns.Value == "[Revolver]" then
+            local k = game.Workspace.Ignored.Shop['[Revolver] - $1339']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[Double Barrel SG]" then
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            local k = game.Workspace.Ignored.Shop['[Double-Barrel SG] - $1442']
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[Shotgun]" then
+            local k = game.Workspace.Ignored.Shop['[Shotgun] - $1288']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[Tactical Shotgun]" then
+            local k = game.Workspace.Ignored.Shop['[TacticalShotgun] - $1751']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+        if Options.BuyGuns.Value == "[SMG]" then
+            local k = game.Workspace.Ignored.Shop['[SMG] - $773']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[Knife]" then
+            local k = game.Workspace.Ignored.Shop['[Knife] - $155']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[RPG]" then
+            local k = game.Workspace.Ignored.Shop['[RPG] - $6180']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[AK-47]" then
+            local k = game.Workspace.Ignored.Shop['[AK47] - $2318']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+        if Options.BuyGuns.Value == "[Flame Thrower]" then
+            local k = game.Workspace.Ignored.Shop['[Flamethrower] - $25750']
+            local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = k.Head.CFrame + Vector3.new(0, 3, 0)
+            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - k.Head.Position).Magnitude <= 50 then
+                wait(.2)
+                fireclickdetector(k:FindFirstChild("ClickDetector"), 4)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+            end
+        end
+    
+    end)
+    
+    Buy:AddDropdown('BuyAmmo', {
+        Values = { '[Taco]', '[Hamburger]', '[Pizza]', '[Popcorn]', '[Cranberry]', '[Chicken]', '[Donut]', ''   },
+        Default = 20, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Weapons',
+        Tooltip = 'Auto Buy Weapons', -- Information shown when you hover over the textbox
+    })
+    
+    Options.BuyAmmo:OnChanged(function()
+    
+    end)
+    
+    local VisualsESP = Tabs.Visuals:AddLeftGroupbox('ESP')
+    local VisualsWorld = Tabs.Visuals:AddLeftGroupbox('World')
+    local TargetVisuals = Tabs.Visuals:AddRightGroupbox('Target Aim')
+    --local SilentVisuals = Tabs.Visuals:AddLeftGroupbox('Silent Aim')
+    local ChamBox = Tabs.Visuals:AddRightTabbox()
+
+    
+    
+    -- 
+
+
+
+
+
+    --
+    VisualsWorld:AddLabel('Fog Color'):AddColorPicker('FogColorR', {
+        Default = Color3.fromRGB(100, 87, 72), -- Bright green
+        Title = 'Fog Color', -- Optional. Allows you to have a custom color picker title (when you open it)
+        Transparency = nil, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    
+        Callback = function(Value)
+        end
+    })
+    
+    Options.FogColorR:OnChanged(function()
+        game:GetService("Lighting").FogColor = Options.FogColorR.Value
+    end)
+    
+    VisualsWorld:AddSlider('FogEnd', {
+        Text = 'Fog Distance',
+        Default = 800,
+        Min = 25,
+        Max = 5000,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.FogEnd:OnChanged(function()
+        game:GetService("Lighting").FogEnd = Options.FogEnd.Value
+    end)
+    
+    
+    local TabBox3 = ChamBox:AddTab('Player')
+    
+    --local ChamBox = Tabs.Visuals:AddRightTabbox()
+    
+    
+    TabBox3:AddToggle('BodyCham', {
+        Text = 'Body Cham',
+        Default = false, 
+        Tooltip = 'Chams Your Body', 
+    })
+    
+    
+    Toggles.BodyCham:OnChanged(function()
+    
+    
+        TargetVisuals:AddToggle('TargetHitbox', {
+            Text = 'Fake Hitbox',
+            Default = false, 
+            Tooltip = 'Adds A Fake Hitbox On Your Target', 
+        })
+        
+        Toggles.TargetHitbox:OnChanged(function()
+            Lock.Visualize.Hitbox = Toggles.TargetHitbox.Value
+        end)
+    end)
+    
+    
+    
+    Toggles.TargetHitbox:AddColorPicker('TargetHitboxColor', {
+        Default = Color3.new(0, 1, 0), -- Bright green
+        Title = 'Hitbox Color', -- Optional. Allows you to have a custom color picker title (when you open it)
+        Transparency = 1, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    })
+    
+    Options.TargetHitboxColor:OnChanged(function()
+        Lock.Drawings.FakeHitbox.Color = Options.TargetHitboxColor.Value
+        Lock.Drawings.FakeHitbox.Transparency = Options.TargetHitboxColor.Transparency
+    end)
+    
+    TargetVisuals:AddDropdown('BodyChamMaterial', {
+        Values = { 'ForceField', 'Neon', 'Glass' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Cham Material',
+        Tooltip = 'Customize The Cham Material', -- Information shown when you hover over the textbox
+    })
+    
+    Options.BodyChamMaterial:OnChanged(function()
+       
+    end)
+    
+    
+    
+    
+    Lock.Drawings.FakeHitbox.CFrame = CFrame.new(9999,9999,9999)
+    
+    
+    
+    
+    TargetVisuals:AddSlider('HitboxSize', {
+        Text = 'Hitbox Size',
+        Default = 4,
+        Min = 1,
+        Max = 15,
+        Rounding = 1,
+        Compact = true, 
+    })
+    
+    Options.HitboxSize:OnChanged(function()
+        Lock.Visualize.X = Options.HitboxSize.Value
+        Lock.Visualize.Y = Options.HitboxSize.Value
+        Lock.Visualize.Z = Options.HitboxSize.Value
+    end)
+    
+    TargetVisuals:AddDropdown('TargetMaterial', {
+        Values = { 'Neon', 'Plastic', 'ForceField', 'Glass' },
+        Default = 3, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Material',
+        Tooltip = 'Hitbox Material', -- Information shown when you hover over the textbox
+    })
+    
+    Options.TargetMaterial:OnChanged(function()
+        Lock.Drawings.FakeHitbox.Material = Enum.Material[Options.TargetMaterial.Value]
+    end)
+    
+    
+    
+    
+    TargetVisuals:AddToggle('VisualHighlight', {
+        Text = 'Highlight',
+        Default = false, 
+        Tooltip = 'Adds A Dot To The Targets Aimpart', 
+    })
+    
+    Toggles.VisualHighlight:OnChanged(function()
+        Lock.Visualize.Highlight = Toggles.VisualHighlight.Value
+    end)
+    
+    
+    
+    Toggles.VisualHighlight:AddColorPicker('HighlightFill', {
+        Default = Color3.fromRGB(255,0,255),
+        Title = 'Highlight Fill Color'
+    })
+    
+    Options.HighlightFill:OnChanged(function()
+        getgenv().fillcolor = Options.HighlightFill.Value
+    end)
+    
+    Toggles.VisualHighlight:AddColorPicker('HighlightOutline', {
+        Default = Color3.fromRGB(255,255,255),
+        Title = 'Highlight Outline Color'
+    })
+    
+    Options.HighlightOutline:OnChanged(function()
+        getgenv().outlinecolor = Options.HighlightOutline.Value
+    end)
+    
+    
+    
+    
+    TargetVisuals:AddToggle('VisualDot', {
+        Text = 'Dot',
+        Default = false, 
+        Tooltip = 'Adds A Dot To The Targets Aimpart', 
+    })
+    
+    Toggles.VisualDot:OnChanged(function()
+        Lock.Visualize.Dot = Toggles.VisualDot.Value
+    end)
+    
+    Toggles.VisualDot:AddColorPicker('DotColor', {
+        Default = Color3.new(0, 1, 0), -- Bright green
+        Title = 'Dot Color', -- Optional. Allows you to have a custom color picker title (when you open it)
+        Transparency = 1, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    })
+    
+    Options.DotColor:OnChanged(function()
+        Lock.Drawings.Dot.Color = Options.DotColor.Value
+        Lock.Drawings.Dot.Transparency = Options.DotColor.Transparency
+    end)
+    
+    
+    TargetVisuals:AddToggle('VisualTracer', {
+        Text = 'Tracer',
+        Default = false, 
+        Tooltip = 'Adds A Tracer From You To Your Target', 
+    })
+    
+    Toggles.VisualTracer:OnChanged(function()
+        Lock.Visualize.Tracer[1] = Toggles.VisualTracer.Value
+    end)
+    
+    Toggles.VisualTracer:AddColorPicker('TracerColor', {
+        Default = Color3.new(0, 1, 0), -- Bright green
+        Title = 'Tracer Color', -- Optional. Allows you to have a custom color picker title (when you open it)
+        Transparency = 1, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    })
+    
+    Options.TracerColor:OnChanged(function()
+        Lock.Drawings.Tracer.Color = Options.TracerColor.Value
+        Lock.Drawings.Tracer.Transparency = Options.TracerColor.Transparency
+    end)
+    
+    TargetVisuals:AddDropdown('TracerOrigin', {
+        Values = { 'Head', 'Mouse', 'Gun', 'Crosshair' },
+        Default = 1, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Tracer Origin',
+        Tooltip = 'Customize The Tracer Origin', -- Information shown when you hover over the textbox
+    })
+    
+    Options.TracerOrigin:OnChanged(function()
+        Lock.Visualize.Tracer[2] = Options.TracerOrigin.Value
+    end)
+    
+    
+    
+    
+    TargetVisuals:AddToggle('TargetUI', {
+        Text = 'Target UI',
+        Default = false, 
+        Tooltip = 'Get info on your targets', 
+    })
+    
+    Toggles.TargetUI:OnChanged(function()
+        Lock.Visualize.TargetUI = Toggles.TargetUI.Value
+    end)
+    
+    
+    TargetVisuals:AddToggle('TargetFOV', {
+        Text = 'FOV',
+        Default = false, 
+        Tooltip = 'Adds A Fake Hitbox On Your Target', 
+    })
+    
+    Toggles.TargetFOV:OnChanged(function()
+        Lock.Drawings.FOV.Visible = Toggles.TargetFOV.Value
+    end)
+    
+    
+    Toggles.TargetFOV:AddColorPicker('FOVColor', {
+    Default = Color3.new(0, 1, 0), -- Bright green
+    Title = 'FOV Color', -- Optional. Allows you to have a custom color picker title (when you open it)
+    Transparency = 1, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+    })
+    
+    Options.FOVColor:OnChanged(function()
+    Lock.Drawings.FOV.Color = Options.FOVColor.Value
+     Lock.Drawings.FOV.Transparency = Options.FOVColor.Transparency
+    end)
+    
+    
+    
+    
+        
+    --[[local MyButton2 = MyButton:AddButton('Sub button', function()
+        print('You clicked a sub button!')
+    end)
+    
+    
+    MyButton:AddTooltip('This is a button')
+    MyButton2:AddTooltip('This is a sub button')
+    
+    LeftGroupBox:AddLabel('This is a label')
+    LeftGroupBox:AddLabel('This is a label\n\nwhich wraps its text!', true)
+    
+    LeftGroupBox:AddDivider()
+    
+    LeftGroupBox:AddSlider('MySlider', {
+        Text = 'This is my slider!',
+        Default = 0,
+        Min = 0,
+        Max = 5,
+        Rounding = 1,
+        Compact = false, 
+    })
+    
+    local Number = Options.MySlider.Value
+    Options.MySlider:OnChanged(function()
+        print('MySlider was changed! New value:', Options.MySlider.Value)
+    end)
+    
+    Options.MySlider:SetValue(3)
+    
+    
+    LeftGroupBox:AddInput('MyTextbox', {
+        Default = 'My textbox!',
+        Numeric = false, 
+        Finished = false,
+    
+        Text = 'This is a textbox',
+        Tooltip = 'This is a tooltip', 
+    
+        Placeholder = 'Placeholder text',
+    })
+    
+    Options.MyTextbox:OnChanged(function()
+        print('Text updated. New text:', Options.MyTextbox.Value)
+    end)
+    
+    LeftGroupBox:AddDropdown('MyDropdown', {
+        Values = { 'This', 'is', 'a', 'dropdown' },
+        Default = 1, 
+        Multi = false,
+    
+        Text = 'A dropdown',
+        Tooltip = 'This is a tooltip',
+    })
+    
+    Options.MyDropdown:OnChanged(function()
+        print('Dropdown got changed. New value:', Options.MyDropdown.Value)
+    end)
+    
+    Options.MyDropdown:SetValue('This')
+    
+    LeftGroupBox:AddDropdown('MyMultiDropdown', {
+        Values = { 'This', 'is', 'a', 'dropdown' },
+        Default = 1, 
+        Multi = true,
+    
+        Text = 'A dropdown',
+        Tooltip = 'This is a tooltip',
+    })
+    
+    Options.MyMultiDropdown:OnChanged(function()
+        -- print('Dropdown got changed. New value:', )
+        print('Multi dropdown got changed:')
+        for key, value in next, Options.MyMultiDropdown.Value do
+            print(key, value) -- should print something like This, true
+        end
+    end)
+    
+    Options.MyMultiDropdown:SetValue({
+        This = true,
+        is = true,
+    })
+    
+    LeftGroupBox:AddLabel('Color'):AddColorPicker('ColorPicker', {
+        Default = Color3.new(0, 1, 0),
+        Title = 'Some color', 
+    })
+    
+    Options.ColorPicker:OnChanged(function()
+        print('Color changed!', Options.ColorPicker.Value)
+    end)
+    
+    Options.ColorPicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
+    
+    LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
+        Default = 'MB2',
+        SyncToggleState = false, 
+        Mode = 'Toggle', 
+        Text = 'Auto lockpick safes', 
+        NoUI = false, 
+    })]]
+    
+    
+    -- Example of dynamically-updating watermark with common traits (fps and ping)
+    local FrameTimer = tick()
+    local FrameCounter = 0;
+    local FPS = 240;
+    
+    local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+        FrameCounter += 1;
+    
+        if (tick() - FrameTimer) >= 1 then
+            FPS = FrameCounter;
+            FrameTimer = tick();
+            FrameCounter = 0;
+        end;
+        Library:SetWatermark(('blazed.lol | %s fps | %s ms'):format(
+            math.floor(FPS),
+            math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+        ));
+    
+    
+    
+    
+    
+    Library:OnUnload(function()
+        Library.Unloaded = true
+    end);
+    end)
+    
+    local MenuGroup = Tabs['Settings']:AddRightGroupbox('Menu')
+    --AddLeftGroupbox
+    
+    
+    
+    MenuGroup:AddLabel('Menu Keybind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' }) 
+    
+    MenuGroup:AddToggle('KeybindList', {
+        Text = 'Keybind List',
+        Default = false, 
+        Tooltip = 'Toggles the Keybind List', 
+    })
+    
+    Toggles.KeybindList:OnChanged(function()
+        Library.KeybindFrame.Visible  = Toggles.KeybindList.Value
+    end)
+    
+    MenuGroup:AddToggle('Watermark', {
+        Text = 'Watermark',
+        Default = false, 
+        Tooltip = 'Toggles the Watermark', 
+    })
+    
+    Toggles.Watermark:OnChanged(function()
+        Library:SetWatermarkVisibility(Toggles.Watermark.Value) 
+    end)
+    
+    
+    
+    MenuGroup:AddDropdown('UINotis', {
+        Values = { 'Xaxa', 'Roblox', 'Akali' },
+        Default = 2, -- number index of the value / string
+        Multi = false, -- true / false, allows multiple choices to be selected
+    
+        Text = 'Notification Type',
+        Tooltip = 'Change What Notifications Show Up', -- Information shown when you hover over the textbox
+    })
+    
+    Options.UINotis:OnChanged(function()
+        getgenv().NotiMode = Options.UINotis.Value
+    end)
+    
+    
+    --
+    local Unload1 = MenuGroup:AddButton({
+        Text = 'Unload',
+        Func = function()
+            Library:Unload()
+        end,
+        DoubleClick = true,
+        Tooltip = 'Unloads The Cheat'
+    })
+    
+    local Unload2 = Unload1:AddButton({
+        Text = 'Join Discord',
+        Func = function()
+            setclipboard("discord.gg/lockers")
+            notifications:BuildNotificationUI();
+            Notifications("discord.gg/lockers");
+            local request = (syn and syn.request) or (http and http.request) or http_request
+            local HttpService = game:GetService("HttpService")
+            if request then
+                request({
+                    Url = 'http://127.0.0.1:6463/rpc?v=1',
+                    Method = 'POST',
+                    Headers = {
+                        ['Content-Type'] = 'application/json',
+                        Origin = 'https://discord.com'
+                    },
+                    Body = HttpService:JSONEncode({
+                        cmd = 'INVITE_BROWSER',
+                        nonce = HttpService:GenerateGUID(false),
+                        args = {code = "lockers"}
+                    })
+                })
+            end
+        end,
+        DoubleClick = false, -- You will have to click this button twice to trigger the callback
+        Tooltip = 'Joins Our Discord'
+    })
+    
+    Library.ToggleKeybind = Options.MenuKeybind
+    
+    ThemeManager:SetLibrary(Library)
+    SaveManager:SetLibrary(Library)
+    
+    --SaveManager:IgnoreThemeSettings() 
+    
+    --SaveManager:SetIgnoreIndexes({ 'MenuKeybind' }) 
+    
+    ThemeManager:SetFolder('blazedlol-thm')
+    SaveManager:SetFolder('blazedlol-cfg')
+    
+    SaveManager:BuildConfigSection(Tabs['Settings']) 
+    
+    ThemeManager:ApplyToTab(Tabs['Settings'])
+    
+    -- Code Below 
+    Options.TargetBind:OnClick(function()
+        if Lock.Enabled then 
+            Lock.Locking = not Lock.Locking 
+            -- 
+            if Lock.Locking == true then 
+                Lock.Target.Player = Lock:GetClosestPlayer() 
+    
+                -- target ui
+                if Lock.Visualize.TargetUI then
+                gui.TextLabel.Text = "@"..tostring(Lock.Target.Player)
+                gui.TextLabel_2.Text = Lock.Target.Player.DisplayName
+                RunService.RenderStepped:Connect(function()
+                gui.TextLabel_1.Text = "Health: "..tostring(Lock.Target.Player.Character.Humanoid.Health)
+                end)
+    
+                local player = Lock.Target.Player
+    
+                local userId = Lock.Target.Player.UserId
+                local thumbType = Enum.ThumbnailType.HeadShot
+                local thumbSize = Enum.ThumbnailSize.Size420x420
+                local content, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+    
+                local imageLabel = gui.ImageLabel
+                imageLabel.Image = content
+                imageLabel.Size = UDim2.new(0, 75,0, 75)
+                gui.Frame.Visible = true
+            end
+                -- target ui
+    
+                if (Lock.Visualize.Notify == true) then 
+                    if Lock.Mode == "Target Aim" then
+                    notifications:BuildNotificationUI();
+                    Notifications("Locked onto: ".. Lock.Target.Player.DisplayName);
+                    wait(1) print(Lock.Target.Prediction)
+                    else
+                        notifications:BuildNotificationUI();
+                        Notifications("Silent Aim Enabled");
+                    end
+                else
+            end
+                -- 
+            if Lock.ViewAt then 
+                Camera.CameraSubject = Lock.Target.Player.Character.Humanoid
+            end     
+        else 
+            if Lock.Visualize.TargetUI then
+            gui.Frame.Visible = false
+        end
+            Lock.Drawings.Dot.Visible = false 
+            Lock.Drawings.Tracer.Visible = false 
+            Camera.CameraSubject = LocalPlayer.Character.Humanoid
+            LocalPlayer.Character.Humanoid.AutoRotate = true 
+            -- 
+            if (Lock.Visualize.Notify == true) then 
+                if Lock.Mode == "Target Aim" then
+                    notifications:BuildNotificationUI();
+                    Notifications("Unlocked");
+                    else
+                        notifications:BuildNotificationUI();
+                        Notifications("Silent Aim Disabled");
+                    end
+            end 
+        end 
+        end 
+    end)
+    RunService.Heartbeat:Connect(function(FPS)
+        if Lock.Drawings.FOV.Visible and Lock.Drawings.FOV.Position ~= NewVector2(Mouse.X, Mouse.Y + offset) then 
+            Lock.Drawings.FOV.Position = NewVector2(Mouse.X, Mouse.Y + offset)
+        end
+        --   
+        if Lock.Locking and Lock.Target.Player and Lock:GetPlayerStatus(Lock.Target.Player) then
+            if Lock.Mode == "Silent Aim" then 
+                Lock.Target.Player = Lock:GetClosestPlayer()
+            end 
+            -- 
+            if Lock.Target.Player and Lock.Target.Player.Character then 
+                Lock.Target.Status = Lock:GetPlayerStatus(Lock.Target.Player)
+                Lock.Target.Velocity = Lock.Resolver and Lock:CalculateAbsolutePosition(Lock.Target.Player) or Lock.Target.Player.Character.HumanoidRootPart.Velocity
+                
+                
+      --ELEGANT WORK ON THIS, DONT DO ANYTHING ELSE!
+      if Lock.Prediction.PingBased then
+        local pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+        local split = string.split(pingvalue,'(')
+        local ping = tonumber(split[1])    
+        --[[ elegants 
+        if ping < 100 then
+            Lock.Target.Prediction = 0.141987
+        elseif ping < 80 then
+            Lock.Target.Prediction = 0.139340
+        elseif ping < 70 then
+            Lock.Target.Prediction = 0.12533
+              elseif ping < 65 then
+                Lock.Target.Prediction = 0.1264236
+        elseif ping < 50 then
+            Lock.Target.Prediction = 0.13544
+        elseif ping < 30 then
+            Lock.Target.Prediction = 0.11252476
+            
+            --[[ louls 
+            if ping < 30 then
+                Lock.Target.Prediction = 0.1099
+            elseif
+                ping < 35 then
+                    Lock.Target.Prediction = 0.2294
+                elseif
+                    ping < 40 then
+                        Lock.Target.Prediction = 0.1195
+                    elseif
+                        ping < 45 then
+                            Lock.Target.Prediction = 0.1207
+                        elseif
+                            ping < 50 then
+                                Lock.Target.Prediction = 0.1219
+                            elseif      
+                                ping < 55 then
+                                    Lock.Target.Prediction = 0.1228
+                                elseif
+                                    ping < 60 then
+                                        Lock.Target.Prediction = 0.1237 
+                                    elseif
+                                        ping < 65 then 
+                                            Lock.Target.Prediction = 0.1264 
+                                        elseif
+                                            ping < 70 then
+                                                Lock.Target.Prediction = 0.1291
+                                            elseif
+                                                ping < 75 then
+                                                    Lock.Target.Prediction = 0.1314
+                                                elseif
+                                                    ping < 80 then 
+                                                        Lock.Target.Prediction = 0.1337 
+                                                    elseif
+                                                        ping < 85 then
+                                                            Lock.Target.Prediction = 0.1343
+                                                        elseif
+                                                            ping < 90 then
+                                                                Lock.Target.Prediction = 0.1349
+                                                            elseif
+                                                                ping < 95 then
+                                                                    Lock.Target.Prediction = 0.1363
+                                                                elseif
+                                                                    ping < 100 then
+                                                                        Lock.Target.Prediction = 0.1378
+                                                                    elseif
+                                                                        ping < 105 then
+                                                                            Lock.Target.Prediction = 0.1418 
+                                                                        elseif
+                                                                            ping < 110 then
+                                                                            Lock.Target.Prediction = 0.1459
+                                                                            ]]
+    
+                                                                            -- sosa sets
+    
+                                                                            if ping < 10 then
+                                                                                Lock.Target.Prediction = 0.1112873
+                                                                            elseif ping < 20 then
+                                                                                Lock.Target.Prediction = 0.1211928
+                                                                            elseif ping < 30 then
+                                                                                Lock.Target.Prediction = 0.1254263
+                                                                            elseif ping < 40 then
+                                                                                Lock.Target.Prediction = 0.1314356
+                                                                            elseif ping < 50 then
+                                                                                Lock.Target.Prediction = 0.1368384
+                                                                            elseif ping < 60 then
+                                                                                Lock.Target.Prediction = 0.12671983
+                                                                            elseif ping < 70 then
+                                                                                Lock.Target.Prediction = 0.12862974
+                                                                            elseif ping < 80 then
+                                                                                Lock.Target.Prediction = 0.13581963
+                                                                            elseif ping < 90 then
+                                                                                Lock.Target.Prediction = 0.13873952
+                                                                            elseif ping < 100 then
+                                                                                Lock.Target.Prediction = 0.14173456
+                                                                            elseif ping < 110 then
+                                                                                Lock.Target.Prediction = 0.14362652
+                                                                            elseif ping < 120 then
+                                                                                Lock.Target.Prediction = 0.14683943
+                                                                            elseif ping < 130 then
+                                                                                Lock.Target.Prediction = 0.15175864
+                                                                            elseif ping < 140 then
+                                                                                Lock.Target.Prediction = 0.15382643
+                                                                            elseif ping < 150 then
+                                                                                Lock.Target.Prediction = 0.15873582
+                                                                            end
+                                                                        end
+    
+                                                                        if Lock.Target_Strafe[1] then 
+                                                                            Lock.Target.Angle += Lock.Target_Strafe[2]
+                                                                            LocalPlayer.Character.HumanoidRootPart.CFrame = 
+                                                                            Lock.Target.Player.Character.HumanoidRootPart.CFrame 
+                                                                            * NewAngle(0, Rad(Lock.Target.Angle), 0) 
+                                                                            * NewCFrame(0, Lock.Target_Strafe[4], Lock.Target_Strafe[3])
+                                                                        end 
+                                                                        --
+                                                                        if Lock.LookAt then 
+                                                                            LocalPlayer.Character.Humanoid.AutoRotate = false 
+                                                                            local NearestPos = CFrame.new(LocalPlayer.Character.PrimaryPart.Position, Vector3.new(Lock.Target.Player.Character.HumanoidRootPart.Position.X, LocalPlayer.Character.PrimaryPart.Position.Y, Lock.Target.Player.Character.HumanoidRootPart.Position.Z))
+                                                                            LocalPlayer.Character:SetPrimaryPartCFrame(NearestPos)
+                                                                        end 
+                                                                        -- 
+                                                                        if Lock.Target.Position then 
+                                                                            local Position1, OnScreen = Camera:WorldToViewportPoint(Lock.Target.Position)
+                                                                            local MousePosition = NewVector2(Mouse.X, Mouse.Y + 36)
+                                                                            local Magn = (MousePosition - NewVector2(Position1.X, Position1.Y)).Magnitude
+                                                                            -- 
+                                                                            if Lock.Drawings.FOV.Visible then 
+                                                                                Lock.Drawings.FOV.Position = NewVector2(Mouse.X, Mouse.Y + 36)
+                                                                                if (Magn >= Lock.Drawings.FOV.Radius) then Lock.Target.Status = false end 
+                                                                            end
+                                                                            -- 
+                                                                            if Lock.Visualize.Hitbox == true then 
+                                                                                Lock.Drawings.FakeHitbox.CFrame = NewCFrame(Lock.Target.Position)
+                                                                                Lock.Drawings.FakeHitbox.Size = NewVector3(Lock.Visualize.X, Lock.Visualize.Y, Lock.Visualize.Z)
+                                                                            else 
+                                                                                Lock.Drawings.FakeHitbox.CFrame = NewCFrame(999,9999,999)
+                                                                            end 
+                                                                            -- 
+                                                                            if OnScreen then 
+                                                                                if Lock.Visualize.Tracer[1] then 
+                                                                                    Lock.Drawings.Tracer.Visible = true 
+                                                                                    --
+                                                                                    if Lock:GetTracerOrigin(Lock.Visualize.Tracer[2]) ~= nil then 
+                                                                                        local Position2, OnScreen = Lock:GetTracerOrigin(Lock.Visualize.Tracer[2])  
+                                                                                        --
+                                                                                        if Position2 then 
+                                                                                            Lock.Drawings.Tracer.From = Vector2.new(Position2.X, Position2.Y)
+                                                                                        end 
+                                                                                    end 
+                                                                                    Lock.Drawings.Tracer.To = Vector2.new(Position1.X, Position1.Y)
+                                                                                end
+                                                                                -- 
+                                                                                if Lock.Visualize.Dot then 
+                                                                                    Lock.Drawings.Dot.Visible = true 
+                                                                                    Lock.Drawings.Dot.Position = NewVector2(Position1.X, Position1.Y)
+                                                                                else 
+                                                                                    Lock.Drawings.Dot.Visible = false 
+                                                                                end 
+                                                                                -- 
+                                                                                if Lock.Visualize.Strafe and Lock.Target_Strafe[1] then 
+                                                                                end 
+                                                                            else 
+                                                                                Lock.Drawings.Dot.Visible = false 
+                                                                                Lock.Drawings.Tracer.Visible = false 
+                                                                            end  
+                                                                        end 
+                                                                    end
+                                                                end
+                                                            end)
+                                                            
+    if not LPH_OBFUSCATED then
+    getfenv().LPH_NO_VIRTUALIZE = function(f) return f end;
+    end
+    local Old
+    Old = hookmetamethod(game, "__index", LPH_NO_VIRTUALIZE(function(self, k)
+        if (self:IsA("Mouse") and (k == "Hit" or k == "Target")) and Lock.Locking and Lock.Target.Player then 
+            local Part = Lock.Prediction.Part or "HumanoidRootPart"
+            if Lock.Prediction.Air == true and Lock.Target.Player.Character.Humanoid.FloorMaterial == Enum.Material.Air then 
+                SilentArg = Lock.Target.Player.Character["LeftFoot"].Position + (Lock.Target.Velocity * Lock.Target.Prediction)
+            else 
+                SilentArg = Lock.Target.Player.Character[Part].Position + (Lock.Target.Velocity * Lock.Target.Prediction)
+            end 
+            Lock.Target.Position = SilentArg
+            -- 
+            if Lock.Target.Status == true then  
+                return (k == "Hit" and NewCFrame(SilentArg))
+            end 
+        end 
+        return Old(self, k) 
+    end))
+    
+    Notifications("Loaded In "..string.format("%.2f", tostring(tick() - loadingtime,nil))..tostring(" Seconds"))
+    loadingtime = nil
+    end
+    
+if boostframes then
+    getgenv().boostFPS = true
+
+    local vim = game:GetService("VirtualInputManager")
+    setfpscap(999)
+    
+    game.DescendantAdded:Connect(function(d)
+       if d.Name == "MainView" and d.Parent.Name == "DevConsoleUI" and boostFPS then
+           task.wait()
+           local screen = d.Parent.Parent.Parent
+           screen.Enabled = false;
+           d.Visible = false;
+       end
+    end)
+    
+    vim:SendKeyEvent(true, "F9", 0, game)    
+    wait()
+    vim:SendKeyEvent(false, "F9", 0, game)  
+    
+    while true do
+       task.wait()
+       if not boostFPS then
+           continue;
+       end
+    
+    end
+end
+
+end)

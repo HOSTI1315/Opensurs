@@ -1,0 +1,821 @@
+local loadstringFunc = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local productInfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+local clientId = game:GetService("RbxAnalyticsService"):GetClientId()
+local localPlayer = game:GetService("Players").LocalPlayer
+local isReady = true
+local someStringVar = ""
+local hubTitle = "MikeyHub"
+
+local windowOptions = {
+    Title = hubTitle,
+    SubTitle = "",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftAlt
+}
+
+local mainWindow = loadstringFunc:CreateWindow(windowOptions)
+
+local function hashString(str)
+    local hash = 0
+    for i = 1, #str do
+        hash = (hash + string.byte(str, i) * i) % 4294967296
+    end
+    return tostring(hash)
+end
+
+local userInputService = game:GetService("UserInputService")
+local playersService = game:GetService("Players")
+local localPlayer = playersService.LocalPlayer
+local userId = localPlayer.UserId
+
+local tabs = {
+    Main = mainWindow:AddTab({ Title = "Main", Icon = "home" }),
+    Combat = mainWindow:AddTab({ Title = "Combat", Icon = "swords" }),
+    GunMods = mainWindow:AddTab({ Title = "Gun Mods", Icon = "crosshair" }),
+    Visuals = mainWindow:AddTab({ Title = "Visuals", Icon = "eye" }),
+    Misc = mainWindow:AddTab({ Title = "Misc", Icon = "circle-ellipsis" })
+}
+-- Brought to you by Javem
+local options = loadstringFunc.Options
+local isLoaded = false
+task.spawn(function()
+    task.wait(2)
+    isLoaded = true
+end)
+
+local mainSection = {
+    GiveUnlockItems = tabs.Main:AddSection("Give/Unlock Items")
+}
+
+local function createItemArrays()
+    local primaryGuns, secondaryGuns, meleeWeapons = {}, {}, {}
+    local primaryExclusions = {
+        ["M16A1"] = true,
+        ["Fisticuffs"] = true,
+        ["Diamond Back"] = true,
+        ["Tanto"] = true,
+        ["Karambit"] = true,
+        ["TT30"] = true,
+        ["Mk PM"] = true,
+        ["PPK"] = true,
+        ["M1911"] = true,
+        ["Model 39"] = true,
+        ["Python"] = true,
+        ["Mauser C96"] = true,
+        ["Akimbo G40"] = true,
+        ["Akimbo Deagle"] = true,
+        ["P08 Luger"] = true,
+        ["Big Iron"] = true
+    }
+    local secondaryInclusions = {
+        ["Mk PM"] = true,
+        ["PPK"] = true,
+        ["M1911"] = true,
+        ["Model 39"] = true,
+        ["Python"] = true,
+        ["Mauser C96"] = true,
+        ["Akimbo G40"] = true,
+        ["Akimbo Deagle"] = true,
+        ["P08 Luger"] = true,
+        ["Big Iron"] = true
+    }
+    local meleeInclusions = {
+        ["Combat Knife"] = true,
+        ["Diamond Back"] = true,
+        ["Tanto"] = true,
+        ["Karambit"] = true
+    }
+    local weaponsSource = game:GetService("ReplicatedStorage"):FindFirstChild("Weapons")
+    if weaponsSource then
+        for _, weapon in pairs(weaponsSource:GetChildren()) do
+            local name = weapon.Name
+            if not primaryExclusions[name] then
+                table.insert(primaryGuns, name)
+            end
+            if secondaryInclusions[name] then
+                table.insert(secondaryGuns, name)
+            end
+            if meleeInclusions[name] then
+                table.insert(meleeWeapons, name)
+            end
+        end
+    end
+    return primaryGuns, secondaryGuns, meleeWeapons
+end
+
+local primaryGuns, secondaryGuns, meleeWeapons = createItemArrays()
+
+local selectedPrimaryGun = nil
+mainSection.Main:AddDropdown("", {
+    Title = "Gun",
+    Description = "the gun you want to spawn in with",
+    Values = primaryGuns,
+    Multi = false,
+    Default = 1
+}):OnChanged(function(value)
+    selectedPrimaryGun = value
+end)
+
+mainSection.Main:AddButton({
+    Title = "Give Gun",
+    Description = "Gives you the gun you selected (deploy to see effects, also saves)",
+    Callback = function()
+        if selectedPrimaryGun then
+            localPlayer:SetAttribute("Primary", selectedPrimaryGun)
+        end
+    end
+})
+
+local selectedSecondaryGun = nil
+mainSection.Main:AddDropdown("", {
+    Title = "Secondary Gun",
+    Description = "the gun you want to spawn in with",
+    Values = secondaryGuns,
+    Multi = false,
+    Default = 1
+}):OnChanged(function(value)
+    selectedSecondaryGun = value
+end)
+
+mainSection.Main:AddButton({
+    Title = "Give Secondary Gun",
+    Description = "Gives you the gun you selected (deploy to see effects, also saves)",
+    Callback = function()
+        if selectedSecondaryGun then
+            localPlayer:SetAttribute("Secondary", selectedSecondaryGun)
+        end
+    end
+})
+
+local selectedMelee = nil
+mainSection.Main:AddDropdown("", {
+    Title = "Melee",
+    Description = "the melee you want to spawn in with",
+    Values = meleeWeapons,
+    Multi = false,
+    Default = 1
+}):OnChanged(function(value)
+    selectedMelee = value
+end)
+
+mainSection.Main:AddButton({
+    Title = "Give Melee",
+    Description = "Gives you the melee you selected (deploy to see effects, also saves)",
+    Callback = function()
+        if selectedMelee then
+            localPlayer:SetAttribute("Melee", selectedMelee)
+        end
+    end
+})
+
+local playerSection = mainSection.Main:AddSection("Player")
+local infJumpDebounce = false
+local jumpConnection = nil
+
+mainSection.Main:AddToggle("", {
+    Title = "Infinite Jump",
+    Description = "jump jump jump",
+    Default = false,
+    Callback = function(toggle)
+        if toggle then
+            jumpConnection = userInputService.JumpRequest:Connect(function()
+                if not infJumpDebounce then
+                    infJumpDebounce = true
+                    local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+                    if humanoid then
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                    task.wait()
+                    infJumpDebounce = false
+                end
+            end)
+        else
+            if jumpConnection then
+                jumpConnection:Disconnect()
+                jumpConnection = nil
+            end
+        end
+    end
+})
+
+local runService = game:GetService("RunService")
+local isSwimming = false
+local originalGravity = workspace.Gravity
+local swimConnection = nil
+local gravityResetConnection = nil
+
+mainSection.Main:AddToggle("", {
+    Title = "Air Swim",
+    Description = "Allows you to swim in the air.",
+    Default = false,
+    Callback = function(toggle)
+        if toggle and not isSwimming then
+            workspace.Gravity = 0
+            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if humanoid then
+                local gravDiedConn
+                gravDiedConn = humanoid.Died:Connect(function()
+                    workspace.Gravity = originalGravity
+                    isSwimming = false
+                    if gravDiedConn then gravDiedConn:Disconnect() end
+                end)
+                local states = Enum.HumanoidStateType:GetEnumItems()
+                table.remove(states, table.find(states, Enum.HumanoidStateType.None))
+                for _, state in pairs(states) do
+                    humanoid:SetStateEnabled(state, false)
+                end
+                humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+                swimConnection = runService.Heartbeat:Connect(function()
+                    pcall(function()
+                        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        local humanoidObj = humanoid
+                        local moveDir = humanoidObj.MoveDirection
+                        if moveDir == Vector3.new() and userInputService:IsKeyDown(Enum.KeyCode.Space) then
+                            moveDir = hrp.Velocity or Vector3.new()
+                        end
+                        if hrp then
+                            hrp.Velocity = moveDir
+                        end
+                    end)
+                end)
+                isSwimming = true
+            end
+        elseif not toggle and isSwimming then
+            workspace.Gravity = originalGravity
+            isSwimming = false
+            if swimConnection then
+                swimConnection:Disconnect()
+                swimConnection = nil
+            end
+            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if humanoid then
+                local states = Enum.HumanoidStateType:GetEnumItems()
+                table.remove(states, table.find(states, Enum.HumanoidStateType.None))
+                for _, state in pairs(states) do
+                    humanoid:SetStateEnabled(state, true)
+                end
+            end
+        end
+    end
+})
+
+local streakSection = mainSection.Main:AddSection("Streak Changer")
+local streakValues = {
+    "Orbital Laser",
+    "Radar",
+    "Minigun",
+    "Akimbo AA12s",
+    "Hunter Drone",
+    "Forcefield",
+    "Sentry",
+    "Launcher",
+    "Nuke"
+}
+
+local streakDropdown1 = mainSection.Main:AddDropdown("", {
+    Title = "Streak1",
+    Values = streakValues,
+    Multi = false,
+    Default = 1
+})
+local streakDropdown2 = mainSection.Main:AddDropdown("", {
+    Title = "Streak2",
+    Values = streakValues,
+    Multi = false,
+    Default = 1
+})
+local streakDropdown3 = mainSection.Main:AddDropdown("", {
+    Title = "Streak3",
+    Values = streakValues,
+    Multi = false,
+    Default = 1
+})
+local streakDropdown4 = mainSection.Main:AddDropdown("", {
+    Title = "Streak4",
+    Values = streakValues,
+    Multi = false,
+    Default = 1
+})
+
+streakDropdown1:OnChanged(function(value)
+    if isLoaded then
+        localPlayer:SetAttribute("Streak1", value)
+    end
+end)
+streakDropdown2:OnChanged(function(value)
+    if isLoaded then
+        localPlayer:SetAttribute("Streak2", value)
+    end
+end)
+streakDropdown3:OnChanged(function(value)
+    if isLoaded then
+        localPlayer:SetAttribute("Streak3", value)
+    end
+end)
+streakDropdown4:OnChanged(function(value)
+    if isLoaded then
+        localPlayer:SetAttribute("Streak4", value)
+    end
+end)
+
+local gunModsSection = mainSection.GunMods:AddSection("Gun Mods")
+mainSection.GunMods:AddButton({
+    Title = "Infinite Ammo",
+    Description = "ammo me 99999 (it works but it may be inconsistent).",
+    Callback = function()
+        local ohAux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
+        local searchClosure = ohAux.searchClosure
+        local weaponScript = localPlayer.PlayerScripts.Vortex
+        local closure = searchClosure(weaponScript, "Unnamed function", 2, { [1]="Parent", [2]="Name", [3]="MGL", [4]="Melee", [5]=2, [6]="Variables" })
+        if closure ~= "?" then
+            debug.setupvalue(closure, 2, 999999)
+        end
+        task.wait(0.1)
+        local searchClosure2 = ohAux.searchClosure
+        local closure2 = searchClosure2(localPlayer.PlayerScripts.Vortex, "Unnamed function", 11, { [1]="Parent", [2]="Name", [3]="script", [5]="Modifiers", [6]="Offset", [7]="Value" })
+        if closure2 ~= "?" then
+            debug.setupvalue(closure2, 11, 999999)
+        end
+    end
+})
+
+mainSection.GunMods:AddSlider("FireRate", {
+    Title = "FireRate",
+    Description = "Change how fast your gun shoots. (might break gun if too high)",
+    Default = 700,
+    Min = 1,
+    Max = 5000,
+    Rounding = 0.1,
+    Callback = function(value)
+        local ohAux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
+        local gatherWeaponData = ohAux.searchClosure
+        local closure = gatherWeaponData(localPlayer.PlayerScripts.Vortex, "GatherWeaponData", 4, { [1]="Animations", [2]="FOV", [3]="FindFirstChild", [4]="Value", [5]="NewSight", [6]="NewSightLine" })
+        if closure ~= "?" then
+            debug.setupvalue(closure, 4, value)
+        else
+            loadstringFunc:Notify({ Title = "Error.", Content = "Failed to edit gun stats", Duration = 5 })
+        end
+    end
+})
+
+local skinDropdown = mainSection.GunMods:AddDropdown("Dropdown", {
+    Title = "Skin",
+    Description = "",
+    Values = {
+        "Navy", "Wildfire", "Volcanic (Free)", "Ice", "Hearts", "Miami Tiger",
+        "Damascus", "Gold", "Haptic", "Blackout", "Warrior", "Blossom",
+        "Freedom", "Dark Matter"
+    },
+    Multi = false,
+    Default = 1
+})
+
+local selectedSkin = ""
+skinDropdown:OnChanged(function(value)
+    selectedSkin = value
+end)
+
+local function changeSkin(camoName, colorBrick, colorValue)
+    local viewModel = workspace:FindFirstChild("ViewModel")
+    if viewModel and viewModel:FindFirstChild("Gun") then
+        for _, child in ipairs(viewModel.Gun:GetChildren()) do
+            if child:FindFirstChild("Camo") then
+                child.MaterialVariant = camoName
+                if colorBrick and colorBrick ~= "" then
+                    child.BrickColor = colorBrick
+                end
+                if colorValue and colorValue ~= "" then
+                    child.Color = colorValue
+                end
+            end
+        end
+    else
+        loadstringFunc:Notify({ Title = "Error.", Content = "You must be in-game to use this.", Duration = 5 })
+    end
+end
+
+mainSection.GunMods:AddButton({
+    Title = "Change Skin",
+    Description = "Changes skin/camo to selected value in dropdown",
+    Callback = function()
+        if selectedSkin == "" then
+            loadstringFunc:Notify({ Title = "Error.", Content = "You must select a skin to use this.", Duration = 5 })
+            return
+        end
+        local camoActions = {
+            Navy = function()
+                changeSkin("NavyCamo")
+                localPlayer:SetAttribute("PrimaryCamo", "Navy")
+            end,
+            Wildfire = function()
+                changeSkin("WildfireCamo")
+                localPlayer:SetAttribute("PrimaryCamo", "Wildfire")
+            end,
+            Ice = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Ice
+                changeSkin("IceCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Ice")
+            end,
+            Hearts = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Hearts
+                changeSkin("CAMOHearts", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Hearts")
+            end,
+            ["Miami Tiger"] = function()
+                local c = game:GetService("ReplicatedStorage").Camos["Miami Tiger"]
+                changeSkin("MiamiTigerCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Miami Tiger")
+            end,
+            Damascus = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Damascus
+                changeSkin("DamascusCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Damascus")
+            end,
+            Gold = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Gold
+                changeSkin("CAMOGoldMain", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Gold")
+            end,
+            Haptic = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Haptic
+                changeSkin("HapticCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Haptic")
+            end,
+            Blackout = function()
+                local c = game:GetService("MaterialService").BlackoutCamo
+                changeSkin("BlackoutCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Blackout")
+            end,
+            Blossom = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Blossom
+                changeSkin("BlossomCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Blossom")
+            end,
+            Warrior = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Warrior
+                changeSkin("CAMOWarrior", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Warrior")
+            end,
+            Freedom = function()
+                local c = game:GetService("ReplicatedStorage").Camos.Freedom
+                changeSkin("FreedomCamo", c.BrickColor, c.Color)
+                localPlayer:SetAttribute("PrimaryCamo", "Freedom")
+            end,
+            ["Dark Matter"] = function()
+                localPlayer:SetAttribute("PrimaryCamo", "Dark Matter")
+            end,
+            ["Volcanic (Free)"] = function()
+                localPlayer:SetAttribute("PrimaryCamo", "Volcanic")
+            end
+        }
+        if camoActions[selectedSkin] then
+            camoActions[selectedSkin]()
+            loadstringFunc:Notify({ Title = "Success!", Content = "Reset to see effects (if you have default camo equipped)", Duration = 5 })
+        end
+    end
+})
+
+local hitSoundSection = mainSection.GunMods:AddSection("Hit Sound")
+local soundDropdown = mainSection.GunMods:AddDropdown("Dropdown", {
+    Title = "Sound",
+    Values = { "Default", "Minecraft", "Fortnite Shotgun" },
+    Multi = false,
+    Default = 1
+})
+
+local soundPaths = {
+    ArmHit = "Vortex.Audio.UI.ArmHit",
+    HeadHit = "Vortex.Audio.UI.HeadHit",
+    LegHit = "Vortex.Audio.UI.LegHit",
+    Lower = "Vortex.Audio.UI.LowerTorsoHit",
+    Upper = "Vortex.Audio.UI.UpperTorsoHit"
+}
+local soundObjects = {}
+for name, path in pairs(soundPaths) do
+    soundObjects[name] = game:GetService("Players").LocalPlayer.PlayerScripts:FindFirstChild(path, true)
+    soundObjects[name .. "Ui"] = game:GetService("StarterPlayer").StarterPlayerScripts:FindFirstChild(path, true)
+    local hud = game:GetService("ReplicatedFirst"):FindFirstChild("HUD") or localPlayer.PlayerGui:FindFirstChild("HUD")
+    if hud and hud:FindFirstChild("Code", true) then
+        soundObjects[name .. "Code"] = hud.Code:FindFirstChild(string.gsub(path, "Vortex.Audio.UI.", ""))
+    end
+end
+
+local function applySound(r0_89)
+    local soundIds = {
+        Default = {
+            ArmHit = "6062254646",
+            HeadHit = "6062253602",
+            LegHit = "6062254394",
+            Lower = "6062254394",
+            Upper = "6062253829"
+        },
+        Minecraft = "8766809464",
+        ["Fortnite Shotgun"] = "4804954860"
+    }
+    local selectedSounds = soundIds[r0_89]
+    if not selectedSounds then return end
+    for name, soundObj in pairs(soundObjects) do
+        if soundObj then
+            if type(selectedSounds) == "string" then
+                soundObj.SoundId = "rbxassetid://" .. selectedSounds
+            else
+                for partName, soundId in pairs(selectedSounds) do
+                    if string.find(name, partName) then
+                        soundObj.SoundId = "rbxassetid://" .. soundId
+                    end
+                end
+            end
+        end
+    end
+end
+
+soundDropdown:OnChanged(function(value)
+    applySound(value)
+end)
+
+mainSection.GunMods:AddInput("", {
+    Title = "Custom Sound",
+    Description = "Get it from the marketplace\n(paste the numbers in url into here)",
+    Numeric = true,
+    Callback = function(value)
+        for _, soundObj in pairs(soundObjects) do
+            if soundObj then
+                soundObj.SoundId = "rbxassetid://" .. value
+            end
+        end
+    end
+})
+
+local killSoundSection = mainSection.GunMods:AddSection("Kill Sound")
+local killSoundObj = nil
+local hudObj = game:GetService("ReplicatedFirst"):FindFirstChild("HUD") or localPlayer.PlayerGui:FindFirstChild("HUD")
+if hudObj and hudObj:FindFirstChild("Code", true) then
+    killSoundObj = hudObj.Code:FindFirstChild("Kill")
+end
+
+local killSoundDropdown = mainSection.GunMods:AddDropdown("Dropdown", {
+    Title = "Sound",
+    Values = { "Default", "Bruh", "Dragon ball hit", "Among Us", "TFS", "UwU" },
+    Multi = false,
+    Default = 1
+})
+
+killSoundDropdown:OnChanged(function(value)
+    local soundIds = {
+        Default = "2523782146",
+        Bruh = "7616380887",
+        ["Dragon ball hit"] = "1058693352",
+        ["Among Us"] = "7227567562",
+        TFS = "6909256325",
+        UwU = "8323804973"
+    }
+    if soundIds[value] and killSoundObj then
+        killSoundObj.SoundId = "rbxassetid://" .. soundIds[value]
+    end
+end)
+
+mainSection.GunMods:AddInput("", {
+    Title = "Custom Sound",
+    Description = "Get it from the marketplace\n(paste the numbers in url into here)",
+    Numeric = true,
+    Callback = function(value)
+        if killSoundObj then
+            killSoundObj.SoundId = "rbxassetid://" .. value
+        end
+    end
+})
+
+local aimSettings = {
+    Aimbot = false,
+    AimPart = "HumanoidRootPart",
+    TeamCheck = false,
+    WallCheck = false,
+    AimKey = Enum.UserInputType.MouseButton2
+}
+
+local aimPlayer = playersService.LocalPlayer
+local aimMouse = aimPlayer:GetMouse()
+local isAimbotActive, targetAimPart = false, nil
+
+local combatTab = mainSection.Combat:AddSection("Aimbot")
+combatTab:AddToggle("AimbotToggle", {
+    Title = "Aimbot Toggle",
+    Default = aimSettings.Aimbot
+}):OnChanged(function(val)
+    aimSettings.Aimbot = val
+end)
+
+combatTab:AddDropdown("AimPartDropdown", {
+    Title = "Aimbot Part",
+    Values = { "Head", "HumanoidRootPart" },
+    Default = aimSettings.AimPart,
+    Callback = function(val)
+        aimSettings.AimPart = val
+    end
+})
+
+local function isValidTarget(target)
+    if not (target and target:FindFirstChild("Humanoid") and target.Humanoid.Health > 0 and target:FindFirstChild(aimSettings.AimPart)) then
+        return false
+    end
+    local targetPlayer = playersService:GetPlayerFromCharacter(target)
+    if not targetPlayer or targetPlayer == aimPlayer then
+        return false
+    end
+    if targetPlayer:GetAttribute("Team") == aimPlayer:GetAttribute("Team") then
+        return false
+    end
+    return true
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if isAimbotActive and aimSettings.Aimbot then
+        local closestTarget, minDist = nil, math.huge
+        for _, player in ipairs(playersService:GetPlayers()) do
+            if player ~= aimPlayer and player.Character and isValidTarget(player.Character) then
+                local headPart = player.Character:FindFirstChild(aimSettings.AimPart)
+                if headPart then
+                    local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(headPart.Position)
+                    if onScreen then
+                        local dist = (Vector2.new(aimMouse.X, aimMouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                        if dist < minDist then
+                            minDist = dist
+                            closestTarget = headPart
+                        end
+                    end
+                end
+            end
+        end
+        if closestTarget then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closestTarget.Position)
+        end
+    end
+end)
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.UserInputType == aimSettings.AimKey then
+        isAimbotActive = true
+    end
+end)
+
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == aimSettings.AimKey then
+        isAimbotActive = false
+    end
+end)
+
+local hitboxSection = mainSection.Combat:AddSection("Hitbox Expander")
+local hitboxSettings = {
+    Enabled = false,
+    Part = "HumanoidRootPart",
+    Size = 5,
+    Visuals = true
+}
+
+hitboxSection:AddToggle("", {
+    Title = "Hitbox Expander",
+    Default = false
+}):OnChanged(function(val)
+    hitboxSettings.Enabled = val
+end)
+
+hitboxSection:AddDropdown("HExpDrop", {
+    Title = "Hitbox Expander Part",
+    Values = { "HumanoidRootPart", "Head" },
+    Default = "HumanoidRootPart"
+}):OnChanged(function(val)
+    hitboxSettings.Part = val
+end)
+
+hitboxSection:AddSlider("", {
+    Title = "Hitbox Size",
+    Default = 5,
+    Min = 1,
+    Max = 20
+}):OnChanged(function(val)
+    hitboxSettings.Size = val
+end)
+
+hitboxSection:AddToggle("", {
+    Title = "Hitbox Visualizer",
+    Default = true
+}):OnChanged(function(val)
+    hitboxSettings.Visuals = val
+end)
+
+task.spawn(function()
+    while true do
+        task.wait()
+        for _, player in ipairs(playersService:GetPlayers()) do
+            if player.Character and player ~= localPlayer then
+                local part = player.Character:FindFirstChild(hitboxSettings.Part)
+                if part then
+                    if hitboxSettings.Enabled then
+                        part.Size = Vector3.new(hitboxSettings.Size, hitboxSettings.Size, hitboxSettings.Size)
+                        part.CanCollide = false
+                        part.Transparency = hitboxSettings.Visuals and 0.5 or 1
+                    else
+                        part.Size = (hitboxSettings.Part == "Head") and Vector3.new(1,1,1) or Vector3.new(2,2,1)
+                        part.Transparency = 1
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local visualsESP = mainSection.Visuals:AddSection("ESP")
+local espSettings = {
+    Enabled = false,
+    FillColor = Color3.new(1,1,1),
+    OutlineColor = Color3.new(1,1,1),
+    FillTrans = 0.5,
+    OutlineTrans = 0.5
+}
+
+visualsESP:AddToggle("", {
+    Title = "ESP",
+    Default = false
+}):OnChanged(function(val)
+    espSettings.Enabled = val
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if espSettings.Enabled then
+            for _, player in ipairs(playersService:GetPlayers()) do
+                if player.Character and player ~= localPlayer then
+                    local highlight = player.Character:FindFirstChild("MikeyHubHighlight") or Instance.new("Highlight", player.Character)
+                    highlight.Name = "MikeyHubHighlight"
+                    highlight.Enabled = true
+                    highlight.FillColor = player.TeamColor.Color
+                    highlight.OutlineColor = player.TeamColor.Color
+                    highlight.FillTransparency = espSettings.FillTrans
+                    highlight.OutlineTransparency = espSettings.OutlineTrans
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+            end
+        else
+            for _, player in ipairs(playersService:GetPlayers()) do
+                if player.Character and player.Character:FindFirstChild("MikeyHubHighlight") then
+                    player.Character.MikeyHubHighlight:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+local worldSection = mainSection.Visuals:AddSection("World")
+local lighting = game:GetService("Lighting")
+local originalAmbient = lighting.Ambient
+
+lighting:AddToggle("", {
+    Title = "Full Bright",
+    Default = false
+}):OnChanged(function(val)
+    lighting.Ambient = val and Color3.new(1,1,1) or originalAmbient
+end)
+
+lighting:AddToggle("", {
+    Title = "Night / Day",
+    Default = false
+}):OnChanged(function(val)
+    lighting.ClockTime = val and 0 or 14
+end)
+
+local miscSection = mainSection.Misc:AddSection("Main")
+miscSection:AddButton({
+    Title = "Force Reset",
+    Callback = function()
+        localPlayer.Character.Humanoid.Health = 0
+    end
+})
+
+miscSection:AddButton({
+    Title = "Rejoin Server",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, localPlayer)
+    end
+})
+
+local fovSlider = mainSection.Misc:AddSlider("Slider", {
+    Title = "Gun AimIn FOV",
+    Default = 50,
+    Min = 1,
+    Max = 120,
+    Callback = function(val)
+        local primary = localPlayer:GetAttribute("Primary")
+        if primary then
+            local weapon = game:GetService("ReplicatedStorage").Weapons:FindFirstChild(primary)
+            if weapon and weapon:FindFirstChild("FOV") then
+                weapon.FOV.Value = val
+            end
+        end
+    end
+})
+
+mainWindow:SelectTab(1)

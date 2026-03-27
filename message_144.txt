@@ -1,0 +1,144 @@
+local SpoofState = {
+    Active = false,
+    TargetCFrame = nil,
+    OriginalCallback = nil,
+    HookInstalled = false
+}
+
+local function formatCFrameForServer(cf)
+    if not cf then return nil end
+    local p, l = cf.Position, cf.LookVector
+    return string.format("%0.3f/%0.3f/%0.3f/%0.3f/%0.3f/%0.3f", p.X, p.Y, p.Z, l.X, l.Y, l.Z)
+end
+
+local function setSpoofCFrame(cf)
+    SpoofState.Active = cf ~= nil
+    SpoofState.TargetCFrame = cf
+end
+
+local function installPositionHook()
+    if SpoofState.HookInstalled then return end
+    
+    pcall(function()
+        local networkModule = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"))
+        
+        if networkModule and networkModule.SetConnection then
+            local originalSetConnection = networkModule.SetConnection
+            
+            networkModule.SetConnection = function(self, key, connType, callback)
+                if key == "GetLocalPosData" and connType == "REMOTE_FUNCTION" then
+                    SpoofState.OriginalCallback = callback
+                    
+                    local wrappedCallback = function(...)
+                        if SpoofState.Active and SpoofState.TargetCFrame then
+                            return formatCFrameForServer(SpoofState.TargetCFrame)
+                        end
+                        if SpoofState.OriginalCallback then
+                            return SpoofState.OriginalCallback(...)
+                        end
+                        local char = lplr.Character
+                        if char and char.PrimaryPart then
+                            return formatCFrameForServer(char.PrimaryPart.CFrame)
+                        end
+                        return nil
+                    end
+                    
+                    return originalSetConnection(self, key, connType, wrappedCallback)
+                end
+                return originalSetConnection(self, key, connType, callback)
+            end
+            
+            SpoofState.HookInstalled = true
+        end
+    end)
+    
+    if not SpoofState.HookInstalled and hookfunction then
+        pcall(function()
+            local networkModule = require(ReplicatedStorage.Modules.Network)
+            local connections = rawget(networkModule, "_connections") or rawget(networkModule, "Connections") or {}
+            
+            for key, data in pairs(connections) do
+                if key == "GetLocalPosData" then
+                    local originalFunc = data.Callback or data.callback or data[2]
+                    if originalFunc then
+                        SpoofState.OriginalCallback = originalFunc
+                        
+                        local newFunc = function(...)
+                            if SpoofState.Active and SpoofState.TargetCFrame then
+                                return formatCFrameForServer(SpoofState.TargetCFrame)
+                            end
+                            return originalFunc(...)
+                        end
+                        
+                        if data.Callback then data.Callback = newFunc
+                        elseif data.callback then data.callback = newFunc
+                        elseif data[2] then data[2] = newFunc end
+                        
+                        SpoofState.HookInstalled = true
+                    end
+                end
+            end
+        end)
+    end
+end
+
+task.spawn(function()
+    task.wait(1)
+    installPositionHook()
+    task.wait(2)
+    installPositionHook()
+end)
+
+local function serverSyncTeleport(targetCFrame)
+    local char = lplr.Character
+    if not char then return false end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    setSpoofCFrame(targetCFrame)
+    
+    root.CFrame = targetCFrame
+    root.Velocity = Vector3.zero
+    root.AssemblyLinearVelocity = Vector3.zero
+    
+    return true
+end
+
+local function smoothTeleport(targetCFrame, speed)
+    local char = lplr.Character
+    if not char then return false end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not root or not hum then return false end
+    
+    speed = speed or 200
+    local startPos = root.Position
+    local endPos = targetCFrame.Position
+    local distance = (endPos - startPos).Magnitude
+    local duration = distance / speed
+    duration = math.clamp(duration, 0.01, 0.5)
+    
+    setSpoofCFrame(targetCFrame)
+    
+    local startTime = tick()
+    while tick() - startTime < duration do
+        local alpha = (tick() - startTime) / duration
+        alpha = math.clamp(alpha, 0, 1)
+        local newPos = startPos:Lerp(endPos, alpha)
+        local currentCFrame = CFrame.new(newPos) * (targetCFrame - targetCFrame.Position)
+        root.CFrame = currentCFrame
+        setSpoofCFrame(currentCFrame)
+        RunService.Heartbeat:Wait()
+    end
+    
+    root.CFrame = targetCFrame
+    root.Velocity = Vector3.zero
+    root.AssemblyLinearVelocity = Vector3.zero
+    setSpoofCFrame(targetCFrame)
+    
+    return true
+end
+
+local function clearSpoof()
+    setSpoofCFrame(nil)
+end

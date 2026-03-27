@@ -1,0 +1,158 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- SERVICES
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
+local player = Players.LocalPlayer
+
+-- SCREEN GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "MusicPlayerGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- TOGGLE BUTTON
+local toggleBtn = Instance.new("TextButton", gui)
+toggleBtn.Size = UDim2.fromScale(0.12, 0.06)
+toggleBtn.Position = UDim2.fromScale(0.02, 0.9)
+toggleBtn.Text = "🎵 Music"
+toggleBtn.TextScaled = true
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.Active = true
+toggleBtn.Draggable = true
+
+-- MAIN FRAME
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromScale(0.35, 0.38)
+frame.Position = UDim2.fromScale(0.325, 0.31)
+frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+frame.Visible = false
+frame.Active = true
+frame.Draggable = true
+
+-- SOUND (PERSISTS AFTER DEATH)
+local sound = Instance.new("Sound")
+sound.Name = "MusicSound"
+sound.Volume = 1
+sound.Looped = false
+sound.Parent = SoundService
+
+-- SONG ID TEXTBOX
+local songBox = Instance.new("TextBox", frame)
+songBox.Size = UDim2.fromScale(0.9, 0.14)
+songBox.Position = UDim2.fromScale(0.05, 0.05)
+songBox.PlaceholderText = "Enter Song ID"
+songBox.TextScaled = true
+songBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+songBox.TextColor3 = Color3.new(1,1,1)
+songBox.ClearTextOnFocus = false
+
+-- BUTTON CREATOR
+local function makeButton(text, pos)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.fromScale(0.8, 0.14)
+	b.Position = pos
+	b.Text = text
+	b.TextScaled = true
+	b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	b.TextColor3 = Color3.new(1,1,1)
+	return b
+end
+
+-- BUTTONS
+local playBtn = makeButton("▶ Play", UDim2.fromScale(0.1, 0.22))
+local stopBtn = makeButton("⏹ Stop", UDim2.fromScale(0.1, 0.38))
+local loopBtn = makeButton("🔁 Loop: OFF", UDim2.fromScale(0.1, 0.54))
+
+-- VOLUME LABEL
+local volumeLabel = Instance.new("TextLabel", frame)
+volumeLabel.Size = UDim2.fromScale(0.8, 0.08)
+volumeLabel.Position = UDim2.fromScale(0.1, 0.70)
+volumeLabel.Text = "Volume: 1.0x"
+volumeLabel.TextScaled = true
+volumeLabel.BackgroundTransparency = 1
+volumeLabel.TextColor3 = Color3.new(1,1,1)
+
+-- SLIDER BAR
+local sliderBar = Instance.new("Frame", frame)
+sliderBar.Size = UDim2.fromScale(0.8, 0.05)
+sliderBar.Position = UDim2.fromScale(0.1, 0.80)
+sliderBar.BackgroundColor3 = Color3.fromRGB(90,90,90)
+
+local knob = Instance.new("Frame", sliderBar)
+knob.Size = UDim2.fromScale(0.05, 1)
+knob.Position = UDim2.fromScale(0.5, 0)
+knob.BackgroundColor3 = Color3.fromRGB(200,200,200)
+
+-- VARIABLES
+local looping = false
+local dragging = false
+local MIN_VOL, MAX_VOL = 0.1, 2
+
+-- TOGGLE GUI
+toggleBtn.MouseButton1Click:Connect(function()
+	frame.Visible = not frame.Visible
+end)
+
+-- PLAY
+playBtn.MouseButton1Click:Connect(function()
+	local id = songBox.Text
+	if id ~= "" then
+		if not id:find("rbxassetid://") then
+			id = "rbxassetid://" .. id
+		end
+		sound.SoundId = id
+		sound:Play()
+	end
+end)
+
+-- STOP
+stopBtn.MouseButton1Click:Connect(function()
+	sound:Stop()
+end)
+
+-- LOOP
+loopBtn.MouseButton1Click:Connect(function()
+	looping = not looping
+	sound.Looped = looping
+	loopBtn.Text = looping and "🔁 Loop: ON" or "🔁 Loop: OFF"
+end)
+
+-- VOLUME UPDATE
+local function setVolume(x)
+	local rel = math.clamp(
+		(x - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X,
+		0, 1
+	)
+
+	knob.Position = UDim2.fromScale(rel, 0)
+
+	local vol = MIN_VOL + (MAX_VOL - MIN_VOL) * rel
+	sound.Volume = vol
+	volumeLabel.Text = string.format("Volume: %.1fx", vol)
+end
+
+sliderBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		setVolume(input.Position.X)
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+	or input.UserInputType == Enum.UserInputType.Touch) then
+		setVolume(input.Position.X)
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)

@@ -1,0 +1,950 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local Gradient = require(ReplicatedStorage.Packages.Gradients)
+local Rarities = require(ReplicatedStorage.Datas.Rarities)
+local Animals = require(ReplicatedStorage.Datas.Animals)
+
+local traitMap = {
+    ["rbxassetid://89041930759464"] = {name = "Taco", mult = 2},
+    ["rbxassetid://104229924295526"] = {name = "Nyan", mult = 5},
+    ["rbxassetid://99181785766598"] = {name = "Galactic", mult = 3},
+    ["rbxassetid://121100427764858"] = {name = "Fireworks", mult = 5},
+    ["rbxassetid://110723387483939"] = {name = "Zombie", mult = 4},
+    ["rbxassetid://104964195846833"] = {name = "Claws", mult = 4},
+    ["rbxassetid://121332433272976"] = {name = "Glitched", mult = 4},
+    ["rbxassetid://100601425541874"] = {name = "Bubblegum", mult = 3},
+    ["rbxassetid://118283346037788"] = {name = "Fire", mult = 5},
+    ["rbxassetid://78474194088770"] = {name = "Wet", mult = 1.5},
+    ["rbxassetid://83627475909869"] = {name = "Snowy", mult = 2},
+    ["rbxassetid://127455440418221"] = {name = "Cometstruck", mult = 2.5},
+    ["rbxassetid://97725744252608"] = {name = "Explosive", mult = 3},
+    ["rbxassetid://82620342632406"] = {name = "Disco", mult = 4},
+    ["rbxassetid://134655415681926"] = {name = "10B", mult = 3},
+    ["rbxassetid://104985313532149"] = {name = "Shark Fin", mult = 3},
+    ["rbxassetid://115664804212096"] = {name = "Matteo Hat", mult = 3.5},
+    ["rbxassetid://75650816341229"] = {name = "Brazil", mult = 5},
+    ["rbxassetid://115001117876534"] = {name = "Sleepy", mult = 0},
+    ["rbxassetid://139729696247144"] = {name = "Lightning", mult = 5},
+    ["rbxassetid://110910518481052"] = {name = "UFO", mult = 2},
+    ["rbxassetid://117478971325696"] = {name = "Spider", mult = 3.5},
+    ["rbxassetid://84731118566493"] = {name = "Strawberry", mult = 7},
+    ["rbxassetid://119591742504251"] = {name = "Paint", mult = 5},
+    ["rbxassetid://89591838221335"] = {name = "Skeleton", mult = 3},
+    ["rbxassetid://95128039793845"] = {name = "Sombrero", mult = 4},
+    ["rbxassetid://103610037004911"] = {name = "Tie", mult = 3.75},
+    ["rbxassetid://123964048606874"] = {name = "Witch Hat", mult = 3},
+    ["rbxassetid://93350414974589"] = {name = "Indonesia", mult = 4},
+    ["rbxassetid://114748221761549"] = {name = "Meowl", mult = 6},
+    ["rbxassetid://123115843719383"] = {name = "RIP Gravestone", mult = 3.5},
+    ["rbxassetid://97054765273857"] = {name = "Jackolantern Pet", mult = 4.5},
+    ["rbxassetid://88375043733582"] = {name = "Santa Hat", mult = 4}
+}
+
+local mutationMap = {
+    ["Gold"] = {
+        mult = 0.25,
+        displayText = "Gold",
+        richText = "<font color=\"#FFDE59\">Gold</font>",
+        color = Color3.fromRGB(255, 222, 89),
+        icon = "rbxassetid://136133057822407"
+    },
+    ["Diamond"] = {
+        mult = 0.5,
+        displayText = "Diamond",
+        richText = "<font color=\"#25C4FE\">Diamond</font>",
+        color = Color3.fromRGB(37, 196, 254),
+        icon = "rbxassetid://100875709547015"
+    },
+    ["Bloodrot"] = {
+        mult = 1,
+        displayText = "Bloodrot",
+        richText = "<font color=\"#8A3B3C\">Bloodrot</font>",
+        color = Color3.fromRGB(145, 0, 27),
+        icon = "rbxassetid://75212036784031"
+    },
+    ["Rainbow"] = {
+        mult = 9,
+        displayText = "Rainbow",
+        richText = "<font color=\"#ff00fb\">Rainbow</font>",
+        color = Color3.fromRGB(255, 0, 251),
+        icon = "rbxassetid://83078714090192"
+    },
+    ["Candy"] = {
+        mult = 3,
+        displayText = "Candy",
+        richText = "<font color=\"#ff46f6\">Candy</font>",
+        color = Color3.fromRGB(255, 70, 246),
+        icon = "rbxassetid://84797673698685"
+    },
+    ["Lava"] = {
+        mult = 5,
+        displayText = "Lava",
+        richText = "<font color=\"#ff7700\">Lava</font>",
+        color = Color3.fromRGB(255, 149, 0),
+        icon = "rbxassetid://70800471498231"
+    },
+    ["Galaxy"] = {
+        mult = 6,
+        displayText = "Galaxy",
+        richText = "<font color=\"#aa3cff\">Galaxy</font>",
+        color = Color3.fromRGB(170, 60, 255),
+        icon = "rbxassetid://139331671405138"
+    },
+    ["Yin Yang"] = {
+        mult = 6.5,
+        displayText = "Yin Yang",
+        richText = "<stroke color=\"#fff\" thickness=\"2\"><font color=\"#000\">Yin</font></stroke> <stroke color=\"#000\" thickness=\"2\"><font color=\"#fff\">Yang</font></stroke>",
+        useRichText = true,
+        color = Color3.fromRGB(255, 255, 255),
+        icon = "rbxassetid://112996178302302"
+    },
+    ["YinYang"] = {
+        mult = 6.5,
+        displayText = "Yin Yang",
+        richText = "<stroke color=\"#fff\" thickness=\"2\"><font color=\"#000\">Yin</font></stroke> <stroke color=\"#000\" thickness=\"2\"><font color=\"#fff\">Yang</font></stroke>",
+        useRichText = true,
+        color = Color3.fromRGB(255, 255, 255),
+        icon = "rbxassetid://112996178302302"
+    },
+    ["Radioactive"] = {
+        mult = 7.5,
+        displayText = "Radioactive",
+        richText = "<font color=\"#68f500\">Radioactive</font>",
+        useRichText = false,
+        color = Color3.fromRGB(104, 245, 0),
+        icon = "rbxassetid://134809510446754"
+    }
+}
+
+local traitList = {}
+for assetId, data in pairs(traitMap) do
+    table.insert(traitList, data.name)
+end
+table.sort(traitList)
+
+local function formatNumber(num)
+    local suffixes = {"", "K", "M", "B", "T", "Q"}
+    local tier = 1
+    
+    while num >= 1000 and tier < #suffixes do
+        num = num / 1000
+        tier = tier + 1
+    end
+    
+    if num % 1 == 0 then
+        return string.format("%d%s", num, suffixes[tier])
+    else
+        return string.format("%.1f%s", num, suffixes[tier])
+    end
+end
+
+local function parseCurrency(str)
+    str = str:gsub("<[^>]+>", "")
+    str = str:gsub("%$", "")
+    str = str:gsub(",", "")
+    str = str:gsub("[^%d%.%a]", "")
+    
+    local numStr, suffix = str:match("^(%d*%.?%d+)(%a*)")
+    local num = tonumber(numStr) or 0
+    
+    suffix = suffix:upper()
+    local multipliers = {
+        K = 1000,
+        M = 1000000,
+        B = 1000000000,
+        T = 1000000000000,
+        Q = 1000000000000000
+    }
+    
+    return num * (multipliers[suffix] or 1)
+end
+
+local Controllers = ReplicatedStorage:WaitForChild("Controllers")
+local Utils = ReplicatedStorage:WaitForChild("Utils")
+local SoundController = require(Controllers.SoundController)
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer.PlayerGui
+local LeftBottom = PlayerGui:WaitForChild("LeftBottom"):WaitForChild("LeftBottom")
+local CashoutFrame = LeftBottom:FindFirstChild("Cashout")
+
+local cashoutTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Linear)
+
+local function showCashout(text, isGreen, playSound)
+    if not CashoutFrame or not CashoutFrame.Template or not CashoutFrame.Template:IsA("TextLabel") then
+        return
+    end
+    
+    local label = CashoutFrame.Template:Clone()
+    label.Text = text
+    
+    local color = isGreen and Color3.fromRGB(13, 255, 0) or Color3.fromRGB(255, 0, 0)
+    label.TextColor3 = color
+    label.Visible = true
+    label.Parent = CashoutFrame
+    
+    local textTween = TweenService:Create(label, cashoutTweenInfo, {TextTransparency = 1})
+    local strokeTween = TweenService:Create(label.UIStroke, cashoutTweenInfo, {Transparency = 1})
+    
+    textTween.Completed:Once(function()
+        label:Destroy()
+    end)
+    
+    textTween:Play()
+    strokeTween:Play()
+    
+    if playSound and isGreen then
+        SoundController:PlaySound("Sounds.Sfx.Cashout")
+    end
+end
+
+local function getAnimalData(animalName)
+    return Animals[animalName] or {}
+end
+
+local function getTraitIconByName(traitName)
+    for assetId, data in pairs(traitMap) do
+        if data.name == traitName then
+            return assetId
+        end
+    end
+    return nil
+end
+
+local function applyMutationVisuals(clonedAnimal, mutationName)
+    if not mutationName or mutationName == "None" then return end
+    
+    local mutationData = mutationMap[mutationName]
+    if not mutationData then return end
+    
+    local MutationsData = ReplicatedStorage.Datas:FindFirstChild("Mutations")
+    if MutationsData then
+        local success, mutationModule = pcall(function()
+            return require(MutationsData)
+        end)
+        
+        if success and mutationModule then
+            local mutationInfo = mutationModule[mutationName]
+            
+            if mutationInfo and mutationInfo.Palettes then
+                local palette = mutationInfo.Palettes[1]
+                if palette then
+                    local colorIndex = 1
+                    for _, part in ipairs(clonedAnimal:GetDescendants()) do
+                        if part:IsA("BasePart") or part:IsA("MeshPart") then
+                            part.Color = palette[colorIndex]
+                            colorIndex = (colorIndex % #palette) + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function spawnAnimal(animalName, selectedTraits, selectedMutation)
+    local animalData = Animals[animalName]
+    if not animalData then
+        return false, "invalid brainrot"
+    end
+    
+    local animalModel = ReplicatedStorage.Models.Animals:FindFirstChild(animalName)
+    if not animalModel then
+        return false, "invalid brainrot"
+    end
+    
+    local foundPlot = false
+    local spawnCFrame = nil
+    local spawnAttachment = nil
+    local claimFrame = nil
+    local hitbox = nil
+    
+    for _, plot in ipairs(workspace.Plots:GetChildren()) do
+        local plotSign = plot:FindFirstChild("PlotSign")
+        if plotSign then
+            local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+            if surfaceGui then
+                local frame = surfaceGui:FindFirstChild("Frame")
+                if frame then
+                    local textLabel = frame:FindFirstChild("TextLabel")
+                    if textLabel then
+                        local ownerText = textLabel.Text:gsub("^%s*(.-)%s*$", "%1")
+                        
+                        if string.find(ownerText:lower(), LocalPlayer.Name:lower()) or 
+                           ownerText == LocalPlayer.Name or 
+                           string.find(ownerText, LocalPlayer.DisplayName) then
+                            
+                            local podiums = plot:FindFirstChild("AnimalPodiums")
+                            if podiums then
+                                local podiumList = {}
+                                
+                                for _, child in ipairs(podiums:GetChildren()) do
+                                    if child:IsA("Model") and tonumber(child.Name) then
+                                        table.insert(podiumList, child)
+                                    end
+                                end
+                                
+                                table.sort(podiumList, function(a, b)
+                                    return tonumber(a.Name) < tonumber(b.Name)
+                                end)
+                                
+                                for _, podium in ipairs(podiumList) do
+                                    local base = podium:FindFirstChild("Base")
+                                    if base then
+                                        local spawn = base:FindFirstChild("Spawn")
+                                        if spawn then
+                                            local attachment = spawn:FindFirstChild("Attachment")
+                                            local hasAnimal = false
+                                            
+                                            for _, obj in ipairs(spawn:GetChildren()) do
+                                                if obj:IsA("Model") and obj.Name ~= "Attachment" then
+                                                    hasAnimal = true
+                                                    break
+                                                end
+                                            end
+                                            
+                                            if not hasAnimal then
+                                                for _, obj in ipairs(podium:GetChildren()) do
+                                                    if obj:IsA("Model") and Animals[obj.Name] then
+                                                        hasAnimal = true
+                                                        break
+                                                    end
+                                                end
+                                            end
+                                            
+                                            if not attachment and not hasAnimal then
+                                                spawnCFrame = spawn.CFrame * CFrame.new(0, -1.5, 0)
+                                                spawnAttachment = spawn
+                                                
+                                                claimFrame = podium:FindFirstChild("Claim") and 
+                                                            podium.Claim:FindFirstChild("Main") and
+                                                            podium.Claim.Main:FindFirstChild("Collect")
+                                                
+                                                hitbox = podium:FindFirstChild("Claim") and
+                                                        podium.Claim:FindFirstChild("Hitbox")
+                                                
+                                                foundPlot = true
+                                                break
+                                            end
+                                        end
+                                    end
+                                end
+                                
+                                if foundPlot then break end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    if not foundPlot then
+        return false, "full base"
+    end
+    
+    local clonedAnimal = animalModel:Clone()
+    clonedAnimal:PivotTo(spawnCFrame)
+    clonedAnimal.Parent = workspace
+    
+    for _, descendant in ipairs(clonedAnimal:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            descendant.Anchored = true
+        end
+    end
+    
+    local animController = clonedAnimal:FindFirstChildOfClass("AnimationController")
+    local idleAnim = ReplicatedStorage.Animations.Animals:FindFirstChild(animalName)
+    if idleAnim then
+        idleAnim = idleAnim:FindFirstChild("Idle")
+    end
+    
+    if animController and idleAnim then
+        local track = animController:LoadAnimation(idleAnim)
+        track:Play()
+    end
+    
+    local animalSoundsFolder = ReplicatedStorage.Sounds:FindFirstChild("Animals")
+    if animalSoundsFolder then
+        local animalSound = animalSoundsFolder:FindFirstChild(animalName)
+        if animalSound and animalSound:IsA("Sound") then
+            local soundClone = animalSound:Clone()
+            soundClone.Parent = clonedAnimal.PrimaryPart or clonedAnimal:FindFirstChildWhichIsA("BasePart")
+            soundClone:Play()
+            soundClone.Ended:Connect(function()
+                soundClone:Destroy()
+            end)
+        end
+    end
+    
+    if selectedMutation and selectedMutation ~= "None" then
+        applyMutationVisuals(clonedAnimal, selectedMutation)
+    end
+    
+    if selectedTraits and clonedAnimal.PrimaryPart then
+        local traitsModelsFolder = ReplicatedStorage.Models:FindFirstChild("Traits")
+        local traitsVfxFolder = ReplicatedStorage.Vfx:FindFirstChild("Traits")
+        local traitsPerAnimalFolder = ReplicatedStorage.Models:FindFirstChild("TraitsPerAnimal")
+        
+        for _, traitName in ipairs(selectedTraits) do
+            local customPlacement = nil
+            if traitsPerAnimalFolder then
+                local animalTraitsFolder = traitsPerAnimalFolder:FindFirstChild(animalName)
+                if animalTraitsFolder then
+                    customPlacement = animalTraitsFolder:FindFirstChild(traitName)
+                end
+            end
+            
+            if traitsVfxFolder then
+                local traitVfx = traitsVfxFolder:FindFirstChild(traitName)
+                if traitVfx then
+                    for _, vfxItem in ipairs(traitVfx:GetChildren()) do
+                        local vfxClone = vfxItem:Clone()
+                        
+                        if customPlacement and customPlacement:IsA("Attachment") then
+                            vfxClone.Parent = customPlacement
+                        else
+                            if vfxClone:IsA("ParticleEmitter") or vfxClone:IsA("Beam") or vfxClone:IsA("Trail") then
+                                local attachment = clonedAnimal.PrimaryPart:FindFirstChildOfClass("Attachment")
+                                if not attachment then
+                                    attachment = Instance.new("Attachment")
+                                    attachment.Parent = clonedAnimal.PrimaryPart
+                                end
+                                vfxClone.Parent = attachment
+                            else
+                                vfxClone.Parent = clonedAnimal.PrimaryPart
+                            end
+                        end
+                        
+                        -- Enable the effect
+                        if vfxClone:IsA("ParticleEmitter") or vfxClone:IsA("Trail") or vfxClone:IsA("Beam") then
+                            vfxClone.Enabled = true
+                        end
+                    end
+                end
+            end
+            
+            if traitsModelsFolder then
+                local traitModel = traitsModelsFolder:FindFirstChild(traitName)
+                
+                if traitModel then
+                    local traitClone = traitModel:Clone()
+                    traitClone.Parent = clonedAnimal
+                    
+                    if traitClone:IsA("Model") then
+                        if customPlacement then
+                            if customPlacement:IsA("Attachment") then
+                                traitClone:PivotTo(customPlacement.WorldCFrame)
+                            elseif customPlacement:IsA("BasePart") then
+                                traitClone:PivotTo(customPlacement.CFrame)
+                            end
+                        elseif traitClone.PrimaryPart then
+                            traitClone:PivotTo(clonedAnimal.PrimaryPart.CFrame)
+                        else
+                            local mainPart = traitClone:FindFirstChildWhichIsA("BasePart")
+                            if mainPart then
+                                mainPart.CFrame = clonedAnimal.PrimaryPart.CFrame
+                            end
+                        end
+                        
+                        for _, part in ipairs(traitClone:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.Anchored = false
+                                part.CanCollide = false
+                                part.CanQuery = false
+                                
+                                local weld = Instance.new("WeldConstraint")
+                                weld.Part0 = clonedAnimal.PrimaryPart
+                                weld.Part1 = part
+                                weld.Parent = part
+                                
+                                for _, desc in ipairs(part:GetDescendants()) do
+                                    if desc:IsA("ParticleEmitter") or desc:IsA("Trail") or desc:IsA("Beam") then
+                                        desc.Enabled = true
+                                    end
+                                end
+                            end
+                        end
+                    elseif traitClone:IsA("BasePart") then
+                        if customPlacement and customPlacement:IsA("BasePart") then
+                            traitClone.CFrame = customPlacement.CFrame
+                        else
+                            traitClone.CFrame = clonedAnimal.PrimaryPart.CFrame
+                        end
+                        traitClone.Anchored = false
+                        traitClone.CanCollide = false
+                        traitClone.CanQuery = false
+                        
+                        local weld = Instance.new("WeldConstraint")
+                        weld.Part0 = clonedAnimal.PrimaryPart
+                        weld.Part1 = traitClone
+                        weld.Parent = traitClone
+                        
+                        for _, desc in ipairs(traitClone:GetDescendants()) do
+                            if desc:IsA("ParticleEmitter") or desc:IsA("Trail") or desc:IsA("Beam") then
+                                desc.Enabled = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    local totalGeneration = 0
+    local connection = nil
+    local attachmentMarker = nil
+    local lastCollectTime = 0
+    
+    local marker = Instance.new("Attachment")
+    marker.Name = "Attachment"
+    marker.Parent = spawnAttachment
+    attachmentMarker = marker
+    
+    if claimFrame and claimFrame:FindFirstChild("Offline") then
+        local offline = claimFrame.Offline
+        if offline:IsA("GuiObject") then
+            offline.Visible = false
+        end
+    end
+    
+    if clonedAnimal.PrimaryPart then
+        local proximityPrompt = Instance.new("ProximityPrompt")
+        proximityPrompt.ObjectText = animalData.DisplayName
+        proximityPrompt.ActionText = "Sell: $" .. formatNumber(animalData.Price / 2)
+        proximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
+        proximityPrompt.HoldDuration = 1.5
+        proximityPrompt.MaxActivationDistance = 10
+        proximityPrompt.Parent = clonedAnimal.PrimaryPart
+        
+        proximityPrompt.Triggered:Connect(function(player)
+            if player ~= LocalPlayer then return end
+            
+            local sellPrice = animalData.Price / 2
+            
+            local currencyLabel = PlayerGui.LeftBottom.LeftBottom:FindFirstChild("Currency")
+            if currencyLabel and currencyLabel:IsA("TextLabel") then
+                local currentMoney = parseCurrency(currencyLabel.Text)
+                currencyLabel.Text = "$" .. formatNumber(currentMoney + sellPrice)
+            end
+            
+            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+            local cash = leaderstats and leaderstats:FindFirstChild("Cash")
+            if cash and (cash:IsA("NumberValue") or cash:IsA("IntValue")) then
+                cash.Value = cash.Value + sellPrice
+            end
+            
+            showCashout("+$" .. formatNumber(sellPrice), true, true)
+            
+            totalGeneration = 0
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+            if claimFrame then
+                claimFrame.Enabled = false
+                local collectLabel = claimFrame:FindFirstChild("Collect")
+                if collectLabel then
+                    collectLabel.Text = "Collect<br/><font color=\"#73ff00\">$0</font>"
+                end
+            end
+            clonedAnimal:Destroy()
+            if attachmentMarker and attachmentMarker.Parent then
+                attachmentMarker:Destroy()
+                attachmentMarker = nil
+            end
+        end)
+    end
+    
+    local generationRate = animalData.Generation or 0
+    local traitBonus = 0
+    
+    if selectedTraits then
+        for _, traitName in ipairs(selectedTraits) do
+            for assetId, data in pairs(traitMap) do
+                if data.name == traitName then
+                    traitBonus = traitBonus + (generationRate * data.mult)
+                    break
+                end
+            end
+        end
+    end
+    
+    local mutationBonus = 0
+    if selectedMutation and selectedMutation ~= "None" and mutationMap[selectedMutation] then
+        mutationBonus = generationRate * mutationMap[selectedMutation].mult
+    end
+    
+    local totalGenRate = generationRate + traitBonus + mutationBonus
+    
+    if claimFrame and hitbox then
+        local collectLabel = claimFrame:FindFirstChild("Collect")
+        if collectLabel and collectLabel:IsA("TextLabel") then
+            claimFrame.Enabled = true
+            collectLabel.Text = "Collect<br/><font color=\"#73ff00\">$0</font>"
+            
+            if hitbox:IsA("BasePart") then
+                hitbox.CanCollide = false
+                hitbox.CanQuery = true
+            end
+            
+            hitbox.Touched:Connect(function(hit)
+                local player = Players:GetPlayerFromCharacter(hit.Parent)
+                if player == LocalPlayer and clonedAnimal and clonedAnimal.Parent then
+                    local currentTime = os.time()
+                    if currentTime - lastCollectTime >= 1 and totalGeneration > 0 then
+                        lastCollectTime = currentTime
+                        
+                        local currencyLabel = PlayerGui.LeftBottom.LeftBottom:FindFirstChild("Currency")
+                        if currencyLabel and currencyLabel:IsA("TextLabel") then
+                            local currentMoney = parseCurrency(currencyLabel.Text)
+                            currencyLabel.Text = "$" .. formatNumber(currentMoney + totalGeneration)
+                        end
+                        
+                        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                        local cash = leaderstats and leaderstats:FindFirstChild("Cash")
+                        if cash and (cash:IsA("NumberValue") or cash:IsA("IntValue")) then
+                            cash.Value = cash.Value + totalGeneration
+                        end
+                        
+                        showCashout("+$" .. formatNumber(totalGeneration), true, true)
+                        totalGeneration = 0
+                        collectLabel.Text = "Collect<br/><font color=\"#73ff00\">$0</font>"
+                    end
+                end
+            end)
+            
+            claimFrame.Changed:Connect(function(property)
+                if property == "Enabled" and claimFrame.Enabled == false then
+                    claimFrame.Enabled = true
+                end
+            end)
+            
+            task.spawn(function()
+                while claimFrame and claimFrame.Parent and claimFrame.Enabled and 
+                      clonedAnimal and clonedAnimal.Parent do
+                    task.wait(1)
+                    totalGeneration = totalGeneration + totalGenRate
+                    collectLabel.Text = "Collect<br/><font color=\"#73ff00\">$" .. 
+                                       formatNumber(totalGeneration) .. "</font>"
+                end
+            end)
+        end
+    end
+    
+    local overheadTemplate = ReplicatedStorage.Overheads:FindFirstChild("AnimalOverhead")
+    local head = clonedAnimal:FindFirstChild("Head") or clonedAnimal.PrimaryPart
+    
+    if overheadTemplate and head then
+        local overhead = overheadTemplate:Clone()
+        overhead.StudsOffset = Vector3.new(0, 7, 0)
+        overhead.Adornee = head
+        overhead.Parent = head
+        overhead.AlwaysOnTop = true
+        overhead.MaxDistance = 200
+        
+        local mutation = overhead:FindFirstChild("Mutation", true)
+        if mutation and mutation:IsA("GuiObject") then
+            if selectedMutation and selectedMutation ~= "None" then
+                local mutationInfo = mutationMap[selectedMutation]
+                if mutationInfo then
+                    -- Use rich text formatting with proper handling
+                    if mutationInfo.useRichText == true and mutationInfo.richText then
+                        mutation.Text = mutationInfo.richText
+                        mutation.RichText = true
+                    elseif mutationInfo.richText then
+                        mutation.Text = mutationInfo.richText
+                        mutation.RichText = true
+                    else
+                        mutation.Text = mutationInfo.displayText or selectedMutation
+                        mutation.TextColor3 = mutationInfo.color or Color3.new(1, 1, 1)
+                    end
+                else
+                    mutation.Text = selectedMutation
+                end
+                mutation.Visible = true
+                
+                if selectedMutation == "Rainbow" then
+                    local rainbowColorSeq = ColorSequence.new({
+                        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 4)),
+                        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 0, 242)),
+                        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 132, 255)),
+                        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(17, 255, 0)),
+                        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(251, 255, 0)),
+                        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255))
+                    })
+                    local transparency = NumberSequence.new(0)
+                    local rainbowGradient = Gradient.new(mutation, rainbowColorSeq, transparency)
+                    rainbowGradient:SetOffsetSpeed(0.5, 0.5)
+                end
+            else
+                mutation.Visible = false
+            end
+        end
+        
+        local function updateOverheadText(fieldName, value)
+            local field = overhead:FindFirstChild(fieldName, true)
+            if field then
+                field.Text = value
+            end
+        end
+        
+        updateOverheadText("DisplayName", animalData.DisplayName)
+        updateOverheadText("Rarity", animalData.Rarity)
+        updateOverheadText("Price", "$" .. formatNumber(animalData.Price))
+        updateOverheadText("Generation", "$" .. formatNumber(totalGenRate) .. "/s")
+        
+        local rarityConfig = Rarities[animalData.Rarity]
+        if rarityConfig then
+            local rarityLabel = overhead:FindFirstChild("Rarity", true)
+            if rarityLabel then
+                if animalData.Rarity == "Brainrot God" then
+                    rarityLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.ExtraBold, Enum.FontStyle.Normal)
+                    rarityLabel.TextColor3 = Color3.fromRGB(255, 0, 221)
+                    rarityLabel.TextStrokeTransparency = 0
+                    rarityLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    
+                    local uiStroke = rarityLabel:FindFirstChild("UIStroke")
+                    if uiStroke then
+                        local gradient = uiStroke:FindFirstChild("UIGradient")
+                        if gradient then
+                            gradient.Enabled = true
+                        end
+                    end
+                    
+                elseif animalData.Rarity == "Secret" then
+                    rarityLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.ExtraBold, Enum.FontStyle.Normal)
+                    rarityLabel.TextColor3 = Color3.new(1, 1, 1)
+                    rarityLabel.TextStrokeTransparency = 0
+                    rarityLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    
+                    local uiStroke = rarityLabel:FindFirstChild("UIStroke")
+                    if uiStroke then
+                        local gradient = uiStroke:FindFirstChild("UIGradient")
+                        if gradient then
+                            gradient.Enabled = true
+                        end
+                    end
+                    
+                    if EasyVisuals then
+                        EasyVisuals.new(rarityLabel, rarityConfig.EasyVisualsPresset, 0.6, nil, true, Color3.new(0, 0, 0))
+                    end
+                    
+                elseif rarityConfig.EasyVisualsPresset and EasyVisuals then
+                    EasyVisuals.new(rarityLabel, rarityConfig.EasyVisualsPresset, nil, nil, true, rarityConfig.Color)
+                else
+                    rarityLabel.TextColor3 = rarityConfig.Color
+                end
+            end
+        end
+        
+        local traitsContainer = overhead:FindFirstChild("Traits")
+        if traitsContainer then
+            traitsContainer.Visible = true
+            local template = traitsContainer:FindFirstChild("Template")
+            
+            if selectedTraits and #selectedTraits > 0 then
+                for _, traitName in ipairs(selectedTraits) do
+                    local iconId = getTraitIconByName(traitName)
+                    if iconId and template then
+                        local icon = template:Clone()
+                        icon.Image = iconId
+                        icon.Visible = true
+                        icon.Parent = traitsContainer
+                        icon.Name = traitName .. "_Icon"
+                    end
+                end
+            end
+        end
+    end
+    
+    return true, clonedAnimal
+end
+
+local Library = loadstring(game:HttpGet("https://pastefy.app/LdojNZj9/raw"))()
+
+local Window = Library:CreateWindow({
+    Name = "Brainrot Spawner",
+    Theme = "Green"
+})
+
+local excludedAnimals = {
+    ["Secret Lucky Block"] = true,
+    ["Chimpanzini Spiderini"] = true,
+    ["Mythic Lucky Block"] = true,
+    ["Brainrot God Lucky Block"] = true
+}
+
+local animalList = {}
+for name in pairs(Animals) do
+    if not excludedAnimals[name] then
+        table.insert(animalList, name)
+    end
+end
+
+local animalsByRarity = {}
+for _, name in ipairs(animalList) do
+    local rarity = Animals[name].Rarity or "Unknown"
+    animalsByRarity[rarity] = animalsByRarity[rarity] or {}
+    table.insert(animalsByRarity[rarity], name)
+end
+
+local rarityOrder = {"Secret", "Brainrot God", "Mythic", "Legendary", "Epic", "Rare", "Common", "Unknown"}
+local sortedList = {}
+for _, rarity in ipairs(rarityOrder) do
+    for _, name in ipairs(animalsByRarity[rarity] or {}) do
+        table.insert(sortedList, name)
+    end
+end
+animalList = sortedList
+
+local mutationList = {"None"}
+for mutName in pairs(mutationMap) do
+    table.insert(mutationList, mutName)
+end
+table.sort(mutationList)
+
+local SpawnerTab = Window:CreateTab("SPAWNER", "rbxassetid://10723425615")
+local SpawnerSection = SpawnerTab:CreateSection("Brainrot Spawner")
+
+local selectedAnimal = animalList[1] or "None"
+local selectedTraits = {}
+local selectedMutation = "None"
+local traitToggles = {}
+
+SpawnerSection:CreateDropdown("Select Brainrot", animalList, animalList[1], function(choice)
+    selectedAnimal = choice
+end)
+
+SpawnerSection:CreateDropdown("Select Mutation", mutationList, "None", function(choice)
+    selectedMutation = choice
+end)
+
+local traitSelectionSection = SpawnerTab:CreateSection("Trait Selection (Infinite)")
+
+for _, traitName in ipairs(traitList) do
+    local toggle = traitSelectionSection:CreateToggle(traitName, false, function(state)
+        if state then
+            if not table.find(selectedTraits, traitName) then
+                table.insert(selectedTraits, traitName)
+            end
+        else
+            local index = table.find(selectedTraits, traitName)
+            if index then
+                table.remove(selectedTraits, index)
+            end
+        end
+    end)
+    traitToggles[traitName] = toggle
+end
+
+local ActionsSection = SpawnerTab:CreateSection("Actions")
+
+ActionsSection:CreateButton("Spawn Brainrot", function()
+    if not selectedAnimal or selectedAnimal == "None" or selectedAnimal == "" then
+        return
+    end
+
+    local traitsToApply = {}
+    for _, trait in ipairs(selectedTraits) do
+        table.insert(traitsToApply, trait)
+    end
+    
+    local mutationToApply = (selectedMutation == "None") and nil or selectedMutation
+
+    local success, result = spawnAnimal(selectedAnimal, traitsToApply, mutationToApply)
+    if not success then
+        warn("Failed to spawn: " .. tostring(result))
+    end
+end)
+
+ActionsSection:CreateButton("Clear All Traits", function()
+    selectedTraits = {}
+    for traitName, toggle in pairs(traitToggles) do
+        if toggle and toggle.Set then
+            toggle:Set(false)
+        end
+    end
+end)
+
+local function createNotification(title, description, duration, iconId)
+    duration = duration or 5
+    iconId = iconId or "rbxassetid://10747359646"  -- Default Discord-like icon, change if needed
+    
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "CustomNotificationGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = game:GetService("CoreGui")
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 80)
+    frame.Position = UDim2.new(1, -320, 0, 20)  -- Start off-screen
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 0.1
+    frame.Parent = screenGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(80, 80, 80)
+    stroke.Thickness = 1
+    stroke.Parent = frame
+    
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, 50, 0, 50)
+    icon.Position = UDim2.new(0, 15, 0.5, -25)
+    icon.BackgroundTransparency = 1
+    icon.Image = iconId
+    icon.Parent = frame
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -80, 0, 25)
+    titleLabel.Position = UDim2.new(0, 75, 0, 10)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = frame
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Size = UDim2.new(1, -80, 0, 30)
+    descLabel.Position = UDim2.new(0, 75, 0, 35)
+    descLabel.BackgroundTransparency = 1
+    descLabel.Text = description
+    descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextSize = 14
+    descLabel.TextWrapped = true
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.Parent = frame
+    
+    -- Animate in
+    frame:TweenPosition(UDim2.new(1, -320, 0, 20), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
+    
+    -- Auto destroy after duration
+    task.delay(duration, function()
+        frame:TweenPosition(UDim2.new(1, 20, 0, 20), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true, function()
+            screenGui:Destroy()
+        end)
+    end)
+end
+
+local DiscordTab = Window:CreateTab("DISCORD", "rbxassetid://10747359646")
+
+local DiscordSection = DiscordTab:CreateSection("Community Hub")
+
+local discordInvite = "https://discord.gg/SnXQCYzGjx"  -- Popular active server for Steal a Brainrot (trading, giveaways, updates)
+
+DiscordSection:CreateButton("Copy Discord Invite", function()
+    setclipboard(discordInvite)
+    createNotification("Discord Invite Copied!", "Join the best scripts discord server!\nInstant Steal, de-sync, dupe & more.", 6, "rbxassetid://10747359646")
+end)
+
+DiscordSection:CreateLabel("Join the best scripts discord server!\nInstant Steal, de-sync, dupe & more.")

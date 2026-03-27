@@ -1,0 +1,214 @@
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Ключ для проверки
+local CORRECT_KEY = "plsfeedback"
+local DISCORD_LINK = "https://discord.gg/rhfRE2Pn"
+
+-- Проверяем сохраненный ключ
+local function getSavedKey()
+    return pcall(function()
+        return readfile("autofarm_key.txt")
+    end)
+end
+
+-- Сохраняем ключ
+local function saveKey(key)
+    return pcall(function()
+        writefile("autofarm_key.txt", key)
+    end)
+end
+
+-- Создаем GUI для ввода ключа
+local function createKeyGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "KeyInputGUI"
+    screenGui.Parent = PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 200)
+    frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+    frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    title.Text = "Введите ключ"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+    title.Parent = frame
+
+    local textBox = Instance.new("TextBox")
+    textBox.Size = UDim2.new(0.8, 0, 0, 35)
+    textBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+    textBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.PlaceholderText = "Введите ключ..."
+    textBox.Font = Enum.Font.Gotham
+    textBox.TextSize = 14
+    textBox.Parent = frame
+
+    local submitButton = Instance.new("TextButton")
+    submitButton.Size = UDim2.new(0.6, 0, 0, 35)
+    submitButton.Position = UDim2.new(0.2, 0, 0.6, 0)
+    submitButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+    submitButton.Text = "Активировать"
+    submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submitButton.Font = Enum.Font.GothamBold
+    submitButton.TextSize = 14
+    submitButton.Parent = frame
+
+    local discordLabel = Instance.new("TextLabel")
+    discordLabel.Size = UDim2.new(1, 0, 0, 20)
+    discordLabel.Position = UDim2.new(0, 0, 0.85, 0)
+    discordLabel.BackgroundTransparency = 1
+    discordLabel.Text = "Ключ в Discord: " .. DISCORD_LINK
+    discordLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    discordLabel.Font = Enum.Font.Gotham
+    discordLabel.TextSize = 12
+    discordLabel.TextXAlignment = Enum.TextXAlignment.Center
+    discordLabel.Parent = frame
+
+    local copyButton = Instance.new("TextButton")
+    copyButton.Size = UDim2.new(0.4, 0, 0, 20)
+    copyButton.Position = UDim2.new(0.3, 0, 0.95, 0)
+    copyButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    copyButton.Text = "Копировать ссылку"
+    copyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    copyButton.Font = Enum.Font.Gotham
+    copyButton.TextSize = 10
+    copyButton.Parent = frame
+
+    -- Функция копирования ссылки
+    copyButton.MouseButton1Click:Connect(function()
+        setclipboard(DISCORD_LINK)
+        copyButton.Text = "Скопировано!"
+        wait(2)
+        copyButton.Text = "Копировать ссылку"
+    end)
+
+    -- Функция проверки ключа
+    submitButton.MouseButton1Click:Connect(function()
+        local inputKey = textBox.Text
+        
+        if inputKey == CORRECT_KEY then
+            -- Сохраняем ключ
+            saveKey(inputKey)
+            screenGui:Destroy()
+            startMainScript()
+        else
+            textBox.Text = ""
+            textBox.PlaceholderText = "Неверный ключ! Попробуйте снова"
+        end
+    end)
+end
+
+-- Основной скрипт
+local function startMainScript()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TeleportService = game:GetService("TeleportService")
+    local remoteFunction = ReplicatedStorage:WaitForChild("RemoteFunction")
+    local player = game.Players.LocalPlayer
+
+    if workspace:FindFirstChild("Elevators") then
+        local args = {
+            [1] = "Multiplayer",
+            [2] = "v2:start",
+            [3] = {
+                ["count"] = 1,
+                ["mode"] = "halloween"
+            }
+        }
+        remoteFunction:InvokeServer(unpack(args))
+    else
+        remoteFunction:InvokeServer("Voting", "Skip")
+        task.wait(1)
+    end
+
+    local guiPath = player:WaitForChild("PlayerGui")
+        :WaitForChild("ReactUniversalHotbar")
+        :WaitForChild("Frame")
+        :WaitForChild("values")
+        :WaitForChild("cash")
+        :WaitForChild("amount")
+
+    local function getCash()
+        local rawText = guiPath.Text or ""
+        local cleaned = rawText:gsub("[^%d%-]", "")
+        return tonumber(cleaned) or 0
+    end
+
+    local function waitForCash(minAmount)
+        while getCash() < minAmount do
+            task.wait(1)
+        end
+    end
+
+    local function safeInvoke(args, cost)
+        waitForCash(cost)
+        local success, err = pcall(function()
+            remoteFunction:InvokeServer(unpack(args))
+        end)
+        task.wait(1)
+    end
+
+    local sequence = {
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(4.668, 2.349, -37.184) }, "Shotgunner" }, cost = 300 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(-1.643, 2.349, -36.870) }, "Shotgunner" }, cost = 300 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(4.487, 2.386, -34.154) }, "Shotgunner" }, cost = 300 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(-1.185, 2.386, -33.905) }, "Shotgunner" }, cost = 300 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(-0.616, 2.386, -30.504) }, "Shotgunner" }, cost = 300 },
+
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(7.143, 2.350, -39.064) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(7.671, 2.386, -35.299) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(-4.269, 2.349, -38.972) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(4.907, 2.386, -31.026) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(7.948, 2.386, -30.539) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(0.052, 2.386, -27.333) }, "Trapper" }, cost = 500 },
+        { args = { "Troops", "Pl\208\176ce", { Rotation = CFrame.new(), Position = Vector3.new(3.450, 2.386, -25.265) }, "Trapper" }, cost = 500 },
+    }
+
+    for _, step in ipairs(sequence) do
+        safeInvoke(step.args, step.cost)
+    end
+
+    local timerThread = task.delay(260, function()
+        TeleportService:Teleport(3260590327)
+    end)
+
+    local towerFolder = workspace:WaitForChild("Towers")
+    while true do
+        local towers = towerFolder:GetChildren()
+        for i, tower in ipairs(towers) do
+            local args = {
+                "Troops",
+                "Upgrade",
+                "Set",
+                {
+                    Troop = tower,
+                    Path = 1
+                }
+            }
+            pcall(function()
+                remoteFunction:InvokeServer(unpack(args))
+            end)
+        end
+        task.wait(1)
+    end
+end
+
+-- Проверяем есть ли сохраненный ключ
+local success, savedKey = getSavedKey()
+
+if success and savedKey == CORRECT_KEY then
+    -- Ключ верный, запускаем основной скрипт
+    startMainScript()
+else
+    -- Показываем GUI для ввода ключа
+    createKeyGUI()
+end

@@ -1,0 +1,118 @@
+-- Anti Steal Test (versi tidak tabrakan)
+if getgenv().ProtectionEnabled == nil then
+	getgenv().ProtectionEnabled = false
+end
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+local plots = workspace:WaitForChild("Plots")
+local zone
+
+-- cari base
+local function getStructureBaseHome()
+	local userLower = string.lower(player.Name)
+	local displayLower = string.lower(player.DisplayName)
+	for _, base in ipairs(plots:GetChildren()) do
+		if base:IsA("Model") then
+			local match = false
+			for _, d in ipairs(base:GetDescendants()) do
+				if d:IsA("TextLabel") then
+					local txt = string.lower(d.Text)
+					if string.find(txt, userLower, 1, true) or string.find(txt, displayLower, 1, true) then
+						match = true
+						break
+					end
+				end
+			end
+			if match then
+				local decorations = base:FindFirstChild("Decorations")
+				if decorations then
+					local innerModel = decorations:FindFirstChild("Model")
+					if innerModel then
+						local kids = innerModel:GetChildren()
+						if #kids >= 5 and kids[5]:IsA("BasePart") then
+							return kids[5]
+						end
+						for _, c in ipairs(kids) do
+							if c:IsA("BasePart") then
+								return c
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function isInsidePart(part, pos)
+	local localPos = part.CFrame:PointToObjectSpace(pos)
+	local half = part.Size / 2
+	return math.abs(localPos.X) <= half.X
+		and math.abs(localPos.Y) <= half.Y
+		and math.abs(localPos.Z) <= half.Z
+end
+
+getgenv().activateProtection = function()
+	if getgenv().ProtectionEnabled then return end
+	getgenv().ProtectionEnabled = true
+	getgenv().ProtectionThread = true
+
+	StarterGui:SetCore("SendNotification", {
+		Title = "Anti Steal Active",
+		Text = "You will exit the game if a player going to your base⚠️.",
+		Duration = 10
+	})
+
+	local basePart = getStructureBaseHome()
+	if basePart then
+		zone = Instance.new("Part")
+		zone.Name = "ExitZone"
+		zone.Anchored = true
+		zone.CanCollide = false
+		zone.Transparency = 0.5
+		zone.BrickColor = BrickColor.new("Really red")
+		zone.Size = Vector3.new(37, 42, 300)
+		zone.CFrame = basePart.CFrame
+		zone.Parent = workspace
+
+		task.spawn(function()
+			while getgenv().ProtectionEnabled and getgenv().ProtectionThread do
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						if isInsidePart(zone, plr.Character.HumanoidRootPart.Position) then
+							getgenv().ProtectionThread = false
+							game:Shutdown()
+							break
+						end
+					end
+				end
+				task.wait(0.1)
+			end
+		end)
+	else
+		warn("❌ Gagal menemukan base kamu (Name/DisplayName tidak ditemukan di TextLabel).")
+	end
+end
+
+getgenv().deactivateProtection = function()
+	getgenv().ProtectionEnabled = false
+	getgenv().ProtectionThread = false
+	if zone and zone.Parent then
+		zone:Destroy()
+	end
+end
+
+-- GANTI: expose dengan nama unik supaya tidak ditimpa script lain
+function AntiSteal_SetEnabled(state)
+	if state then
+		getgenv().activateProtection()
+	else
+		getgenv().deactivateProtection()
+	end
+end
+
+-- optional: publish ke getgenv kalau mau akses bebas
+getgenv().AntiSteal_SetEnabled = AntiSteal_SetEnabled

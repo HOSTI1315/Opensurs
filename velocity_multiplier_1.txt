@@ -1,0 +1,75 @@
+local ToggleKey = "z" -- Change that to whatever keybind: "t"
+local Power = 2
+    
+local Desync = false
+local RunS = game:GetService("RunService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local Marker = Instance.new("Part", game.Workspace)
+Marker.Anchored = true
+Marker.CanCollide = false
+Marker.Transparency = 1
+
+local Billb = Instance.new("BillboardGui", Marker)
+Billb.Name = "PP"
+Billb.Adornee = Marker
+Billb.Size = UDim2.new(0.60, 0,  0.60, 0)
+Billb.AlwaysOnTop = true
+
+local Frame = Instance.new("Frame", Billb)
+Frame.Size = UDim2.new(1, 0, 1, 0)
+Frame.Transparency = 0
+Frame.BackgroundTransparency = 0
+Frame.BackgroundColor3 = Color3.fromRGB(255, 115, 174)
+
+local Corner = Instance.new("UICorner", Frame)
+Corner.CornerRadius = UDim.new(0, 0)
+Corner.CornerRadius = UDim.new(1, 1)
+
+Mouse.KeyDown:Connect(function(Key)
+    if Key == string.lower(ToggleKey) then
+        Desync = not Desync
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Arceus.cc";
+            Text = "Velocity Multi = ".. tostring(Desync),
+            Icon = "rbxassetid://12225612888",
+            Duration = 1
+        })
+    end
+end)
+
+local DesyncTypes = {}
+RunS.Heartbeat:Connect(function()
+    if Desync == true and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        DesyncTypes[1] = LocalPlayer.Character.HumanoidRootPart.CFrame
+        DesyncTypes[2] = LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity
+
+        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity * Power
+        
+        Marker.CFrame = (LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity * 0.135)
+        
+        RunS.RenderStepped:Wait()
+
+        LocalPlayer.Character.HumanoidRootPart.CFrame = DesyncTypes[1]
+        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = DesyncTypes[2]
+    else
+        Marker.CFrame = CFrame.new(9999,9999,9999)
+    end
+end)
+
+local Hook = nil
+Hook = hookmetamethod(game, "__index", newcclosure(function(self, key)
+    if Desync == true then
+        if not checkcaller() then
+            if key == "CFrame" and Desync == true and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character:FindFirstChild("Humanoid").Health > 0 then
+                if self == LocalPlayer.Character.HumanoidRootPart then
+                    return DesyncTypes[1] or CFrame.new()
+                elseif self == LocalPlayer.Character.Head then
+                    return DesyncTypes[1] and DesyncTypes[1] + Vector3.new(0, LocalPlayer.Character.HumanoidRootPart.Size / 2 + 0.5, 0) or CFrame.new()
+                end
+            end
+        end
+    end
+    return Hook(self, key)
+end))

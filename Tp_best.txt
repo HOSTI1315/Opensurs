@@ -1,0 +1,449 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+
+local TpToBestEnabled = false
+local TpToBestConnections = {}
+local currentBestPetTP = nil
+local isStoppingTP = false
+
+local baseCoordinatesTP = {
+    ["Base 1"] = Vector3.new(-479.5, 17.4, -103.1),
+    ["Base 2"] = Vector3.new(-339.8, 17.4, -98.5),
+    ["Base 3"] = Vector3.new(-340.3, 17.4, 6.0),
+    ["Base 4"] = Vector3.new(-340.0, 17.4, 113.1),
+    ["Base 5"] = Vector3.new(-339.7, 17.0, 221.8),
+    ["Base 6"] = Vector3.new(-479.3, 17.4, 218.5),
+    ["Base 7"] = Vector3.new(-478.5, 17.4, 116.3),
+    ["Base 8"] = Vector3.new(-478.2, 17.4, 5.8)
+}
+
+local subterraneanCoordinates = {
+    ["Base 1"] = Vector3.new(-348.0, -2, 5.9),
+    ["Base 2"] = Vector3.new(-349.2, -2, -100.3),
+    ["Base 3"] = Vector3.new(-470.4, -2, -99.9),
+    ["Base 4"] = Vector3.new(-471.2, -2, 6.6),
+    ["Base 5"] = Vector3.new(-469.6, -2, 114.2),
+    ["Base 6"] = Vector3.new(-469.4, -2, 222.0),
+    ["Base 7"] = Vector3.new(-349.4, -2, 219.1),
+    ["Base 8"] = Vector3.new(-348.4, -2, 112.8)
+}
+
+local function equipFlyingCarpet()
+    if isStoppingTP then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
+
+    local flyingCarpet = backpack:FindFirstChild("Flying Carpet")
+    if flyingCarpet then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:EquipTool(flyingCarpet)
+        end
+    end
+end
+
+local function parseGenerationValue(text)
+    local cleanText = text:gsub('[^%d%.KMBT]', '')
+    local number = tonumber(string.match(cleanText, '^%d*%.?%d+'))
+    if not number then return nil end
+    local suffix = string.match(cleanText, '[KMBT]$') or ''
+    local multipliers = { K = 1e3, M = 1e6, B = 1e9, T = 1e12 }
+    return number * (multipliers[suffix] or 1)
+end
+
+local function findPlayerPlot()
+    local plotsFolder = Workspace:FindFirstChild('Plots')
+    if not plotsFolder then return nil end
+    
+    for _, plot in pairs(plotsFolder:GetChildren()) do
+        local yourBase = plot:FindFirstChild("YourBase", true)
+        if yourBase and yourBase:IsA("BoolValue") and yourBase.Value then
+            return plot.Name
+        end
+    end
+    return nil
+end
+
+local function findClosestBaseTP(petPosition)
+    local closestBase = nil
+    local closestDistance = math.huge
+    local closestBaseCoord = nil
+    
+    local coordinatesToUse = baseCoordinatesTP
+    if petPosition.Y < 0 then
+        coordinatesToUse = subterraneanCoordinates
+    end
+
+    for baseName, baseCoord in pairs(coordinatesToUse) do
+        local distance = (petPosition - baseCoord).Magnitude
+        if distance < closestDistance then
+            closestDistance = distance
+            closestBase = baseName
+            closestBaseCoord = baseCoord
+        end
+    end
+
+    return closestBase, closestBaseCoord
+end
+
+local function findMostExpensivePetTP()
+    if isStoppingTP then return nil end
+
+    local plots = Workspace:FindFirstChild('Plots')
+    if not plots then return nil end
+
+    local animalData = {}
+    local myPlotName = findPlayerPlot()
+
+    for _, plot in pairs(plots:GetChildren()) do
+        local podiums = plot:FindFirstChild('AnimalPodiums')
+        if podiums then
+            for _, podium in pairs(podiums:GetChildren()) do
+                local base = podium:FindFirstChild('Base')
+                if base then
+                    local spawn = base:FindFirstChild('Spawn')
+                    if spawn then
+                        local attach = spawn:FindFirstChild('Attachment')
+                        if attach then
+                            local overhead = attach:FindFirstChild('AnimalOverhead')
+                            if overhead then
+                                local gen = overhead:FindFirstChild('Generation')
+                                local nameLbl = overhead:FindFirstChild('DisplayName')
+                                local rarityLbl = overhead:FindFirstChild('Rarity')
+                                if gen and nameLbl and rarityLbl then
+                                    local val = parseGenerationValue(gen.Text)
+                                    if val then
+                                        local position = podium:GetPivot().Position
+                                        local closestBaseName, closestBaseCoord = nil, nil
+                                        
+                                        if myPlotName and myPlotName == plot.Name then
+                                            closestBaseName = "My Base"
+                                            closestBaseCoord = position
+                                        else
+                                            closestBaseName, closestBaseCoord = findClosestBaseTP(position)
+                                        end
+                                        
+                                        table.insert(animalData, {
+                                            model = podium,
+                                            displayName = nameLbl.Text,
+                                            rarity = rarityLbl.Text,
+                                            generation = gen.Text,
+                                            genValue = val,
+                                            position = position,
+                                            baseName = closestBaseName,
+                                            basePosition = closestBaseCoord,
+                                            plotName = plot.Name
+                                        })
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        for _, obj in pairs(plot:GetDescendants()) do
+            if obj.Name == 'OVERHEAD_ATTACHMENT' then
+                local AnimalOverhead = obj:FindFirstChild('AnimalOverhead')
+                if AnimalOverhead then
+                    local DisplayName = AnimalOverhead:FindFirstChild('DisplayName')
+                    local Generation = AnimalOverhead:FindFirstChild('Generation')
+                    local Rarity = AnimalOverhead:FindFirstChild('Rarity')
+                    if DisplayName and Generation and Rarity then
+                        local genValue = parseGenerationValue(Generation.Text)
+                        if genValue then
+                            local model = obj:FindFirstAncestorOfClass('Model') or plot
+                            local position = model:GetPivot().Position
+                            local closestBaseName, closestBaseCoord = nil, nil
+                            
+                            if myPlotName and myPlotName == plot.Name then
+                                closestBaseName = "My Base"
+                                closestBaseCoord = position
+                            else
+                                closestBaseName, closestBaseCoord = findClosestBaseTP(position)
+                            end
+                            
+                            table.insert(animalData, {
+                                model = model,
+                                displayName = DisplayName.Text,
+                                generation = Generation.Text,
+                                rarity = Rarity.Text,
+                                genValue = genValue,
+                                position = position,
+                                baseName = closestBaseName,
+                                basePosition = closestBaseCoord,
+                                plotName = plot.Name
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if #animalData > 0 and not isStoppingTP then
+        table.sort(animalData, function(a, b)
+            return a.genValue > b.genValue
+        end)
+
+        local bestPet = animalData[1]
+        return bestPet
+    end
+
+    return nil
+end
+
+local function flyUpFirstTP()
+    if isStoppingTP then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    equipFlyingCarpet()
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local startTime = tick()
+    local targetHeight = 20
+    while tick() - startTime < 2 and not isStoppingTP do
+        local currentY = hrp.Position.Y
+        if currentY < targetHeight then
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 90, 0)
+        else
+            break
+        end
+        task.wait(0.1)
+    end
+    
+    if hrp.Position.Y < targetHeight then
+        hrp.CFrame = CFrame.new(hrp.Position.X, targetHeight, hrp.Position.Z)
+    end
+    
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    return true
+end
+
+local function teleportToPosition(position)
+    if isStoppingTP then return false end
+
+    local char = LocalPlayer.Character
+    if not char then return false end
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    local teleportHeight = math.max(position.Y + 5, 25)
+    if position.Y < 0 then
+        teleportHeight = position.Y + 3
+    end
+    
+    local teleportPos = Vector3.new(position.X, teleportHeight, position.Z)
+    
+    local success = pcall(function()
+        hrp.CFrame = CFrame.new(teleportPos)
+    end)
+    
+    return success
+end
+
+local function cleanStopTP()
+    isStoppingTP = true
+
+    for name, conn in pairs(TpToBestConnections) do
+        if conn then
+            conn:Disconnect()
+        end
+    end
+
+    TpToBestConnections = {}
+    currentBestPetTP = nil
+    
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        end
+    end
+    
+    isStoppingTP = false
+end
+
+local function startTpToBest()
+    cleanStopTP()
+    
+    isStoppingTP = false
+
+    task.spawn(function()
+        if not isStoppingTP then
+            local flewUp = flyUpFirstTP()
+            if flewUp then
+                equipFlyingCarpet()
+                
+                currentBestPetTP = findMostExpensivePetTP()
+                if currentBestPetTP and currentBestPetTP.basePosition then
+                    teleportToPosition(currentBestPetTP.basePosition)
+                end
+            end
+        end
+    end)
+end
+
+local function TpToBest()
+    TpToBestEnabled = true
+    startTpToBest()
+    
+    task.spawn(function()
+        task.wait(3)
+        TpToBestEnabled = false
+        cleanStopTP()
+    end)
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TPToBestGUI"
+screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = screenGui
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.Size = UDim2.new(0, 250, 0, 120)
+mainFrame.Position = UDim2.new(0, 10, 0, 10)
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = mainFrame
+
+local titleBar = Instance.new("Frame")
+titleBar.Parent = mainFrame
+titleBar.Size = UDim2.new(1, 0, 0, 25)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = titleBar
+titleLabel.Size = UDim2.new(1, 0, 1, 0)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "TP TO BEST"
+titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 14
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Parent = mainFrame
+contentFrame.Size = UDim2.new(1, 0, 0, 1)
+contentFrame.Position = UDim2.new(0, 0, 0, 25)
+contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+contentFrame.BorderSizePixel = 0
+
+local tpButton = Instance.new("TextButton")
+tpButton.Parent = mainFrame
+tpButton.Name = "TPButton"
+tpButton.Size = UDim2.new(0.9, 0, 0, 35)
+tpButton.Position = UDim2.new(0.05, 0, 0.3, 0)
+tpButton.BackgroundColor3 = Color3.fromRGB(25, 40, 85)
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpButton.Text = "TP TO BEST"
+tpButton.Font = Enum.Font.GothamBold
+tpButton.TextSize = 12
+tpButton.AutoButtonColor = false
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 6)
+buttonCorner.Parent = tpButton
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(40, 70, 150)
+buttonStroke.Thickness = 1
+buttonStroke.Parent = tpButton
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = mainFrame
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(0.9, 0, 0, 20)
+statusLabel.Position = UDim2.new(0.05, 0, 0.7, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Click to teleport"
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 11
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+tpButton.MouseEnter:Connect(function()
+    game.TweenService:Create(tpButton, TweenInfo.new(0.2), {
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        BackgroundColor3 = Color3.fromRGB(35, 55, 110)
+    }):Play()
+end)
+
+tpButton.MouseLeave:Connect(function()
+    game.TweenService:Create(tpButton, TweenInfo.new(0.2), {
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = Color3.fromRGB(25, 40, 85)
+    }):Play()
+end)
+
+tpButton.MouseButton1Click:Connect(function()
+    TpToBest()
+    
+    game.TweenService:Create(tpButton, TweenInfo.new(0.3), {
+        TextColor3 = Color3.fromRGB(100, 255, 100),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    }):Play()
+    
+    game.TweenService:Create(statusLabel, TweenInfo.new(0.3), {
+        TextColor3 = Color3.fromRGB(220, 220, 220)
+    }):Play()
+    
+    statusLabel.Text = "Teleporting..."
+    
+    task.spawn(function()
+        task.wait(0.5)
+        game.TweenService:Create(tpButton, TweenInfo.new(0.3), {
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            BackgroundColor3 = Color3.fromRGB(25, 40, 85)
+        }):Play()
+        
+        game.TweenService:Create(statusLabel, TweenInfo.new(0.3), {
+            TextColor3 = Color3.fromRGB(150, 150, 150)
+        }):Play()
+        
+        statusLabel.Text = "Ready"
+    end)
+end)
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        mainFrame.Draggable = true
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        mainFrame.Draggable = true
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input then
+        mainFrame.Draggable = true
+    end
+end)

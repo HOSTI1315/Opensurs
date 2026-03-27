@@ -1,0 +1,328 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+local selectedNumber = 1
+local isSpaceEnabled = false
+
+local toolGroups = {
+	{ "Flowing Water", "Lethal Whirlwind Stream", "Hunter's Grasp", "Prey's Peril" },
+	{ "Doom Dive", "Crowd Buster", "Hammer Heel", "Binding Cloth" },
+	{ "Machine Gun Blows", "Ignition Burst", "Blitz Shot", "Jet Dive" },
+	{ "Flash Strike", "Whirlwind Kick", "Scatter", "Explosive Shuriken" },
+	{ "Homerun", "Beatdown", "Grand Slam", "Foul Ball" },
+	{ "Quick Slice", "Atmos Cleave", "Pinpoint Cut", "Split Second Counter" },
+	{ "Crushing Pull", "Windstorm Fury", "Stone Coffin", "Expulsive Push" },
+	{ "Bullet Barrage", "Vanishing Kick", "Whirlwind Drop", "Head First" },
+	{ "Normal Punch", "Consecutive Punches", "Shove", "Uppercut" }
+}
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "MacroRemoteGUI"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+local function roundify(inst, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = inst
+end
+
+-- Top Frame
+local topFrame = Instance.new("Frame")
+topFrame.Size = UDim2.new(0, 370, 0, 50)
+topFrame.Position = UDim2.new(0.5, -180, 0, 20)
+topFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+topFrame.ZIndex = 20
+topFrame.Parent = gui
+roundify(topFrame, 20)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 20)
+title.Position = UDim2.new(0, 0, -0.6, 0)
+title.BackgroundTransparency = 1
+title.Text = "Select Skill BackDash"
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.Font = Enum.Font.Code
+title.TextSize = 18
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.ZIndex = 21
+title.Parent = topFrame
+
+-- Buttons 1-4
+for i = 1, 4 do
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 45, 0, 30)
+	btn.Position = UDim2.new(0, (i - 1) * 55 + 10, 0, 10)
+	btn.Text = tostring(i)
+	btn.Name = "Select_" .. i
+	btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 18
+	btn.ZIndex = 21
+	btn.BorderSizePixel = 0
+	btn.Parent = topFrame
+	roundify(btn, 15)
+
+	btn.MouseButton1Click:Connect(function()
+		selectedNumber = i
+		for j = 1, 4 do
+			local b = topFrame:FindFirstChild("Select_" .. j)
+			if b then
+				local color = (j == i) and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(80, 80, 80)
+				TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
+			end
+		end
+	end)
+end
+
+-- Toggle Space
+local spaceToggle = Instance.new("TextButton")
+spaceToggle.Size = UDim2.new(0, 80, 0, 30)
+spaceToggle.Position = UDim2.new(0, 240, 0, 10)
+spaceToggle.Text = "Jump: OFF"
+spaceToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+spaceToggle.TextColor3 = Color3.new(1, 1, 1)
+spaceToggle.Font = Enum.Font.SourceSansItalic
+spaceToggle.TextSize = 16
+spaceToggle.ZIndex = 21
+spaceToggle.BorderSizePixel = 0
+spaceToggle.Parent = topFrame
+roundify(spaceToggle, 15)
+
+spaceToggle.MouseButton1Click:Connect(function()
+	isSpaceEnabled = not isSpaceEnabled
+	spaceToggle.Text = isSpaceEnabled and "Jump: ON" or "Jump: OFF"
+	spaceToggle.BackgroundColor3 = isSpaceEnabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(80, 80, 80)
+end)
+
+-- Nút X
+local xButton = Instance.new("TextButton")
+xButton.Size = UDim2.new(0, 30, 0, 30)
+xButton.Position = UDim2.new(0, 330, 0, 10)
+xButton.Text = "X"
+xButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+xButton.TextColor3 = Color3.new(1, 1, 1)
+xButton.Font = Enum.Font.SourceSansBold
+xButton.TextSize = 16
+xButton.ZIndex = 21
+xButton.Parent = topFrame
+roundify(xButton, 15)
+
+-- Confirm remove
+local confirmFrame = Instance.new("Frame")
+confirmFrame.Size = UDim2.new(0, 200, 0, 100)
+confirmFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
+confirmFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+confirmFrame.Visible = false
+confirmFrame.ZIndex = 50
+confirmFrame.Parent = gui
+roundify(confirmFrame, 15)
+
+local confirmLabel = Instance.new("TextLabel")
+confirmLabel.Size = UDim2.new(1, 0, 0, 30)
+confirmLabel.Position = UDim2.new(0, 0, 0, 5)
+confirmLabel.BackgroundTransparency = 1
+confirmLabel.Text = "Do you want remove?"
+confirmLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+confirmLabel.Font = Enum.Font.SourceSansItalic
+confirmLabel.TextSize = 18
+confirmLabel.ZIndex = 51
+confirmLabel.Parent = confirmFrame
+
+local yesButton = Instance.new("TextButton")
+yesButton.Size = UDim2.new(0, 80, 0, 30)
+yesButton.Position = UDim2.new(0, 20, 0, 50)
+yesButton.Text = "Yes"
+yesButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+yesButton.TextColor3 = Color3.new(1, 1, 1)
+yesButton.Font = Enum.Font.SourceSansBold
+yesButton.TextSize = 16
+yesButton.ZIndex = 51
+yesButton.Parent = confirmFrame
+roundify(yesButton, 12)
+
+local noButton = Instance.new("TextButton")
+noButton.Size = UDim2.new(0, 80, 0, 30)
+noButton.Position = UDim2.new(0, 100, 0, 50)
+noButton.Text = "No"
+noButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+noButton.TextColor3 = Color3.new(1, 1, 1)
+noButton.Font = Enum.Font.SourceSansBold
+noButton.TextSize = 16
+noButton.ZIndex = 51
+noButton.Parent = confirmFrame
+roundify(noButton, 12)
+
+xButton.MouseButton1Click:Connect(function()
+	confirmFrame.Visible = true
+end)
+
+yesButton.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+
+noButton.MouseButton1Click:Connect(function()
+	confirmFrame.Visible = false
+end)
+
+-- Back Dash Frame
+local actionFrame = Instance.new("Frame")
+actionFrame.Size = UDim2.new(0, 160, 0, 70)
+actionFrame.Position = UDim2.new(0.5, -80, 0.7, 0)
+actionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+actionFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+actionFrame.BorderSizePixel = 0
+actionFrame.Parent = gui
+actionFrame.ZIndex = 5
+roundify(actionFrame, 20)
+
+-- Drag mượt
+local dragging, dragInput, dragStart, startPos
+actionFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = actionFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+actionFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		actionFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- ICON MENU: 🗿
+local icon = Instance.new("TextButton")
+icon.Size = UDim2.new(0, 50, 0, 50)
+icon.Position = UDim2.new(0, 20, 0, 200)
+icon.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+icon.Text = "🗿"
+icon.TextSize = 30
+icon.Font = Enum.Font.SourceSansBold
+icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+icon.ZIndex = 99
+icon.Parent = gui
+roundify(icon, 25)
+
+-- Cho icon kéo được như drag mượt
+local draggingIcon, dragInputIcon, dragStartIcon, startPosIcon
+
+icon.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingIcon = true
+		dragStartIcon = input.Position
+		startPosIcon = icon.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				draggingIcon = false
+			end
+		end)
+	end
+end)
+
+icon.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInputIcon = input
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if input == dragInputIcon and draggingIcon then
+		local delta = input.Position - dragStartIcon
+		icon.Position = UDim2.new(startPosIcon.X.Scale, startPosIcon.X.Offset + delta.X, startPosIcon.Y.Scale, startPosIcon.Y.Offset + delta.Y)
+	end
+end)
+
+-- Toggle GUI khi nhấn icon
+local guiVisible = true
+
+icon.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+
+	-- Hiệu ứng nhấp màu
+	local targetColor = guiVisible and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(20, 120, 200)
+	TweenService:Create(icon, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+
+	-- Ẩn/hiện GUI thành phần
+	topFrame.Visible = guiVisible
+	actionFrame.Visible = guiVisible
+end)
+
+-- Back Dash Button
+local mainButton = Instance.new("TextButton")
+mainButton.Size = UDim2.new(0, 120, 0, 40)
+mainButton.Position = UDim2.new(0.5, -60, 0.5, -20)
+mainButton.Text = "Back Dash"
+mainButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+mainButton.TextColor3 = Color3.new(1, 1, 1)
+mainButton.Font = Enum.Font.SourceSansBold
+mainButton.TextSize = 20
+mainButton.ZIndex = 6
+mainButton.Parent = actionFrame
+mainButton.BorderSizePixel = 0
+roundify(mainButton, 20)
+
+-- Remote Fire
+local function triggerRemote(tool)
+	local args = {
+		[1] = {
+			["Tool"] = tool,
+			["Goal"] = "Console Move"
+		}
+	}
+	local remote = player.Character and player.Character:FindFirstChild("Communicate")
+	if remote then
+		remote:FireServer(unpack(args))
+	end
+end
+
+mainButton.MouseButton1Click:Connect(function()
+	if isSpaceEnabled then
+		VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+		task.wait(0.05)
+		VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+	end
+
+	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.S, false, game)
+
+	task.spawn(function()
+		VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+		task.wait(0.05)
+		VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+	end)
+
+	task.spawn(function()
+		local backpack = player:FindFirstChild("Backpack")
+		if not backpack then return end
+
+		for _, group in ipairs(toolGroups) do
+			local toolName = group[selectedNumber]
+			local tool = backpack:FindFirstChild(toolName)
+			if tool then
+				triggerRemote(tool)
+				break
+			end
+		end
+	end)
+
+	task.delay(0.1, function()
+		VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.S, false, game)
+	end)
+end)

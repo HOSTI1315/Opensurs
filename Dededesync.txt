@@ -1,0 +1,220 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local FreezeModeEnabled = false
+local OriginalState = {}
+
+local function GetCharacter(player)
+    return player.Character
+end
+
+local function GetRoot(player)
+    local char = GetCharacter(player)
+    return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
+end
+
+local function GetHumanoid(player)
+    local char = GetCharacter(player)
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function EnableFreezeWalk()
+    local success, err = pcall(function()
+        local Root = GetRoot(LocalPlayer)
+        local Character = GetCharacter(LocalPlayer)
+        local Humanoid = GetHumanoid(LocalPlayer)
+        
+        if not Root or not Character or not Humanoid then return end
+        
+        if Humanoid.RigType == Enum.HumanoidRigType.R6 then
+            local ClonedRoot = Root:Clone()
+            Root:Destroy()
+            ClonedRoot.Parent = Character
+            OriginalState.RigType = "R6"
+        else
+            Character.LowerTorso.Anchored = true
+            local RootJoint = Character.LowerTorso:FindFirstChild("Root")
+            if RootJoint then
+                RootJoint:Destroy()
+            end
+            OriginalState.RigType = "R15"
+        end
+        
+        FreezeModeEnabled = true
+    end)
+    
+    return success
+end
+
+local function DisableFreezeWalk()
+    local success, err = pcall(function()
+        local Character = GetCharacter(LocalPlayer)
+        if not Character then return end
+        
+        if OriginalState.RigType == "R15" then
+            local LowerTorso = Character:FindFirstChild("LowerTorso")
+            if LowerTorso then
+                LowerTorso.Anchored = false
+            end
+        end
+        
+        LocalPlayer.Character = nil
+        LocalPlayer.Character = Character
+        
+        FreezeModeEnabled = false
+        OriginalState = {}
+    end)
+    
+    return success
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MelonDesyncGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 240, 0, 110)
+MainFrame.Position = UDim2.new(0.5, -120, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 192, 223)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 105, 180)
+UIStroke.Thickness = 3
+UIStroke.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -24, 0, 28)
+TitleLabel.Position = UDim2.new(0, 12, 0, 8)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "melon desync - UwU"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 20
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+local DevLabel = Instance.new("TextLabel")
+DevLabel.Name = "DevLabel"
+DevLabel.Size = UDim2.new(1, -24, 0, 16)
+DevLabel.Position = UDim2.new(0, 12, 0, 36)
+DevLabel.BackgroundTransparency = 1
+DevLabel.Text = "Not Ready Yet"
+DevLabel.TextColor3 = Color3.fromRGB(255, 105, 180)
+DevLabel.TextSize = 12
+DevLabel.Font = Enum.Font.GothamMedium
+DevLabel.TextXAlignment = Enum.TextXAlignment.Left
+DevLabel.Parent = MainFrame
+
+local StatusIcon = Instance.new("ImageLabel")
+StatusIcon.Name = "StatusIcon"
+StatusIcon.Size = UDim2.new(0, 18, 0, 18)
+StatusIcon.Position = UDim2.new(1, -30, 0, 13)
+StatusIcon.BackgroundTransparency = 1
+StatusIcon.Image = "rbxassetid://71013302316200"
+StatusIcon.ImageColor3 = Color3.fromRGB(255, 105, 180)
+StatusIcon.Parent = MainFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(1, -24, 0, 38)
+ToggleButton.Position = UDim2.new(0, 12, 1, -50)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 105, 180)
+ToggleButton.TextSize = 18
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = MainFrame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 10)
+ButtonCorner.Parent = ToggleButton
+
+local ButtonIcon = Instance.new("ImageLabel")
+ButtonIcon.Name = "ButtonIcon"
+ButtonIcon.Size = UDim2.new(0, 22, 0, 22)
+ButtonIcon.Position = UDim2.new(0, 10, 0.5, -11)
+ButtonIcon.BackgroundTransparency = 1
+ButtonIcon.Image = "rbxassetid://71013302316200"
+ButtonIcon.ImageColor3 = Color3.fromRGB(255, 105, 180)
+ButtonIcon.Parent = ToggleButton
+
+local function UpdateUI(enabled)
+    if enabled then
+        ToggleButton.Text = "ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
+        ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ButtonIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+        StatusIcon.ImageColor3 = Color3.fromRGB(144, 238, 144)
+    else
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleButton.TextColor3 = Color3.fromRGB(255, 105, 180)
+        ButtonIcon.ImageColor3 = Color3.fromRGB(255, 105, 180)
+        StatusIcon.ImageColor3 = Color3.fromRGB(255, 105, 180)
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    if FreezeModeEnabled then
+        DisableFreezeWalk()
+    else
+        EnableFreezeWalk()
+    end
+    UpdateUI(FreezeModeEnabled)
+end)
+
+local dragging = false
+local dragInput, mousePos, framePos
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        MainFrame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+ScreenGui.Parent = PlayerGui
+
+UpdateUI(false)
+
+--- Script Version: v1.3

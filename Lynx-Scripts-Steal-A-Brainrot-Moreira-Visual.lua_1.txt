@@ -1,0 +1,282 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local speed = 20 
+local output = 0.05
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Creator = Instance.new("TextLabel")
+local StartButton = Instance.new("TextButton")
+local LoadingBarBG = Instance.new("Frame")
+local LoadingBarFill = Instance.new("Frame")
+local StatusLabel = Instance.new("TextLabel")
+local AutoBlockLabel = Instance.new("TextLabel")
+local AntiCooldownLabel = Instance.new("TextLabel")
+local ConsoleLog = Instance.new("ScrollingFrame")
+local ConsoleText = Instance.new("TextLabel")
+
+ScreenGui.Name = "AutoMoreiraGUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 15, 25)
+MainFrame.BackgroundTransparency = 0.15
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.65, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 380, 0, 320)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 20)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(40, 50, 70)
+UIStroke.Thickness = 1
+UIStroke.Transparency = 0.5
+UIStroke.Parent = MainFrame
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 25, 0, 20)
+Title.Size = UDim2.new(1, -50, 0, 32)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Auto Moreira Method"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 22
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+Creator.Name = "Creator"
+Creator.Parent = MainFrame
+Creator.BackgroundTransparency = 1
+Creator.Position = UDim2.new(0, 25, 0, 52)
+Creator.Size = UDim2.new(1, -50, 0, 18)
+Creator.Font = Enum.Font.Gotham
+Creator.Text = "discord.gg/SnXQCYzGjx"
+Creator.TextColor3 = Color3.fromRGB(130, 140, 160)
+Creator.TextSize = 13
+Creator.TextXAlignment = Enum.TextXAlignment.Left
+
+StartButton.Name = "StartButton"
+StartButton.Parent = MainFrame
+StartButton.BackgroundColor3 = Color3.fromRGB(50, 130, 255)
+StartButton.Position = UDim2.new(0, 25, 0, 85)
+StartButton.Size = UDim2.new(1, -50, 0, 45)
+StartButton.Font = Enum.Font.GothamBold
+StartButton.Text = "Start Auto Moreira"
+StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartButton.TextSize = 16
+StartButton.AutoButtonColor = false
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 12)
+ButtonCorner.Parent = StartButton
+
+LoadingBarBG.Name = "LoadingBarBG"
+LoadingBarBG.Parent = MainFrame
+LoadingBarBG.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+LoadingBarBG.BorderSizePixel = 0
+LoadingBarBG.Position = UDim2.new(0, 25, 0, 140)
+LoadingBarBG.Size = UDim2.new(1, -50, 0, 4)
+LoadingBarBG.Visible = false
+
+local LoadingBGCorner = Instance.new("UICorner")
+LoadingBGCorner.CornerRadius = UDim.new(0, 2)
+LoadingBGCorner.Parent = LoadingBarBG
+
+LoadingBarFill.Name = "LoadingBarFill"
+LoadingBarFill.Parent = LoadingBarBG
+LoadingBarFill.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
+LoadingBarFill.BorderSizePixel = 0
+LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
+
+local LoadingFillCorner = Instance.new("UICorner")
+LoadingFillCorner.CornerRadius = UDim.new(0, 2)
+LoadingFillCorner.Parent = LoadingBarFill
+
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 25, 0, 155)
+StatusLabel.Size = UDim2.new(1, -50, 0, 20)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Ready to start..."
+StatusLabel.TextColor3 = Color3.fromRGB(160, 170, 190)
+StatusLabel.TextSize = 13
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+AutoBlockLabel.Name = "AutoBlockLabel"
+AutoBlockLabel.Parent = MainFrame
+AutoBlockLabel.BackgroundTransparency = 1
+AutoBlockLabel.Position = UDim2.new(0, 25, 0, 185)
+AutoBlockLabel.Size = UDim2.new(1, -50, 0, 22)
+AutoBlockLabel.Font = Enum.Font.GothamBold
+AutoBlockLabel.Text = "Auto Block: ON"
+AutoBlockLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+AutoBlockLabel.TextSize = 14
+AutoBlockLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+AntiCooldownLabel.Name = "AntiCooldownLabel"
+AntiCooldownLabel.Parent = MainFrame
+AntiCooldownLabel.BackgroundTransparency = 1
+AntiCooldownLabel.Position = UDim2.new(0, 25, 0, 212)
+AntiCooldownLabel.Size = UDim2.new(1, -50, 0, 22)
+AntiCooldownLabel.Font = Enum.Font.GothamBold
+AntiCooldownLabel.Text = "Anti Cooldown (Soon)"
+AntiCooldownLabel.TextColor3 = Color3.fromRGB(200, 120, 255)
+AntiCooldownLabel.TextSize = 14
+AntiCooldownLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+ConsoleLog.Name = "ConsoleLog"
+ConsoleLog.Parent = MainFrame
+ConsoleLog.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ConsoleLog.BackgroundTransparency = 0.6
+ConsoleLog.BorderSizePixel = 0
+ConsoleLog.Position = UDim2.new(0, 25, 0, 245)
+ConsoleLog.Size = UDim2.new(1, -50, 0, 60)
+ConsoleLog.CanvasSize = UDim2.new(0, 0, 0, 0)
+ConsoleLog.ScrollBarThickness = 0
+ConsoleLog.ScrollingEnabled = false
+ConsoleLog.ClipsDescendants = true
+
+local LogCorner = Instance.new("UICorner")
+LogCorner.CornerRadius = UDim.new(0, 10)
+LogCorner.Parent = ConsoleLog
+
+ConsoleText.Name = "ConsoleText"
+ConsoleText.Parent = ConsoleLog
+ConsoleText.BackgroundTransparency = 1
+ConsoleText.Position = UDim2.new(0, 8, 0, 5)
+ConsoleText.Size = UDim2.new(1, -16, 0, 0)
+ConsoleText.Font = Enum.Font.Code
+ConsoleText.Text = ""
+ConsoleText.TextColor3 = Color3.fromRGB(200, 210, 220)
+ConsoleText.TextSize = 11
+ConsoleText.TextXAlignment = Enum.TextXAlignment.Left
+ConsoleText.TextYAlignment = Enum.TextYAlignment.Top
+ConsoleText.RichText = true
+
+local IsRunning = false
+local IsLoading = false
+local LogMessages = {}
+local SuccessCount = 0
+local FailedCount = 0
+
+local function AddLog(message, color)
+    table.insert(LogMessages, {text = message, color = color or Color3.fromRGB(100, 255, 150)})
+    
+    local visibleMessages = {}
+    local startIndex = math.max(1, #LogMessages - 3)
+    
+    for i = startIndex, #LogMessages do
+        table.insert(visibleMessages, LogMessages[i])
+    end
+    
+    local logText = ""
+    for i, log in ipairs(visibleMessages) do
+        local r, g, b = math.floor(log.color.R * 255), math.floor(log.color.G * 255), math.floor(log.color.B * 255)
+        logText = logText .. string.format('<font color="rgb(%d,%d,%d)">%s</font>\n', r, g, b, log.text)
+    end
+    
+    ConsoleText.Text = logText
+end
+
+local function AnimateLoadingBar()
+    IsLoading = true
+    LoadingBarBG.Visible = true
+    LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
+    
+    local loadTween = TweenService:Create(
+        LoadingBarFill,
+        TweenInfo.new(speed, Enum.EasingStyle.Linear),
+        {Size = UDim2.new(1, 0, 1, 0)}
+    )
+    loadTween:Play()
+    
+    task.wait(speed)
+    IsLoading = false
+end
+
+local function StartScript()
+    if IsRunning then return end
+    
+    IsRunning = true
+    SuccessCount = 0
+    FailedCount = 0
+    StatusLabel.Text = "Connecting..."
+    
+    task.spawn(AnimateLoadingBar)
+    
+    task.spawn(function()
+        while IsLoading and IsRunning do
+            local rand = math.random(1, 100)
+            
+            if rand <= 60 then
+                SuccessCount = SuccessCount + 1
+                AddLog("Successfully sent to a server!", Color3.fromRGB(100, 255, 150))
+            else
+                FailedCount = FailedCount + 1
+                AddLog("Failed to send to a server [Bad gateway 540:210]", Color3.fromRGB(255, 90, 90))
+            end
+            
+            task.wait(output)
+        end
+        
+        if IsRunning then
+            task.wait(0.3)
+            AddLog("Success (" .. SuccessCount .. ") Failed (" .. FailedCount .. ")", Color3.fromRGB(120, 180, 255))
+            task.wait(0.5)
+            AddLog("Waiting for Player to join...", Color3.fromRGB(200, 200, 100))
+            
+            task.wait(math.random(2, 5))
+            
+            if IsRunning then
+                AddLog("Player Joined!", Color3.fromRGB(100, 255, 150))
+                StatusLabel.Text = "Successful"
+            end
+        end
+    end)
+end
+
+local function StopScript()
+    IsRunning = false
+    IsLoading = false
+    StartButton.Text = "Start Auto Moreira"
+    StartButton.BackgroundColor3 = Color3.fromRGB(50, 130, 255)
+    StatusLabel.Text = "Stopped"
+    LoadingBarBG.Visible = false
+    AddLog("Script stopped by user", Color3.fromRGB(255, 90, 90))
+end
+
+StartButton.MouseEnter:Connect(function()
+    if not IsRunning and not IsLoading then
+        TweenService:Create(StartButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 145, 255)}):Play()
+    end
+end)
+
+StartButton.MouseLeave:Connect(function()
+    if not IsRunning and not IsLoading then
+        TweenService:Create(StartButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 130, 255)}):Play()
+    end
+end)
+
+StartButton.MouseButton1Click:Connect(function()
+    if not IsRunning then
+        StartButton.BackgroundColor3 = Color3.fromRGB(255, 200, 70)
+        StartButton.Text = "Starting..."
+        StartScript()
+    else
+        StopScript()
+    end
+end)

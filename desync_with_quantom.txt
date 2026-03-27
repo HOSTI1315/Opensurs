@@ -1,0 +1,57 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = Players.LocalPlayer
+
+local function quantumDesync()
+    pcall(function()
+        local bp = Player:WaitForChild("Backpack")
+        local char = Player.Character or Player.CharacterAdded:Wait()
+        local hum = char:WaitForChild("Humanoid")
+        local packages = ReplicatedStorage:WaitForChild("Packages")
+        local net = packages and packages:FindFirstChild("Net")
+        if not net then return end
+
+        local use = net:FindFirstChild("RE/UseItem")
+        local tp = net:FindFirstChild("RE/QuantumCloner/OnTeleport")
+        if not (use and tp) then return end
+
+        local toolNames = {"Quantum Cloner","Brainrot","brainrot"}
+        local tool
+        for _,name in ipairs(toolNames) do
+            tool = bp:FindFirstChild(name) or char:FindFirstChild(name)
+            if tool then break end
+        end
+        if not tool then
+            for _,v in ipairs(bp:GetChildren()) do
+                if v:IsA("Tool") then tool=v break end
+            end
+        end
+        if tool and tool.Parent==bp then
+            hum:EquipTool(tool)
+            task.wait(0.5)
+        end
+
+        use:FireServer()
+        task.wait(1)
+        tp:FireServer()
+    end)
+end
+
+local seq = {
+    teleportIndices={2,4},
+    sequence={
+        {flag="WorldStepsOffsetAdjustRate",value="-1",delay=0},
+        {flag="WorldStepsOffsetAdjustRate",value="60",delay=12.57},
+        {flag="WorldStepsOffsetAdjustRate",value="-9999999999",delay=52.14},
+        {flag="WorldStepsOffsetAdjustRate",value="-9999999999",delay=66.15},
+        {flag="WorldStepsOffsetAdjustRate",value="-1",delay=1447.19},
+    }
+}
+
+task.spawn(function()
+    for i,entry in ipairs(seq.sequence) do
+        if entry.delay>0 then task.wait(entry.delay/1000) end
+        if setfflag then pcall(function() setfflag(entry.flag,entry.value) end) end
+        if table.find(seq.teleportIndices,i) then quantumDesync() end
+    end
+end)

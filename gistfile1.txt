@@ -1,0 +1,399 @@
+-- SUPER FAST SAFE ESP + AUTO GRAPPLE (ANTI-CHEAT FRIENDLY + WALL CHECK FOR PET)
+
+local Players = game:GetService("Players")
+
+local Workspace = game:GetService("Workspace")
+
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local HRP = Character:WaitForChild("HumanoidRootPart")
+
+----------------------------------------------------
+
+-- SETTINGS
+
+----------------------------------------------------
+
+local pullSpeed = 55
+
+local reachDistance = 7
+
+local updateInterval = 0.25
+
+local grappleCooldown = 0.45
+
+local scanRadius = 999999
+
+local wallStopDistance = 2.2
+
+----------------------------------------------------
+
+local ESP_FOLDER = Instance.new("Folder", LocalPlayer:WaitForChild("PlayerGui"))
+
+ESP_FOLDER.Name = "ESP"
+
+local LINE_FOLDER = Instance.new("Folder", Workspace)
+
+LINE_FOLDER.Name = "ESP_Lines"
+
+local currentESP, currentBeam, currentPetInfo, a0, a1
+
+local pullingRunning = false
+
+----------------------------------------------------
+
+-- PARSE MONEY
+
+----------------------------------------------------
+
+local function parseMoney(text)
+
+    if not text then return 0 end
+
+    local n, s = text:match("%$([%d%.]+)%s*([kKmMbB]?)")
+
+    n = tonumber(n) or 0
+
+    if s then
+
+        s = s:lower()
+
+        if s == "k" then n *= 1000
+
+        elseif s == "m" then n *= 1e6
+
+        elseif s == "b" then n *= 1e9 end
+
+    end
+
+    return n
+
+end
+
+----------------------------------------------------
+
+-- ESP
+
+----------------------------------------------------
+
+local function createESP(name, info, mut, target)
+
+    if currentESP then currentESP:Destroy() end
+
+    local b = Instance.new("BillboardGui")
+
+    b.Parent = ESP_FOLDER
+
+    b.Size = UDim2.new(0,150,0,45)
+
+    b.AlwaysOnTop = true
+
+    b.Adornee = target
+
+    local l = Instance.new("TextLabel", b)
+
+    l.Size = UDim2.new(1,0,1,0)
+
+    l.BackgroundTransparency = 1
+
+    l.TextColor3 = Color3.new(1,1,1)
+
+    l.TextStrokeTransparency = 0
+
+    l.TextSize = 9
+
+    l.RichText = true
+
+    l.Text = string.format(
+
+        '<font color="rgb(255,80,80)">%s</font>\n<font color="rgb(150,255,150)">%s</font>\n<font color="rgb(255,255,120)">%s</font>',
+
+        name, info, mut or ""
+
+    )
+
+    currentESP = b
+
+end
+
+local function createBeam(target)
+
+    if currentBeam then currentBeam:Destroy() end
+
+    if a0 then a0:Destroy() end
+
+    if a1 then a1:Destroy() end
+
+    a0 = Instance.new("Attachment", HRP)
+
+    a1 = Instance.new("Attachment", target)
+
+    local beam = Instance.new("Beam", LINE_FOLDER)
+
+    beam.Attachment0 = a0
+
+    beam.Attachment1 = a1
+
+    beam.Width0 = 0.25
+
+    beam.Width1 = 0.25
+
+    task.spawn(function()
+
+        while beam.Parent do
+
+            beam.Color = ColorSequence.new(Color3.fromHSV((tick()*0.6)%1,1,1))
+
+            task.wait(0.03)
+
+        end
+
+    end)
+
+    currentBeam = beam
+
+end
+
+----------------------------------------------------
+
+-- FIND BEST PET
+
+----------------------------------------------------
+
+local function findBestPet()
+
+    local best, value = nil, -1
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+
+        if obj.Name == "AnimalOverhead" then
+
+            local p = obj.Parent and obj.Parent.Parent
+
+            if p and p:IsA("BasePart") then
+
+                if (HRP.Position - p.Position).Magnitude <= scanRadius then
+
+                    local name = obj:FindFirstChild("DisplayName")
+
+                    local gen = obj:FindFirstChild("Generation")
+
+                    local mut = obj:FindFirstChild("Mutation")
+
+                    if gen then
+
+                        local val = parseMoney(gen.Text)
+
+                        if val > value then
+
+                            value = val
+
+                            best = {
+
+                                name = name and name.Text or "",
+
+                                info = gen.Text,
+
+                                mutation = mut and mut.Text or "",
+
+                                part = p,
+
+                                value = val
+
+                            }
+
+                        end
+
+                    end
+
+                end
+
+            end
+
+        end
+
+    end
+
+    return best
+
+end
+
+----------------------------------------------------
+
+-- GRAPPLE
+
+----------------------------------------------------
+
+local function findGrapple()
+
+    for _, c in ipairs({Character, LocalPlayer.Backpack}) do
+
+        if c then
+
+            for _, t in ipairs(c:GetChildren()) do
+
+                if t:IsA("Tool") and (t.Name:lower():find("grap") or t.Name:lower():find("hook")) then
+
+                    return t
+
+                end
+
+            end
+
+        end
+
+    end
+
+end
+
+local function useGrapple(tool)
+
+    if not tool then return end
+
+    tool.Parent = Character
+
+    task.wait(0.05)
+
+    pcall(function() tool:Activate() end)
+
+end
+
+----------------------------------------------------
+
+-- WALL CHECK FOR PET
+
+----------------------------------------------------
+
+local function isBlockedByWall(targetPart)
+
+    local dir = (targetPart.Position - HRP.Position)
+
+    local ray = Ray.new(HRP.Position, dir.Unit * wallStopDistance)
+
+    local hit = Workspace:FindPartOnRay(ray, Character)
+
+    -- فقط توقف اذا هناك جدار **أمام الحيوان**
+
+    if hit and hit.CanCollide and (targetPart.Position - hit.Position).Magnitude > 0.5 then
+
+        return true
+
+    end
+
+    return false
+
+end
+
+----------------------------------------------------
+
+-- SOFT PULL
+
+----------------------------------------------------
+
+local function softPull(targetPos)
+
+    local d = targetPos - HRP.Position
+
+    if d.Magnitude < 1 then return end
+
+    local bv = Instance.new("BodyVelocity")
+
+    bv.MaxForce = Vector3.new(9e4,9e4,9e4)
+
+    bv.Velocity = d.Unit * pullSpeed
+
+    bv.Parent = HRP
+
+    game.Debris:AddItem(bv, 0.12)
+
+end
+
+----------------------------------------------------
+
+-- MOVE TO PET
+
+----------------------------------------------------
+
+local function moveTo(part)
+
+    if pullingRunning then return end
+
+    pullingRunning = true
+
+    task.spawn(function()
+
+        local tool = findGrapple()
+
+        local lastG = 0
+
+        while pullingRunning do
+
+            if not part or not part.Parent then break end
+
+            local dist = (HRP.Position - part.Position).Magnitude
+
+            if dist <= reachDistance then break end
+
+            if isBlockedByWall(part) then break end -- توقف فقط اذا جدار وأمام الحيوان
+
+            if tool and tick() - lastG > grappleCooldown then
+
+                useGrapple(tool)
+
+                lastG = tick()
+
+            end
+
+            softPull(part.Position)
+
+            RunService.Heartbeat:Wait()
+
+        end
+
+        pullingRunning = false
+
+    end)
+
+end
+
+----------------------------------------------------
+
+-- MAIN UPDATE
+
+----------------------------------------------------
+
+local function update()
+
+    local pet = findBestPet()
+
+    if not pet then return end
+
+    if not currentPetInfo or pet.value ~= currentPetInfo.value then
+
+        currentPetInfo = pet
+
+        createESP(pet.name, pet.info, pet.mutation, pet.part)
+
+        createBeam(pet.part)
+
+        moveTo(pet.part)
+
+    end
+
+end
+
+task.spawn(function()
+
+    while true do
+
+        pcall(update)
+
+        task.wait(updateInterval)
+
+    end
+
+end)

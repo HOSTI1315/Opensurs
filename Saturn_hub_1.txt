@@ -1,0 +1,848 @@
+--[[
+                 . .  .     .          .  .             .
+          .       .  .  .     ..   .    .      .        .
+                   .   .     .             ...  .        
+.                  .       .    ..  .    .=*+-.         .
+       . .             .               .-*:..+:  .      .
+..      .               .+=:..        :*-.. .-+          
+.           ..        . :#-..-#=.   .#-      .*.         
+  .          .........:-=#=.  ..=*-==.       .*..   .    
+        . .:+#%%%%*#%%#%%=..      -+:.       .*.         
+         .-%#%*%%#****%%#=:.       ..     .. .*.      .  
+        ..=%%*@*******%%##+.           .    .==        . 
+       .  -%%%**********+--.   .  ..:*%=-. .:+:  .. . .  
+          .=#****#%@%**++**:.    .+#-.#..  .=-. .   .    
+      ..   :****#@@@@%*****-.=..-%@%-.--  :*=:..     .   
+     .     :*****#%@%******=-:+#@@@#:..=..:::+=          
+. .       .:##************=:. ..*@%=..... .:*-..         
+           :##**********+=++::..  ..:==-:.=*.      .     
+          .=##********##===+*+++:  ...-... :+:..  .    . 
+ ..  .    :+##********##===*-....  ...:++===*=.      .   
+    .     .-#%#%*****##@=-*= ....:=#%+.                  
+        .     :%%%%#%*%%#*..      .:+.                .  
+        . .   -@%#%#******+..   .  .-+.                  
+    .        :%%#******+-... .  .  ..+=.   .         .   
+            :%*%********+...  .    . .%.            .  . 
+       .   .*##%*********....        .:+.  .   .         
+          .-#*##*********+:..        ..*.    .           
+  .    .  .=#*%#********+::...     .  .=:  . .           
+    .     .+#*%#*******=.... ..       .--        .  ..   
+          .*#*%%********=.. .     . . .-=.    .    .     
+   .   .  .+#*#%*******-:..           .-=.         .   . 
+       .  .:--+*********+-...   .  .  ... .  .     .     
+        .     .........::::..            .  ..           
+                        .. .                     ..      
+             .            .           .               .  
+]]
+repeat
+	task.wait()
+until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+game:GetService("TeleportService")
+local VirtualUser = game:GetService("VirtualUser")
+local Workspace = game:GetService("Workspace")
+local InsertService = game:GetService("InsertService")
+game:GetService("StarterGui")
+
+local Window = loadstring(game:HttpGet("https://sirius.menu/rayfield"))():CreateWindow({
+	["Name"] = "Saturn Hub (.gg/6UaRDjBY42)",
+	["LoadingTitle"] = "Evade (Summer Event) :)",
+	["LoadingSubtitle"] = "by Saturn Hub Team",
+	["ShowText"] = "Saturn Hub",
+	["Icon"] = 110406257395326,
+	["ConfigurationSaving"] = {
+		["Enabled"] = true,
+		["FolderName"] = "SaturnHub",
+		["FileName"] = "EvadeConfig"
+	},
+	["Discord"] = {
+		["Enabled"] = true,
+		["Invite"] = "6UaRDjBY42",
+		["RememberJoins"] = true
+	},
+	["KeySystem"] = false,
+	["KeySettings"] = {
+		["Title"] = "Saturn Keysystem",
+		["Subtitle"] = "Sorry I need more member :)",
+		["Note"] = "Get from discord server : discord.gg/6UaRDjBY42",
+		["FileName"] = "SaturnKey",
+		["SaveKey"] = false,
+		["GrabKeyFromSite"] = false,
+		["Key"] = { "Saturn-0001-111" }
+	}
+})
+
+local SpeedValue = 16
+local SpeedBoostEnabled = false
+local SpeedConnection = nil
+local AutoWinEnabled = false
+local AutoMoneyEnabled = false
+local AutoSummerEnabled = false
+local AntiAfkEnabled = true
+local SelectedMapIndex = 1
+local AutoVoteEnabled = false
+local AutoVoteConnection = nil
+local HeadlessEnabled = false
+local KorbloxEnabled = false
+local KorbloxAccessory = nil
+local LoopFakeConnection = nil
+local LoopFakeEnabled = false
+local PlayerESPEnabled = false
+local NextBotsESPEnabled = false
+local SummerESPEnabled = false
+local DistanceESPEnabled = false
+local PlayerAddedConnection = nil
+local NextBotsESPConnection = nil
+local SummerESPConnection = nil
+
+local OriginalBrightness = game.Lighting.Brightness
+local OriginalOutdoorAmbient = game.Lighting.OutdoorAmbient
+local OriginalAmbient = game.Lighting.Ambient
+local OriginalGlobalShadows = game.Lighting.GlobalShadows
+local OriginalFogEnd = game.Lighting.FogEnd
+local OriginalFogStart = game.Lighting.FogStart
+local OriginalColorCorrectionEnabled = game.Lighting.ColorCorrection.Enabled
+local OriginalSaturation = game.Lighting.ColorCorrection.Saturation
+local OriginalContrast = game.Lighting.ColorCorrection.Contrast
+
+local AutoReviveEnabled = false
+local LastReviveTime = 0
+local ReviveCooldown = 5
+
+local MainTab = Window:CreateTab("Main")
+local PlayerTab = Window:CreateTab("Player")
+local VoteTab = Window:CreateTab("Vote")
+local ESPTab = Window:CreateTab("ESP")
+local ReviveTab = Window:CreateTab("Revive")
+local FakeTab = Window:CreateTab("Fake")
+local MiscTab = Window:CreateTab("Misc")
+
+local function VoteForMap(mapIndex)
+	local eventsFolder = ReplicatedStorage:WaitForChild("Events", 10)
+	local playerFolder = eventsFolder and eventsFolder:WaitForChild("Player", 10)
+	if playerFolder then
+		local voteRemote = playerFolder:WaitForChild("Vote", 10)
+		if voteRemote and typeof(voteRemote) == "Instance" and voteRemote:IsA("RemoteEvent") then
+			voteRemote:FireServer(unpack({ mapIndex }))
+		end
+	end
+end
+
+local function EnableFullBright()
+	game.Lighting.Brightness = 2
+	game.Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+	game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+	game.Lighting.GlobalShadows = false
+end
+
+local function RestoreLighting()
+	game.Lighting.Brightness = OriginalBrightness
+	game.Lighting.OutdoorAmbient = OriginalOutdoorAmbient
+	game.Lighting.Ambient = OriginalAmbient
+	game.Lighting.GlobalShadows = OriginalGlobalShadows
+end
+
+local function EnableSuperFullBright()
+	game.Lighting.Brightness = 15
+	game.Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+	game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+	game.Lighting.GlobalShadows = false
+end
+
+local function DisableFog()
+	game.Lighting.FogEnd = 1000000
+	game.Lighting.FogStart = 999999
+end
+
+local function RestoreFog()
+	game.Lighting.FogEnd = OriginalFogEnd
+	game.Lighting.FogStart = OriginalFogStart
+end
+
+local function EnableVibrantColors()
+	game.Lighting.ColorCorrection.Enabled = true
+	game.Lighting.ColorCorrection.Saturation = 0.8
+	game.Lighting.ColorCorrection.Contrast = 0.4
+end
+
+local function RestoreColorCorrection()
+	game.Lighting.ColorCorrection.Enabled = OriginalColorCorrectionEnabled
+	game.Lighting.ColorCorrection.Saturation = OriginalSaturation
+	game.Lighting.ColorCorrection.Contrast = OriginalContrast
+end
+
+local function GetCharacter()
+	local player = Players.LocalPlayer
+	if player then
+		return player.Character or player.CharacterAdded:Wait()
+	else
+		return nil
+	end
+end
+
+local function HideHead()
+	local character = GetCharacter()
+	local head = character and character:FindFirstChild("Head")
+	if head then
+		head.Transparency = 1
+		local faceDecal = head:FindFirstChildOfClass("Decal")
+		if faceDecal then
+			faceDecal.Transparency = 1
+		end
+	end
+end
+
+local function ShowHead()
+	local character = GetCharacter()
+	local head = character and character:FindFirstChild("Head")
+	if head then
+		head.Transparency = 0
+		local faceDecal = head:FindFirstChildOfClass("Decal")
+		if faceDecal then
+			faceDecal.Transparency = 0
+		end
+	end
+end
+
+local function ApplyKorblox()
+	local character = GetCharacter()
+	if character and character:FindFirstChildOfClass("Humanoid") then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if KorbloxAccessory and KorbloxAccessory.Parent == character then
+			return
+		end
+		local success, assetModel = pcall(function()
+			return InsertService:LoadAsset(139607718)
+		end)
+		local accessory = success and assetModel and assetModel:FindFirstChildOfClass("Accessory")
+		if accessory then
+			for _, child in ipairs(character:GetChildren()) do
+				if child:IsA("Accessory") and child.Name == "Right Leg" then
+					child:Destroy()
+				end
+			end
+			humanoid:AddAccessory(accessory)
+			KorbloxAccessory = accessory
+		end
+	end
+end
+
+local function RemoveKorblox()
+	local character = GetCharacter()
+	if character and KorbloxAccessory and KorbloxAccessory.Parent == character then
+		KorbloxAccessory:Destroy()
+		KorbloxAccessory = nil
+	end
+end
+
+local function RemoveAllHats()
+	local character = GetCharacter()
+	if character then
+		for _, child in ipairs(character:GetChildren()) do
+			if child:IsA("Accessory") then
+				child:Destroy()
+			end
+		end
+	end
+end
+
+local function CreateESP(model, color, labelText, adorneePart, studsOffset)
+	if model and adorneePart and adorneePart:IsA("BasePart") then
+		if not (model:FindFirstChild("ESP_Highlight") and adorneePart:FindFirstChild("ESP")) then
+			local highlight = Instance.new("Highlight")
+			highlight.Name = "ESP_Highlight"
+			highlight.Adornee = model
+			highlight.FillColor = color
+			highlight.FillTransparency = 0.5
+			highlight.OutlineColor = color
+			highlight.OutlineTransparency = 0
+			highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			highlight.Enabled = true
+			highlight.Parent = model
+			local billboard = Instance.new("BillboardGui")
+			billboard.Name = "ESP"
+			billboard.Size = UDim2.new(0, 100, 0, 50)
+			billboard.AlwaysOnTop = true
+			billboard.StudsOffset = Vector3.new(0, studsOffset, 0)
+			billboard.Adornee = adorneePart
+			billboard.Enabled = true
+			billboard.Parent = adorneePart
+			local textLabel = Instance.new("TextLabel")
+			textLabel.Size = UDim2.new(1, 0, 1, 0)
+			textLabel.BackgroundTransparency = 1
+			textLabel.Text = tostring(labelText) or ""
+			textLabel.TextColor3 = color
+			textLabel.TextScaled = true
+			textLabel.Font = Enum.Font.SourceSansBold
+			textLabel.Parent = billboard
+			spawn(function()
+				local camera = Workspace.CurrentCamera
+				while highlight.Parent and billboard.Parent and adorneePart.Parent and camera do
+					local distance = (camera.CFrame.Position - adorneePart.Position).Magnitude
+					local baseText = tostring(labelText) or ""
+					if DistanceESPEnabled then
+						textLabel.Text = baseText .. " " .. tostring(math.floor(distance + 0.5)) .. "m"
+					else
+						textLabel.Text = baseText
+					end
+					task.wait(0.1)
+				end
+				if highlight then
+					highlight:Destroy()
+				end
+				if billboard then
+					billboard:Destroy()
+				end
+			end)
+		end
+	else
+		return
+	end
+end
+
+local function RemoveESP(model, adorneePart)
+	local highlight = model and model:FindFirstChild("ESP_Highlight")
+	if highlight then
+		highlight:Destroy()
+	end
+	local billboard = adorneePart and adorneePart:FindFirstChild("ESP")
+	if billboard then
+		billboard:Destroy()
+	end
+end
+
+local function SetupPlayerESP(player)
+	if player ~= LocalPlayer and player.Character then
+		local function ApplyESPToCharacter(character)
+			if PlayerESPEnabled and character:FindFirstChild("Head") then
+				CreateESP(character, Color3.new(0.4, 0.8, 0.4), player.Name, character.Head, 1)
+			end
+		end
+		ApplyESPToCharacter(player.Character)
+		player.CharacterAdded:Connect(function(character)
+			task.wait(0.1)
+			ApplyESPToCharacter(character)
+		end)
+		player.CharacterRemoving:Connect(function(character)
+			if character:FindFirstChild("Head") then
+				RemoveESP(character, character.Head)
+			end
+		end)
+	end
+end
+
+MainTab:CreateToggle({
+	["Name"] = "Auto Farm Win",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoWin",
+	["Callback"] = function(enabled)
+		AutoWinEnabled = enabled
+		if AutoWinEnabled then
+			spawn(function()
+				while AutoWinEnabled do
+					local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+					local rootPart = character:FindFirstChild("HumanoidRootPart")
+					if character and rootPart then
+						if character:GetAttribute("Downed") then
+							ReplicatedStorage.Events.Player.ChangePlayerMode:FireServer(true)
+							task.wait(0.5)
+						end
+						if not character:GetAttribute("Downed") then
+							local securityPart = Instance.new("Part")
+							securityPart.Name = "SecurityPartTemp"
+							securityPart.Size = Vector3.new(10, 1, 10)
+							securityPart.Position = Vector3.new(0, 500, 0)
+							securityPart.Anchored = true
+							securityPart.Transparency = 1
+							securityPart.CanCollide = true
+							securityPart.Parent = Workspace
+							rootPart.CFrame = securityPart.CFrame + Vector3.new(0, 3, 0)
+							task.wait(0.5)
+							securityPart:Destroy()
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+
+MainTab:CreateToggle({
+	["Name"] = "Auto Farm Money",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoMoney",
+	["Callback"] = function(enabled)
+		AutoMoneyEnabled = enabled
+		if AutoMoneyEnabled then
+			spawn(function()
+				while true do
+					if not AutoMoneyEnabled then
+						return
+					end
+					local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+					local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+					if character and rootPart then
+						if character:GetAttribute("Downed") then
+							ReplicatedStorage.Events.Player.ChangePlayerMode:FireServer(true)
+							task.wait(0.5)
+						end
+						local playersFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Players")
+						if playersFolder then
+							for _, playerModel in pairs(playersFolder:GetChildren()) do
+								if playerModel:IsA("Model") and playerModel:FindFirstChildOfClass("Humanoid") and playerModel:GetAttribute("Downed") then
+									rootPart.CFrame = playerModel.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+									ReplicatedStorage.Events.Character.Interact:FireServer("Revive", true, playerModel)
+									task.wait(0.5)
+									break
+								end
+							end
+						end
+						local securityPart = Instance.new("Part")
+						securityPart.Name = "SecurityPartTemp"
+						securityPart.Size = Vector3.new(10, 1, 10)
+						securityPart.Position = Vector3.new(0, 500, 0)
+						securityPart.Anchored = true
+						securityPart.Transparency = 1
+						securityPart.CanCollide = true
+						securityPart.Parent = Workspace
+						rootPart.CFrame = securityPart.CFrame + Vector3.new(0, 3, 0)
+					end
+					task.wait(1)
+				end
+			end)
+		end
+	end
+})
+
+MainTab:CreateToggle({
+	["Name"] = "Auto Farm Summer Event",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoSummer",
+	["Callback"] = function(enabled)
+		AutoSummerEnabled = enabled
+		if AutoSummerEnabled then
+			spawn(function()
+				while AutoSummerEnabled do
+					local ticketsFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Effects") and Workspace.Game.Effects:FindFirstChild("Tickets")
+					if ticketsFolder then
+						local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+						local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+						if character and rootPart then
+							if character:GetAttribute("Downed") then
+								ReplicatedStorage.Events.Player.ChangePlayerMode:FireServer(true)
+								task.wait(0.5)
+							end
+							for _, ticket in ipairs(ticketsFolder:GetChildren()) do
+								local ticketPart = ticket:FindFirstChild("HumanoidRootPart") or ticket.PrimaryPart
+								if ticketPart and rootPart then
+									rootPart.CFrame = ticketPart.CFrame + Vector3.new(0, 2, 0)
+									task.wait(0.2)
+								end
+							end
+							local securityPart = Instance.new("Part")
+							securityPart.Name = "SecurityPartTemp"
+							securityPart.Size = Vector3.new(10, 1, 10)
+							securityPart.Position = Vector3.new(0, 500, 0)
+							securityPart.Anchored = true
+							securityPart.Transparency = 1
+							securityPart.CanCollide = true
+							securityPart.Parent = Workspace
+							rootPart.CFrame = securityPart.CFrame + Vector3.new(0, 3, 0)
+						end
+					end
+					task.wait(1)
+				end
+			end)
+		end
+	end
+})
+
+PlayerTab:CreateSlider({
+	["Name"] = "Speed Value",
+	["Range"] = { 1, 1000 },
+	["Increment"] = 1,
+	["Suffix"] = "Speed",
+	["CurrentValue"] = 16,
+	["Flag"] = "SpeedValue",
+	["Callback"] = function(value)
+		SpeedValue = value
+		if SpeedBoostEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+			LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+		end
+	end
+})
+
+PlayerTab:CreateToggle({
+	["Name"] = "CFrame Speed Boost",
+	["CurrentValue"] = false,
+	["Flag"] = "CFrameSpeed",
+	["Callback"] = function(enabled)
+		SpeedBoostEnabled = enabled
+		if SpeedBoostEnabled then
+			if SpeedConnection then
+				SpeedConnection:Disconnect()
+				SpeedConnection = nil
+			end
+			SpeedConnection = RunService.RenderStepped:Connect(function()
+				local character = LocalPlayer.Character
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+				if character and humanoid and rootPart then
+					local moveDirection = humanoid.MoveDirection
+					if moveDirection.Magnitude > 0 then
+						rootPart.CFrame = rootPart.CFrame + moveDirection * math.max(SpeedValue, 1) * 0.08
+					end
+				end
+			end)
+		elseif SpeedConnection then
+			SpeedConnection:Disconnect()
+			SpeedConnection = nil
+		end
+	end
+})
+
+VoteTab:CreateDropdown({
+	["Name"] = "Select Map",
+	["Options"] = { "Map 1", "Map 2", "Map 3", "Map 4" },
+	["CurrentOption"] = "Map 1",
+	["Flag"] = "MapSelection",
+	["Callback"] = function(selected)
+		if selected == "Map 1" then
+			SelectedMapIndex = 1
+		elseif selected == "Map 2" then
+			SelectedMapIndex = 2
+		elseif selected == "Map 3" then
+			SelectedMapIndex = 3
+		elseif selected == "Map 4" then
+			SelectedMapIndex = 4
+		end
+	end
+})
+
+VoteTab:CreateButton({
+	["Name"] = "Vote Map",
+	["Callback"] = function()
+		VoteForMap(SelectedMapIndex)
+	end
+})
+
+VoteTab:CreateToggle({
+	["Name"] = "Auto Vote",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoVote",
+	["Callback"] = function(enabled)
+		AutoVoteEnabled = enabled
+		if AutoVoteEnabled then
+			if not AutoVoteConnection then
+				AutoVoteConnection = RunService.Heartbeat:Connect(function()
+					VoteForMap(SelectedMapIndex)
+				end)
+			end
+		elseif AutoVoteConnection then
+			AutoVoteConnection:Disconnect()
+			AutoVoteConnection = nil
+		end
+	end
+})
+
+ESPTab:CreateToggle({
+	["Name"] = "Players ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "PlayersESP",
+	["Callback"] = function(enabled)
+		PlayerESPEnabled = enabled
+		if PlayerESPEnabled then
+			for _, player in pairs(Players:GetPlayers()) do
+				SetupPlayerESP(player)
+			end
+			PlayerAddedConnection = Players.PlayerAdded:Connect(function(player)
+				SetupPlayerESP(player)
+			end)
+		else
+			if PlayerAddedConnection then
+				PlayerAddedConnection:Disconnect()
+				PlayerAddedConnection = nil
+			end
+			for _, player in pairs(Players:GetPlayers()) do
+				if player.Character and player.Character:FindFirstChild("Head") then
+					RemoveESP(player.Character, player.Character.Head)
+				end
+			end
+		end
+	end
+})
+
+ESPTab:CreateToggle({
+	["Name"] = "NextBots ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "BotsESP",
+	["Callback"] = function(enabled)
+		NextBotsESPEnabled = enabled
+		if NextBotsESPEnabled then
+			NextBotsESPConnection = RunService.Heartbeat:Connect(function()
+				local playersFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Players")
+				if playersFolder then
+					for _, bot in pairs(playersFolder:GetChildren()) do
+						if bot:IsA("Model") and bot:FindFirstChild("Hitbox") then
+							bot.Hitbox.Transparency = 0.5
+							CreateESP(bot, Color3.new(0.8, 0.2, 0.2), bot.Name, bot.Hitbox, -2)
+						end
+					end
+				end
+			end)
+		else
+			if NextBotsESPConnection then
+				NextBotsESPConnection:Disconnect()
+				NextBotsESPConnection = nil
+			end
+			local playersFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Players")
+			if playersFolder then
+				for _, bot in pairs(playersFolder:GetChildren()) do
+					if bot:IsA("Model") and bot:FindFirstChild("Hitbox") then
+						bot.Hitbox.Transparency = 1
+						RemoveESP(bot, bot.Hitbox)
+					end
+				end
+			end
+		end
+	end
+})
+
+ESPTab:CreateToggle({
+	["Name"] = "Summer Event ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "SummerESP",
+	["Callback"] = function(enabled)
+		SummerESPEnabled = enabled
+		if SummerESPEnabled then
+			SummerESPConnection = RunService.Heartbeat:Connect(function()
+				local ticketsFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Effects") and Workspace.Game.Effects:FindFirstChild("Tickets")
+				if ticketsFolder then
+					for _, ticket in pairs(ticketsFolder:GetChildren()) do
+						if ticket and ticket.PrimaryPart and ticket.Name == "Visual" then
+							CreateESP(ticket, Color3.new(0.9, 0.9, 0.3), "Ticket", ticket.PrimaryPart, -2)
+						end
+					end
+				end
+			end)
+		else
+			if SummerESPConnection then
+				SummerESPConnection:Disconnect()
+				SummerESPConnection = nil
+			end
+			local ticketsFolder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Effects") and Workspace.Game.Effects:FindFirstChild("Tickets")
+			if ticketsFolder then
+				for _, ticket in pairs(ticketsFolder:GetChildren()) do
+					if ticket and ticket.PrimaryPart then
+						RemoveESP(ticket, ticket.PrimaryPart)
+					end
+				end
+			end
+		end
+	end
+})
+
+ESPTab:CreateToggle({
+	["Name"] = "Distance ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "DistanceESP",
+	["Callback"] = function(enabled)
+		DistanceESPEnabled = enabled
+	end
+})
+
+ReviveTab:CreateButton({
+	["Name"] = "Revive Yourself",
+	["Callback"] = function()
+		local character = LocalPlayer.Character
+		if character and character:GetAttribute("Downed") then
+			ReplicatedStorage.Events.Player.ChangePlayerMode:FireServer(true)
+		end
+	end
+})
+
+ReviveTab:CreateToggle({
+	["Name"] = "Auto Revive Yourself",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoRevive",
+	["Callback"] = function(enabled)
+		AutoReviveEnabled = enabled
+	end
+})
+
+FakeTab:CreateToggle({
+	["Name"] = "Headless",
+	["CurrentValue"] = false,
+	["Flag"] = "Headless",
+	["Callback"] = function(enabled)
+		HeadlessEnabled = enabled
+		if HeadlessEnabled then
+			HideHead()
+		else
+			ShowHead()
+		end
+	end
+})
+
+FakeTab:CreateToggle({
+	["Name"] = "Korblox Right Leg",
+	["CurrentValue"] = false,
+	["Flag"] = "Korblox",
+	["Callback"] = function(enabled)
+		KorbloxEnabled = enabled
+		if KorbloxEnabled then
+			ApplyKorblox()
+		else
+			RemoveKorblox()
+		end
+	end
+})
+
+FakeTab:CreateToggle({
+	["Name"] = "Loop Fake Bundle",
+	["CurrentValue"] = false,
+	["Flag"] = "LoopFake",
+	["Callback"] = function(enabled)
+		LoopFakeEnabled = enabled
+		if LoopFakeEnabled then
+			if not LoopFakeConnection then
+				LoopFakeConnection = RunService.Heartbeat:Connect(function()
+					if KorbloxEnabled then
+						ApplyKorblox()
+					end
+					if HeadlessEnabled then
+						HideHead()
+					end
+				end)
+			end
+		elseif LoopFakeConnection then
+			LoopFakeConnection:Disconnect()
+			LoopFakeConnection = nil
+		end
+	end
+})
+
+FakeTab:CreateButton({
+	["Name"] = "Remove All Hats",
+	["Callback"] = function()
+		RemoveAllHats()
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "Anti-AFK",
+	["CurrentValue"] = true,
+	["Flag"] = "AntiAFK",
+	["Callback"] = function(enabled)
+		AntiAfkEnabled = enabled
+		if enabled then
+			task.spawn(function()
+				while AntiAfkEnabled do
+					if not LocalPlayer then
+						return
+					end
+					VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+					VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+					task.wait(60)
+				end
+			end)
+		end
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "Full Brightness",
+	["CurrentValue"] = false,
+	["Flag"] = "FullBright",
+	["Callback"] = function(enabled)
+		if enabled then
+			EnableFullBright()
+		else
+			RestoreLighting()
+		end
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "Super Full Brightness",
+	["CurrentValue"] = false,
+	["Flag"] = "SuperFullBright",
+	["Callback"] = function(enabled)
+		if enabled then
+			EnableSuperFullBright()
+		else
+			RestoreLighting()
+		end
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "No Fog",
+	["CurrentValue"] = false,
+	["Flag"] = "NoFog",
+	["Callback"] = function(enabled)
+		if enabled then
+			DisableFog()
+		else
+			RestoreFog()
+		end
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "Vibrant Colors",
+	["CurrentValue"] = false,
+	["Flag"] = "Vibrant",
+	["Callback"] = function(enabled)
+		if enabled then
+			EnableVibrantColors()
+		else
+			RestoreColorCorrection()
+		end
+	end
+})
+
+MiscTab:CreateToggle({
+	["Name"] = "FPS Boost",
+	["CurrentValue"] = false,
+	["Flag"] = "FPSBoost",
+	["Callback"] = function(enabled)
+		if enabled then
+			for _, descendant in pairs(game:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					descendant.Material = Enum.Material.SmoothPlastic
+					descendant.Reflectance = 0
+				elseif descendant:IsA("Decal") then
+					descendant.Transparency = 1
+				end
+			end
+			settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+		end
+	end
+})
+
+RunService.Heartbeat:Connect(function()
+	if AutoReviveEnabled and ReviveCooldown <= tick() - LastReviveTime then
+		LastReviveTime = tick()
+		local character = LocalPlayer.Character
+		if character and character:GetAttribute("Downed") then
+			ReplicatedStorage.Events.Player.ChangePlayerMode:FireServer(true)
+		end
+	end
+end)
+
+Players.LocalPlayer.CharacterAdded:Connect(function(_)
+	if HeadlessEnabled then
+		task.wait(0.1)
+		HideHead()
+	end
+	if KorbloxEnabled then
+		task.wait(0.1)
+		ApplyKorblox()
+	end
+end)

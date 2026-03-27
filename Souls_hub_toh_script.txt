@@ -1,0 +1,521 @@
+-- souls hub  
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Player = Players.LocalPlayer
+
+-- Wait for character
+local Char = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Char:WaitForChild("Humanoid")
+local HRP = Char:WaitForChild("HumanoidRootPart")
+
+-- ===== GUI Setup =====
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "souls hub"
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+
+-- Colors
+local MainColor = Color3.fromRGB(50,50,50)
+local MainTransparency = 0.6
+local AccentColor = Color3.fromRGB(0,0,0)
+local AccentTransparency = 0.4
+local TextColor = Color3.fromRGB(255,255,255)
+
+-- ===== Main Frame =====
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0,350,0,400)
+MainFrame.Position = UDim2.new(0.5,-175,0.5,-200)
+MainFrame.BackgroundColor3 = MainColor
+MainFrame.BackgroundTransparency = MainTransparency
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Close/Open Button
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0,100,0,25)
+toggleBtn.Position = UDim2.new(1,-105,0,5)
+toggleBtn.Text = "Close GUI"
+toggleBtn.TextColor3 = TextColor
+toggleBtn.BackgroundColor3 = AccentColor
+toggleBtn.BackgroundTransparency = AccentTransparency
+toggleBtn.Parent = MainFrame
+
+local guiOpen = true
+toggleBtn.MouseButton1Click:Connect(function()
+    guiOpen = not guiOpen
+    MainFrame.Visible = guiOpen
+    toggleBtn.Text = guiOpen and "Close GUI" or "Open GUI"
+end)
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,30)
+Title.Position = UDim2.new(0,0,0,0)
+Title.BackgroundTransparency = 1
+Title.Text = "SOULS HUB"
+Title.TextColor3 = TextColor
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+Title.Parent = MainFrame
+
+-- ===== Tabs =====
+local Tabs = {"Player","Teleport","Fling"}
+local TabFrames = {}
+
+for i,tabName in ipairs(Tabs) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,110,0,30)
+    btn.Position = UDim2.new(0, (i-1)*115,0,35)
+    btn.Text = tabName
+    btn.TextColor3 = TextColor
+    btn.BackgroundColor3 = AccentColor
+    btn.BackgroundTransparency = AccentTransparency
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.Parent = MainFrame
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1,-10,1,-75)
+    frame.Position = UDim2.new(0,5,0,70)
+    frame.BackgroundColor3 = MainColor
+    frame.BackgroundTransparency = MainTransparency
+    frame.Visible = (i==1)
+    frame.Parent = MainFrame
+    TabFrames[tabName] = frame
+
+    btn.MouseButton1Click:Connect(function()
+        for name,f in pairs(TabFrames) do
+            f.Visible = (name == tabName)
+        end
+    end)
+end
+
+-- ===== Player Tab =====
+local PlayerTab = TabFrames["Player"]
+
+local speedBox = Instance.new("TextBox")
+speedBox.PlaceholderText = "WalkSpeed (16-200)"
+speedBox.Size = UDim2.new(0,200,0,30)
+speedBox.Position = UDim2.new(0,10,0,10)
+speedBox.Text = tostring(Humanoid.WalkSpeed)
+speedBox.Parent = PlayerTab
+speedBox.FocusLost:Connect(function()
+    local val = tonumber(speedBox.Text)
+    if val then Humanoid.WalkSpeed = val end
+end)
+
+local jumpBox = Instance.new("TextBox")
+jumpBox.PlaceholderText = "JumpPower (50-500)"
+jumpBox.Size = UDim2.new(0,200,0,30)
+jumpBox.Position = UDim2.new(0,10,0,50)
+jumpBox.Text = tostring(Humanoid.JumpPower)
+jumpBox.Parent = PlayerTab
+jumpBox.FocusLost:Connect(function()
+    local val = tonumber(jumpBox.Text)
+    if val then Humanoid.JumpPower = val end
+end)
+
+-- ===== Teleport Tab =====
+local TeleportTab = TabFrames["Teleport"]
+local posX,posY,posZ = 0,0,0
+
+local xBox = Instance.new("TextBox")
+xBox.PlaceholderText = "X"
+xBox.Size = UDim2.new(0,200,0,30)
+xBox.Position = UDim2.new(0,10,0,10)
+xBox.Parent = TeleportTab
+xBox.FocusLost:Connect(function() posX = tonumber(xBox.Text) or 0 end)
+
+local yBox = Instance.new("TextBox")
+yBox.PlaceholderText = "Y"
+yBox.Size = UDim2.new(0,200,0,30)
+yBox.Position = UDim2.new(0,10,0,50)
+yBox.Parent = TeleportTab
+yBox.FocusLost:Connect(function() posY = tonumber(yBox.Text) or 0 end)
+
+local zBox = Instance.new("TextBox")
+zBox.PlaceholderText = "Z"
+zBox.Size = UDim2.new(0,200,0,30)
+zBox.Position = UDim2.new(0,10,0,90)
+zBox.Parent = TeleportTab
+zBox.FocusLost:Connect(function() posZ = tonumber(zBox.Text) or 0 end)
+
+local tpBtn = Instance.new("TextButton")
+tpBtn.Size = UDim2.new(0,150,0,30)
+tpBtn.Position = UDim2.new(0,10,0,130)
+tpBtn.Text = "Teleport"
+tpBtn.TextColor3 = TextColor
+tpBtn.BackgroundColor3 = AccentColor
+tpBtn.BackgroundTransparency = AccentTransparency
+tpBtn.Parent = TeleportTab
+tpBtn.MouseButton1Click:Connect(function()
+    if HRP then HRP.CFrame = CFrame.new(posX,posY,posZ) end
+end)
+
+
+-- ===== Flower Tap Particles =====
+-- Aurora Flower GUI - Perfect Size Edition
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local flowers = {}
+local maxFlowers = 60
+
+-- Aurora colors ()
+local auroraColors = {
+    Color3.fromRGB(255, 105, 180), -- Pink
+    Color3.fromRGB(0, 255, 187),   -- Teal
+    Color3.fromRGB(178, 0, 255),   -- Purple
+    Color3.fromRGB(255, 215, 0),   -- Gold
+    Color3.fromRGB(0, 195, 255),   -- Light Blue
+    Color3.fromRGB(152, 251, 152)  -- Light Green
+}
+
+-- Create the main GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AuroraFlowerGUI"
+screenGui.DisplayOrder = 999
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Perfect flower sizes
+local sizes = {
+    small = {min = 12, max = 18},
+    medium = {min = 20, max = 28},
+    large = {min = 30, max = 40}
+}
+
+function createFlower(x, y, sizeType)
+    local sizeData = sizes[sizeType or "medium"]
+    local size = math.random(sizeData.min, sizeData.max)
+    local petalCount = math.random(5, 7)
+    
+    -- Main flower frame
+    local flower = Instance.new("Frame")
+    flower.Size = UDim2.new(0, size, 0, size)
+    flower.Position = UDim2.new(0, x - size/2, 0, y - size/2)
+    flower.BackgroundTransparency = 1
+    flower.Parent = screenGui
+    
+    -- Aurora glow effect
+    local glow = Instance.new("Frame")
+    glow.Size = UDim2.new(1.5, 0, 1.5, 0)
+    glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    glow.BackgroundColor3 = auroraColors[math.random(1, #auroraColors)]
+    glow.BorderSizePixel = 0
+    glow.BackgroundTransparency = 0.85
+    glow.ZIndex = -1
+    glow.Parent = flower
+    
+    local glowCorner = Instance.new("UICorner")
+    glowCorner.CornerRadius = UDim.new(1, 0)
+    glowCorner.Parent = glow
+    
+    -- Create petals in circle
+    local petals = {}
+    local flowerColor = auroraColors[math.random(1, #auroraColors)]
+    
+    for i = 1, petalCount do
+        local angle = (i / petalCount) * math.pi * 2
+        local distance = size * 0.35
+        local petalX = math.cos(angle) * distance
+        local petalY = math.sin(angle) * distance
+        
+        local petal = Instance.new("Frame")
+        petal.Size = UDim2.new(0, size/2.5, 0, size/2.5)
+        petal.Position = UDim2.new(0.5, petalX - size/5, 0.5, petalY - size/5)
+        petal.BackgroundColor3 = flowerColor
+        petal.BorderSizePixel = 0
+        petal.BackgroundTransparency = 0.3
+        petal.ZIndex = 2
+        petal.Parent = flower
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = petal
+        
+        table.insert(petals, petal)
+    end
+    
+    -- Flower center
+    local center = Instance.new("Frame")
+    center.Size = UDim2.new(0, size/2, 0, size/2)
+    center.Position = UDim2.new(0.5, -size/4, 0.5, -size/4)
+    center.BackgroundColor3 = Color3.new(1, 1, 0.9)
+    center.BorderSizePixel = 0
+    center.BackgroundTransparency = 0.2
+    center.ZIndex = 3
+    center.Parent = flower
+    
+    local centerCorner = Instance.new("UICorner")
+    centerCorner.CornerRadius = UDim.new(1, 0)
+    centerCorner.Parent = center
+    
+    -- Particle data
+    local particle = {
+        gui = flower,
+        petals = petals,
+        center = center,
+        glow = glow,
+        velocity = Vector2.new(
+            (math.random() - 0.5) * 8,
+            (math.random() - 0.5) * 8 - 2
+        ),
+        life = 1,
+        decay = math.random() * 0.015 + 0.01,
+        rotation = 0,
+        rotationSpeed = (math.random() - 0.5) * 15,
+        size = size,
+        color = flowerColor,
+        floatTime = math.random() * math.pi * 2
+    }
+    
+    table.insert(flowers, particle)
+    return particle
+end
+
+-- Create flower burst with mixed sizes
+function createFlowerBurst(x, y)
+    local burstCount = math.random(10, 16)
+    
+    for i = 1, burstCount do
+        local sizeType = "small"
+        if i <= 3 then
+            sizeType = "large"
+        elseif i <= 7 then
+            sizeType = "medium"
+        end
+        createFlower(x, y, sizeType)
+    end
+    
+    -- Aurora flash effect
+    local flash = Instance.new("Frame")
+    flash.Size = UDim2.new(0, 50, 0, 50)
+    flash.Position = UDim2.new(0, x-25, 0, y-25)
+    flash.BackgroundColor3 = auroraColors[math.random(1, #auroraColors)]
+    flash.BorderSizePixel = 0
+    flash.BackgroundTransparency = 0.1
+    flash.ZIndex = 10
+    flash.Parent = screenGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = flash
+    
+    -- Flash animation
+    local tween1 = TweenService:Create(flash, TweenInfo.new(0.3), {
+        Size = UDim2.new(0, 80, 0, 80),
+        Position = UDim2.new(0, x-40, 0, y-40),
+        BackgroundTransparency = 0.4
+    })
+    
+    local tween2 = TweenService:Create(flash, TweenInfo.new(0.4), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0, x, 0, y),
+        BackgroundTransparency = 1,
+        Rotation = 360
+    })
+    
+    tween1:Play()
+    tween1.Completed:Connect(function()
+        tween2:Play()
+        tween2.Completed:Connect(function()
+            flash:Destroy()
+        end)
+    end)
+end
+
+-- Mouse click event
+mouse.Button1Down:Connect(function()
+    createFlowerBurst(mouse.X, mouse.Y)
+end)
+
+-- Touch support
+if game:GetService("UserInputService").TouchEnabled then
+    game:GetService("UserInputService").TouchStarted:Connect(function(touch)
+        createFlowerBurst(touch.Position.X, touch.Position.Y)
+    end)
+end
+
+-- Auto-spawn some flowers
+spawn(function()
+    wait(1)
+    for i = 1, 4 do
+        createFlower(
+            math.random(100, 700),
+            math.random(100, 500),
+            "medium"
+        )
+        wait(0.3)
+    end
+end)
+
+-- Main update loop
+RunService.Heartbeat:Connect(function(deltaTime)
+    local currentTime = tick()
+    
+    for i = #flowers, 1, -1 do
+        local flower = flowers[i]
+        
+        -- Update physics
+        flower.velocity = flower.velocity * 0.97
+        flower.velocity = flower.velocity + Vector2.new(0, 0.08)
+        flower.life = flower.life - flower.decay
+        flower.rotation = flower.rotation + flower.rotationSpeed * deltaTime
+        flower.floatTime = flower.floatTime + deltaTime * 3
+        
+        -- Floating motion
+        local floatX = math.sin(flower.floatTime) * 1.2
+        local floatY = math.cos(flower.floatTime * 0.8) * 0.8
+        
+        -- Update position
+        local currentPos = flower.gui.Position
+        flower.gui.Position = UDim2.new(
+            0, currentPos.X.Offset + flower.velocity.X + floatX,
+            0, currentPos.Y.Offset + flower.velocity.Y + floatY
+        )
+        
+        -- Update rotation
+        flower.gui.Rotation = flower.rotation
+        
+        -- Fade out
+        local transparency = 1 - flower.life
+        for _, petal in ipairs(flower.petals) do
+            petal.BackgroundTransparency = 0.3 + transparency * 0.7
+        end
+        flower.center.BackgroundTransparency = 0.2 + transparency * 0.8
+        flower.glow.BackgroundTransparency = 0.85 + transparency * 0.15
+        
+        -- Scale down
+        local scale = flower.size * flower.life
+        flower.gui.Size = UDim2.new(0, scale, 0, scale)
+        
+        -- Aurora color shift
+        if math.random(1, 120) == 1 then
+            local newColor = auroraColors[math.random(1, #auroraColors)]
+            for _, petal in ipairs(flower.petals) do
+                petal.BackgroundColor3 = newColor
+            end
+            flower.glow.BackgroundColor3 = newColor
+            flower.color = newColor
+        end
+        
+        -- Remove dead flowers
+        if flower.life <= 0 then
+            flower.gui:Destroy()
+            table.remove(flowers, i)
+        end
+    end
+    
+    -- Cleanup
+    while #flowers > maxFlowers do
+        if flowers[1] and flowers[1].gui then
+            flowers[1].gui:Destroy()
+        end
+        table.remove(flowers, 1)
+    end
+end)
+
+print("Aurora Flower GUI loaded! Perfect sizes, same beautiful colors!")
+-- ===== Load Notification =====
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification",{
+        Title = "Info",
+        Text = "Recommended teleport: Y ≈ 350, X/Z ≈ 50–45",
+        Duration = 5
+    })
+end)-- Roblox Script: Halloween Orange Sky + Floating Skull Rain with Music
+
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
+
+-- 🎃 Halloween Sky / Orange Theme
+-- Optional: Replace with orange skybox if available
+local sky = Instance.new("Sky")
+sky.SkyboxBk = "rbxassetid://1234567890" -- replace with orange sky images if you have
+sky.SkyboxDn = "rbxassetid://1234567891"
+sky.SkyboxFt = "rbxassetid://1234567892"
+sky.SkyboxLf = "rbxassetid://1234567893"
+sky.SkyboxRt = "rbxassetid://1234567894"
+sky.SkyboxUp = "rbxassetid://1234567895"
+sky.Parent = Lighting
+
+Lighting.Ambient = Color3.fromRGB(255,140,50)       -- bright orange ambient
+Lighting.OutdoorAmbient = Color3.fromRGB(200,100,40)
+Lighting.FogColor = Color3.fromRGB(255,120,50)
+Lighting.FogStart = 0
+Lighting.FogEnd = 1200
+Lighting.ClockTime = 16
+Lighting.Brightness = 2
+
+-- 🎵 Music Setup
+local music = Instance.new("Sound")
+music.SoundId = "rbxassetid://15689451063" -- Poster Boy
+music.Looped = true
+music.Volume = 0.5
+music.Parent = SoundService
+music:Play()
+
+-- ⚰️ Function to spawn floating skulls
+local function spawnFloatingSkull(position)
+    local skull = Instance.new("MeshPart")
+    skull.MeshId = "rbxassetid://16672632" -- Skull mesh
+    skull.TextureID = "rbxassetid://16672633"
+    skull.Size = Vector3.new(3,3,3)
+    skull.Position = position
+    skull.Anchored = false -- allow movement with BodyVelocity
+    skull.CanCollide = false
+    skull.Material = Enum.Material.Neon
+    skull.Color = Color3.fromRGB(200,0,0)
+    skull.Parent = workspace
+
+    -- Apply downward velocity for floating effect
+    local bv = Instance.new("BodyVelocity")
+    bv.Velocity = Vector3.new(0,-math.random(10,25),0)
+    bv.MaxForce = Vector3.new(0, math.huge, 0)
+    bv.Parent = skull
+
+    -- Rotate skull
+    local rotationSpeed = math.random(20,60)
+    local conn
+    conn = RunService.RenderStepped:Connect(function(delta)
+        if skull.Parent then
+            skull.CFrame = skull.CFrame * CFrame.Angles(0, math.rad(rotationSpeed*delta), 0)
+        else
+            conn:Disconnect()
+        end
+    end)
+
+    -- Cleanup after 7 seconds
+    Debris:AddItem(skull,7)
+end
+
+-- ⏱ Approximate bass-beat intervals
+local bassInterval = 0.45
+local lastBeat = 0
+
+-- Spawn skulls on beat
+RunService.RenderStepped:Connect(function()
+    if music.IsPlaying then
+        if tick() - lastBeat >= bassInterval then
+            lastBeat = tick()
+            for i = 1, math.random(3,6) do
+                local x = math.random(-50,50)
+                local y = 80 + math.random(0,20)
+                local z = math.random(-50,50)
+                spawnFloatingSkull(Vector3.new(x,y,z))
+            end
+        end
+    end
+end)

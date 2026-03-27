@@ -1,0 +1,507 @@
+-- Serviços
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+-- Config Plataforma
+local PLATFORM_SIZE = Vector3.new(5,0.4,5)
+local OFFSET_BELOW = 2
+
+local platform
+local platformActive = false
+local character
+local conn
+
+-- Float Walk configs
+local floatWalkActive = false
+local floatWalkForce
+local floatConn
+local floatSpeed = 14
+
+-- Função Draggable
+local function makeDraggable(obj)
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        obj.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = obj.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    obj.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            update(input)
+        end
+    end)
+end
+
+-- Criar ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+----------------------------------------------------
+-- Tela de Carregamento
+----------------------------------------------------
+local LoadingFrame = Instance.new("Frame")
+LoadingFrame.Parent = ScreenGui
+LoadingFrame.Size = UDim2.new(0, 400, 0, 200)
+LoadingFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local UICornerLoad = Instance.new("UICorner")
+UICornerLoad.CornerRadius = UDim.new(0,20)
+UICornerLoad.Parent = LoadingFrame
+
+local Title = Instance.new("TextLabel")
+Title.Parent = LoadingFrame
+Title.Size = UDim2.new(1,0,0,40)
+Title.Position = UDim2.new(0,0,0.15,0)
+Title.Text = "HYPER Hub Premium"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 24
+Title.BackgroundTransparency = 1
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Parent = LoadingFrame
+SubTitle.Size = UDim2.new(1,0,0,25)
+SubTitle.Position = UDim2.new(0,0,0.35,0)
+SubTitle.Text = "Welcome @"..player.Name
+SubTitle.TextColor3 = Color3.fromRGB(200,200,200)
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.TextSize = 16
+SubTitle.BackgroundTransparency = 1
+
+-- Barra de progresso
+local ProgressBarBG = Instance.new("Frame")
+ProgressBarBG.Parent = LoadingFrame
+ProgressBarBG.Size = UDim2.new(0.8,0,0,20)
+ProgressBarBG.Position = UDim2.new(0.1,0,0.7,0)
+ProgressBarBG.BackgroundColor3 = Color3.fromRGB(50,50,50)
+
+local UICornerBG = Instance.new("UICorner")
+UICornerBG.CornerRadius = UDim.new(0,10)
+UICornerBG.Parent = ProgressBarBG
+
+local ProgressBar = Instance.new("Frame")
+ProgressBar.Parent = ProgressBarBG
+ProgressBar.Size = UDim2.new(0,0,1,0)
+ProgressBar.BackgroundColor3 = Color3.fromRGB(138,43,226)
+
+local UICornerBar = Instance.new("UICorner")
+UICornerBar.CornerRadius = UDim.new(0,10)
+UICornerBar.Parent = ProgressBar
+
+-- Som de início
+local Sound = Instance.new("Sound")
+Sound.SoundId = "rbxassetid://9085027122"
+Sound.Volume = 1
+Sound.Parent = ScreenGui
+Sound:Play()
+
+-- Tween da barra de carregamento
+TweenService:Create(ProgressBar, TweenInfo.new(6, Enum.EasingStyle.Linear), {Size=UDim2.new(1,0,1,0)}):Play()
+task.wait(6)
+LoadingFrame:Destroy()
+
+----------------------------------------------------
+-- Botão circular
+----------------------------------------------------
+local CircleBtn = Instance.new("ImageButton")
+CircleBtn.Parent = ScreenGui
+CircleBtn.Size = UDim2.new(0,60,0,60)
+CircleBtn.Position = UDim2.new(0.1,0,0.2,0)
+CircleBtn.Image = "rbxassetid://98331868062387"
+CircleBtn.BackgroundTransparency = 1
+CircleBtn.Visible = false
+CircleBtn.ScaleType = Enum.ScaleType.Fit
+
+local UICornerCircle = Instance.new("UICorner")
+UICornerCircle.CornerRadius = UDim.new(1,0)
+UICornerCircle.Parent = CircleBtn
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = CircleBtn
+UIStroke.Thickness = 3
+
+task.spawn(function()
+    while true do
+        TweenService:Create(UIStroke, TweenInfo.new(1),{Color=Color3.fromRGB(186,85,211)}):Play()
+        task.wait(1)
+        TweenService:Create(UIStroke, TweenInfo.new(1),{Color=Color3.fromRGB(128,0,128)}):Play()
+        task.wait(1)
+    end
+end)
+
+CircleBtn.Visible = true
+CircleBtn.Size = UDim2.new(0,0,0,0)
+TweenService:Create(CircleBtn,TweenInfo.new(0.6,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,60,0,60)}):Play()
+
+----------------------------------------------------
+-- GUI principal
+----------------------------------------------------
+local MainHub = Instance.new("Frame")
+MainHub.Parent = ScreenGui
+MainHub.Size = UDim2.new(0,260,0,350)
+MainHub.Position = UDim2.new(0.5,-130,0.5,-175)
+MainHub.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MainHub.Visible = false
+
+local UICornerHub = Instance.new("UICorner")
+UICornerHub.CornerRadius = UDim.new(0,15)
+UICornerHub.Parent = MainHub
+
+local UIStrokeHub = Instance.new("UIStroke")
+UIStrokeHub.Parent = MainHub
+UIStrokeHub.Color = Color3.fromRGB(255,40,255)
+UIStrokeHub.Thickness = 3
+
+-- Topo com imagem
+local TopBar = Instance.new("Frame")
+TopBar.Parent = MainHub
+TopBar.Size = UDim2.new(1,0,0,60)
+TopBar.Position = UDim2.new(0,0,0,0)
+TopBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local UICornerTop = Instance.new("UICorner")
+UICornerTop.CornerRadius = UDim.new(0,15)
+UICornerTop.Parent = TopBar
+
+local TopImage = Instance.new("ImageLabel")
+TopImage.Parent = TopBar
+TopImage.Size = UDim2.new(0,40,0,40)
+TopImage.Position = UDim2.new(0,5,0,10)
+TopImage.Image = "rbxassetid://98331868062387"
+TopImage.BackgroundTransparency = 1
+TopImage.ScaleType = Enum.ScaleType.Fit
+
+local UICornerCircle2 = Instance.new("UICorner")
+UICornerCircle2.CornerRadius = UDim.new(1,0)
+UICornerCircle2.Parent = TopImage
+
+local UIStroke2 = Instance.new("UIStroke")
+UIStroke2.Parent = TopImage
+UIStroke2.Thickness = 3
+
+task.spawn(function()
+    while true do
+        TweenService:Create(UIStroke2, TweenInfo.new(1),{Color=Color3.fromRGB(186,85,211)}):Play()
+        task.wait(1)
+        TweenService:Create(UIStroke2, TweenInfo.new(1),{Color=Color3.fromRGB(128,0,128)}):Play()
+        task.wait(1)
+    end
+end)
+
+-- Título HYPER Hpremium
+local TitleFrame = Instance.new("Frame")
+TitleFrame.Parent = TopBar
+TitleFrame.Size = UDim2.new(1,-50,1,0)
+TitleFrame.Position = UDim2.new(0,50,0,0)
+TitleFrame.BackgroundTransparency = 1
+
+local TitleLine1 = Instance.new("TextLabel")
+TitleLine1.Parent = TitleFrame
+TitleLine1.Size = UDim2.new(1,0,0.5,0)
+TitleLine1.Position = UDim2.new(0,0,0,0)
+TitleLine1.Text = "HYPER"
+TitleLine1.TextColor3 = Color3.fromRGB(255,255,255)
+TitleLine1.BackgroundTransparency = 1
+TitleLine1.Font = Enum.Font.GothamBold
+TitleLine1.TextSize = 28
+TitleLine1.TextXAlignment = Enum.TextXAlignment.Left
+TitleLine1.TextYAlignment = Enum.TextYAlignment.Bottom
+local TitleLine2 = Instance.new("TextLabel")
+TitleLine2.Parent = TitleFrame
+TitleLine2.Size = UDim2.new(1,0,0.5,0)
+TitleLine2.Position = UDim2.new(0,0,0.5,0)
+TitleLine2.Text = "Hpremium"
+TitleLine2.TextColor3 = Color3.fromRGB(255,255,255)
+TitleLine2.BackgroundTransparency = 1
+TitleLine2.Font = Enum.Font.GothamBold
+TitleLine2.TextSize = 22
+TitleLine2.TextXAlignment = Enum.TextXAlignment.Left
+TitleLine2.TextYAlignment = Enum.TextYAlignment.Top
+
+-- TikTok pequeno ao lado
+local TikTokLabel = Instance.new("TextLabel")
+TikTokLabel.Parent = TitleFrame
+TikTokLabel.Size = UDim2.new(0,100,0,12)
+TikTokLabel.Position = UDim2.new(0,150,0,28)
+TikTokLabel.Text = "TikTok: @hyper.hubscript"
+TikTokLabel.TextColor3 = Color3.fromRGB(255,255,255)
+TikTokLabel.Font = Enum.Font.Gotham
+TikTokLabel.TextSize = 10
+TikTokLabel.BackgroundTransparency = 1
+TikTokLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+----------------------------------------------------
+-- ScrollFrame funcional
+----------------------------------------------------
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Parent = MainHub
+ScrollFrame.Size = UDim2.new(1,-20,1,-60)
+ScrollFrame.Position = UDim2.new(0,10,0,60)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.ScrollBarThickness = 6
+ScrollFrame.CanvasSize = UDim2.new(0,0,0,0)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0,5)
+
+local function updateCanvas()
+    ScrollFrame.CanvasSize = UDim2.new(0,0,0,UIListLayout.AbsoluteContentSize.Y)
+end
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+
+----------------------------------------------------
+-- Função para botões com animação roxo->verde e som
+----------------------------------------------------
+local function makeToggleButton(name, parent, callback)
+    local btn = Instance.new("TextButton")
+    btn.Parent = parent
+    btn.Size = UDim2.new(1,-20,0,50)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(0,0,0)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 18
+    btn.BackgroundColor3 = Color3.fromRGB(255,40,255)
+    local uic = Instance.new("UICorner")
+    uic.CornerRadius = UDim.new(0,8)
+    uic.Parent = btn
+
+    local active = false
+
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        local goal = {BackgroundColor3 = active and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,40,255)}
+        TweenService:Create(btn,TweenInfo.new(0.5,Enum.EasingStyle.Quad), goal):Play()
+
+        -- Splash efeito
+        local splash = Instance.new("Frame")
+        splash.Size = UDim2.new(0,0,0,0)
+        splash.Position = UDim2.new(0.5,0,0.5,0)
+        splash.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        splash.AnchorPoint = Vector2.new(0.5,0.5)
+        splash.BackgroundTransparency = 0.5
+        splash.ZIndex = btn.ZIndex+1
+        splash.Parent = btn
+        TweenService:Create(splash, TweenInfo.new(0.3,Enum.EasingStyle.Quad), {Size=UDim2.new(2,0,2,0), BackgroundTransparency = 1}):Play()
+        task.delay(0.3,function() splash:Destroy() end)
+
+        -- Som do botão
+        local btnSound = Instance.new("Sound")
+        btnSound.SoundId = "rbxassetid://9083627113"
+        btnSound.Volume = 1
+        btnSound.Parent = btn
+        btnSound:Play()
+        task.delay(1,function() btnSound:Destroy() end)
+
+        callback(active)
+    end)
+
+    return btn
+end
+
+----------------------------------------------------
+-- Botão Plataforma V2
+----------------------------------------------------
+makeToggleButton("Plataforma V2", ScrollFrame, function(active)
+    platformActive = active
+    if platformActive then
+        character = player.Character or player.CharacterAdded:Wait()
+
+        local function createPlatform()
+            if platform and platform.Parent then return platform end
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local p = Instance.new("Part")
+            p.Size = PLATFORM_SIZE
+            p.Anchored = true
+            p.CanCollide = true
+            p.Material = Enum.Material.Neon
+            p.Color = Color3.fromRGB(0,140,255)
+            p.Transparency = 0.15
+            p.Name = "Hyper_Platform"
+            p.CFrame = hrp.CFrame * CFrame.new(0, -OFFSET_BELOW - (PLATFORM_SIZE.Y/2),0)
+            p.Parent = Workspace
+
+            platform = p
+            return p
+        end
+
+        local function startMoving()
+            if conn then return end
+            conn = RunService.Heartbeat:Connect(function()
+                if not platform or not platform.Parent then return end
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+                platform.CFrame = CFrame.new(hrp.Position - Vector3.new(0, OFFSET_BELOW,0))
+            end)
+        end
+
+        createPlatform()
+        startMoving()
+    else
+        if platform then platform:Destroy() platform=nil end
+        if conn then conn:Disconnect() conn=nil end
+    end
+end)
+
+----------------------------------------------------
+-- Botão FPS KILLER
+----------------------------------------------------
+local FPSDevourer = {}
+do
+    FPSDevourer.running = false
+    local TOOL_NAME = "Bat"
+    local function equipBat()
+        local character = player.Character
+        local backpack = player:FindFirstChild("Backpack")
+        if not character or not backpack then return false end
+        local tool = backpack:FindFirstChild(TOOL_NAME)
+        if tool then tool.Parent = character return true end
+        return false
+    end
+    local function unequipBat()
+        local character = player.Character
+        local backpack = player:FindFirstChild("Backpack")
+        if not character or not backpack then return false end
+        local tool = character:FindFirstChild(TOOL_NAME)
+        if tool then tool.Parent = backpack return true end
+        return false
+    end
+    local function removeAllAccessoriesFromCharacter()
+        local character = player.Character
+        if not character then return end
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Accessory")
+                or item:IsA("LayeredClothing")
+                or item:IsA("Shirt")
+                or item:IsA("ShirtGraphic")
+                or item:IsA("Pants")
+                or item:IsA("BodyColors")
+                or item:IsA("CharacterMesh") then
+                pcall(function() item:Destroy() end)
+            end
+        end
+    end
+
+    makeToggleButton("FPS KILLER", ScrollFrame, function(active)
+        if active then
+            FPSDevourer.running = true
+            FPSDevourer._stop = false
+            removeAllAccessoriesFromCharacter()
+            task.spawn(function()
+                while FPSDevourer.running and not FPSDevourer._stop do
+                    equipBat()
+                    task.wait(0.035)
+                    unequipBat()
+                    task.wait(0.035)
+                end
+            end)
+        else
+            FPSDevourer.running = false
+            FPSDevourer._stop = true
+            unequipBat()
+        end
+    end)
+
+    player.CharacterAdded:Connect(function()
+        FPSDevourer.running = false
+        FPSDevourer._stop = true
+        task.wait(0.2)
+        removeAllAccessoriesFromCharacter()
+    end)
+end
+
+----------------------------------------------------
+-- Botão Float Walk suave e lenta
+----------------------------------------------------
+makeToggleButton("Float Walk", ScrollFrame, function(active)
+    character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp then return end
+
+    floatWalkActive = active
+
+    if floatWalkActive then
+        floatWalkForce = Instance.new("BodyVelocity")
+        floatWalkForce.MaxForce = Vector3.new(1e5,1e5,1e5)
+        floatWalkForce.Velocity = Vector3.new(0,0,0)
+        floatWalkForce.Parent = hrp
+
+        floatConn = RunService.Heartbeat:Connect(function()
+            if floatWalkActive and hrp.Parent then
+                local cam = workspace.CurrentCamera
+                local moveDir = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+                if moveDir.Magnitude > 0 then
+                    moveDir = moveDir.Unit
+                else
+                    moveDir = Vector3.new(0,0,0)
+                end
+                floatWalkForce.Velocity = moveDir * floatSpeed
+            end
+        end)
+    else
+        if floatWalkForce then floatWalkForce:Destroy() floatWalkForce=nil end
+        if floatConn then floatConn:Disconnect() floatConn=nil end
+    end
+end)
+
+----------------------------------------------------
+-- Botão Ultra Boost
+----------------------------------------------------
+makeToggleButton("Ultra Boost", ScrollFrame, function(active)
+    character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    if active then
+        humanoid.WalkSpeed = 55
+        humanoid.JumpPower = 100
+    else
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+    end
+end)
+
+----------------------------------------------------
+-- Abrir/fechar GUI
+----------------------------------------------------
+CircleBtn.MouseButton1Click:Connect(function()
+    MainHub.Visible = not MainHub.Visible
+end)
+
+-- Tornar draggable
+makeDraggable(CircleBtn)
+makeDraggable(MainHub)

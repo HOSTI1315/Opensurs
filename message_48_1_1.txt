@@ -1,0 +1,494 @@
+local library = loadstring(game:HttpGet("https://pastebin.com/raw/qwdPKKDN"))()
+local venyx = library.new("sot.cc | steroids for da hood", 5013109572)
+
+-- themes
+local themes = {
+Background = Color3.fromRGB(24, 24, 24),
+Glow = Color3.fromRGB(0, 0, 0),
+Accent = Color3.fromRGB(10, 10, 10),
+LightContrast = Color3.fromRGB(20, 20, 20),
+DarkContrast = Color3.fromRGB(14, 14, 14),  
+TextColor = Color3.fromRGB(255, 255, 255)
+}
+
+-- first page
+local page = venyx:addPage("Main", 5012544693)
+local section1 = page:addSection("Main")
+section1:addButton("Hitbox Expander(B) on person", function()
+local CC = game:GetService"Workspace".CurrentCamera
+    local Plr
+    local enabled = falseWD
+    local accomidationfactor = 0.131
+    local mouse = game.Players.LocalPlayer:GetMouse()
+    local placemarker = Instance.new("Part", game.Workspace)
+
+    function makemarker(Parent, Adornee, Color, Size, Size2)
+        local e = Instance.new("BillboardGui", Parent)
+        e.Name = "PP"
+        e.Adornee = Adornee
+        e.Size = UDim2.new(Size, Size2, Size, Size2)
+        e.AlwaysOnTop = true
+        local a = Instance.new("Frame", e)
+        a.Size = UDim2.new(1, 0, 1, 0)
+        a.BackgroundTransparency = 0
+        a.BackgroundColor3 = Color
+        local g = Instance.new("UICorner", a)
+        g.CornerRadius = UDim.new(50, 50)
+        return(e)
+    end
+
+    
+    local data = game.Players:GetPlayers()
+    function noob(player)
+        local character
+        repeat wait() until player.Character
+        local handler = makemarker(guimain, player.Character:WaitForChild("HumanoidRootPart"), Color3.fromRGB(107, 184, 255), 0.3, 3)
+        handler.Name = player.Name
+        player.CharacterAdded:connect(function(Char) handler.Adornee = Char:WaitForChild("HumanoidRootPart") end)
+
+
+        spawn(function()
+            while wait() do
+                if player.Character then
+                    TextLabel.Text = player.Name..tostring(player:WaitForChild("leaderstats").Wanted.Value).." | "..tostring(math.floor(player.Character:WaitForChild("Humanoid").Health))
+                end
+            end
+        end)
+    end
+
+    for i = 1, #data do
+        if data[i] ~= game.Players.LocalPlayer then
+            noob(data[i])
+        end
+    end
+
+    game.Players.PlayerAdded:connect(function(Player)
+        noob(Player)
+    end)
+
+    spawn(function()
+        placemarker.Anchored = true
+        placemarker.CanCollide = false
+        placemarker.Size = Vector3.new(7, 7, 7)
+        placemarker.Transparency = 0.50
+        makemarker(placemarker, placemarker, Color3.fromRGB(82, 112, 234), 0.40, 0)
+    end)    
+
+mouse.KeyDown:Connect(function(k)
+    if k ~= "q" then return end
+    if enabled then
+        enabled = false
+        guimain[Plr.Name].Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        enabled = true 
+        Plr = getClosestPlayerToCursor()
+        guimain[Plr.Name].Frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end    
+end)
+
+    function getClosestPlayerToCursor()
+        local closestPlayer
+        local shortestDistance = math.huge
+
+        for i, v in pairs(game.Players:GetPlayers()) do
+            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = CC:WorldToViewportPoint(v.Character.PrimaryPart.Position)
+                local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).magnitude
+                if magnitude < shortestDistance then
+                    closestPlayer = v
+                    shortestDistance = magnitude
+                end
+            end
+        end
+        return closestPlayer
+    end
+
+    game:GetService"RunService".Stepped:connect(function()
+        if enabled and Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart") then
+            placemarker.CFrame = CFrame.new(Plr.Character.HumanoidRootPart.Position+(Plr.Character.HumanoidRootPart.Velocity*accomidationfactor))
+        else
+            placemarker.CFrame = CFrame.new(0, 9999, 0)
+        end
+    end)
+
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(...)
+        local args = {...}
+        if enabled and getnamecallmethod() == "FireServer" and args[2] == "UpdateMousePos" then
+            args[3] = Plr.Character.HumanoidRootPart.Position+(Plr.Character.HumanoidRootPart.Velocity*accomidationfactor)
+            return old(unpack(args))
+        end
+        return old(...)
+    end)
+end)
+section1:addButton("Auto-Prediction", function()
+end)
+section1:addTextbox("Prediction", "Set", function(value, focusLost)
+print("Nothing")
+if focusLost then
+venyx:Notify("Title", value)
+end
+end)
+section1:addButton("CFrame Speed(X)", function()
+for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+        if v:IsA("Script") and v.Name ~= "Health" and v.Name ~= "Sound" and v:FindFirstChild("LocalScript") then
+            v:Destroy()
+        end
+    end
+    game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+        repeat
+            wait()
+        until game.Players.LocalPlayer.Character
+        char.ChildAdded:Connect(function(child)
+            if child:IsA("Script") then 
+                wait(0.1)
+                if child:FindFirstChild("LocalScript") then
+                    child.LocalScript:FireServer()
+                end
+            end
+        end)
+    end)
+        repeat
+        wait()
+    until game:IsLoaded()
+    local L134 = game:service('Players')
+    local L135 = L134.LocalPlayer
+    repeat
+        wait()
+    until L135.Character
+    local L136 = game:service('UserInputService')
+    local L137 = game:service('RunService')
+    getgenv().Multiplier = 0.5
+    local L138 = true
+    local L139
+    L136.InputBegan:connect(function(L_140_arg0)
+        if L_140_arg0.KeyCode == Enum.KeyCode.LeftBracket then
+            Multiplier = Multiplier + 0.01
+            print(Multiplier)
+            wait(0.2)
+            while L136:IsKeyDown(Enum.KeyCode.LeftBracket) do
+                wait()
+                Multiplier = Multiplier + 0.01
+                print(Multiplier)
+            end
+        end
+        if L_140_arg0.KeyCode == Enum.KeyCode.RightBracket then
+            Multiplier = Multiplier - 0.01
+            print(Multiplier)
+            wait(0.2)
+            while L136:IsKeyDown(Enum.KeyCode.RightBracket) do
+                wait()
+                Multiplier = Multiplier - 0.01
+                print(Multiplier)
+            end
+        end
+        if L_140_arg0.KeyCode == Enum.KeyCode.X then
+            L138 = not L138
+            if L138 == true then
+                repeat
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+                    game:GetService("RunService").Stepped:wait()
+                until L138 == false
+            end
+        end
+    end)
+end)
+--Second Page
+local page = venyx:addPage("Misc", 5012544693)
+local section2 = page:addSection("Misc")
+section2:addButton("Fly(X)", function()
+    print("Clicked")
+ local plr = game.Players.LocalPlayer
+    local mouse = plr:GetMouse()
+
+    localplayer = plr
+
+    if workspace:FindFirstChild("Core") then
+        workspace.Core:Destroy()
+    end
+
+    local Core = Instance.new("Part")
+    Core.Name = "Core"
+    Core.Size = Vector3.new(0.05, 0.05, 0.05)
+
+    spawn(function()
+        Core.Parent = workspace
+        local Weld = Instance.new("Weld", Core)
+        Weld.Part0 = Core
+        Weld.Part1 = localplayer.Character.LowerTorso
+        Weld.C0 = CFrame.new(0, 0, 0)
+    end)
+
+    workspace:WaitForChild("Core")
+
+    local torso = workspace.Core
+    flying = true
+    local speed=7.5
+    local keys={a=false,d=false,w=false,s=false}
+    local e1
+    local e2
+    local function start()
+        local pos = Instance.new("BodyPosition",torso)
+        local gyro = Instance.new("BodyGyro",torso)
+        pos.Name="EPIXPOS"
+        pos.maxForce = Vector3.new(math.huge, math.huge, math.huge)
+        pos.position = torso.Position
+        gyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        gyro.cframe = torso.CFrame
+        repeat
+            wait()
+            localplayer.Character.Humanoid.PlatformStand=true
+            local new=gyro.cframe - gyro.cframe.p + pos.position
+            if not keys.w and not keys.s and not keys.a and not keys.d then
+                speed=7.5
+            end
+            if keys.w then
+                new = new + workspace.CurrentCamera.CoordinateFrame.lookVector * speed
+                speed=speed+0
+            end
+            if keys.s then
+                new = new - workspace.CurrentCamera.CoordinateFrame.lookVector * speed
+                speed=speed+0
+            end
+            if keys.d then
+                new = new * CFrame.new(speed,0,0)
+                speed=speed+0
+            end
+            if keys.a then
+                new = new * CFrame.new(-speed,0,0)
+                speed=speed+0
+            end
+            if speed>3.2 then
+                speed=7.5
+            end
+            pos.position=new.p
+            if keys.w then
+                gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(-math.rad(speed*0),0,0)
+            elseif keys.s then
+                gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(math.rad(speed*0),0,0)
+            else
+                gyro.cframe = workspace.CurrentCamera.CoordinateFrame
+            end
+        until flying == false
+        if gyro then gyro:Destroy() end
+        if pos then pos:Destroy() end
+        flying=false
+        localplayer.Character.Humanoid.PlatformStand=false
+        speed=7.5
+    end
+    e1=mouse.KeyDown:connect(function(key)
+        if not torso or not torso.Parent then flying=false e1:disconnect() e2:disconnect() return end
+        if key=="w" then
+            keys.w=true
+        elseif key=="s" then
+            keys.s=true
+        elseif key=="a" then
+            keys.a=true
+        elseif key=="d" then
+            keys.d=true
+        elseif key=="x" then
+            if flying==true then
+                flying=false
+            else
+                flying=true
+                start()
+            end
+        end
+    end)
+    e2=mouse.KeyUp:connect(function(key)
+        if key=="w" then
+            keys.w=false
+        elseif key=="s" then
+            keys.s=false
+        elseif key=="a" then
+            keys.a=false
+        elseif key=="d" then
+            keys.d=false
+        end
+    end)
+    start()
+end)
+section2:addKeybind("Toggle UI", Enum.KeyCode.RightControl, function()
+print("Activated Keybind")
+venyx:toggle()
+end, function()
+print("Changed Keybind")
+end)
+section2:addButton("Noclip", function()
+ loadstring(game:HttpGet("https://raw.githubusercontent.com/LegoHacker1337/legohacks/main/PhysicsServiceOnClient.lua"))()
+    setfflag("HumanoidParallelRemoveNoPhysics", "False")
+    setfflag("HumanoidParallelRemoveNoPhysicsNoSimulate2", "False")
+    if t == true then
+        game:GetService('RunService'):BindToRenderStep("crash", 0 , function()
+            game.Players.LocalPlayer.Character.Humanoid:ChangeState(11)
+        end)
+    elseif t == false then
+        game:GetService('RunService'):UnbindFromRenderStep("crash")
+    end
+end)
+section2:addButton("Hide User", function()
+if game.Players.LocalPlayer.Character:FindFirstChild("In-gameMask") then
+        game.Players.LocalPlayer.Character:FindFirstChild("In-gameMask"):FindFirstChildWhichIsA("Model"):Destroy()
+        game.Players.LocalPlayer.Character:FindFirstChild("In-gameMask"):FindFirstChild('Handle'):Destroy()
+    end
+end)
+section2:addButton("Force Reset", function()
+   for i, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v:Destroy()
+        end
+    end
+end)
+section2:addButton("Headless(CS)", function()
+ game.Players.LocalPlayer.Character.Head.Transparency = 1
+    game.Players.LocalPlayer.Character.Head.Transparency = 1
+    for i,v in pairs(game.Players.LocalPlayer.Character.Head:GetChildren()) do
+    if (v:IsA("Decal")) then
+    v.Transparency = 1
+    end
+    end
+end)
+section2:addButton("Korblox(CS)", function()
+	local ply = game.Players.LocalPlayer
+		local chr = ply.Character
+		chr.RightLowerLeg.MeshId = "902942093"
+		chr.RightLowerLeg.Transparency = "1"
+		chr.RightUpperLeg.MeshId = "http://www.roblox.com/asset/?id=902942096"
+		chr.RightUpperLeg.TextureID = "http://roblox.com/asset/?id=902843398"
+		chr.RightFoot.MeshId = "902942089"
+		chr.RightFoot.Transparency = "1"
+end)
+section2:addButton("Anonymous", function()
+     	local function inTable(What, Table)
+		for Index, Value in pairs(Table) do
+			if What == Value then
+				return true
+			end
+		end
+		return false
+	end
+
+	local removingClasses = {
+		"Accessory",
+		"Pants",
+		"Shirt",
+	}
+
+	for _, Instance in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+		if inTable(Instance.ClassName, removingClasses) or Instance.Name == "face" then
+			Instance:Destroy()
+		end
+	end
+end)
+section2:addButton("Anti-Bag", function()
+ local LP = game.Players.LocalPlayer;
+
+    for i,v in ipairs(LP.Character:GetDescendants()) do
+        if v.Name == "Christmas_Sock" then v:Destroy()
+            end;
+        end;
+            
+        LP.Character.ChildAdded:Connect(function()
+        wait(0.3)
+        for i,v in ipairs(LP.Character:GetDescendants()) do
+        if v.Name == "Christmas_Sock" then v:Destroy()
+        end;
+        end;
+        end);
+end)
+section2:addButton("Rejoin", function()
+game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+end)
+
+local page = venyx:addPage("Combat", 5012544693)
+local section3 = page:addSection("Combat")
+section3:addButton("Silent Reach(Fist)", function()
+if e == true then
+        game:GetService('RunService'):BindToRenderStep("Reach", 0 , function()
+            local success, err = pcall(function()
+                if game.Players.LocalPlayer.Character.BodyEffects.Attacking.Value == true then
+                    for i,v in pairs(game:GetService('Players'):GetChildren()) do
+                        if (v.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.LeftHand.Position).Magnitude <= 50 then
+                            if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then
+                                if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild('Handle') then
+                                    firetouchinterest(game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool").Handle, v.Character.UpperTorso, 0)
+                                else
+                                    firetouchinterest(game.Players.LocalPlayer.Character['RightHand'], v.Character.UpperTorso, 0)
+                                    firetouchinterest(game.Players.LocalPlayer.Character['LeftHand'], v.Character.UpperTorso, 0)
+                                    firetouchinterest(game.Players.LocalPlayer.Character['RightFoot'], v.Character.UpperTorso, 0)
+                                    firetouchinterest(game.Players.LocalPlayer.Character['LeftFoot'], v.Character.UpperTorso, 0)
+                                    firetouchinterest(game.Players.LocalPlayer.Character['RightLowerLeg'], v.Character.UpperTorso, 0)
+                                    firetouchinterest(game.Players.LocalPlayer.Character['LeftLowerLeg'], v.Character.UpperTorso, 0)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end)
+    elseif e == false then
+        game:GetService('RunService'):UnbindFromRenderStep("Reach")
+    end
+end)
+section3:addButton("Tool Reach", function()
+for i, v in pairs(game:GetService"Players".LocalPlayer.Character:GetChildren()) do
+        if v:isA("Tool") then
+            local a = Instance.new("SelectionBox", v.Handle)
+            a.Adornee = v.Handle
+            v.Handle.Size = Vector3.new(50, 50, 50)
+            v.Handle.Transparency = 1
+            v.GripPos = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+section3:addButton("Auto Stomp", function()
+if r == true then
+        game:GetService('RunService'):BindToRenderStep("Auto-Stomp", 0 , function()
+            game:GetService("ReplicatedStorage").MainEvent:FireServer("Stomp")
+        end)
+    elseif r == false then
+        game:GetService('RunService'):UnbindFromRenderStep("Auto-Stomp")
+    end
+end)
+section3:addButton("Anti Stomp", function()
+    if x == true then
+        game:GetService('RunService'):BindToRenderStep("Anti-Stomp", 0 , function()
+            if game.Players.LocalPlayer.Character.Humanoid.Health <= 5 then
+                for i,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                    if v:IsA('MeshPart') or v:IsA('Part') then
+                        v:Destroy()
+                    end
+                end
+                for i,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                    if v:IsA('Accessory') then
+                        v.Handle:Destroy()
+                    end
+                end
+            end
+        end)
+    elseif x == false then
+        game:GetService('RunService'):UnbindFromRenderStep("Anti-Stomp")
+    end
+end)
+
+local page = venyx:addPage("Teleports", 5012544693)
+local section4 = page:addSection("Teleports")
+section4:addButton("Admin base", function()
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-797.15, -39.6189, -887.957)
+end)
+section4:addButton("Food Shop(Bank)", function()
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-335.141, 23.7129, -298.029)
+end)
+-- third
+local theme = venyx:addPage("UiThemes", 5012544693)
+local colors = theme:addSection("Colors")
+
+for theme, color in pairs(themes) do
+colors:addColorPicker(theme, color, function(color3)
+venyx:setTheme(theme, color3)
+end)
+end
+-- load
+venyx:SelectPage(venyx.pages[1], true) -- no default for more freedom

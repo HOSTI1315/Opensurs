@@ -1,0 +1,13459 @@
+--Deobfuscated by Nyzlinh
+
+local L_3_ = {}
+L_3_[168] = table["concat"]
+do
+	local L_85_ = {}
+	L_85_[12] = true
+	L_85_[1] = string["gmatch"]
+	L_85_[4] = function()
+		error("You Are Lost!")
+	end
+	L_85_[3] = false
+	L_85_[15] = pcall(function()
+		L_85_[3] = true
+	end) and L_85_[3]
+	L_85_[13] = math["random"]
+	L_85_[6] = table["concat"]
+	L_85_[9] = table and table["unpack"] or unpack
+	L_85_[8] = L_85_[13](3, 65)
+	L_85_[7] = 0
+	L_85_[14] = 0
+	L_85_[2] = {
+		pcall(function()
+			local L_86_ = {}
+			L_86_[2] = 11805745 - "5oP3v0lnSgxL" ^ 4310596
+			return "EwtXPrd2crFOS2" / L_86_[2]
+		end)
+	}
+	L_85_[10] = L_85_[2][2]
+	L_85_[5] = tonumber((L_85_[1](tostring(L_85_[10]), ":(%d*):"))())
+	for L_87_forvar0 = 1, L_85_[8], 1 do
+		local L_88_ = {}
+		L_88_[5] = L_87_forvar0
+		L_88_[2] = math["random"](1, 100)
+		L_88_[1] = L_85_[13](0, 255)
+		L_88_[3] = L_85_[13](1, L_88_[2])
+		L_88_[8] = L_85_[13](1, 2) == 1
+		L_88_[4] = L_85_[10]:gsub(":(%d*):", ":" .. (tostring(L_85_[13](0, 10000)) .. ":"))
+		L_88_[7] = {
+			pcall(function()
+				local L_89_ = {}
+				if L_85_[13](1, 2) == 1 or L_88_[5] == L_85_[8] then
+					local L_90_ = {}
+					L_90_[1] = tonumber((L_85_[1](tostring(({
+						pcall(function()
+							local L_91_ = {}
+							L_91_[1] = 1898093 - "AwWp5N" ^ 2461985
+							return "dXWU" / L_91_[1]
+						end)
+					})[2]), ":(%d*):"))())
+					L_85_[12] = L_85_[12] and L_85_[5] == L_90_[1]
+				end
+				if L_88_[8] then
+					error(L_88_[4], 0)
+				end
+				L_89_[2] = {}
+				for L_92_forvar0 = 1, L_88_[2], 1 do
+					local L_93_ = {}
+					L_93_[2] = L_92_forvar0
+					L_89_[2][L_93_[2]] = L_85_[13](0, 255)
+				end
+				L_89_[2][L_88_[3]] = L_88_[1]
+				return L_85_[9](L_89_[2])
+			end)
+		}
+		if L_88_[8] then
+			L_85_[12] = L_85_[12] and (L_88_[7][1] == false and L_88_[7][2] == L_88_[4])
+		else
+			L_85_[12] = L_85_[12] and L_88_[7][1]
+			L_85_[7] = (L_85_[7] + L_88_[7][L_88_[3] + 1]) % 256
+			L_85_[14] = (L_85_[14] + L_88_[1]) % 256
+		end
+	end
+	L_85_[12] = L_85_[12] and L_85_[7] == L_85_[14]
+	if L_85_[12] then
+	else
+		repeat
+			return (function()
+				while true do
+					l1, l2 = l2, l1
+					L_85_[4]()
+				end
+			end)()
+		until true
+		while true do
+			l2 = L_85_[13](1, 6)
+			if l2 > 2 then
+				l2 = tostring(l1)
+			else
+				l1 = l2
+			end
+		end
+		return
+	end
+end
+do
+	local L_94_ = {}
+	L_94_[31] = true
+	L_94_[43] = function()
+		originalError({
+			["msg"] = L_3_[168]({
+				"Tampering detected. ",
+				"Please contact the o",
+				"wner of this script ";
+				"for a new version."
+			})
+		})
+		while true do
+		end
+	end
+	L_94_[36] = function()
+		originalError(L_3_[168]({
+			"Tampering detected. ",
+			"Error code: "
+		}) .. math["random"](1000, 9999))
+		while true do
+		end
+	end
+	L_94_[17] = function()
+		originalError(function()
+			return L_3_[168]({
+				"Tampering detected. ";
+				"This incident will b";
+				"e reported."
+			})
+		end)
+		while true do
+		end
+	end
+	L_94_[23] = {
+		L_94_[43],
+		L_94_[36],
+		L_94_[17]
+	}
+	L_94_[26] = L_94_[23][math["random"](1, #L_94_[23])]
+	L_94_[5] = error
+	L_94_[19] = pairs
+	L_94_[22] = setmetatable
+	L_94_[11] = getmetatable
+	L_94_[33] = type
+	L_94_[42] = load
+	L_94_[39] = loadstring
+	L_94_[12] = pcall
+	L_94_[3] = math["random"]
+	L_94_[28] = xpcall
+	L_94_[40] = debug
+	L_94_[32] = debug["getinfo"]
+	L_94_[4] = package
+	L_94_[27] = coroutine
+	L_94_[44] = string
+	L_94_[46] = math
+	L_94_[24] = table
+	L_94_[30] = os
+	L_94_[25] = io
+	L_94_[9] = file
+	L_94_[16] = {}
+	L_94_[34] = {}
+	for L_95_forvar0, L_96_forvar1 in L_94_[19](_G) do
+		local L_97_ = {}
+		L_97_[2], L_97_[1] = L_95_forvar0, L_96_forvar1
+		L_94_[34][L_97_[2]] = L_97_[1]
+	end
+	L_94_[41] = function(L_98_arg0)
+		local L_99_ = {}
+		L_99_[3] = L_98_arg0
+		L_99_[2] = {
+			["__index"] = L_99_[3];
+			["__newindex"] = function(L_100_arg0, L_101_arg1, L_102_arg2)
+				local L_103_ = {}
+				L_103_[2], L_103_[4], L_103_[3] = L_100_arg0, L_101_arg1, L_102_arg2
+				if L_94_[34][L_103_[4]] then
+					L_94_[26]()
+				else
+					L_94_[34][L_103_[4]] = L_103_[3]
+				end
+			end;
+			["__metatable"] = false,
+			["__gc"] = function()
+				L_94_[26]()
+			end,
+			["__mode"] = "k";
+			["__call"] = function()
+				L_94_[26]()
+			end;
+			["__len"] = function()
+				L_94_[26]()
+			end,
+			["__pairs"] = function()
+				L_94_[26]()
+			end,
+			["__ipairs"] = function()
+				L_94_[26]()
+			end,
+			["__debug"] = function()
+				L_94_[26]()
+			end;
+			["__tostring"] = function()
+				L_94_[26]()
+			end,
+			["__concat"] = function()
+				L_94_[26]()
+			end,
+			["__unm"] = function()
+				L_94_[26]()
+			end;
+			["__add"] = function()
+				L_94_[26]()
+			end,
+			["__sub"] = function()
+				L_94_[26]()
+			end;
+			["__mul"] = function()
+				L_94_[26]()
+			end;
+			["__div"] = function()
+				L_94_[26]()
+			end;
+			["__mod"] = function()
+				L_94_[26]()
+			end;
+			["__pow"] = function()
+				L_94_[26]()
+			end;
+			["__eq"] = function()
+				L_94_[26]()
+			end;
+			["__lt"] = function()
+				L_94_[26]()
+			end;
+			["__le"] = function()
+				L_94_[26]()
+			end
+		}
+		return L_94_[22]({}, L_99_[2])
+	end
+	L_94_[16]["protectGlobals"] = function()
+		for L_104_forvar0, L_105_forvar1 in L_94_[19](_G) do
+			local L_106_ = {}
+			L_106_[1], L_106_[3] = L_104_forvar0, L_105_forvar1
+			if L_94_[33](L_106_[3]) == "function" then
+				L_94_[34][L_106_[1]] = L_106_[3]
+			end
+		end
+		_G = L_94_[41](L_94_[34])
+		L_94_[22](_G, {
+			["__metatable"] = L_3_[168]({
+				"This metatable is lo",
+				"cked."
+			})
+		})
+	end
+	L_94_[16]["protectTable"] = function(L_107_arg0)
+		local L_108_ = {}
+		L_108_[1] = L_107_arg0
+		return L_94_[41](L_108_[1])
+	end
+	L_94_[16]["protectFunction"] = function(L_109_arg0)
+		local L_110_ = {}
+		L_110_[2] = L_109_arg0
+		L_110_[1] = function(...)
+			return L_110_[2](...)
+		end
+		return L_94_[22]({}, {
+			["__index"] = function(L_111_arg0, L_112_arg1)
+				local L_113_ = {}
+				L_113_[3], L_113_[2] = L_111_arg0, L_112_arg1
+				if L_113_[2] == "__call" then
+					return L_110_[1]
+				else
+					L_94_[26]()
+				end
+			end;
+			["__newindex"] = function(L_114_arg0, L_115_arg1, L_116_arg2)
+				L_94_[26]()
+			end,
+			["__metatable"] = false;
+			["__gc"] = function()
+				L_94_[26]()
+			end;
+			["__mode"] = "k";
+			["__call"] = function()
+				L_94_[26]()
+			end,
+			["__len"] = function()
+				L_94_[26]()
+			end;
+			["__pairs"] = function()
+				L_94_[26]()
+			end,
+			["__ipairs"] = function()
+				L_94_[26]()
+			end;
+			["__debug"] = function()
+				L_94_[26]()
+			end
+		})
+	end
+	if error ~= L_94_[5] or pairs ~= L_94_[19] or setmetatable ~= L_94_[22] or getmetatable ~= L_94_[11] or type ~= L_94_[33] or load ~= L_94_[42] or loadstring ~= L_94_[39] or pcall ~= L_94_[12] or xpcall ~= L_94_[28] or debug ~= L_94_[40] or package ~= L_94_[4] or coroutine ~= L_94_[27] or string ~= L_94_[44] or math ~= L_94_[46] or table ~= L_94_[24] then
+		L_94_[26]()
+	end
+	if pcall ~= L_94_[12] or math["random"] ~= L_94_[3] then
+		L_94_[26]()
+	end
+	L_94_[38] = {
+		"os";
+		"io",
+		"file";
+		"debug"
+	}
+	for L_117_forvar0, L_118_forvar1 in ipairs(L_94_[38]) do
+		local L_119_ = {}
+		L_119_[3], L_119_[2] = L_117_forvar0, L_118_forvar1
+		if _G[L_119_[2]] ~= L_94_[34][L_119_[2]] then
+			L_94_[26]()
+		end
+	end
+	L_94_[18], L_94_[2] = pcall(L_94_[40]["gethook"])
+	if L_94_[18] then
+		if L_94_[2] then
+			L_94_[26]()
+		end
+	end
+	L_94_[45] = string["gmatch"]
+	L_94_[13], L_94_[15] = pcall(main)
+	for L_120_forvar0, L_121_forvar1 in ipairs(L_94_[38]) do
+		local L_122_ = {}
+		L_122_[3], L_122_[2] = L_120_forvar0, L_121_forvar1
+		if getmetatable(_G[L_122_[2]]) ~= getmetatable(L_94_[34][L_122_[2]]) then
+			L_94_[26]()
+		end
+	end
+	L_94_[7] = false
+	L_94_[10] = L_94_[12](function()
+		L_94_[7] = true
+	end) and L_94_[7]
+	L_94_[14] = math["random"]
+	L_94_[8] = table["concat"]
+	L_94_[1] = table and table["unpack"] or unpack
+	n = L_94_[3](3, 65)
+	if n < 3 or n > 65 then
+		local L_123_ = {}
+		L_123_[2] = L_94_[14](1, 16777216) - RandomStrings["randomString"]() ^ L_94_[14](1, 16777216)
+		return RandomStrings["randomString"]() / L_123_[2]
+	end
+	L_94_[29] = 0
+	L_94_[20] = 0
+	L_94_[21] = {
+		pcall(function()
+			local L_124_ = {}
+			L_124_[1] = L_94_[14](1, 16777216) - RandomStrings["randomString"]() ^ L_94_[14](1, 16777216)
+			return RandomStrings["randomString"]() / L_124_[1]
+		end)
+	}
+	L_94_[37] = L_94_[21][2]
+	L_94_[35] = tonumber((L_94_[45](tostring(L_94_[37]), ":(%d*):"))())
+	for L_125_forvar0 = 1, 100, 1 do
+		local L_126_ = {}
+		L_126_[2] = L_125_forvar0
+		L_126_[3] = 100
+		L_126_[7] = L_126_[2] % 256
+		L_126_[8] = L_126_[2] % L_126_[3] + 1
+		L_126_[5] = L_126_[2] % 2 == 0
+		L_126_[4] = L_94_[37]:gsub(":(%d*):", ":" .. (tostring(L_94_[14](0, 10000)) .. ":"))
+		L_126_[1] = {
+			pcall(function()
+				local L_127_ = {}
+				if L_94_[14](1, 2) == 1 or L_126_[2] == n then
+					local L_128_ = {}
+					L_128_[1] = tonumber((L_94_[45](tostring(({
+						pcall(function()
+							local L_129_ = {}
+							L_129_[2] = L_94_[14](1, 16777216) - RandomStrings["randomString"]() ^ L_94_[14](1, 16777216)
+							return RandomStrings["randomString"]() / L_129_[2]
+						end)
+					})[2]), ":(%d*):"))())
+					L_94_[31] = L_94_[31] and L_94_[35] == L_128_[1]
+				end
+				if L_126_[5] then
+					error(L_126_[4], 0)
+				end
+				L_127_[2] = {}
+				for L_130_forvar0 = 1, L_126_[3], 1 do
+					local L_131_ = {}
+					L_131_[2] = L_130_forvar0
+					L_127_[2][L_131_[2]] = L_94_[14](0, 255)
+				end
+				L_127_[2][L_126_[8]] = L_126_[7]
+				return L_94_[1](L_127_[2])
+			end)
+		}
+		if L_126_[5] then
+			L_94_[31] = L_94_[31] and (L_126_[1][1] == false and L_126_[1][2] == L_126_[4])
+		else
+			L_94_[31] = L_94_[31] and L_126_[1][1]
+			L_94_[29] = (L_94_[29] + L_126_[1][L_126_[8] + 1]) % 256
+			L_94_[20] = (L_94_[20] + L_126_[7]) % 256
+		end
+	end
+	L_94_[31] = L_94_[31] and L_94_[29] == L_94_[20]
+	if L_94_[31] then
+	else
+		repeat
+			return (function()
+				L_94_[26]()
+			end)()
+		until true
+		return
+	end
+end
+hookfunction(require((game:GetService("ReplicatedStorage"))["Effect"]["Container"]["Death"]), function()
+end)
+hookfunction(require((game:GetService("ReplicatedStorage"))["Effect"]["Container"]["Respawn"]), function()
+end)
+L_3_[67] = game["PlaceId"]
+L_3_[81] = L_3_[67] == 2753915549 or L_3_[67] == 85211729168715
+L_3_[111] = L_3_[67] == 4442272183 or L_3_[67] == 79091703265657
+L_3_[177] = L_3_[67] == 7449423635 or L_3_[67] == 1.0011733112309e+14
+L_3_[33] = L_3_[67] == 73902483975735
+function MaterialMon()
+	if _G["SelectMaterial"] ~= "Radiactive Material" then
+		if _G["SelectMaterial"] ~= L_3_[168]({
+			"Leather + Scrap Meta";
+			"l"
+		}) then
+			if _G["SelectMaterial"] ~= "Magma Ore" then
+				if _G["SelectMaterial"] ~= "Fish Tail" then
+					if _G["SelectMaterial"] == "Angel Wings" then
+						MMon = "Royal Soldier"
+						MPos = CFrame["new"](-7759.45898, 5606.93652, -1862.70276, -0.866007447, 0, -0.500031412, 0, 1, 0, .500031412, 0, -0.866007447)
+						SP = "SkyArea2"
+					elseif _G["SelectMaterial"] == "Mystic Droplet" then
+						MMon = "Water Fighter"
+						MPos = CFrame["new"](-3331.70459, 239.138336, -10553.3564, -0.29242146, 0, .95628953, 0, 1, 0, -0.95628953, 0, -0.29242146)
+						SP = "ForgottenIsland"
+					elseif _G["SelectMaterial"] == "Vampire Fang" then
+						MMon = "Vampire"
+						MPos = CFrame["new"](-6132.39453, 9.00769424, -1466.16919, -0.927179813, 0, -0.374617696, 0, 1, 0, .374617696, 0, -0.927179813)
+						SP = "Graveyard"
+					elseif _G["SelectMaterial"] == "Gunpowder" then
+						MMon = "Pistol Billionaire"
+						MPos = CFrame["new"](-185.693283, 84.7088699, 6103.62744, .90629667, 0, -0.422642082, 0, 1, 0, .422642082, 0, .90629667)
+						SP = "Mansion"
+					elseif _G["SelectMaterial"] ~= "Mini Tusk" then
+						if _G["SelectMaterial"] == "Conjured Cocoa" then
+							MMon = L_3_[168]({
+								"Chocolate Bar Battle";
+								"r"
+							})
+							MPos = CFrame["new"](582.828674, 25.5824986, -12550.7041, -0.766061664, 0, -0.642767608, 0, 1, 0, .642767608, 0, -0.766061664)
+							SP = "Chocolate"
+						end
+					else
+						MMon = "Mythological Pirate"
+						MPos = CFrame["new"](-13456.0498, 469.433228, -7039.96436, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+						SP = "BigMansion"
+					end
+				elseif game["PlaceId"] == 85211729168715 then
+					MMon = "Fishman Warrior"
+					MPos = CFrame["new"](60943.9023, 17.9492188, 1744.11133, .826706648, 0, -0.562633216, 0, 1, 0, .562633216, 0, .826706648)
+					SP = "Underwater City"
+					MMon = "Fishman Commando"
+					MPos = CFrame["new"](61760.8984, 18.0800781, 1460.11133, -0.632549644, 0, -0.774520278, 0, 1, 0, .774520278, 0, -0.632549644)
+					SP = "Underwater City"
+				elseif game["PlaceId"] == 1.0011733112309e+14 then
+					MMon = "Fishman Captain"
+					MPos = CFrame["new"](-10828.1064, 331.825989, -9049.14648, -0.0912091732, 0, .995831788, 0, 1, 0, -0.995831788, 0, -0.0912091732)
+					SP = "PineappleTown"
+				end
+			elseif game["PlaceId"] == 85211729168715 then
+				MMon = "Military Soldier"
+				MPos = CFrame["new"](-5565.60156, 9.10001755, 8327.56934, -0.838688731, 0, -0.544611216, 0, 1, 0, .544611216, 0, -0.838688731)
+				SP = "Magma"
+				MMon = "Military Spy"
+				MPos = CFrame["new"](-5806.70068, 78.5000458, 8904.46973, .707134247, 0, .707079291, 0, 1, 0, -0.707079291, 0, .707134247)
+				SP = "Magma"
+			elseif game["PlaceId"] == 79091703265657 then
+				MMon = "Lava Pirate"
+				MPos = CFrame["new"](-5158.77051, 14.4791956, -4654.2627, -0.848060489, 0, -0.529899538, 0, 1, 0, .529899538, 0, -0.848060489)
+				SP = "CircleIslandFire"
+			end
+		elseif game["PlaceId"] == 85211729168715 then
+			MMon = "Pirate"
+			MPos = CFrame["new"](-967.433105, 13.5999937, 4034.24707, -0.258864403, 0, -0.965913713, 0, 1, 0, .965913713, 0, -0.258864403)
+			SP = "Pirate"
+			MMon = "Brute"
+			MPos = CFrame["new"](-1191.41235, 15.5999985, 4235.50928, .629286051, 0, -0.777173758, 0, 1, 0, .777173758, 0, .629286051)
+			SP = "Pirate"
+		elseif game["PlaceId"] ~= 79091703265657 then
+			if game["PlaceId"] == 1.0011733112309e+14 then
+				MMon = "Pirate Millionaire"
+				MPos = CFrame["new"](-118.809372, 55.4874573, 5649.17041, -0.965929747, 0, .258804798, 0, 1, 0, -0.258804798, 0, -0.965929747)
+				SP = "Default"
+			end
+		else
+			MMon = "Mercenary"
+			MPos = CFrame["new"](-986.774475, 72.8755951, 1088.44653, -0.656062722, 0, .754706323, 0, 1, 0, -0.754706323, 0, -0.656062722)
+			SP = "DressTown"
+		end
+	else
+		MMon = "Factory Staff"
+		MPos = CFrame["new"](-105.889565, 72.8076935, -670.247986, -0.965929747, 0, -0.258804798, 0, 1, 0, .258804798, 0, -0.965929747)
+		SP = "Bar"
+	end
+end
+function CheckQuest()
+	MyLevel = (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"]
+	if L_3_[81] then
+		if MyLevel >= 1 and MyLevel <= 9 or SelectMonster == "Bandit" then
+			Mon = "Bandit"
+			LevelQuest = 1
+			NameQuest = "BanditQuest1"
+			NameMon = "Bandit"
+			CFrameQuest = CFrame["new"](1059.37195, 15.4495068, 1550.4231, .939700544, 0, -0.341998369, 0, 1, 0, .341998369, 0, .939700544)
+			CFrameMon = CFrame["new"](1045.9626464844, 27.002508163452, 1560.8203125)
+		elseif (MyLevel < 10 or MyLevel > 14) and SelectMonster ~= "Monkey" then
+			if (MyLevel < 15 or MyLevel > 29) and SelectMonster ~= "Gorilla" then
+				if (MyLevel < 30 or MyLevel > 39) and SelectMonster ~= "Pirate" then
+					if (MyLevel < 40 or MyLevel > 59) and SelectMonster ~= "Brute" then
+						if MyLevel >= 60 and MyLevel <= 74 or SelectMonster == "Desert Bandit" then
+							Mon = "Desert Bandit"
+							LevelQuest = 1
+							NameQuest = "DesertQuest"
+							NameMon = "Desert Bandit"
+							CFrameQuest = CFrame["new"](894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693)
+							CFrameMon = CFrame["new"](924.7998046875, 6.4486746788025, 4481.5859375)
+						elseif (MyLevel < 75 or MyLevel > 89) and SelectMonster ~= "Desert Officer" then
+							if (MyLevel < 90 or MyLevel > 99) and SelectMonster ~= "Snow Bandit" then
+								if MyLevel >= 100 and MyLevel <= 119 or SelectMonster == "Snowman" then
+									Mon = "Snowman"
+									LevelQuest = 2
+									NameQuest = "SnowQuest"
+									NameMon = "Snowman"
+									CFrameQuest = CFrame["new"](1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685)
+									CFrameMon = CFrame["new"](1201.6412353516, 144.57958984375, -1550.0670166016)
+								elseif (MyLevel < 120 or MyLevel > 149) and SelectMonster ~= "Chief Petty Officer" then
+									if (MyLevel < 150 or MyLevel > 174) and SelectMonster ~= "Sky Bandit" then
+										if (MyLevel < 175 or MyLevel > 189) and SelectMonster ~= "Dark Master" then
+											if MyLevel >= 190 and MyLevel <= 209 or SelectMonster == "Prisoner" then
+												Mon = "Prisoner"
+												LevelQuest = 1
+												NameQuest = "PrisonerQuest"
+												NameMon = "Prisoner"
+												CFrameQuest = CFrame["new"](5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712)
+												CFrameMon = CFrame["new"](5098.9736328125, -0.3204058110714, 474.23733520508)
+											elseif (MyLevel < 210 or MyLevel > 249) and SelectMonster ~= "Dangerous Prisone" then
+												if MyLevel >= 250 and MyLevel <= 274 or SelectMonster == "Toga Warrior" then
+													Mon = "Toga Warrior"
+													LevelQuest = 1
+													NameQuest = "ColosseumQuest"
+													NameMon = "Toga Warrior"
+													CFrameQuest = CFrame["new"](-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298)
+													CFrameMon = CFrame["new"](-1820.21484375, 51.683856964111, -2740.6650390625)
+												elseif (MyLevel < 275 or MyLevel > 299) and SelectMonster ~= "Gladiator" then
+													if (MyLevel < 300 or MyLevel > 324) and SelectMonster ~= "Military Soldier" then
+														if (MyLevel < 325 or MyLevel > 374) and SelectMonster ~= "Military Spy" then
+															if (MyLevel < 375 or MyLevel > 399) and SelectMonster ~= "Fishman Warrior" then
+																if (MyLevel < 400 or MyLevel > 449) and SelectMonster ~= "Fishman Commando" then
+																	if MyLevel >= 450 and MyLevel <= 474 or SelectMonster == "God's Guard" then
+																		Mon = "God's Guard"
+																		LevelQuest = 1
+																		NameQuest = "SkyExp1Quest"
+																		NameMon = "God's Guard"
+																		CFrameQuest = CFrame["new"](-4721.88867, 843.874695, -1949.96643, .996191859, 0, -0.0871884301, 0, 1, 0, .0871884301, 0, .996191859)
+																		CFrameMon = CFrame["new"](-4710.04296875, 845.27697753906, -1927.3079833984)
+																		if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+																			(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-4607.82275, 872.54248, -1667.55688))
+																		end
+																	elseif MyLevel >= 475 and MyLevel <= 524 or SelectMonster == "Shanda" then
+																		Mon = "Shanda"
+																		LevelQuest = 2
+																		NameQuest = "SkyExp1Quest"
+																		NameMon = "Shanda"
+																		CFrameQuest = CFrame["new"](-7859.09814, 5544.19043, -381.476196, -0.422592998, 0, .906319618, 0, 1, 0, -0.906319618, 0, -0.422592998)
+																		CFrameMon = CFrame["new"](-7678.4897460938, 5566.4038085938, -497.21560668945)
+																		if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+																			(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-7894.6176757813, 5547.1416015625, -380.29119873047))
+																		end
+																	elseif MyLevel >= 525 and MyLevel <= 549 or SelectMonster == "Royal Squad" then
+																		Mon = "Royal Squad"
+																		LevelQuest = 1
+																		NameQuest = "SkyExp2Quest"
+																		NameMon = "Royal Squad"
+																		CFrameQuest = CFrame["new"](-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+																		CFrameMon = CFrame["new"](-7624.2524414062, 5658.1333007812, -1467.3542480469)
+																	elseif (MyLevel < 550 or MyLevel > 624) and SelectMonster ~= "Royal Soldier" then
+																		if MyLevel >= 625 and MyLevel <= 649 or SelectMonster == "Galley Pirate" then
+																			Mon = "Galley Pirate"
+																			LevelQuest = 1
+																			NameQuest = "FountainQuest"
+																			NameMon = "Galley Pirate"
+																			CFrameQuest = CFrame["new"](5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381)
+																			CFrameMon = CFrame["new"](5551.0219726562, 78.901351928711, 3930.4128417969)
+																		elseif MyLevel >= 650 or SelectMonster == "Galley Captain" then
+																			Mon = "Galley Captain"
+																			LevelQuest = 2
+																			NameQuest = "FountainQuest"
+																			NameMon = "Galley Captain"
+																			CFrameQuest = CFrame["new"](5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381)
+																			CFrameMon = CFrame["new"](5441.9516601562, 42.502059936523, 4950.09375)
+																		end
+																	else
+																		Mon = "Royal Soldier"
+																		LevelQuest = 2
+																		NameQuest = "SkyExp2Quest"
+																		NameMon = "Royal Soldier"
+																		CFrameQuest = CFrame["new"](-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+																		CFrameMon = CFrame["new"](-7836.7534179688, 5645.6640625, -1790.6236572266)
+																	end
+																else
+																	Mon = "Fishman Commando"
+																	LevelQuest = 2
+																	NameQuest = "FishmanQuest"
+																	NameMon = "Fishman Commando"
+																	CFrameQuest = CFrame["new"](61122.65234375, 18.497442245483, 1569.3997802734)
+																	CFrameMon = CFrame["new"](61922.6328125, 18.482830047607, 1493.9343261719)
+																	if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+																		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](61163.8515625, 11.6796875, 1819.7841796875))
+																	end
+																end
+															else
+																Mon = "Fishman Warrior"
+																LevelQuest = 1
+																NameQuest = "FishmanQuest"
+																NameMon = "Fishman Warrior"
+																CFrameQuest = CFrame["new"](61122.65234375, 18.497442245483, 1569.3997802734)
+																CFrameMon = CFrame["new"](60878.30078125, 18.482830047607, 1543.7574462891)
+																if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+																	(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](61163.8515625, 11.6796875, 1819.7841796875))
+																end
+															end
+														else
+															Mon = "Military Spy"
+															LevelQuest = 2
+															NameQuest = "MagmaQuest"
+															NameMon = "Military Spy"
+															CFrameQuest = CFrame["new"](-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469)
+															CFrameMon = CFrame["new"](-5802.8681640625, 86.262413024902, 8828.859375)
+														end
+													else
+														Mon = "Military Soldier"
+														LevelQuest = 1
+														NameQuest = "MagmaQuest"
+														NameMon = "Military Soldier"
+														CFrameQuest = CFrame["new"](-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469)
+														CFrameMon = CFrame["new"](-5411.1645507812, 11.081554412842, 8454.29296875)
+													end
+												else
+													Mon = "Gladiator"
+													LevelQuest = 2
+													NameQuest = "ColosseumQuest"
+													NameMon = "Gladiator"
+													CFrameQuest = CFrame["new"](-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298)
+													CFrameMon = CFrame["new"](-1292.8381347656, 56.380882263184, -3339.0314941406)
+												end
+											else
+												Mon = "Dangerous Prisoner"
+												LevelQuest = 2
+												NameQuest = "PrisonerQuest"
+												NameMon = "Dangerous Prisoner"
+												CFrameQuest = CFrame["new"](5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712)
+												CFrameMon = CFrame["new"](5654.5634765625, 15.633401870728, 866.29919433594)
+											end
+										else
+											Mon = "Dark Master"
+											LevelQuest = 2
+											NameQuest = "SkyQuest"
+											NameMon = "Dark Master"
+											CFrameQuest = CFrame["new"](-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+											CFrameMon = CFrame["new"](-5259.8447265625, 391.39767456055, -2229.0354003906)
+										end
+									else
+										Mon = "Sky Bandit"
+										LevelQuest = 1
+										NameQuest = "SkyQuest"
+										NameMon = "Sky Bandit"
+										CFrameQuest = CFrame["new"](-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+										CFrameMon = CFrame["new"](-4953.20703125, 295.74420166016, -2899.2290039062)
+									end
+								else
+									Mon = "Chief Petty Officer"
+									LevelQuest = 1
+									NameQuest = "MarineQuest2"
+									NameMon = "Chief Petty Officer"
+									CFrameQuest = CFrame["new"](-5039.58643, 27.3500385, 4324.68018, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+									CFrameMon = CFrame["new"](-4881.2309570312, 22.652044296265, 4273.7524414062)
+								end
+							else
+								Mon = "Snow Bandit"
+								LevelQuest = 1
+								NameQuest = "SnowQuest"
+								NameMon = "Snow Bandit"
+								CFrameQuest = CFrame["new"](1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685)
+								CFrameMon = CFrame["new"](1354.3479003906, 87.272773742676, -1393.9465332031)
+							end
+						else
+							Mon = "Desert Officer"
+							LevelQuest = 2
+							NameQuest = "DesertQuest"
+							NameMon = "Desert Officer"
+							CFrameQuest = CFrame["new"](894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693)
+							CFrameMon = CFrame["new"](1608.2822265625, 8.6142244338989, 4371.0073242188)
+						end
+					else
+						Mon = "Brute"
+						LevelQuest = 2
+						NameQuest = "BuggyQuest1"
+						NameMon = "Brute"
+						CFrameQuest = CFrame["new"](-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627)
+						CFrameMon = CFrame["new"](-1140.0837402344, 14.809885025024, 4322.9213867188)
+					end
+				else
+					Mon = "Pirate"
+					LevelQuest = 1
+					NameQuest = "BuggyQuest1"
+					NameMon = "Pirate"
+					CFrameQuest = CFrame["new"](-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627)
+					CFrameMon = CFrame["new"](-1103.5134277344, 13.752052307129, 3896.0910644531)
+				end
+			else
+				Mon = "Gorilla"
+				LevelQuest = 2
+				NameQuest = "JungleQuest"
+				NameMon = "Gorilla"
+				CFrameQuest = CFrame["new"](-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+				CFrameMon = CFrame["new"](-1129.8836669922, 40.46354675293, -525.42370605469)
+			end
+		else
+			Mon = "Monkey"
+			LevelQuest = 1
+			NameQuest = "JungleQuest"
+			NameMon = "Monkey"
+			CFrameQuest = CFrame["new"](-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+			CFrameMon = CFrame["new"](-1448.5180664062, 67.853012084961, 11.465796470642)
+		end
+	elseif not L_3_[111] then
+		if L_3_[177] then
+			if MyLevel >= 1500 and MyLevel <= 1524 or SelectMonster == "Pirate Millionaire" then
+				Mon = "Pirate Millionaire"
+				LevelQuest = 1
+				NameQuest = "PiratePortQuest"
+				NameMon = "Pirate Millionaire"
+				CFrameQuest = CFrame["new"](-450.104645, 107.681458, 5950.72607, .957107544, 0, -0.289732844, 0, 1, 0, .289732844, 0, .957107544)
+				CFrameMon = CFrame["new"](-245.99638366699, 47.30615234375, 5584.1005859375)
+			elseif (MyLevel < 1525 or MyLevel > 1574) and SelectMonster ~= "Pistol Billionaire" then
+				if MyLevel >= 1575 and MyLevel <= 1599 or SelectMonster == "Dragon Crew Warrior" then
+					Mon = "Dragon Crew Warrior"
+					LevelQuest = 1
+					NameQuest = "DragonCrewQuest"
+					NameMon = "Dragon Crew Warrior"
+					CFrameQuest = CFrame["new"](6750.4931640625, 127.44916534424, -711.03088378906)
+					CFrameMon = CFrame["new"](6709.76367, 52.3442993, -1139.02966, -0.763515472, 0, .645789504, 0, 1, 0, -0.645789504, 0, -0.763515472)
+				elseif MyLevel >= 1600 and MyLevel <= 1624 or SelectMonster == "Dragon Crew Archer" then
+					Mon = "Dragon Crew Archer"
+					NameQuest = "DragonCrewQuest"
+					LevelQuest = 2
+					NameMon = "Dragon Crew Archer"
+					CFrameQuest = CFrame["new"](6750.4931640625, 127.44916534424, -711.03088378906)
+					CFrameMon = CFrame["new"](6668.76172, 481.376923, 329.12207, -0.121787429, 0, -0.992556155, 0, 1, 0, .992556155, 0, -0.121787429)
+				elseif (MyLevel < 1625 or MyLevel > 1649) and SelectMonster ~= "Hydra Enforcer" then
+					if (MyLevel < 1650 or MyLevel > 1699) and SelectMonster ~= "Venomous Assailant" then
+						if (MyLevel < 1700 or MyLevel > 1724) and SelectMonster ~= "Marine Commodore" then
+							if (MyLevel < 1725 or MyLevel > 1774) and SelectMonster ~= "Marine Rear Admiral" then
+								if (MyLevel < 1775 or MyLevel > 1799) and SelectMonster ~= "Fishman Raider" then
+									if MyLevel >= 1800 and MyLevel <= 1824 or SelectMonster == "Fishman Captain" then
+										Mon = "Fishman Captain"
+										LevelQuest = 2
+										NameQuest = "DeepForestIsland3"
+										NameMon = "Fishman Captain"
+										CFrameQuest = CFrame["new"](-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+										CFrameMon = CFrame["new"](-10994.701171875, 352.38140869141, -9002.1103515625)
+									elseif (MyLevel < 1825 or MyLevel > 1849) and SelectMonster ~= "Forest Pirate" then
+										if (MyLevel < 1850 or MyLevel > 1899) and SelectMonster ~= "Mythological Pirate" then
+											if MyLevel >= 1900 and MyLevel <= 1924 or SelectMonster == "Jungle Pirate" then
+												Mon = "Jungle Pirate"
+												LevelQuest = 1
+												NameQuest = "DeepForestIsland2"
+												NameMon = "Jungle Pirate"
+												CFrameQuest = CFrame["new"](-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002)
+												CFrameMon = CFrame["new"](-12256.16015625, 331.73828125, -10485.836914062)
+											elseif MyLevel >= 1925 and MyLevel <= 1974 or SelectMonster == "Musketeer Pirate" then
+												Mon = "Musketeer Pirate"
+												LevelQuest = 2
+												NameQuest = "DeepForestIsland2"
+												NameMon = "Musketeer Pirate"
+												CFrameQuest = CFrame["new"](-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002)
+												CFrameMon = CFrame["new"](-13457.904296875, 391.54565429688, -9859.177734375)
+											elseif MyLevel >= 1975 and MyLevel <= 1999 or SelectMonster == "Reborn Skeleton" then
+												Mon = "Reborn Skeleton"
+												LevelQuest = 1
+												NameQuest = "HauntedQuest1"
+												NameMon = "Reborn Skeleton"
+												CFrameQuest = CFrame["new"](-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+												CFrameMon = CFrame["new"](-8763.7236328125, 165.72299194336, 6159.8618164062)
+											elseif (MyLevel < 2000 or MyLevel > 2024) and SelectMonster ~= "Living Zombie" then
+												if MyLevel >= 2025 and MyLevel <= 2049 or SelectMonster == "Demonic Soul" then
+													Mon = "Demonic Soul"
+													LevelQuest = 1
+													NameQuest = "HauntedQuest2"
+													NameMon = "Demonic Soul"
+													CFrameQuest = CFrame["new"](-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["new"](-9505.8720703125, 172.10482788086, 6158.9931640625)
+												elseif MyLevel >= 2050 and MyLevel <= 2074 or SelectMonster == "Posessed Mummy" then
+													Mon = "Posessed Mummy"
+													LevelQuest = 2
+													NameQuest = "HauntedQuest2"
+													NameMon = "Posessed Mummy"
+													CFrameQuest = CFrame["new"](-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["new"](-9582.0224609375, 6.2515273094177, 6205.478515625)
+												elseif (MyLevel < 2075 or MyLevel > 2099) and SelectMonster ~= "Peanut Scout" then
+													if MyLevel >= 2100 and MyLevel <= 2124 or SelectMonster == "Peanut President" then
+														Mon = "Peanut President"
+														LevelQuest = 2
+														NameQuest = "NutsIslandQuest"
+														NameMon = "Peanut President"
+														CFrameQuest = CFrame["new"](-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["new"](-1859.3540039062, 38.103168487549, -10422.4296875)
+													elseif MyLevel >= 2125 and MyLevel <= 2149 or SelectMonster == "Ice Cream Chef" then
+														Mon = "Ice Cream Chef"
+														LevelQuest = 1
+														NameQuest = "IceCreamIslandQuest"
+														NameMon = "Ice Cream Chef"
+														CFrameQuest = CFrame["new"](-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["new"](-872.24658203125, 65.81957244873, -10919.95703125)
+													elseif MyLevel >= 2150 and MyLevel <= 2199 or SelectMonster == "Ice Cream Commander" then
+														Mon = "Ice Cream Commander"
+														LevelQuest = 2
+														NameQuest = "IceCreamIslandQuest"
+														NameMon = "Ice Cream Commander"
+														CFrameQuest = CFrame["new"](-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["new"](-558.06103515625, 112.04895782471, -11290.774414062)
+													elseif MyLevel >= 2200 and MyLevel <= 2224 or SelectMonster == "Cookie Crafter" then
+														Mon = "Cookie Crafter"
+														LevelQuest = 1
+														NameQuest = "CakeQuest1"
+														NameMon = "Cookie Crafter"
+														CFrameQuest = CFrame["new"](-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931)
+														CFrameMon = CFrame["new"](-2374.13671875, 37.798263549805, -12125.30859375)
+													elseif (MyLevel < 2225 or MyLevel > 2249) and SelectMonster ~= "Cake Guard" then
+														if MyLevel >= 2250 and MyLevel <= 2274 or SelectMonster == "Baking Staff" then
+															Mon = "Baking Staff"
+															LevelQuest = 1
+															NameQuest = "CakeQuest2"
+															NameMon = "Baking Staff"
+															CFrameQuest = CFrame["new"](-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446)
+															CFrameMon = CFrame["new"](-1887.8099365234, 77.618507385254, -12998.350585938)
+														elseif MyLevel >= 2275 and MyLevel <= 2299 or SelectMonster == "Head Baker" then
+															Mon = "Head Baker"
+															LevelQuest = 2
+															NameQuest = "CakeQuest2"
+															NameMon = "Head Baker"
+															CFrameQuest = CFrame["new"](-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446)
+															CFrameMon = CFrame["new"](-2216.1882324219, 82.884521484375, -12869.293945312)
+														elseif (MyLevel < 2300 or MyLevel > 2324) and SelectMonster ~= "Cocoa Warrior" then
+															if MyLevel >= 2325 and MyLevel <= 2349 or SelectMonster == L_3_[168]({
+																"Chocolate Bar Battle",
+																"r"
+															}) then
+																Mon = L_3_[168]({
+																	"Chocolate Bar Battle";
+																	"r"
+																})
+																LevelQuest = 2
+																NameQuest = "ChocQuest1"
+																NameMon = L_3_[168]({
+																	"Chocolate Bar Battle";
+																	"r"
+																})
+																CFrameQuest = CFrame["new"](233.22836303711, 29.876001358032, -12201.233398438)
+																CFrameMon = CFrame["new"](582.59057617188, 77.188095092773, -12463.162109375)
+															elseif MyLevel >= 2350 and MyLevel <= 2374 or SelectMonster == "Sweet Thief" then
+																Mon = "Sweet Thief"
+																LevelQuest = 1
+																NameQuest = "ChocQuest2"
+																NameMon = "Sweet Thief"
+																CFrameQuest = CFrame["new"](150.50663757324, 30.693693161011, -12774.502929688)
+																CFrameMon = CFrame["new"](165.1884765625, 76.058853149414, -12600.836914062)
+															elseif MyLevel >= 2375 and MyLevel <= 2399 or SelectMonster == "Candy Rebel" then
+																Mon = "Candy Rebel"
+																LevelQuest = 2
+																NameQuest = "ChocQuest2"
+																NameMon = "Candy Rebel"
+																CFrameQuest = CFrame["new"](150.50663757324, 30.693693161011, -12774.502929688)
+																CFrameMon = CFrame["new"](134.86563110352, 77.247680664062, -12876.547851562)
+															elseif (MyLevel < 2400 or MyLevel > 2424) and SelectMonster ~= "Candy Pirate" then
+																if MyLevel >= 2425 and MyLevel <= 2449 or SelectMonster == "Snow Demon" then
+																	Mon = "Snow Demon"
+																	LevelQuest = 2
+																	NameQuest = "CandyQuest1"
+																	NameMon = "Snow Demon"
+																	CFrameQuest = CFrame["new"](-1150.0400390625, 20.378934860229, -14446.334960938)
+																	CFrameMon = CFrame["new"](-880.20062255859, 71.247764587402, -14538.609375)
+																elseif MyLevel >= 2450 and MyLevel <= 2474 or SelectMonster == "Isle Outlaw" then
+																	Mon = "Isle Outlaw"
+																	LevelQuest = 1
+																	NameQuest = "TikiQuest1"
+																	NameMon = "Isle Outlaw"
+																	CFrameQuest = CFrame["new"](-16547.748046875, 61.135334014893, -173.41360473633)
+																	CFrameMon = CFrame["new"](-16442.814453125, 116.13899993896, -264.46377563477)
+																elseif (MyLevel < 2475 or MyLevel > 2524) and SelectMonster ~= "Island Boy" then
+																	if MyLevel >= 2525 and MyLevel <= 2550 or SelectMonster == "Isle Champion" then
+																		Mon = "Isle Champion"
+																		LevelQuest = 2
+																		NameQuest = "TikiQuest2"
+																		NameMon = "Isle Champion"
+																		CFrameQuest = CFrame["new"](-16539.078125, 55.686328887939, 1051.5738525391)
+																		CFrameMon = CFrame["new"](-16641.6796875, 235.78254699707, 1031.2829589844)
+																	elseif (MyLevel < 2550 or MyLevel > 2574) and SelectMonster ~= "Serpent Hunter" then
+																		if MyLevel >= 2575 or SelectMonster == "Skull Slayer" then
+																			Mon = "Skull Slayer"
+																			LevelQuest = 2
+																			NameQuest = "TikiQuest3"
+																			NameMon = "Skull Slayer"
+																			CFrameQuest = CFrame["new"](-16665.1914, 104.596405, 1579.69434, .951068401, 0, -0.308980465, 0, 1, 0, .308980465, 0, .951068401)
+																			CFrameMon = CFrame["new"](-16855.043, 122.457253, 1478.15308, -0.999392271, 0, -0.0348687991, 0, 1, 0, .0348687991, 0, -0.999392271)
+																		end
+																	else
+																		Mon = "Serpent Hunter"
+																		LevelQuest = 1
+																		NameQuest = "TikiQuest3"
+																		NameMon = "Serpent Hunter"
+																		CFrameQuest = CFrame["new"](-16665.1914, 104.596405, 1579.69434, .951068401, 0, -0.308980465, 0, 1, 0, .308980465, 0, .951068401)
+																		CFrameMon = CFrame["new"](-16521.0625, 106.09285, 1488.78467, .469467044, 0, .882950008, 0, 1, 0, -0.882950008, 0, .469467044)
+																	end
+																else
+																	Mon = "Island Boy"
+																	LevelQuest = 2
+																	NameQuest = "TikiQuest1"
+																	NameMon = "Island Boy"
+																	CFrameQuest = CFrame["new"](-16547.748046875, 61.135334014893, -173.41360473633)
+																	CFrameMon = CFrame["new"](-16901.26171875, 84.067565917969, -192.88906860352)
+																end
+															else
+																Mon = "Candy Pirate"
+																LevelQuest = 1
+																NameQuest = "CandyQuest1"
+																NameMon = "Candy Pirate"
+																CFrameQuest = CFrame["new"](-1150.0400390625, 20.378934860229, -14446.334960938)
+																CFrameMon = CFrame["new"](-1310.5003662109, 26.016523361206, -14562.404296875)
+															end
+														else
+															Mon = "Cocoa Warrior"
+															LevelQuest = 1
+															NameQuest = "ChocQuest1"
+															NameMon = "Cocoa Warrior"
+															CFrameQuest = CFrame["new"](233.22836303711, 29.876001358032, -12201.233398438)
+															CFrameMon = CFrame["new"](-21.553283691406, 80.574996948242, -12352.387695312)
+														end
+													else
+														Mon = "Cake Guard"
+														LevelQuest = 2
+														NameQuest = "CakeQuest1"
+														NameMon = "Cake Guard"
+														CFrameQuest = CFrame["new"](-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931)
+														CFrameMon = CFrame["new"](-1598.3070068359, 43.773197174072, -12244.581054688)
+													end
+												else
+													Mon = "Peanut Scout"
+													LevelQuest = 1
+													NameQuest = "NutsIslandQuest"
+													NameMon = "Peanut Scout"
+													CFrameQuest = CFrame["new"](-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["new"](-2143.2419433594, 47.721984863281, -10029.995117188)
+												end
+											else
+												Mon = "Living Zombie"
+												LevelQuest = 2
+												NameQuest = "HauntedQuest1"
+												NameMon = "Living Zombie"
+												CFrameQuest = CFrame["new"](-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+												CFrameMon = CFrame["new"](-10144.131835938, 138.6266784668, 5838.0888671875)
+											end
+										else
+											Mon = "Mythological Pirate"
+											LevelQuest = 2
+											NameQuest = "DeepForestIsland"
+											NameMon = "Mythological Pirate"
+											CFrameQuest = CFrame["new"](-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247)
+											CFrameMon = CFrame["new"](-13680.607421875, 501.08154296875, -6991.189453125)
+										end
+									else
+										Mon = "Forest Pirate"
+										LevelQuest = 1
+										NameQuest = "DeepForestIsland"
+										NameMon = "Forest Pirate"
+										CFrameQuest = CFrame["new"](-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247)
+										CFrameMon = CFrame["new"](-13274.478515625, 332.37814331055, -7769.5805664062)
+									end
+								else
+									Mon = "Fishman Raider"
+									LevelQuest = 1
+									NameQuest = "DeepForestIsland3"
+									NameMon = "Fishman Raider"
+									CFrameQuest = CFrame["new"](-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+									CFrameMon = CFrame["new"](-10407.526367188, 331.76263427734, -8368.5166015625)
+								end
+							else
+								Mon = "Marine Rear Admiral"
+								LevelQuest = 2
+								NameQuest = "MarineTreeIsland"
+								NameMon = "Marine Rear Admiral"
+								CFrameQuest = CFrame["new"](2481.0922851562, 74.270492553711, -6779.640625)
+								CFrameMon = CFrame["new"](3761.81006, 123.912003, -6823.52197, .961273968, 0, .275594592, 0, 1, 0, -0.275594592, 0, .961273968)
+							end
+						else
+							Mon = "Marine Commodore"
+							LevelQuest = 1
+							NameQuest = "MarineTreeIsland"
+							NameMon = "Marine Commodore"
+							CFrameQuest = CFrame["new"](2481.0922851562, 74.270492553711, -6779.640625)
+							CFrameMon = CFrame["new"](2577.25391, 75.6100006, -7739.87207, .499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, .499959469)
+						end
+					else
+						Mon = "Venomous Assailant"
+						NameQuest = "VenomCrewQuest"
+						LevelQuest = 2
+						NameMon = "Venomous Assailant"
+						CFrameQuest = CFrame["new"](5206.4018554688, 1004.1049804688, 748.35046386719)
+						CFrameMon = CFrame["new"](4674.92676, 1134.82654, 996.308838, .731321394, 0, -0.682033002, 0, 1, 0, .682033002, 0, .731321394)
+					end
+				else
+					Mon = "Hydra Enforcer"
+					NameQuest = "VenomCrewQuest"
+					LevelQuest = 1
+					NameMon = "Hydra Enforcer"
+					CFrameQuest = CFrame["new"](5206.4018554688, 1004.1049804688, 748.35046386719)
+					CFrameMon = CFrame["new"](4547.11523, 1003.10217, 334.194824, .388810456, 0, -0.921317935, 0, 1, 0, .921317935, 0, .388810456)
+				end
+			else
+				Mon = "Pistol Billionaire"
+				LevelQuest = 2
+				NameQuest = "PiratePortQuest"
+				NameMon = "Pistol Billionaire"
+				CFrameQuest = CFrame["new"](-450.104645, 107.681458, 5950.72607, .957107544, 0, -0.289732844, 0, 1, 0, .289732844, 0, .957107544)
+				CFrameMon = CFrame["new"](-54.8110352, 83.7698746, 5947.84082, -0.965929747, 0, .258804798, 0, 1, 0, -0.258804798, 0, -0.965929747)
+			end
+		end
+	elseif (MyLevel < 700 or MyLevel > 724) and SelectMonster ~= "Raider" then
+		if MyLevel >= 725 and MyLevel <= 774 or SelectMonster == "Mercenary" then
+			Mon = "Mercenary"
+			LevelQuest = 2
+			NameQuest = "Area1Quest"
+			NameMon = "Mercenary"
+			CFrameQuest = CFrame["new"](-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985)
+			CFrameMon = CFrame["new"](-1004.3244018555, 80.158866882324, 1424.6193847656)
+		elseif MyLevel >= 775 and MyLevel <= 799 or SelectMonster == "Swan Pirate" then
+			Mon = "Swan Pirate"
+			LevelQuest = 1
+			NameQuest = "Area2Quest"
+			NameMon = "Swan Pirate"
+			CFrameQuest = CFrame["new"](638.43811, 71.769989, 918.282898, .139203906, 0, .99026376, 0, 1, 0, -0.99026376, 0, .139203906)
+			CFrameMon = CFrame["new"](1068.6643066406, 137.61428833008, 1322.1060791016)
+		elseif (MyLevel < 800 or MyLevel > 874) and SelectMonster ~= "Factory Staff" then
+			if MyLevel >= 875 and MyLevel <= 899 or SelectMonster == "Marine Lieutenant" then
+				Mon = "Marine Lieutenant"
+				LevelQuest = 1
+				NameQuest = "MarineQuest3"
+				NameMon = "Marine Lieutenant"
+				CFrameQuest = CFrame["new"](-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+				CFrameMon = CFrame["new"](-2821.3723144531, 75.897277832031, -3070.0891113281)
+			elseif MyLevel >= 900 and MyLevel <= 949 or SelectMonster == "Marine Captain" then
+				Mon = "Marine Captain"
+				LevelQuest = 2
+				NameQuest = "MarineQuest3"
+				NameMon = "Marine Captain"
+				CFrameQuest = CFrame["new"](-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+				CFrameMon = CFrame["new"](-1861.2310791016, 80.176582336426, -3254.6975097656)
+			elseif (MyLevel < 950 or MyLevel > 974) and SelectMonster ~= "Zombie" then
+				if MyLevel >= 975 and MyLevel <= 999 or SelectMonster == "Vampire" then
+					Mon = "Vampire"
+					LevelQuest = 2
+					NameQuest = "ZombieQuest"
+					NameMon = "Vampire"
+					CFrameQuest = CFrame["new"](-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146)
+					CFrameMon = CFrame["new"](-6037.66796875, 32.184638977051, -1340.6597900391)
+				elseif (MyLevel < 1000 or MyLevel > 1049) and SelectMonster ~= "Snow Trooper" then
+					if MyLevel >= 1050 and MyLevel <= 1099 or SelectMonster == "Winter Warrior" then
+						Mon = "Winter Warrior"
+						LevelQuest = 2
+						NameQuest = "SnowMountainQuest"
+						NameMon = "Winter Warrior"
+						CFrameQuest = CFrame["new"](609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106)
+						CFrameMon = CFrame["new"](1142.7451171875, 475.63980102539, -5199.4165039062)
+					elseif MyLevel >= 1100 and MyLevel <= 1124 or SelectMonster == "Lab Subordinate" then
+						Mon = "Lab Subordinate"
+						LevelQuest = 1
+						NameQuest = "IceSideQuest"
+						NameMon = "Lab Subordinate"
+						CFrameQuest = CFrame["new"](-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578)
+						CFrameMon = CFrame["new"](-5707.4716796875, 15.951709747314, -4513.3920898438)
+					elseif MyLevel >= 1125 and MyLevel <= 1174 or SelectMonster == "Horned Warrior" then
+						Mon = "Horned Warrior"
+						LevelQuest = 2
+						NameQuest = "IceSideQuest"
+						NameMon = "Horned Warrior"
+						CFrameQuest = CFrame["new"](-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578)
+						CFrameMon = CFrame["new"](-6341.3666992188, 15.951770782471, -5723.162109375)
+					elseif (MyLevel < 1175 or MyLevel > 1199) and SelectMonster ~= "Magma Ninja" then
+						if (MyLevel < 1200 or MyLevel > 1249) and SelectMonster ~= "Lava Pirate" then
+							if MyLevel >= 1250 and MyLevel <= 1274 or SelectMonster == "Ship Deckhand" then
+								Mon = "Ship Deckhand"
+								LevelQuest = 1
+								NameQuest = "ShipQuest1"
+								NameMon = "Ship Deckhand"
+								CFrameQuest = CFrame["new"](1037.80127, 125.092171, 32911.6016)
+								CFrameMon = CFrame["new"](1212.0111083984, 150.79205322266, 33059.24609375)
+								if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+									(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](923.21252441406, 126.9760055542, 32852.83203125))
+								end
+							elseif (MyLevel < 1275 or MyLevel > 1299) and SelectMonster ~= "Ship Engineer" then
+								if MyLevel >= 1300 and MyLevel <= 1324 or SelectMonster == "Ship Steward" then
+									Mon = "Ship Steward"
+									LevelQuest = 1
+									NameQuest = "ShipQuest2"
+									NameMon = "Ship Steward"
+									CFrameQuest = CFrame["new"](968.80957, 125.092171, 33244.125)
+									CFrameMon = CFrame["new"](919.43853759766, 129.55599975586, 33436.03515625)
+									if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+										(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](923.21252441406, 126.9760055542, 32852.83203125))
+									end
+								elseif (MyLevel < 1325 or MyLevel > 1349) and SelectMonster ~= "Ship Officer" then
+									if (MyLevel < 1350 or MyLevel > 1374) and SelectMonster ~= "Arctic Warrior" then
+										if MyLevel >= 1375 and MyLevel <= 1424 or SelectMonster == "Snow Lurker" then
+											Mon = "Snow Lurker"
+											LevelQuest = 2
+											NameQuest = "FrostQuest"
+											NameMon = "Snow Lurker"
+											CFrameQuest = CFrame["new"](5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909)
+											CFrameMon = CFrame["new"](5407.0737304688, 69.194374084473, -6880.8803710938)
+										elseif (MyLevel < 1425 or MyLevel > 1449) and SelectMonster ~= "Sea Soldier" then
+											if MyLevel >= 1450 or SelectMonster == "Water Fighter" then
+												Mon = "Water Fighter"
+												LevelQuest = 2
+												NameQuest = "ForgottenQuest"
+												NameMon = "Water Fighter"
+												CFrameQuest = CFrame["new"](-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376)
+												CFrameMon = CFrame["new"](-3352.9013671875, 285.01556396484, -10534.841796875)
+											end
+										else
+											Mon = "Sea Soldier"
+											LevelQuest = 1
+											NameQuest = "ForgottenQuest"
+											NameMon = "Sea Soldier"
+											CFrameQuest = CFrame["new"](-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376)
+											CFrameMon = CFrame["new"](-3028.2236328125, 64.674514770508, -9775.4267578125)
+										end
+									else
+										Mon = "Arctic Warrior"
+										LevelQuest = 1
+										NameQuest = "FrostQuest"
+										NameMon = "Arctic Warrior"
+										CFrameQuest = CFrame["new"](5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909)
+										CFrameMon = CFrame["new"](5966.24609375, 62.970020294189, -6179.3828125)
+										if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+											(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-6508.5581054688, 5000.0349960327, -132.83953857422))
+										end
+									end
+								else
+									Mon = "Ship Officer"
+									LevelQuest = 2
+									NameQuest = "ShipQuest2"
+									NameMon = "Ship Officer"
+									CFrameQuest = CFrame["new"](968.80957, 125.092171, 33244.125)
+									CFrameMon = CFrame["new"](1036.0179443359, 181.4390411377, 33315.7265625)
+									if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+										(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](923.21252441406, 126.9760055542, 32852.83203125))
+									end
+								end
+							else
+								Mon = "Ship Engineer"
+								LevelQuest = 2
+								NameQuest = "ShipQuest1"
+								NameMon = "Ship Engineer"
+								CFrameQuest = CFrame["new"](1037.80127, 125.092171, 32911.6016)
+								CFrameMon = CFrame["new"](919.47863769531, 43.544013977051, 32779.96875)
+								if _G["AutoFarm"] and (CFrameQuest["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 10000 then
+									(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](923.21252441406, 126.9760055542, 32852.83203125))
+								end
+							end
+						else
+							Mon = "Lava Pirate"
+							LevelQuest = 2
+							NameQuest = "FireSideQuest"
+							NameMon = "Lava Pirate"
+							CFrameQuest = CFrame["new"](-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+							CFrameMon = CFrame["new"](-5213.3315429688, 49.737880706787, -4701.451171875)
+						end
+					else
+						Mon = "Magma Ninja"
+						LevelQuest = 1
+						NameQuest = "FireSideQuest"
+						NameMon = "Magma Ninja"
+						CFrameQuest = CFrame["new"](-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+						CFrameMon = CFrame["new"](-5449.6728515625, 76.658744812012, -5808.2006835938)
+					end
+				else
+					Mon = "Snow Trooper"
+					LevelQuest = 1
+					NameQuest = "SnowMountainQuest"
+					NameMon = "Snow Trooper"
+					CFrameQuest = CFrame["new"](609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106)
+					CFrameMon = CFrame["new"](549.14733886719, 427.38705444336, -5563.6987304688)
+				end
+			else
+				Mon = "Zombie"
+				LevelQuest = 1
+				NameQuest = "ZombieQuest"
+				NameMon = "Zombie"
+				CFrameQuest = CFrame["new"](-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146)
+				CFrameMon = CFrame["new"](-5657.7768554688, 78.969734191895, -928.68701171875)
+			end
+		else
+			Mon = "Factory Staff"
+			NameQuest = "Area2Quest"
+			LevelQuest = 2
+			NameMon = "Factory Staff"
+			CFrameQuest = CFrame["new"](632.698608, 73.1055908, 918.666321, -0.0319722369, 8.96074881e-10, -0.999488771, 1.36326533e-10, 1, 8.92172336e-10, .999488771, -1.07732087e-10, -0.0319722369)
+			CFrameMon = CFrame["new"](73.078674316406, 81.863441467285, -27.470672607422)
+		end
+	else
+		Mon = "Raider"
+		LevelQuest = 1
+		NameQuest = "Area1Quest"
+		NameMon = "Raider"
+		CFrameQuest = CFrame["new"](-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985)
+		CFrameMon = CFrame["new"](-728.32672119141, 52.779319763184, 2345.7705078125)
+	end
+end
+function Hop()
+	local L_132_ = {}
+	L_132_[1] = game["PlaceId"]
+	L_132_[6] = {}
+	L_132_[2] = ""
+	L_132_[4] = (os["date"]("!*t"))["hour"]
+	L_132_[3] = false
+	function TPReturner()
+		local L_133_ = {}
+		if L_132_[2] ~= "" then
+			L_133_[4] = game["HttpService"]:JSONDecode(game:HttpGet(L_3_[168]({
+				"https://games.roblox";
+				".com/v1/games/"
+			}) .. (L_132_[1] .. (L_3_[168]({
+				"/servers/Public?sort";
+				"Order=Asc&limit=100&";
+				"cursor="
+			}) .. L_132_[2]))))
+		else
+			L_133_[4] = game["HttpService"]:JSONDecode(game:HttpGet(L_3_[168]({
+				"https://games.roblox",
+				".com/v1/games/"
+			}) .. (L_132_[1] .. L_3_[168]({
+				"/servers/Public?sort",
+				"Order=Asc&limit=100"
+			}))))
+		end
+		L_133_[2] = ""
+		if L_133_[4]["nextPageCursor"] and (L_133_[4]["nextPageCursor"] ~= "null" and L_133_[4]["nextPageCursor"] ~= "null") then
+			L_132_[2] = L_133_[4]["nextPageCursor"]
+		end
+		L_133_[1] = 0
+		for L_134_forvar0, L_135_forvar1 in pairs(L_133_[4]["data"]) do
+			local L_136_ = {}
+			L_136_[3], L_136_[1] = L_134_forvar0, L_135_forvar1
+			L_136_[2] = true
+			L_133_[2] = tostring(L_136_[1]["id"])
+			if tonumber(L_136_[1]["maxPlayers"]) > tonumber(L_136_[1]["playing"]) then
+				for L_137_forvar0, L_138_forvar1 in pairs(L_132_[6]) do
+					local L_139_ = {}
+					L_139_[3], L_139_[2] = L_137_forvar0, L_138_forvar1
+					if L_133_[1] ~= 0 then
+						if L_133_[2] == tostring(L_139_[2]) then
+							L_136_[2] = false
+						end
+					elseif tonumber(L_132_[4]) ~= tonumber(L_139_[2]) then
+						local L_140_ = {}
+						L_140_[1] = pcall(function()
+							L_132_[6] = {}
+							table["insert"](L_132_[6], L_132_[4])
+						end)
+					end
+					L_133_[1] = L_133_[1] + 1
+				end
+				if L_136_[2] == true then
+					table["insert"](L_132_[6], L_133_[2])
+					wait(.1)
+					pcall(function()
+						wait();
+						(game:GetService("TeleportService")):TeleportToPlaceInstance(L_132_[1], L_133_[2], game["Players"]["LocalPlayer"])
+					end)
+					wait(.1)
+				end
+			end
+		end
+	end
+	function Teleport()
+		while wait(.1) do
+			pcall(function()
+				TPReturner()
+				if L_132_[2] ~= "" then
+					TPReturner()
+				end
+			end)
+		end
+	end
+	Teleport()
+end
+function CheckItem(L_141_arg0)
+	local L_142_ = {}
+	L_142_[2] = L_141_arg0
+	for L_143_forvar0, L_144_forvar1 in pairs((game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("getInventory")) do
+		local L_145_ = {}
+		L_145_[1], L_145_[2] = L_143_forvar0, L_144_forvar1
+		if L_145_[2]["Name"] == L_142_[2] then
+			return L_145_[2]
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_146_forvar0, L_147_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_148_ = {}
+		L_148_[3], L_148_[1] = L_146_forvar0, L_147_forvar1
+		do
+			local L_149_ = {}
+			L_149_[1] = L_148_[1]
+			pcall(function()
+				if IslandESP then
+					if L_149_[1]["Name"] ~= "Sea" then
+						if not L_149_[1]:FindFirstChild("NameEsp") then
+							local L_150_ = {}
+							L_150_[1] = Instance["new"]("BillboardGui", L_149_[1])
+							L_150_[1]["Name"] = "NameEsp"
+							L_150_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_150_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_150_[1]["Adornee"] = L_149_[1]
+							L_150_[1]["AlwaysOnTop"] = true
+							L_150_[2] = Instance["new"]("TextLabel", L_150_[1])
+							L_150_[2]["Font"] = "GothamSemibold"
+							L_150_[2]["FontSize"] = "Size14"
+							L_150_[2]["TextWrapped"] = true
+							L_150_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_150_[2]["TextYAlignment"] = "Top"
+							L_150_[2][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_150_[2][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_150_[2]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						else
+							L_149_[1]["NameEsp"]["TextLabel"]["Text"] = L_149_[1]["Name"] .. ("   
+" .. (round(((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_149_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+						end
+					end
+				elseif L_149_[1]:FindFirstChild("NameEsp") then
+					(L_149_[1]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(L_151_arg0)
+	local L_152_ = {}
+	L_152_[1] = L_151_arg0
+	L_152_[2] = nil
+	if L_152_[1] ~= L_152_[2] then
+		local L_153_ = {}
+		L_153_[1] = false
+	end
+	return true
+end
+L_3_[100] = function(L_154_arg0)
+	local L_155_ = {}
+	L_155_[1] = L_154_arg0
+	return math["floor"](tonumber(L_155_[1]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_156_forvar0, L_157_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_158_ = {}
+		L_158_[2], L_158_[1] = L_156_forvar0, L_157_forvar1
+		do
+			local L_159_ = {}
+			L_159_[2] = L_158_[1]
+			pcall(function()
+				if not isnil(L_159_[2]["Character"]) then
+					if not ESPPlayer then
+						if L_159_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							(L_159_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+						end
+					elseif not isnil(L_159_[2]["Character"]["Head"]) and not L_159_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						local L_160_ = {}
+						L_160_[3] = Instance["new"]("BillboardGui", L_159_[2]["Character"]["Head"])
+						L_160_[3]["Name"] = "NameEsp" .. Number
+						L_160_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_160_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_160_[3]["Adornee"] = L_159_[2]["Character"]["Head"]
+						L_160_[3]["AlwaysOnTop"] = true
+						L_160_[2] = Instance["new"]("TextLabel", L_160_[3])
+						L_160_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_160_[2]["FontSize"] = "Size14"
+						L_160_[2]["TextWrapped"] = true
+						L_160_[2]["Text"] = L_159_[2]["Name"] .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_159_[2]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						L_160_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_160_[2]["TextYAlignment"] = "Top"
+						L_160_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_160_[2][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						if L_159_[2]["Team"] == game["Players"]["LocalPlayer"]["Team"] then
+							L_160_[2]["TextColor3"] = Color3["new"](0, 255, 0)
+						else
+							L_160_[2]["TextColor3"] = Color3["new"](255, 0, 0)
+						end
+					else
+						L_159_[2]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_159_[2]["Name"] .. (" | " .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_159_[2]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[100]((L_159_[2]["Character"]["Humanoid"]["Health"] * 100) / L_159_[2]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_161_forvar0, L_162_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_163_ = {}
+		L_163_[3], L_163_[1] = L_161_forvar0, L_162_forvar1
+		do
+			local L_164_ = {}
+			L_164_[2] = L_163_[1]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_164_[2]:GetAttribute("IsDisabled") then
+						if not L_164_[2]:FindFirstChild("ChestEsp") then
+							local L_165_ = {}
+							L_165_[3] = Instance["new"]("BillboardGui", L_164_[2])
+							L_165_[3]["Name"] = "ChestEsp"
+							L_165_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_165_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_165_[3]["Adornee"] = L_164_[2]
+							L_165_[3]["AlwaysOnTop"] = true
+							L_165_[2] = Instance["new"]("TextLabel", L_165_[3])
+							L_165_[2]["Font"] = "Code"
+							L_165_[2]["FontSize"] = "Size14"
+							L_165_[2]["TextWrapped"] = true
+							L_165_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_165_[2]["TextYAlignment"] = "Top"
+							L_165_[2][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_165_[2][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_165_[2]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						else
+							local L_166_ = {}
+							L_166_[1] = L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_164_[2]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_164_[2]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_166_[1] .. " M")
+						end
+					end
+				elseif L_164_[2]:FindFirstChild("ChestEsp") then
+					(L_164_[2]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[100] = function(L_167_arg0)
+	local L_168_ = {}
+	L_168_[2] = L_167_arg0
+	return math["floor"](L_168_[2] + .5)
+end
+function UpdateDevilChams()
+	for L_169_forvar0, L_170_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_171_ = {}
+		L_171_[3], L_171_[2] = L_169_forvar0, L_170_forvar1
+		do
+			local L_172_ = {}
+			L_172_[1] = L_171_[2]
+			pcall(function()
+				if DevilFruitESP then
+					if string["find"](L_172_[1]["Name"], "Fruit") then
+						if not L_172_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+							local L_173_ = {}
+							L_173_[1] = Instance["new"]("BillboardGui", L_172_[1]["Handle"])
+							L_173_[1]["Name"] = "NameEsp" .. Number
+							L_173_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_173_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_173_[1]["Adornee"] = L_172_[1]["Handle"]
+							L_173_[1]["AlwaysOnTop"] = true
+							L_173_[2] = Instance["new"]("TextLabel", L_173_[1])
+							L_173_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_173_[2]["FontSize"] = "Size14"
+							L_173_[2]["TextWrapped"] = true
+							L_173_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_173_[2]["TextYAlignment"] = "Top"
+							L_173_[2][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_173_[2][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_173_[2]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+							L_173_[2]["Text"] = L_172_[1]["Name"] .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_172_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							L_172_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_172_[1]["Name"] .. ("   
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_172_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						end
+					end
+				elseif L_172_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_172_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_174_forvar0, L_175_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_176_ = {}
+		L_176_[2], L_176_[1] = L_174_forvar0, L_175_forvar1
+		do
+			local L_177_ = {}
+			L_177_[2] = L_176_[1]
+			pcall(function()
+				if L_177_[2]["Name"] == "Flower2" or L_177_[2]["Name"] == "Flower1" then
+					if FlowerESP then
+						if L_177_[2]:FindFirstChild("NameEsp" .. Number) then
+							L_177_[2]["NameEsp" .. Number]["TextLabel"]["Text"] = L_177_[2]["Name"] .. ("   
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_177_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_178_ = {}
+							L_178_[2] = Instance["new"]("BillboardGui", L_177_[2])
+							L_178_[2]["Name"] = "NameEsp" .. Number
+							L_178_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_178_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_178_[2]["Adornee"] = L_177_[2]
+							L_178_[2]["AlwaysOnTop"] = true
+							L_178_[3] = Instance["new"]("TextLabel", L_178_[2])
+							L_178_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_178_[3]["FontSize"] = "Size14"
+							L_178_[3]["TextWrapped"] = true
+							L_178_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_178_[3]["TextYAlignment"] = "Top"
+							L_178_[3][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_178_[3][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_178_[3]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							if L_177_[2]["Name"] == "Flower1" then
+								L_178_[3]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_177_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_178_[3]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+							end
+							if L_177_[2]["Name"] == "Flower2" then
+								L_178_[3]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_177_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_178_[3]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							end
+						end
+					elseif L_177_[2]:FindFirstChild("NameEsp" .. Number) then
+						(L_177_[2]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_179_forvar0, L_180_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_181_ = {}
+		L_181_[1], L_181_[3] = L_179_forvar0, L_180_forvar1
+		if L_181_[3]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_181_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_181_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif L_181_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				L_181_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_181_[3]["Name"] .. (" " .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_181_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				local L_182_ = {}
+				L_182_[2] = Instance["new"]("BillboardGui", L_181_[3]["Handle"])
+				L_182_[2]["Name"] = "NameEsp" .. Number
+				L_182_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_182_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_182_[2]["Adornee"] = L_181_[3]["Handle"]
+				L_182_[2]["AlwaysOnTop"] = true
+				L_182_[1] = Instance["new"]("TextLabel", L_182_[2])
+				L_182_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_182_[1]["FontSize"] = "Size14"
+				L_182_[1]["TextWrapped"] = true
+				L_182_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_182_[1]["TextYAlignment"] = "Top"
+				L_182_[1][L_3_[168]({
+					"BackgroundTransparen",
+					"cy"
+				})] = 1
+				L_182_[1][L_3_[168]({
+					"TextStrokeTransparen";
+					"cy"
+				})] = .5
+				L_182_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+				L_182_[1]["Text"] = L_181_[3]["Name"] .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_181_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+	for L_183_forvar0, L_184_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_185_ = {}
+		L_185_[1], L_185_[2] = L_183_forvar0, L_184_forvar1
+		if L_185_[2]:IsA("Tool") then
+			if RealFruitESP then
+				if L_185_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_185_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_185_[2]["Name"] .. (" " .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_185_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_186_ = {}
+					L_186_[2] = Instance["new"]("BillboardGui", L_185_[2]["Handle"])
+					L_186_[2]["Name"] = "NameEsp" .. Number
+					L_186_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_186_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_186_[2]["Adornee"] = L_185_[2]["Handle"]
+					L_186_[2]["AlwaysOnTop"] = true
+					L_186_[3] = Instance["new"]("TextLabel", L_186_[2])
+					L_186_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_186_[3]["FontSize"] = "Size14"
+					L_186_[3]["TextWrapped"] = true
+					L_186_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_186_[3]["TextYAlignment"] = "Top"
+					L_186_[3][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_186_[3][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_186_[3]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+					L_186_[3]["Text"] = L_185_[2]["Name"] .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_185_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_185_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_185_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_187_forvar0, L_188_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_189_ = {}
+		L_189_[2], L_189_[3] = L_187_forvar0, L_188_forvar1
+		if L_189_[3]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_189_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_190_ = {}
+					L_190_[1] = Instance["new"]("BillboardGui", L_189_[3]["Handle"])
+					L_190_[1]["Name"] = "NameEsp" .. Number
+					L_190_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_190_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_190_[1]["Adornee"] = L_189_[3]["Handle"]
+					L_190_[1]["AlwaysOnTop"] = true
+					L_190_[3] = Instance["new"]("TextLabel", L_190_[1])
+					L_190_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_190_[3]["FontSize"] = "Size14"
+					L_190_[3]["TextWrapped"] = true
+					L_190_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_190_[3]["TextYAlignment"] = "Top"
+					L_190_[3][L_3_[168]({
+						"BackgroundTransparen",
+						"cy"
+					})] = 1
+					L_190_[3][L_3_[168]({
+						"TextStrokeTransparen";
+						"cy"
+					})] = .5
+					L_190_[3]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+					L_190_[3]["Text"] = L_189_[3]["Name"] .. (" 
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_189_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_189_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_189_[3]["Name"] .. (" " .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_189_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_189_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_189_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_191_forvar0, L_192_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_193_ = {}
+		L_193_[1], L_193_[3] = L_191_forvar0, L_192_forvar1
+		do
+			local L_194_ = {}
+			L_194_[2] = L_193_[3]
+			pcall(function()
+				if IslandESP then
+					if L_194_[2]["Name"] ~= "Sea" then
+						if not L_194_[2]:FindFirstChild("NameEsp") then
+							local L_195_ = {}
+							L_195_[2] = Instance["new"]("BillboardGui", L_194_[2])
+							L_195_[2]["Name"] = "NameEsp"
+							L_195_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_195_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_195_[2]["Adornee"] = L_194_[2]
+							L_195_[2]["AlwaysOnTop"] = true
+							L_195_[1] = Instance["new"]("TextLabel", L_195_[2])
+							L_195_[1]["Font"] = "GothamSemibold"
+							L_195_[1]["FontSize"] = "Size14"
+							L_195_[1]["TextWrapped"] = true
+							L_195_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_195_[1]["TextYAlignment"] = "Top"
+							L_195_[1][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_195_[1][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_195_[1]["TextColor3"] = Color3["fromRGB"](8, 247, 255)
+						else
+							L_194_[2]["NameEsp"]["TextLabel"]["Text"] = L_194_[2]["Name"] .. ("   
+" .. (L_3_[100](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_194_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+						end
+					end
+				elseif L_194_[2]:FindFirstChild("NameEsp") then
+					(L_194_[2]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(L_196_arg0)
+	local L_197_ = {}
+	L_197_[2] = L_196_arg0
+	L_197_[3] = nil
+	if L_197_[2] ~= L_197_[3] then
+		local L_198_ = {}
+		L_198_[2] = false
+	end
+	return true
+end
+L_3_[209] = function(L_199_arg0)
+	local L_200_ = {}
+	L_200_[1] = L_199_arg0
+	return math["floor"](tonumber(L_200_[1]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_201_forvar0, L_202_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_203_ = {}
+		L_203_[2], L_203_[3] = L_201_forvar0, L_202_forvar1
+		do
+			local L_204_ = {}
+			L_204_[1] = L_203_[3]
+			pcall(function()
+				if not isnil(L_204_[1]["Character"]) then
+					if ESPPlayer then
+						if not isnil(L_204_[1]["Character"]["Head"]) and not L_204_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							local L_205_ = {}
+							L_205_[3] = Instance["new"]("BillboardGui", L_204_[1]["Character"]["Head"])
+							L_205_[3]["Name"] = "NameEsp" .. Number
+							L_205_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_205_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_205_[3]["Adornee"] = L_204_[1]["Character"]["Head"]
+							L_205_[3]["AlwaysOnTop"] = true
+							L_205_[1] = Instance["new"]("TextLabel", L_205_[3])
+							L_205_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_205_[1]["FontSize"] = "Size14"
+							L_205_[1]["TextWrapped"] = true
+							L_205_[1]["Text"] = L_204_[1]["Name"] .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_204_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_205_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_205_[1]["TextYAlignment"] = "Top"
+							L_205_[1][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_205_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							if L_204_[1]["Team"] == game["Players"]["LocalPlayer"]["Team"] then
+								L_205_[1]["TextColor3"] = Color3["new"](0, 255, 0)
+							else
+								L_205_[1]["TextColor3"] = Color3["new"](255, 0, 0)
+							end
+						else
+							L_204_[1]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_204_[1]["Name"] .. (" | " .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_204_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[209]((L_204_[1]["Character"]["Humanoid"]["Health"] * 100) / L_204_[1]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+						end
+					elseif L_204_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						(L_204_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_206_forvar0, L_207_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_208_ = {}
+		L_208_[2], L_208_[1] = L_206_forvar0, L_207_forvar1
+		do
+			local L_209_ = {}
+			L_209_[1] = L_208_[1]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_209_[1]:GetAttribute("IsDisabled") then
+						if L_209_[1]:FindFirstChild("ChestEsp") then
+							local L_210_ = {}
+							L_210_[2] = L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_209_[1]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_209_[1]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_210_[2] .. " M")
+						else
+							local L_211_ = {}
+							L_211_[1] = Instance["new"]("BillboardGui", L_209_[1])
+							L_211_[1]["Name"] = "ChestEsp"
+							L_211_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_211_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_211_[1]["Adornee"] = L_209_[1]
+							L_211_[1]["AlwaysOnTop"] = true
+							L_211_[3] = Instance["new"]("TextLabel", L_211_[1])
+							L_211_[3]["Font"] = "Code"
+							L_211_[3]["FontSize"] = "Size14"
+							L_211_[3]["TextWrapped"] = true
+							L_211_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_211_[3]["TextYAlignment"] = "Top"
+							L_211_[3][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_211_[3][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_211_[3]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						end
+					end
+				elseif L_209_[1]:FindFirstChild("ChestEsp") then
+					(L_209_[1]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[209] = function(L_212_arg0)
+	local L_213_ = {}
+	L_213_[1] = L_212_arg0
+	return math["floor"](L_213_[1] + .5)
+end
+function UpdateDevilChams()
+	for L_214_forvar0, L_215_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_216_ = {}
+		L_216_[2], L_216_[3] = L_214_forvar0, L_215_forvar1
+		do
+			local L_217_ = {}
+			L_217_[2] = L_216_[3]
+			pcall(function()
+				if not DevilFruitESP then
+					if L_217_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						(L_217_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				elseif string["find"](L_217_[2]["Name"], "Fruit") then
+					if L_217_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						L_217_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_217_[2]["Name"] .. ("   
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_217_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_218_ = {}
+						L_218_[2] = Instance["new"]("BillboardGui", L_217_[2]["Handle"])
+						L_218_[2]["Name"] = "NameEsp" .. Number
+						L_218_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_218_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_218_[2]["Adornee"] = L_217_[2]["Handle"]
+						L_218_[2]["AlwaysOnTop"] = true
+						L_218_[3] = Instance["new"]("TextLabel", L_218_[2])
+						L_218_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_218_[3]["FontSize"] = "Size14"
+						L_218_[3]["TextWrapped"] = true
+						L_218_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_218_[3]["TextYAlignment"] = "Top"
+						L_218_[3][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_218_[3][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						L_218_[3]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						L_218_[3]["Text"] = L_217_[2]["Name"] .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_217_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_219_forvar0, L_220_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_221_ = {}
+		L_221_[3], L_221_[2] = L_219_forvar0, L_220_forvar1
+		do
+			local L_222_ = {}
+			L_222_[1] = L_221_[2]
+			pcall(function()
+				if L_222_[1]["Name"] == "Flower2" or L_222_[1]["Name"] == "Flower1" then
+					if not FlowerESP then
+						if L_222_[1]:FindFirstChild("NameEsp" .. Number) then
+							(L_222_[1]:FindFirstChild("NameEsp" .. Number)):Destroy()
+						end
+					elseif L_222_[1]:FindFirstChild("NameEsp" .. Number) then
+						L_222_[1]["NameEsp" .. Number]["TextLabel"]["Text"] = L_222_[1]["Name"] .. ("   
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_222_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_223_ = {}
+						L_223_[1] = Instance["new"]("BillboardGui", L_222_[1])
+						L_223_[1]["Name"] = "NameEsp" .. Number
+						L_223_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_223_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_223_[1]["Adornee"] = L_222_[1]
+						L_223_[1]["AlwaysOnTop"] = true
+						L_223_[2] = Instance["new"]("TextLabel", L_223_[1])
+						L_223_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_223_[2]["FontSize"] = "Size14"
+						L_223_[2]["TextWrapped"] = true
+						L_223_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_223_[2]["TextYAlignment"] = "Top"
+						L_223_[2][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_223_[2][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						L_223_[2]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						if L_222_[1]["Name"] == "Flower1" then
+							L_223_[2]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_222_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_223_[2]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+						end
+						if L_222_[1]["Name"] == "Flower2" then
+							L_223_[2]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_222_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_223_[2]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_224_forvar0, L_225_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_226_ = {}
+		L_226_[2], L_226_[3] = L_224_forvar0, L_225_forvar1
+		if L_226_[3]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_226_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_226_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif L_226_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				L_226_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_226_[3]["Name"] .. (" " .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_226_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				local L_227_ = {}
+				L_227_[2] = Instance["new"]("BillboardGui", L_226_[3]["Handle"])
+				L_227_[2]["Name"] = "NameEsp" .. Number
+				L_227_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_227_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_227_[2]["Adornee"] = L_226_[3]["Handle"]
+				L_227_[2]["AlwaysOnTop"] = true
+				L_227_[3] = Instance["new"]("TextLabel", L_227_[2])
+				L_227_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_227_[3]["FontSize"] = "Size14"
+				L_227_[3]["TextWrapped"] = true
+				L_227_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_227_[3]["TextYAlignment"] = "Top"
+				L_227_[3][L_3_[168]({
+					"BackgroundTransparen",
+					"cy"
+				})] = 1
+				L_227_[3][L_3_[168]({
+					"TextStrokeTransparen";
+					"cy"
+				})] = .5
+				L_227_[3]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+				L_227_[3]["Text"] = L_226_[3]["Name"] .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_226_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+	for L_228_forvar0, L_229_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_230_ = {}
+		L_230_[2], L_230_[3] = L_228_forvar0, L_229_forvar1
+		if L_230_[3]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_230_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_231_ = {}
+					L_231_[3] = Instance["new"]("BillboardGui", L_230_[3]["Handle"])
+					L_231_[3]["Name"] = "NameEsp" .. Number
+					L_231_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_231_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_231_[3]["Adornee"] = L_230_[3]["Handle"]
+					L_231_[3]["AlwaysOnTop"] = true
+					L_231_[2] = Instance["new"]("TextLabel", L_231_[3])
+					L_231_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_231_[2]["FontSize"] = "Size14"
+					L_231_[2]["TextWrapped"] = true
+					L_231_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_231_[2]["TextYAlignment"] = "Top"
+					L_231_[2][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_231_[2][L_3_[168]({
+						"TextStrokeTransparen";
+						"cy"
+					})] = .5
+					L_231_[2]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+					L_231_[2]["Text"] = L_230_[3]["Name"] .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_230_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_230_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_230_[3]["Name"] .. (" " .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_230_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_230_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_230_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_232_forvar0, L_233_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_234_ = {}
+		L_234_[2], L_234_[1] = L_232_forvar0, L_233_forvar1
+		if L_234_[1]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_234_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_234_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif not L_234_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				local L_235_ = {}
+				L_235_[3] = Instance["new"]("BillboardGui", L_234_[1]["Handle"])
+				L_235_[3]["Name"] = "NameEsp" .. Number
+				L_235_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_235_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_235_[3]["Adornee"] = L_234_[1]["Handle"]
+				L_235_[3]["AlwaysOnTop"] = true
+				L_235_[2] = Instance["new"]("TextLabel", L_235_[3])
+				L_235_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_235_[2]["FontSize"] = "Size14"
+				L_235_[2]["TextWrapped"] = true
+				L_235_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_235_[2]["TextYAlignment"] = "Top"
+				L_235_[2][L_3_[168]({
+					"BackgroundTransparen",
+					"cy"
+				})] = 1
+				L_235_[2][L_3_[168]({
+					"TextStrokeTransparen";
+					"cy"
+				})] = .5
+				L_235_[2]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+				L_235_[2]["Text"] = L_234_[1]["Name"] .. (" 
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_234_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				L_234_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_234_[1]["Name"] .. (" " .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_234_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_236_forvar0, L_237_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_238_ = {}
+		L_238_[1], L_238_[2] = L_236_forvar0, L_237_forvar1
+		do
+			local L_239_ = {}
+			L_239_[2] = L_238_[2]
+			pcall(function()
+				if not IslandESP then
+					if L_239_[2]:FindFirstChild("NameEsp") then
+						(L_239_[2]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_239_[2]["Name"] ~= "Sea" then
+					if L_239_[2]:FindFirstChild("NameEsp") then
+						L_239_[2]["NameEsp"]["TextLabel"]["Text"] = L_239_[2]["Name"] .. ("   
+" .. (L_3_[209](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_239_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_240_ = {}
+						L_240_[1] = Instance["new"]("BillboardGui", L_239_[2])
+						L_240_[1]["Name"] = "NameEsp"
+						L_240_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_240_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_240_[1]["Adornee"] = L_239_[2]
+						L_240_[1]["AlwaysOnTop"] = true
+						L_240_[2] = Instance["new"]("TextLabel", L_240_[1])
+						L_240_[2]["Font"] = "GothamSemibold"
+						L_240_[2]["FontSize"] = "Size14"
+						L_240_[2]["TextWrapped"] = true
+						L_240_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_240_[2]["TextYAlignment"] = "Top"
+						L_240_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_240_[2][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						L_240_[2]["TextColor3"] = Color3["fromRGB"](8, 247, 255)
+					end
+				end
+			end)
+		end
+	end
+end
+function isnil(L_241_arg0)
+	local L_242_ = {}
+	L_242_[3] = L_241_arg0
+	L_242_[2] = nil
+	if L_242_[3] ~= L_242_[2] then
+		local L_243_ = {}
+		L_243_[2] = false
+	end
+	return true
+end
+L_3_[54] = function(L_244_arg0)
+	local L_245_ = {}
+	L_245_[1] = L_244_arg0
+	return math["floor"](tonumber(L_245_[1]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_246_forvar0, L_247_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_248_ = {}
+		L_248_[1], L_248_[2] = L_246_forvar0, L_247_forvar1
+		do
+			local L_249_ = {}
+			L_249_[1] = L_248_[2]
+			pcall(function()
+				if not isnil(L_249_[1]["Character"]) then
+					if ESPPlayer then
+						if isnil(L_249_[1]["Character"]["Head"]) or L_249_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							L_249_[1]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_249_[1]["Name"] .. (" | " .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_249_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[54]((L_249_[1]["Character"]["Humanoid"]["Health"] * 100) / L_249_[1]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+						else
+							local L_250_ = {}
+							L_250_[3] = Instance["new"]("BillboardGui", L_249_[1]["Character"]["Head"])
+							L_250_[3]["Name"] = "NameEsp" .. Number
+							L_250_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_250_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_250_[3]["Adornee"] = L_249_[1]["Character"]["Head"]
+							L_250_[3]["AlwaysOnTop"] = true
+							L_250_[2] = Instance["new"]("TextLabel", L_250_[3])
+							L_250_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_250_[2]["FontSize"] = "Size14"
+							L_250_[2]["TextWrapped"] = true
+							L_250_[2]["Text"] = L_249_[1]["Name"] .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_249_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_250_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_250_[2]["TextYAlignment"] = "Top"
+							L_250_[2][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_250_[2][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							if L_249_[1]["Team"] ~= game["Players"]["LocalPlayer"]["Team"] then
+								L_250_[2]["TextColor3"] = Color3["new"](255, 0, 0)
+							else
+								L_250_[2]["TextColor3"] = Color3["new"](0, 255, 0)
+							end
+						end
+					elseif L_249_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						(L_249_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_251_forvar0, L_252_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_253_ = {}
+		L_253_[3], L_253_[2] = L_251_forvar0, L_252_forvar1
+		do
+			local L_254_ = {}
+			L_254_[1] = L_253_[2]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_254_[1]:GetAttribute("IsDisabled") then
+						if L_254_[1]:FindFirstChild("ChestEsp") then
+							local L_255_ = {}
+							L_255_[1] = L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_254_[1]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_254_[1]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_255_[1] .. " M")
+						else
+							local L_256_ = {}
+							L_256_[3] = Instance["new"]("BillboardGui", L_254_[1])
+							L_256_[3]["Name"] = "ChestEsp"
+							L_256_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_256_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_256_[3]["Adornee"] = L_254_[1]
+							L_256_[3]["AlwaysOnTop"] = true
+							L_256_[2] = Instance["new"]("TextLabel", L_256_[3])
+							L_256_[2]["Font"] = "Code"
+							L_256_[2]["FontSize"] = "Size14"
+							L_256_[2]["TextWrapped"] = true
+							L_256_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_256_[2]["TextYAlignment"] = "Top"
+							L_256_[2][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_256_[2][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_256_[2]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						end
+					end
+				elseif L_254_[1]:FindFirstChild("ChestEsp") then
+					(L_254_[1]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[54] = function(L_257_arg0)
+	local L_258_ = {}
+	L_258_[2] = L_257_arg0
+	return math["floor"](L_258_[2] + .5)
+end
+function UpdateDevilChams()
+	for L_259_forvar0, L_260_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_261_ = {}
+		L_261_[2], L_261_[3] = L_259_forvar0, L_260_forvar1
+		do
+			local L_262_ = {}
+			L_262_[2] = L_261_[3]
+			pcall(function()
+				if not DevilFruitESP then
+					if L_262_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						(L_262_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				elseif string["find"](L_262_[2]["Name"], "Fruit") then
+					if L_262_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						L_262_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_262_[2]["Name"] .. ("   
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_262_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_263_ = {}
+						L_263_[1] = Instance["new"]("BillboardGui", L_262_[2]["Handle"])
+						L_263_[1]["Name"] = "NameEsp" .. Number
+						L_263_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_263_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_263_[1]["Adornee"] = L_262_[2]["Handle"]
+						L_263_[1]["AlwaysOnTop"] = true
+						L_263_[3] = Instance["new"]("TextLabel", L_263_[1])
+						L_263_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_263_[3]["FontSize"] = "Size14"
+						L_263_[3]["TextWrapped"] = true
+						L_263_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_263_[3]["TextYAlignment"] = "Top"
+						L_263_[3][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_263_[3][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_263_[3]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						L_263_[3]["Text"] = L_262_[2]["Name"] .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_262_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_264_forvar0, L_265_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_266_ = {}
+		L_266_[2], L_266_[1] = L_264_forvar0, L_265_forvar1
+		do
+			local L_267_ = {}
+			L_267_[1] = L_266_[1]
+			pcall(function()
+				if L_267_[1]["Name"] == "Flower2" or L_267_[1]["Name"] == "Flower1" then
+					if FlowerESP then
+						if L_267_[1]:FindFirstChild("NameEsp" .. Number) then
+							L_267_[1]["NameEsp" .. Number]["TextLabel"]["Text"] = L_267_[1]["Name"] .. ("   
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_267_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_268_ = {}
+							L_268_[3] = Instance["new"]("BillboardGui", L_267_[1])
+							L_268_[3]["Name"] = "NameEsp" .. Number
+							L_268_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_268_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_268_[3]["Adornee"] = L_267_[1]
+							L_268_[3]["AlwaysOnTop"] = true
+							L_268_[1] = Instance["new"]("TextLabel", L_268_[3])
+							L_268_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_268_[1]["FontSize"] = "Size14"
+							L_268_[1]["TextWrapped"] = true
+							L_268_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_268_[1]["TextYAlignment"] = "Top"
+							L_268_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_268_[1][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_268_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							if L_267_[1]["Name"] == "Flower1" then
+								L_268_[1]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_267_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_268_[1]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+							end
+							if L_267_[1]["Name"] == "Flower2" then
+								L_268_[1]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_267_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_268_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							end
+						end
+					elseif L_267_[1]:FindFirstChild("NameEsp" .. Number) then
+						(L_267_[1]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_269_forvar0, L_270_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_271_ = {}
+		L_271_[1], L_271_[3] = L_269_forvar0, L_270_forvar1
+		if L_271_[3]:IsA("Tool") then
+			if RealFruitESP then
+				if L_271_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_271_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_271_[3]["Name"] .. (" " .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_271_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_272_ = {}
+					L_272_[2] = Instance["new"]("BillboardGui", L_271_[3]["Handle"])
+					L_272_[2]["Name"] = "NameEsp" .. Number
+					L_272_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_272_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_272_[2]["Adornee"] = L_271_[3]["Handle"]
+					L_272_[2]["AlwaysOnTop"] = true
+					L_272_[1] = Instance["new"]("TextLabel", L_272_[2])
+					L_272_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_272_[1]["FontSize"] = "Size14"
+					L_272_[1]["TextWrapped"] = true
+					L_272_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_272_[1]["TextYAlignment"] = "Top"
+					L_272_[1][L_3_[168]({
+						"BackgroundTransparen",
+						"cy"
+					})] = 1
+					L_272_[1][L_3_[168]({
+						"TextStrokeTransparen";
+						"cy"
+					})] = .5
+					L_272_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+					L_272_[1]["Text"] = L_271_[3]["Name"] .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_271_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_271_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_271_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_273_forvar0, L_274_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_275_ = {}
+		L_275_[1], L_275_[3] = L_273_forvar0, L_274_forvar1
+		if L_275_[3]:IsA("Tool") then
+			if RealFruitESP then
+				if L_275_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_275_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_275_[3]["Name"] .. (" " .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_275_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_276_ = {}
+					L_276_[2] = Instance["new"]("BillboardGui", L_275_[3]["Handle"])
+					L_276_[2]["Name"] = "NameEsp" .. Number
+					L_276_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_276_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_276_[2]["Adornee"] = L_275_[3]["Handle"]
+					L_276_[2]["AlwaysOnTop"] = true
+					L_276_[1] = Instance["new"]("TextLabel", L_276_[2])
+					L_276_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_276_[1]["FontSize"] = "Size14"
+					L_276_[1]["TextWrapped"] = true
+					L_276_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_276_[1]["TextYAlignment"] = "Top"
+					L_276_[1][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_276_[1][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_276_[1]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+					L_276_[1]["Text"] = L_275_[3]["Name"] .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_275_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_275_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_275_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_277_forvar0, L_278_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_279_ = {}
+		L_279_[1], L_279_[2] = L_277_forvar0, L_278_forvar1
+		if L_279_[2]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_279_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_279_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif not L_279_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				local L_280_ = {}
+				L_280_[1] = Instance["new"]("BillboardGui", L_279_[2]["Handle"])
+				L_280_[1]["Name"] = "NameEsp" .. Number
+				L_280_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_280_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_280_[1]["Adornee"] = L_279_[2]["Handle"]
+				L_280_[1]["AlwaysOnTop"] = true
+				L_280_[3] = Instance["new"]("TextLabel", L_280_[1])
+				L_280_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_280_[3]["FontSize"] = "Size14"
+				L_280_[3]["TextWrapped"] = true
+				L_280_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_280_[3]["TextYAlignment"] = "Top"
+				L_280_[3][L_3_[168]({
+					"BackgroundTransparen",
+					"cy"
+				})] = 1
+				L_280_[3][L_3_[168]({
+					"TextStrokeTransparen",
+					"cy"
+				})] = .5
+				L_280_[3]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+				L_280_[3]["Text"] = L_279_[2]["Name"] .. (" 
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_279_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				L_279_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_279_[2]["Name"] .. (" " .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_279_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_281_forvar0, L_282_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_283_ = {}
+		L_283_[3], L_283_[1] = L_281_forvar0, L_282_forvar1
+		do
+			local L_284_ = {}
+			L_284_[2] = L_283_[1]
+			pcall(function()
+				if IslandESP then
+					if L_284_[2]["Name"] ~= "Sea" then
+						if L_284_[2]:FindFirstChild("NameEsp") then
+							L_284_[2]["NameEsp"]["TextLabel"]["Text"] = L_284_[2]["Name"] .. ("   
+" .. (L_3_[54](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_284_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_285_ = {}
+							L_285_[3] = Instance["new"]("BillboardGui", L_284_[2])
+							L_285_[3]["Name"] = "NameEsp"
+							L_285_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_285_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_285_[3]["Adornee"] = L_284_[2]
+							L_285_[3]["AlwaysOnTop"] = true
+							L_285_[1] = Instance["new"]("TextLabel", L_285_[3])
+							L_285_[1]["Font"] = "GothamSemibold"
+							L_285_[1]["FontSize"] = "Size14"
+							L_285_[1]["TextWrapped"] = true
+							L_285_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_285_[1]["TextYAlignment"] = "Top"
+							L_285_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_285_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_285_[1]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						end
+					end
+				elseif L_284_[2]:FindFirstChild("NameEsp") then
+					(L_284_[2]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(L_286_arg0)
+	local L_287_ = {}
+	L_287_[2] = L_286_arg0
+	L_287_[1] = nil
+	if L_287_[2] ~= L_287_[1] then
+		local L_288_ = {}
+		L_288_[2] = false
+	end
+	return true
+end
+L_3_[36] = function(L_289_arg0)
+	local L_290_ = {}
+	L_290_[2] = L_289_arg0
+	return math["floor"](tonumber(L_290_[2]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_291_forvar0, L_292_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_293_ = {}
+		L_293_[3], L_293_[2] = L_291_forvar0, L_292_forvar1
+		do
+			local L_294_ = {}
+			L_294_[2] = L_293_[2]
+			pcall(function()
+				if not isnil(L_294_[2]["Character"]) then
+					if not ESPPlayer then
+						if L_294_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							(L_294_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+						end
+					elseif isnil(L_294_[2]["Character"]["Head"]) or L_294_[2]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						L_294_[2]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_294_[2]["Name"] .. (" | " .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_294_[2]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[36]((L_294_[2]["Character"]["Humanoid"]["Health"] * 100) / L_294_[2]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+					else
+						local L_295_ = {}
+						L_295_[3] = Instance["new"]("BillboardGui", L_294_[2]["Character"]["Head"])
+						L_295_[3]["Name"] = "NameEsp" .. Number
+						L_295_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_295_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_295_[3]["Adornee"] = L_294_[2]["Character"]["Head"]
+						L_295_[3]["AlwaysOnTop"] = true
+						L_295_[2] = Instance["new"]("TextLabel", L_295_[3])
+						L_295_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_295_[2]["FontSize"] = "Size14"
+						L_295_[2]["TextWrapped"] = true
+						L_295_[2]["Text"] = L_294_[2]["Name"] .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_294_[2]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						L_295_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_295_[2]["TextYAlignment"] = "Top"
+						L_295_[2][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_295_[2][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						if L_294_[2]["Team"] == game["Players"]["LocalPlayer"]["Team"] then
+							L_295_[2]["TextColor3"] = Color3["new"](0, 255, 0)
+						else
+							L_295_[2]["TextColor3"] = Color3["new"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_296_forvar0, L_297_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_298_ = {}
+		L_298_[1], L_298_[2] = L_296_forvar0, L_297_forvar1
+		do
+			local L_299_ = {}
+			L_299_[2] = L_298_[2]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_299_[2]:GetAttribute("IsDisabled") then
+						if L_299_[2]:FindFirstChild("ChestEsp") then
+							local L_300_ = {}
+							L_300_[2] = L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_299_[2]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_299_[2]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_300_[2] .. " M")
+						else
+							local L_301_ = {}
+							L_301_[3] = Instance["new"]("BillboardGui", L_299_[2])
+							L_301_[3]["Name"] = "ChestEsp"
+							L_301_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_301_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_301_[3]["Adornee"] = L_299_[2]
+							L_301_[3]["AlwaysOnTop"] = true
+							L_301_[2] = Instance["new"]("TextLabel", L_301_[3])
+							L_301_[2]["Font"] = "Code"
+							L_301_[2]["FontSize"] = "Size14"
+							L_301_[2]["TextWrapped"] = true
+							L_301_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_301_[2]["TextYAlignment"] = "Top"
+							L_301_[2][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_301_[2][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_301_[2]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						end
+					end
+				elseif L_299_[2]:FindFirstChild("ChestEsp") then
+					(L_299_[2]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[36] = function(L_302_arg0)
+	local L_303_ = {}
+	L_303_[2] = L_302_arg0
+	return math["floor"](L_303_[2] + .5)
+end
+function UpdateDevilChams()
+	for L_304_forvar0, L_305_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_306_ = {}
+		L_306_[2], L_306_[1] = L_304_forvar0, L_305_forvar1
+		do
+			local L_307_ = {}
+			L_307_[1] = L_306_[1]
+			pcall(function()
+				if DevilFruitESP then
+					if string["find"](L_307_[1]["Name"], "Fruit") then
+						if L_307_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+							L_307_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_307_[1]["Name"] .. ("   
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_307_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_308_ = {}
+							L_308_[3] = Instance["new"]("BillboardGui", L_307_[1]["Handle"])
+							L_308_[3]["Name"] = "NameEsp" .. Number
+							L_308_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_308_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_308_[3]["Adornee"] = L_307_[1]["Handle"]
+							L_308_[3]["AlwaysOnTop"] = true
+							L_308_[1] = Instance["new"]("TextLabel", L_308_[3])
+							L_308_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_308_[1]["FontSize"] = "Size14"
+							L_308_[1]["TextWrapped"] = true
+							L_308_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_308_[1]["TextYAlignment"] = "Top"
+							L_308_[1][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_308_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_308_[1]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+							L_308_[1]["Text"] = L_307_[1]["Name"] .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_307_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+						end
+					end
+				elseif L_307_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_307_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_309_forvar0, L_310_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_311_ = {}
+		L_311_[1], L_311_[3] = L_309_forvar0, L_310_forvar1
+		do
+			local L_312_ = {}
+			L_312_[1] = L_311_[3]
+			pcall(function()
+				if L_312_[1]["Name"] == "Flower2" or L_312_[1]["Name"] == "Flower1" then
+					if not FlowerESP then
+						if L_312_[1]:FindFirstChild("NameEsp" .. Number) then
+							(L_312_[1]:FindFirstChild("NameEsp" .. Number)):Destroy()
+						end
+					elseif L_312_[1]:FindFirstChild("NameEsp" .. Number) then
+						L_312_[1]["NameEsp" .. Number]["TextLabel"]["Text"] = L_312_[1]["Name"] .. ("   
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_312_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_313_ = {}
+						L_313_[3] = Instance["new"]("BillboardGui", L_312_[1])
+						L_313_[3]["Name"] = "NameEsp" .. Number
+						L_313_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_313_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_313_[3]["Adornee"] = L_312_[1]
+						L_313_[3]["AlwaysOnTop"] = true
+						L_313_[1] = Instance["new"]("TextLabel", L_313_[3])
+						L_313_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_313_[1]["FontSize"] = "Size14"
+						L_313_[1]["TextWrapped"] = true
+						L_313_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_313_[1]["TextYAlignment"] = "Top"
+						L_313_[1][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_313_[1][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_313_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						if L_312_[1]["Name"] == "Flower1" then
+							L_313_[1]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_312_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_313_[1]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+						end
+						if L_312_[1]["Name"] == "Flower2" then
+							L_313_[1]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_312_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_313_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_314_forvar0, L_315_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_316_ = {}
+		L_316_[1], L_316_[2] = L_314_forvar0, L_315_forvar1
+		if L_316_[2]:IsA("Tool") then
+			if RealFruitESP then
+				if L_316_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_316_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_316_[2]["Name"] .. (" " .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_316_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_317_ = {}
+					L_317_[3] = Instance["new"]("BillboardGui", L_316_[2]["Handle"])
+					L_317_[3]["Name"] = "NameEsp" .. Number
+					L_317_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_317_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_317_[3]["Adornee"] = L_316_[2]["Handle"]
+					L_317_[3]["AlwaysOnTop"] = true
+					L_317_[2] = Instance["new"]("TextLabel", L_317_[3])
+					L_317_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_317_[2]["FontSize"] = "Size14"
+					L_317_[2]["TextWrapped"] = true
+					L_317_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_317_[2]["TextYAlignment"] = "Top"
+					L_317_[2][L_3_[168]({
+						"BackgroundTransparen",
+						"cy"
+					})] = 1
+					L_317_[2][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_317_[2]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+					L_317_[2]["Text"] = L_316_[2]["Name"] .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_316_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_316_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_316_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_318_forvar0, L_319_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_320_ = {}
+		L_320_[2], L_320_[3] = L_318_forvar0, L_319_forvar1
+		if L_320_[3]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_320_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_321_ = {}
+					L_321_[1] = Instance["new"]("BillboardGui", L_320_[3]["Handle"])
+					L_321_[1]["Name"] = "NameEsp" .. Number
+					L_321_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_321_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_321_[1]["Adornee"] = L_320_[3]["Handle"]
+					L_321_[1]["AlwaysOnTop"] = true
+					L_321_[2] = Instance["new"]("TextLabel", L_321_[1])
+					L_321_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_321_[2]["FontSize"] = "Size14"
+					L_321_[2]["TextWrapped"] = true
+					L_321_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_321_[2]["TextYAlignment"] = "Top"
+					L_321_[2][L_3_[168]({
+						"BackgroundTransparen",
+						"cy"
+					})] = 1
+					L_321_[2][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_321_[2]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+					L_321_[2]["Text"] = L_320_[3]["Name"] .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_320_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_320_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_320_[3]["Name"] .. (" " .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_320_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_320_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_320_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_322_forvar0, L_323_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_324_ = {}
+		L_324_[3], L_324_[1] = L_322_forvar0, L_323_forvar1
+		if L_324_[1]:IsA("Tool") then
+			if RealFruitESP then
+				if L_324_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_324_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_324_[1]["Name"] .. (" " .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_324_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_325_ = {}
+					L_325_[1] = Instance["new"]("BillboardGui", L_324_[1]["Handle"])
+					L_325_[1]["Name"] = "NameEsp" .. Number
+					L_325_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_325_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_325_[1]["Adornee"] = L_324_[1]["Handle"]
+					L_325_[1]["AlwaysOnTop"] = true
+					L_325_[2] = Instance["new"]("TextLabel", L_325_[1])
+					L_325_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_325_[2]["FontSize"] = "Size14"
+					L_325_[2]["TextWrapped"] = true
+					L_325_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_325_[2]["TextYAlignment"] = "Top"
+					L_325_[2][L_3_[168]({
+						"BackgroundTransparen",
+						"cy"
+					})] = 1
+					L_325_[2][L_3_[168]({
+						"TextStrokeTransparen";
+						"cy"
+					})] = .5
+					L_325_[2]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+					L_325_[2]["Text"] = L_324_[1]["Name"] .. (" 
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_324_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_324_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_324_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_326_forvar0, L_327_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_328_ = {}
+		L_328_[1], L_328_[2] = L_326_forvar0, L_327_forvar1
+		do
+			local L_329_ = {}
+			L_329_[2] = L_328_[2]
+			pcall(function()
+				if not IslandESP then
+					if L_329_[2]:FindFirstChild("NameEsp") then
+						(L_329_[2]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_329_[2]["Name"] ~= "Sea" then
+					if L_329_[2]:FindFirstChild("NameEsp") then
+						L_329_[2]["NameEsp"]["TextLabel"]["Text"] = L_329_[2]["Name"] .. ("   
+" .. (L_3_[36](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_329_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_330_ = {}
+						L_330_[3] = Instance["new"]("BillboardGui", L_329_[2])
+						L_330_[3]["Name"] = "NameEsp"
+						L_330_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_330_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_330_[3]["Adornee"] = L_329_[2]
+						L_330_[3]["AlwaysOnTop"] = true
+						L_330_[1] = Instance["new"]("TextLabel", L_330_[3])
+						L_330_[1]["Font"] = "GothamSemibold"
+						L_330_[1]["FontSize"] = "Size14"
+						L_330_[1]["TextWrapped"] = true
+						L_330_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_330_[1]["TextYAlignment"] = "Top"
+						L_330_[1][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_330_[1][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_330_[1]["TextColor3"] = Color3["fromRGB"](8, 247, 255)
+					end
+				end
+			end)
+		end
+	end
+end
+function isnil(L_331_arg0)
+	local L_332_ = {}
+	L_332_[2] = L_331_arg0
+	L_332_[3] = nil
+	if L_332_[2] ~= L_332_[3] then
+		local L_333_ = {}
+		L_333_[1] = false
+	end
+	return true
+end
+L_3_[27] = function(L_334_arg0)
+	local L_335_ = {}
+	L_335_[1] = L_334_arg0
+	return math["floor"](tonumber(L_335_[1]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_336_forvar0, L_337_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_338_ = {}
+		L_338_[1], L_338_[2] = L_336_forvar0, L_337_forvar1
+		do
+			local L_339_ = {}
+			L_339_[1] = L_338_[2]
+			pcall(function()
+				if not isnil(L_339_[1]["Character"]) then
+					if ESPPlayer then
+						if isnil(L_339_[1]["Character"]["Head"]) or L_339_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							L_339_[1]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_339_[1]["Name"] .. (" | " .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_339_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[27]((L_339_[1]["Character"]["Humanoid"]["Health"] * 100) / L_339_[1]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+						else
+							local L_340_ = {}
+							L_340_[3] = Instance["new"]("BillboardGui", L_339_[1]["Character"]["Head"])
+							L_340_[3]["Name"] = "NameEsp" .. Number
+							L_340_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_340_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_340_[3]["Adornee"] = L_339_[1]["Character"]["Head"]
+							L_340_[3]["AlwaysOnTop"] = true
+							L_340_[1] = Instance["new"]("TextLabel", L_340_[3])
+							L_340_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_340_[1]["FontSize"] = "Size14"
+							L_340_[1]["TextWrapped"] = true
+							L_340_[1]["Text"] = L_339_[1]["Name"] .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_339_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_340_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_340_[1]["TextYAlignment"] = "Top"
+							L_340_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_340_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							if L_339_[1]["Team"] ~= game["Players"]["LocalPlayer"]["Team"] then
+								L_340_[1]["TextColor3"] = Color3["new"](255, 0, 0)
+							else
+								L_340_[1]["TextColor3"] = Color3["new"](0, 255, 0)
+							end
+						end
+					elseif L_339_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						(L_339_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_341_forvar0, L_342_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_343_ = {}
+		L_343_[2], L_343_[1] = L_341_forvar0, L_342_forvar1
+		do
+			local L_344_ = {}
+			L_344_[1] = L_343_[1]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_344_[1]:GetAttribute("IsDisabled") then
+						if not L_344_[1]:FindFirstChild("ChestEsp") then
+							local L_345_ = {}
+							L_345_[3] = Instance["new"]("BillboardGui", L_344_[1])
+							L_345_[3]["Name"] = "ChestEsp"
+							L_345_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_345_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_345_[3]["Adornee"] = L_344_[1]
+							L_345_[3]["AlwaysOnTop"] = true
+							L_345_[1] = Instance["new"]("TextLabel", L_345_[3])
+							L_345_[1]["Font"] = "Code"
+							L_345_[1]["FontSize"] = "Size14"
+							L_345_[1]["TextWrapped"] = true
+							L_345_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_345_[1]["TextYAlignment"] = "Top"
+							L_345_[1][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_345_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_345_[1]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						else
+							local L_346_ = {}
+							L_346_[2] = L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_344_[1]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_344_[1]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_346_[2] .. " M")
+						end
+					end
+				elseif L_344_[1]:FindFirstChild("ChestEsp") then
+					(L_344_[1]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[27] = function(L_347_arg0)
+	local L_348_ = {}
+	L_348_[1] = L_347_arg0
+	return math["floor"](L_348_[1] + .5)
+end
+function UpdateDevilChams()
+	for L_349_forvar0, L_350_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_351_ = {}
+		L_351_[3], L_351_[2] = L_349_forvar0, L_350_forvar1
+		do
+			local L_352_ = {}
+			L_352_[2] = L_351_[2]
+			pcall(function()
+				if not DevilFruitESP then
+					if L_352_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						(L_352_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				elseif string["find"](L_352_[2]["Name"], "Fruit") then
+					if L_352_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						L_352_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_352_[2]["Name"] .. ("   
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_352_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_353_ = {}
+						L_353_[1] = Instance["new"]("BillboardGui", L_352_[2]["Handle"])
+						L_353_[1]["Name"] = "NameEsp" .. Number
+						L_353_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_353_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_353_[1]["Adornee"] = L_352_[2]["Handle"]
+						L_353_[1]["AlwaysOnTop"] = true
+						L_353_[2] = Instance["new"]("TextLabel", L_353_[1])
+						L_353_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_353_[2]["FontSize"] = "Size14"
+						L_353_[2]["TextWrapped"] = true
+						L_353_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_353_[2]["TextYAlignment"] = "Top"
+						L_353_[2][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_353_[2][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						L_353_[2]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						L_353_[2]["Text"] = L_352_[2]["Name"] .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_352_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_354_forvar0, L_355_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_356_ = {}
+		L_356_[3], L_356_[1] = L_354_forvar0, L_355_forvar1
+		do
+			local L_357_ = {}
+			L_357_[2] = L_356_[1]
+			pcall(function()
+				if L_357_[2]["Name"] == "Flower2" or L_357_[2]["Name"] == "Flower1" then
+					if not FlowerESP then
+						if L_357_[2]:FindFirstChild("NameEsp" .. Number) then
+							(L_357_[2]:FindFirstChild("NameEsp" .. Number)):Destroy()
+						end
+					elseif L_357_[2]:FindFirstChild("NameEsp" .. Number) then
+						L_357_[2]["NameEsp" .. Number]["TextLabel"]["Text"] = L_357_[2]["Name"] .. ("   
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_357_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_358_ = {}
+						L_358_[1] = Instance["new"]("BillboardGui", L_357_[2])
+						L_358_[1]["Name"] = "NameEsp" .. Number
+						L_358_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_358_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_358_[1]["Adornee"] = L_357_[2]
+						L_358_[1]["AlwaysOnTop"] = true
+						L_358_[2] = Instance["new"]("TextLabel", L_358_[1])
+						L_358_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_358_[2]["FontSize"] = "Size14"
+						L_358_[2]["TextWrapped"] = true
+						L_358_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_358_[2]["TextYAlignment"] = "Top"
+						L_358_[2][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_358_[2][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_358_[2]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						if L_357_[2]["Name"] == "Flower1" then
+							L_358_[2]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_357_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_358_[2]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+						end
+						if L_357_[2]["Name"] == "Flower2" then
+							L_358_[2]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_357_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_358_[2]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_359_forvar0, L_360_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_361_ = {}
+		L_361_[2], L_361_[3] = L_359_forvar0, L_360_forvar1
+		if L_361_[3]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_361_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_361_[3]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif L_361_[3]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				L_361_[3]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_361_[3]["Name"] .. (" " .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_361_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				local L_362_ = {}
+				L_362_[2] = Instance["new"]("BillboardGui", L_361_[3]["Handle"])
+				L_362_[2]["Name"] = "NameEsp" .. Number
+				L_362_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_362_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_362_[2]["Adornee"] = L_361_[3]["Handle"]
+				L_362_[2]["AlwaysOnTop"] = true
+				L_362_[3] = Instance["new"]("TextLabel", L_362_[2])
+				L_362_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_362_[3]["FontSize"] = "Size14"
+				L_362_[3]["TextWrapped"] = true
+				L_362_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_362_[3]["TextYAlignment"] = "Top"
+				L_362_[3][L_3_[168]({
+					"BackgroundTransparen";
+					"cy"
+				})] = 1
+				L_362_[3][L_3_[168]({
+					"TextStrokeTransparen",
+					"cy"
+				})] = .5
+				L_362_[3]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+				L_362_[3]["Text"] = L_361_[3]["Name"] .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_361_[3]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+	for L_363_forvar0, L_364_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_365_ = {}
+		L_365_[2], L_365_[1] = L_363_forvar0, L_364_forvar1
+		if L_365_[1]:IsA("Tool") then
+			if RealFruitESP then
+				if L_365_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					L_365_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_365_[1]["Name"] .. (" " .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_365_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					local L_366_ = {}
+					L_366_[2] = Instance["new"]("BillboardGui", L_365_[1]["Handle"])
+					L_366_[2]["Name"] = "NameEsp" .. Number
+					L_366_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_366_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_366_[2]["Adornee"] = L_365_[1]["Handle"]
+					L_366_[2]["AlwaysOnTop"] = true
+					L_366_[1] = Instance["new"]("TextLabel", L_366_[2])
+					L_366_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_366_[1]["FontSize"] = "Size14"
+					L_366_[1]["TextWrapped"] = true
+					L_366_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_366_[1]["TextYAlignment"] = "Top"
+					L_366_[1][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_366_[1][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_366_[1]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+					L_366_[1]["Text"] = L_365_[1]["Name"] .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_365_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_365_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_365_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_367_forvar0, L_368_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_369_ = {}
+		L_369_[3], L_369_[2] = L_367_forvar0, L_368_forvar1
+		if L_369_[2]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_369_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_370_ = {}
+					L_370_[1] = Instance["new"]("BillboardGui", L_369_[2]["Handle"])
+					L_370_[1]["Name"] = "NameEsp" .. Number
+					L_370_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_370_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_370_[1]["Adornee"] = L_369_[2]["Handle"]
+					L_370_[1]["AlwaysOnTop"] = true
+					L_370_[2] = Instance["new"]("TextLabel", L_370_[1])
+					L_370_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_370_[2]["FontSize"] = "Size14"
+					L_370_[2]["TextWrapped"] = true
+					L_370_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_370_[2]["TextYAlignment"] = "Top"
+					L_370_[2][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_370_[2][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_370_[2]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+					L_370_[2]["Text"] = L_369_[2]["Name"] .. (" 
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_369_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_369_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_369_[2]["Name"] .. (" " .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_369_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_369_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_369_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for L_371_forvar0, L_372_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_373_ = {}
+		L_373_[1], L_373_[2] = L_371_forvar0, L_372_forvar1
+		do
+			local L_374_ = {}
+			L_374_[2] = L_373_[2]
+			pcall(function()
+				if IslandESP then
+					if L_374_[2]["Name"] ~= "Sea" then
+						if L_374_[2]:FindFirstChild("NameEsp") then
+							L_374_[2]["NameEsp"]["TextLabel"]["Text"] = L_374_[2]["Name"] .. ("   
+" .. (L_3_[27](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_374_[2]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_375_ = {}
+							L_375_[1] = Instance["new"]("BillboardGui", L_374_[2])
+							L_375_[1]["Name"] = "NameEsp"
+							L_375_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_375_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_375_[1]["Adornee"] = L_374_[2]
+							L_375_[1]["AlwaysOnTop"] = true
+							L_375_[3] = Instance["new"]("TextLabel", L_375_[1])
+							L_375_[3]["Font"] = "GothamSemibold"
+							L_375_[3]["FontSize"] = "Size14"
+							L_375_[3]["TextWrapped"] = true
+							L_375_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_375_[3]["TextYAlignment"] = "Top"
+							L_375_[3][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_375_[3][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_375_[3]["TextColor3"] = Color3["fromRGB"](8, 247, 255)
+						end
+					end
+				elseif L_374_[2]:FindFirstChild("NameEsp") then
+					(L_374_[2]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(L_376_arg0)
+	local L_377_ = {}
+	L_377_[2] = L_376_arg0
+	L_377_[3] = nil
+	if L_377_[2] ~= L_377_[3] then
+		local L_378_ = {}
+		L_378_[2] = false
+	end
+	return true
+end
+L_3_[107] = function(L_379_arg0)
+	local L_380_ = {}
+	L_380_[1] = L_379_arg0
+	return math["floor"](tonumber(L_380_[1]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdatePlayerChams()
+	for L_381_forvar0, L_382_forvar1 in pairs((game:GetService("Players")):GetChildren()) do
+		local L_383_ = {}
+		L_383_[3], L_383_[1] = L_381_forvar0, L_382_forvar1
+		do
+			local L_384_ = {}
+			L_384_[1] = L_383_[1]
+			pcall(function()
+				if not isnil(L_384_[1]["Character"]) then
+					if ESPPlayer then
+						if not isnil(L_384_[1]["Character"]["Head"]) and not L_384_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+							local L_385_ = {}
+							L_385_[2] = Instance["new"]("BillboardGui", L_384_[1]["Character"]["Head"])
+							L_385_[2]["Name"] = "NameEsp" .. Number
+							L_385_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_385_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_385_[2]["Adornee"] = L_384_[1]["Character"]["Head"]
+							L_385_[2]["AlwaysOnTop"] = true
+							L_385_[1] = Instance["new"]("TextLabel", L_385_[2])
+							L_385_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_385_[1]["FontSize"] = "Size14"
+							L_385_[1]["TextWrapped"] = true
+							L_385_[1]["Text"] = L_384_[1]["Name"] .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_384_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. " Distance"))
+							L_385_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_385_[1]["TextYAlignment"] = "Top"
+							L_385_[1][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_385_[1][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							if L_384_[1]["Team"] ~= game["Players"]["LocalPlayer"]["Team"] then
+								L_385_[1]["TextColor3"] = Color3["new"](255, 0, 0)
+							else
+								L_385_[1]["TextColor3"] = Color3["new"](0, 255, 0)
+							end
+						else
+							L_384_[1]["Character"]["Head"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_384_[1]["Name"] .. (" | " .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_384_[1]["Character"]["Head"]["Position"])["Magnitude"] / 3) .. (" Distance
+Health : " .. (L_3_[107]((L_384_[1]["Character"]["Humanoid"]["Health"] * 100) / L_384_[1]["Character"]["Humanoid"]["MaxHealth"]) .. "%"))))
+						end
+					elseif L_384_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number) then
+						(L_384_[1]["Character"]["Head"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for L_386_forvar0, L_387_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("_ChestTagged")) do
+		local L_388_ = {}
+		L_388_[1], L_388_[3] = L_386_forvar0, L_387_forvar1
+		do
+			local L_389_ = {}
+			L_389_[2] = L_388_[3]
+			pcall(function()
+				if _G["ChestESP"] then
+					if not L_389_[2]:GetAttribute("IsDisabled") then
+						if L_389_[2]:FindFirstChild("ChestEsp") then
+							local L_390_ = {}
+							L_390_[1] = L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - (L_389_[2]:GetPivot())["Position"])["Magnitude"] / 3)
+							L_389_[2]["ChestEsp"]["TextLabel"]["Text"] = "Chest
+" .. (L_390_[1] .. " M")
+						else
+							local L_391_ = {}
+							L_391_[2] = Instance["new"]("BillboardGui", L_389_[2])
+							L_391_[2]["Name"] = "ChestEsp"
+							L_391_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_391_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_391_[2]["Adornee"] = L_389_[2]
+							L_391_[2]["AlwaysOnTop"] = true
+							L_391_[3] = Instance["new"]("TextLabel", L_391_[2])
+							L_391_[3]["Font"] = "Code"
+							L_391_[3]["FontSize"] = "Size14"
+							L_391_[3]["TextWrapped"] = true
+							L_391_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_391_[3]["TextYAlignment"] = "Top"
+							L_391_[3][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_391_[3][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_391_[3]["TextColor3"] = Color3["fromRGB"](255, 215, 0)
+						end
+					end
+				elseif L_389_[2]:FindFirstChild("ChestEsp") then
+					(L_389_[2]:FindFirstChild("ChestEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+L_3_[107] = function(L_392_arg0)
+	local L_393_ = {}
+	L_393_[1] = L_392_arg0
+	return math["floor"](L_393_[1] + .5)
+end
+function UpdateDevilChams()
+	for L_394_forvar0, L_395_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_396_ = {}
+		L_396_[2], L_396_[3] = L_394_forvar0, L_395_forvar1
+		do
+			local L_397_ = {}
+			L_397_[1] = L_396_[3]
+			pcall(function()
+				if not DevilFruitESP then
+					if L_397_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						(L_397_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				elseif string["find"](L_397_[1]["Name"], "Fruit") then
+					if L_397_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+						L_397_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_397_[1]["Name"] .. ("   
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_397_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					else
+						local L_398_ = {}
+						L_398_[1] = Instance["new"]("BillboardGui", L_397_[1]["Handle"])
+						L_398_[1]["Name"] = "NameEsp" .. Number
+						L_398_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_398_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_398_[1]["Adornee"] = L_397_[1]["Handle"]
+						L_398_[1]["AlwaysOnTop"] = true
+						L_398_[2] = Instance["new"]("TextLabel", L_398_[1])
+						L_398_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+						L_398_[2]["FontSize"] = "Size14"
+						L_398_[2]["TextWrapped"] = true
+						L_398_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_398_[2]["TextYAlignment"] = "Top"
+						L_398_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_398_[2][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_398_[2]["TextColor3"] = Color3["fromRGB"](255, 255, 255)
+						L_398_[2]["Text"] = L_397_[1]["Name"] .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_397_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for L_399_forvar0, L_400_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+		local L_401_ = {}
+		L_401_[3], L_401_[1] = L_399_forvar0, L_400_forvar1
+		do
+			local L_402_ = {}
+			L_402_[1] = L_401_[1]
+			pcall(function()
+				if L_402_[1]["Name"] == "Flower2" or L_402_[1]["Name"] == "Flower1" then
+					if FlowerESP then
+						if L_402_[1]:FindFirstChild("NameEsp" .. Number) then
+							L_402_[1]["NameEsp" .. Number]["TextLabel"]["Text"] = L_402_[1]["Name"] .. ("   
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_402_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+						else
+							local L_403_ = {}
+							L_403_[2] = Instance["new"]("BillboardGui", L_402_[1])
+							L_403_[2]["Name"] = "NameEsp" .. Number
+							L_403_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_403_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_403_[2]["Adornee"] = L_402_[1]
+							L_403_[2]["AlwaysOnTop"] = true
+							L_403_[1] = Instance["new"]("TextLabel", L_403_[2])
+							L_403_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_403_[1]["FontSize"] = "Size14"
+							L_403_[1]["TextWrapped"] = true
+							L_403_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_403_[1]["TextYAlignment"] = "Top"
+							L_403_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_403_[1][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_403_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							if L_402_[1]["Name"] == "Flower1" then
+								L_403_[1]["Text"] = "Blue Flower" .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_402_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_403_[1]["TextColor3"] = Color3["fromRGB"](0, 0, 255)
+							end
+							if L_402_[1]["Name"] == "Flower2" then
+								L_403_[1]["Text"] = "Red Flower" .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_402_[1]["Position"])["Magnitude"] / 3) .. " Distance"))
+								L_403_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+							end
+						end
+					elseif L_402_[1]:FindFirstChild("NameEsp" .. Number) then
+						(L_402_[1]:FindFirstChild("NameEsp" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for L_404_forvar0, L_405_forvar1 in pairs(game["Workspace"]["AppleSpawner"]:GetChildren()) do
+		local L_406_ = {}
+		L_406_[2], L_406_[1] = L_404_forvar0, L_405_forvar1
+		if L_406_[1]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_406_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_407_ = {}
+					L_407_[2] = Instance["new"]("BillboardGui", L_406_[1]["Handle"])
+					L_407_[2]["Name"] = "NameEsp" .. Number
+					L_407_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_407_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_407_[2]["Adornee"] = L_406_[1]["Handle"]
+					L_407_[2]["AlwaysOnTop"] = true
+					L_407_[1] = Instance["new"]("TextLabel", L_407_[2])
+					L_407_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_407_[1]["FontSize"] = "Size14"
+					L_407_[1]["TextWrapped"] = true
+					L_407_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_407_[1]["TextYAlignment"] = "Top"
+					L_407_[1][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_407_[1][L_3_[168]({
+						"TextStrokeTransparen",
+						"cy"
+					})] = .5
+					L_407_[1]["TextColor3"] = Color3["fromRGB"](255, 0, 0)
+					L_407_[1]["Text"] = L_406_[1]["Name"] .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_406_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_406_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_406_[1]["Name"] .. (" " .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_406_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_406_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_406_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+	for L_408_forvar0, L_409_forvar1 in pairs(game["Workspace"]["PineappleSpawner"]:GetChildren()) do
+		local L_410_ = {}
+		L_410_[3], L_410_[1] = L_408_forvar0, L_409_forvar1
+		if L_410_[1]:IsA("Tool") then
+			if not RealFruitESP then
+				if L_410_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					(L_410_[1]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+				end
+			elseif not L_410_[1]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				local L_411_ = {}
+				L_411_[3] = Instance["new"]("BillboardGui", L_410_[1]["Handle"])
+				L_411_[3]["Name"] = "NameEsp" .. Number
+				L_411_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+				L_411_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+				L_411_[3]["Adornee"] = L_410_[1]["Handle"]
+				L_411_[3]["AlwaysOnTop"] = true
+				L_411_[2] = Instance["new"]("TextLabel", L_411_[3])
+				L_411_[2]["Font"] = Enum["Font"]["GothamSemibold"]
+				L_411_[2]["FontSize"] = "Size14"
+				L_411_[2]["TextWrapped"] = true
+				L_411_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+				L_411_[2]["TextYAlignment"] = "Top"
+				L_411_[2][L_3_[168]({
+					"BackgroundTransparen",
+					"cy"
+				})] = 1
+				L_411_[2][L_3_[168]({
+					"TextStrokeTransparen",
+					"cy"
+				})] = .5
+				L_411_[2]["TextColor3"] = Color3["fromRGB"](255, 174, 0)
+				L_411_[2]["Text"] = L_410_[1]["Name"] .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_410_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			else
+				L_410_[1]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_410_[1]["Name"] .. (" " .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_410_[1]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+			end
+		end
+	end
+	for L_412_forvar0, L_413_forvar1 in pairs(game["Workspace"]["BananaSpawner"]:GetChildren()) do
+		local L_414_ = {}
+		L_414_[1], L_414_[2] = L_412_forvar0, L_413_forvar1
+		if L_414_[2]:IsA("Tool") then
+			if RealFruitESP then
+				if not L_414_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+					local L_415_ = {}
+					L_415_[2] = Instance["new"]("BillboardGui", L_414_[2]["Handle"])
+					L_415_[2]["Name"] = "NameEsp" .. Number
+					L_415_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+					L_415_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+					L_415_[2]["Adornee"] = L_414_[2]["Handle"]
+					L_415_[2]["AlwaysOnTop"] = true
+					L_415_[3] = Instance["new"]("TextLabel", L_415_[2])
+					L_415_[3]["Font"] = Enum["Font"]["GothamSemibold"]
+					L_415_[3]["FontSize"] = "Size14"
+					L_415_[3]["TextWrapped"] = true
+					L_415_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+					L_415_[3]["TextYAlignment"] = "Top"
+					L_415_[3][L_3_[168]({
+						"BackgroundTransparen";
+						"cy"
+					})] = 1
+					L_415_[3][L_3_[168]({
+						"TextStrokeTransparen";
+						"cy"
+					})] = .5
+					L_415_[3]["TextColor3"] = Color3["fromRGB"](251, 255, 0)
+					L_415_[3]["Text"] = L_414_[2]["Name"] .. (" 
+" .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_414_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				else
+					L_414_[2]["Handle"]["NameEsp" .. Number]["TextLabel"]["Text"] = L_414_[2]["Name"] .. (" " .. (L_3_[107](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_414_[2]["Handle"]["Position"])["Magnitude"] / 3) .. " Distance"))
+				end
+			elseif L_414_[2]["Handle"]:FindFirstChild("NameEsp" .. Number) then
+				(L_414_[2]["Handle"]:FindFirstChild("NameEsp" .. Number)):Destroy()
+			end
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		pcall(function()
+			if MobESP then
+				for L_416_forvar0, L_417_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+					local L_418_ = {}
+					L_418_[2], L_418_[1] = L_416_forvar0, L_417_forvar1
+					if L_418_[1]:FindFirstChild("HumanoidRootPart") then
+						local L_419_ = {}
+						if not L_418_[1]:FindFirstChild("MobEap") then
+							local L_420_ = {}
+							L_420_[1] = Instance["new"]("BillboardGui")
+							L_420_[3] = Instance["new"]("TextLabel")
+							L_420_[1]["Parent"] = L_418_[1]
+							L_420_[1]["ZIndexBehavior"] = Enum["ZIndexBehavior"]["Sibling"]
+							L_420_[1]["Active"] = true
+							L_420_[1]["Name"] = "MobEap"
+							L_420_[1]["AlwaysOnTop"] = true
+							L_420_[1]["LightInfluence"] = 1
+							L_420_[1]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_420_[1]["StudsOffset"] = Vector3["new"](0, 2.5, 0)
+							L_420_[3]["Parent"] = L_420_[1]
+							L_420_[3]["BackgroundColor3"] = Color3["fromRGB"](255, 255, 255)
+							L_420_[3][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_420_[3]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_420_[3]["Font"] = Enum["Font"]["GothamBold"]
+							L_420_[3]["TextColor3"] = Color3["fromRGB"](7, 236, 240)
+							L_420_[3]["Text"]["Size"] = 35
+						end
+						L_419_[1] = math["floor"]((game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_418_[1]["HumanoidRootPart"]["Position"])["Magnitude"])
+						L_418_[1]["MobEap"]["TextLabel"]["Text"] = L_418_[1]["Name"] .. (" - " .. (L_419_[1] .. " Distance"))
+					end
+				end
+			else
+				for L_421_forvar0, L_422_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+					local L_423_ = {}
+					L_423_[3], L_423_[1] = L_421_forvar0, L_422_forvar1
+					if L_423_[1]:FindFirstChild("MobEap") then
+						L_423_[1]["MobEap"]:Destroy()
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		pcall(function()
+			if not SeaESP then
+				for L_424_forvar0, L_425_forvar1 in pairs((game:GetService("Workspace"))["SeaBeasts"]:GetChildren()) do
+					local L_426_ = {}
+					L_426_[1], L_426_[3] = L_424_forvar0, L_425_forvar1
+					if L_426_[3]:FindFirstChild("Seaesps") then
+						L_426_[3]["Seaesps"]:Destroy()
+					end
+				end
+			else
+				for L_427_forvar0, L_428_forvar1 in pairs((game:GetService("Workspace"))["SeaBeasts"]:GetChildren()) do
+					local L_429_ = {}
+					L_429_[1], L_429_[2] = L_427_forvar0, L_428_forvar1
+					if L_429_[2]:FindFirstChild("HumanoidRootPart") then
+						local L_430_ = {}
+						if not L_429_[2]:FindFirstChild("Seaesps") then
+							local L_431_ = {}
+							L_431_[3] = Instance["new"]("BillboardGui")
+							L_431_[2] = Instance["new"]("TextLabel")
+							L_431_[3]["Parent"] = L_429_[2]
+							L_431_[3]["ZIndexBehavior"] = Enum["ZIndexBehavior"]["Sibling"]
+							L_431_[3]["Active"] = true
+							L_431_[3]["Name"] = "Seaesps"
+							L_431_[3]["AlwaysOnTop"] = true
+							L_431_[3]["LightInfluence"] = 1
+							L_431_[3]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_431_[3]["StudsOffset"] = Vector3["new"](0, 2.5, 0)
+							L_431_[2]["Parent"] = L_431_[3]
+							L_431_[2]["BackgroundColor3"] = Color3["fromRGB"](255, 255, 255)
+							L_431_[2][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_431_[2]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_431_[2]["Font"] = Enum["Font"]["GothamBold"]
+							L_431_[2]["TextColor3"] = Color3["fromRGB"](7, 236, 240)
+							L_431_[2]["Text"]["Size"] = 35
+						end
+						L_430_[2] = math["floor"]((game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_429_[2]["HumanoidRootPart"]["Position"])["Magnitude"])
+						L_429_[2]["Seaesps"]["TextLabel"]["Text"] = L_429_[2]["Name"] .. (" - " .. (L_430_[2] .. " Distance"))
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		pcall(function()
+			if not NpcESP then
+				for L_432_forvar0, L_433_forvar1 in pairs((game:GetService("Workspace"))["NPCs"]:GetChildren()) do
+					local L_434_ = {}
+					L_434_[3], L_434_[1] = L_432_forvar0, L_433_forvar1
+					if L_434_[1]:FindFirstChild("NpcEspes") then
+						L_434_[1]["NpcEspes"]:Destroy()
+					end
+				end
+			else
+				for L_435_forvar0, L_436_forvar1 in pairs((game:GetService("Workspace"))["NPCs"]:GetChildren()) do
+					local L_437_ = {}
+					L_437_[1], L_437_[3] = L_435_forvar0, L_436_forvar1
+					if L_437_[3]:FindFirstChild("HumanoidRootPart") then
+						local L_438_ = {}
+						if not L_437_[3]:FindFirstChild("NpcEspes") then
+							local L_439_ = {}
+							L_439_[2] = Instance["new"]("BillboardGui")
+							L_439_[1] = Instance["new"]("TextLabel")
+							L_439_[2]["Parent"] = L_437_[3]
+							L_439_[2]["ZIndexBehavior"] = Enum["ZIndexBehavior"]["Sibling"]
+							L_439_[2]["Active"] = true
+							L_439_[2]["Name"] = "NpcEspes"
+							L_439_[2]["AlwaysOnTop"] = true
+							L_439_[2]["LightInfluence"] = 1
+							L_439_[2]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_439_[2]["StudsOffset"] = Vector3["new"](0, 2.5, 0)
+							L_439_[1]["Parent"] = L_439_[2]
+							L_439_[1]["BackgroundColor3"] = Color3["fromRGB"](255, 255, 255)
+							L_439_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_439_[1]["Size"] = UDim2["new"](0, 200, 0, 50)
+							L_439_[1]["Font"] = Enum["Font"]["GothamBold"]
+							L_439_[1]["TextColor3"] = Color3["fromRGB"](7, 236, 240)
+							L_439_[1]["Text"]["Size"] = 35
+						end
+						L_438_[2] = math["floor"]((game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_437_[3]["HumanoidRootPart"]["Position"])["Magnitude"])
+						L_437_[3]["NpcEspes"]["TextLabel"]["Text"] = L_437_[3]["Name"] .. (" - " .. (L_438_[2] .. " Distance"))
+					end
+				end
+			end
+		end)
+	end
+end)
+function isnil(L_440_arg0)
+	local L_441_ = {}
+	L_441_[1] = L_440_arg0
+	L_441_[3] = nil
+	if L_441_[1] ~= L_441_[3] then
+		local L_442_ = {}
+		L_442_[1] = false
+	end
+	return true
+end
+L_3_[138] = function(L_443_arg0)
+	local L_444_ = {}
+	L_444_[2] = L_443_arg0
+	return math["floor"](tonumber(L_444_[2]) + .5)
+end
+Number = math["random"](1, 1000000)
+function UpdateIslandMirageESP()
+	for L_445_forvar0, L_446_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_447_ = {}
+		L_447_[3], L_447_[1] = L_445_forvar0, L_446_forvar1
+		do
+			local L_448_ = {}
+			L_448_[1] = L_447_[1]
+			pcall(function()
+				if not MirageIslandESP then
+					if L_448_[1]:FindFirstChild("NameEsp") then
+						(L_448_[1]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_448_[1]["Name"] == "Mirage Island" then
+					if L_448_[1]:FindFirstChild("NameEsp") then
+						L_448_[1]["NameEsp"]["TextLabel"]["Text"] = L_448_[1]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_448_[1]["Position"])["Magnitude"] / 3) .. " M"))
+					else
+						local L_449_ = {}
+						L_449_[2] = Instance["new"]("BillboardGui", L_448_[1])
+						L_449_[2]["Name"] = "NameEsp"
+						L_449_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_449_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_449_[2]["Adornee"] = L_448_[1]
+						L_449_[2]["AlwaysOnTop"] = true
+						L_449_[3] = Instance["new"]("TextLabel", L_449_[2])
+						L_449_[3]["Font"] = "Code"
+						L_449_[3]["FontSize"] = "Size14"
+						L_449_[3]["TextWrapped"] = true
+						L_449_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_449_[3]["TextYAlignment"] = "Top"
+						L_449_[3][L_3_[168]({
+							"BackgroundTransparen",
+							"cy"
+						})] = 1
+						L_449_[3][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_449_[3]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdatePrehistoricIslandESP()
+	for L_450_forvar0, L_451_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_452_ = {}
+		L_452_[3], L_452_[2] = L_450_forvar0, L_451_forvar1
+		do
+			local L_453_ = {}
+			L_453_[1] = L_452_[2]
+			pcall(function()
+				if not PrehistoricIslandESP then
+					if L_453_[1]:FindFirstChild("NameEsp") then
+						(L_453_[1]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_453_[1]["Name"] == "PrehistoricIsland" then
+					if not L_453_[1]:FindFirstChild("NameEsp") then
+						local L_454_ = {}
+						L_454_[1] = Instance["new"]("BillboardGui", L_453_[1])
+						L_454_[1]["Name"] = "NameEsp"
+						L_454_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_454_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_454_[1]["Adornee"] = L_453_[1]
+						L_454_[1]["AlwaysOnTop"] = true
+						L_454_[2] = Instance["new"]("TextLabel", L_454_[1])
+						L_454_[2]["Font"] = "Code"
+						L_454_[2]["FontSize"] = "Size14"
+						L_454_[2]["TextWrapped"] = true
+						L_454_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_454_[2]["TextYAlignment"] = "Top"
+						L_454_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_454_[2][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_454_[2]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+					else
+						L_453_[1]["NameEsp"]["TextLabel"]["Text"] = L_453_[1]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_453_[1]["Position"])["Magnitude"] / 3) .. " M"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateAfdESP()
+	for L_455_forvar0, L_456_forvar1 in pairs((game:GetService("Workspace"))["NPCs"]:GetChildren()) do
+		local L_457_ = {}
+		L_457_[1], L_457_[3] = L_455_forvar0, L_456_forvar1
+		do
+			local L_458_ = {}
+			L_458_[2] = L_457_[3]
+			pcall(function()
+				if not AfdESP then
+					if L_458_[2]:FindFirstChild("NameEsp") then
+						(L_458_[2]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_458_[2]["Name"] == L_3_[168]({
+					"Advanced Fruit Deale",
+					"r"
+				}) then
+					if L_458_[2]:FindFirstChild("NameEsp") then
+						L_458_[2]["NameEsp"]["TextLabel"]["Text"] = L_458_[2]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_458_[2]["Position"])["Magnitude"] / 3) .. " M"))
+					else
+						local L_459_ = {}
+						L_459_[1] = Instance["new"]("BillboardGui", L_458_[2])
+						L_459_[1]["Name"] = "NameEsp"
+						L_459_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_459_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_459_[1]["Adornee"] = L_458_[2]
+						L_459_[1]["AlwaysOnTop"] = true
+						L_459_[2] = Instance["new"]("TextLabel", L_459_[1])
+						L_459_[2]["Font"] = "Code"
+						L_459_[2]["FontSize"] = "Size14"
+						L_459_[2]["TextWrapped"] = true
+						L_459_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_459_[2]["TextYAlignment"] = "Top"
+						L_459_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_459_[2][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_459_[2]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateAuraESP()
+	for L_460_forvar0, L_461_forvar1 in pairs((game:GetService("Workspace"))["NPCs"]:GetChildren()) do
+		local L_462_ = {}
+		L_462_[1], L_462_[2] = L_460_forvar0, L_461_forvar1
+		do
+			local L_463_ = {}
+			L_463_[2] = L_462_[2]
+			pcall(function()
+				if AuraESP then
+					if L_463_[2]["Name"] == L_3_[168]({
+						"Master of Enhancemen";
+						"t"
+					}) then
+						if L_463_[2]:FindFirstChild("NameEsp") then
+							L_463_[2]["NameEsp"]["TextLabel"]["Text"] = L_463_[2]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_463_[2]["Position"])["Magnitude"] / 3) .. " M"))
+						else
+							local L_464_ = {}
+							L_464_[2] = Instance["new"]("BillboardGui", L_463_[2])
+							L_464_[2]["Name"] = "NameEsp"
+							L_464_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_464_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_464_[2]["Adornee"] = L_463_[2]
+							L_464_[2]["AlwaysOnTop"] = true
+							L_464_[3] = Instance["new"]("TextLabel", L_464_[2])
+							L_464_[3]["Font"] = "Code"
+							L_464_[3]["FontSize"] = "Size14"
+							L_464_[3]["TextWrapped"] = true
+							L_464_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_464_[3]["TextYAlignment"] = "Top"
+							L_464_[3][L_3_[168]({
+								"BackgroundTransparen";
+								"cy"
+							})] = 1
+							L_464_[3][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_464_[3]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+						end
+					end
+				elseif L_463_[2]:FindFirstChild("NameEsp") then
+					(L_463_[2]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateLSDESP()
+	for L_465_forvar0, L_466_forvar1 in pairs((game:GetService("Workspace"))["NPCs"]:GetChildren()) do
+		local L_467_ = {}
+		L_467_[1], L_467_[2] = L_465_forvar0, L_466_forvar1
+		do
+			local L_468_ = {}
+			L_468_[1] = L_467_[2]
+			pcall(function()
+				if LADESP then
+					if L_468_[1]["Name"] == L_3_[168]({
+						"Legendary Sword Deal";
+						"er"
+					}) then
+						if L_468_[1]:FindFirstChild("NameEsp") then
+							L_468_[1]["NameEsp"]["TextLabel"]["Text"] = L_468_[1]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_468_[1]["Position"])["Magnitude"] / 3) .. " M"))
+						else
+							local L_469_ = {}
+							L_469_[1] = Instance["new"]("BillboardGui", L_468_[1])
+							L_469_[1]["Name"] = "NameEsp"
+							L_469_[1]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+							L_469_[1]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_469_[1]["Adornee"] = L_468_[1]
+							L_469_[1]["AlwaysOnTop"] = true
+							L_469_[2] = Instance["new"]("TextLabel", L_469_[1])
+							L_469_[2]["Font"] = "Code"
+							L_469_[2]["FontSize"] = "Size14"
+							L_469_[2]["TextWrapped"] = true
+							L_469_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_469_[2]["TextYAlignment"] = "Top"
+							L_469_[2][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_469_[2][L_3_[168]({
+								"TextStrokeTransparen",
+								"cy"
+							})] = .5
+							L_469_[2]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+						end
+					end
+				elseif L_468_[1]:FindFirstChild("NameEsp") then
+					(L_468_[1]:FindFirstChild("NameEsp")):Destroy()
+				end
+			end)
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if InfAbility then
+			InfAb()
+		end
+	end
+end)
+function InfAb()
+	if InfAbility then
+		if not(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("Agility") then
+			local L_470_ = {}
+			L_470_[2] = Instance["new"]("ParticleEmitter")
+			L_470_[2]["Acceleration"] = Vector3["new"](0, 0, 0)
+			L_470_[2]["Archivable"] = true
+			L_470_[2]["Drag"] = 20
+			L_470_[2]["EmissionDirection"] = Enum["NormalId"]["Top"]
+			L_470_[2]["Enabled"] = true
+			L_470_[2]["Lifetime"] = NumberRange["new"](0, 0)
+			L_470_[2]["LightInfluence"] = 0
+			L_470_[2]["LockedToPart"] = true
+			L_470_[2]["Name"] = "Agility"
+			L_470_[2]["Rate"] = 500
+			L_470_[1] = {
+				NumberSequenceKeypoint["new"](0, 0),
+				NumberSequenceKeypoint["new"](1, 4)
+			}
+			L_470_[2]["Size"] = NumberSequence["new"](L_470_[1])
+			L_470_[2]["RotSpeed"] = NumberRange["new"](9999, 99999)
+			L_470_[2]["Rotation"] = NumberRange["new"](0, 0)
+			L_470_[2]["Speed"] = NumberRange["new"](30, 30)
+			L_470_[2]["SpreadAngle"] = Vector2["new"](0, 0, 0, 0)
+			L_470_[2]["Texture"] = ""
+			L_470_[2]["VelocityInheritance"] = 0
+			L_470_[2]["ZOffset"] = 2
+			L_470_[2]["Transparency"] = NumberSequence["new"](0)
+			L_470_[2]["Color"] = ColorSequence["new"](Color3["fromRGB"](0, 0, 0), Color3["fromRGB"](0, 0, 0))
+			L_470_[2]["Parent"] = (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]
+		end
+	elseif (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("Agility") then
+		((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("Agility")):Destroy()
+	end
+end
+function UpdateGeaESP()
+	for L_471_forvar0, L_472_forvar1 in pairs((game:GetService("Workspace"))["Map"]["MysticIsland"]:GetChildren()) do
+		local L_473_ = {}
+		L_473_[3], L_473_[1] = L_471_forvar0, L_472_forvar1
+		do
+			local L_474_ = {}
+			L_474_[1] = L_473_[1]
+			pcall(function()
+				if not GearESP then
+					if L_474_[1]:FindFirstChild("NameEsp") then
+						(L_474_[1]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_474_[1]["Name"] == "MeshPart" then
+					if not L_474_[1]:FindFirstChild("NameEsp") then
+						local L_475_ = {}
+						L_475_[3] = Instance["new"]("BillboardGui", L_474_[1])
+						L_475_[3]["Name"] = "NameEsp"
+						L_475_[3]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_475_[3]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_475_[3]["Adornee"] = L_474_[1]
+						L_475_[3]["AlwaysOnTop"] = true
+						L_475_[2] = Instance["new"]("TextLabel", L_475_[3])
+						L_475_[2]["Font"] = "Code"
+						L_475_[2]["FontSize"] = "Size14"
+						L_475_[2]["TextWrapped"] = true
+						L_475_[2]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_475_[2]["TextYAlignment"] = "Top"
+						L_475_[2][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_475_[2][L_3_[168]({
+							"TextStrokeTransparen";
+							"cy"
+						})] = .5
+						L_475_[2]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+					else
+						L_474_[1]["NameEsp"]["TextLabel"]["Text"] = L_474_[1]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_474_[1]["Position"])["Magnitude"] / 3) .. " M"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateBerriesESP()
+	local L_476_ = {}
+	L_476_[2] = (game:GetService("CollectionService")):GetTagged("BerryBush")
+	for L_477_forvar0, L_478_forvar1 in pairs(L_476_[2]) do
+		local L_479_ = {}
+		L_479_[2], L_479_[3] = L_477_forvar0, L_478_forvar1
+		do
+			local L_480_ = {}
+			L_480_[2] = L_479_[3]
+			pcall(function()
+				for L_481_forvar0, L_482_forvar1 in pairs(L_480_[2]:GetAttributes()) do
+					local L_483_ = {}
+					L_483_[2], L_483_[1] = L_481_forvar0, L_482_forvar1
+					if not L_483_[1] then
+						if L_480_[2]["Parent"]:FindFirstChild("NameEsp") then
+							(L_480_[2]["Parent"]:FindFirstChild("NameEsp")):Destroy()
+						end
+					else
+						if not L_480_[2]["Parent"]:FindFirstChild("BerryESP") then
+							local L_484_ = {}
+							L_484_[2] = Instance["new"]("BillboardGui", L_480_[2]["Parent"])
+							L_484_[2]["Name"] = "BerryESP"
+							L_484_[2]["ExtentsOffset"] = Vector3["new"](0, 2, 0)
+							L_484_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+							L_484_[2]["Adornee"] = L_480_[2]["Parent"]
+							L_484_[2]["AlwaysOnTop"] = true
+							L_484_[1] = Instance["new"]("TextLabel", L_484_[2])
+							L_484_[1]["Font"] = Enum["Font"]["GothamSemibold"]
+							L_484_[1]["TextSize"] = 14
+							L_484_[1]["TextWrapped"] = true
+							L_484_[1]["Size"] = UDim2["new"](1, 0, 1, 0)
+							L_484_[1]["TextYAlignment"] = Enum["TextYAlignment"]["Top"]
+							L_484_[1][L_3_[168]({
+								"BackgroundTransparen",
+								"cy"
+							})] = 1
+							L_484_[1][L_3_[168]({
+								"TextStrokeTransparen";
+								"cy"
+							})] = .5
+							L_484_[1]["TextColor3"] = Color3["fromRGB"](255, 255, 0)
+							L_484_[1]["Text"] = L_483_[1]
+						end
+						if L_480_[2]["Parent"]:FindFirstChild("BerryESP") then
+							local L_485_ = {}
+							L_485_[1] = game["Players"]["LocalPlayer"]
+							if L_485_[1] and (L_485_[1]["Character"] and L_485_[1]["Character"]:FindFirstChild("Head")) then
+								local L_486_ = {}
+								L_486_[2] = L_485_[1]["Character"]["Head"]["Position"]
+								L_486_[3] = ((L_480_[2]["Parent"]:GetPivot())["Position"] - L_486_[2])["Magnitude"]
+								L_480_[2]["Parent"]["BerryESP"]["TextLabel"]["Text"] = L_483_[1] .. (-41148 .. (math["floor"](L_486_[3]) .. "m"))
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateIslandKisuneESP()
+	for L_487_forvar0, L_488_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+		local L_489_ = {}
+		L_489_[1], L_489_[3] = L_487_forvar0, L_488_forvar1
+		do
+			local L_490_ = {}
+			L_490_[1] = L_489_[3]
+			pcall(function()
+				if not KitsuneIslandEsp then
+					if L_490_[1]:FindFirstChild("NameEsp") then
+						(L_490_[1]:FindFirstChild("NameEsp")):Destroy()
+					end
+				elseif L_490_[1]["Name"] == "Kitsune Island" then
+					if L_490_[1]:FindFirstChild("NameEsp") then
+						L_490_[1]["NameEsp"]["TextLabel"]["Text"] = L_490_[1]["Name"] .. ("   
+" .. (L_3_[138](((game:GetService("Players"))["LocalPlayer"]["Character"]["Head"]["Position"] - L_490_[1]["Position"])["Magnitude"] / 3) .. " M"))
+					else
+						local L_491_ = {}
+						L_491_[2] = Instance["new"]("BillboardGui", L_490_[1])
+						L_491_[2]["Name"] = "NameEsp"
+						L_491_[2]["ExtentsOffset"] = Vector3["new"](0, 1, 0)
+						L_491_[2]["Size"] = UDim2["new"](1, 200, 1, 30)
+						L_491_[2]["Adornee"] = L_490_[1]
+						L_491_[2]["AlwaysOnTop"] = true
+						L_491_[3] = Instance["new"]("TextLabel", L_491_[2])
+						L_491_[3]["Font"] = "Code"
+						L_491_[3]["FontSize"] = "Size14"
+						L_491_[3]["TextWrapped"] = true
+						L_491_[3]["Size"] = UDim2["new"](1, 0, 1, 0)
+						L_491_[3]["TextYAlignment"] = "Top"
+						L_491_[3][L_3_[168]({
+							"BackgroundTransparen";
+							"cy"
+						})] = 1
+						L_491_[3][L_3_[168]({
+							"TextStrokeTransparen",
+							"cy"
+						})] = .5
+						L_491_[3]["TextColor3"] = Color3["fromRGB"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function AutoHaki()
+	local L_492_ = {}
+	L_492_[2] = (game:GetService("Players"))["LocalPlayer"]["Character"]
+	if L_492_[2] and not L_492_[2]:FindFirstChild("HasBuso") then
+		local L_493_ = {}
+		L_493_[2] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]
+		if L_493_[2] then
+			L_493_[2]:InvokeServer("Buso")
+		end
+	end
+end
+function UnEquipWeapon(L_494_arg0)
+	local L_495_ = {}
+	L_495_[1] = L_494_arg0
+	if game["Players"]["LocalPlayer"]["Character"]:FindFirstChild(L_495_[1]) then
+		_G["NotAutoEquip"] = true
+		wait(.5);
+		(game["Players"]["LocalPlayer"]["Character"]:FindFirstChild(L_495_[1]))["Parent"] = game["Players"]["LocalPlayer"]["Backpack"]
+		wait(.1)
+		_G["NotAutoEquip"] = false
+	end
+end
+function EquipWeapon(L_496_arg0)
+	local L_497_ = {}
+	L_497_[2] = L_496_arg0
+	if not _G["NotAutoEquip"] and game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild(L_497_[2]) then
+		Tool = game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild(L_497_[2])
+		wait(.1)
+		game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(Tool)
+	end
+end
+spawn(function()
+	local L_498_ = {}
+	L_498_[3] = getrawmetatable(game)
+	L_498_[2] = L_498_[3]["__namecall"]
+	setreadonly(L_498_[3], false)
+	L_498_[3]["__namecall"] = newcclosure(function(...)
+		local L_499_ = {}
+		L_499_[3] = getnamecallmethod()
+		L_499_[2] = {
+			...
+		}
+		if tostring(L_499_[3]) == "FireServer" and (tostring(L_499_[2][1]) == "RemoteEvent" and (tostring(L_499_[2][2]) ~= "true" and (tostring(L_499_[2][2]) ~= "false" and _G["UseSkill"]))) then
+			if type(L_499_[2][2]) ~= "vector" then
+				L_499_[2][2] = CFrame["new"](PositionSkillMasteryDevilFruit)
+			else
+				L_499_[2][2] = PositionSkillMasteryDevilFruit
+			end
+			return L_498_[2](unpack(L_499_[2]))
+		else
+			return L_498_[2](...)
+		end
+	end)
+end)
+spawn(function()
+	pcall(function()
+		while task["wait"]() do
+			for L_500_forvar0, L_501_forvar1 in pairs((game:GetService("Players"))["LocalPlayer"]["Backpack"]:GetChildren()) do
+				local L_502_ = {}
+				L_502_[3], L_502_[2] = L_500_forvar0, L_501_forvar1
+				if L_502_[2]:IsA("Tool") and L_502_[2]:FindFirstChild("RemoteFunctionShoot") then
+					CurrentEquipGun = L_502_[2]["Name"]
+				end
+			end
+		end
+	end)
+end)
+function StopTween(L_503_arg0)
+	local L_504_ = {}
+	L_504_[1] = L_503_arg0
+	L_504_[2] = (game:GetService("Players"))["LocalPlayer"]["Character"]
+	if not L_504_[1] then
+		_G["StopTween"] = true
+		wait(.2)
+		topos(L_504_[2]["HumanoidRootPart"]["CFrame"])
+		wait(.2)
+		if L_504_[2]["HumanoidRootPart"]:FindFirstChild("BodyClip") then
+			L_504_[2]["HumanoidRootPart"]["BodyClip"]:Destroy()
+		end
+		if L_504_[2]:FindFirstChild("Block") then
+			L_504_[2]["Block"]:Destroy()
+		end
+		_G["StopTween"] = false
+		_G["Clip"] = false
+	end
+	if L_504_[2]:FindFirstChild("Highlight") then
+		L_504_[2]["Highlight"]:Destroy()
+	end
+end
+function LockTween()
+	if _G["LockTween"] then
+		return
+	else
+		local L_505_ = {}
+		_G["LockTween"] = true
+		wait()
+		L_505_[1] = game["Players"]["LocalPlayer"]["Character"]
+		if L_505_[1] and L_505_[1]:IsDescendantOf(game["Workspace"]) then
+			local L_506_ = {}
+			L_506_[1] = L_505_[1]:WaitForChild("HumanoidRootPart")
+			if L_506_[1] then
+				L_506_[1]["CFrame"] = L_506_[1]["CFrame"]
+			end
+		end
+		wait()
+		if L_505_[1]:FindFirstChild("BodyClip") then
+			L_505_[1]["BodyClip"]:Destroy()
+		end
+		if L_505_[1]:FindFirstChild("PartTele") then
+			L_505_[1]["Block"]:Destroy()
+		end
+		_G["LockTween"] = false
+		return
+	end
+end
+function BringMob(L_507_arg0)
+	local L_508_ = {}
+	L_508_[1] = L_507_arg0
+	for L_509_forvar0, L_510_forvar1 in pairs(WS["Enemies"]:GetChildren()) do
+		local L_511_ = {}
+		L_511_[1], L_511_[2] = L_509_forvar0, L_510_forvar1
+		if L_511_[2]["Name"] == L_508_[1] and (L_511_[2]["Parent"] and (L_511_[2]:FindFirstChild("HumanoidRootPart") and (L_511_[2]:FindFirstChild("Humanoid") and (L_511_[2]["Humanoid"]["Health"] > 0 and (L_511_[2]["HumanoidRootPart"]["Position"] - plr["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 350)))) then
+			L_511_[2]["HumanoidRootPart"]["CFrame"] = BringPos
+			L_511_[2]["Humanoid"]["JumpPower"] = 0
+			L_511_[2]["Humanoid"]["WalkSpeed"] = 0
+			L_511_[2]["HumanoidRootPart"]["Transparency"] = 1
+			L_511_[2]["HumanoidRootPart"]["CanCollide"] = false
+			L_511_[2]["Head"]["CanCollide"] = false
+			if L_511_[2]["Humanoid"]:FindFirstChild("Animator") then
+				L_511_[2]["Humanoid"]["Animator"]:Destroy()
+			end
+			if not L_511_[2]["HumanoidRootPart"]:FindFirstChild("Lock") then
+				local L_512_ = {}
+				L_512_[2] = Instance["new"]("BodyVelocity")
+				L_512_[2]["Parent"] = L_511_[2]["HumanoidRootPart"]
+				L_512_[2]["Name"] = "Lock"
+				L_512_[2]["MaxForce"] = Vector3["new"](100000, 100000, 100000)
+				L_512_[2]["Velocity"] = Vector3["new"](0, 0, 0)
+			end
+			sethiddenproperty(plr, "SimulationRadius", math["huge"])
+			L_511_[2]["Humanoid"]:ChangeState(11)
+		end
+	end
+end
+function CancelTween23()
+	if plr["Character"]["Head"]:FindFirstChild("BodyVelocity") then
+		(plr["Character"]["Head"]:FindFirstChild("BodyVelocity")):Destroy()
+	end
+	if plr["Character"]:FindFirstChild("PartTele") then
+		(plr["Character"]:FindFirstChild("PartTele")):Destroy()
+	end
+	NoClip = false
+	return Tween23(plr["Character"]["HumanoidRootPart"]["CFrame"])
+end
+function KillMob(L_513_arg0, L_514_arg1)
+	local L_515_ = {}
+	L_515_[1], L_515_[3] = L_513_arg0, L_514_arg1
+	pcall(function()
+		thismob = DetectMob2(L_515_[1])
+		if thismob:FindFirstChild("HumanoidRootPart") and (thismob["Parent"] and (thismob:FindFirstChild("Humanoid") and thismob["Humanoid"]["Health"] > 0)) then
+			repeat
+				task["wait"]()
+				Buso()
+				EquipWeapon()
+				Tween23(thismob["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 15, 0))
+				BringPos = thismob["HumanoidRootPart"]["CFrame"]
+				BringMob(L_515_[1])
+				NoClip = true
+			until not thismob["Parent"] or not thismob:FindFirstChild("Humanoid") or (thismob:FindFirstChild("Humanoid"))["Health"] <= 0 or not thismob:FindFirstChild("HumanoidRootPart") or L_515_[3]()
+			NoClip = false
+			CancelTween23()
+		end
+	end)
+end
+spawn(function()
+	while wait() do
+		pcall(function()
+			if NoClip ~= true then
+				if plr["Character"]["Head"]:FindFirstChild("Nigga") then
+					(plr["Character"]["Head"]:FindFirstChild("Nigga")):Destroy()
+				end
+			else
+				if not plr["Character"]["Head"]:FindFirstChild("Nigga") then
+					local L_516_ = {}
+					L_516_[1] = Instance["new"]("BodyVelocity", plr["Character"]["Head"])
+					L_516_[1]["P"] = 1500
+					L_516_[1]["Name"] = "Nigga"
+					L_516_[1]["MaxForce"] = Vector3["new"](0, 100000, 0)
+					L_516_[1]["Velocity"] = Vector3["new"](0, 0, 0)
+				end
+				for L_517_forvar0, L_518_forvar1 in pairs(plr["Character"]:GetDescendants()) do
+					local L_519_ = {}
+					L_519_[2], L_519_[3] = L_517_forvar0, L_518_forvar1
+					if L_519_[3]:IsA("BasePart") then
+						L_519_[3]["CanCollide"] = false
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while task["wait"]() do
+		pcall(function()
+			local L_520_ = {}
+			L_520_[2] = (game:GetService("Players"))["LocalPlayer"]["Character"]
+			L_520_[3] = L_520_[2]:FindFirstChild("HumanoidRootPart")
+			if (L_520_[2]["Humanoid"]["Health"] <= 0 or not L_520_[3]) and L_520_[2]:FindFirstChild("Block") then
+				L_520_[2]["Block"]:Destroy()
+			end
+		end)
+	end
+end)
+spawn(function()
+	while task["wait"]() do
+		pcall(function()
+			local L_521_ = {}
+			L_521_[1] = (game:GetService("Players"))["LocalPlayer"]["Character"]
+			L_521_[3] = L_521_[1]:FindFirstChild("HumanoidRootPart")
+			if L_521_[1]:FindFirstChild("Block") and (L_521_[3]["Position"] - L_521_[1]["Block"]["Position"])["Magnitude"] >= 100 then
+				L_521_[1]["Block"]:Destroy()
+			end
+		end)
+	end
+end)
+function enableNoclip()
+	if not(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip") then
+		local L_522_ = {}
+		L_522_[2] = Instance["new"]("BodyVelocity")
+		L_522_[2]["Name"] = "BodyClip"
+		L_522_[2]["Parent"] = (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]
+		L_522_[2]["MaxForce"] = Vector3["new"](100000, 100000, 100000)
+		L_522_[2]["Velocity"] = Vector3["new"](0, 0, 0)
+	end
+end
+function disableNoclip()
+	local L_523_ = {}
+	L_523_[2] = (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip")
+	if L_523_[2] then
+		L_523_[2]:Destroy()
+	end
+end
+function disableCollisions()
+	for L_524_forvar0, L_525_forvar1 in pairs((game:GetService("Players"))["LocalPlayer"]["Character"]:GetDescendants()) do
+		local L_526_ = {}
+		L_526_[2], L_526_[1] = L_524_forvar0, L_525_forvar1
+		if L_526_[1]:IsA("BasePart") then
+			L_526_[1]["CanCollide"] = false
+		end
+	end
+end
+L_3_[11], L_3_[46] = pcall(function()
+	return (getgenv())["Module"]
+end)
+spawn(function()
+	pcall(function()
+		while task["wait"](.2) do
+			if (getgenv())["Module"] or _G["DefendVolcano"] or (getgenv())["AutoFarm"] then
+				enableNoclip()
+				disableCollisions()
+			else
+				disableNoclip()
+			end
+		end
+	end)
+end)
+function EquipAllWeapon()
+	pcall(function()
+		for L_527_forvar0, L_528_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+			local L_529_ = {}
+			L_529_[2], L_529_[1] = L_527_forvar0, L_528_forvar1
+			if L_529_[1]:IsA("Tool") and (L_529_[1]["Name"] ~= "Summon Sea Beast" and (L_529_[1]["Name"] ~= "Water Body" and L_529_[1]["Name"] ~= "Awakening")) then
+				local L_530_ = {}
+				L_530_[2] = game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild(L_529_[1]["Name"])
+				game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(L_530_[2])
+				wait(1)
+			end
+		end
+	end)
+end
+L_3_[32] = false
+function WaitHRP(L_531_arg0)
+	local L_532_ = {}
+	L_532_[2] = L_531_arg0
+	if L_532_[2] then
+		return L_532_[2]["Character"]:WaitForChild("HumanoidRootPart", 9)
+	else
+		return
+	end
+end
+function CheckNearestTeleporter(L_533_arg0)
+	local L_534_ = {}
+	L_534_[2] = L_533_arg0
+	L_534_[1] = L_534_[2]["Position"]
+	L_534_[6] = math["huge"]
+	L_534_[4] = nil
+	L_534_[3] = game["PlaceId"]
+	L_534_[7] = {}
+	if L_534_[3] ~= 85211729168715 then
+		if L_534_[3] ~= 79091703265657 then
+			if L_534_[3] == 1.0011733112309e+14 then
+				L_534_[7] = {
+					["Floating Turtle"] = Vector3["new"](-12462, 375, -7552),
+					["Hydra Island"] = Vector3["new"](5657.8862304688, 1013.0790405273, -335.49963378906),
+					["Mansion"] = Vector3["new"](-12462, 375, -7552);
+					["Castle"] = Vector3["new"](-5036, 315, -3179);
+					["Dimensional Shift"] = Vector3["new"](-2097.3447265625, 4776.2446289062, -15013.499023438),
+					["Beautiful Pirate"] = Vector3["new"](5319, 23, -93),
+					["Beautiful Room"] = Vector3["new"](5314.58203, 22.5364361, -125.942276, 1, 2.14762768e-08, -1.99111154e-13, -2.14762768e-08, 1, -3.0510602e-08, 1.98455903e-13, 3.0510602e-08, 1);
+					["Temple of Time"] = Vector3["new"](28286, 14897, 103)
+				}
+			end
+		else
+			L_534_[7] = {
+				["Swan Mansion"] = Vector3["new"](-390, 332, 673);
+				["Swan Room"] = Vector3["new"](2285, 15, 905),
+				["Cursed Ship"] = Vector3["new"](923, 126, 32852),
+				["Zombie Island"] = Vector3["new"](-6509, 83, -133)
+			}
+		end
+	else
+		L_534_[7] = {
+			["Sky3"] = Vector3["new"](-7894, 5547, -380);
+			["Sky3Exit"] = Vector3["new"](-4607, 874, -1667),
+			["UnderWater"] = Vector3["new"](61163, 11, 1819);
+			["Underwater City"] = Vector3["new"](61165.19140625, .18704631924629, 1897.3791503906),
+			["Pirate Village"] = Vector3["new"](-1242.4625244141, 4.7870597839355, 3901.2829589844);
+			["UnderwaterExit"] = Vector3["new"](4050, -1, -1814)
+		}
+	end
+	for L_535_forvar0, L_536_forvar1 in pairs(L_534_[7]) do
+		local L_537_ = {}
+		L_537_[1], L_537_[3] = L_535_forvar0, L_536_forvar1
+		L_537_[4] = (L_537_[3] - L_534_[1])["Magnitude"]
+		if L_537_[4] < L_534_[6] then
+			L_534_[6] = L_537_[4]
+			L_534_[4] = L_537_[3]
+		end
+	end
+	if L_534_[6] <= (L_534_[1] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] then
+		return L_534_[4]
+	else
+		return
+	end
+end
+function requestEntrance(L_538_arg0)
+	local L_539_ = {}
+	L_539_[2] = L_538_arg0
+	game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("requestEntrance", L_539_[2])
+	L_539_[1] = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]
+	L_539_[1]["CFrame"] = L_539_[1]["CFrame"] + Vector3["new"](0, 50, 0)
+	task["wait"](.5)
+end
+function TelePPlayer(L_540_arg0)
+	local L_541_ = {}
+	L_541_[1] = L_540_arg0
+	game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = L_541_[1]
+end
+function topos(L_542_arg0)
+	local L_543_ = {}
+	L_543_[3] = L_542_arg0
+	L_543_[1] = game["Players"]["LocalPlayer"]
+	if L_543_[1]["Character"] and (L_543_[1]["Character"]["Humanoid"]["Health"] > 0 and L_543_[1]["Character"]:FindFirstChild("HumanoidRootPart")) then
+		local L_544_ = {}
+		L_544_[1] = (L_543_[3]["Position"] - L_543_[1]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+		if not L_543_[3] then
+			return
+		else
+			local L_545_ = {}
+			L_545_[1] = CheckNearestTeleporter(L_543_[3])
+			if L_545_[1] then
+				requestEntrance(L_545_[1])
+			end
+			if not L_543_[1]["Character"]:FindFirstChild("PartTele") then
+				local L_546_ = {}
+				L_546_[1] = Instance["new"]("Part", L_543_[1]["Character"])
+				L_546_[1]["Size"] = Vector3["new"](10, 1, 10)
+				L_546_[1]["Name"] = "PartTele"
+				L_546_[1]["Anchored"] = true
+				L_546_[1]["Transparency"] = 1
+				L_546_[1]["CanCollide"] = true
+				L_546_[1]["CFrame"] = (WaitHRP(L_543_[1]))["CFrame"]
+				do
+					local L_547_ = {}
+					L_547_[2] = L_546_[1];
+					(L_547_[2]:GetPropertyChangedSignal("CFrame")):Connect(function()
+						if not L_3_[32] then
+							return
+						else
+							task["wait"]()
+							if L_543_[1]["Character"] and L_543_[1]["Character"]:FindFirstChild("HumanoidRootPart") then
+								(WaitHRP(L_543_[1]))["CFrame"] = L_547_[2]["CFrame"]
+							end
+							return
+						end
+					end)
+				end
+			end
+			L_3_[32] = true
+			L_545_[3] = (game:GetService("TweenService")):Create(L_543_[1]["Character"]["PartTele"], TweenInfo["new"](L_544_[1] / 360, Enum["EasingStyle"]["Linear"]), {
+				["CFrame"] = L_543_[3]
+			})
+			L_545_[3]:Play()
+			L_545_[3]["Completed"]:Connect(function(L_548_arg0)
+				local L_549_ = {}
+				L_549_[1] = L_548_arg0
+				if L_549_[1] == Enum["PlaybackState"]["Completed"] then
+					if L_543_[1]["Character"]:FindFirstChild("PartTele") then
+						L_543_[1]["Character"]["PartTele"]:Destroy()
+					end
+					L_3_[32] = false
+				end
+			end)
+		end
+	end
+end
+function stopTeleport()
+	local L_550_ = {}
+	L_3_[32] = false
+	L_550_[2] = game["Players"]["LocalPlayer"]
+	if L_550_[2]["Character"]:FindFirstChild("PartTele") then
+		L_550_[2]["Character"]["PartTele"]:Destroy()
+	end
+end
+spawn(function()
+	while task["wait"]() do
+		if not L_3_[32] then
+			stopTeleport()
+		end
+	end
+end)
+spawn(function()
+	local L_551_ = {}
+	L_551_[1] = game["Players"]["LocalPlayer"]
+	while task["wait"]() do
+		pcall(function()
+			if L_551_[1]["Character"]:FindFirstChild("PartTele") and (L_551_[1]["Character"]["HumanoidRootPart"]["Position"] - L_551_[1]["Character"]["PartTele"]["Position"])["Magnitude"] >= 100 then
+				stopTeleport()
+			end
+		end)
+	end
+end)
+L_3_[181] = game["Players"]["LocalPlayer"]
+L_3_[50] = function(L_552_arg0)
+	local L_553_ = {}
+	L_553_[2] = L_552_arg0;
+	(L_553_[2]:WaitForChild("Humanoid"))["Died"]:Connect(function()
+		stopTeleport()
+	end)
+end
+L_3_[181]["CharacterAdded"]:Connect(L_3_[50])
+if L_3_[181]["Character"] then
+	L_3_[50](L_3_[181]["Character"])
+end
+function TP1(L_554_arg0)
+	local L_555_ = {}
+	L_555_[2] = L_554_arg0
+	topos(L_555_[2])
+end
+spawn(function()
+	while wait() do
+		if _G["SpinPos"] then
+			Pos = CFrame["new"](0, PosY, -20)
+			wait(.1)
+			Pos = CFrame["new"](-20, PosY, 0)
+			wait(.1)
+			Pos = CFrame["new"](0, PosY, 20)
+			wait(.1)
+			Pos = CFrame["new"](20, PosY, 0)
+		else
+			Pos = CFrame["new"](0, PosY, 0)
+		end
+	end
+end)
+spawn(function()
+	while task["wait"]() do
+		pcall(function()
+			if _G["FarmBone"] or _G["AutoFarm"] or _G["Pray"] or _G["Trylux"] or _G["Hallow"] or _G["FarmCake"] or _G["FarmDaiBan"] or _G["Dungeonh"] or _G["Greybeard"] or _G["CursedCaptain"] or _G["AutoDarkBoss"] or _G["ChiefWarden"] or _G["Trident"] or _G["Longsword"] or _G["GravityBlade"] or _G["SwodsFlail"] or _G["AutoRengoku"] or _G["SwodsDRTrident"] or _G["SwodCanvande"] or _G["SwodsBuddy"] or _G["FarmBlazeEM"] or _G["AutoFindPrehistoric"] or _G["TweenVolcano"] or _G["DefendVolcano"] or _G["KillGolem"] or _G["SwodTwinHooks"] or _G["Fullykatakuri"] or _G["AutoBoss"] or _G["SwodCanvander"] or _G["AutoFarmMaterial"] or _G["AutoSecondSea"] or _G["Autosaw"] or _G["ChiefWarden"] or _G["Trident"] or _G["AutoSaber"] or _G["ThirdSea"] or _G["AutoBartilo"] or _G["AutoFactory"] or _G["Longsword"] or _G["GravityBlade"] or _G["SwodsFlail"] or _G["AutoRengoku"] or _G["SwodsDRTrident"] or _G["SwodTwinHooks"] or _G["SwodCanvander"] or _G["AutoRaidPirate"] or _G["AutoQuestYama"] or _G["AutoYamaQuest"] or _G["AutoSaber"] or _G["DefendVolcano"] or _G["TPB"] or _G["SailBoat"] or _G["Autoterrorshark"] or _G["KillShark"] or _G["KillPiranha"] or _G["KillFishCrew"] or _G["AutoQuestRace"] or _G["Dungeon"] or _G["AutoLawRaid"] or _G["Tweenfruit"] or ProjectTrialPro or _G["TweenMGear"] or _G["AutoMysticIsland"] or AutoUpgradeRace or AutoRaceEvo1 or _G["AutoFarmFruits"] or _G["Autopole"] or _G["Autosaw"] or _G["AutoElitehunter"] or FarmMtrFruit or _G["AutoNear"] or _G["CollectBerry"] or _G["RipIndraKill"] or _G["FarmChocola"] or SoulGuitar or _G["AutoHolyTorch"] or _G["AutoGetTushita"] or _G["AutoYama"] or _G["AutoMobDragon"] or _G["AutoHydraTree"] or _G["TweenToKitsune"] or _G["AutoDooHee"] or _G["AutoAzuerEmber"] or _G["TweenVolcano"] or _G["Dungeon"] or _G["AutoLawRaid"] or _G["TweenFruit"] or _G["Grabfruit"] or _G["TeleportIsland"] or _G["TeleportNPC"] or _G["SafeMode"] or _G["AutoPlayerHunter"] or _G["AutoKillPlayer"] or _G["TeleportPly"] or _G["AutoQuestBoss"] or _G["AutoAllBoss"] or _G["AutoFarmLevelNew"] or _G["FarmSummer"] or _G["buygod"] then
+				if not(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip") then
+					local L_556_ = {}
+					L_556_[2] = Instance["new"]("BodyVelocity")
+					L_556_[2]["Name"] = "BodyClip"
+					L_556_[2]["Parent"] = (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]
+					L_556_[2]["MaxForce"] = Vector3["new"](100000, 100000, 100000)
+					L_556_[2]["Velocity"] = Vector3["new"](0, 0, 0)
+				end
+			else
+				((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip")):Destroy()
+			end
+		end)
+	end
+end)
+spawn(function()
+	pcall(function()
+		(game:GetService("RunService"))["Stepped"]:Connect(function()
+			if _G["FarmBone"] or _G["AutoFarm"] or _G["Dungeonh"] or _G["Pray"] or _G["Trylux"] or _G["Hallow"] or _G["FarmCake"] or _G["FarmDaiBan"] or _G["Fullykatakuri"] or _G["AutoBoss"] or _G["AutoMateria"] or _G["AutoSecondSea"] or _G["Autosaw"] or _G["ChiefWarden"] or _G["Trident"] or _G["AutoSaber"] or _G["Greybeard"] or _G["CursedCaptain"] or _G["AutoDarkBoss"] or _G["ChiefWarden"] or _G["Trident"] or _G["Longsword"] or _G["GravityBlade"] or _G["SwodsFlail"] or _G["AutoRengoku"] or _G["SwodsDRTrident"] or _G["SwodCanvande"] or _G["SwodTwinHooks"] or _G["ThirdSea"] or _G["AutoBartilo"] or _G["AutoFactory"] or _G["Longsword"] or _G["GravityBlade"] or _G["SwodsFlail"] or _G["AutoRengoku"] or _G["SwodsDRTrident"] or _G["SwodTwinHooks"] or _G["SwodCanvander"] or _G["SwodsBuddy"] or _G["FarmBlazeEM"] or _G["AutoFindPrehistoric"] or _G["TweenVolcano"] or _G["DefendVolcano"] or _G["KillGolem"] or _G["AutoRaidPirate"] or _G["AutoQuestYama"] or _G["AutoYamaQuest"] or _G["AutoElitehunter"] or FarmMtrFruit or AutoUpgradeRace or _G["AutoFarmMaterial"] or AutoRaceEvo1 or AutoSaber or _G["Autopole"] or _G["SwodCanvander"] or _G["DefendVolcano"] or _G["SailBoat"] or _G["Autoterrorshark"] or _G["KillShark"] or _G["KillPiranha"] or _G["KillFishCrew"] or _G["AutoQuestRace"] or _G["Dungeonh"] or _G["AutoLawRaid"] or _G["Tweenfruit"] or ProjectTrialPro or _G["AutoMysticIsland"] or _G["TweenMGear"] or _G["Autosaw"] or _G["AutoNear"] or _G["AutoFarmFruits"] or _G["CollectBerry"] or _G["RipIndraKill"] or _G["FarmChocola"] or SoulGuitar or _G["AutoHolyTorch"] or _G["AutoGetTushita"] or _G["AutoYama"] or _G["AutoMobDragon"] or _G["AutoHydraTree"] or _G["TweenToKitsune"] or _G["AutoDooHee"] or _G["AutoAzuerEmber"] or _G["TweenVolcano"] or _G["AutoLawRaid"] or _G["TweenFruit"] or _G["Grabfruit"] or _G["TeleportIsland"] or _G["TeleportNPC"] or _G["SafeMode"] or _G["AutoPlayerHunter"] or _G["AutoKillPlayer"] or _G["TeleportPly"] or _G["AutoQuestBoss"] or _G["AutoAllBoss"] or _G["AutoFarmLevelNew"] or _G["FarmSummer"] or _G["BossPain"] then
+				for L_557_forvar0, L_558_forvar1 in pairs((game:GetService("Players"))["LocalPlayer"]["Character"]:GetDescendants()) do
+					local L_559_ = {}
+					L_559_[3], L_559_[2] = L_557_forvar0, L_558_forvar1
+					if L_559_[2]:IsA("BasePart") then
+						L_559_[2]["CanCollide"] = false
+					end
+				end
+			end
+		end)
+	end)
+end)
+L_3_[106] = {}
+function TP13(L_560_arg0)
+	local L_561_ = {}
+	L_561_[4] = L_560_arg0
+	L_561_[3] = (L_561_[4]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+	L_561_[1] = ((game:GetService("TweenService")):Create((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"], TweenInfo["new"](L_561_[3] / TweenSpeed, Enum["EasingStyle"]["Linear"]), {
+		["CFrame"] = L_561_[4]
+	})):Play()
+	L_3_[106]["Stop"] = function(L_562_arg0)
+		L_561_[1]:Cancel()
+	end
+	return L_3_[106]
+end
+function fastpos(L_563_arg0)
+	local L_564_ = {}
+	L_564_[1] = L_563_arg0
+	Distance = (L_564_[1]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+	Speed = 1000;
+	((game:GetService("TweenService")):Create((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"], TweenInfo["new"](Distance / Speed, Enum["EasingStyle"]["Linear"]), {
+		["CFrame"] = L_564_[1]
+	})):Play()
+end
+function slowpos(L_565_arg0)
+	local L_566_ = {}
+	L_566_[2] = L_565_arg0
+	Distance = (L_566_[2]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+	Speed = 150;
+	((game:GetService("TweenService")):Create((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"], TweenInfo["new"](Distance / Speed, Enum["EasingStyle"]["Linear"]), {
+		["CFrame"] = L_566_[2]
+	})):Play()
+end
+L_3_[85] = {}
+function BTP(L_567_arg0)
+	local L_568_ = {}
+	L_568_[1] = L_567_arg0
+	pcall(function()
+		if (L_568_[1]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] >= 1500 and (not Auto_Raid and game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Health"] > 0) then
+			repeat
+				wait()
+				game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = L_568_[1]
+				wait(.05)
+				game["Players"]["LocalPlayer"]["Character"]["Head"]:Destroy()
+				game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = L_568_[1]
+			until (L_568_[1]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] < 1500 and game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Health"] > 0
+		end
+	end)
+end
+function TelePPlayer(L_569_arg0)
+	local L_570_ = {}
+	L_570_[2] = L_569_arg0
+	game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = L_570_[2]
+end
+function TPB(L_571_arg0)
+	local L_572_ = {}
+	L_572_[3] = L_571_arg0
+	L_572_[2] = game:service("TweenService")
+	L_572_[1] = TweenInfo["new"](((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"]["Position"] - L_572_[3]["Position"])["Magnitude"] / 300, Enum["EasingStyle"]["Linear"])
+	tween = L_572_[2]:Create((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"], L_572_[1], {
+		["CFrame"] = L_572_[3]
+	})
+	tween:Play()
+	return {
+		["Stop"] = function(L_573_arg0)
+			tween:Cancel()
+		end
+	}
+end
+function TPP(L_574_arg0)
+	local L_575_ = {}
+	L_575_[2] = L_574_arg0
+	if (game["Players"]["LocalPlayer"]["Character"]:WaitForChild("Humanoid"))["Health"] > 0 and (game:GetService("Players"))["LocalPlayer"]["Character"]:WaitForChild("Humanoid") then
+		local L_576_ = {}
+		L_576_[3] = game:service("TweenService")
+		L_576_[1] = TweenInfo["new"](((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_575_[2]["Position"])["Magnitude"] / 325, Enum["EasingStyle"]["Linear"])
+		tween = L_576_[3]:Create(game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"], L_576_[1], {
+			["CFrame"] = L_575_[2]
+		})
+		tween:Play()
+		return {
+			["Stop"] = function(L_577_arg0)
+				tween:Cancel()
+			end
+		}
+	else
+		tween:Cancel()
+		repeat
+			wait()
+		until (game:GetService("Players"))["LocalPlayer"]["Character"]:WaitForChild("Humanoid") and ((game:GetService("Players"))["LocalPlayer"]["Character"]:WaitForChild("Humanoid"))["Health"] > 0
+		wait(7)
+		return
+	end
+end
+function StopTween(L_578_arg0)
+	local L_579_ = {}
+	L_579_[2] = L_578_arg0
+	if not L_579_[2] then
+		_G["StopTween"] = true
+		wait()
+		topos((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"])
+		wait()
+		if (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip") then
+			((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]:FindFirstChild("BodyClip")):Destroy()
+		end
+		_G["StopTween"] = false
+		_G["Clip"] = false
+	end
+end
+spawn(function()
+	pcall(function()
+		while wait() do
+			for L_580_forvar0, L_581_forvar1 in pairs((game:GetService("Players"))["LocalPlayer"]["Backpack"]:GetChildren()) do
+				local L_582_ = {}
+				L_582_[2], L_582_[1] = L_580_forvar0, L_581_forvar1
+				if L_582_[1]:IsA("Tool") and L_582_[1]:FindFirstChild("RemoteFunctionShoot") then
+					_G["SelectWeaponGun"] = L_582_[1]["Name"]
+				end
+			end
+		end
+	end)
+end);
+(game:GetService("Players"))["LocalPlayer"]["Idled"]:connect(function()
+	(game:GetService("VirtualUser")):Button2Down(Vector2["new"](0, 0), workspace["CurrentCamera"]["CFrame"])
+	wait(1);
+	(game:GetService("VirtualUser")):Button2Up(Vector2["new"](0, 0), workspace["CurrentCamera"]["CFrame"])
+end)
+function CheckColorRipIndra()
+	mmb = {}
+	for L_583_forvar0, L_584_forvar1 in next, (game:GetService("Workspace"))["Map"]["Boat Castle"]["Summoner"]["Circle"]:GetChildren() do
+		local L_585_ = {}
+		L_585_[3], L_585_[2] = L_583_forvar0, L_584_forvar1
+		if L_585_[2]:IsA("Part") and (L_585_[2]:FindFirstChild("Part") and L_585_[2]["Part"]["BrickColor"]["Name"] == "Dark stone grey") then
+			mmb[L_585_[2]["BrickColor"]["Name"]] = L_585_[2]
+		end
+	end
+	return mmb
+end
+function ActivateColor(L_586_arg0)
+	local L_587_ = {}
+	L_587_[1] = L_586_arg0
+	haki = {
+		["Hot pink"] = "Winter Sky";
+		["Really red"] = "Pure Red";
+		["Oyster"] = "Snow White"
+	}
+	runnay = haki[L_587_[1]]
+	if runnay then
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("activateColor", runnay)
+	end
+end
+function AutoActiveColorRip_Indra()
+	for L_588_forvar0, L_589_forvar1 in pairs(CheckColorRipIndra()) do
+		local L_590_ = {}
+		L_590_[3], L_590_[1] = L_588_forvar0, L_589_forvar1
+		ActivateColor(L_590_[3])
+		topos(L_590_[1]["CFrame"])
+		firetouchinterest(L_590_[1]["TouchInterest"])
+	end
+end
+function CheckRace()
+	local L_591_ = {}
+	L_591_[1] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "1")
+	L_591_[2] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("Alchemist", "1")
+	if not game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("RaceTransformed") then
+		if L_591_[1] == -2 then
+			return (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] .. " V3"
+		elseif L_591_[2] == -2 then
+			return (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] .. " V2"
+		else
+			return (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] .. " V1"
+		end
+	else
+		return (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] .. " V4"
+	end
+end
+_G["TargTrial"] = "TargTrial"
+function targettrial()
+	if _G["TargTrial"] == "TargTrial" then
+		local L_592_ = {}
+		L_592_[3] = nil
+		L_592_[2] = 450
+		for L_593_forvar0, L_594_forvar1 in pairs(game["Players"]:GetChildren()) do
+			local L_595_ = {}
+			L_595_[1], L_595_[2] = L_593_forvar0, L_594_forvar1
+			c = (L_595_[2]["Character"]["HumanoidRootPart"]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+			if c <= L_592_[2] and L_595_[2] ~= game["Players"]["LocalPlayer"] then
+				L_592_[2] = c
+				L_592_[3] = L_595_[2]
+			end
+		end
+		if L_592_[3] == "c" then
+			return
+		elseif _G["TargTrial"] == "c" then
+			_G["TargTrial"] = L_592_[3]
+			return
+		else
+			return
+		end
+	else
+		return
+	end
+end
+function CheckPirateBoat()
+	local L_596_ = {}
+	L_596_[1] = {
+		"PirateBrigade";
+		"PirateBrigade"
+	}
+	for L_597_forvar0, L_598_forvar1 in next, (game:GetService("Workspace"))["Enemies"]:GetChildren() do
+		local L_599_ = {}
+		L_599_[1], L_599_[3] = L_597_forvar0, L_598_forvar1
+		if table["find"](L_596_[1], L_599_[3]["Name"]) and (L_599_[3]:FindFirstChild("Health") and L_599_[3]["Health"]["Value"] > 0) then
+			return L_599_[3]
+		end
+	end
+end
+function CheckPirateBoat()
+	local L_600_ = {}
+	L_600_[2] = {
+		"FishBoat"
+	}
+	for L_601_forvar0, L_602_forvar1 in next, (game:GetService("Workspace"))["Enemies"]:GetChildren() do
+		local L_603_ = {}
+		L_603_[1], L_603_[2] = L_601_forvar0, L_602_forvar1
+		if table["find"](L_600_[2], L_603_[2]["Name"]) and (L_603_[2]:FindFirstChild("Health") and L_603_[2]["Health"]["Value"] > 0) then
+			return L_603_[2]
+		end
+	end
+end
+function StoreFruit()
+	for L_604_forvar0, L_605_forvar1 in pairs(thelocal["Backpack"]:GetChildren()) do
+		local L_606_ = {}
+		L_606_[3], L_606_[2] = L_604_forvar0, L_605_forvar1
+		if L_606_[2]:IsA("Tool") and string["find"](L_606_[2]["Name"], "Fruit") then
+			(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("StoreFruit", L_606_[2]:GetAttribute("OriginalName"), L_606_[2])
+		end
+	end
+end
+function TpEntrance(L_607_arg0)
+	local L_608_ = {}
+	L_608_[1] = L_607_arg0
+	game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("requestEntrance", L_608_[1])
+	game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]["X"], game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]["Y"], game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]["Z"])
+	wait(.5)
+end
+function CheckItemBPCRBPCR(L_609_arg0)
+	local L_610_ = {}
+	L_610_[2] = L_609_arg0
+	chbp = {
+		game["Players"]["LocalPlayer"]["Character"],
+		game["Players"]["LocalPlayer"]["Backpack"]
+	}
+	for L_611_forvar0, L_612_forvar1 in pairs(chbp) do
+		local L_613_ = {}
+		L_613_[2], L_613_[1] = L_611_forvar0, L_612_forvar1
+		if L_613_[1]:FindFirstChild(L_610_[2]) then
+			return L_613_[1]:FindFirstChild(L_610_[2])
+		end
+	end
+end
+L_3_[164] = ((loadstring(game:HttpGet(L_3_[168]({
+	"https://pastefy.app/";
+	"8iDxKPyn/raw"
+}))))()):MakeWindow({
+	["Title"] = "PMT",
+	["SubTitle"] = "by Trieu";
+	["SaveFolder"] = L_3_[168]({
+		"Redz | redz lib v5.l",
+		"ua"
+	})
+})
+L_3_[194] = Instance["new"]("ScreenGui")
+L_3_[194]["Name"] = "ControlGUI"
+L_3_[194]["Parent"] = game["CoreGui"]
+L_3_[93] = Instance["new"]("ImageButton")
+L_3_[93]["Size"] = UDim2["new"](0, 50, 0, 50)
+L_3_[93]["Position"] = UDim2["new"](.15, 0, .15, 0)
+L_3_[93]["Image"] = L_3_[168]({
+	"rbxassetid://8932047",
+	"1904757"
+})
+L_3_[93][L_3_[168]({
+	"BackgroundTransparen",
+	"cy"
+})] = 1
+L_3_[93]["Parent"] = L_3_[194]
+L_3_[124] = Instance["new"]("UICorner")
+L_3_[124]["CornerRadius"] = UDim["new"](.25, 0)
+L_3_[124]["Parent"] = L_3_[93]
+L_3_[31] = Instance["new"]("UIStroke")
+L_3_[31]["Thickness"] = 2
+L_3_[31]["ApplyStrokeMode"] = Enum["ApplyStrokeMode"]["Border"]
+L_3_[31]["Parent"] = L_3_[93]
+L_3_[183] = {
+	Color3["fromRGB"](0, 80, 255),
+	Color3["fromRGB"](0, 140, 255);
+	Color3["fromRGB"](0, 200, 255),
+	Color3["fromRGB"](60, 80, 255),
+	Color3["fromRGB"](120, 60, 255);
+	Color3["fromRGB"](180, 40, 255);
+	Color3["fromRGB"](230, 0, 255)
+}
+task["spawn"](function()
+	local L_614_ = {}
+	L_614_[1] = 1
+	while true do
+		L_3_[31]["Color"] = L_3_[183][L_614_[1]]
+		L_614_[1] = L_614_[1] % #L_3_[183] + 1
+		task["wait"](.3)
+	end
+end)
+L_3_[60] = true
+L_3_[108] = nil
+L_3_[174] = nil
+L_3_[163] = nil
+L_3_[142] = nil
+L_3_[112] = function(L_615_arg0)
+	local L_616_ = {}
+	L_616_[3] = L_615_arg0
+	L_616_[1] = L_616_[3]["Position"] - L_3_[163]
+	L_3_[93]["Position"] = UDim2["new"](L_3_[142]["X"]["Scale"], L_3_[142]["X"]["Offset"] + L_616_[1]["X"], L_3_[142]["Y"]["Scale"], L_3_[142]["Y"]["Offset"] + L_616_[1]["Y"])
+end
+L_3_[93]["InputBegan"]:Connect(function(L_617_arg0)
+	local L_618_ = {}
+	L_618_[2] = L_617_arg0
+	if L_618_[2]["UserInputType"] == Enum["UserInputType"]["Touch"] or L_618_[2]["UserInputType"] == Enum["UserInputType"]["MouseButton1"] then
+		L_3_[108] = true
+		L_3_[163] = L_618_[2]["Position"]
+		L_3_[142] = L_3_[93]["Position"]
+		L_618_[2]["Changed"]:Connect(function()
+			if L_618_[2]["UserInputState"] == Enum["UserInputState"]["End"] then
+				L_3_[108] = false
+			end
+		end)
+	end
+end)
+L_3_[93]["InputChanged"]:Connect(function(L_619_arg0)
+	local L_620_ = {}
+	L_620_[2] = L_619_arg0
+	if L_620_[2]["UserInputType"] == Enum["UserInputType"]["Touch"] or L_620_[2]["UserInputType"] == Enum["UserInputType"]["MouseMovement"] then
+		L_3_[174] = L_620_[2]
+	end
+end);
+(game:GetService("UserInputService"))["InputChanged"]:Connect(function(L_621_arg0)
+	local L_622_ = {}
+	L_622_[2] = L_621_arg0
+	if L_3_[108] and L_622_[2] == L_3_[174] then
+		L_3_[112](L_622_[2])
+	end
+end)
+L_3_[93]["MouseButton1Click"]:Connect(function()
+	L_3_[60] = not L_3_[60]
+	if L_3_[60] then
+		L_3_[164]:Minimize(false)
+	else
+		L_3_[164]:Minimize(true)
+	end
+end)
+L_3_[7] = L_3_[164]:MakeTab({
+	"Thông Tin | Info",
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[6] = L_3_[164]:MakeTab({
+	"Farming",
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[116] = L_3_[164]:MakeTab({
+	"Auto Fishing";
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[186] = L_3_[164]:MakeTab({
+	"Quest | Items",
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[133] = L_3_[164]:MakeTab({
+	"Volcano Dojo";
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[51] = L_3_[164]:MakeTab({
+	"Sea Event";
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[130] = L_3_[164]:MakeTab({
+	"Race V4";
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[113] = L_3_[164]:MakeTab({
+	"Raid | dungeon",
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[99] = L_3_[164]:MakeTab({
+	"Fruits | Check Stock",
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[53] = L_3_[164]:MakeTab({
+	"Teleport",
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[39] = L_3_[164]:MakeTab({
+	"PvP,Player",
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[203] = L_3_[164]:MakeTab({
+	"Mod-Skin";
+	L_3_[168]({
+		"rbxassetid://1021648",
+		"96740079"
+	})
+})
+L_3_[96] = L_3_[164]:MakeTab({
+	"Settings",
+	L_3_[168]({
+		"rbxassetid://1021648";
+		"96740079"
+	})
+})
+L_3_[7]:AddDiscordInvite({
+	["Name"] = "Tham Gia Discord",
+	["Description"] = "Link Sever Discord",
+	["Logo"] = L_3_[168]({
+		"rbxassetid://7757695";
+		"8738832"
+	});
+	["Invite"] = L_3_[168]({
+		"https://discord.gg/Z";
+		"3CG5seF"
+	})
+})
+L_3_[7]:AddDiscordInvite({
+	["Name"] = "Lemon-hub";
+	["Description"] = "TikTok";
+	["Logo"] = L_3_[168]({
+		"rbxassetid://7757695";
+		"8738832"
+	});
+	["Invite"] = L_3_[168]({
+		"https://www.tiktok.c";
+		"om/@trieu1082?_r=1&_";
+		"t=ZP-91LAn1IXUYp"
+	})
+})
+L_3_[64] = L_3_[6]:AddSection({
+	L_3_[168]({
+		"Select Melee,Sword,G";
+		"un,Fruit"
+	})
+})
+_G["SelectWeapon"] = "Melee"
+task["spawn"](function()
+	while task["wait"]() do
+		pcall(function()
+			if _G["SelectWeapon"] ~= "Melee" then
+				if _G["SelectWeapon"] ~= "Sword" then
+					if _G["SelectWeapon"] == "Gun" then
+						for L_623_forvar0, L_624_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+							local L_625_ = {}
+							L_625_[1], L_625_[2] = L_623_forvar0, L_624_forvar1
+							if L_625_[2]["ToolTip"] == "Gun" then
+								_G["SelectWeapon"] = L_625_[2]["Name"]
+							end
+						end
+					elseif _G["SelectWeapon"] == "Fruit" or _G["SelectWeapon"] == "Blox Fruit" then
+						for L_626_forvar0, L_627_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+							local L_628_ = {}
+							L_628_[3], L_628_[2] = L_626_forvar0, L_627_forvar1
+							if L_628_[2]["ToolTip"] == "Blox Fruit" then
+								_G["SelectWeapon"] = L_628_[2]["Name"]
+							end
+						end
+					end
+				else
+					for L_629_forvar0, L_630_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+						local L_631_ = {}
+						L_631_[3], L_631_[1] = L_629_forvar0, L_630_forvar1
+						if L_631_[1]["ToolTip"] == "Sword" then
+							_G["SelectWeapon"] = L_631_[1]["Name"]
+						end
+					end
+				end
+			else
+				for L_632_forvar0, L_633_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+					local L_634_ = {}
+					L_634_[1], L_634_[3] = L_632_forvar0, L_633_forvar1
+					if L_634_[3]["ToolTip"] == "Melee" then
+						_G["SelectWeapon"] = L_634_[3]["Name"]
+					end
+				end
+			end
+		end)
+	end
+end)
+L_3_[157] = L_3_[6]:AddDropdown({
+	["Name"] = "Chọn Công Cụ";
+	["Description"] = L_3_[168]({
+		"Chọn công cụ b�";
+		"��n muốn sử dụ",
+		"ng"
+	}),
+	["Options"] = {
+		"Melee";
+		"Sword";
+		"Gun";
+		"Blox Fruit"
+	};
+	["Default"] = "Melee",
+	["Flag"] = "WeaponType";
+	["Callback"] = function(L_635_arg0)
+		local L_636_ = {}
+		L_636_[1] = L_635_arg0
+		_G["SelectWeapon"] = L_636_[1]
+	end
+})
+L_3_[196] = L_3_[6]:AddSection({
+	"Main Farm"
+})
+L_3_[6]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Farm Level 1-26";
+		"50"
+	});
+	["Description"] = L_3_[168]({
+		"Tự động farm c�";
+		"��p"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_637_arg0)
+		local L_638_ = {}
+		L_638_[1] = L_637_arg0
+		_G["AutoFarm"] = L_638_[1]
+		StopTween(_G["AutoFarm"])
+	end
+})
+spawn(function()
+	while task["wait"]() do
+		if _G["AutoFarm"] then
+			pcall(function()
+				local L_639_ = {}
+				L_639_[1] = (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"]
+				CheckQuest()
+				if not string["find"](L_639_[1], NameMon) then
+					StartBring = false;
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
+				end
+				if (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] ~= false then
+					if (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == true then
+						if not string["find"](L_639_[1], "kissed") then
+							if (game:GetService("Workspace"))["Enemies"]:FindFirstChild(Mon) then
+								for L_640_forvar0, L_641_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+									local L_642_ = {}
+									L_642_[2], L_642_[1] = L_640_forvar0, L_641_forvar1
+									if L_642_[1]:FindFirstChild("HumanoidRootPart") and (L_642_[1]:FindFirstChild("Humanoid") and (L_642_[1]["Humanoid"]["Health"] > 0 and L_642_[1]["Name"] == Mon)) then
+										if not string["find"](L_639_[1], NameMon) then
+											StartBring = false;
+											(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
+										else
+											repeat
+												task["wait"]()
+												EquipWeapon(_G["SelectWeapon"])
+												AutoHaki()
+												PosMon = L_642_[1]["HumanoidRootPart"]["CFrame"]
+												topos(L_642_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+												L_642_[1]["HumanoidRootPart"]["CanCollide"] = false
+												L_642_[1]["Humanoid"]["WalkSpeed"] = 0
+												L_642_[1]["Head"]["CanCollide"] = false
+												L_642_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](70, 70, 70)
+												StartBring = true
+												MonFarm = L_642_[1]["Name"];
+												(game:GetService("VirtualUser")):CaptureController();
+												(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+											until not _G["AutoFarm"] or L_642_[1]["Humanoid"]["Health"] <= 0 or not L_642_[1]["Parent"] or (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == false
+										end
+									end
+								end
+							else
+								TP1(CFrameMon)
+								StartBring = false
+								if (game:GetService("ReplicatedStorage")):FindFirstChild(Mon) then
+									TP1(((game:GetService("ReplicatedStorage")):FindFirstChild(Mon))["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 20, 0))
+								end
+							end
+						else
+							for L_643_forvar0, L_644_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_645_ = {}
+								L_645_[3], L_645_[2] = L_643_forvar0, L_644_forvar1
+								if string["find"](L_645_[2]["Name"], "kissed Warrior") then
+									if L_645_[2]:FindFirstChild("HumanoidRootPart") and (L_645_[2]:FindFirstChild("Humanoid") and L_645_[2]["Humanoid"]["Health"] > 0) then
+										if string["find"](L_639_[1], NameMon) then
+											repeat
+												task["wait"]()
+												EquipWeapon(_G["SelectWeapon"])
+												PosMon = L_645_[2]["HumanoidRootPart"]["CFrame"]
+												topos(L_645_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+												L_645_[2]["HumanoidRootPart"]["CanCollide"] = false
+												L_645_[2]["Humanoid"]["WalkSpeed"] = 0
+												L_645_[2]["Head"]["CanCollide"] = false
+												L_645_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](70, 70, 70)
+												StartBring = true
+												MonFarm = L_645_[2]["Name"];
+												(game:GetService("VirtualUser")):CaptureController();
+												(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+											until not _G["AutoFarm"] or L_645_[2]["Humanoid"]["Health"] <= 0 or not L_645_[2]["Parent"] or (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == false
+										else
+											StartBring = false;
+											(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
+										end
+									end
+								else
+									TP1(CFrameMon)
+									StartBring = false
+									if (game:GetService("ReplicatedStorage")):FindFirstChild(Mon) then
+										TP1(((game:GetService("ReplicatedStorage")):FindFirstChild(Mon))["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 20, 0))
+									end
+								end
+							end
+						end
+					end
+				else
+					StartBring = false
+					if BypassTP then
+						if (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - CFrameQuest["Position"])["Magnitude"] <= 1500 then
+							TP1(CFrameQuest)
+						else
+							TP1(CFrameQuest)
+						end
+					else
+						TP1(CFrameQuest)
+					end
+					if (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - CFrameQuest["Position"])["Magnitude"] <= 20 then
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("StartQuest", NameQuest, LevelQuest)
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Title"] = L_3_[168]({
+		"Farm Level New 2650 ";
+		"- 2750"
+	}),
+	["Description"] = L_3_[168]({
+		"Cày Cấp Đảo M�";
+		"��i"
+	}),
+	["Value"] = false,
+	["Callback"] = function(L_646_arg0)
+		local L_647_ = {}
+		L_647_[1] = L_646_arg0
+		_G["AutoFarmLevelNew"] = L_647_[1]
+		StopTween()
+	end
+})
+L_3_[44] = game:GetService("Players")
+L_3_[144] = game:GetService("TweenService")
+L_3_[175] = L_3_[44]["LocalPlayer"]
+L_3_[42] = function()
+	local L_648_ = {}
+	L_648_[2] = L_3_[175]["Character"]
+	return L_648_[2] and L_648_[2]:FindFirstChild("HumanoidRootPart")
+end
+L_3_[141] = function(L_649_arg0, L_650_arg1)
+	local L_651_ = {}
+	L_651_[5], L_651_[1] = L_649_arg0, L_650_arg1
+	L_651_[3] = L_3_[42]()
+	if not L_651_[3] then
+		return false
+	end
+	L_651_[1] = L_651_[1] or 350
+	L_651_[4] = (L_651_[3]["Position"] - L_651_[5]["Position"])["Magnitude"]
+	L_651_[2] = math["clamp"](L_651_[4] / L_651_[1], .1, 10)
+	pcall(function()
+		if _G["__FarmTween"] then
+			_G["__FarmTween"]:Cancel()
+		end
+	end)
+	L_651_[6] = L_3_[144]:Create(L_651_[3], TweenInfo["new"](L_651_[2], Enum["EasingStyle"]["Linear"]), {
+		["CFrame"] = L_651_[5]
+	})
+	_G["__FarmTween"] = L_651_[6]
+	L_651_[6]:Play()
+	L_651_[6]["Completed"]:Wait()
+	return true
+end
+L_3_[184] = function(L_652_arg0)
+	local L_653_ = {}
+	L_653_[2] = L_652_arg0
+	L_653_[1] = false
+	if type(TP1) == "function" then
+		L_653_[1] = pcall(function()
+			TP1(L_653_[2])
+		end)
+	end
+	if not L_653_[1] then
+		L_3_[141](L_653_[2], 350)
+	end
+end
+L_3_[122] = function()
+	local L_654_ = {}
+	L_654_[3] = L_3_[175]:FindFirstChild("Data")
+	L_654_[2] = L_654_[3] and L_654_[3]:FindFirstChild("Level")
+	L_654_[1] = L_654_[2] and L_654_[2]["Value"]
+	if not L_654_[1] then
+		return false, "Level not loaded"
+	end
+	MonNew, LevelQuestNew, NameQuestNew, NameMonNew, CFrameQuestNew, CFrameMonNew = nil, nil, nil, nil, nil, nil
+	if L_654_[1] >= 2600 and L_654_[1] <= 2624 then
+		MonNew = "Reef Bandit"
+		LevelQuestNew = 1
+		NameQuestNew = "SubmergedQuest1"
+		NameMonNew = "Reef Bandit"
+		CFrameQuestNew = CFrame["new"](10780.739, -2088.41, 9260.411)
+		CFrameMonNew = CFrame["new"](10899.859, -2145.235, 9279.294)
+	elseif L_654_[1] >= 2625 and L_654_[1] <= 2649 then
+		MonNew = "Coral Pirate"
+		LevelQuestNew = 2
+		NameQuestNew = "SubmergedQuest1"
+		NameMonNew = "Coral Pirate"
+		CFrameQuestNew = CFrame["new"](10780.739, -2088.41, 9260.411)
+		CFrameMonNew = CFrame["new"](10824.544, -2087.295, 9357.231)
+	elseif L_654_[1] >= 2650 and L_654_[1] <= 2674 then
+		MonNew = "Sea Chanter"
+		LevelQuestNew = 1
+		NameQuestNew = "SubmergedQuest2"
+		NameMonNew = "Sea Chanter"
+		CFrameQuestNew = CFrame["new"](10883.599, -2086.885, 10034.02)
+		CFrameMonNew = CFrame["new"](10786.387, -2087.373, 10105.262)
+	elseif L_654_[1] >= 2675 and L_654_[1] <= 2750 then
+		MonNew = "Ocean Prophet"
+		LevelQuestNew = 2
+		NameQuestNew = "SubmergedQuest2"
+		NameMonNew = "Ocean Prophet"
+		CFrameQuestNew = CFrame["new"](10883.599, -2086.885, 10034.02)
+		CFrameMonNew = CFrame["new"](11003.326, -2007.026, 10225.063)
+	end
+	if not(MonNew and (LevelQuestNew and (NameQuestNew and (NameMonNew and (CFrameQuestNew and CFrameMonNew))))) then
+		return false, "Level out of range: " .. tostring(L_654_[1])
+	end
+	return true
+end
+task["spawn"](function()
+	while task["wait"](.2) do
+		local L_655_ = {}
+		if not _G["AutoFarmLevelNew"] then
+			continue
+		end
+		L_655_[1], L_655_[2] = pcall(function()
+			local L_656_ = {}
+			L_656_[7], L_656_[11] = L_3_[122]()
+			if not L_656_[7] then
+				return
+			end
+			L_656_[8] = L_3_[42]()
+			if not L_656_[8] then
+				return
+			end
+			L_656_[1] = L_3_[175]:FindFirstChild("PlayerGui")
+			L_656_[3] = L_656_[1] and L_656_[1]:FindFirstChild("Main")
+			L_656_[2] = L_656_[3] and L_656_[3]:FindFirstChild("Quest")
+			if not L_656_[2] then
+				L_3_[184](CFrameQuestNew)
+				return
+			end
+			if not L_656_[2]["Visible"] then
+				if (L_656_[8]["Position"] - CFrameQuestNew["Position"])["Magnitude"] > 20 then
+					L_3_[184](CFrameQuestNew)
+				else
+					game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("StartQuest", NameQuestNew, LevelQuestNew)
+				end
+				return
+			end
+			L_656_[5] = L_656_[2]:FindFirstChild("Container") and L_656_[2]["Container"]:FindFirstChild("QuestTitle")
+			L_656_[4] = L_656_[5] and (L_656_[5]:FindFirstChild("Title") and L_656_[5]["Title"]["Text"])
+			L_656_[4] = tostring(L_656_[4] or "")
+			if not string["find"](L_656_[4], MonNew, 1, true) then
+				game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
+				return
+			end
+			L_656_[9] = workspace:FindFirstChild("Enemies")
+			if not L_656_[9] then
+				return
+			end
+			L_656_[10] = false
+			for L_657_forvar0, L_658_forvar1 in pairs(L_656_[9]:GetChildren()) do
+				local L_659_ = {}
+				L_659_[1], L_659_[2] = L_657_forvar0, L_658_forvar1
+				if L_659_[2] and (L_659_[2]["Parent"] and string["find"](L_659_[2]["Name"], MonNew, 1, true)) then
+					local L_660_ = {}
+					L_660_[3] = L_659_[2]:FindFirstChild("HumanoidRootPart")
+					L_660_[1] = L_659_[2]:FindFirstChild("Humanoid")
+					if L_660_[3] and (L_660_[1] and L_660_[1]["Health"] > 0) then
+						L_656_[10] = true
+						repeat
+							local L_661_ = {}
+							task["wait"]()
+							EquipWeapon(_G["SelectWeapon"])
+							AutoHaki()
+							topos(L_660_[3]["CFrame"] * CFrame["new"](0, 30, 0))
+							L_660_[1]["WalkSpeed"] = 0
+							L_660_[3]["CanCollide"] = false
+							L_660_[3]["Size"] = Vector3["new"](70, 70, 70)
+							L_661_[2] = L_659_[2]:FindFirstChild("Head")
+							if L_661_[2] then
+								L_661_[2]["CanCollide"] = false
+							end
+							MonFarmNew = L_659_[2]["Name"]
+							L_661_[3] = game:GetService("VirtualUser")
+							L_661_[3]:CaptureController()
+							L_661_[3]:Button1Down(Vector2["new"](1280, 672))
+						until L_660_[1]["Health"] <= 0 or not _G["AutoFarmLevelNew"] or L_656_[2]["Visible"] == false or not L_659_[2]["Parent"]
+					end
+				end
+			end
+			if not L_656_[10] then
+				L_3_[184](CFrameMonNew)
+			end
+		end)
+		if not L_655_[1] then
+			warn(L_3_[168]({
+				"[AutoFarmLevelNew ER",
+				"ROR] "
+			}), L_655_[2])
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Kill Near | Mob";
+		" Aura"
+	});
+	["Description"] = "Đánh Quái Gần";
+	["Default"] = false,
+	["Callback"] = function(L_662_arg0)
+		local L_663_ = {}
+		L_663_[2] = L_662_arg0
+		_G["AutoNear"] = L_663_[2]
+		StopTween(_G["AutoNear"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoNear"] then
+			pcall(function()
+				for L_664_forvar0, L_665_forvar1 in pairs(game["Workspace"]["Enemies"]:GetChildren()) do
+					local L_666_ = {}
+					L_666_[2], L_666_[1] = L_664_forvar0, L_665_forvar1
+					if L_666_[1]:FindFirstChild("Humanoid") and (L_666_[1]:FindFirstChild("HumanoidRootPart") and (L_666_[1]["Humanoid"]["Health"] > 0 and (not string["find"](L_666_[1]["Name"], "Shadow") and (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_666_[1]["HumanoidRootPart"]["Position"])["Magnitude"] <= 5000))) then
+						repeat
+							wait(_G["Fast_Delay"])
+							StartBring = true
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							topos(L_666_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+							L_666_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+							L_666_[1]["HumanoidRootPart"]["Transparency"] = 1
+							L_666_[1]["Humanoid"]["JumpPower"] = 0
+							L_666_[1]["Humanoid"]["WalkSpeed"] = 0
+							L_666_[1]["HumanoidRootPart"]["CanCollide"] = false
+							FarmPos = L_666_[1]["HumanoidRootPart"]["CFrame"]
+							MonFarm = L_666_[1]["Name"]
+						until not _G["AutoNear"] or not L_666_[1]["Parent"] or L_666_[1]["Humanoid"]["Health"] <= 0 or not game["Workspace"]["Enemies"]:FindFirstChild(L_666_[1]["Name"])
+						StartBring = false
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[172] = L_3_[6]:AddSection({
+	"AutoRaidPirate"
+})
+L_3_[6]:AddToggle({
+	["Name"] = "Farm Pirate";
+	["Description"] = L_3_[168]({
+		"Đánh Hải Tặc T",
+		"rên Pháo Đài Bi�",
+		"��n"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_667_arg0)
+		local L_668_ = {}
+		L_668_[2] = L_667_arg0
+		_G["AutoRaidPirate"] = L_668_[2]
+		StopTween(_G["AutoRaidPirate"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoRaidPirate"] then
+			pcall(function()
+				local L_669_ = {}
+				L_669_[2] = CFrame["new"](-5496.17432, 313.768921, -2841.53027, .924894512, 7.37058015e-09, .380223751, 3.5881019e-08, 1, -1.06665446e-07, -0.380223751, 1.12297109e-07, .924894512)
+				if ((CFrame["new"](-5539.3115234375, 313.80053710938, -2972.3723144531))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 500 then
+					for L_670_forvar0, L_671_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_672_ = {}
+						L_672_[3], L_672_[1] = L_670_forvar0, L_671_forvar1
+						if _G["AutoRaidPirate"] and (L_672_[1]:FindFirstChild("HumanoidRootPart") and (L_672_[1]:FindFirstChild("Humanoid") and (L_672_[1]["Humanoid"]["Health"] > 0 and (L_672_[1]["HumanoidRootPart"]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] < 2000))) then
+							repeat
+								wait()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								NeedAttacking = true
+								StartMagnet = true
+								L_672_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_672_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+								topos(L_672_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+							until L_672_[1]["Humanoid"]["Health"] <= 0 or not L_672_[1]["Parent"] or _G["AutoRaidPirate"] == false
+							NeedAttacking = false
+							StartMagnet = false
+						end
+					end
+				elseif (L_669_[2]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["magnitude"] <= 1500 then
+					TP1(L_669_[2])
+				else
+					TP1(L_669_[2])
+				end
+			end)
+		end
+	end
+end)
+L_3_[58] = L_3_[6]:AddSection({
+	"TyrantoftheSkies"
+})
+L_3_[18] = L_3_[6]:AddParagraph({
+	["Title"] = "Check Eyes Status",
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			local L_673_ = {}
+			L_673_[2] = 0
+			L_673_[3] = {
+				workspace["Map"]["TikiOutpost"]["IslandModel"]:FindFirstChild("Eye1"),
+				workspace["Map"]["TikiOutpost"]["IslandModel"]:FindFirstChild("Eye2"),
+				workspace["Map"]["TikiOutpost"]["IslandModel"]:FindFirstChild("Eye3"),
+				workspace["Map"]["TikiOutpost"]["IslandModel"]:FindFirstChild("Eye4")
+			}
+			for L_674_forvar0, L_675_forvar1 in ipairs(L_673_[3]) do
+				local L_676_ = {}
+				L_676_[2], L_676_[3] = L_674_forvar0, L_675_forvar1
+				if L_676_[3] and (L_676_[3]:IsA("BasePart") and L_676_[3]["Transparency"] == 0) then
+					L_673_[2] = L_673_[2] + 1
+				end
+			end
+			L_3_[18]:Set("Status: " .. (L_673_[2] .. (" Eye(s)" .. (not(L_673_[2] ~= 4) and " ������" or ""))))
+		end)
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Auto Farm Tyrant",
+	["Description"] = L_3_[168]({
+		"Farm Quái Và Đán",
+		"h Boss Chim"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_677_arg0)
+		local L_678_ = {}
+		L_678_[2] = L_677_arg0
+		_G["FarmDaiBan"] = L_678_[2]
+		StopTween(_G["FarmDaiBan"])
+	end
+})
+L_3_[146] = CFrame["new"](-16194.004882812, 155.21844482422, 1420.7199707031)
+L_3_[59] = (game:GetService("Workspace"))["Enemies"]
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["FarmDaiBan"] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Tyrant of the Skies") then
+					local L_679_ = {}
+					L_679_[2] = false
+					for L_680_forvar0, L_681_forvar1 in pairs({
+						"Isle Outlaw";
+						"Island Boy",
+						"Isle Champion";
+						"Serpent Hunter";
+						"Skull Slayer"
+					}) do
+						local L_682_ = {}
+						L_682_[2], L_682_[3] = L_680_forvar0, L_681_forvar1
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild(L_682_[3]) then
+							L_679_[2] = true
+							break
+						end
+					end
+					if not L_679_[2] then
+						local L_683_ = {}
+						L_683_[2] = math["random"](1, 3)
+						if L_683_[2] == 1 then
+							topos(CFrame["new"](-1436.86011, 167.753616, -12296.9512))
+						elseif L_683_[2] ~= 2 then
+							if L_683_[2] == 3 then
+								topos(CFrame["new"](-2231.2793, 168.256653, -12845.7559))
+							end
+						else
+							topos(CFrame["new"](-2383.78979, 150.450592, -12126.4961))
+						end
+					else
+						for L_684_forvar0, L_685_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_686_ = {}
+							L_686_[2], L_686_[1] = L_684_forvar0, L_685_forvar1
+							if (L_686_[1]["Name"] == "Isle Outlaw" or L_686_[1]["Name"] == "Island Boy" or L_686_[1]["Name"] == "Isle Champion" or L_686_[1]["Name"] == "Serpent Hunter" or L_686_[1]["Name"] == "Skull Slayer") and (L_686_[1]:FindFirstChild("Humanoid") and (L_686_[1]:FindFirstChild("HumanoidRootPart") and L_686_[1]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_686_[1]["HumanoidRootPart"]["CanCollide"] = false
+									L_686_[1]["Humanoid"]["WalkSpeed"] = 0
+									StartBring = true
+									L_686_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+									PosMon = L_686_[1]["HumanoidRootPart"]["CFrame"]
+									MonFarm = L_686_[1]["Name"]
+									L_686_[1]["Head"]["CanCollide"] = false
+									topos(L_686_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									NeedAttacking = true
+									if L_686_[1]["Name"] ~= "Isle Outlaw" then
+										if L_686_[1]["Name"] == "Island Boy" then
+											Bring(L_686_[1]["Name"], CFrame["new"](-16901.26171875, 84.067565917969, -192.88906860352))
+										elseif L_686_[1]["Name"] ~= "Isle Champion" then
+											if L_686_[1]["Name"] ~= "Serpent Hunter" then
+												if L_686_[1]["Name"] == "Skull Slayer" then
+													Bring(L_686_[1]["Name"], CFrame["new"](-16855.043, 122.457253, 1478.15308, -0.999392271, 0, -0.0348687991, 0, 1, 0, .0348687991, 0, -0.999392271))
+												end
+											else
+												Bring(L_686_[1]["Name"], CFrame["new"](-16521.0625, 106.09285, 1488.78467, .469467044, 0, .882950008, 0, 1, 0, -0.882950008, 0, .469467044))
+											end
+										else
+											Bring(L_686_[1]["Name"], CFrame["new"](-16641.6796875, 235.78254699707, 1031.2829589844))
+										end
+									else
+										Bring(L_686_[1]["Name"], CFrame["new"](-16442.814453125, 116.13899993896, -264.46377563477))
+									end
+								until not _G["FarmDaiBan"] or not L_686_[1]["Parent"] or L_686_[1]["Humanoid"]["Health"] <= 0 or (game:GetService("Workspace"))["Map"]["CakeLoaf"]["BigMioaQ"]["Other"]["Transparency"] == 0 or (game:GetService("ReplicatedStorage")):FindFirstChild(L_3_[168]({
+									"Tyrant of the Skies ",
+									"[Lv. 2600] [Raid Bos",
+									"s]"
+								})) or (game:GetService("Workspace"))["Enemies"]:FindFirstChild(L_3_[168]({
+									"Tyrant of the Skies ",
+									"[Lv. 2600] [Raid Bos";
+									"s]"
+								}))
+								DamageAura = false
+							end
+						end
+					end
+					if not BypassTP then
+						topos(L_3_[146])
+					elseif (playerPos - L_3_[146]["Position"])["Magnitude"] > 1500 then
+						BTP(L_3_[146])
+					else
+						topos(L_3_[146])
+					end
+					UnEquipWeapon(_G["Selectweapon"])
+					topos(CFrame["new"](-16194.004882812, 155.21844482422, 1420.7199707031))
+				else
+					for L_687_forvar0, L_688_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_689_ = {}
+						L_689_[2], L_689_[1] = L_687_forvar0, L_688_forvar1
+						if L_689_[1]["Name"] == "Tyrant of the Skies" and (L_689_[1]:FindFirstChild("Humanoid") and (L_689_[1]:FindFirstChild("HumanoidRootPart") and L_689_[1]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_689_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_689_[1]["Humanoid"]["WalkSpeed"] = 0
+								L_689_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+								topos(L_689_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 40, 0))
+								NeedAttacking = true
+							until not _G["FarmDaiBan"] or not L_689_[1]["Parent"] or L_689_[1]["Humanoid"]["Health"] <= 0
+							wait(1)
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Summon Tyrant Of The",
+		" Skies"
+	}),
+	["Description"] = L_3_[168]({
+		"Tự Động Phá B�";
+		"�nh Để Triệu H�",
+		"��i Boss"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_690_arg0)
+		local L_691_ = {}
+		L_691_[2] = L_690_arg0
+		_G["Farm8Binhs"] = L_691_[2]
+		StopTween(_G["Farm8Binhs"])
+	end
+})
+L_3_[24] = {
+	CFrame["new"](-16250.2354, 158.167007, 1313.01904, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874);
+	CFrame["new"](-16250.2354, 158.167007, 1313.01904, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874);
+	CFrame["new"](-16297.0596, 159.322998, 1317.224, -0.463313937, 0, .886194229, 0, 1, 0, -0.886194229, 0, -0.463313937);
+	CFrame["new"](-16335.0967, 159.334, 1324.88599, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874);
+	CFrame["new"](-16288.6094, 158.167007, 1470.36804, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874),
+	CFrame["new"](-16258.001, 156.761002, 1461.40405, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874),
+	CFrame["new"](-16245.4121, 158.436996, 1463.36597, -0.993159413, 0, .116766132, 0, 1, 0, -0.116766132, 0, -0.993159413);
+	CFrame["new"](-16212.4688, 158.167007, 1466.34399, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874)
+}
+function TweenToPosition(L_692_arg0)
+	local L_693_ = {}
+	L_693_[3] = L_692_arg0
+	L_693_[2] = game["Players"]["LocalPlayer"]["Character"]
+	L_693_[4] = L_693_[2] and L_693_[2]:FindFirstChild("HumanoidRootPart")
+	if not L_693_[4] then
+		return
+	else
+		local L_694_ = {}
+		L_694_[2] = game:GetService("TweenService")
+		L_694_[4] = (L_693_[4]["Position"] - L_693_[3]["Position"])["Magnitude"] / 300
+		L_694_[3] = L_694_[2]:Create(L_693_[4], TweenInfo["new"](L_694_[4], Enum["EasingStyle"]["Linear"]), {
+			["CFrame"] = L_693_[3]
+		})
+		L_694_[3]:Play()
+		L_694_[3]["Completed"]:Wait()
+		return
+	end
+end
+function Skill(L_695_arg0)
+	local L_696_ = {}
+	L_696_[2] = L_695_arg0
+	L_696_[1] = game:GetService("VirtualInputManager")
+	L_696_[1]:SendKeyEvent(true, Enum["KeyCode"][L_696_[2]], false, game)
+	task["wait"](.05)
+	L_696_[1]:SendKeyEvent(false, Enum["KeyCode"][L_696_[2]], false, game)
+end
+function Click()
+	local L_697_ = {}
+	L_697_[1] = game:GetService("VirtualInputManager")
+	L_697_[1]:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+	task["wait"](.05)
+	L_697_[1]:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+end
+function FindWeapon(L_698_arg0)
+	local L_699_ = {}
+	L_699_[2] = L_698_arg0
+	L_699_[3] = game["Players"]["LocalPlayer"]["Backpack"]
+	for L_700_forvar0, L_701_forvar1 in ipairs(L_699_[3]:GetChildren()) do
+		local L_702_ = {}
+		L_702_[2], L_702_[1] = L_700_forvar0, L_701_forvar1
+		if L_702_[1]:IsA("Tool") then
+			if L_699_[2] ~= "Melee" or L_702_[1]["ToolTip"] ~= "Melee" and L_702_[1]["Name"] ~= "Combat" then
+				if L_699_[2] ~= "Sword" or L_702_[1]["ToolTip"] ~= "Sword" then
+					if L_699_[2] == "Gun" and L_702_[1]["ToolTip"] == "Gun" then
+						return L_702_[1]["Name"]
+					elseif L_699_[2] == "Fruit" and L_702_[1]["ToolTip"] == "Blox Fruit" then
+						return L_702_[1]["Name"]
+					end
+				else
+					return L_702_[1]["Name"]
+				end
+			else
+				return L_702_[1]["Name"]
+			end
+		end
+	end
+	return nil
+end
+function EquipWeapon(L_703_arg0)
+	local L_704_ = {}
+	L_704_[1] = L_703_arg0
+	if not L_704_[1] then
+		return
+	else
+		local L_705_ = {}
+		L_705_[3] = game["Players"]["LocalPlayer"]
+		L_705_[2] = (L_705_[3]:WaitForChild("Backpack")):FindFirstChild(L_704_[1])
+		if L_705_[2] then
+			L_705_[3]["Character"]["Humanoid"]:EquipTool(L_705_[2])
+		end
+		return
+	end
+end
+function AttackAllSkills()
+	local L_706_ = {}
+	L_706_[1] = FindWeapon("Melee")
+	L_706_[2] = FindWeapon("Sword")
+	L_706_[3] = FindWeapon("Fruit")
+	L_706_[4] = FindWeapon("Gun")
+	if L_706_[1] then
+		EquipWeapon(L_706_[1])
+		Skill("Z")
+		Skill("X")
+		Skill("C")
+		Skill("V")
+		Click()
+	end
+	if L_706_[2] then
+		EquipWeapon(L_706_[2])
+		Skill("Z")
+		Skill("X")
+		Click()
+	end
+	if L_706_[3] then
+		EquipWeapon(L_706_[3])
+		Skill("Z")
+		Skill("X")
+		Skill("C")
+		Skill("F")
+		Click()
+	end
+	if L_706_[4] then
+		EquipWeapon(L_706_[4])
+		Skill("Z")
+		Skill("X")
+		Click()
+	end
+end
+task["spawn"](function()
+	while task["wait"](1) do
+		if _G["Farm8Binhs"] then
+			for L_707_forvar0, L_708_forvar1 in ipairs(L_3_[24]) do
+				local L_709_ = {}
+				L_709_[1], L_709_[3] = L_707_forvar0, L_708_forvar1
+				if _G["Farm8Binhs"] then
+					TweenToPosition(L_709_[3] * CFrame["new"](0, 5, 0))
+					task["wait"](.5)
+					AttackAllSkills()
+					task["wait"](3)
+				else
+					break
+				end
+			end
+		end
+	end
+end)
+L_3_[120] = L_3_[6]:AddSection({
+	"Xương"
+})
+L_3_[23] = L_3_[6]:AddParagraph({
+	["Title"] = "Check Bone",
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			local L_710_ = {}
+			L_710_[1] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("Bones", "Check")
+			L_3_[23]:Set("bạn có : " .. (tostring(L_710_[1]) .. " Bones"))
+		end)
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Fram Bone",
+	["Description"] = "Fram Sương";
+	["Default"] = false;
+	["Callback"] = function(L_711_arg0)
+		local L_712_ = {}
+		L_712_[2] = L_711_arg0
+		_G["FarmBone"] = L_712_[2]
+		StopTween(_G["FarmBone"])
+	end
+})
+spawn(function()
+	while wait() do
+		local L_713_ = {}
+		L_713_[2] = CFrame["new"](-9508.5673828125, 142.13984680176, 5737.3603515625)
+		do
+			local L_714_ = {}
+			L_714_[2] = L_713_[2]
+			if _G["FarmBone"] and L_3_[177] then
+				pcall(function()
+					if not BypassTP then
+						TP1(L_714_[2])
+					elseif (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_714_[2]["Position"])["Magnitude"] > 2000 then
+						TP1(L_714_[2])
+						wait(.1)
+						for L_715_forvar0 = 1, 8, 1 do
+							game["Players"]["localPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](L_714_[2]);
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("SetSpawnPoint")
+							wait(.1)
+						end
+					elseif (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_714_[2]["Position"])["Magnitude"] < 2000 then
+						TP1(L_714_[2])
+					end
+					if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Reborn Skeleton") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Living Zombie") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Demonic Soul") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Posessed Mummy"))) then
+						StartBring = false
+						topos(CFrame["new"](-9506.234375, 172.13061523438, 6117.0771484375))
+						for L_716_forvar0, L_717_forvar1 in pairs((game:GetService("ReplicatedStorage")):GetChildren()) do
+							local L_718_ = {}
+							L_718_[3], L_718_[2] = L_716_forvar0, L_717_forvar1
+							if L_718_[2]["Name"] == "Reborn Skeleton" then
+								topos(L_718_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+							elseif L_718_[2]["Name"] ~= "Living Zombie" then
+								if L_718_[2]["Name"] ~= "Demonic Soul" then
+									if L_718_[2]["Name"] == "Posessed Mummy" then
+										topos(L_718_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+									end
+								else
+									topos(L_718_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+								end
+							else
+								topos(L_718_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+							end
+						end
+					else
+						for L_719_forvar0, L_720_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_721_ = {}
+							L_721_[3], L_721_[2] = L_719_forvar0, L_720_forvar1
+							if (L_721_[2]["Name"] == "Reborn Skeleton" or L_721_[2]["Name"] == "Living Zombie" or L_721_[2]["Name"] == "Demonic Soul" or L_721_[2]["Name"] == "Posessed Mummy") and (L_721_[2]:FindFirstChild("Humanoid") and (L_721_[2]:FindFirstChild("HumanoidRootPart") and L_721_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									NoAttackAnimation = true
+									NeedAttacking = true
+									EquipWeapon(_G["SelectWeapon"])
+									L_721_[2]["HumanoidRootPart"]["CanCollide"] = false
+									L_721_[2]["Humanoid"]["WalkSpeed"] = 0
+									L_721_[2]["Head"]["CanCollide"] = false
+									StartBring = true
+									MonFarm = L_721_[2]["Name"]
+									PosMon = L_721_[2]["HumanoidRootPart"]["CFrame"]
+									topos(L_721_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["FarmBone"] or not L_721_[2]["Parent"] or L_721_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Seperator Hallow Scy";
+		"the"
+	});
+	["Description"] = L_3_[168]({
+		"Triệu hồi và ti",
+		"êu diệt Soul Reap",
+		"er"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_722_arg0)
+		local L_723_ = {}
+		L_723_[1] = L_722_arg0
+		_G["Hallow"] = L_723_[1]
+		StopTween(_G["Hallow"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Hallow"] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Soul Reaper") then
+					if (game:GetService("Players"))["LocalPlayer"]["Backpack"]:FindFirstChild("Hallow Essence") or (game:GetService("Players"))["LocalPlayer"]["Character"]:FindFirstChild("Hallow Essence") then
+						repeat
+							TP1(CFrame["new"](-8932.322265625, 146.83154296875, 6062.55078125))
+							wait()
+						until ((CFrame["new"](-8932.322265625, 146.83154296875, 6062.55078125))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 8
+						EquipWeapon("Hallow Essence")
+					elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Soul Reaper") then
+						TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Soul Reaper"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+					end
+				else
+					for L_724_forvar0, L_725_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_726_ = {}
+						L_726_[1], L_726_[3] = L_724_forvar0, L_725_forvar1
+						if string["find"](L_726_[3]["Name"], "Soul Reaper") then
+							repeat
+								task["wait"]()
+								EquipWeapon(_G["SelectWeapon"])
+								AutoHaki()
+								L_726_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+								topos(L_726_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+								(game:GetService("VirtualUser")):CaptureController();
+								(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 670))
+								L_726_[3]["HumanoidRootPart"]["Transparency"] = 1
+							until L_726_[3]["Humanoid"]["Health"] <= 0 or _G["Hallow"] == false
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Trade Bone";
+	["Description"] = L_3_[168]({
+		"Tự động đổi ",
+		"xương lấy phần";
+		" thưởng"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_727_arg0)
+		local L_728_ = {}
+		L_728_[2] = L_727_arg0
+		_G["Rdbone"] = L_728_[2]
+		StopTween(_G["Rdbone"])
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["Rdbone"] then
+			(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("Bones", "Buy", 1, 1)
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Auto Pray";
+	["Description"] = "";
+	["Default"] = false,
+	["Callback"] = function(L_729_arg0)
+		local L_730_ = {}
+		L_730_[2] = L_729_arg0
+		_G["Pray"] = L_730_[2]
+		StopTween(_G["Pray"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["Pray"] then
+				TP1(CFrame["new"](-8652.99707, 143.450119, 6170.50879, -0.983064115, -2.48005533e-10, .18326205, -1.78910387e-09, 1, -8.24392288e-09, -0.18326205, -8.43218029e-09, -0.983064115))
+				wait();
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 1)
+			end
+		end
+	end)
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Auto Try Luck",
+	["Description"] = "",
+	["Default"] = false,
+	["Callback"] = function(L_731_arg0)
+		local L_732_ = {}
+		L_732_[1] = L_731_arg0
+		_G["Trylux"] = L_732_[1]
+		StopTween(_G["Trylux"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["Trylux"] then
+				TP1(CFrame["new"](-8652.99707, 143.450119, 6170.50879, -0.983064115, -2.48005533e-10, .18326205, -1.78910387e-09, 1, -8.24392288e-09, -0.18326205, -8.43218029e-09, -0.983064115))
+				wait();
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2)
+			end
+		end
+	end)
+end)
+L_3_[75] = L_3_[6]:AddSection({
+	"Katakuri"
+})
+L_3_[37] = L_3_[6]:AddParagraph({
+	["Title"] = "Check Cake Prince",
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			local L_733_ = {}
+			L_733_[1] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")
+			if string["len"](L_733_[1]) == 88 then
+				L_3_[37]:Set("Killed : " .. (string["sub"](L_733_[1], 39, 41) .. " / 500"))
+			elseif string["len"](L_733_[1]) ~= 87 then
+				if string["len"](L_733_[1]) == 86 then
+					L_3_[37]:Set("Killed : " .. (string["sub"](L_733_[1], 39, 39) .. " / 500"))
+				else
+					L_3_[37]:Set(L_3_[168]({
+						"Prince King Spawned ";
+						"✅"
+					}))
+				end
+			else
+				L_3_[37]:Set("Killed : " .. (string["sub"](L_733_[1], 39, 40) .. " / 500"))
+			end
+		end)
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Farm Katakuri",
+	["Description"] = L_3_[168]({
+		"Fram Quái Và Đán",
+		"h Hoàng Tử Bột ",
+		"V1"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_734_arg0)
+		local L_735_ = {}
+		L_735_[1] = L_734_arg0
+		_G["FarmCake"] = L_735_[1]
+		StopTween(_G["FarmCake"])
+	end
+})
+L_3_[135] = CFrame["new"](-2130.8071289062, 69.956344604492, -12327.83984375)
+L_3_[88] = (game:GetService("Workspace"))["Enemies"]
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["FarmCake"] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Cake Prince") then
+					local L_736_ = {}
+					L_736_[2] = false
+					for L_737_forvar0, L_738_forvar1 in pairs({
+						"Cookie Crafter",
+						"Cake Guard",
+						"Baking Staff",
+						"Head Baker"
+					}) do
+						local L_739_ = {}
+						L_739_[3], L_739_[2] = L_737_forvar0, L_738_forvar1
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild(L_739_[2]) then
+							L_736_[2] = true
+							break
+						end
+					end
+					if L_736_[2] then
+						for L_740_forvar0, L_741_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_742_ = {}
+							L_742_[3], L_742_[2] = L_740_forvar0, L_741_forvar1
+							if (L_742_[2]["Name"] == "Cookie Crafter" or L_742_[2]["Name"] == "Cake Guard" or L_742_[2]["Name"] == "Baking Staff" or L_742_[2]["Name"] == "Head Baker") and (L_742_[2]:FindFirstChild("Humanoid") and (L_742_[2]:FindFirstChild("HumanoidRootPart") and L_742_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_742_[2]["HumanoidRootPart"]["CanCollide"] = false
+									L_742_[2]["Humanoid"]["WalkSpeed"] = 0
+									StartBring = true
+									L_742_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+									PosMon = L_742_[2]["HumanoidRootPart"]["CFrame"]
+									MonFarm = L_742_[2]["Name"]
+									L_742_[2]["Head"]["CanCollide"] = false
+									topos(L_742_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									NeedAttacking = true
+									if L_742_[2]["Name"] ~= "Cookie Crafter" then
+										if L_742_[2]["Name"] == "Cake Guard" then
+											Bring(L_742_[2]["Name"], CFrame["new"](-1693.98047, 35.2188225, -12436.8438, -0.716115236, 0, -0.697982132, 0, 1, 0, .697982132, 0, -0.716115236))
+										elseif L_742_[2]["Name"] == "Baking Staff" then
+											Bring(L_742_[2]["Name"], CFrame["new"](-1980.4375, 34.6653099, -12983.8408, -0.254338264, 0, -0.967115223, 0, 1, 0, .967115223, 0, -0.254338264))
+										elseif L_742_[2]["Name"] == "Head Baker" then
+											Bring(L_742_[2]["Name"], CFrame["new"](-2151.37793, 51.0095749, -13033.3975, -0.996587753, 0, .0825396702, 0, 1, 0, -0.0825396702, 0, -0.996587753))
+										end
+									else
+										Bring(L_742_[2]["Name"], CFrame["new"](-2212.88965, 37.0051041, -11969.2568, .458114207, 0, -0.888893366, 0, 1, 0, .888893366, 0, .458114207))
+									end
+								until not _G["FarmCake"] or not L_742_[2]["Parent"] or L_742_[2]["Humanoid"]["Health"] <= 0 or (game:GetService("Workspace"))["Map"]["CakeLoaf"]["BigMioaQ"]["Other"]["Transparency"] == 0 or (game:GetService("ReplicatedStorage")):FindFirstChild(L_3_[168]({
+									"Cake Prince [Lv. 230",
+									"0] [Raid Boss]"
+								})) or (game:GetService("Workspace"))["Enemies"]:FindFirstChild(L_3_[168]({
+									"Cake Prince [Lv. 230",
+									"0] [Raid Boss]"
+								}))
+								DamageAura = false
+							end
+						end
+					else
+						local L_743_ = {}
+						L_743_[2] = math["random"](1, 3)
+						if L_743_[2] ~= 1 then
+							if L_743_[2] ~= 2 then
+								if L_743_[2] == 3 then
+									topos(CFrame["new"](-2231.2793, 168.256653, -12845.7559))
+								end
+							else
+								topos(CFrame["new"](-2383.78979, 150.450592, -12126.4961))
+							end
+						else
+							topos(CFrame["new"](-1436.86011, 167.753616, -12296.9512))
+						end
+					end
+					if BypassTP then
+						if (playerPos - L_3_[135]["Position"])["Magnitude"] <= 1500 then
+							topos(L_3_[135])
+						else
+							BTP(L_3_[135])
+						end
+					else
+						topos(L_3_[135])
+					end
+					UnEquipWeapon(_G["Selectweapon"])
+					topos(CFrame["new"](-2130.8071289062, 69.956344604492, -12327.83984375))
+				else
+					for L_744_forvar0, L_745_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_746_ = {}
+						L_746_[2], L_746_[1] = L_744_forvar0, L_745_forvar1
+						if L_746_[1]["Name"] == "Cake Prince" and (L_746_[1]:FindFirstChild("Humanoid") and (L_746_[1]:FindFirstChild("HumanoidRootPart") and L_746_[1]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_746_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_746_[1]["Humanoid"]["WalkSpeed"] = 0
+								L_746_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+								if (game:GetService("Workspace"))["_WorldOrigin"]:FindFirstChild("Ring") or (game:GetService("Workspace"))["_WorldOrigin"]:FindFirstChild("Fist") or (game:GetService("Workspace"))["_WorldOrigin"]:FindFirstChild("MochiSwirl") then
+									topos(L_746_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -40, 0))
+								else
+									topos(L_746_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](4, 10, 10))
+								end
+								NeedAttacking = true
+							until not _G["FarmCake"] or not L_746_[1]["Parent"] or L_746_[1]["Humanoid"]["Health"] <= 0
+							wait(1)
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = "Farm Katakuri V2",
+	["Description"] = L_3_[168]({
+		"Fram Quái Và Đán";
+		"h Hoàng Tử Bột ";
+		"V2"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_747_arg0)
+		local L_748_ = {}
+		L_748_[2] = L_747_arg0
+		_G["Fullykatakuri"] = L_748_[2]
+		StopTween(_G["Fullykatakuri"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Fullykatakuri"] then
+			pcall(function()
+				if not game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild("God's Chalice") and not game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("God's Chalice") then
+					if game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild("Sweet Chalice") or game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("Sweet Chalice") then
+						if string["find"]((game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner"), L_3_[168]({
+							"Do you want to open ",
+							"the portal now?"
+						})) then
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")
+						elseif game["Workspace"]["Enemies"]:FindFirstChild("Baking Staff") or game["Workspace"]["Enemies"]:FindFirstChild("Head Baker") or game["Workspace"]["Enemies"]:FindFirstChild("Cake Guard") or game["Workspace"]["Enemies"]:FindFirstChild("Cookie Crafter") then
+							for L_749_forvar0, L_750_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_751_ = {}
+								L_751_[1], L_751_[2] = L_749_forvar0, L_750_forvar1
+								if (L_751_[2]["Name"] == "Baking Staff" or L_751_[2]["Name"] == "Head Baker" or L_751_[2]["Name"] == "Cake Guard" or L_751_[2]["Name"] == "Cookie Crafter") and L_751_[2]["Humanoid"]["Health"] > 0 then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										AutoHaki()
+										PosMon = L_751_[2]["HumanoidRootPart"]["CFrame"]
+										topos(L_751_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										L_751_[2]["HumanoidRootPart"]["CanCollide"] = false
+										L_751_[2]["Humanoid"]["WalkSpeed"] = 0
+										L_751_[2]["Head"]["CanCollide"] = false
+										attackGunEnemies(L_751_[2]["Name"], 5)
+										L_751_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](70, 70, 70)
+										StartBring = false
+										MonFarm = L_751_[2]["Name"];
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+									until _G["Fullykatakuri"] == false or (game:GetService("ReplicatedStorage")):FindFirstChild("Cake Prince") or not L_751_[2]["Parent"] or L_751_[2]["Humanoid"]["Health"] <= 0
+								end
+							end
+						else
+							CakeBring = false
+							StartBring = false
+							topos(CFrame["new"](-1820.0634765625, 210.74781799316, -12297.49609375))
+						end
+					elseif game["ReplicatedStorage"]:FindFirstChild("Dough King") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Dough King") then
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Dough King") then
+							topos(CFrame["new"](-2009.2802734375, 4532.9721679688, -14937.307617188))
+						else
+							for L_752_forvar0, L_753_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_754_ = {}
+								L_754_[3], L_754_[2] = L_752_forvar0, L_753_forvar1
+								if L_754_[2]["Name"] == "Dough King" then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_754_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](70, 70, 70)
+										L_754_[2]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = false
+										topos(L_754_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -40, 0));
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+									until _G["Fullykatakuri"] == false or not L_754_[2]["Parent"] or L_754_[2]["Humanoid"]["Health"] <= 0
+								end
+							end
+						end
+					elseif game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild("Red Key") or game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("Red Key") then
+						local L_755_ = {}
+						L_755_[1] = {
+							[1] = "CakeScientist";
+							[2] = "Check"
+						};
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_755_[1]))
+					elseif (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] ~= true then
+						wait(.5);
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("EliteHunter")
+					elseif string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Diablo") or string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Deandre") or string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Urban") then
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Diablo") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Deandre") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Urban")) then
+							if (game:GetService("ReplicatedStorage")):FindFirstChild("Diablo") then
+								topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Diablo"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+							elseif not(game:GetService("ReplicatedStorage")):FindFirstChild("Deandre") then
+								if (game:GetService("ReplicatedStorage")):FindFirstChild("Urban") then
+									topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Urban"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+								end
+							else
+								topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Deandre"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+							end
+						else
+							for L_756_forvar0, L_757_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_758_ = {}
+								L_758_[2], L_758_[3] = L_756_forvar0, L_757_forvar1
+								if (L_758_[3]["Name"] == "Diablo" or L_758_[3]["Name"] == "Deandre" or L_758_[3]["Name"] == "Urban") and (L_758_[3]:FindFirstChild("Humanoid") and (L_758_[3]:FindFirstChild("HumanoidRootPart") and L_758_[3]["Humanoid"]["Health"] > 0)) then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										PosMon = L_758_[3]["HumanoidRootPart"]["CFrame"]
+										topos(L_758_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										L_758_[3]["HumanoidRootPart"]["CanCollide"] = false
+										L_758_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_758_[3]["Head"]["CanCollide"] = false
+										attackGunEnemies(L_758_[3]["Name"], 5)
+										L_758_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](70, 70, 70)
+										StartBring = false
+										MonFarm = L_758_[3]["Name"];
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until _G["Fullykatakuri"] == false or L_758_[3]["Humanoid"]["Health"] <= 0 or not L_758_[3]["Parent"] or game["Players"]["LocalPlayer"]["Backpack"]:FindFirstChild("God's Chalice") or game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("God's Chalice")
+								end
+							end
+						end
+					end
+				elseif string["find"]((game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("SweetChaliceNpc"), "Where") then
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("SweetChaliceNpc")
+				end
+			end)
+		end
+	end
+end)
+L_3_[28] = L_3_[6]:AddSection({
+	L_3_[168]({
+		"Auto Farm Chest And ";
+		"Berry"
+	})
+})
+L_3_[6]:AddToggle({
+	["Name"] = "Auto Collect Berry";
+	["Description"] = L_3_[168]({
+		"Tự động Nhặt ";
+		"Berry"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_759_arg0)
+		local L_760_ = {}
+		L_760_[1] = L_759_arg0
+		_G["CollectBerry"] = L_760_[1]
+		StopTween(_G["CollectBerry"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["CollectBerry"] then
+			local L_761_ = {}
+			L_761_[2] = (game:GetService("Players"))["LocalPlayer"]
+			L_761_[6] = ((L_761_[2]["Character"] or L_761_[2]["CharacterAdded"]:Wait()):GetPivot())["Position"]
+			L_761_[3] = (game:GetService("CollectionService")):GetTagged("BerryBush")
+			L_761_[1] = math["huge"]
+			L_761_[4] = nil
+			L_761_[7] = nil
+			for L_762_forvar0, L_763_forvar1 in ipairs(L_761_[3]) do
+				local L_764_ = {}
+				L_764_[3], L_764_[1] = L_762_forvar0, L_763_forvar1
+				for L_765_forvar0, L_766_forvar1 in pairs(L_764_[1]:GetAttributes()) do
+					local L_767_ = {}
+					L_767_[2], L_767_[3] = L_765_forvar0, L_766_forvar1
+					L_767_[1] = ((L_764_[1]["Parent"]:GetPivot())["Position"] - L_761_[6])["Magnitude"]
+					if L_767_[1] < L_761_[1] then
+						L_761_[1] = L_767_[1]
+						L_761_[4] = L_764_[1]
+						L_761_[7] = L_767_[2]
+					end
+				end
+			end
+			if L_761_[4] and L_761_[7] then
+				local L_768_ = {}
+				L_768_[1] = L_761_[4]["Parent"]
+				L_768_[2] = (L_768_[1]:GetPivot())["Position"]
+				TP1(CFrame["new"](L_768_[2] + Vector3["new"](0, 2, 0)))
+				task["wait"](.5)
+				L_768_[3] = L_768_[1]:FindFirstChild(L_761_[7])
+				if L_768_[3] and L_768_[3]:IsA("BasePart") then
+					local L_769_ = {}
+					TP1(L_768_[3]["CFrame"] + Vector3["new"](0, 1, 0))
+					task["wait"](.3)
+					L_769_[1] = game:GetService("VirtualInputManager")
+					L_769_[1]:SendKeyEvent(true, Enum["KeyCode"]["E"], false, game)
+					task["wait"](.1)
+					L_769_[1]:SendKeyEvent(false, Enum["KeyCode"]["E"], false, game)
+				end
+			elseif _G["CollectBerryHop"] then
+				Hop()
+			end
+		end
+	end
+end)
+L_3_[6]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Farm Chest [ Tw";
+		"een ]"
+	});
+	["Description"] = L_3_[168]({
+		"Tự động Nhặt ",
+		"rương bằng tween"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_770_arg0)
+		local L_771_ = {}
+		L_771_[1] = L_770_arg0
+		_G["FarmChest"] = L_771_[1]
+		StopTween(_G["FarmChest"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["FarmChest"] then
+			local L_772_ = {}
+			L_772_[5] = (game:GetService("Players"))["LocalPlayer"]
+			L_772_[3] = ((L_772_[5]["Character"] or L_772_[5]["CharacterAdded"]:Wait()):GetPivot())["Position"]
+			L_772_[2] = (game:GetService("CollectionService")):GetTagged("_ChestTagged")
+			L_772_[4] = math["huge"]
+			L_772_[1] = nil
+			for L_773_forvar0 = 1, #L_772_[2], 1 do
+				local L_774_ = {}
+				L_774_[1] = L_773_forvar0
+				L_774_[3] = L_772_[2][L_774_[1]]
+				L_774_[4] = ((L_774_[3]:GetPivot())["Position"] - L_772_[3])["Magnitude"]
+				if not L_774_[3]:GetAttribute("IsDisabled") and L_774_[4] < L_772_[4] then
+					local L_775_ = {}
+					L_775_[1] = L_774_[4]
+					L_772_[1] = L_774_[3]
+					L_772_[4] = L_775_[1]
+				end
+			end
+			if L_772_[1] then
+				local L_776_ = {}
+				L_776_[3] = (L_772_[1]["GetPivot"](L_772_[1]))["Position"]
+				L_776_[1] = CFrame["new"](L_776_[3])
+				topos(L_776_[1])
+			end
+		end
+	end
+end)
+L_3_[94] = L_3_[6]:AddSection({
+	"Boss Fram"
+})
+L_3_[6]:AddButton({
+	["Name"] = "Cập Nhật Boss",
+	["Description"] = L_3_[168]({
+		"Làm mới danh sác";
+		"h boss"
+	}),
+	["Callback"] = function()
+	end
+})
+L_3_[109] = L_3_[6]:AddParagraph({
+	["Title"] = "Boss Spawn Status",
+	["Content"] = "Initializing..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			if _G["SelectBoss"] and ((game:GetService("ReplicatedStorage")):FindFirstChild(_G["SelectBoss"]) or (game:GetService("Workspace"))["Enemies"]:FindFirstChild(_G["SelectBoss"])) then
+				L_3_[109]:Set(L_3_[168]({
+					"Status: Boss Spawn �";
+					"��"
+				}))
+			else
+				L_3_[109]:Set(L_3_[168]({
+					"Status: Boss Not Spa",
+					"wn ❌"
+				}))
+			end
+		end)
+	end
+end)
+L_3_[155] = {}
+if L_3_[81] then
+	L_3_[155] = {
+		"The Gorilla King",
+		"Bobby",
+		"Yeti",
+		"Mob Leader",
+		"Vice Admiral";
+		"Warden",
+		"Chief Warden",
+		"Swan",
+		"Magma Admiral",
+		"Fishman Lord",
+		"Wysper",
+		"Thunder God",
+		"Cyborg",
+		"Saber Expert"
+	}
+elseif not L_3_[111] then
+	if L_3_[177] then
+		L_3_[155] = {
+			"";
+			"Tyrant of the Skies";
+			"Stone";
+			"Island Empress";
+			"Kilo Admiral";
+			"Captain Elephant",
+			"Beautiful Pirate",
+			"rip_indra True Form";
+			"Longma";
+			"Soul Reaper",
+			"Cake Queen"
+		}
+	end
+else
+	L_3_[155] = {
+		"Diamond";
+		"Jeremy",
+		"Fajita",
+		"Don Swan",
+		"Smoke Admiral",
+		"Cursed Captain",
+		"Darkbeard",
+		"Order",
+		"Awakened Ice Admiral";
+		"Tide Keeper"
+	}
+end
+L_3_[6]:AddDropdown({
+	["Name"] = "Auto Select Boss";
+	["Description"] = L_3_[168]({
+		"Chọn Boss Cần Fa",
+		"rm"
+	}),
+	["Options"] = L_3_[155],
+	["Default"] = L_3_[155][1],
+	["Callback"] = function(L_777_arg0)
+		local L_778_ = {}
+		L_778_[1] = L_777_arg0
+		_G["SelectBoss"] = L_778_[1]
+	end
+})
+L_3_[6]:AddToggle({
+	["Name"] = "Farm Boss",
+	["Description"] = L_3_[168]({
+		"Farm Boss Đã Chọ",
+		"n"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_779_arg0)
+		local L_780_ = {}
+		L_780_[2] = L_779_arg0
+		_G["AutoBoss"] = L_780_[2]
+		StopTween(_G["AutoBoss"])
+	end
+})
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["AutoBoss"] and _G["SelectBoss"] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild(_G["SelectBoss"]) then
+					if (game:GetService("ReplicatedStorage")):FindFirstChild(_G["SelectBoss"]) then
+						topos(((game:GetService("ReplicatedStorage")):FindFirstChild(_G["SelectBoss"]))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				else
+					for L_781_forvar0, L_782_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_783_ = {}
+						L_783_[3], L_783_[1] = L_781_forvar0, L_782_forvar1
+						if L_783_[1]["Name"] == _G["SelectBoss"] and (L_783_[1]:FindFirstChild("Humanoid") and (L_783_[1]:FindFirstChild("HumanoidRootPart") and L_783_[1]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_783_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_783_[1]["Humanoid"]["WalkSpeed"] = 0
+								L_783_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+								topos(L_783_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+								sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+							until not _G["AutoBoss"] or not L_783_[1]["Parent"] or L_783_[1]["Humanoid"]["Health"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[160] = L_3_[6]:AddSection({
+	"Material"
+})
+L_3_[189] = {}
+if not L_3_[81] then
+	if L_3_[111] then
+		L_3_[189] = {
+			"Radioactive";
+			"Mystic Droplet",
+			"Magma Ore";
+			"Leather";
+			"Ectoplasm",
+			"Scrap Metal"
+		}
+	elseif L_3_[177] then
+		L_3_[189] = {
+			"Leather";
+			"Scrap Metal";
+			"Conjured Cocoa",
+			"Dragon Scale",
+			"Gunpowder",
+			"Fish Tail",
+			"Mini Tusk"
+		}
+	end
+else
+	L_3_[189] = {
+		"Magma Ore",
+		"Angel Wings",
+		"Leather";
+		"Scrap Metal"
+	}
+end
+function getConfigMaterial(L_784_arg0)
+	local L_785_ = {}
+	L_785_[2] = L_784_arg0
+	if L_785_[2] ~= "Radioactive" or not L_3_[111] then
+		if L_785_[2] ~= "Mystic Droplet" or not L_3_[111] then
+			if L_785_[2] == "Magma Ore" and L_3_[81] then
+				MaterialMon = {
+					"Military Spy"
+				}
+				MaterialPos = CFrame["new"](-5850.28, 77.28, 8848.67)
+			elseif L_785_[2] ~= "Magma Ore" or not L_3_[111] then
+				if L_785_[2] ~= "Angel Wings" or not L_3_[81] then
+					if L_785_[2] ~= "Leather" or not L_3_[81] then
+						if L_785_[2] ~= "Leather" or not L_3_[111] then
+							if L_785_[2] ~= "Leather" or not L_3_[177] then
+								if L_785_[2] ~= "Ectoplasm" or not L_3_[111] then
+									if L_785_[2] ~= "Scrap Metal" or not L_3_[81] then
+										if L_785_[2] == "Scrap Metal" and L_3_[111] then
+											MaterialMon = {
+												"Mercenary"
+											}
+											MaterialPos = CFrame["new"](-972.3, 73.04, 1419.29)
+										elseif L_785_[2] == "Scrap Metal" and L_3_[177] then
+											MaterialMon = {
+												"Pirate Millionaire"
+											}
+											MaterialPos = CFrame["new"](-289.63, 43.82, 5583.66)
+										elseif L_785_[2] ~= "Conjured Cocoa" or not L_3_[177] then
+											if L_785_[2] == "Dragon Scale" and L_3_[177] then
+												MaterialMon = {
+													"Dragon Crew Warrior"
+												}
+												MaterialPos = CFrame["new"](5824.06, 51.38, -1106.69)
+											elseif L_785_[2] == "Gunpowder" and L_3_[177] then
+												MaterialMon = {
+													"Pistol Billionaire"
+												}
+												MaterialPos = CFrame["new"](-379.61, 73.84, 5928.52)
+											elseif L_785_[2] ~= "Fish Tail" or not L_3_[177] then
+												if L_785_[2] == "Mini Tusk" and L_3_[177] then
+													MaterialMon = {
+														"Mithological Pirate"
+													}
+													MaterialPos = CFrame["new"](-13516.04, 469.81, -6899.16)
+												end
+											else
+												MaterialMon = {
+													"Fishman Captain"
+												}
+												MaterialPos = CFrame["new"](-10961.01, 331.79, -8914.29)
+											end
+										else
+											MaterialMon = {
+												L_3_[168]({
+													"Chocolate Bar Battle";
+													"r"
+												})
+											}
+											MaterialPos = CFrame["new"](744.79, 24.76, -12637.72)
+										end
+									else
+										MaterialMon = {
+											"Brute"
+										}
+										MaterialPos = CFrame["new"](-1132.42, 14.84, 4293.3)
+									end
+								else
+									MaterialMon = {
+										"Ship Deckhand",
+										"Ship Engineer";
+										"Ship Steward";
+										"Ship Officer"
+									}
+									MaterialPos = CFrame["new"](911.35, 125.95, 33159.53)
+								end
+							else
+								MaterialMon = {
+									"Jungle Pirate"
+								}
+								MaterialPos = CFrame["new"](-11975.78, 331.77, -10620.03)
+							end
+						else
+							MaterialMon = {
+								"Marine Captain"
+							}
+							MaterialPos = CFrame["new"](-2010.5, 73, -3326.62)
+						end
+					else
+						MaterialMon = {
+							"Pirate"
+						}
+						MaterialPos = CFrame["new"](-1211.87, 4.78, 3916.83)
+					end
+				else
+					MaterialMon = {
+						"Royal Soldier"
+					}
+					MaterialPos = CFrame["new"](-7827.15, 5606.91, -1705.58)
+				end
+			else
+				MaterialMon = {
+					"Lava Pirate"
+				}
+				MaterialPos = CFrame["new"](-5234.6, 51.95, -4732.27)
+			end
+		else
+			MaterialMon = {
+				"Water Fighter"
+			}
+			MaterialPos = CFrame["new"](-3352.9, 285.01, -10534.84)
+		end
+	else
+		MaterialMon = {
+			"Factory Staff"
+		}
+		MaterialPos = CFrame["new"](-507.78, 73, -126.45)
+	end
+end
+L_3_[6]:AddDropdown({
+	["Name"] = "Select Material";
+	["Description"] = L_3_[168]({
+		"Chọn vật phẩm ";
+		"cần farm"
+	});
+	["Options"] = L_3_[189];
+	["Default"] = L_3_[189][1],
+	["Callback"] = function(L_786_arg0)
+		local L_787_ = {}
+		L_787_[1] = L_786_arg0
+		_G["SelectMaterial"] = L_787_[1]
+	end
+})
+L_3_[6]:AddToggle({
+	["Name"] = "Start Farm";
+	["Description"] = L_3_[168]({
+		"Tự động farm ma",
+		"terial đã chọn"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_788_arg0)
+		local L_789_ = {}
+		L_789_[1] = L_788_arg0
+		_G["AutoFarmMaterial"] = L_789_[1]
+		StopTween(_G["AutoFarmMaterial"])
+	end
+})
+task["spawn"](function()
+	while task["wait"](.2) do
+		if _G["AutoFarmMaterial"] and _G["SelectMaterial"] then
+			pcall(function()
+				getConfigMaterial(_G["SelectMaterial"])
+				for L_790_forvar0, L_791_forvar1 in pairs(MaterialMon) do
+					local L_792_ = {}
+					L_792_[1], L_792_[3] = L_790_forvar0, L_791_forvar1
+					if workspace["Enemies"]:FindFirstChild(L_792_[3]) then
+						for L_793_forvar0, L_794_forvar1 in pairs(workspace["Enemies"]:GetChildren()) do
+							local L_795_ = {}
+							L_795_[2], L_795_[3] = L_793_forvar0, L_794_forvar1
+							if L_795_[3]["Name"] == L_792_[3] and (L_795_[3]:FindFirstChild("Humanoid") and (L_795_[3]:FindFirstChild("HumanoidRootPart") and L_795_[3]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									PosMon = L_795_[3]["HumanoidRootPart"]["CFrame"]
+									MonFarm = L_795_[3]["Name"]
+									topos(L_795_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+								until not _G["AutoFarmMaterial"] or not L_795_[3]["Parent"] or L_795_[3]["Humanoid"]["Health"] <= 0
+							end
+						end
+					else
+						UnEquipWeapon(_G["SelectWeapon"])
+						if _G["SelectMaterial"] == "Ectoplasm" and (MaterialPos["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 18000 then
+							game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](923.21, 126.97, 32852.83))
+						end
+						topos(MaterialPos)
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[79] = L_3_[116]:AddSection({
+	L_3_[168]({
+		"Auto Fishing |  Tự";
+		" Động Câu Cá"
+	})
+})
+L_3_[116]:AddToggle({
+	["Title"] = "Auto Fishing";
+	["Description"] = L_3_[168]({
+		"Tự Động Câu C�",
+		"� Xoá Hiệu Ứng ",
+		"Khi Câu"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_796_arg0)
+		local L_797_ = {}
+		L_797_[1] = L_796_arg0
+		_G["AutoFishing"] = L_797_[1]
+	end
+})
+L_3_[148] = workspace
+L_3_[1] = game["Players"]["LocalPlayer"]
+L_3_[69] = game["ReplicatedStorage"]:WaitForChild("FishReplicated")
+L_3_[72] = L_3_[69]:WaitForChild("FishingRequest")
+L_3_[95] = (require(L_3_[69]["FishingClient"]["Config"]))["Rod"]["MaxLaunchDistance"]
+L_3_[8] = require(game["ReplicatedStorage"]["Util"][L_3_[168]({
+	"GetWaterHeightAtLoca",
+	"tion"
+})])
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["AutoFishing"] then
+			local L_798_ = {}
+			L_798_[3] = L_3_[1]["Character"]
+			L_798_[1] = L_798_[3] and L_798_[3]:FindFirstChild("HumanoidRootPart")
+			L_798_[2] = L_798_[3] and L_798_[3]:FindFirstChildOfClass("Tool")
+			if _G["SelectedRod"] and (not L_798_[2] or L_798_[2]["Name"] ~= _G["SelectedRod"]) then
+				local L_799_ = {}
+				L_799_[1] = L_3_[1]["Backpack"]:FindFirstChild(_G["SelectedRod"])
+				if L_799_[1] then
+					L_3_[1]["Character"]["Humanoid"]:EquipTool(L_799_[1])
+					L_798_[2] = L_799_[1]
+				end
+			end
+			if L_798_[3] and (L_798_[1] and L_798_[2]) then
+				local L_800_ = {}
+				L_800_[6] = L_3_[8](L_798_[1]["Position"])
+				L_800_[4], L_800_[3] = workspace:FindPartOnRayWithIgnoreList(Ray["new"](L_798_[3]["Head"]["Position"], L_798_[1]["CFrame"]["LookVector"] * L_3_[95]), {
+					L_798_[3],
+					workspace["Characters"],
+					workspace["Enemies"]
+				})
+				L_800_[1] = L_800_[3] and Vector3["new"](L_800_[3]["X"], math["max"](L_800_[3]["Y"], L_800_[6]), L_800_[3]["Z"])
+				L_800_[2] = L_798_[2]["GetAttribute"](L_798_[2], "State")
+				L_800_[7] = L_798_[2]["GetAttribute"](L_798_[2], "ServerState")
+				if L_800_[2] ~= "ReeledIn" and L_800_[7] ~= "ReeledIn" or not L_800_[1] then
+					if L_800_[7] == "Biting" then
+						L_3_[72]:InvokeServer("Catching", true)
+						task["wait"](.1)
+						L_3_[72]:InvokeServer("Catch", 1)
+					end
+				else
+					L_3_[72]:InvokeServer("StartCasting")
+					task["wait"]()
+					L_3_[72]:InvokeServer("CastLineAtLocation", L_800_[1], 100, true)
+				end
+			end
+		end
+	end
+end)
+L_3_[116]:AddDropdown({
+	["Name"] = "Select Fishing Lure",
+	["Description"] = L_3_[168]({
+		"Tự Động Chọn ",
+		"Mồi Khi Câu Cá"
+	}),
+	["Options"] = {
+		"Basic Bait",
+		"Kelp Bait";
+		"Good Bait";
+		"Abyssal Bait";
+		"Frozen Bait",
+		"Epic Bait";
+		"Carnivore Bait"
+	},
+	["Default"] = "Basic Bait";
+	["Callback"] = function(L_801_arg0)
+		local L_802_ = {}
+		L_802_[1] = L_801_arg0
+		_G["SelectedBait"] = L_802_[1]
+		L_3_[72]:InvokeServer("SelectBait", L_802_[1])
+	end
+})
+L_3_[116]:AddDropdown({
+	["Name"] = "Select Fishing Rod",
+	["Description"] = L_3_[168]({
+		"Tự Động Chọn ",
+		"Cần Câu Khi Câu ",
+		"Cá"
+	});
+	["Options"] = {
+		"Fishing Rod";
+		"Gold Rod",
+		"Shark Rod",
+		"Shell Rod",
+		"Treasure Rod"
+	},
+	["Default"] = "Fishing Rod";
+	["Callback"] = function(L_803_arg0)
+		local L_804_ = {}
+		L_804_[2] = L_803_arg0
+		_G["SelectedRod"] = L_804_[2]
+	end
+})
+if L_3_[81] then
+	local L_805_ = {}
+	L_805_[5] = L_3_[186]:AddSection({
+		"Quest Sea 1"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "AutoSecondSea";
+		["Description"] = L_3_[168]({
+			"Tự động Auto Qu";
+			"est Sea 2"
+		}),
+		["Default"] = false;
+		["Callback"] = function(L_806_arg0)
+			local L_807_ = {}
+			L_807_[2] = L_806_arg0
+			_G["AutoSecondSea"] = L_807_[2]
+			StopTween(_G["AutoSecondSea"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["AutoSecondSea"] then
+				pcall(function()
+					if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 700 and L_3_[81] then
+						_G["AutoFarm"] = false
+						if game["Workspace"]["Map"]["Ice"]["Door"]["CanCollide"] == true and game["Workspace"]["Map"]["Ice"]["Door"]["Transparency"] == 0 then
+							local L_808_ = {}
+							repeat
+								wait()
+								topos(CFrame["new"](4851.8720703125, 5.6514348983765, 718.47094726563))
+							until ((CFrame["new"](4851.8720703125, 5.6514348983765, 718.47094726563))["Position"] - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3 or not _G["AutoSecondSea"]
+							wait(1);
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(L_3_[168]({
+								"DressrosaQuestProgre",
+								"ss"
+							}), "Detective")
+							EquipWeapon("Key")
+							L_808_[1] = CFrame["new"](1347.7124, 37.3751602, -1325.6488)
+							repeat
+								wait()
+								topos(L_808_[1])
+							until (L_808_[1]["Position"] - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3 or not _G["AutoSecondSea"]
+							wait(3)
+						elseif game["Workspace"]["Map"]["Ice"]["Door"]["CanCollide"] ~= false or game["Workspace"]["Map"]["Ice"]["Door"]["Transparency"] ~= 1 then
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
+						elseif (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Ice Admiral") then
+							for L_809_forvar0, L_810_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_811_ = {}
+								L_811_[3], L_811_[1] = L_809_forvar0, L_810_forvar1
+								if L_811_[1]["Name"] == "Ice Admiral" and L_811_[1]["Humanoid"]["Health"] > 0 then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_811_[1]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_811_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+										L_811_[1]["HumanoidRootPart"]["Transparency"] = 1
+										topos(L_811_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 870), workspace["CurrentCamera"]["CFrame"])
+									until L_811_[1]["Humanoid"]["Health"] <= 0 or not L_811_[1]["Parent"] or not _G["AutoSecondSea"];
+									(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
+								end
+							end
+						else
+							topos(CFrame["new"](1347.7124, 37.3751602, -1325.6488))
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_805_[3] = L_3_[186]:AddSection({
+		"Boss Greybeard"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Kill Greybeard",
+		["Description"] = L_3_[168]({
+			"Tự động Đánh ";
+			"Greybeard"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_812_arg0)
+			local L_813_ = {}
+			L_813_[1] = L_812_arg0
+			_G["Greybeard"] = L_813_[1]
+			StopTween(_G["Greybeard"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Greybeard"] then
+				pcall(function()
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Greybeard") then
+						for L_814_forvar0, L_815_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_816_ = {}
+							L_816_[2], L_816_[3] = L_814_forvar0, L_815_forvar1
+							if L_816_[3]["Name"] == "Greybeard" and (L_816_[3]:FindFirstChild("Humanoid") and (L_816_[3]:FindFirstChild("HumanoidRootPart") and L_816_[3]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_816_[3]["HumanoidRootPart"]["CanCollide"] = false
+									L_816_[3]["Humanoid"]["WalkSpeed"] = 0
+									L_816_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+									topos(L_816_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+									(game:GetService("VirtualUser")):CaptureController();
+									(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+									sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["Greybeard"] or not L_816_[3]["Parent"] or L_816_[3]["Humanoid"]["Health"] <= 0
+							end
+						end
+					else
+						topos(CFrame["new"](-5023.3833007812, 28.652032852173, 4332.3818359375))
+						if not(game:GetService("ReplicatedStorage")):FindFirstChild("Greybeard") then
+							if _G["Greybeardhop"] then
+								Hop()
+							end
+						else
+							topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Greybeard"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_805_[2] = L_3_[186]:AddSection({
+		"Quest Sword"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Get Saber",
+		["Description"] = L_3_[168]({
+			"Tự động Lấy K",
+			"iếm Saber"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_817_arg0)
+			local L_818_ = {}
+			L_818_[2] = L_817_arg0
+			_G["AutoSaber"] = L_818_[2]
+			StopTween(_G["AutoSaber"])
+		end
+	})
+	spawn(function()
+		while task["wait"]() do
+			if _G["AutoSaber"] and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 200 then
+				pcall(function()
+					if (game:GetService("Workspace"))["Map"]["Jungle"]["Final"]["Part"]["Transparency"] ~= 0 then
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Saber Expert") or (game:GetService("ReplicatedStorage")):FindFirstChild("Saber Expert") then
+							for L_819_forvar0, L_820_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_821_ = {}
+								L_821_[1], L_821_[3] = L_819_forvar0, L_820_forvar1
+								if L_821_[3]:FindFirstChild("Humanoid") and (L_821_[3]:FindFirstChild("HumanoidRootPart") and (L_821_[3]["Humanoid"]["Health"] > 0 and L_821_[3]["Name"] == "Saber Expert")) then
+									repeat
+										task["wait"]()
+										EquipWeapon(_G["SelectWeapon"])
+										topos(L_821_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										L_821_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+										L_821_[3]["HumanoidRootPart"]["Transparency"] = 1
+										L_821_[3]["Humanoid"]["JumpPower"] = 0
+										L_821_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_821_[3]["HumanoidRootPart"]["CanCollide"] = false
+										FarmPos = L_821_[3]["HumanoidRootPart"]["CFrame"]
+										MonFarm = L_821_[3]["Name"];
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672), workspace["CurrentCamera"]["CFrame"])
+									until L_821_[3]["Humanoid"]["Health"] <= 0 or not _G["AutoSaber"]
+									if L_821_[3]["Humanoid"]["Health"] <= 0 then
+										(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "PlaceRelic")
+									end
+								end
+							end
+						end
+					elseif (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Door"]["Transparency"] == 0 then
+						if ((CFrame["new"](-1612.55884, 36.9774132, 148.719543, .37091279, 3.0717151e-09, -0.928667724, 3.97099491e-08, 1, 1.91679348e-08, .928667724, -4.39869794e-08, .37091279))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 100 then
+							topos(CFrame["new"](-1612.55884, 36.9774132, 148.719543, .37091279, 3.0717151e-09, -0.928667724, 3.97099491e-08, 1, 1.91679348e-08, .928667724, -4.39869794e-08, .37091279))
+						else
+							topos((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"])
+							wait(1)
+							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Plate1"]["Button"]["CFrame"]
+							wait(1)
+							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Plate2"]["Button"]["CFrame"]
+							wait(1)
+							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Plate3"]["Button"]["CFrame"]
+							wait(1)
+							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Plate4"]["Button"]["CFrame"]
+							wait(1)
+							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Workspace"))["Map"]["Jungle"]["QuestPlates"]["Plate5"]["Button"]["CFrame"]
+							wait(1)
+						end
+					elseif (game:GetService("Workspace"))["Map"]["Desert"]["Burn"]["Part"]["Transparency"] == 0 then
+						if (game:GetService("Players"))["LocalPlayer"]["Backpack"]:FindFirstChild("Torch") or game["Players"]["LocalPlayer"]["Character"]:FindFirstChild("Torch") then
+							EquipWeapon("Torch")
+							topos(CFrame["new"](1114.61475, 5.04679728, 4350.22803, -0.648466587, -1.28799094e-09, .761243105, -5.70652914e-10, 1, 1.20584542e-09, -0.761243105, 3.47544882e-10, -0.648466587))
+						else
+							topos(CFrame["new"](-1610.00757, 11.5049858, 164.001587, .984807551, -0.167722285, -0.0449818149, .17364943, .951244235, .254912198, 3.42372805e-05, -0.258850515, .965917408))
+						end
+					elseif (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "SickMan") ~= 0 then
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "GetCup")
+						wait(.5)
+						EquipWeapon("Cup")
+						wait(.5);
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "FillCup", (game:GetService("Players"))["LocalPlayer"]["Character"]["Cup"])
+						wait(0);
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "SickMan")
+					elseif (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "RichSon") == "RichSon" then
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "RichSon")
+					elseif (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "RichSon") ~= 0 then
+						if (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "RichSon") == 1 then
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ProQuestProgress", "RichSon")
+							wait(.5)
+							EquipWeapon("Relic")
+							wait(.5)
+							topos(CFrame["new"](-1404.91504, 29.9773273, 3.80598116, .876514494, 5.66906877e-09, .481375456, 2.53851997e-08, 1, -5.79995607e-08, -0.481375456, 6.30572643e-08, .876514494))
+						end
+					elseif (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Mob Leader") or (game:GetService("ReplicatedStorage")):FindFirstChild("Mob Leader") then
+						topos(CFrame["new"](-2967.59521, -4.91089821, 5328.70703, .342208564, -0.0227849055, .939347804, .0251603816, .999569714, .0150796166, -0.939287126, .0184739735, .342634559))
+						for L_822_forvar0, L_823_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_824_ = {}
+							L_824_[1], L_824_[2] = L_822_forvar0, L_823_forvar1
+							if L_824_[2]["Name"] == "Mob Leader" then
+								if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Mob Leader") and (L_824_[2]:FindFirstChild("Humanoid") and (L_824_[2]:FindFirstChild("HumanoidRootPart") and L_824_[2]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_824_[2]["HumanoidRootPart"]["CanCollide"] = false
+										L_824_[2]["Humanoid"]["WalkSpeed"] = 0
+										L_824_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_824_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+										(game:GetService("VirtualUser")):CaptureController();
+										(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until L_824_[2]["Humanoid"]["Health"] <= 0 or not _G["AutoSaber"]
+								end
+								if (game:GetService("ReplicatedStorage")):FindFirstChild(L_3_[168]({
+									"Mob Leader [Lv. 120]",
+									" [Boss]"
+								})) then
+									topos(((game:GetService("ReplicatedStorage")):FindFirstChild(L_3_[168]({
+										"Mob Leader [Lv. 120]",
+										" [Boss]"
+									})))["HumanoidRootPart"]["CFrame"] * Farm_Mode)
+								end
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Get Sword Pole";
+		["Description"] = L_3_[168]({
+			"Tự động Lấy K",
+			"iếm Pole"
+		});
+		["Default"] = false,
+		["Callback"] = function(L_825_arg0)
+			local L_826_ = {}
+			L_826_[1] = L_825_arg0
+			_G["Autopole"] = L_826_[1]
+			StopTween(_G["Autopole"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Autopole"] then
+				pcall(function()
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Thunder God") then
+						for L_827_forvar0, L_828_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_829_ = {}
+							L_829_[3], L_829_[1] = L_827_forvar0, L_828_forvar1
+							if L_829_[1]["Name"] == "Thunder God" and (L_829_[1]:FindFirstChild("Humanoid") and (L_829_[1]:FindFirstChild("HumanoidRootPart") and L_829_[1]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_829_[1]["HumanoidRootPart"]["CanCollide"] = false
+									StartBring = true
+									L_829_[1]["Humanoid"]["WalkSpeed"] = 0
+									L_829_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+									topos(L_829_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["Autopole"] or not L_829_[1]["Parent"] or L_829_[1]["Humanoid"]["Health"] <= 0
+							end
+						end
+					elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Thunder God") then
+						TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Thunder God"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Get Sword Saw";
+		["Description"] = L_3_[168]({
+			"Tự động Lấy K",
+			"iếm Saw"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_830_arg0)
+			local L_831_ = {}
+			L_831_[2] = L_830_arg0
+			_G["Autosaw"] = L_831_[2]
+			StopTween(_G["Autosaw"])
+		end
+	})
+	L_805_[4] = CFrame["new"](-690.33081054688, 15.09425163269, 1582.2380371094)
+	do
+		local L_832_ = {}
+		L_832_[2] = L_805_[4]
+		spawn(function()
+			while wait() do
+				if _G["Autosaw"] then
+					pcall(function()
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("The Saw") then
+							if BypassTP then
+								if (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_832_[2]["Position"])["Magnitude"] > 1500 then
+									BTP(L_832_[2])
+								elseif (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_832_[2]["Position"])["Magnitude"] < 1500 then
+									topos(L_832_[2])
+								end
+							else
+								topos(L_832_[2])
+							end
+							EquipWeapon(_G["SelectWeapon"])
+							topos(CFrame["new"](-690.33081054688, 15.09425163269, 1582.2380371094))
+							if (game:GetService("ReplicatedStorage")):FindFirstChild("The Saw") then
+								topos(((game:GetService("ReplicatedStorage")):FindFirstChild("The Saw"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 40, 2))
+							end
+						else
+							for L_833_forvar0, L_834_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_835_ = {}
+								L_835_[2], L_835_[3] = L_833_forvar0, L_834_forvar1
+								if L_835_[3]["Name"] == "The Saw" and (L_835_[3]:FindFirstChild("Humanoid") and (L_835_[3]:FindFirstChild("HumanoidRootPart") and L_835_[3]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"](_G["FastAttackDelay"])
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_835_[3]["HumanoidRootPart"]["CanCollide"] = false
+										L_835_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_835_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+										topos(L_835_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										AttackNoCD()
+									until not _G["Autosaw"] or not L_835_[3]["Parent"] or L_835_[3]["Humanoid"]["Health"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = L_3_[168]({
+				"Auto Get Sword Warde";
+				"ns"
+			});
+			["Description"] = L_3_[168]({
+				"Tự động Lấy K",
+				"iếm Wardens"
+			});
+			["Default"] = false,
+			["Callback"] = function(L_836_arg0)
+				local L_837_ = {}
+				L_837_[1] = L_836_arg0
+				_G["ChiefWarden"] = L_837_[1]
+				StopTween(_G["ChiefWarden"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["ChiefWarden"] then
+					pcall(function()
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Chief Warden") then
+							for L_838_forvar0, L_839_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_840_ = {}
+								L_840_[3], L_840_[2] = L_838_forvar0, L_839_forvar1
+								if L_840_[2]["Name"] == "Chief Warden" and (L_840_[2]:FindFirstChild("Humanoid") and (L_840_[2]:FindFirstChild("HumanoidRootPart") and L_840_[2]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_840_[2]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_840_[2]["Humanoid"]["WalkSpeed"] = 0
+										L_840_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_840_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["ChiefWarden"] or not L_840_[2]["Parent"] or L_840_[2]["Humanoid"]["Health"] <= 0
+								end
+							end
+						elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Chief Warden") then
+							TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Chief Warden"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = L_3_[168]({
+				"Auto Get Sword Tride";
+				"nt"
+			}),
+			["Description"] = L_3_[168]({
+				"Tự động Lấy K";
+				"iếm Trident"
+			});
+			["Default"] = false;
+			["Callback"] = function(L_841_arg0)
+				local L_842_ = {}
+				L_842_[2] = L_841_arg0
+				_G["Trident"] = L_842_[2]
+				StopTween(_G["Trident"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["Trident"] then
+					pcall(function()
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fishman Lord") then
+							for L_843_forvar0, L_844_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_845_ = {}
+								L_845_[1], L_845_[2] = L_843_forvar0, L_844_forvar1
+								if L_845_[2]["Name"] == "Fishman Lord" and (L_845_[2]:FindFirstChild("Humanoid") and (L_845_[2]:FindFirstChild("HumanoidRootPart") and L_845_[2]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_845_[2]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_845_[2]["Humanoid"]["WalkSpeed"] = 0
+										L_845_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_845_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["Trident"] or not L_845_[2]["Parent"] or L_845_[2]["Humanoid"]["Health"] <= 0
+								end
+							end
+						elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Fishman Lord") then
+							TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Fishman Lord"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+	end
+end
+if L_3_[111] then
+	local L_846_ = {}
+	L_846_[2] = L_3_[186]:AddSection({
+		"Quest Sea 2"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = L_3_[168]({
+			"Auto Quest Sea Barti",
+			"lo"
+		});
+		["Description"] = L_3_[168]({
+			"Tự động Làm Nh",
+			"iệm Vụ Sea Barti";
+			"lo"
+		}),
+		["Default"] = false;
+		["Callback"] = function(L_847_arg0)
+			local L_848_ = {}
+			L_848_[1] = L_847_arg0
+			_G["AutoBartilo"] = L_848_[1]
+			StopTween(_G["AutoBartilo"])
+		end
+	})
+	spawn(function()
+		pcall(function()
+			while wait(.1) do
+				if _G["AutoBartilo"] then
+					if (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"] >= 800 and (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("BartiloQuestProgress", "Bartilo") == 0 then
+						if not string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Swan Pirates") or not string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "50") or (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] ~= true then
+							repeat
+								topos(CFrame["new"](-456.28952, 73.0200958, 299.895966))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-456.28952, 73.0200958, 299.895966))["Magnitude"] <= 10
+							wait(1.1);
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("StartQuest", "BartiloQuest", 1)
+						elseif (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Swan Pirate") then
+							Ms = "Swan Pirate"
+							for L_849_forvar0, L_850_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_851_ = {}
+								L_851_[2], L_851_[1] = L_849_forvar0, L_850_forvar1
+								do
+									local L_852_ = {}
+									L_852_[1] = L_851_[1]
+									if L_852_[1]["Name"] == Ms then
+										pcall(function()
+											repeat
+												task["wait"]()
+												sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+												EquipWeapon(_G["SelectWeapon"])
+												AutoHaki()
+												L_852_[1]["HumanoidRootPart"]["Transparency"] = 1
+												L_852_[1]["HumanoidRootPart"]["CanCollide"] = false
+												L_852_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+												topos(L_852_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+												PosMonBarto = L_852_[1]["HumanoidRootPart"]["CFrame"];
+												(game:GetService("VirtualUser")):CaptureController();
+												(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+												StartBring = true
+											until not L_852_[1]["Parent"] or L_852_[1]["Humanoid"]["Health"] <= 0 or _G["AutoBartilo"] == false or (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == false
+											StartBring = false
+										end)
+									end
+								end
+							end
+						else
+							repeat
+								topos(CFrame["new"](932.624451, 156.106079, 1180.27466, -0.973085582, 4.55137119e-08, -0.230443969, 2.67024713e-08, 1, 8.47491108e-08, .230443969, 7.63147128e-08, -0.973085582))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](932.624451, 156.106079, 1180.27466, -0.973085582, 4.55137119e-08, -0.230443969, 2.67024713e-08, 1, 8.47491108e-08, .230443969, 7.63147128e-08, -0.973085582))["Magnitude"] <= 10
+						end
+					elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"] < 800 or (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("BartiloQuestProgress", "Bartilo") ~= 1 then
+						if (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"] >= 800 and (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("BartiloQuestProgress", "Bartilo") == 2 then
+							repeat
+								topos(CFrame["new"](-1850.49329, 13.1789551, 1750.89685))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1850.49329, 13.1789551, 1750.89685))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1858.87305, 19.3777466, 1712.01807))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1858.87305, 19.3777466, 1712.01807))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1803.94324, 16.5789185, 1750.89685))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1803.94324, 16.5789185, 1750.89685))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1858.55835, 16.8604317, 1724.79541))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1858.55835, 16.8604317, 1724.79541))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1869.54224, 15.987854, 1681.00659))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1869.54224, 15.987854, 1681.00659))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1800.0979, 16.4978027, 1684.52368))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1800.0979, 16.4978027, 1684.52368))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1819.26343, 14.795166, 1717.90625))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1819.26343, 14.795166, 1717.90625))["Magnitude"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["new"](-1813.51843, 14.8604736, 1724.79541))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-1813.51843, 14.8604736, 1724.79541))["Magnitude"] <= 10
+						end
+					elseif not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Jeremy") then
+						if not(game:GetService("ReplicatedStorage")):FindFirstChild("Jeremy") then
+							repeat
+								topos(CFrame["new"](2099.88159, 448.931, 648.997375))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](2099.88159, 448.931, 648.997375))["Magnitude"] <= 10
+						else
+							repeat
+								topos(CFrame["new"](-456.28952, 73.0200958, 299.895966))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-456.28952, 73.0200958, 299.895966))["Magnitude"] <= 10
+							wait(1.1);
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("BartiloQuestProgress", "Bartilo")
+							wait(1)
+							repeat
+								topos(CFrame["new"](2099.88159, 448.931, 648.997375))
+								wait()
+							until not _G["AutoBartilo"] or ((game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](2099.88159, 448.931, 648.997375))["Magnitude"] <= 10
+							wait(2)
+						end
+					else
+						Ms = "Jeremy"
+						for L_853_forvar0, L_854_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_855_ = {}
+							L_855_[1], L_855_[3] = L_853_forvar0, L_854_forvar1
+							if L_855_[3]["Name"] == Ms then
+								OldCFrameBartlio = L_855_[3]["HumanoidRootPart"]["CFrame"]
+								repeat
+									task["wait"]()
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									EquipWeapon(_G["SelectWeapon"])
+									AutoHaki()
+									L_855_[3]["HumanoidRootPart"]["Transparency"] = 1
+									L_855_[3]["HumanoidRootPart"]["CanCollide"] = false
+									L_855_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+									L_855_[3]["HumanoidRootPart"]["CFrame"] = OldCFrameBartlio
+									topos(L_855_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+									(game:GetService("VirtualUser")):CaptureController();
+									(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not L_855_[3]["Parent"] or L_855_[3]["Humanoid"]["Health"] <= 0 or _G["AutoBartilo"] == false
+							end
+						end
+					end
+				end
+			end
+		end)
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Quest Sea 3";
+		["Description"] = L_3_[168]({
+			"Tự động Làm Nh";
+			"iệm Vụ Sang Sea ",
+			"3"
+		});
+		["Default"] = false,
+		["Callback"] = function(L_856_arg0)
+			local L_857_ = {}
+			L_857_[2] = L_856_arg0
+			_G["ThirdSea"] = L_857_[2]
+			StopTween(_G["ThirdSea"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["ThirdSea"] then
+				pcall(function()
+					if (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"] >= 1500 and L_3_[111] then
+						_G["AutoFarm"] = false
+						if (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ZQuestProgress", "General") == 0 then
+							topos(CFrame["new"](-1926.3221435547, 12.819851875305, 1738.3092041016))
+							if ((CFrame["new"](-1926.3221435547, 12.819851875305, 1738.3092041016))["Position"] - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 10 then
+								wait(1.5);
+								(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("ZQuestProgress", "Begin")
+							end
+							wait(1.8)
+							if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("rip_indra") then
+								if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("rip_indra") and ((CFrame["new"](-26880.93359375, 22.848554611206, 473.18951416016))["Position"] - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1000 then
+									TP1(CFrame["new"](-26880.93359375, 22.848554611206, 473.18951416016))
+								end
+							else
+								for L_858_forvar0, L_859_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+									local L_860_ = {}
+									L_860_[1], L_860_[2] = L_858_forvar0, L_859_forvar1
+									if L_860_[2]["Name"] == "rip_indra" then
+										OldCFrameThird = L_860_[2]["HumanoidRootPart"]["CFrame"]
+										repeat
+											task["wait"]()
+											AutoHaki()
+											EquipWeapon(_G["SelectWeapon"])
+											topos(L_860_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+											L_860_[2]["HumanoidRootPart"]["CFrame"] = OldCFrameThird
+											L_860_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+											L_860_[2]["HumanoidRootPart"]["CanCollide"] = false
+											StartBring = true
+											L_860_[2]["Humanoid"]["WalkSpeed"] = 0;
+											(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelZou")
+											sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+										until _G["ThirdSea"] == false or L_860_[2]["Humanoid"]["Health"] <= 0 or not L_860_[2]["Parent"]
+									end
+								end
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_846_[3] = L_3_[186]:AddSection({
+		"Factory Sea 2"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Factory",
+		["Description"] = L_3_[168]({
+			"Tự động Đánh ",
+			"Nhà Máy"
+		});
+		["Default"] = false,
+		["Callback"] = function(L_861_arg0)
+			local L_862_ = {}
+			L_862_[1] = L_861_arg0
+			_G["AutoFactory"] = L_862_[1]
+			StopTween(_G["AutoFactory"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			spawn(function()
+				if _G["AutoFactory"] then
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Core") then
+						for L_863_forvar0, L_864_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_865_ = {}
+							L_865_[3], L_865_[2] = L_863_forvar0, L_864_forvar1
+							if L_865_[2]["Name"] == "Core" and L_865_[2]["Humanoid"]["Health"] > 0 then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									topos(CFrame["new"](448.46756, 199.356781, -441.389252));
+									(game:GetService("VirtualUser")):CaptureController();
+									(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+								until L_865_[2]["Humanoid"]["Health"] <= 0 or _G["AutoFactory"] == false
+							end
+						end
+					else
+						topos(CFrame["new"](448.46756, 199.356781, -441.389252))
+					end
+				end
+			end)
+		end
+	end)
+	L_846_[5] = L_3_[186]:AddSection({
+		"Boss Dark Beard"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Kill Dark Beard",
+		["Description"] = L_3_[168]({
+			"Tự động Đánh ",
+			"Râu Đen"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_866_arg0)
+			local L_867_ = {}
+			L_867_[2] = L_866_arg0
+			_G["AutoDarkBoss"] = L_867_[2]
+			StopTween(_G["AutoDarkBoss"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["AutoDarkBoss"] then
+				pcall(function()
+					if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Darkbeard") then
+						NeedAttacking = true
+						if (game:GetService("ReplicatedStorage")):FindFirstChild("Darkbeard") then
+							topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Darkbeard"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					else
+						for L_868_forvar0, L_869_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_870_ = {}
+							L_870_[3], L_870_[2] = L_868_forvar0, L_869_forvar1
+							if L_870_[2]["Name"] == "Darkbeard" and (L_870_[2]:FindFirstChild("Humanoid") and (L_870_[2]:FindFirstChild("HumanoidRootPart") and L_870_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									NeedAttacking = true
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_870_[2]["HumanoidRootPart"]["CanCollide"] = false
+									L_870_[2]["Humanoid"]["WalkSpeed"] = 0
+									topos(L_870_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["AutoDarkBoss"] or not L_870_[2]["Parent"] or L_870_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = L_3_[168]({
+			"Auto Kill Cursed Cap",
+			"tain"
+		});
+		["Description"] = L_3_[168]({
+			"Tự động Đánh ";
+			"Cursed Captain"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_871_arg0)
+			local L_872_ = {}
+			L_872_[1] = L_871_arg0
+			_G["CursedCaptain"] = L_872_[1]
+			StopTween(_G["CursedCaptain"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["CursedCaptain"] then
+				pcall(function()
+					if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Cursed Captain") then
+						NeedAttacking = true
+						if (Vector3["new"](911.35827636719, 125.95812988281, 33159.5390625) - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 18000 and (game:GetService("ReplicatedStorage")):FindFirstChild("Cursed Captain") then
+							topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Cursed Captain"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					else
+						for L_873_forvar0, L_874_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_875_ = {}
+							L_875_[3], L_875_[2] = L_873_forvar0, L_874_forvar1
+							if L_875_[2]["Name"] == "Cursed Captain" and (L_875_[2]:FindFirstChild("Humanoid") and (L_875_[2]:FindFirstChild("HumanoidRootPart") and L_875_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									NeedAttacking = true
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_875_[2]["HumanoidRootPart"]["CanCollide"] = false
+									L_875_[2]["Humanoid"]["WalkSpeed"] = 0
+									topos(L_875_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["CursedCaptain"] or not L_875_[2]["Parent"] or L_875_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_846_[4] = L_3_[186]:AddSection({
+		"Auto Buy Haki Màu"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Buy Haki Colors";
+		["Description"] = L_3_[168]({
+			"Tự động Mua Hak",
+			"i"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_876_arg0)
+			local L_877_ = {}
+			L_877_[2] = L_876_arg0
+			_G[L_3_[168]({
+				"AutoBuyEnchancementC",
+				"olour"
+			})] = L_877_[2]
+			StopTween(_G[L_3_[168]({
+				"AutoBuyEnchancementC",
+				"olour"
+			})])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G[L_3_[168]({
+				"AutoBuyEnchancementC",
+				"olour"
+			})] then
+				local L_878_ = {}
+				L_878_[1] = {
+					[1] = "ColorsDealer";
+					[2] = "2"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_878_[1]))
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Title"] = L_3_[168]({
+			"Auto Buy Legendary S";
+			"word"
+		}),
+		["Value"] = false;
+		["Callback"] = function(L_879_arg0)
+			local L_880_ = {}
+			L_880_[1] = L_879_arg0
+			_G[L_3_[168]({
+				"AutoBuyLegendarySwor";
+				"d"
+			})] = L_880_[1]
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G[L_3_[168]({
+				"AutoBuyLegendarySwor",
+				"d"
+			})] then
+				pcall(function()
+					local L_881_ = {}
+					L_881_[3] = {
+						[1] = "LegendarySwordDealer";
+						[2] = "1"
+					};
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_881_[3]))
+					L_881_[4] = {
+						[1] = "LegendarySwordDealer";
+						[2] = "2"
+					};
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_881_[4]))
+					L_881_[1] = {
+						[1] = "LegendarySwordDealer",
+						[2] = "3"
+					};
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_881_[1]))
+				end)
+			end
+		end
+	end)
+	L_846_[6] = L_3_[186]:AddSection({
+		"Quest Sword"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Get Longsword",
+		["Description"] = L_3_[168]({
+			"Tự động Get Lon",
+			"gsword"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_882_arg0)
+			local L_883_ = {}
+			L_883_[2] = L_882_arg0
+			_G["Longsword"] = L_883_[2]
+			StopTween(_G["Longsword"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Longsword"] then
+				pcall(function()
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Diamond") then
+						for L_884_forvar0, L_885_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_886_ = {}
+							L_886_[1], L_886_[2] = L_884_forvar0, L_885_forvar1
+							if L_886_[2]["Name"] == "Diamond" and (L_886_[2]:FindFirstChild("Humanoid") and (L_886_[2]:FindFirstChild("HumanoidRootPart") and L_886_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_886_[2]["HumanoidRootPart"]["CanCollide"] = false
+									StartBring = true
+									L_886_[2]["Humanoid"]["WalkSpeed"] = 0
+									L_886_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+									topos(L_886_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["Longsword"] or not L_886_[2]["Parent"] or L_886_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Diamond") then
+						TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Diamond"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = L_3_[168]({
+			"Auto Get Sword Gravi";
+			"ty Blade"
+		});
+		["Description"] = L_3_[168]({
+			"Tự động Lấy G";
+			"ravity Blade"
+		}),
+		["Default"] = false,
+		["Callback"] = function(L_887_arg0)
+			local L_888_ = {}
+			L_888_[2] = L_887_arg0
+			_G["GravityBlade"] = L_888_[2]
+			StopTween(_G["GravityBlade"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["GravityBlade"] then
+				pcall(function()
+					if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fajita") then
+						if (game:GetService("ReplicatedStorage")):FindFirstChild("Fajita") then
+							TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Fajita"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					else
+						for L_889_forvar0, L_890_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_891_ = {}
+							L_891_[2], L_891_[3] = L_889_forvar0, L_890_forvar1
+							if L_891_[3]["Name"] == "Fajita" and (L_891_[3]:FindFirstChild("Humanoid") and (L_891_[3]:FindFirstChild("HumanoidRootPart") and L_891_[3]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_891_[3]["HumanoidRootPart"]["CanCollide"] = false
+									StartBring = true
+									L_891_[3]["Humanoid"]["WalkSpeed"] = 0
+									L_891_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+									topos(L_891_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["GravityBlade"] or not L_891_[3]["Parent"] or L_891_[3]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto Get Sword Flail";
+		["Description"] = L_3_[168]({
+			"Tự động Lấy F",
+			"lail"
+		}),
+		["Default"] = false;
+		["Callback"] = function(L_892_arg0)
+			local L_893_ = {}
+			L_893_[1] = L_892_arg0
+			_G["SwodsFlail"] = L_893_[1]
+			StopTween(_G["SwodsFlail"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["SwodsFlail"] then
+				pcall(function()
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Smoke Admiral") then
+						for L_894_forvar0, L_895_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_896_ = {}
+							L_896_[2], L_896_[1] = L_894_forvar0, L_895_forvar1
+							if L_896_[1]["Name"] == "Smoke Admiral" and (L_896_[1]:FindFirstChild("Humanoid") and (L_896_[1]:FindFirstChild("HumanoidRootPart") and L_896_[1]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_896_[1]["HumanoidRootPart"]["CanCollide"] = false
+									StartBring = true
+									L_896_[1]["Humanoid"]["WalkSpeed"] = 0
+									L_896_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+									topos(L_896_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["SwodsFlail"] or not L_896_[1]["Parent"] or L_896_[1]["Humanoid"]["Health"] <= 0
+							end
+						end
+					elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Smoke Admiral") then
+						TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Smoke Admiral"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = L_3_[168]({
+			"Auto Get Sword Rengo",
+			"ku"
+		}),
+		["Description"] = L_3_[168]({
+			"Tự động Lấy R",
+			"engoku"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_897_arg0)
+			local L_898_ = {}
+			L_898_[1] = L_897_arg0
+			_G["AutoRengoku"] = L_898_[1]
+			StopTween(_G["AutoRengoku"])
+		end
+	})
+	spawn(function()
+		pcall(function()
+			while wait() do
+				if _G["AutoRengoku"] then
+					if (game:GetService("Players"))["LocalPlayer"]["Backpack"]:FindFirstChild("Hidden Key") or (game:GetService("Players"))["LocalPlayer"]["Character"]:FindFirstChild("Hidden Key") then
+						EquipWeapon("Hidden Key")
+						topos(CFrame["new"](6571.1201171875, 299.23028564453, -6967.841796875))
+					elseif not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Awakened Ice Admiral") then
+						StartBring = false
+						topos(CFrame["new"](5439.716796875, 84.420944213867, -6715.1635742188))
+					else
+						for L_899_forvar0, L_900_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_901_ = {}
+							L_901_[3], L_901_[2] = L_899_forvar0, L_900_forvar1
+							if L_901_[2]["Name"] == "Awakened Ice Admiral" and (L_901_[2]:FindFirstChild("Humanoid") and (L_901_[2]:FindFirstChild("HumanoidRootPart") and L_901_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									EquipWeapon(_G["SelectWeapon"])
+									AutoHaki()
+									L_901_[2]["HumanoidRootPart"]["CanCollide"] = false
+									L_901_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+									PosMon = L_901_[2]["HumanoidRootPart"]["CFrame"]
+									MonFarm = L_901_[2]["Name"]
+									topos(L_901_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									AttackNoCD()
+									StartBring = true
+								until (game:GetService("Players"))["LocalPlayer"]["Backpack"]:FindFirstChild("Hidden Key") or _G["AutoRengoku"] == false or not L_901_[2]["Parent"] or L_901_[2]["Humanoid"]["Health"] <= 0
+								StartBring = false
+							end
+						end
+					end
+				end
+			end
+		end)
+	end)
+	L_3_[186]:AddToggle({
+		["Name"] = L_3_[168]({
+			"Auto Get Sword Drago";
+			"n Trident"
+		});
+		["Description"] = L_3_[168]({
+			"Tự động Lấy D";
+			"ragon Trident"
+		});
+		["Default"] = false,
+		["Callback"] = function(L_902_arg0)
+			local L_903_ = {}
+			L_903_[1] = L_902_arg0
+			_G["SwodsDRTrident"] = L_903_[1]
+			StopTween(_G["SwodsDRTrident"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["SwodsDRTrident"] then
+				pcall(function()
+					if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Tide Keeper") then
+						for L_904_forvar0, L_905_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+							local L_906_ = {}
+							L_906_[1], L_906_[2] = L_904_forvar0, L_905_forvar1
+							if L_906_[2]["Name"] == "Tide Keeper" and (L_906_[2]:FindFirstChild("Humanoid") and (L_906_[2]:FindFirstChild("HumanoidRootPart") and L_906_[2]["Humanoid"]["Health"] > 0)) then
+								repeat
+									task["wait"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									L_906_[2]["HumanoidRootPart"]["CanCollide"] = false
+									StartBring = true
+									L_906_[2]["Humanoid"]["WalkSpeed"] = 0
+									L_906_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+									topos(L_906_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+									sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+								until not _G["SwodsDRTrident"] or not L_906_[2]["Parent"] or L_906_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Tide Keeper") then
+						TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Tide Keeper"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+end
+if L_3_[177] then
+	local L_907_ = {}
+	L_907_[2] = L_3_[186]:AddSection({
+		"Quest Sea 3"
+	})
+	L_907_[1] = L_3_[186]:AddSection({
+		"Boss Rip indra"
+	})
+	L_3_[186]:AddToggle({
+		["Name"] = "Auto kill Rip Indra",
+		["Description"] = L_3_[168]({
+			"Tự động Đánh ";
+			"Rip Indra"
+		});
+		["Default"] = false;
+		["Callback"] = function(L_908_arg0)
+			local L_909_ = {}
+			L_909_[2] = L_908_arg0
+			_G["RipIndraKill"] = L_909_[2]
+			StopTween(_G["RipIndraKill"])
+		end
+	})
+	L_907_[4] = CFrame["new"](-5344.822265625, 423.98541259766, -2725.0930175781)
+	do
+		local L_910_ = {}
+		L_910_[2] = L_907_[4]
+		spawn(function()
+			pcall(function()
+				while wait() do
+					if _G["RipIndraKill"] then
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("rip_indra True Form") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("rip_indra") then
+							if BypassTP then
+								if (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_910_[2]["Position"])["Magnitude"] > 1500 then
+									TP1(L_910_[2])
+								elseif (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_910_[2]["Position"])["Magnitude"] < 1500 then
+									TP1(L_910_[2])
+								end
+							else
+								TP1(L_910_[2])
+							end
+							TP1(CFrame["new"](-5344.822265625, 423.98541259766, -2725.0930175781))
+						else
+							for L_911_forvar0, L_912_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_913_ = {}
+								L_913_[1], L_913_[2] = L_911_forvar0, L_912_forvar1
+								L_913_[5] = L_913_[2]["Name"]
+								L_913_[3] = "rip_indra True Form"
+								if not L_913_[3] then
+									if L_913_[2]["Name"] ~= "rip_indra" then
+										L_913_[3] = false
+									end
+									L_913_[3] = true
+								end
+								do
+									local L_914_ = {}
+									L_914_[1] = L_913_[2]
+									if L_913_[5] == L_913_[3] and (L_914_[1]["Humanoid"]["Health"] > 0 and (L_914_[1]:IsA("Model") and (L_914_[1]:FindFirstChild("Humanoid") and L_914_[1]:FindFirstChild("HumanoidRootPart")))) then
+										repeat
+											task["wait"]()
+											pcall(function()
+												AutoHaki()
+												EquipWeapon(_G["SelectWeapon"])
+												L_914_[1]["HumanoidRootPart"]["CanCollide"] = false
+												L_914_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+												topos(L_914_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -40, 0));
+												(game:GetService("VirtualUser")):CaptureController();
+												(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 670), workspace["CurrentCamera"]["CFrame"])
+											end)
+										until _G["RipIndraKill"] == false or L_914_[1]["Humanoid"]["Health"] <= 0
+									end
+								end
+							end
+						end
+					end
+				end
+			end)
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Haki Colors";
+			["Description"] = L_3_[168]({
+				"Tự Động Haki Co",
+				"lors"
+			});
+			["Default"] = false;
+			["Callback"] = function(L_915_arg0)
+				local L_916_ = {}
+				L_916_[2] = L_915_arg0
+				_G["RipIndraKill"] = L_916_[2]
+				StopTween(_G["RipIndraKill"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G[L_3_[168]({
+					"AutoBuyEnchancementC";
+					"olour"
+				})] then
+					local L_917_ = {}
+					L_917_[1] = {
+						[1] = "ColorsDealer",
+						[2] = "2"
+					};
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_917_[1]))
+				end
+			end
+		end)
+		L_910_[5] = L_3_[186]:AddSection({
+			"Quest Skull Guitar"
+		})
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Skull Guitar",
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy �";
+				"�àn GuiTar"
+			});
+			["Default"] = false;
+			["Callback"] = function(L_918_arg0)
+				local L_919_ = {}
+				L_919_[1] = L_918_arg0
+				_G["AutoSkullGuitar"] = L_919_[1]
+				StopTween(_G["AutoSkullGuitar"])
+			end
+		})
+		spawn(function()
+			while task["wait"]() do
+				if (getgenv())["AutoSkullGuitar"] then
+					pcall(function()
+						if not GetWeaponInventory("Skull Guitar") then
+							local L_920_ = {}
+							L_920_[3] = (game:GetService("Players"))["LocalPlayer"]
+							L_920_[1] = L_920_[3]["Character"] and L_920_[3]["Character"]:FindFirstChild("HumanoidRootPart")
+							if L_920_[1] and (Vector3["new"](-9681.458, 6.139, 6341.372) - L_920_[1]["Position"])["Magnitude"] <= 5000 then
+								if (game:GetService("Workspace"))["NPCs"]:FindFirstChild("Skeleton Machine") then
+									(game:GetService("ReplicatedStorage"))["Remotes"]["CommF"]:InvokeServer("soulGuitarBuy", true)
+								else
+									local L_921_ = {}
+									L_921_[2] = (game:GetService("Workspace"))["Map"]:FindFirstChild("Haunted Castle")
+									if not L_921_[2] or L_921_[2]["Candle1"]["Transparency"] ~= 0 then
+										if not L_921_[2] or not L_921_[2]["Tablet"] or not L_921_[2]["Tablet"]:FindFirstChild("Segment1") then
+											local L_922_ = {}
+											if (game:GetService("Workspace"))["NPCs"]:FindFirstChild("Ghost") then
+												(game:GetService("ReplicatedStorage"))["Remotes"]["CommF"]:InvokeServer("GuitarPuzzleProgress", "Ghost")
+											end
+											L_922_[2] = game["Workspace"]:FindFirstChild("Enemies")
+											if L_922_[2] and L_922_[2]:FindFirstChild("Living Zombie") then
+												for L_923_forvar0, L_924_forvar1 in pairs(L_922_[2]:GetChildren()) do
+													local L_925_ = {}
+													L_925_[1], L_925_[3] = L_923_forvar0, L_924_forvar1
+													if L_925_[3]:FindFirstChild("HumanoidRootPart") and (L_925_[3]:FindFirstChild("Humanoid") and (L_925_[3]["Humanoid"]["Health"] > 0 and L_925_[3]["Name"] == "Living Zombie")) then
+														local L_926_ = {}
+														AutoHaki()
+														EquipWeapon((getgenv())["SelectWeapon"])
+														L_925_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+														L_925_[3]["HumanoidRootPart"]["Transparency"] = 1
+														L_925_[3]["Humanoid"]["JumpPower"] = 0
+														L_925_[3]["Humanoid"]["WalkSpeed"] = 0
+														L_925_[3]["HumanoidRootPart"]["CanCollide"] = false
+														L_925_[3]["HumanoidRootPart"]["CFrame"] = L_920_[1]["CFrame"] * CFrame["new"](0, 20, 0)
+														topos(CFrame["new"](-10160.787, 138.662, 5955.031))
+														task["wait"](.5)
+														L_926_[2] = game:GetService("VirtualUser")
+														L_926_[2]:CaptureController()
+														L_926_[2]:Button1Down(Vector2["new"](1280, 672))
+													end
+												end
+											else
+												topos(CFrame["new"](-10160.787, 138.662, 5955.031))
+											end
+										else
+											local L_927_ = {}
+											L_927_[2] = L_921_[2]:FindFirstChild("Lab Puzzle")
+											if not L_927_[2] or not L_927_[2]["ColorFloor"]["Model"]["Part1"]:FindFirstChild("ClickDetector") then
+												Quest3 = true
+											else
+												Quest4 = true
+												topos(CFrame["new"](-9553.599, 65.623, 6041.588))
+												task["wait"](1)
+												for L_928_forvar0, L_929_forvar1 in ipairs({
+													3;
+													4,
+													4,
+													4;
+													6,
+													6,
+													8,
+													10,
+													10,
+													10
+												}) do
+													local L_930_ = {}
+													L_930_[2], L_930_[1] = L_928_forvar0, L_929_forvar1
+													L_930_[3] = L_927_[2]["ColorFloor"]["Model"]:FindFirstChild("Part" .. L_930_[1])
+													if L_930_[3] and L_930_[3]:FindFirstChild("ClickDetector") then
+														topos(L_930_[3]["CFrame"])
+														task["wait"](1)
+														fireclickdetector(L_930_[3]["ClickDetector"])
+														task["wait"](.5)
+													end
+												end
+											end
+										end
+									else
+										local L_931_ = {}
+										L_931_[1] = L_921_[2]:FindFirstChild("Placard1")
+										if L_931_[1] and L_931_[1]["Left"]["Part"]["Transparency"] == 0 then
+											Quest2 = true
+											topos(CFrame["new"](-8762.691, 176.847, 6171.308))
+											task["wait"](1)
+											for L_932_forvar0 = 7, 1, -1 do
+												local L_933_ = {}
+												L_933_[1] = L_932_forvar0
+												L_933_[3] = L_921_[2]:FindFirstChild("Placard" .. L_933_[1])
+												if L_933_[3] and (L_933_[3]:FindFirstChild("Left") and L_933_[3]["Left"]:FindFirstChild("ClickDetector")) then
+													fireclickdetector(L_933_[3]["Left"]["ClickDetector"])
+													task["wait"](.5)
+												end
+											end
+										end
+									end
+								end
+							end
+						elseif not string["find"]((game:GetService("ReplicatedStorage"))["Remotes"]["CommF"]:InvokeServer("gravestoneEvent", 2), "Error") then
+							if string["find"]((game:GetService("ReplicatedStorage"))["Remotes"]["CommF"]:InvokeServer("gravestoneEvent", 2), "Nothing") then
+								topos("Wait Full Moon")
+							else
+								(game:GetService("ReplicatedStorage"))["Remotes"]["CommF"]:InvokeServer("gravestoneEvent", 2, true)
+							end
+						else
+							topos(CFrame["new"](-8653.206, 140.985, 6160.033))
+						end
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = "Kill Elite Hunter",
+			["Description"] = L_3_[168]({
+				"Tự Động Đánh ",
+				"Elite Hunter"
+			}),
+			["Default"] = false;
+			["Callback"] = function(L_934_arg0)
+				local L_935_ = {}
+				L_935_[2] = L_934_arg0
+				_G["AutoElitehunter"] = L_935_[2]
+				StopTween(_G["AutoElitehunter"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["AutoElitehunter"] and L_3_[177] then
+					pcall(function()
+						if (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == true then
+							if string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Diablo") or string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Deandre") or string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], "Urban") then
+								if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Diablo") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Deandre") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Urban") then
+									for L_936_forvar0, L_937_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+										local L_938_ = {}
+										L_938_[1], L_938_[2] = L_936_forvar0, L_937_forvar1
+										if (L_938_[2]["Name"] == "Diablo" or L_938_[2]["Name"] == "Deandre" or L_938_[2]["Name"] == "Urban") and (L_938_[2]:FindFirstChild("Humanoid") and (L_938_[2]:FindFirstChild("HumanoidRootPart") and L_938_[2]["Humanoid"]["Health"] > 0)) then
+											repeat
+												wait()
+												AutoHaki()
+												EquipWeapon(_G["SelectWeapon"])
+												NeedAttacking = true
+												StartBring = true
+												L_938_[2]["HumanoidRootPart"]["CanCollide"] = false
+												L_938_[2]["Humanoid"]["WalkSpeed"] = 0
+												topos(L_938_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0));
+												(game:GetService("VirtualUser")):CaptureController();
+												(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+												sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+											until _G["AutoElitehunter"] == false or L_938_[2]["Humanoid"]["Health"] <= 0 or not L_938_[2]["Parent"]
+										end
+									end
+								else
+									NeedAttacking = false
+									if (game:GetService("ReplicatedStorage")):FindFirstChild("Diablo") then
+										TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Diablo"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+									elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Deandre") then
+										TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Deandre"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+									elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Urban") then
+										TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Urban"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+									end
+								end
+							end
+						elseif _G["AutoEliteHunterHop"] and (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("EliteHunter") == L_3_[168]({
+							"I don't have anythin";
+							"g for you right now.",
+							" Come back later."
+						}) then
+							Hop()
+						else
+							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("EliteHunter")
+						end
+					end)
+				end
+			end
+		end)
+		L_910_[1] = L_3_[186]:AddSection({
+			"Auto CDK"
+		})
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Cdk [Beta]";
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy X";
+				"ong Kiếm Ô Đen"
+			}),
+			["Default"] = false;
+			["Callback"] = function(L_939_arg0)
+				local L_940_ = {}
+				L_940_[2] = L_939_arg0
+				_G["AutoGetCDK"] = L_940_[2]
+				StopTween(_G["AutoGetCDK"])
+			end
+		})
+		task["spawn"](function()
+			local L_941_ = {}
+			repeat
+				task["wait"]()
+			until (getgenv())["AutoGetCDK"]
+			L_941_[1] = false
+			L_941_[4] = game["Players"]["LocalPlayer"]
+			L_941_[6] = game:GetService("ReplicatedStorage")
+			L_941_[3] = game:GetService("Workspace")
+			L_941_[5] = L_941_[3]["Enemies"]
+			while (getgenv())["AutoGetCDK"] do
+				task["wait"](.2)
+				pcall(function()
+					L_941_[6]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "Progress", "Good")
+					task["wait"](.2)
+					L_941_[6]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "Progress", "Evil")
+					task["wait"](.2)
+					L_941_[6]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "StartTrial", "Boss")
+					task["wait"](.2)
+					if not L_941_[5]:FindFirstChild("Cursed Skeleton Boss") then
+						topos(CFrame["new"](-12318.193, 601.951, -6538.662))
+						task["wait"](.5)
+						topos(L_941_[3]["Map"]["Turtle"]["Cursed"]["BossDoor"]["CFrame"])
+					else
+						for L_942_forvar0, L_943_forvar1 in pairs(L_941_[5]:GetChildren()) do
+							local L_944_ = {}
+							L_944_[1], L_944_[2] = L_942_forvar0, L_943_forvar1
+							if L_944_[2]["Name"] == "Cursed Skeleton Boss" and (L_944_[2]:FindFirstChild("Humanoid") and (L_944_[2]:FindFirstChild("HumanoidRootPart") and L_944_[2]["Humanoid"]["Health"] > 0)) then
+								local L_945_ = {}
+								L_945_[3] = L_941_[4]["Character"]
+								L_945_[1] = L_941_[4]["Backpack"]
+								if not L_945_[3]:FindFirstChild("Yama") and not L_945_[1]:FindFirstChild("Yama") then
+									if not L_945_[3]:FindFirstChild("Tushita") and not L_945_[1]:FindFirstChild("Tushita") then
+										if not L_941_[1] then
+											game["StarterGui"]:SetCore("SendNotification", {
+												["Title"] = "Tuấn Anh IOS";
+												["Text"] = L_3_[168]({
+													"Use! - Yama or Tushi";
+													"ta"
+												}),
+												["con"] = L_3_[168]({
+													"rbxassetid://1106577",
+													"25541747"
+												});
+												["Duration"] = 10
+											})
+											L_941_[1] = true
+										end
+									else
+										EquipWeapon("Tushita")
+									end
+								else
+									EquipWeapon("Yama")
+								end
+								Buso()
+								L_944_[2]["HumanoidRootPart"]["CanCollide"] = false
+								L_944_[2]["Humanoid"]["WalkSpeed"] = 0
+								topos(L_944_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+								if syn and not(getgenv())["SimulationSet"] then
+									sethiddenproperty(L_941_[4], "SimulationRadius", math["huge"]);
+									(getgenv())["SimulationSet"] = true
+								end
+								repeat
+									task["wait"]()
+								until not(getgenv())["AutoGetCDK"] or not L_944_[2]["Parent"] or L_944_[2]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Get Yama";
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy K";
+				"iếm Yama"
+			});
+			["Default"] = false,
+			["Callback"] = function(L_946_arg0)
+				local L_947_ = {}
+				L_947_[1] = L_946_arg0
+				_G["AutoYama"] = L_947_[1]
+				StopTween(_G["AutoYama"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["AutoYama"] and (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("EliteHunter", "Progress") >= 30 then
+					repeat
+						wait()
+						fireclickdetector((game:GetService("Workspace"))["Map"]["Waterfall"]["SealedKatana"]["Handle"]["ClickDetector"])
+					until (game:GetService("Players"))["LocalPlayer"]["Backpack"]:FindFirstChild("Yama") or not _G["AutoYama"]
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = L_3_[168]({
+				"Auto Holy Torch Tush",
+				"ita"
+			}),
+			["Description"] = L_3_[168]({
+				"Tự Động Torch T";
+				"ushita"
+			});
+			["Default"] = false,
+			["Callback"] = function(L_948_arg0)
+				local L_949_ = {}
+				L_949_[2] = L_948_arg0
+				_G["AutoHolyTorch"] = L_949_[2]
+				StopTween(_G["AutoHolyTorch"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["AutoHolyTorch"] then
+					pcall(function()
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](5657.8862304688, 1013.0790405273, -335.49963378906))
+						wait(1)
+						topos(CFrame["new"](5711.8745117188, 45.828029632568, 254.1700592041))
+						wait(15)
+						EquipWeapon("Holy Torch")
+						repeat
+							topos(CFrame["new"](-10752, 417, -9366))
+							wait()
+						until not _G["AutoHolyTorch"] or (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-10752, 417, -9366))["Magnitude"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["new"](-11672, 334, -9474))
+							wait()
+						until not _G["AutoHolyTorch"] or (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-11672, 334, -9474))["Magnitude"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["new"](-12132, 521, -10655))
+							wait()
+						until not _G["AutoHolyTorch"] or (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-12132, 521, -10655))["Magnitude"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["new"](-13336, 486, -6985))
+							wait()
+						until not _G["AutoHolyTorch"] or (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-13336, 486, -6985))["Magnitude"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["new"](-13489, 332, -7925))
+							wait()
+						until not _G["AutoHolyTorch"] or (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-13489, 332, -7925))["Magnitude"] <= 10
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Get Tushita";
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy T",
+				"ushita"
+			});
+			["Default"] = false,
+			["Callback"] = function(L_950_arg0)
+				local L_951_ = {}
+				L_951_[1] = L_950_arg0
+				_G["AutoGetTushita"] = L_951_[1]
+				StopTween(_G["AutoGetTushita"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["AutoGetTushita"] then
+					pcall(function()
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Longma") then
+							for L_952_forvar0, L_953_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_954_ = {}
+								L_954_[1], L_954_[2] = L_952_forvar0, L_953_forvar1
+								if L_954_[2]["Name"] == "Longma" and (L_954_[2]:FindFirstChild("Humanoid") and (L_954_[2]:FindFirstChild("HumanoidRootPart") and L_954_[2]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_954_[2]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_954_[2]["Humanoid"]["WalkSpeed"] = 0
+										L_954_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_954_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["AutoGetTushita"] or not L_954_[2]["Parent"] or L_954_[2]["Humanoid"]["Health"] <= 0
+								end
+							end
+						elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Longma") then
+							TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Longma"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		L_910_[4] = L_3_[186]:AddSection({
+			"Quest Sword"
+		})
+		L_3_[186]:AddToggle({
+			["Name"] = L_3_[168]({
+				"Auto Get Sword Twin ",
+				"Hooks"
+			}),
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy K",
+				"iếm Twin Hooks"
+			}),
+			["Default"] = false;
+			["Callback"] = function(L_955_arg0)
+				local L_956_ = {}
+				L_956_[1] = L_955_arg0
+				_G["SwodTwinHooks"] = L_956_[1]
+				StopTween(_G["SwodTwinHooks"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["SwodTwinHooks"] then
+					pcall(function()
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Captain Elephant") then
+							if (game:GetService("ReplicatedStorage")):FindFirstChild("Captain Elephant") then
+								TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Captain Elephant"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+							end
+						else
+							for L_957_forvar0, L_958_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_959_ = {}
+								L_959_[1], L_959_[3] = L_957_forvar0, L_958_forvar1
+								if L_959_[3]["Name"] == "Captain Elephant" and (L_959_[3]:FindFirstChild("Humanoid") and (L_959_[3]:FindFirstChild("HumanoidRootPart") and L_959_[3]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_959_[3]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_959_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_959_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_959_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["SwodTwinHooks"] or not L_959_[3]["Parent"] or L_959_[3]["Humanoid"]["Health"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = L_3_[168]({
+				"Auto Get Sword Canva",
+				"nder"
+			}),
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy K";
+				"iếm Canvander"
+			});
+			["Default"] = false,
+			["Callback"] = function(L_960_arg0)
+				local L_961_ = {}
+				L_961_[2] = L_960_arg0
+				_G["SwodCanvander"] = L_961_[2]
+				StopTween(_G["SwodCanvander"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["SwodCanvander"] then
+					pcall(function()
+						if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Beautiful Pirate") then
+							for L_962_forvar0, L_963_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_964_ = {}
+								L_964_[2], L_964_[3] = L_962_forvar0, L_963_forvar1
+								if L_964_[3]["Name"] == "Beautiful Pirate" and (L_964_[3]:FindFirstChild("Humanoid") and (L_964_[3]:FindFirstChild("HumanoidRootPart") and L_964_[3]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_964_[3]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_964_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_964_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_964_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["SwodCanvander"] or not L_964_[3]["Parent"] or L_964_[3]["Humanoid"]["Health"] <= 0
+								end
+							end
+						elseif (game:GetService("ReplicatedStorage")):FindFirstChild("Beautiful Pirate") then
+							TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Beautiful Pirate"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		L_3_[186]:AddToggle({
+			["Name"] = "Auto Get Sword Buddy";
+			["Description"] = L_3_[168]({
+				"Tự Động Lấy K";
+				"iếm Buddy"
+			}),
+			["Default"] = false,
+			["Callback"] = function(L_965_arg0)
+				local L_966_ = {}
+				L_966_[2] = L_965_arg0
+				_G["SwodsBuddy"] = L_966_[2]
+				StopTween(_G["SwodsBuddy"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["SwodsBuddy"] then
+					pcall(function()
+						if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Cake Queen") then
+							if (game:GetService("ReplicatedStorage")):FindFirstChild("Cake Queen") then
+								TP1(((game:GetService("ReplicatedStorage")):FindFirstChild("Cake Queen"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+							end
+						else
+							for L_967_forvar0, L_968_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+								local L_969_ = {}
+								L_969_[2], L_969_[3] = L_967_forvar0, L_968_forvar1
+								if L_969_[3]["Name"] == "Cake Queen" and (L_969_[3]:FindFirstChild("Humanoid") and (L_969_[3]:FindFirstChild("HumanoidRootPart") and L_969_[3]["Humanoid"]["Health"] > 0)) then
+									repeat
+										task["wait"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										L_969_[3]["HumanoidRootPart"]["CanCollide"] = false
+										StartBring = true
+										L_969_[3]["Humanoid"]["WalkSpeed"] = 0
+										L_969_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](80, 80, 80)
+										topos(L_969_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+										sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["SwodsBuddy"] or not L_969_[3]["Parent"] or L_969_[3]["Humanoid"]["Health"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+	end
+end
+L_3_[133]:AddButton({
+	["Title"] = "Tween Dragon Dojo";
+	["Value"] = false;
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](5661.53, 1013.09, -334.96))
+		topos(CFrame["new"](5841.29, 1208.32, 884.31))
+	end
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Dragon Huntery",
+	["Description"] = L_3_[168]({
+		"Tự Động Farm Bl",
+		"aze"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_970_arg0)
+		local L_971_ = {}
+		L_971_[1] = L_970_arg0
+		_G["FarmBlazeEM"] = L_971_[1]
+		StopTween(_G["FarmBlazeEM"])
+	end
+})
+function checkQuesta()
+	local L_972_ = {}
+	L_972_[9] = {
+		[1] = {
+			["Context"] = "Check"
+		}
+	}
+	L_972_[5] = nil
+	pcall(function()
+		local L_973_ = {}
+		L_973_[1] = {
+			[1] = {
+				["Context"] = "RequestQuest"
+			}
+		};
+		(game:GetService("ReplicatedStorage"))["Modules"]["Net"]["RF/DragonHunter"]:InvokeServer(unpack(L_973_[1]))
+	end)
+	L_972_[7], L_972_[3] = pcall(function()
+		L_972_[5] = (game:GetService("ReplicatedStorage"))["Modules"]["Net"]["RF/DragonHunter"]:InvokeServer(unpack(L_972_[9]))
+	end)
+	L_972_[4] = false
+	L_972_[6] = nil
+	L_972_[1] = nil
+	L_972_[8] = nil
+	if L_972_[5] and L_972_[5]["Text"] then
+		local L_974_ = {}
+		L_972_[4] = true
+		L_974_[1] = L_972_[5]["Text"]
+		if string["find"](L_974_[1], "Defeat") then
+			L_972_[8] = 1
+			L_972_[1] = tonumber(string["sub"](L_974_[1], 8, 9))
+			for L_975_forvar0, L_976_forvar1 in pairs({
+				"Hydra Enforcer",
+				"Venomous Assailant"
+			}) do
+				local L_977_ = {}
+				L_977_[3], L_977_[2] = L_975_forvar0, L_976_forvar1
+				if string["find"](L_974_[1], L_977_[2]) then
+					L_972_[6] = L_977_[2]
+					break
+				end
+			end
+		elseif string["find"](L_974_[1], "Destroy") then
+			L_972_[8] = 2
+			L_972_[1] = 10
+		end
+	end
+	return L_972_[4], L_972_[6], L_972_[1], L_972_[8]
+end
+function BackTODoJo()
+	for L_978_forvar0, L_979_forvar1 in pairs((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Notifications"]:GetChildren()) do
+		local L_980_ = {}
+		L_980_[2], L_980_[3] = L_978_forvar0, L_979_forvar1
+		if L_980_[3]["Name"] == "NotificationTemplate" and string["find"](L_980_[3]["Text"], L_3_[168]({
+			"Head back to the Doj",
+			"o to complete more t",
+			"asks"
+		})) then
+			return true
+		end
+	end
+	return false
+end
+function DragonMobClear(L_981_arg0, L_982_arg1, L_983_arg2)
+	local L_984_ = {}
+	L_984_[1], L_984_[3], L_984_[4] = L_981_arg0, L_982_arg1, L_983_arg2
+	if not workspace["Enemies"]:FindFirstChild(L_984_[3]) then
+		if L_984_[4] then
+			topos(L_984_[4])
+		end
+	else
+		for L_985_forvar0, L_986_forvar1 in pairs(workspace["Enemies"]:GetChildren()) do
+			local L_987_ = {}
+			L_987_[2], L_987_[3] = L_985_forvar0, L_986_forvar1
+			if L_987_[3]["Name"] == L_984_[3] and (Attack["Alive"](L_987_[3]) and L_984_[1]) then
+				Attack["Kill"](L_987_[3], L_984_[1])
+			end
+		end
+	end
+end
+spawn(function()
+	while task["wait"]() do
+		if _G["FarmBlazeEM"] then
+			pcall(function()
+				local L_988_ = {}
+				L_988_[4], L_988_[5], L_988_[2], L_988_[1] = checkQuesta()
+				if not L_988_[4] or BackTODoJo() then
+					topos(CFrame["new"](5813, 1208, 884))
+					DragonMobClear(false, nil, nil)
+				elseif L_988_[1] ~= 1 then
+					if L_988_[1] == 2 then
+						local L_989_ = {}
+						L_989_[1] = workspace["Map"]["Waterfall"]["IslandModel"]:FindFirstChild("Meshes/bambootree", true)
+						do
+							local L_990_ = {}
+							L_990_[2] = L_989_[1]
+							if L_990_[2] then
+								repeat
+									task["wait"]()
+									spawn(function()
+										topos(L_990_[2]["CFrame"] * CFrame["new"](4, 0, 0))
+									end)
+									if (L_990_[2]["Position"] - Root["Position"])["Magnitude"] <= 200 then
+										MousePos = L_990_[2]["Position"]
+										Useskills("Melee", "Z")
+										Useskills("Melee", "X")
+										Useskills("Melee", "C")
+										task["wait"](.5)
+										Useskills("Sword", "Z")
+										Useskills("Sword", "X")
+										task["wait"](.5)
+										Useskills("Blox Fruit", "Z")
+										Useskills("Blox Fruit", "X")
+										Useskills("Blox Fruit", "C")
+										task["wait"](.5)
+										Useskills("Gun", "Z")
+										Useskills("Gun", "X")
+									end
+								until not _G["FarmBlazeEM"] or not L_988_[4] or BackTODoJo()
+							end
+						end
+					end
+				elseif L_988_[5] == "Hydra Enforcer" or L_988_[5] == "Venomous Assailant" then
+					repeat
+						task["wait"]()
+						DragonMobClear(true, L_988_[5], CFrame["new"](4620.61, 1002.29, 399.08))
+					until not _G["FarmBlazeEM"] or not L_988_[4] or BackTODoJo()
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while task["wait"](.1) do
+		if _G["FarmBlazeEM"] then
+			pcall(function()
+				if workspace:FindFirstChild("EmberTemplate") and workspace["EmberTemplate"]:FindFirstChild("Part") then
+					game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = workspace["EmberTemplate"]["Part"]["CFrame"]
+				end
+			end)
+		end
+	end
+end)
+L_3_[114] = L_3_[133]:AddSection({
+	"Volcanic Island"
+})
+L_3_[133]:AddButton({
+	["Title"] = L_3_[168]({
+		"Craft Volcanic Magne",
+		"t"
+	});
+	["Value"] = false,
+	["Callback"] = function()
+		local L_991_ = {}
+		L_991_[2] = {
+			[1] = "CraftItem",
+			[2] = "Craft",
+			[3] = "Volcanic Magnet"
+		};
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_991_[2]))
+	end
+})
+L_3_[43] = L_3_[133]:AddParagraph({
+	["Title"] = L_3_[168]({
+		"Check Prehistoric Is";
+		"land"
+	}),
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			if (game:GetService("Workspace"))["Map"]:FindFirstChild("PrehistoricIsland") then
+				L_3_[43]:Set(L_3_[168]({
+					"Prehistoric Island S";
+					"pawning ✅"
+				}))
+			else
+				L_3_[43]:Set(L_3_[168]({
+					"Prehistoric Island N";
+					"ot Spawn ❌"
+				}))
+			end
+		end)
+	end
+end)
+L_3_[133]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Find Prehistori",
+		"c"
+	});
+	["Description"] = L_3_[168]({
+		"Tự Động Tìm Đ",
+		"ảo Thời Tiền S";
+		"ử ( Đảo Núi L�";
+		"��a )"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_992_arg0)
+		local L_993_ = {}
+		L_993_[1] = L_992_arg0
+		_G["Nocliprock"] = L_993_[1]
+		StopTween(_G["Nocliprock"])
+	end
+})
+L_3_[49] = {}
+L_3_[193] = game:GetService("Players")
+L_3_[80] = game:GetService("RunService")
+L_3_[78] = game:GetService("VirtualInputManager")
+L_3_[101] = game:GetService("Workspace")
+L_3_[204] = 350
+L_3_[80]["RenderStepped"]:Connect(function()
+	for L_994_forvar0, L_995_forvar1 in pairs(L_3_[49]) do
+		local L_996_ = {}
+		L_996_[2], L_996_[1] = L_994_forvar0, L_995_forvar1
+		if L_996_[1] and (L_996_[1]["Parent"] and (L_996_[1]["Name"] == "VehicleSeat" and not L_996_[1]["Occupant"])) then
+			L_3_[49][L_996_[2]] = L_996_[1]
+		end
+	end
+end)
+L_3_[154] = function()
+	for L_997_forvar0, L_998_forvar1 in pairs(L_3_[49]) do
+		local L_999_ = {}
+		L_999_[3], L_999_[1] = L_997_forvar0, L_998_forvar1
+		if L_999_[1] and (L_999_[1]["Parent"] and (L_999_[1]["Name"] == "VehicleSeat" and not L_999_[1]["Occupant"])) then
+			topos(L_999_[1]["CFrame"])
+		end
+	end
+end
+L_3_[159] = false
+L_3_[128] = false
+L_3_[80]["RenderStepped"]:Connect(function()
+	if _G["AutoFindPrehistoric"] then
+		local L_1000_ = {}
+		L_1000_[1] = L_3_[193]["LocalPlayer"]["Character"]
+		if L_1000_[1] and L_1000_[1]:FindFirstChild("Humanoid") then
+			local L_1001_ = {}
+			L_1001_[5] = function()
+				if not L_3_[159] then
+					L_3_[159] = true
+					for L_1002_forvar0, L_1003_forvar1 in pairs(L_3_[49]) do
+						local L_1004_ = {}
+						L_1004_[1], L_1004_[3] = L_1002_forvar0, L_1003_forvar1
+						if L_1004_[3] and (L_1004_[3]["Parent"] and (L_1004_[3]["Name"] == "VehicleSeat" and not L_1004_[3]["Occupant"])) then
+							topos(L_1004_[3]["CFrame"])
+							break
+						end
+					end
+					L_3_[159] = false
+					return
+				else
+					return
+				end
+			end
+			L_1001_[2] = L_1000_[1]["Humanoid"]
+			L_1001_[1] = false
+			L_1001_[4] = nil
+			for L_1005_forvar0, L_1006_forvar1 in pairs(L_3_[101]["Boats"]:GetChildren()) do
+				local L_1007_ = {}
+				L_1007_[4], L_1007_[1] = L_1005_forvar0, L_1006_forvar1
+				L_1007_[2] = L_1007_[1]:FindFirstChild("VehicleSeat")
+				if L_1007_[2] and L_1007_[2]["Occupant"] == L_1001_[2] then
+					L_1001_[1] = true
+					L_1001_[4] = L_1007_[2]
+					L_3_[49][L_1007_[1]["Name"]] = L_1007_[2]
+				elseif L_1007_[2] and L_1007_[2]["Occupant"] == "Name" then
+					L_1001_[5]()
+				end
+			end
+			if L_1001_[1] then
+				L_1001_[4]["MaxSpeed"] = L_3_[204]
+				L_1001_[4]["CFrame"] = CFrame["new"](Vector3["new"](L_1001_[4]["Position"]["X"], L_1001_[4]["Position"]["Y"], L_1001_[4]["Position"]["Z"])) * L_1001_[4]["CFrame"]["Rotation"]
+				L_3_[78]:SendKeyEvent(true, "W", false, game)
+				for L_1008_forvar0, L_1009_forvar1 in pairs(L_3_[101]["Boats"]:GetDescendants()) do
+					local L_1010_ = {}
+					L_1010_[2], L_1010_[3] = L_1008_forvar0, L_1009_forvar1
+					if L_1010_[3]:IsA("BasePart") then
+						L_1010_[3]["CanCollide"] = false
+					end
+				end
+				for L_1011_forvar0, L_1012_forvar1 in pairs(L_1000_[1]:GetDescendants()) do
+					local L_1013_ = {}
+					L_1013_[2], L_1013_[3] = L_1011_forvar0, L_1012_forvar1
+					if L_1013_[3]:IsA("BasePart") then
+						L_1013_[3]["CanCollide"] = false
+					end
+				end
+				for L_1014_forvar0, L_1015_forvar1 in ipairs({
+					"ShipwreckIsland";
+					"SandIsland",
+					"TreeIsland";
+					"TinyIsland";
+					"MysticIsland";
+					"KitsuneIsland",
+					"FrozenDimension"
+				}) do
+					local L_1016_ = {}
+					L_1016_[1], L_1016_[2] = L_1014_forvar0, L_1015_forvar1
+					L_1016_[3] = L_3_[101]["Map"]:FindFirstChild(L_1016_[2])
+					if L_1016_[3] and L_1016_[3]:IsA("Model") then
+						L_1016_[3]:Destroy()
+					end
+				end
+				if L_3_[101]["Map"]:FindFirstChild("PrehistoricIsland") then
+					L_3_[78]:SendKeyEvent(false, "W", false, game)
+					_G["AutoFindPrehistoric"] = false
+					if not L_3_[128] then
+						L_3_[128] = true
+					end
+					return
+				else
+					return
+				end
+			else
+				return
+			end
+		else
+			return
+		end
+	else
+		L_3_[128] = false
+		return
+	end
+end)
+L_3_[133]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Tween Prehistor";
+		"ic Island"
+	});
+	["Description"] = L_3_[168]({
+		"Tự Động Bay Và",
+		"o Đảo Núi Lửa ";
+		"Volcano"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1017_arg0)
+		local L_1018_ = {}
+		L_1018_[1] = L_1017_arg0
+		_G["TweenVolcano"] = L_1018_[1]
+		StopTween(_G["TweenVolcano"])
+	end
+})
+spawn(function()
+	local L_1019_ = {}
+	L_1019_[2] = nil
+	while not L_1019_[2] do
+		L_1019_[2] = (game:GetService("Workspace"))["Map"]:FindFirstChild("PrehistoricIsland")
+		wait()
+	end
+	while wait() do
+		if _G["TweenVolcano"] then
+			local L_1020_ = {}
+			L_1020_[1] = (game:GetService("Workspace"))["Map"]:FindFirstChild("PrehistoricIsland")
+			if L_1020_[1] then
+				local L_1021_ = {}
+				L_1021_[2] = L_1020_[1]:FindFirstChild("Core") and L_1020_[1]["Core"]:FindFirstChild("PrehistoricRelic")
+				L_1021_[1] = L_1021_[2] and L_1021_[2]:FindFirstChild("Skull")
+				if L_1021_[1] then
+					TP1(CFrame["new"](L_1021_[1]["Position"]))
+					_G["TweenVolcano"] = false
+				end
+			end
+		end
+	end
+end)
+L_3_[133]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Defend Prehisto",
+		"ric"
+	});
+	["Description"] = "Xoá Lava",
+	["Default"] = false;
+	["Callback"] = function(L_1022_arg0)
+		local L_1023_ = {}
+		L_1023_[2] = L_1022_arg0
+		_G["DefendVolcano"] = L_1023_[2]
+		StopTween(_G["DefendVolcano"])
+	end
+})
+L_3_[123] = function(L_1024_arg0)
+	local L_1025_ = {}
+	L_1025_[1] = L_1024_arg0;
+	(game:GetService("VirtualInputManager")):SendKeyEvent(true, L_1025_[1], false, game);
+	(game:GetService("VirtualInputManager")):SendKeyEvent(false, L_1025_[1], false, game)
+end
+L_3_[176] = function()
+	local L_1026_ = {}
+	L_1026_[3] = game["Workspace"]["Map"]["PrehistoricIsland"]["Core"]:FindFirstChild("InteriorLava")
+	if L_1026_[3] and L_1026_[3]:IsA("Model") then
+		L_1026_[3]:Destroy()
+	end
+	L_1026_[2] = game["Workspace"]["Map"]:FindFirstChild("PrehistoricIsland")
+	if L_1026_[2] then
+		for L_1027_forvar0, L_1028_forvar1 in pairs(L_1026_[2]:GetDescendants()) do
+			local L_1029_ = {}
+			L_1029_[3], L_1029_[1] = L_1027_forvar0, L_1028_forvar1
+			if L_1029_[1]:IsA("Part") and (L_1029_[1]["Name"]:lower()):find("lava") then
+				L_1029_[1]:Destroy()
+			end
+		end
+	end
+	if L_1026_[2] then
+		for L_1030_forvar0, L_1031_forvar1 in pairs(L_1026_[2]:GetDescendants()) do
+			local L_1032_ = {}
+			L_1032_[3], L_1032_[1] = L_1030_forvar0, L_1031_forvar1
+			if L_1032_[1]:IsA("Model") then
+				for L_1033_forvar0, L_1034_forvar1 in pairs(L_1032_[1]:GetDescendants()) do
+					local L_1035_ = {}
+					L_1035_[3], L_1035_[2] = L_1033_forvar0, L_1034_forvar1
+					if L_1035_[2]:IsA("MeshPart") and (L_1035_[2]["Name"]:lower()):find("lava") then
+						L_1035_[2]:Destroy()
+					end
+				end
+			end
+		end
+	end
+end
+L_3_[48] = function()
+	local L_1036_ = {}
+	L_1036_[2] = game["Workspace"]["Map"]["PrehistoricIsland"]["Core"]["VolcanoRocks"]
+	for L_1037_forvar0, L_1038_forvar1 in pairs(L_1036_[2]:GetChildren()) do
+		local L_1039_ = {}
+		L_1039_[3], L_1039_[2] = L_1037_forvar0, L_1038_forvar1
+		if L_1039_[2]:IsA("Model") then
+			local L_1040_ = {}
+			L_1040_[2] = L_1039_[2]:FindFirstChild("volcanorock")
+			if L_1040_[2] and L_1040_[2]:IsA("MeshPart") then
+				local L_1041_ = {}
+				L_1041_[2] = L_1040_[2]["Color"]
+				if L_1041_[2] == Color3["fromRGB"](185, 53, 56) or L_1041_[2] == Color3["fromRGB"](185, 53, 57) then
+					return L_1040_[2]
+				end
+			end
+		end
+	end
+	return nil
+end
+L_3_[26] = function(L_1042_arg0)
+	local L_1043_ = {}
+	L_1043_[3] = L_1042_arg0
+	L_1043_[4] = game["Players"]["LocalPlayer"]
+	L_1043_[2] = L_1043_[4]["Backpack"]
+	for L_1044_forvar0, L_1045_forvar1 in pairs(L_1043_[2]:GetChildren()) do
+		local L_1046_ = {}
+		L_1046_[3], L_1046_[2] = L_1044_forvar0, L_1045_forvar1
+		if L_1046_[2]:IsA("Tool") and L_1046_[2]["ToolTip"] == L_1043_[3] then
+			L_1046_[2]["Parent"] = L_1043_[4]["Character"]
+			for L_1047_forvar0, L_1048_forvar1 in ipairs({
+				"Z";
+				"X";
+				"C";
+				"V";
+				"F"
+			}) do
+				local L_1049_ = {}
+				L_1049_[3], L_1049_[1] = L_1047_forvar0, L_1048_forvar1
+				wait()
+				do
+					local L_1050_ = {}
+					L_1050_[2] = L_1049_[1]
+					pcall(function()
+						L_3_[123](L_1050_[2])
+					end)
+				end
+			end
+			L_1046_[2]["Parent"] = L_1043_[2]
+			break
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if _G["DefendVolcano"] then
+			local L_1051_ = {}
+			AutoHaki()
+			pcall(L_3_[176])
+			L_1051_[1] = L_3_[48]()
+			if not L_1051_[1] then
+				_G["TpPrehistoric"] = true
+			else
+				local L_1052_ = {}
+				L_1052_[2] = CFrame["new"](L_1051_[1]["Position"])
+				TP1(L_1052_[2])
+				L_1052_[3] = L_1051_[1]["Color"]
+				if L_1052_[3] == Color3["fromRGB"](185, 53, 56) or L_1052_[3] == Color3["fromRGB"](185, 53, 57) then
+					if (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_1051_[1]["Position"])["Magnitude"] <= 1 then
+						if _G["UseMelee"] then
+							L_3_[26]("Melee")
+						end
+						if _G["UseSword"] then
+							L_3_[26]("Sword")
+						end
+						if _G["UseGun"] then
+							L_3_[26]("Gun")
+						end
+					end
+					_G["TpPrehistoric"] = false
+				else
+					L_1051_[1] = L_3_[48]()
+				end
+			end
+		end
+	end
+end)
+L_3_[16] = L_3_[133]:AddSection({
+	"Auto Skill"
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Use Melee",
+	["Description"] = L_3_[168]({
+		"Dùng Melee Để Ph",
+		"á Lava"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1053_arg0)
+		local L_1054_ = {}
+		L_1054_[2] = L_1053_arg0
+		_G["UseMelee"] = L_1054_[2]
+		StopTween(_G["UseMelee"])
+	end
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Use Sword",
+	["Description"] = L_3_[168]({
+		"Dùng Sword Để Ph";
+		"á Lava"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1055_arg0)
+		local L_1056_ = {}
+		L_1056_[2] = L_1055_arg0
+		_G["UseSword"] = L_1056_[2]
+		StopTween(_G["UseSword"])
+	end
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Use Gun",
+	["Description"] = L_3_[168]({
+		"Dùng Gun Để Phá";
+		" Lava"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1057_arg0)
+		local L_1058_ = {}
+		L_1058_[2] = L_1057_arg0
+		_G["UseGun"] = L_1058_[2]
+		StopTween(_G["UseGun"])
+	end
+})
+L_3_[206] = L_3_[133]:AddSection({
+	"Auto Kill Golem"
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Kill Golem";
+	["Description"] = L_3_[168]({
+		"Tự Động Kill Go";
+		"lem"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1059_arg0)
+		local L_1060_ = {}
+		L_1060_[2] = L_1059_arg0
+		_G["KillGolem"] = L_1060_[2]
+		StopTween(_G["KillGolem"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["KillGolem"] and L_3_[177] then
+			pcall(function()
+				if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Lava Golem") then
+					for L_1061_forvar0, L_1062_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1063_ = {}
+						L_1063_[3], L_1063_[1] = L_1061_forvar0, L_1062_forvar1
+						if L_1063_[1]["Name"] == "Lava Golem" and (L_1063_[1]:FindFirstChild("Humanoid") and (L_1063_[1]:FindFirstChild("HumanoidRootPart") and L_1063_[1]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1063_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_1063_[1]["Humanoid"]["WalkSpeed"] = 0
+								L_1063_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
+								topos(L_1063_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+								sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+							until not _G["KillGolem"] or not L_1063_[1]["Parent"] or L_1063_[1]["Humanoid"]["Health"] <= 0
+						end
+					end
+				else
+					UnEquipWeapon(_G["SelectWeapon"])
+					if (game:GetService("ReplicatedStorage")):FindFirstChild("Lava Golem") then
+						topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Lava Golem"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Kill Aura Golem",
+	["Description"] = L_3_[168]({
+		"Tự Động Kill Au";
+		"ra Golem"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1064_arg0)
+		local L_1065_ = {}
+		L_1065_[1] = L_1064_arg0
+		_G["Kill_Aura"] = L_1065_[1]
+		StopTween(_G["Kill_Aura"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["Kill_Aura"] then
+				local L_1066_ = {}
+				L_1066_[2] = (game:GetService("Players"))["LocalPlayer"]
+				L_1066_[3] = (game:GetService("Workspace"))["Enemies"]:GetChildren()
+				L_1066_[1] = L_1066_[2]["Character"] and (L_1066_[2]["Character"]:FindFirstChild("HumanoidRootPart") and L_1066_[2]["Character"]["HumanoidRootPart"]["Position"])
+				do
+					local L_1067_ = {}
+					L_1067_[1] = L_1066_[2]
+					if L_1066_[1] then
+						for L_1068_forvar0, L_1069_forvar1 in pairs(L_1066_[3]) do
+							local L_1070_ = {}
+							L_1070_[1], L_1070_[3] = L_1068_forvar0, L_1069_forvar1
+							do
+								local L_1071_ = {}
+								L_1071_[1] = L_1070_[3]
+								if L_1071_[1]:FindFirstChild("Humanoid") and (L_1071_[1]:FindFirstChild("HumanoidRootPart") and (L_1071_[1]["Humanoid"]["Health"] > 0 and (L_1071_[1]["HumanoidRootPart"]["Position"] - L_1066_[1])["Magnitude"] <= 1000)) then
+									pcall(function()
+										repeat
+											wait()
+											sethiddenproperty(L_1067_[1], "SimulationRadius", math["huge"])
+											L_1071_[1]["Humanoid"]["Health"] = 0
+											L_1071_[1]["HumanoidRootPart"]["CanCollide"] = false
+										until not _G["Kill_Aura"] or not L_1071_[1]["Parent"] or L_1071_[1]["Humanoid"]["Health"] <= 0
+									end)
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end)
+end)
+L_3_[61] = L_3_[133]:AddSection({
+	L_3_[168]({
+		"Auto Collect Bone,Eg",
+		"g"
+	})
+})
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Collect Bone";
+	["Description"] = L_3_[168]({
+		"Tự Động Nhặt ",
+		"Sương"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1072_arg0)
+		local L_1073_ = {}
+		L_1073_[1] = L_1072_arg0
+		_G["AutoCollectBone"] = L_1073_[1]
+		StopTween(_G["AutoCollectBone"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoCollectBone"] then
+			for L_1074_forvar0, L_1075_forvar1 in pairs(workspace:GetDescendants()) do
+				local L_1076_ = {}
+				L_1076_[1], L_1076_[2] = L_1074_forvar0, L_1075_forvar1
+				if L_1076_[2]:IsA("BasePart") and L_1076_[2]["Name"] == "DinoBone" then
+					topos(CFrame["new"](L_1076_[2]["Position"]))
+				end
+			end
+		end
+	end
+end)
+L_3_[133]:AddToggle({
+	["Name"] = "Auto Collect Egg";
+	["Description"] = L_3_[168]({
+		"Tự Động Nhặt ";
+		"Trứng"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1077_arg0)
+		local L_1078_ = {}
+		L_1078_[1] = L_1077_arg0
+		_G["CollectEgg"] = L_1078_[1]
+		StopTween(_G["CollectEgg"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["CollectEgg"] then
+			pcall(function()
+				((((game:GetService("ReplicatedStorage")):WaitForChild("Modules")):WaitForChild("Net")):WaitForChild(L_3_[168]({
+					"RE/CollectedDragonEg";
+					"g"
+				}))):FireServer()
+			end)
+		end
+	end
+end)
+L_3_[152] = L_3_[51]:AddSection({
+	"Kitsune Island"
+})
+L_3_[34] = L_3_[51]:AddParagraph({
+	["Title"] = "Check Kitsune Island",
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			if (game:GetService("Workspace"))["Map"]:FindFirstChild("KitsuneIsland") then
+				L_3_[34]:Set(L_3_[168]({
+					"Kitsune Island Spawn";
+					"ing ✅"
+				}))
+			else
+				L_3_[34]:Set(L_3_[168]({
+					"Kitsune Island Not S";
+					"pawn ❌"
+				}))
+			end
+		end)
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Tween Kitsune i";
+		"sland"
+	}),
+	["Description"] = L_3_[168]({
+		"Bay Vô Đảo Kitsu";
+		"ne"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1079_arg0)
+		local L_1080_ = {}
+		L_1080_[2] = L_1079_arg0
+		_G["TweenToKitsune"] = L_1080_[2]
+		StopTween(_G["TweenToKitsune"])
+	end
+})
+spawn(function()
+	local L_1081_ = {}
+	L_1081_[2] = nil
+	while not L_1081_[2] do
+		L_1081_[2] = (game:GetService("Workspace"))["Map"]:FindFirstChild("KitsuneIsland")
+		wait(1)
+	end
+	while wait() do
+		if _G["TweenToKitsune"] then
+			local L_1082_ = {}
+			L_1082_[2] = L_1081_[2]["FindFirstChild"](L_1081_[2], "ShrineActive")
+			if L_1082_[2] then
+				for L_1083_forvar0, L_1084_forvar1 in pairs(L_1082_[2]:GetDescendants()) do
+					local L_1085_ = {}
+					L_1085_[2], L_1085_[3] = L_1083_forvar0, L_1084_forvar1
+					if L_1085_[3]:IsA("BasePart") and L_1085_[3]["Name"]:find("NeonShrinePart") then
+						Tween(L_1085_[3]["CFrame"])
+					end
+				end
+			end
+		end
+	end
+end)
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["TweenToKitsune"] then
+				topos(game["Workspace"]["Map"]["KitsuneIsland"]["ShrineActive"]["NeonShrinePart"]["CFrame"] * CFrame["new"](0, 0, 10))
+			end
+		end
+	end)
+end)
+L_3_[51]:AddToggle({
+	["Title"] = "Esp Kitsune Island";
+	["Value"] = false;
+	["Callback"] = function(L_1086_arg0)
+		local L_1087_ = {}
+		L_1087_[1] = L_1086_arg0
+		KitsuneIslandEsp = L_1087_[1]
+		if KitsuneIslandEsp then
+			task["spawn"](function()
+				while KitsuneIslandEsp do
+					UpdateIslandKisuneESP()
+					task["wait"](1)
+				end
+			end)
+		else
+			UpdateIslandKisuneESP()
+		end
+	end
+})
+L_3_[51]:AddToggle({
+	["Name"] = "Auto Azuer Ember",
+	["Description"] = L_3_[168]({
+		"Tự Động Nhặt ",
+		"Linh Hồn Xanh"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1088_arg0)
+		local L_1089_ = {}
+		L_1089_[2] = L_1088_arg0
+		_G["AutoAzuerEmber"] = L_1089_[2]
+		StopTween(_G["AutoAzuerEmber"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoAzuerEmber"] then
+			pcall(function()
+				if (game:GetService("Workspace")):FindFirstChild("AttachedAzureEmber") then
+					TP1(game["Workspace"]["EmberTemplate"]["Part"]["CFrame"])
+				end
+			end)
+		end
+	end
+end)
+L_3_[77] = L_3_[51]:AddSection({
+	"Sea Events"
+})
+L_3_[51]:AddToggle({
+	["Name"] = "Auto Drive Boats";
+	["Description"] = L_3_[168]({
+		"Tự Động Lái Th";
+		"uyền"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1090_arg0)
+		local L_1091_ = {}
+		L_1091_[1] = L_1090_arg0
+		_G["SailBoat"] = L_1091_[1]
+		StopTween(_G["SailBoat"])
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["SailBoat"] and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") or not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") or not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") or not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member")) then
+				if (game:GetService("Workspace"))["Boats"]:FindFirstChild("PirateBrigade") then
+					if (game:GetService("Workspace"))["Boats"]:FindFirstChild("PirateBrigade") then
+						if (game["Players"]["LocalPlayer"]["Character"]:WaitForChild("Humanoid"))["Sit"] == false then
+							TPP((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"] * CFrame["new"](0, 1, 0))
+						else
+							for L_1092_forvar0, L_1093_forvar1 in pairs((game:GetService("Workspace"))["Boats"]:GetChildren()) do
+								local L_1094_ = {}
+								L_1094_[3], L_1094_[2] = L_1092_forvar0, L_1093_forvar1
+								if L_1094_[2]["Name"] == "PirateBrigade" then
+									repeat
+										wait()
+										if ((CFrame["new"](-17013.80078125, 10.962434768677, 438.01699829102))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["magnitude"] <= 10 then
+											TPB(CFrame["new"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))
+										elseif ((CFrame["new"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["magnitude"] > 10 then
+											if ((CFrame["new"](-42250.2227, -0.3221744, 9247.07715, -0.45916447, 6.39043236e-08, .888351262, -3.36711423e-08, 1, -8.93395651e-08, -0.888351262, -7.09333605e-08, -0.45916447))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["magnitude"] <= 10 then
+												TPB(CFrame["new"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))
+											end
+										else
+											TPB(CFrame["new"](-42250.2227, -0.3221744, 9247.07715, -0.45916447, 6.39043236e-08, .888351262, -3.36711423e-08, 1, -8.93395651e-08, -0.888351262, -7.09333605e-08, -0.45916447))
+										end
+									until (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member") or _G["SailBoat"] == false
+								end
+							end
+						end
+					end
+				else
+					buyb = TPP(CFrame["new"](-16927.451171875, 9.0863618850708, 433.86428833008))
+					if ((CFrame["new"](-16927.451171875, 9.0863618850708, 433.86428833008))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["magnitude"] <= 10 then
+						local L_1095_ = {}
+						if buyb then
+							buyb:Stop()
+						end
+						L_1095_[1] = {
+							[1] = "BuyBoat",
+							[2] = "PirateBrigade"
+						};
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1095_[1]))
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["SailBoat"] and ((game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member")) then
+				game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] = false
+			end
+		end
+	end)
+end)
+L_3_[51]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Kill Terror Sha",
+		"nk"
+	});
+	["Description"] = L_3_[168]({
+		"Tự Đánh Terror S";
+		"hank"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1096_arg0)
+		local L_1097_ = {}
+		L_1097_[1] = L_1096_arg0
+		_G["Autoterrorshark"] = L_1097_[1]
+		StopTween(_G["Autoterrorshark"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Autoterrorshark"] and L_3_[177] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") and (not(game:GetService("Workspace"))["SeaBeasts"]:FindFirstChild("SeaBeast1") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBrigade") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBasic")))))) then
+					topos((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"] * CFrame["new"](0, -1, 0))
+					for L_1098_forvar0, L_1099_forvar1 in pairs((game:GetService("ReplicatedStorage")):GetChildren()) do
+						local L_1100_ = {}
+						L_1100_[3], L_1100_[2] = L_1098_forvar0, L_1099_forvar1
+						if L_1100_[2]["Name"] ~= "Terrorshark" then
+							(game:GetService("Workspace"))["Boats"]["VehicleSeat"]["CFrame"] = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]
+						else
+							topos(L_1100_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+						end
+					end
+				else
+					for L_1101_forvar0, L_1102_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1103_ = {}
+						L_1103_[1], L_1103_[3] = L_1101_forvar0, L_1102_forvar1
+						if L_1103_[3]["Name"] == "Terrorshark" and (L_1103_[3]:FindFirstChild("Humanoid") and (L_1103_[3]:FindFirstChild("HumanoidRootPart") and L_1103_[3]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1103_[3]["HumanoidRootPart"]["CanCollide"] = false
+								L_1103_[3]["Humanoid"]["WalkSpeed"] = 0
+								L_1103_[3]["Head"]["CanCollide"] = false
+								topos(L_1103_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 40, 10))
+								MonFarm = L_1103_[3]["Name"]
+								PosMon = L_1103_[3]["HumanoidRootPart"]["CFrame"]
+								game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] = false
+								if (game:GetService("Workspace"))["_WorldOrigin"]:FindFirstChild("Typhoon Splash") then
+									topos(L_1103_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 300, 0))
+								else
+									topos(L_1103_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 60, 0))
+								end
+							until not _G["Autoterrorshark"] or not L_1103_[3]["Parent"] or L_1103_[3]["Humanoid"]["Health"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["dao"] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Boats"]:FindFirstChild("PirateBrigade") then
+					(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("BuyBoat", "PirateBrigade")
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["dao"] and game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] == true then
+			TPB(CFrame["new"](-25351.8418, 10.7575607, 26430.791, -0.998379767, -0.00721008703, -0.0564435199, -0.00722159958, .999973953, -1.53919405e-10, .0564420484, .000407612359, -0.998405814))
+		end
+	end
+end)
+spawn(function()
+	while task["wait"](.1) do
+		pcall(function()
+			if (getgenv())["SafeMode"] then
+				local L_1104_ = {}
+				L_1104_[1] = game["Players"]["LocalPlayer"]["Character"]
+				if L_1104_[1] and (L_1104_[1]:FindFirstChild("Humanoid") and L_1104_[1]:FindFirstChild("HumanoidRootPart")) then
+					local L_1105_ = {}
+					L_1105_[3] = L_1104_[1]["Humanoid"]
+					L_1105_[1] = L_1104_[1]["HumanoidRootPart"]
+					if L_1105_[3]["Health"] < 5500 then
+						while (getgenv())["SafeMode"] and L_1105_[3]["Health"] < 5500 do
+							task["wait"](.1)
+							L_1105_[1]["CFrame"] = L_1105_[1]["CFrame"] + Vector3["new"](0, 200, 0)
+						end
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["Nocliprock"] then
+			if game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] == true then
+				for L_1106_forvar0, L_1107_forvar1 in pairs(game["Workspace"]["Boats"]:GetDescendants()) do
+					local L_1108_ = {}
+					L_1108_[3], L_1108_[2] = L_1106_forvar0, L_1107_forvar1
+					if L_1108_[2]:IsA("BasePart") and L_1108_[2]["CanCollide"] == true then
+						L_1108_[2]["CanCollide"] = false
+					end
+				end
+				for L_1109_forvar0, L_1110_forvar1 in pairs(game["Players"]["LocalPlayer"]["Character"]:GetDescendants()) do
+					local L_1111_ = {}
+					L_1111_[3], L_1111_[2] = L_1109_forvar0, L_1110_forvar1
+					if L_1111_[2]:IsA("BasePart") and L_1111_[2]["CanCollide"] == true then
+						L_1111_[2]["CanCollide"] = false
+					end
+				end
+			elseif game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] == false then
+				for L_1112_forvar0, L_1113_forvar1 in pairs(game["Workspace"]["Boats"]:GetDescendants()) do
+					local L_1114_ = {}
+					L_1114_[1], L_1114_[3] = L_1112_forvar0, L_1113_forvar1
+					if L_1114_[3]:IsA("BasePart") and L_1114_[3]["CanCollide"] == false then
+						L_1114_[3]["CanCollide"] = true
+					end
+				end
+				for L_1115_forvar0, L_1116_forvar1 in pairs(game["Players"]["LocalPlayer"]["Character"]:GetDescendants()) do
+					local L_1117_ = {}
+					L_1117_[2], L_1117_[1] = L_1115_forvar0, L_1116_forvar1
+					if L_1117_[1]:IsA("BasePart") and L_1117_[1]["CanCollide"] == false then
+						L_1117_[1]["CanCollide"] = true
+					end
+				end
+			end
+		end
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = "Auto Kill Shark";
+	["Description"] = L_3_[168]({
+		"Tự Động Đánh ",
+		"Shark"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1118_arg0)
+		local L_1119_ = {}
+		L_1119_[1] = L_1118_arg0
+		_G["KillShark"] = L_1119_[1]
+		StopTween(_G["KillShark"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["KillShark"] and (L_3_[177] and _G["SailBoat"]) then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") and (not(game:GetService("Workspace"))["SeaBeasts"]:FindFirstChild("SeaBeast1") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBrigade") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBasic")))))) then
+					topos((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"] * CFrame["new"](0, -1, 0))
+					for L_1120_forvar0, L_1121_forvar1 in pairs((game:GetService("ReplicatedStorage")):GetChildren()) do
+						local L_1122_ = {}
+						L_1122_[1], L_1122_[2] = L_1120_forvar0, L_1121_forvar1
+						if not L_1122_[2]["Name"] == "Shark" then
+							(game:GetService("Workspace"))["Boats"]["VehicleSeat"]["CFrame"] = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]
+						elseif L_1122_[2]["Name"] == "Shark" then
+							topos(L_1122_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+						end
+					end
+				else
+					for L_1123_forvar0, L_1124_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1125_ = {}
+						L_1125_[1], L_1125_[2] = L_1123_forvar0, L_1124_forvar1
+						if L_1125_[2]["Name"] == "Shark" and (L_1125_[2]:FindFirstChild("Humanoid") and (L_1125_[2]:FindFirstChild("HumanoidRootPart") and L_1125_[2]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1125_[2]["HumanoidRootPart"]["CanCollide"] = false
+								L_1125_[2]["Humanoid"]["WalkSpeed"] = 0
+								L_1125_[2]["Head"]["CanCollide"] = false
+								topos(L_1125_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 40, 10))
+								MonFarm = L_1125_[2]["Name"]
+								PosMon = L_1125_[2]["HumanoidRootPart"]["CFrame"]
+								game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] = false
+							until not _G["KillShark"] or not L_1125_[2]["Parent"] or L_1125_[2]["Humanoid"]["Health"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = "Auto Kill Piranha";
+	["Description"] = L_3_[168]({
+		"Tự Động Đánh ";
+		"Piranha"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1126_arg0)
+		local L_1127_ = {}
+		L_1127_[2] = L_1126_arg0
+		_G["KillPiranha"] = L_1127_[2]
+		StopTween(_G["KillPiranha"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["KillPiranha"] and L_3_[177] then
+			pcall(function()
+				if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") or (game:GetService("Workspace"))["SeaBeasts"]:FindFirstChild("SeaBeast1") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBrigade") or (game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBasic") then
+					for L_1128_forvar0, L_1129_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1130_ = {}
+						L_1130_[2], L_1130_[1] = L_1128_forvar0, L_1129_forvar1
+						if L_1130_[1]["Name"] == "Piranha" and (L_1130_[1]:FindFirstChild("Humanoid") and (L_1130_[1]:FindFirstChild("HumanoidRootPart") and L_1130_[1]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1130_[1]["HumanoidRootPart"]["CanCollide"] = false
+								L_1130_[1]["Humanoid"]["WalkSpeed"] = 0
+								L_1130_[1]["Head"]["CanCollide"] = false
+								topos(L_1130_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 40, 10))
+								MonFarm = L_1130_[1]["Name"]
+								PosMon = L_1130_[1]["HumanoidRootPart"]["CFrame"]
+								game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] = false
+							until not _G["KillPiranha"] or not L_1130_[1]["Parent"] or L_1130_[1]["Humanoid"]["Health"] <= 0
+						end
+					end
+				else
+					topos((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"] * CFrame["new"](0, -1, 0))
+					for L_1131_forvar0, L_1132_forvar1 in pairs((game:GetService("ReplicatedStorage")):GetChildren()) do
+						local L_1133_ = {}
+						L_1133_[2], L_1133_[1] = L_1131_forvar0, L_1132_forvar1
+						if not L_1133_[1]["Name"] == "Piranha" then
+							(game:GetService("Workspace"))["Boats"]["VehicleSeat"]["CFrame"] = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]
+						elseif L_1133_[1]["Name"] == "Piranha" then
+							topos(L_1133_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](2, 20, 2))
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Kill Fish Crew ",
+		"Member"
+	}),
+	["Description"] = L_3_[168]({
+		"Tự Động Thành ",
+		"viên phi hành đo�";
+		"�n Auto Kill Fish"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1134_arg0)
+		local L_1135_ = {}
+		L_1135_[1] = L_1134_arg0
+		_G["KillFishCrew"] = L_1135_[1]
+		StopTween(_G["KillFishCrew"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["KillFishCrew"] and L_3_[177] then
+			pcall(function()
+				if not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Fish Crew Member") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Piranha") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Shark") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("Terrorshark") and (not(game:GetService("Workspace"))["SeaBeasts"]:FindFirstChild("SeaBeast1") and (not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBrigade") and not(game:GetService("Workspace"))["Enemies"]:FindFirstChild("PirateBasic")))))) then
+					topos((game:GetService("Workspace"))["Boats"]["PirateBrigade"]["VehicleSeat"]["CFrame"] * CFrame["new"](0, -1, 0))
+					for L_1136_forvar0, L_1137_forvar1 in pairs((game:GetService("ReplicatedStorage")):GetChildren()) do
+						local L_1138_ = {}
+						L_1138_[3], L_1138_[1] = L_1136_forvar0, L_1137_forvar1
+						if not L_1138_[1]["Name"] == "Fish Crew Member" then
+							(game:GetService("Workspace"))["Boats"]["VehicleSeat"]["CFrame"] = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"]
+						end
+					end
+				else
+					for L_1139_forvar0, L_1140_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1141_ = {}
+						L_1141_[2], L_1141_[3] = L_1139_forvar0, L_1140_forvar1
+						if L_1141_[3]["Name"] == "Fish Crew Member" and (L_1141_[3]:FindFirstChild("Humanoid") and (L_1141_[3]:FindFirstChild("HumanoidRootPart") and L_1141_[3]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1141_[3]["HumanoidRootPart"]["CanCollide"] = false
+								L_1141_[3]["Humanoid"]["WalkSpeed"] = 0
+								L_1141_[3]["Head"]["CanCollide"] = false
+								topos(L_1141_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 40, 10))
+								MonFarm = L_1141_[3]["Name"]
+								PosMon = L_1141_[3]["HumanoidRootPart"]["CFrame"]
+								game["Players"]["LocalPlayer"]["Character"]["Humanoid"]["Sit"] = false
+							until not _G["KillFishCrew"] or not L_1141_[3]["Parent"] or L_1141_[3]["Humanoid"]["Health"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[17] = L_3_[51]:AddSection({
+	"Mirage Island"
+})
+L_3_[45] = L_3_[51]:AddParagraph({
+	["Title"] = "Check Mirage Island",
+	["Content"] = "Loading..."
+})
+task["spawn"](function()
+	while task["wait"](1) do
+		pcall(function()
+			if not game["Workspace"]["_WorldOrigin"]["Locations"]:FindFirstChild("Mirage Island") then
+				L_3_[45]:Set(L_3_[168]({
+					"Mirage Island Not Sp";
+					"awn ❌"
+				}))
+			else
+				L_3_[45]:Set(L_3_[168]({
+					"Mirage Island Spawni",
+					"ng ✅"
+				}))
+			end
+		end)
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = "Tween Mirage Island",
+	["Description"] = L_3_[168]({
+		"Tự Động Bay T�";
+		"�i Đảo Bí Ẩn"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1142_arg0)
+		local L_1143_ = {}
+		L_1143_[2] = L_1142_arg0
+		_G["AutoMysticIsland"] = L_1143_[2]
+		StopTween(_G["AutoMysticIsland"])
+	end
+})
+spawn(function()
+	while task["wait"](.1) do
+		pcall(function()
+			if _G["AutoMysticIsland"] then
+				for L_1144_forvar0, L_1145_forvar1 in pairs((game:GetService("Workspace"))["_WorldOrigin"]["Locations"]:GetChildren()) do
+					local L_1146_ = {}
+					L_1146_[2], L_1146_[3] = L_1144_forvar0, L_1145_forvar1
+					if L_1146_[3]["Name"] == "Mirage Island" then
+						topos(L_1146_[3]["CFrame"] * CFrame["new"](0, 333, 0))
+					end
+				end
+			end
+		end)
+	end
+end)
+L_3_[51]:AddToggle({
+	["Title"] = "Esp Mirage Island",
+	["Description"] = L_3_[168]({
+		"Định Vị Đảo ";
+		"Bí Ẩn"
+	}),
+	["Value"] = false;
+	["Callback"] = function(L_1147_arg0)
+		local L_1148_ = {}
+		L_1148_[2] = L_1147_arg0
+		MirageIslandESP = L_1148_[2]
+		if MirageIslandESP then
+			task["spawn"](function()
+				while MirageIslandESP do
+					UpdateIslandMirageESP()
+					task["wait"](1)
+				end
+			end)
+		else
+			UpdateIslandMirageESP()
+		end
+	end
+})
+L_3_[51]:AddToggle({
+	["Name"] = "Look Moon + Auto V3";
+	["Description"] = L_3_[168]({
+		"Tự Động Nhìn T";
+		"răng Và Bật Tộ",
+		"c V3"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1149_arg0)
+		local L_1150_ = {}
+		L_1150_[2] = L_1149_arg0
+		_G["AutoDooHee"] = L_1150_[2]
+		StopTween(_G["AutoDooHee"])
+	end
+})
+L_3_[35] = game:GetService("VirtualInputManager")
+spawn(function()
+	while wait() do
+		pcall(function()
+			if (getgenv())["_G"]["AutoDooHee"] then
+				local L_1151_ = {}
+				L_1151_[2] = game["Lighting"]:GetMoonDirection()
+				L_1151_[3] = game["Workspace"]["CurrentCamera"]["CFrame"]["p"] + L_1151_[2] * 100
+				game["Workspace"]["CurrentCamera"]["CFrame"] = CFrame["lookAt"](game["Workspace"]["CurrentCamera"]["CFrame"]["p"], L_1151_[3])
+				wait(2)
+				L_3_[35]:SendKeyEvent(true, "T", false, game)
+				wait(.1)
+				L_3_[35]:SendKeyEvent(false, "T", false, game)
+			end
+		end)
+	end
+end)
+L_3_[51]:AddToggle({
+	["Name"] = "Auto Tween To Gear";
+	["Description"] = L_3_[168]({
+		"Tự Động Bay Đ�";
+		"��n Gear"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1152_arg0)
+		local L_1153_ = {}
+		L_1153_[1] = L_1152_arg0
+		_G["TweenMGear"] = L_1153_[1]
+		StopTween(_G["TweenMGear"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["TweenMGear"] and (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") then
+				for L_1154_forvar0, L_1155_forvar1 in pairs((game:GetService("Workspace"))["Map"]["MysticIsland"]:GetChildren()) do
+					local L_1156_ = {}
+					L_1156_[1], L_1156_[3] = L_1154_forvar0, L_1155_forvar1
+					if L_1156_[3]:IsA("MeshPart") and L_1156_[3]["Material"] == Enum["Material"]["Neon"] then
+						topos(L_1156_[3]["CFrame"])
+					end
+				end
+			end
+		end
+	end)
+end)
+L_3_[182] = L_3_[130]:AddSection({
+	"Teleport V4"
+})
+L_3_[130]:AddButton({
+	["Title"] = L_3_[168]({
+		"Teleport To Top Grea",
+		"tTree"
+	});
+	["Value"] = false,
+	["Callback"] = function()
+		(Game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](3030.39453125, 2280.6171875, -7320.18359375)
+	end
+})
+L_3_[130]:AddButton({
+	["Title"] = L_3_[168]({
+		"Teleport Temple Of T";
+		"ime"
+	}),
+	["Value"] = false,
+	["Callback"] = function()
+		(Game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](28286.35546875, 14895.301757812, 102.62469482422)
+	end
+})
+L_3_[130]:AddButton({
+	["Title"] = "Teleport Lever Pull",
+	["Value"] = false,
+	["Callback"] = function()
+		topos(CFrame["new"](28575.181640625, 14936.627929688, 72.316368103027))
+	end
+})
+L_3_[130]:AddButton({
+	["Title"] = L_3_[168]({
+		"Teleport To The Cloc";
+		"k"
+	});
+	["Value"] = false,
+	["Callback"] = function()
+		topos(CFrame["new"](29553.7812, 15066.6133, -88.2750015, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+	end
+})
+L_3_[197] = L_3_[130]:AddSection({
+	"Trial V4"
+})
+L_3_[130]:AddButton({
+	["Title"] = "Auto Race Door";
+	["Value"] = false,
+	["Callback"] = function()
+		(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.5)
+		if (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Human" then
+			topos(CFrame["new"](29221.822265625, 14890.975585938, -205.99114990234))
+		elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] ~= "Skypiea" then
+			if (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Fishman" then
+				topos(CFrame["new"](28231.17578125, 14890.975585938, -211.6417388916))
+			elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Cyborg" then
+				topos(CFrame["new"](28502.681640625, 14895.975585938, -423.72793579102))
+			elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] ~= "Ghoul" then
+				if (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Mink" then
+					topos(CFrame["new"](29012.341796875, 14890.975585938, -380.14926147461))
+				end
+			else
+				topos(CFrame["new"](28674.244140625, 14890.676757812, 445.43106079102))
+			end
+		else
+			topos(CFrame["new"](28960.158203125, 14919.624023438, 235.03948974609))
+		end
+	end
+})
+L_3_[130]:AddButton({
+	["Title"] = "Buy Acient One Quest",
+	["Value"] = false,
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("UpgradeRace", "Buy")
+	end
+})
+L_3_[130]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Trial Human Gho",
+		"st"
+	});
+	["Description"] = "Tự Động Trial",
+	["Default"] = false,
+	["Callback"] = function(L_1157_arg0)
+		local L_1158_ = {}
+		L_1158_[2] = L_1157_arg0
+		_G["Kill_Aura"] = L_1158_[2]
+		StopTween(_G["Kill_Aura"])
+	end
+})
+L_3_[130]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Trailer All Rac",
+		"e"
+	});
+	["Description"] = L_3_[168]({
+		"Tự Động Trailer",
+		" All Race"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1159_arg0)
+		local L_1160_ = {}
+		L_1160_[2] = L_1159_arg0
+		_G["AutoQuestRace"] = L_1160_[2]
+		StopTween(_G["AutoQuestRace"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["AutoQuestRace"] then
+				if (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Human" then
+					for L_1161_forvar0, L_1162_forvar1 in pairs(game["Workspace"]["Enemies"]:GetDescendants()) do
+						local L_1163_ = {}
+						L_1163_[3], L_1163_[2] = L_1161_forvar0, L_1162_forvar1
+						do
+							local L_1164_ = {}
+							L_1164_[1] = L_1163_[2]
+							if L_1164_[1]:FindFirstChild("Humanoid") and (L_1164_[1]:FindFirstChild("HumanoidRootPart") and L_1164_[1]["Humanoid"]["Health"] > 0) then
+								pcall(function()
+									repeat
+										wait(.1)
+										L_1164_[1]["Humanoid"]["Health"] = 0
+										L_1164_[1]["HumanoidRootPart"]["CanCollide"] = false
+										sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+									until not _G["AutoQuestRace"] or not L_1164_[1]["Parent"] or L_1164_[1]["Humanoid"]["Health"] <= 0
+								end)
+							end
+						end
+					end
+				elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Skypiea" then
+					for L_1165_forvar0, L_1166_forvar1 in pairs((game:GetService("Workspace"))["Map"]["SkyTrial"]["Model"]:GetDescendants()) do
+						local L_1167_ = {}
+						L_1167_[2], L_1167_[3] = L_1165_forvar0, L_1166_forvar1
+						if L_1167_[3]["Name"] == L_3_[168]({
+							"snowisland_Cylinder.";
+							"081"
+						}) then
+							topos(L_1167_[3]["CFrame"] * CFrame["new"](0, 0, 0))
+						end
+					end
+				elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] ~= "Fishman" then
+					if (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Cyborg" then
+						topos(CFrame["new"](28654, 14898.7832, -30, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+					elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Ghoul" then
+						for L_1168_forvar0, L_1169_forvar1 in pairs(game["Workspace"]["Enemies"]:GetDescendants()) do
+							local L_1170_ = {}
+							L_1170_[3], L_1170_[2] = L_1168_forvar0, L_1169_forvar1
+							do
+								local L_1171_ = {}
+								L_1171_[2] = L_1170_[2]
+								if L_1171_[2]:FindFirstChild("Humanoid") and (L_1171_[2]:FindFirstChild("HumanoidRootPart") and L_1171_[2]["Humanoid"]["Health"] > 0) then
+									pcall(function()
+										repeat
+											wait(.1)
+											L_1171_[2]["Humanoid"]["Health"] = 0
+											L_1171_[2]["HumanoidRootPart"]["CanCollide"] = false
+											sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+										until not _G["AutoQuestRace"] or not L_1171_[2]["Parent"] or L_1171_[2]["Humanoid"]["Health"] <= 0
+									end)
+								end
+							end
+						end
+					elseif (game:GetService("Players"))["LocalPlayer"]["Data"]["Race"]["Value"] == "Mink" then
+						for L_1172_forvar0, L_1173_forvar1 in pairs((game:GetService("Workspace")):GetDescendants()) do
+							local L_1174_ = {}
+							L_1174_[3], L_1174_[1] = L_1172_forvar0, L_1173_forvar1
+							if L_1174_[1]["Name"] == "StartPoint" then
+								topos(L_1174_[1]["CFrame"] * CFrame["new"](0, 3, 0))
+								_G["AutoQuestRace"] = false
+								StopTween(_G["AutoQuestRace"])
+							end
+						end
+					end
+				else
+					for L_1175_forvar0, L_1176_forvar1 in pairs((game:GetService("Workspace"))["SeaBeasts"]["SeaBeast1"]:GetDescendants()) do
+						local L_1177_ = {}
+						L_1177_[3], L_1177_[1] = L_1175_forvar0, L_1176_forvar1
+						if L_1177_[1]["Name"] == "HumanoidRootPart" then
+							topos(L_1177_[1]["CFrame"] * Pos)
+							for L_1178_forvar0, L_1179_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+								local L_1180_ = {}
+								L_1180_[2], L_1180_[3] = L_1178_forvar0, L_1179_forvar1
+								if L_1180_[3]:IsA("Tool") and L_1180_[3]["ToolTip"] == "Melee" then
+									game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(L_1180_[3])
+								end
+							end;
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							for L_1181_forvar0, L_1182_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+								local L_1183_ = {}
+								L_1183_[2], L_1183_[3] = L_1181_forvar0, L_1182_forvar1
+								if L_1183_[3]:IsA("Tool") and L_1183_[3]["ToolTip"] == "Blox Fruit" then
+									game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(L_1183_[3])
+								end
+							end;
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.5)
+							for L_1184_forvar0, L_1185_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+								local L_1186_ = {}
+								L_1186_[1], L_1186_[3] = L_1184_forvar0, L_1185_forvar1
+								if L_1186_[3]:IsA("Tool") and L_1186_[3]["ToolTip"] == "Sword" then
+									game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(L_1186_[3])
+								end
+							end;
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.5)
+							for L_1187_forvar0, L_1188_forvar1 in pairs(game["Players"]["LocalPlayer"]["Backpack"]:GetChildren()) do
+								local L_1189_ = {}
+								L_1189_[2], L_1189_[1] = L_1187_forvar0, L_1188_forvar1
+								if L_1189_[1]:IsA("Tool") and L_1189_[1]["ToolTip"] == "Gun" then
+									game["Players"]["LocalPlayer"]["Character"]["Humanoid"]:EquipTool(L_1189_[1])
+								end
+							end;
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 122, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 120, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+							wait(.2);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(true, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]);
+							(game:GetService("VirtualInputManager")):SendKeyEvent(false, 99, false, game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"])
+						end
+					end
+				end
+			end
+		end
+	end)
+end)
+L_3_[130]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Kill Player Tra";
+		"iler V4"
+	}),
+	["Description"] = L_3_[168]({
+		"Đánh Người Chơ",
+		"i Trong Trial"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1190_arg0)
+		local L_1191_ = {}
+		L_1191_[2] = L_1190_arg0
+		_G["AutoKillV4"] = L_1191_[2]
+		StopTween(_G["AutoKillV4"])
+	end
+})
+spawn(function()
+	while task["wait"]() do
+		if _G["AutoKillV4"] then
+			pcall(function()
+				for L_1192_forvar0, L_1193_forvar1 in pairs(game["Workspace"]["Characters"]:GetChildren()) do
+					local L_1194_ = {}
+					L_1194_[2], L_1194_[3] = L_1192_forvar0, L_1193_forvar1
+					if L_1194_[3]["Name"] ~= game["Players"]["LocalPlayer"]["Name"] and (L_1194_[3]:FindFirstChild("Humanoid") and (L_1194_[3]:FindFirstChild("HumanoidRootPart") and (L_1194_[3]["Humanoid"]["Health"] > 0 and (L_1194_[3]["Parent"] and (game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"] - L_1194_[3]["HumanoidRootPart"]["Position"])["Magnitude"] <= 230)))) then
+						repeat
+							task["wait"]()
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							topos(L_1194_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](1, 1, 2))
+							L_1194_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+							L_1194_[3]["HumanoidRootPart"]["CanCollide"] = false
+							L_1194_[3]["Head"]["CanCollide"] = false
+							L_1194_[3]["Humanoid"]["WalkSpeed"] = 0
+							sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+						until not _G["AutoKillV4"] or L_1194_[3]["Humanoid"]["Health"] <= 0 or not L_1194_[3]["Parent"] or not L_1194_[3]:FindFirstChild("HumanoidRootPart") or not L_1194_[3]:FindFirstChild("Humanoid")
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[170] = L_3_[130]:AddSection({
+	"Auto Skill"
+})
+L_3_[130]:AddToggle({
+	["Name"] = "Auto Skill Z",
+	["Description"] = L_3_[168]({
+		"Tự Động Dùng S";
+		"kill Z Để Đánh"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1195_arg0)
+		local L_1196_ = {}
+		L_1196_[1] = L_1195_arg0
+		_G["XaiSkillZ"] = L_1196_[1]
+		StopTween(_G["XaiSkillZ"])
+	end
+})
+L_3_[130]:AddToggle({
+	["Name"] = "Auto Skill X";
+	["Description"] = L_3_[168]({
+		"Tự Động Dùng S",
+		"kill X Để Đánh"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1197_arg0)
+		local L_1198_ = {}
+		L_1198_[2] = L_1197_arg0
+		_G["XaiSkillX"] = L_1198_[2]
+		StopTween(_G["XaiSkillX"])
+	end
+})
+L_3_[130]:AddToggle({
+	["Name"] = "Auto Skill C";
+	["Description"] = L_3_[168]({
+		"Tự Động Dùng S",
+		"kill C Để Đánh"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1199_arg0)
+		local L_1200_ = {}
+		L_1200_[1] = L_1199_arg0
+		_G["XaiSkillC"] = L_1200_[1]
+		StopTween(_G["XaiSkillC"])
+	end
+})
+L_3_[86] = L_3_[113]:AddSection({
+	"Dungeon-Vip"
+})
+L_3_[113]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto-join-sever-dung";
+		"eon"
+	});
+	["Description"] = L_3_[168]({
+		"Click ServerBrowserB";
+		"utton 1 lần rồi ",
+		"click Dungeon 3 lầ";
+		"n"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1201_arg0)
+		local L_1202_ = {}
+		L_1202_[1] = L_1201_arg0
+		_G[L_3_[168]({
+			"AutoJoinDungeonServe";
+			"r"
+		})] = L_1202_[1]
+	end
+})
+task["spawn"](function()
+	local L_1203_ = {}
+	L_1203_[6] = game:GetService("Players")
+	L_1203_[1] = L_1203_[6]["LocalPlayer"]
+	L_1203_[7] = L_1203_[1]:WaitForChild("PlayerGui")
+	L_1203_[4] = 73902483975735
+	L_1203_[8] = function()
+		return game["PlaceId"] == L_1203_[4]
+	end
+	L_1203_[5] = function(L_1204_arg0, L_1205_arg1)
+		local L_1206_ = {}
+		L_1206_[1], L_1206_[3] = L_1204_arg0, L_1205_arg1
+		if not L_1206_[1] or not L_1206_[1]["Parent"] then
+			return false
+		end
+		L_1206_[3] = L_1206_[3] or "ClickedOnce"
+		if L_1206_[1]:GetAttribute(L_1206_[3]) then
+			return false
+		end
+		L_1206_[1]:SetAttribute(L_1206_[3], true)
+		L_1206_[4] = pcall(function()
+			L_1206_[1]:Activate()
+		end)
+		if not L_1206_[4] then
+			pcall(function()
+				if firesignal and L_1206_[1]["Activated"] then
+					firesignal(L_1206_[1]["Activated"])
+				end
+			end)
+		end
+		return true
+	end
+	L_1203_[2] = function(L_1207_arg0)
+		local L_1208_ = {}
+		L_1208_[2] = L_1207_arg0
+		if not L_1208_[2] or not L_1208_[2]["Parent"] then
+			return false
+		end
+		pcall(function()
+			L_1208_[2]:Activate()
+		end)
+		pcall(function()
+			if firesignal and L_1208_[2]["Activated"] then
+				firesignal(L_1208_[2]["Activated"])
+			end
+		end)
+		return true
+	end
+	while task["wait"](.5) do
+		local L_1209_ = {}
+		if L_1203_[8]() then
+			if _G[L_3_[168]({
+				"AutoJoinDungeonServe";
+				"r"
+			})] then
+				_G[L_3_[168]({
+					"AutoJoinDungeonServe";
+					"r"
+				})] = false
+			end
+			continue
+		end
+		if not _G[L_3_[168]({
+			"AutoJoinDungeonServe",
+			"r"
+		})] then
+			local L_1210_ = {}
+			L_1210_[3], L_1210_[1] = pcall(function()
+				return L_1203_[7]:FindFirstChild("Topbar") and (L_1203_[7]["Topbar"]:FindFirstChild("Frame") and L_1203_[7]["Topbar"]["Frame"]:FindFirstChild("ServerBrowserButton"))
+			end)
+			if L_1210_[3] and L_1210_[1] then
+				pcall(function()
+					L_1210_[1]:SetAttribute(L_3_[168]({
+						"Clicked_ServerBrowse";
+						"rButton"
+					}), nil)
+				end)
+			end
+			continue
+		end
+		L_1209_[3] = ((L_1203_[7]:WaitForChild("Topbar")):WaitForChild("Frame")):WaitForChild("ServerBrowserButton")
+		L_1203_[5](L_1209_[3], L_3_[168]({
+			"Clicked_ServerBrowse";
+			"rButton"
+		}))
+		L_1209_[5] = L_1203_[7]:WaitForChild("ServerBrowser")
+		L_1209_[4] = os["clock"]()
+		while _G[L_3_[168]({
+			"AutoJoinDungeonServe";
+			"r"
+		})] and os["clock"]() - L_1209_[4] < 5 do
+			if L_1209_[5]["Enabled"] ~= false and L_1209_[5]["Parent"] then
+				break
+			end
+			task["wait"](.05)
+		end
+		if not _G[L_3_[168]({
+			"AutoJoinDungeonServe";
+			"r"
+		})] then
+			continue
+		end
+		L_1209_[2] = ((L_1209_[5]:WaitForChild("Frame")):WaitForChild("TeleportButtons")):WaitForChild("Dungeon")
+		L_1209_[4] = os["clock"]()
+		while _G[L_3_[168]({
+			"AutoJoinDungeonServe",
+			"r"
+		})] and os["clock"]() - L_1209_[4] < 5 do
+			if L_1209_[2]["Visible"] and L_1209_[2]["Active"] then
+				break
+			end
+			task["wait"](.05)
+		end
+		if not _G[L_3_[168]({
+			"AutoJoinDungeonServe",
+			"r"
+		})] then
+			continue
+		end
+		for L_1211_forvar0 = 1, 3, 1 do
+			if not _G[L_3_[168]({
+				"AutoJoinDungeonServe";
+				"r"
+			})] then
+				break
+			end
+			L_1203_[2](L_1209_[2])
+			task["wait"](.25)
+		end
+		_G[L_3_[168]({
+			"AutoJoinDungeonServe",
+			"r"
+		})] = false
+	end
+end)
+L_3_[178] = 73902483975735
+L_3_[73] = function()
+	return game["PlaceId"] == L_3_[178]
+end
+L_3_[113]:AddToggle({
+	["Name"] = "Bring-mobs-dungeon",
+	["Description"] = "Bring dungeon";
+	["Default"] = true,
+	["Callback"] = function(L_1212_arg0)
+		local L_1213_ = {}
+		L_1213_[2] = L_1212_arg0
+		_G["Bringmobsdungeon"] = L_1213_[2]
+	end
+})
+L_3_[143] = {
+	["BringRadius"] = 350,
+	["ScanRadius"] = 1000,
+	["ClusterLinkDistance"] = 200,
+	["MinMobsInSpot"] = 1,
+	["UpdateDelay"] = .2,
+	["HopStep"] = 180,
+	["HopArriveDistance"] = 1000;
+	["CenterSmoothing"] = .25;
+	["UseRingHold"] = true;
+	["RingRadius"] = 6;
+	["MaxBring"] = 5,
+	["HoldHeight"] = 1
+}
+_G["FarmSpotBring"] = _G["FarmSpotBring"] ~= false
+_G["Bringmobsdungeon"] = _G["Bringmobsdungeon"] ~= false
+L_3_[199] = game:GetService("Players")
+L_3_[147] = L_3_[199]["LocalPlayer"]
+L_3_[169] = function()
+	return _G["FarmSpotBring"] == true
+end
+L_3_[74] = function()
+	return _G["Bringmobsdungeon"] == true and L_3_[73]()
+end
+L_3_[71] = function()
+	return L_3_[147] and L_3_[147]["Character"]
+end
+L_3_[115] = function()
+	local L_1214_ = {}
+	L_1214_[2] = L_3_[71]()
+	return L_1214_[2] and L_1214_[2]:FindFirstChild("HumanoidRootPart")
+end
+L_3_[52] = function()
+	return workspace:FindFirstChild("Enemies")
+end
+L_3_[84] = function(L_1215_arg0)
+	return false
+end
+L_3_[65] = function(L_1216_arg0)
+	local L_1217_ = {}
+	L_1217_[2] = L_1216_arg0
+	if typeof(IsRaidMob) == "function" then
+		local L_1218_ = {}
+		L_1218_[3], L_1218_[2] = pcall(IsRaidMob, L_1217_[2])
+		if L_1218_[3] then
+			return L_1218_[2]
+		end
+	end
+	return L_3_[84](L_1217_[2])
+end
+L_3_[180] = function(L_1219_arg0)
+	local L_1220_ = {}
+	L_1220_[4] = L_1219_arg0
+	if not L_1220_[4] or not L_1220_[4]["Parent"] then
+		return false
+	end
+	L_1220_[2] = L_1220_[4]:FindFirstChild("Humanoid")
+	L_1220_[1] = L_1220_[4]:FindFirstChild("HumanoidRootPart")
+	if not L_1220_[2] or not L_1220_[1] then
+		return false
+	end
+	if L_1220_[2]["Health"] <= 0 then
+		return false
+	end
+	if L_3_[65](L_1220_[4]) then
+		return false
+	end
+	return true
+end
+L_3_[15] = function(L_1221_arg0, L_1222_arg1)
+	local L_1223_ = {}
+	L_1223_[4], L_1223_[3] = L_1221_arg0, L_1222_arg1
+	L_1223_[2] = L_3_[52]()
+	if not L_1223_[2] then
+		return {}
+	end
+	L_1223_[1] = {}
+	for L_1224_forvar0, L_1225_forvar1 in ipairs(L_1223_[2]:GetChildren()) do
+		local L_1226_ = {}
+		L_1226_[1], L_1226_[2] = L_1224_forvar0, L_1225_forvar1
+		if L_3_[180](L_1226_[2]) then
+			local L_1227_ = {}
+			L_1227_[2] = (L_1226_[2]["HumanoidRootPart"]["Position"] - L_1223_[4])["Magnitude"]
+			if L_1227_[2] <= L_1223_[3] then
+				L_1223_[1][#L_1223_[1] + 1] = L_1226_[2]
+			end
+		end
+	end
+	return L_1223_[1]
+end
+L_3_[151] = function(L_1228_arg0, L_1229_arg1)
+	local L_1230_ = {}
+	L_1230_[3], L_1230_[1] = L_1228_arg0, L_1229_arg1
+	L_1230_[2], L_1230_[5] = {}, {}
+	for L_1231_forvar0, L_1232_forvar1 in ipairs(L_1230_[3]) do
+		local L_1233_ = {}
+		L_1233_[2], L_1233_[1] = L_1231_forvar0, L_1232_forvar1
+		if not L_1230_[5][L_1233_[1]] then
+			local L_1234_ = {}
+			L_1230_[5][L_1233_[1]] = true
+			L_1234_[1] = {
+				L_1233_[1]
+			}
+			L_1234_[3] = {}
+			while #L_1234_[1] > 0 do
+				local L_1235_ = {}
+				L_1235_[1] = table["remove"](L_1234_[1])
+				L_1234_[3][#L_1234_[3] + 1] = L_1235_[1]
+				L_1235_[2] = L_1235_[1]:FindFirstChild("HumanoidRootPart")
+				if L_1235_[2] then
+					local L_1236_ = {}
+					L_1236_[2] = L_1235_[2]["Position"]
+					for L_1237_forvar0, L_1238_forvar1 in ipairs(L_1230_[3]) do
+						local L_1239_ = {}
+						L_1239_[1], L_1239_[2] = L_1237_forvar0, L_1238_forvar1
+						if not L_1230_[5][L_1239_[2]] then
+							local L_1240_ = {}
+							L_1240_[1] = L_1239_[2]:FindFirstChild("HumanoidRootPart")
+							if L_1240_[1] and (L_1240_[1]["Position"] - L_1236_[2])["Magnitude"] <= L_1230_[1] then
+								L_1230_[5][L_1239_[2]] = true
+								L_1234_[1][#L_1234_[1] + 1] = L_1239_[2]
+							end
+						end
+					end
+				end
+			end
+			L_1230_[2][#L_1230_[2] + 1] = L_1234_[3]
+		end
+	end
+	return L_1230_[2]
+end
+L_3_[103] = function(L_1241_arg0)
+	local L_1242_ = {}
+	L_1242_[1] = L_1241_arg0
+	L_1242_[2], L_1242_[4] = Vector3["new"](0, 0, 0), 0
+	for L_1243_forvar0, L_1244_forvar1 in ipairs(L_1242_[1]) do
+		local L_1245_ = {}
+		L_1245_[3], L_1245_[1] = L_1243_forvar0, L_1244_forvar1
+		if L_3_[180](L_1245_[1]) then
+			Ts[2] += L_1245_[1]["HumanoidRootPart"]["Position"]
+			Ts[4] += 1
+		end
+	end
+	if L_1242_[4] == 0 then
+		return nil, 0
+	end
+	return L_1242_[2] / L_1242_[4], L_1242_[4]
+end
+L_3_[129] = function(L_1246_arg0, L_1247_arg1)
+	local L_1248_ = {}
+	L_1248_[1], L_1248_[5] = L_1246_arg0, L_1247_arg1
+	L_1248_[2], L_1248_[4] = nil, math["huge"]
+	for L_1249_forvar0, L_1250_forvar1 in ipairs(L_1248_[1]) do
+		local L_1251_ = {}
+		L_1251_[1], L_1251_[4] = L_1249_forvar0, L_1250_forvar1
+		L_1251_[5], L_1251_[3] = L_3_[103](L_1251_[4])
+		if L_1251_[5] and L_1251_[3] > 0 then
+			local L_1252_ = {}
+			L_1252_[1] = (L_1251_[5] - L_1248_[5])["Magnitude"]
+			L_1252_[2] = L_1252_[1] - L_1251_[3] * 40
+			if L_1252_[2] < L_1248_[4] then
+				L_1248_[4] = L_1252_[2]
+				L_1248_[2] = {
+					["cluster"] = L_1251_[4];
+					["center"] = L_1251_[5];
+					["count"] = L_1251_[3];
+					["dist"] = L_1252_[1]
+				}
+			end
+		end
+	end
+	return L_1248_[2]
+end
+L_3_[82] = function(L_1253_arg0, L_1254_arg1, L_1255_arg2)
+	local L_1256_ = {}
+	L_1256_[4], L_1256_[3], L_1256_[2] = L_1253_arg0, L_1254_arg1, L_1255_arg2
+	L_1256_[5] = L_1256_[3] - L_1256_[4]
+	L_1256_[1] = L_1256_[5]["Magnitude"]
+	if L_1256_[1] <= L_1256_[2] then
+		return L_1256_[3]
+	end
+	return L_1256_[4] + L_1256_[5]["Unit"] * L_1256_[2]
+end
+L_3_[4] = function(L_1257_arg0, L_1258_arg1)
+	local L_1259_ = {}
+	L_1259_[4], L_1259_[1] = L_1257_arg0, L_1258_arg1
+	L_1259_[3] = L_1259_[4] * 2.3999632297287
+	return Vector3["new"](math["cos"](L_1259_[3]) * L_1259_[1], 0, math["sin"](L_1259_[3]) * L_1259_[1])
+end
+PosMon = PosMon or nil
+L_3_[19] = nil
+L_3_[110] = 0
+L_3_[126] = function()
+	local L_1260_ = {}
+	L_1260_[5] = L_3_[115]()
+	if not L_1260_[5] then
+		return
+	end
+	L_1260_[1] = L_3_[15](L_1260_[5]["Position"], L_3_[143]["ScanRadius"])
+	if #L_1260_[1] == 0 then
+		L_3_[19] = L_1260_[5]["Position"]
+		L_3_[110] = 0
+		return
+	end
+	L_1260_[4] = L_3_[151](L_1260_[1], L_3_[143]["ClusterLinkDistance"])
+	L_1260_[3] = L_3_[129](L_1260_[4], L_1260_[5]["Position"])
+	if not L_1260_[3] then
+		L_3_[19] = L_1260_[5]["Position"]
+		L_3_[110] = 0
+		return
+	end
+	L_3_[19] = L_1260_[3]["center"]
+	L_3_[110] = L_1260_[3]["count"]
+end
+L_3_[117] = function()
+	local L_1261_ = {}
+	if not L_3_[169]() or not L_3_[74]() then
+		return
+	end
+	L_1261_[9] = L_3_[71]()
+	if not L_1261_[9] then
+		return
+	end
+	L_1261_[1] = L_1261_[9]:FindFirstChild("HumanoidRootPart")
+	if not L_1261_[1] then
+		return
+	end
+	if setscriptable then
+		pcall(function()
+			setscriptable(L_3_[147], "SimulationRadius", true)
+		end)
+	end
+	if sethiddenproperty then
+		pcall(function()
+			sethiddenproperty(L_3_[147], "SimulationRadius", math["huge"])
+		end)
+	end
+	L_1261_[8] = PosMon or L_1261_[1]["Position"]
+	L_1261_[7] = L_3_[52]()
+	if not L_1261_[7] then
+		return
+	end
+	L_1261_[6] = L_3_[143]["MaxBring"] or 5
+	L_1261_[5] = L_3_[143]["HoldHeight"] or 1
+	L_1261_[3] = {}
+	for L_1262_forvar0, L_1263_forvar1 in ipairs(L_1261_[7]:GetChildren()) do
+		local L_1264_ = {}
+		L_1264_[2], L_1264_[1] = L_1262_forvar0, L_1263_forvar1
+		L_1264_[4] = L_1264_[1]:FindFirstChild("Humanoid")
+		L_1264_[3] = L_1264_[1]:FindFirstChild("HumanoidRootPart")
+		if L_1264_[4] and (L_1264_[3] and (L_1264_[4]["Health"] > 0 and not L_3_[65](L_1264_[1]))) then
+			local L_1265_ = {}
+			L_1265_[1] = (L_1264_[3]["Position"] - L_1261_[8])["Magnitude"]
+			if L_1265_[1] <= L_3_[143]["BringRadius"] then
+				L_1261_[3][#L_1261_[3] + 1] = {
+					["root"] = L_1264_[3];
+					["dist"] = L_1265_[1]
+				}
+			end
+		end
+	end
+	if #L_1261_[3] <= 3 then
+		return
+	end
+	table["sort"](L_1261_[3], function(L_1266_arg0, L_1267_arg1)
+		local L_1268_ = {}
+		L_1268_[2], L_1268_[1] = L_1266_arg0, L_1267_arg1
+		return L_1268_[2]["dist"] < L_1268_[1]["dist"]
+	end)
+	L_1261_[2] = 0
+	for L_1269_forvar0 = 1, #L_1261_[3], 1 do
+		local L_1270_ = {}
+		L_1270_[1] = L_1269_forvar0
+		Ys[2] += 1
+		if L_1261_[2] > L_1261_[6] then
+			break
+		end
+		L_1270_[3] = L_1261_[3][L_1270_[1]]["root"]
+		if L_1270_[3] and L_1270_[3]["Parent"] then
+			local L_1271_ = {}
+			L_1271_[3] = Vector3["new"](L_1261_[8]["X"], L_1261_[8]["Y"] + L_1261_[5], L_1261_[8]["Z"])
+			if L_3_[143]["UseRingHold"] then
+				L_1271_[2] = L_1271_[3] + L_3_[4](L_1261_[2], L_3_[143]["RingRadius"])
+			else
+				L_1271_[2] = L_1271_[3]
+			end
+			L_1270_[3]["CFrame"] = CFrame["new"](L_1271_[2])
+		end
+	end
+end
+task["spawn"](function()
+	local L_1272_ = {}
+	L_1272_[2] = L_3_[115]()
+	if L_1272_[2] then
+		PosMon = L_1272_[2]["Position"]
+		L_3_[19] = L_1272_[2]["Position"]
+	end
+	while task["wait"](L_3_[143]["UpdateDelay"]) do
+		local L_1273_ = {}
+		if not L_3_[169]() or not L_3_[74]() then
+			continue
+		end
+		L_1273_[3] = L_3_[115]()
+		if not L_1273_[3] then
+			continue
+		end
+		L_3_[126]()
+		L_1273_[2] = L_3_[19] or L_1273_[3]["Position"]
+		if typeof(PosMon) ~= "Vector3" then
+			PosMon = L_1273_[3]["Position"]
+		end
+		L_1273_[1] = L_3_[82](PosMon, L_1273_[2], L_3_[143]["HopStep"])
+		PosMon = PosMon:Lerp(L_1273_[1], L_3_[143]["CenterSmoothing"])
+		pcall(L_3_[117])
+	end
+end)
+L_3_[113]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Farm raid-dunge",
+		"on"
+	}),
+	["Description"] = L_3_[168]({
+		"Auto farm dungeon + ",
+		"next floor"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1274_arg0)
+		local L_1275_ = {}
+		L_1275_[1] = L_1274_arg0
+		_G["Dungeonh"] = L_1275_[1]
+		StopTween(L_1275_[1])
+		if not L_1275_[1] then
+			StartBring = false
+			_G["GoingExit"] = false
+			_G["DeathPause"] = false
+		end
+	end
+})
+L_3_[201] = game:GetService("Players")
+L_3_[127] = L_3_[201]["LocalPlayer"]
+L_3_[104] = 73902483975735
+_G["Fast_Delay"] = _G["Fast_Delay"] or .5
+_G["GoingExit"] = false
+_G["DeathPause"] = false
+L_3_[153] = 35
+L_3_[200] = 5000
+L_3_[162] = 30
+L_3_[161] = 250
+L_3_[207] = 4
+L_3_[131] = .15
+L_3_[13] = function()
+	return game["PlaceId"] == L_3_[104]
+end
+L_3_[167] = function()
+	return workspace:FindFirstChild("Map") and workspace["Map"]:FindFirstChild("Dungeon")
+end
+L_3_[165] = function()
+	return L_3_[127]["Character"]
+end
+L_3_[185] = function()
+	local L_1276_ = {}
+	L_1276_[2] = L_3_[165]()
+	return L_1276_[2] and L_1276_[2]:FindFirstChildOfClass("Humanoid")
+end
+L_3_[98] = function()
+	local L_1277_ = {}
+	L_1277_[2] = L_3_[165]()
+	return L_1277_[2] and L_1277_[2]:FindFirstChild("HumanoidRootPart")
+end
+L_3_[30] = function(L_1278_arg0)
+	local L_1279_ = {}
+	L_1279_[1] = L_1278_arg0
+	L_1279_[3] = tick() + (L_1279_[1] or 10)
+	repeat
+		local L_1280_ = {}
+		L_1280_[1] = L_3_[98]()
+		if L_1280_[1] then
+			return L_1280_[1]
+		end
+		task["wait"](.1)
+	until tick() > L_1279_[3]
+end
+L_3_[132] = L_3_[168]({
+	"PropHitboxPlaceholde";
+	"r"
+})
+L_3_[150] = 1000000
+L_3_[102] = "Blank Buddy"
+L_3_[89] = function()
+	local L_1281_ = {}
+	L_1281_[1] = game["Players"]["LocalPlayer"]["Character"]
+	return L_1281_[1] and L_1281_[1]:FindFirstChild("HumanoidRootPart")
+end
+L_3_[66] = function(L_1282_arg0)
+	local L_1283_ = {}
+	L_1283_[2] = L_1282_arg0
+	L_1283_[1] = workspace:FindFirstChild("Map")
+	L_1283_[4] = L_1283_[1] and L_1283_[1]:FindFirstChild("Dungeon")
+	return L_1283_[4] and L_1283_[4]:FindFirstChild(tostring(L_1283_[2]))
+end
+L_3_[140] = function(L_1284_arg0, L_1285_arg1)
+	local L_1286_ = {}
+	L_1286_[6], L_1286_[4] = L_1284_arg0, L_1285_arg1
+	if not L_1286_[6] or not L_1286_[4] or not L_1286_[6]:IsA("Model") then
+		return false
+	end
+	L_1286_[5], L_1286_[7] = L_1286_[6]:GetBoundingBox()
+	L_1286_[3] = L_1286_[5]:PointToObjectSpace(L_1286_[4])
+	L_1286_[1] = 25
+	return math["abs"](L_1286_[3]["X"]) <= L_1286_[7]["X"] / 2 + L_1286_[1] and (math["abs"](L_1286_[3]["Y"]) <= L_1286_[7]["Y"] / 2 + L_1286_[1] and math["abs"](L_1286_[3]["Z"]) <= L_1286_[7]["Z"] / 2 + L_1286_[1])
+end
+L_3_[14] = function()
+	local L_1287_ = {}
+	if not L_3_[167]() then
+		return nil
+	end
+	L_1287_[3] = L_3_[89]()
+	if not L_1287_[3] then
+		return nil
+	end
+	L_1287_[2] = workspace["Map"]["Dungeon"]
+	for L_1288_forvar0, L_1289_forvar1 in ipairs(L_1287_[2]:GetChildren()) do
+		local L_1290_ = {}
+		L_1290_[2], L_1290_[3] = L_1288_forvar0, L_1289_forvar1
+		if L_1290_[3]:IsA("Model") and L_3_[140](L_1290_[3], L_1287_[3]["Position"]) then
+			return L_1290_[3]
+		end
+	end
+	L_1287_[4], L_1287_[5] = nil, math["huge"]
+	for L_1291_forvar0, L_1292_forvar1 in ipairs(L_1287_[2]:GetChildren()) do
+		local L_1293_ = {}
+		L_1293_[2], L_1293_[1] = L_1291_forvar0, L_1292_forvar1
+		if L_1293_[1]:IsA("Model") then
+			local L_1294_ = {}
+			L_1294_[3] = L_1293_[1]:GetBoundingBox()
+			L_1294_[1] = (L_1287_[3]["Position"] - L_1294_[3]["Position"])["Magnitude"]
+			if L_1294_[1] < L_1287_[5] then
+				L_1287_[5] = L_1294_[1]
+				L_1287_[4] = L_1293_[1]
+			end
+		end
+	end
+	return L_1287_[4]
+end
+L_3_[187] = function()
+	local L_1295_ = {}
+	L_1295_[2] = workspace:FindFirstChild("Enemies")
+	if not L_1295_[2] then
+		return
+	end
+	for L_1296_forvar0, L_1297_forvar1 in ipairs(L_1295_[2]:GetChildren()) do
+		local L_1298_ = {}
+		L_1298_[1], L_1298_[3] = L_1296_forvar0, L_1297_forvar1
+		if L_1298_[3] and L_1298_[3]["Name"] == L_3_[132] then
+			L_1298_[3]:Destroy()
+		end
+	end
+end
+L_3_[205] = false
+L_3_[137] = function()
+	local L_1299_ = {}
+	L_1299_[3] = L_3_[89]()
+	L_1299_[2] = L_3_[66](16)
+	if L_1299_[2] and (L_1299_[3] and L_3_[140](L_1299_[2], L_1299_[3]["Position"])) then
+		L_3_[187]()
+		if not L_3_[205] then
+			local L_1300_ = {}
+			L_3_[205] = true
+			L_1300_[1] = workspace:FindFirstChild("Enemies")
+			if L_1300_[1] then
+				L_1300_[1]["ChildAdded"]:Connect(function(L_1301_arg0)
+					local L_1302_ = {}
+					L_1302_[1] = L_1301_arg0
+					L_1302_[2] = L_3_[89]()
+					L_1302_[3] = L_3_[66](16)
+					if L_1302_[1] and (L_1302_[1]["Name"] == L_3_[132] and (L_1302_[3] and (L_1302_[2] and L_3_[140](L_1302_[3], L_1302_[2]["Position"])))) then
+						L_1302_[1]:Destroy()
+					end
+				end)
+			end
+		end
+	end
+end
+L_3_[125] = function(L_1303_arg0, L_1304_arg1)
+	local L_1305_ = {}
+	L_1305_[6], L_1305_[5] = L_1303_arg0, L_1304_arg1
+	if not L_1305_[6] or not L_1305_[6]["Parent"] then
+		return false
+	end
+	if L_1305_[6]["Name"] == L_3_[102] then
+		return false
+	end
+	L_1305_[2] = L_1305_[6]:FindFirstChild("Humanoid")
+	L_1305_[1] = L_1305_[6]:FindFirstChild("HumanoidRootPart")
+	if not L_1305_[2] or not L_1305_[1] then
+		return false
+	end
+	if L_1305_[2]["Health"] <= 0 then
+		return false
+	end
+	L_1305_[3] = (L_1305_[5]["Position"] - L_1305_[1]["Position"])["Magnitude"]
+	if L_1305_[3] > L_3_[200] then
+		return false
+	end
+	return true
+end
+L_3_[208] = function()
+	local L_1306_ = {}
+	L_1306_[2] = L_3_[89]()
+	if not L_1306_[2] then
+		return nil
+	end
+	L_1306_[4], L_1306_[3] = nil, math["huge"]
+	for L_1307_forvar0, L_1308_forvar1 in ipairs(workspace["Enemies"]:GetChildren()) do
+		local L_1309_ = {}
+		L_1309_[2], L_1309_[1] = L_1307_forvar0, L_1308_forvar1
+		if L_3_[125](L_1309_[1], L_1306_[2]) then
+			local L_1310_ = {}
+			L_1310_[4] = L_1309_[1]["HumanoidRootPart"]
+			L_1310_[2] = (L_1306_[2]["Position"] - L_1310_[4]["Position"])["Magnitude"]
+			L_1310_[3] = L_1310_[2]
+			if L_1309_[1]["Name"] == L_3_[132] then
+				L_1310_[3] = L_1310_[3] - L_3_[150]
+			end
+			if L_1310_[3] < L_1306_[3] then
+				L_1306_[3] = L_1310_[3]
+				L_1306_[4] = L_1309_[1]
+			end
+		end
+	end
+	return L_1306_[4]
+end
+L_3_[173] = function()
+	local L_1311_ = {}
+	L_1311_[1] = L_3_[89]()
+	if not L_1311_[1] then
+		return false
+	end
+	for L_1312_forvar0, L_1313_forvar1 in ipairs(workspace["Enemies"]:GetChildren()) do
+		local L_1314_ = {}
+		L_1314_[2], L_1314_[3] = L_1312_forvar0, L_1313_forvar1
+		if L_3_[125](L_1314_[3], L_1311_[1]) then
+			return true
+		end
+	end
+	return false
+end
+L_3_[68] = function(L_1315_arg0)
+	local L_1316_ = {}
+	L_1316_[1] = L_1315_arg0
+	if L_1316_[1]:IsA("BasePart") then
+		return L_1316_[1]
+	end
+	if L_1316_[1]:IsA("Model") then
+		if L_1316_[1]["PrimaryPart"] then
+			return L_1316_[1]["PrimaryPart"]
+		end
+		for L_1317_forvar0, L_1318_forvar1 in pairs(L_1316_[1]:GetDescendants()) do
+			local L_1319_ = {}
+			L_1319_[2], L_1319_[3] = L_1317_forvar0, L_1318_forvar1
+			if L_1319_[3]:IsA("BasePart") then
+				return L_1319_[3]
+			end
+		end
+	end
+end
+L_3_[3] = function(L_1320_arg0)
+	local L_1321_ = {}
+	L_1321_[2] = L_1320_arg0
+	if not L_1321_[2] then
+		return nil
+	end
+	L_1321_[1] = L_1321_[2]:FindFirstChild("ExitTeleporter")
+	if not L_1321_[1] then
+		return nil
+	end
+	return L_3_[68](L_1321_[1])
+end
+L_3_[171] = function()
+	local L_1322_ = {}
+	if not L_3_[167]() then
+		return
+	end
+	L_1322_[4] = L_3_[89]()
+	if not L_1322_[4] then
+		return
+	end
+	L_1322_[1], L_1322_[3] = nil, math["huge"]
+	for L_1323_forvar0, L_1324_forvar1 in pairs(workspace["Map"]["Dungeon"]:GetChildren()) do
+		local L_1325_ = {}
+		L_1325_[4], L_1325_[2] = L_1323_forvar0, L_1324_forvar1
+		L_1325_[3] = L_1325_[2]:FindFirstChild("ExitTeleporter")
+		if L_1325_[3] then
+			local L_1326_ = {}
+			L_1326_[1] = L_3_[68](L_1325_[3])
+			if L_1326_[1] then
+				local L_1327_ = {}
+				L_1327_[2] = (L_1322_[4]["Position"] - L_1326_[1]["Position"])["Magnitude"]
+				if L_1327_[2] < L_1322_[3] then
+					L_1322_[3] = L_1327_[2]
+					L_1322_[1] = L_1326_[1]
+				end
+			end
+		end
+	end
+	return L_1322_[1]
+end
+L_3_[149] = function()
+	local L_1328_ = {}
+	if not _G["Dungeonh"] then
+		return
+	end
+	if _G["GoingExit"] then
+		return
+	end
+	if not L_3_[13]() then
+		return
+	end
+	_G["GoingExit"] = true
+	L_1328_[3] = L_3_[30](12)
+	if not L_1328_[3] then
+		_G["GoingExit"] = false
+		return
+	end
+	L_1328_[2] = tick() + 10
+	repeat
+		task["wait"](.2)
+	until L_3_[167]() or tick() > L_1328_[2]
+	for L_1329_forvar0 = 1, 8, 1 do
+		local L_1330_ = {}
+		L_1330_[2] = L_1329_forvar0
+		L_3_[137]()
+		L_1330_[1] = L_3_[14]()
+		L_1330_[3] = L_3_[3](L_1330_[1]) or L_3_[171]()
+		if L_1330_[3] then
+			local L_1331_ = {}
+			TP1(L_1330_[3]["CFrame"] * CFrame["new"](0, 3, 0))
+			L_1331_[1] = tick() + 4
+			repeat
+				task["wait"](.1)
+				L_1328_[3] = L_3_[89]()
+				if L_1328_[3] and (L_1328_[3]["Position"] - L_1330_[3]["Position"])["Magnitude"] <= 8 then
+					_G["GoingExit"] = false
+					return
+				end
+			until tick() > L_1331_[1]
+		end
+		task["wait"](.35)
+	end
+	_G["GoingExit"] = false
+end
+L_3_[192] = function(L_1332_arg0)
+	local L_1333_ = {}
+	L_1333_[1] = L_1332_arg0
+	if L_1333_[1]:FindFirstChild("Frozen") then
+		return
+	end
+	L_1333_[3] = Instance["new"]("BoolValue")
+	L_1333_[3]["Name"] = "Frozen"
+	L_1333_[3]["Parent"] = L_1333_[1]
+	pcall(function()
+		L_1333_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+		L_1333_[1]["HumanoidRootPart"]["Transparency"] = 1
+		L_1333_[1]["HumanoidRootPart"]["CanCollide"] = false
+		L_1333_[1]["Humanoid"]["WalkSpeed"] = 0
+		L_1333_[1]["Humanoid"]["JumpPower"] = 0
+	end)
+end
+L_3_[62] = function()
+	local L_1334_ = {}
+	if L_3_[166] then
+		pcall(function()
+			L_3_[166]:Disconnect()
+		end)
+	end
+	L_1334_[2] = L_3_[185]()
+	if not L_1334_[2] then
+		return
+	end
+	L_3_[166] = L_1334_[2]["Died"]:Connect(function()
+		if not _G["Dungeonh"] then
+			return
+		end
+		_G["DeathPause"] = true
+		pcall(function()
+			StopTween(true)
+		end)
+	end)
+end
+L_3_[127]["CharacterAdded"]:Connect(function()
+	task["wait"](.25)
+	L_3_[62]()
+	task["spawn"](function()
+		if _G["Dungeonh"] and L_3_[13]() then
+			_G["DeathPause"] = true
+			StartBring = false
+			task["wait"](.25)
+			L_3_[149]()
+			task["wait"](.2)
+			_G["DeathPause"] = false
+		end
+	end)
+end)
+task["spawn"](function()
+	task["wait"](.5)
+	L_3_[62]()
+end)
+task["spawn"](function()
+	local L_1335_ = {}
+	L_1335_[2] = .2
+	L_1335_[1] = 0
+	L_1335_[3] = nil
+	while task["wait"](.05) do
+		if not _G["Dungeonh"] then
+			continue
+		end
+		if _G["GoingExit"] or _G["DeathPause"] then
+			continue
+		end
+		if not L_3_[13]() or not L_3_[167]() then
+			continue
+		end
+		pcall(function()
+			local L_1336_ = {}
+			L_1336_[2] = L_3_[89]()
+			if not L_1336_[2] then
+				return
+			end
+			L_3_[137]()
+			L_1336_[1] = L_3_[208]()
+			if not L_1336_[1] or not L_3_[125](L_1336_[1], L_1336_[2]) then
+				L_1335_[3] = nil
+				if not L_3_[173]() then
+					L_3_[149]()
+				end
+				return
+			end
+			do
+				local L_1337_ = {}
+				L_1337_[1] = L_3_[66](16)
+				if L_1336_[1]["Name"] == L_3_[132] and (L_1337_[1] and L_3_[140](L_1337_[1], L_1336_[2]["Position"])) then
+					L_1336_[1]:Destroy()
+					L_1335_[3] = nil
+					if not L_3_[173]() then
+						L_3_[149]()
+					end
+					return
+				end
+			end
+			L_3_[192](L_1336_[1])
+			repeat
+				local L_1338_ = {}
+				task["wait"](_G["Fast_Delay"])
+				if not _G["Dungeonh"] or _G["GoingExit"] or _G["DeathPause"] then
+					break
+				end
+				L_1336_[2] = L_3_[89]()
+				if not L_1336_[2] then
+					break
+				end
+				if not L_1336_[1] or not L_1336_[1]["Parent"] then
+					break
+				end
+				if not L_1336_[1]:FindFirstChild("Humanoid") or L_1336_[1]["Humanoid"]["Health"] <= 0 then
+					break
+				end
+				L_3_[137]()
+				if tick() - L_1335_[1] >= L_1335_[2] then
+					local L_1339_ = {}
+					L_1335_[1] = tick()
+					L_1339_[2] = L_3_[208]()
+					if L_1335_[3] then
+						if not L_1335_[3]["Parent"] or not L_1335_[3]:FindFirstChild("Humanoid") or L_1335_[3]["Humanoid"]["Health"] <= 0 then
+							L_1335_[3] = nil
+						else
+							L_1336_[1] = L_1335_[3]
+						end
+					end
+					if not L_1335_[3] and (L_1339_[2] and L_1339_[2]["Parent"]) then
+						if L_1339_[2]["Name"] == L_3_[132] then
+							L_1335_[3] = L_1339_[2]
+							L_1336_[1] = L_1339_[2]
+							L_3_[192](L_1336_[1])
+						else
+							if not L_3_[125](L_1336_[1], L_1336_[2]) and L_3_[125](L_1339_[2], L_1336_[2]) then
+								L_1336_[1] = L_1339_[2]
+								L_3_[192](L_1336_[1])
+							end
+						end
+					end
+				end
+				AutoHaki()
+				EquipWeapon(_G["SelectWeapon"])
+				L_1338_[2] = L_1336_[1]:FindFirstChild("HumanoidRootPart")
+				if not L_1338_[2] then
+					break
+				end
+				L_1338_[1] = L_1338_[2]["CFrame"] * CFrame["new"](0, L_3_[162], 0)
+				if (L_1336_[2]["Position"] - L_1338_[1]["Position"])["Magnitude"] > 6 then
+					topos(L_1338_[1])
+				end
+			until false
+			StartBring = _G["DungeonBring"] ~= false
+			L_1335_[3] = nil
+			if _G["Dungeonh"] and (not _G["GoingExit"] and not _G["DeathPause"]) then
+				if not L_3_[173]() then
+					L_3_[149]()
+				end
+			end
+		end)
+	end
+end)
+L_3_[21] = 0
+L_3_[119] = .9
+task["spawn"](function()
+	while task["wait"](.45) do
+		local L_1340_ = {}
+		if not _G["Dungeonh"] then
+			continue
+		end
+		if _G["GoingExit"] or _G["DeathPause"] then
+			L_3_[21] = 0
+			continue
+		end
+		if not L_3_[13]() or not L_3_[167]() then
+			L_3_[21] = 0
+			continue
+		end
+		L_3_[137]()
+		L_1340_[2] = L_3_[173]()
+		if not L_1340_[2] then
+			if L_3_[21] == 0 then
+				L_3_[21] = tick()
+			end
+			if tick() - L_3_[21] >= L_3_[119] then
+				L_3_[149]()
+				L_3_[21] = 0
+			end
+		else
+			L_3_[21] = 0
+		end
+	end
+end)
+L_3_[202] = L_3_[113]:AddSection({
+	"Raid Fruits"
+})
+L_3_[113]:AddDropdown({
+	["Name"] = "Select Chip";
+	["Options"] = {
+		"Flame",
+		"Ice";
+		"Sand",
+		"Dark";
+		"Light";
+		"Magma",
+		"Quake";
+		"Buddha";
+		"Spider";
+		"Phoenix",
+		"Lightning";
+		"Dough"
+	},
+	["Default"] = "Flame",
+	["Callback"] = function(L_1341_arg0)
+		local L_1342_ = {}
+		L_1342_[2] = L_1341_arg0
+		_G["SelectChip"] = L_1342_[2]
+	end
+})
+L_3_[113]:AddToggle({
+	["Name"] = "Auto Buy Chip";
+	["Description"] = L_3_[168]({
+		"Tự Động Mua Chi";
+		"p Raid"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1343_arg0)
+		local L_1344_ = {}
+		L_1344_[2] = L_1343_arg0
+		_G["AutoBuyChip"] = L_1344_[2]
+	end
+})
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["AutoBuyChip"] and _G["SelectChip"] then
+			pcall(function()
+				local L_1345_ = {}
+				L_1345_[2] = {
+					"RaidsNpc",
+					"Select";
+					_G["SelectChip"]
+				}
+				game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer(unpack(L_1345_[2]))
+			end)
+		end
+	end
+end)
+L_3_[113]:AddToggle({
+	["Name"] = "Auto Start Raid",
+	["Description"] = "Bắt Đầu Raid";
+	["Default"] = false;
+	["Callback"] = function(L_1346_arg0)
+		local L_1347_ = {}
+		L_1347_[2] = L_1346_arg0
+		_G["StartRaid"] = L_1347_[2]
+	end
+})
+task["spawn"](function()
+	while task["wait"]() do
+		pcall(function()
+			if _G["StartRaid"] then
+				local L_1348_ = {}
+				L_1348_[1] = game["Players"]["LocalPlayer"]
+				if not L_1348_[1]["PlayerGui"]["Main"]["Timer"]["Visible"] and (not workspace["_WorldOrigin"]["Locations"]:FindFirstChild("Island 1") and (L_1348_[1]["Backpack"]:FindFirstChild("Special Microchip") or L_1348_[1]["Character"]:FindFirstChild("Special Microchip"))) then
+					if not L_3_[111] then
+						if L_3_[177] then
+							game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-5075.5, 314.51, -3150.02))
+							topos(CFrame["new"](-5017.4, 314.84, -2823.01))
+							game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("SetSpawnPoint")
+							fireclickdetector(workspace["Map"]["Boat Castle"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"])
+						end
+					else
+						topos(CFrame["new"](-6438.73, 250.64, -4501.5))
+						game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("SetSpawnPoint")
+						fireclickdetector(workspace["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"])
+					end
+				end
+			end
+		end)
+	end
+end)
+L_3_[113]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Farm Raid Next ",
+		"Island"
+	});
+	["Description"] = L_3_[168]({
+		"Đánh Quái Và Đi",
+		" Chuyển Đảo"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1349_arg0)
+		local L_1350_ = {}
+		L_1350_[2] = L_1349_arg0
+		_G["Dungeon"] = L_1350_[2]
+	end
+})
+L_3_[76] = function(L_1351_arg0)
+	local L_1352_ = {}
+	L_1352_[1] = L_1351_arg0
+	if workspace["_WorldOrigin"]["Locations"]:FindFirstChild("Island " .. L_1352_[1]) then
+		local L_1353_ = {}
+		L_1353_[2] = 4500
+		for L_1354_forvar0, L_1355_forvar1 in pairs(workspace["_WorldOrigin"]["Locations"]:GetChildren()) do
+			local L_1356_ = {}
+			L_1356_[1], L_1356_[2] = L_1354_forvar0, L_1355_forvar1
+			if L_1356_[2]["Name"] == "Island " .. L_1352_[1] and (L_1356_[2]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] < L_1353_[2] then
+				L_1353_[2] = (L_1356_[2]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"]
+			end
+		end
+		for L_1357_forvar0, L_1358_forvar1 in pairs(workspace["_WorldOrigin"]["Locations"]:GetChildren()) do
+			local L_1359_ = {}
+			L_1359_[3], L_1359_[2] = L_1357_forvar0, L_1358_forvar1
+			if L_1359_[2]["Name"] == "Island " .. L_1352_[1] and (L_1359_[2]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= L_1353_[2] then
+				return L_1359_[2]
+			end
+		end
+	end
+end
+L_3_[87] = function()
+	for L_1360_forvar0, L_1361_forvar1 in pairs({
+		5;
+		4;
+		3,
+		2,
+		1
+	}) do
+		local L_1362_ = {}
+		L_1362_[2], L_1362_[3] = L_1360_forvar0, L_1361_forvar1
+		if L_3_[76](L_1362_[3]) and ((L_3_[76](L_1362_[3]))["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 4500 then
+			return L_3_[76](L_1362_[3])
+		end
+	end
+end
+L_3_[20] = function()
+	local L_1363_ = {}
+	L_1363_[2] = {}
+	for L_1364_forvar0, L_1365_forvar1 in pairs(workspace["Enemies"]:GetChildren()) do
+		local L_1366_ = {}
+		L_1366_[2], L_1366_[3] = L_1364_forvar0, L_1365_forvar1
+		if L_1366_[3]:FindFirstChild("HumanoidRootPart") and (L_1366_[3]:FindFirstChild("Humanoid") and (L_1366_[3]["Humanoid"]["Health"] > 0 and (L_1366_[3]["HumanoidRootPart"]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1000)) then
+			table["insert"](L_1363_[2], L_1366_[3])
+		end
+	end
+	for L_1367_forvar0, L_1368_forvar1 in pairs(L_1363_[2]) do
+		local L_1369_ = {}
+		L_1369_[2], L_1369_[1] = L_1367_forvar0, L_1368_forvar1
+		repeat
+			task["wait"](.1)
+			if L_1369_[1]:FindFirstChild("Humanoid") and L_1369_[1]["Humanoid"]["Health"] > 0 then
+				EquipWeapon(_G["SelectWeapon"])
+				topos(L_1369_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+			end
+		until not L_1369_[1]:FindFirstChild("Humanoid") or L_1369_[1]["Humanoid"]["Health"] <= 0
+	end
+end
+task["spawn"](function()
+	while task["wait"]() do
+		if _G["Dungeon"] then
+			L_3_[20]()
+			if L_3_[87]() then
+				topos((L_3_[87]())["CFrame"] * CFrame["new"](0, 60, 0))
+			end
+		end
+	end
+end)
+L_3_[113]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Auto Get Fruit Low B",
+		"eli"
+	});
+	["Description"] = L_3_[168]({
+		"Tự Động Lấy T",
+		"rái Ít Beli"
+	});
+	["Default"] = false,
+	["Callback"] = function(L_1370_arg0)
+		local L_1371_ = {}
+		L_1371_[2] = L_1370_arg0
+		_G["Autofruit"] = L_1371_[2]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		pcall(function()
+			if _G["Autofruit"] then
+				local L_1372_ = {}
+				L_1372_[3] = {
+					[1] = "LoadFruit";
+					[2] = "Rocket-Rocket"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[3]))
+				L_1372_[11] = {
+					[1] = "LoadFruit";
+					[2] = "Spin-Spin"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[11]))
+				L_1372_[17] = {
+					[1] = "LoadFruit",
+					[2] = "Chop-Chop"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[17]))
+				L_1372_[12] = {
+					[1] = "LoadFruit";
+					[2] = "Spring-Spring"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[12]))
+				L_1372_[7] = {
+					[1] = "LoadFruit";
+					[2] = "Bomb-Bomb"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[7]))
+				L_1372_[9] = {
+					[1] = "LoadFruit";
+					[2] = "Smoke-Smoke"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[9]))
+				L_1372_[10] = {
+					[1] = "LoadFruit",
+					[2] = "Spike-Spike"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[10]))
+				L_1372_[6] = {
+					[1] = "LoadFruit",
+					[2] = "Flame-Flame"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[6]))
+				L_1372_[14] = {
+					[1] = "LoadFruit",
+					[2] = "Falcon-Falcon"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[14]))
+				L_1372_[16] = {
+					[1] = "LoadFruit";
+					[2] = "Ice-Ice"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[16]))
+				L_1372_[1] = {
+					[1] = "LoadFruit",
+					[2] = "Sand-Sand"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[1]))
+				L_1372_[18] = {
+					[1] = "LoadFruit";
+					[2] = "Dark-Dark"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[18]))
+				L_1372_[5] = {
+					[1] = "LoadFruit";
+					[2] = "Ghost-Ghost"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[5]))
+				L_1372_[13] = {
+					[1] = "LoadFruit",
+					[2] = "Diamond-Diamond"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[13]))
+				L_1372_[15] = {
+					[1] = "LoadFruit",
+					[2] = "Light-Light"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[15]))
+				L_1372_[4] = {
+					[1] = "LoadFruit",
+					[2] = "Rubber-Rubber"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[4]))
+				L_1372_[8] = {
+					[1] = "LoadFruit";
+					[2] = "Creation-Creation"
+				};
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1372_[8]))
+			end
+		end)
+	end
+end)
+L_3_[29] = L_3_[113]:AddSection({
+	"Raid Law Sea 2"
+})
+L_3_[113]:AddButton({
+	["Title"] = "Auto Buy Chip Law",
+	["Description"] = L_3_[168]({
+		"Tự Động Mua Chi";
+		"p Law Raid"
+	}),
+	["Value"] = false;
+	["Callback"] = function()
+		local L_1373_ = {}
+		L_1373_[1] = {
+			[1] = "BlackbeardReward";
+			[2] = "Microchip",
+			[3] = "2"
+		};
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1373_[1]))
+	end
+})
+L_3_[113]:AddButton({
+	["Title"] = "Auto Start Raid Law";
+	["Value"] = false,
+	["Callback"] = function()
+		fireclickdetector((game:GetService("Workspace"))["Map"]["CircleIsland"]["RaidSummon"]["Button"]["Main"]["ClickDetector"])
+	end
+})
+L_3_[113]:AddToggle({
+	["Name"] = "Auto Farm Law Raid";
+	["Description"] = "Đánh Boss Law Raid";
+	["Default"] = false,
+	["Callback"] = function(L_1374_arg0)
+		local L_1375_ = {}
+		L_1375_[1] = L_1374_arg0
+		_G["AutoLawRaid"] = L_1375_[1]
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoLawRaid"] then
+			pcall(function()
+				if (game:GetService("Workspace"))["Enemies"]:FindFirstChild("Order") then
+					for L_1376_forvar0, L_1377_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+						local L_1378_ = {}
+						L_1378_[1], L_1378_[2] = L_1376_forvar0, L_1377_forvar1
+						if L_1378_[2]["Name"] == "Order" and (L_1378_[2]:FindFirstChild("Humanoid") and (L_1378_[2]:FindFirstChild("HumanoidRootPart") and L_1378_[2]["Humanoid"]["Health"] > 0)) then
+							repeat
+								task["wait"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								L_1378_[2]["HumanoidRootPart"]["CanCollide"] = false
+								L_1378_[2]["Humanoid"]["WalkSpeed"] = 0
+								topos(L_1378_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0))
+								sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+							until not _G["AutoLawRaid"] or not L_1378_[2]["Parent"] or L_1378_[2]["Humanoid"]["Health"] <= 0
+						end
+					end
+				else
+					NeedAttacking = true
+					if (game:GetService("ReplicatedStorage")):FindFirstChild("Order") then
+						topos(((game:GetService("ReplicatedStorage")):FindFirstChild("Order"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](5, 10, 2))
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[198] = L_3_[99]:AddSection({
+	"Fruits"
+})
+L_3_[99]:AddToggle({
+	["Name"] = "Auto Random Fruits";
+	["Description"] = "Random fruits money";
+	["Default"] = false;
+	["Callback"] = function(L_1379_arg0)
+		local L_1380_ = {}
+		L_1380_[1] = L_1379_arg0
+		_G["RandomAuto"] = L_1380_[1]
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["RandomAuto"] then
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("Cousin", "Buy")
+			end
+		end
+	end)
+end)
+L_3_[99]:AddToggle({
+	["Title"] = "Auto Store Fruits",
+	["Description"] = L_3_[168]({
+		"Tự Động Lưu Tr";
+		"ái Ác Quỷ Vào K";
+		"ho Đồ"
+	}),
+	["Value"] = false,
+	["Callback"] = function(L_1381_arg0)
+		local L_1382_ = {}
+		L_1382_[1] = L_1381_arg0;
+		(getgenv())["AutoStoreFruit"] = L_1382_[1]
+	end
+})
+spawn(function()
+	while task["wait"](.5) do
+		if (getgenv())["AutoStoreFruit"] then
+			pcall(function()
+				local L_1383_ = {}
+				L_1383_[2] = (game:GetService("Players"))["LocalPlayer"]
+				L_1383_[1] = L_1383_[2]["Character"] or L_1383_[2]["CharacterAdded"]:Wait()
+				L_1383_[3] = L_1383_[2]:WaitForChild("Backpack")
+				for L_1384_forvar0, L_1385_forvar1 in ipairs({
+					{
+						"Rocket Fruit";
+						"Rocket-Rocket"
+					},
+					{
+						"Spin Fruit";
+						"Spin-Spin"
+					};
+					{
+						"Blade Fruit",
+						"Blade-Blade"
+					};
+					{
+						"Spring Fruit",
+						"Spring-Spring"
+					};
+					{
+						"Bomb Fruit",
+						"Bomb-Bomb"
+					};
+					{
+						"Smoke Fruit",
+						"Smoke-Smoke"
+					};
+					{
+						"Spike Fruit",
+						"Spike-Spike"
+					},
+					{
+						"Flame Fruit",
+						"Flame-Flame"
+					},
+					{
+						"Eagle Fruit";
+						"Eagle-Eagle"
+					};
+					{
+						"Ice Fruit";
+						"Ice-Ice"
+					},
+					{
+						"Sand Fruit";
+						"Sand-Sand"
+					},
+					{
+						"Dark Fruit";
+						"Dark-Dark"
+					},
+					{
+						"Diamond Fruit",
+						"Diamond-Diamond"
+					};
+					{
+						"Light Fruit",
+						"Light-Light"
+					},
+					{
+						"Rubber Fruit";
+						"Rubber-Rubber"
+					},
+					{
+						"Creation Fruit";
+						"Creation-Creation"
+					},
+					{
+						"Ghost Fruit",
+						"Ghost-Ghost"
+					},
+					{
+						"Magma Fruit";
+						"Magma-Magma"
+					},
+					{
+						"Quake Fruit",
+						"Quake-Quake"
+					};
+					{
+						"Buddha Fruit";
+						"Buddha-Buddha"
+					},
+					{
+						"Love Fruit",
+						"Love-Love"
+					},
+					{
+						"Spider Fruit",
+						"Spider-Spider"
+					};
+					{
+						"Sound Fruit";
+						"Sound-Sound"
+					},
+					{
+						"Phoenix Fruit";
+						"Phoenix-Phoenix"
+					};
+					{
+						"Portal Fruit",
+						"Portal-Portal"
+					};
+					{
+						"Lightning Fruit";
+						"Lightning-Lightning"
+					},
+					{
+						"Pain Fruit";
+						"Pain-Pain"
+					},
+					{
+						"Blizzard Fruit",
+						"Blizzard-Blizzard"
+					};
+					{
+						"Gravity Fruit";
+						"Gravity-Gravity"
+					};
+					{
+						"Mammoth Fruit",
+						"Mammoth-Mammoth"
+					};
+					{
+						"T-Rex Fruit",
+						"T-Rex-T-Rex"
+					},
+					{
+						"Dough Fruit",
+						"Dough-Dough"
+					};
+					{
+						"Shadow Fruit";
+						"Shadow-Shadow"
+					};
+					{
+						"Venom Fruit";
+						"Venom-Venom"
+					};
+					{
+						"Gas Fruit";
+						"Gas-Gas"
+					};
+					{
+						"Control Fruit";
+						"Control-Control"
+					},
+					{
+						"Spirit Fruit";
+						"Spirit-Spirit"
+					},
+					{
+						"Leopard Fruit",
+						"Leopard-Leopard"
+					};
+					{
+						"Yeti Fruit",
+						"Yeti-Yeti"
+					};
+					{
+						"Kitsune Fruit",
+						"Kitsune-Kitsune"
+					},
+					{
+						"Dragon Fruit";
+						"Dragon-Dragon"
+					}
+				}) do
+					local L_1386_ = {}
+					L_1386_[4], L_1386_[6] = L_1384_forvar0, L_1385_forvar1
+					L_1386_[2] = L_1386_[6][1]
+					L_1386_[1] = L_1386_[6][2]
+					L_1386_[3] = L_1383_[3]:FindFirstChild(L_1386_[2]) or L_1383_[1]:FindFirstChild(L_1386_[2])
+					if L_1386_[3] then
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("StoreFruit", L_1386_[1], L_1386_[3])
+						break
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[99]:AddToggle({
+	["Name"] = L_3_[168]({
+		"Teleport To Fruit Sp",
+		"awn"
+	}),
+	["Description"] = L_3_[168]({
+		"Tự Động Nhặt ",
+		"Trái Ác Quỷ Nế";
+		"u Xuất Hiện Tron";
+		"g Sever"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1387_arg0)
+		local L_1388_ = {}
+		L_1388_[1] = L_1387_arg0
+		_G["Tweenfruit"] = L_1388_[1]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["TweenFruit"] then
+			for L_1389_forvar0, L_1390_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+				local L_1391_ = {}
+				L_1391_[3], L_1391_[2] = L_1389_forvar0, L_1390_forvar1
+				if string["find"](L_1391_[2]["Name"], "Fruit") then
+					TP1(L_1391_[2]["Handle"]["CFrame"])
+				end
+			end
+		end
+	end
+end)
+L_3_[99]:AddToggle({
+	["Name"] = "Auto Teleport Fruits";
+	["Description"] = L_3_[168]({
+		"Tự Động Telepor",
+		"t Đến Trái Ác Q";
+		"uỷ"
+	});
+	["Default"] = false;
+	["Callback"] = function(L_1392_arg0)
+		local L_1393_ = {}
+		L_1393_[2] = L_1392_arg0
+		_G["Grabfruit"] = L_1393_[2]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["Grabfruit"] then
+			for L_1394_forvar0, L_1395_forvar1 in pairs(game["Workspace"]:GetChildren()) do
+				local L_1396_ = {}
+				L_1396_[2], L_1396_[1] = L_1394_forvar0, L_1395_forvar1
+				if string["find"](L_1396_[1]["Name"], "Fruit") then
+					game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = L_1396_[1]["Handle"]["CFrame"]
+				end
+			end
+		end
+	end
+end)
+L_3_[12] = L_3_[99]:AddSection({
+	"Check Stock Fruits"
+})
+L_3_[41] = function(L_1397_arg0)
+	local L_1398_ = {}
+	L_1398_[3] = L_1397_arg0
+	L_1398_[1] = tostring(L_1398_[3])
+	repeat
+		local L_1399_ = {}
+		L_1399_[1] = nil
+		L_1399_[3], L_1399_[4] = L_1398_[1]["gsub"](L_1398_[1], "^(-?%d+)(%d%d%d)", "%1,%2")
+		L_1399_[1] = L_1399_[4]
+		L_1398_[1] = L_1399_[3]
+	until L_1399_[1] == 0
+	return L_1398_[1]
+end
+L_3_[92] = (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]
+L_3_[55] = function()
+	local L_1400_ = {}
+	L_1400_[1] = "Advance Fruit Stock
+"
+	L_1400_[3], L_1400_[2] = pcall(function()
+		return L_3_[92]:InvokeServer("GetFruits", true)
+	end)
+	if not L_1400_[3] or not L_1400_[2] then
+		L_1400_[1] = L_1400_[1] .. L_3_[168]({
+			"- ❌ Lỗi khi lấ",
+			"y dữ liệu.
+"
+		})
+	else
+		local L_1401_ = {}
+		L_1401_[2] = false
+		for L_1402_forvar0, L_1403_forvar1 in pairs(L_1400_[2]) do
+			local L_1404_ = {}
+			L_1404_[3], L_1404_[2] = L_1402_forvar0, L_1403_forvar1
+			if L_1404_[2]["OnSale"] then
+				local L_1405_ = {}
+				L_1401_[2] = true
+				L_1405_[2] = L_3_[41](L_1404_[2]["Price"])
+				L_1400_[1] = L_1400_[1] .. (L_1404_[2]["Name"] .. (" - $" .. (L_1405_[2] .. -41148)))
+			end
+		end
+		if not L_1401_[2] then
+			L_1400_[1] = L_1400_[1] .. L_3_[168]({
+				"- Không có trái n";
+				"ào.
+"
+			})
+		end
+	end
+	L_1400_[1] = L_1400_[1] .. "
+Normal Fruit Stock
+"
+	L_1400_[5], L_1400_[4] = pcall(function()
+		return L_3_[92]:InvokeServer("GetFruits")
+	end)
+	if L_1400_[5] and L_1400_[4] then
+		local L_1406_ = {}
+		L_1406_[2] = false
+		for L_1407_forvar0, L_1408_forvar1 in pairs(L_1400_[4]) do
+			local L_1409_ = {}
+			L_1409_[2], L_1409_[3] = L_1407_forvar0, L_1408_forvar1
+			if L_1409_[3]["OnSale"] then
+				local L_1410_ = {}
+				L_1406_[2] = true
+				L_1410_[2] = L_3_[41](L_1409_[3]["Price"])
+				L_1400_[1] = L_1400_[1] .. (L_1409_[3]["Name"] .. (" - $" .. (L_1410_[2] .. -41148)))
+			end
+		end
+		if not L_1406_[2] then
+			L_1400_[1] = L_1400_[1] .. L_3_[168]({
+				"- Không có trái n";
+				"ào.
+"
+			})
+		end
+	else
+		L_1400_[1] = L_1400_[1] .. L_3_[168]({
+			"- ❌ Lỗi khi lấ",
+			"y dữ liệu.
+"
+		})
+	end
+	return L_1400_[1]
+end
+L_3_[2] = L_3_[99]:AddParagraph({
+	["Title"] = "Stock Trái Cây",
+	["Content"] = L_3_[168]({
+		"Đang tải dữ li�";
+		"��u..."
+	})
+})
+task["spawn"](function()
+	while task["wait"](60) do
+		pcall(function()
+			L_3_[2]:Set(L_3_[55]())
+		end)
+	end
+end)
+pcall(function()
+	L_3_[2]:Set(L_3_[55]())
+end)
+L_3_[136] = L_3_[53]:AddSection({
+	L_3_[168]({
+		"Teleport Island | Di";
+		" Chuyển Đến Đ�",
+		"��o"
+	})
+})
+L_3_[91] = function(L_1411_arg0)
+	local L_1412_ = {}
+	L_1412_[1] = L_1411_arg0
+	pcall(function()
+		if type(topos) == "function" then
+			topos(L_1412_[1])
+		else
+			local L_1413_ = {}
+			L_1413_[2] = (game:GetService("Players"))["LocalPlayer"]
+			if L_1413_[2] and (L_1413_[2]["Character"] and L_1413_[2]["Character"]:FindFirstChild("HumanoidRootPart")) then
+				L_1413_[2]["Character"]["HumanoidRootPart"]["CFrame"] = L_1412_[1]
+			end
+		end
+	end)
+end
+L_3_[179] = nil
+if not L_3_[81] then
+	if L_3_[111] then
+		L_3_[179] = {
+			"The Cafe";
+			"Frist Spot",
+			"Dark Area";
+			"Flamingo Mansion";
+			"Flamingo Room";
+			"Green Zone",
+			"Factory";
+			"Colossuim";
+			"Zombie Island",
+			"Two Snow Mountain";
+			"Punk Hazard",
+			"Cursed Ship",
+			"Ice Castle",
+			"Forgotten Island",
+			"Ussop Island",
+			"Mini Sky Island"
+		}
+	elseif L_3_[177] then
+		L_3_[179] = {
+			"Mansion",
+			"Port Town",
+			"Great Tree",
+			"Castle On The Sea";
+			"MiniSky";
+			"Hydra Island",
+			"Floating Turtle",
+			"Haunted Castle";
+			"Ice Cream Island",
+			"Peanut Island";
+			"Cake Island",
+			"Cocoa Island";
+			"Candy Island",
+			"Tiki Outpost",
+			"Dragon Dojo"
+		}
+	else
+		L_3_[179] = {
+			"Spawn"
+		}
+	end
+else
+	L_3_[179] = {
+		"WindMill",
+		"Marine";
+		"Middle Town",
+		"Jungle",
+		"Pirate Village";
+		"Desert",
+		"Snow Island";
+		"MarineFord";
+		"Colosseum",
+		"Sky Island 1",
+		"Sky Island 2";
+		"Sky Island 3",
+		"Prison";
+		"Magma Village",
+		"Under Water Island",
+		"Fountain City",
+		"Shank Room",
+		"Mob Island"
+	}
+end
+L_3_[53]:AddDropdown({
+	["Name"] = "Select Island";
+	["Description"] = L_3_[168]({
+		"Chọn đảo để ",
+		"teleport"
+	}),
+	["Options"] = L_3_[179],
+	["Default"] = L_3_[179][1],
+	["Callback"] = function(L_1414_arg0)
+		local L_1415_ = {}
+		L_1415_[1] = L_1414_arg0
+		_G["SelectIsland"] = L_1415_[1]
+	end
+})
+L_3_[53]:AddToggle({
+	["Name"] = "Auto Tween To Island",
+	["Description"] = L_3_[168]({
+		"Tự động di chuy",
+		"ển tới đảo đ",
+		"ã chọn"
+	}),
+	["Default"] = false;
+	["Callback"] = function(L_1416_arg0)
+		local L_1417_ = {}
+		L_1417_[1] = L_1416_arg0
+		_G["TeleportIsland"] = L_1417_[1]
+		StopTween(_G["TeleportIsland"])
+	end
+})
+L_3_[22] = function()
+	if _G["SelectIsland"] then
+		if _G["SelectIsland"] ~= "WindMill" then
+			if _G["SelectIsland"] ~= "Marine" then
+				if _G["SelectIsland"] ~= "Middle Town" then
+					if _G["SelectIsland"] ~= "Jungle" then
+						if _G["SelectIsland"] == "Pirate Village" then
+							L_3_[91](CFrame["new"](-1181.309, 4.751, 3803.546))
+						elseif _G["SelectIsland"] ~= "Desert" then
+							if _G["SelectIsland"] == "Snow Island" then
+								L_3_[91](CFrame["new"](1347.807, 104.668, -1319.737))
+							elseif _G["SelectIsland"] == "MarineFord" then
+								L_3_[91](CFrame["new"](-4914.821, 50.964, 4281.028))
+							elseif _G["SelectIsland"] ~= "Colosseum" then
+								if _G["SelectIsland"] ~= "Sky Island 1" then
+									if _G["SelectIsland"] ~= "Sky Island 2" then
+										if _G["SelectIsland"] ~= "Sky Island 3" then
+											if _G["SelectIsland"] ~= "Prison" then
+												if _G["SelectIsland"] == "Magma Village" then
+													L_3_[91](CFrame["new"](-5247.716, 12.884, 8504.969))
+												elseif _G["SelectIsland"] ~= "Under Water Island" then
+													if _G["SelectIsland"] == "Fountain City" then
+														L_3_[91](CFrame["new"](5127.128, 59.501, 4105.446))
+													elseif _G["SelectIsland"] ~= "Shank Room" then
+														if _G["SelectIsland"] ~= "Mob Island" then
+															if _G["SelectIsland"] == "The Cafe" then
+																L_3_[91](CFrame["new"](-380.479, 77.22, 255.826))
+															elseif _G["SelectIsland"] ~= "Frist Spot" then
+																if _G["SelectIsland"] == "Dark Area" then
+																	L_3_[91](CFrame["new"](3780.03, 22.652, -3498.586))
+																elseif _G["SelectIsland"] ~= "Flamingo Mansion" then
+																	if _G["SelectIsland"] ~= "Flamingo Room" then
+																		if _G["SelectIsland"] ~= "Green Zone" then
+																			if _G["SelectIsland"] == "Factory" then
+																				L_3_[91](CFrame["new"](424.127, 211.162, -427.54))
+																			elseif _G["SelectIsland"] == "Colossuim" then
+																				L_3_[91](CFrame["new"](-1503.622, 219.796, 1369.31))
+																			elseif _G["SelectIsland"] ~= "Zombie Island" then
+																				if _G["SelectIsland"] == "Two Snow Mountain" then
+																					L_3_[91](CFrame["new"](753.143, 408.236, -5274.615))
+																				elseif _G["SelectIsland"] == "Punk Hazard" then
+																					L_3_[91](CFrame["new"](-6127.654, 15.952, -5040.286))
+																				elseif _G["SelectIsland"] ~= "Cursed Ship" then
+																					if _G["SelectIsland"] ~= "Ice Castle" then
+																						if _G["SelectIsland"] ~= "Forgotten Island" then
+																							if _G["SelectIsland"] == "Ussop Island" then
+																								L_3_[91](CFrame["new"](4816.862, 8.46, 2863.82))
+																							elseif _G["SelectIsland"] == "Mini Sky Island" or _G["SelectIsland"] == "MiniSky" then
+																								L_3_[91](CFrame["new"](-288.741, 49326.316, -35248.594))
+																							elseif _G["SelectIsland"] ~= "Great Tree" then
+																								if _G["SelectIsland"] ~= "Castle On The Sea" then
+																									if _G["SelectIsland"] ~= "Port Town" then
+																										if _G["SelectIsland"] ~= "Hydra Island" then
+																											if _G["SelectIsland"] == "Floating Turtle" then
+																												L_3_[91](CFrame["new"](-13274.528, 531.821, -7579.223))
+																											elseif _G["SelectIsland"] ~= "Mansion" then
+																												if _G["SelectIsland"] ~= "Haunted Castle" then
+																													if _G["SelectIsland"] == "Ice Cream Island" then
+																														L_3_[91](CFrame["new"](-902.568, 79.932, -10988.848))
+																													elseif _G["SelectIsland"] == "Peanut Island" then
+																														L_3_[91](CFrame["new"](-2062.748, 50.474, -10232.568))
+																													elseif _G["SelectIsland"] ~= "Cake Island" then
+																														if _G["SelectIsland"] ~= "Cocoa Island" then
+																															if _G["SelectIsland"] == "Candy Island" then
+																																L_3_[91](CFrame["new"](-1014.424, 149.111, -14555.963))
+																															elseif _G["SelectIsland"] ~= "Tiki Outpost" then
+																																if _G["SelectIsland"] == "Dragon Dojo" then
+																																	L_3_[91](CFrame["new"](5743.319, 1206.91, 936.011))
+																																end
+																															else
+																																L_3_[91](CFrame["new"](-16218.683, 9.086, 445.618))
+																															end
+																														else
+																															L_3_[91](CFrame["new"](87.943, 73.555, -12319.465))
+																														end
+																													else
+																														L_3_[91](CFrame["new"](-1884.775, 19.328, -11666.897))
+																													end
+																												else
+																													L_3_[91](CFrame["new"](-9515.372, 164.006, 5786.061))
+																												end
+																											else
+																												(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-12471.17, 374.94, -7551.678))
+																											end
+																										else
+																											L_3_[91](CFrame["new"](5291.249, 1005.443, 393.762))
+																										end
+																									else
+																										L_3_[91](CFrame["new"](-226.751, 20.603, 5538.34))
+																									end
+																								else
+																									(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-5083.26, 314.606, -3175.673))
+																								end
+																							else
+																								L_3_[91](CFrame["new"](2681.274, 1682.809, -7190.985))
+																							end
+																						else
+																							L_3_[91](CFrame["new"](-3032.764, 317.897, -10075.373))
+																						end
+																					else
+																						L_3_[91](CFrame["new"](6148.412, 294.387, -6741.117))
+																					end
+																				else
+																					L_3_[91](CFrame["new"](923.402, 125.057, 32885.875))
+																				end
+																			else
+																				L_3_[91](CFrame["new"](-5622.033, 492.196, -781.786))
+																			end
+																		else
+																			L_3_[91](CFrame["new"](-2448.53, 73.016, -3210.631))
+																		end
+																	else
+																		L_3_[91](CFrame["new"](2284.414, 15.152, 875.725))
+																	end
+																else
+																	L_3_[91](CFrame["new"](-483.734, 332.038, 595.327))
+																end
+															else
+																L_3_[91](CFrame["new"](-11.311, 29.277, 2771.522))
+															end
+														else
+															L_3_[91](CFrame["new"](-2850.201, 7.392, 5354.993))
+														end
+													else
+														L_3_[91](CFrame["new"](-1442.166, 29.879, -28.355))
+													end
+												else
+													(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](61163.852, 11.68, 1819.784))
+												end
+											else
+												L_3_[91](CFrame["new"](4875.33, 5.652, 734.85))
+											end
+										else
+											(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-7894.618, 5547.142, -380.291))
+										end
+									else
+										(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("requestEntrance", Vector3["new"](-4607.823, 872.543, -1667.557))
+									end
+								else
+									L_3_[91](CFrame["new"](-4869.103, 733.461, -2667.018))
+								end
+							else
+								L_3_[91](CFrame["new"](-1427.62, 7.288, -2792.772))
+							end
+						else
+							L_3_[91](CFrame["new"](944.158, 20.92, 4373.3))
+						end
+					else
+						L_3_[91](CFrame["new"](-1612.796, 36.852, 149.128))
+					end
+				else
+					L_3_[91](CFrame["new"](-690.331, 15.094, 1582.238))
+				end
+			else
+				L_3_[91](CFrame["new"](-2566.43, 6.856, 2045.256))
+			end
+		else
+			L_3_[91](CFrame["new"](979.799, 16.516, 1429.047))
+		end
+		return
+	else
+		return
+	end
+end
+task["spawn"](function()
+	while task["wait"](.5) do
+		if _G["TeleportIsland"] then
+			L_3_[22]()
+		end
+	end
+end)
+L_3_[38] = L_3_[53]:AddSection({
+	L_3_[168]({
+		"Teleport Sea | Di Ch";
+		"uyển Sea 1,2,3"
+	})
+})
+L_3_[53]:AddButton({
+	["Name"] = "Sea 1",
+	["Description"] = "Biển 1";
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelMain")
+	end
+})
+L_3_[53]:AddButton({
+	["Name"] = "Sea 2";
+	["Description"] = "Biển 2";
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
+	end
+})
+L_3_[53]:AddButton({
+	["Name"] = "Sea 3";
+	["Description"] = "Biển 3",
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelZou")
+	end
+})
+L_3_[121] = L_3_[39]:AddSection({
+	L_3_[168]({
+		"Teleport Player | Di",
+		" Chuyển Đến Pla",
+		"yer"
+	})
+})
+L_3_[139] = {}
+for L_1418_forvar0, L_1419_forvar1 in pairs(game["Players"]:GetPlayers()) do
+	local L_1420_ = {}
+	L_1420_[1], L_1420_[2] = L_1418_forvar0, L_1419_forvar1
+	table["insert"](L_3_[139], L_1420_[2]["Name"])
+end
+L_3_[118] = nil
+L_3_[39]:AddButton({
+	["Title"] = L_3_[168]({
+		"Get Quest Elite Play";
+		"ers"
+	}),
+	["Description"] = L_3_[168]({
+		"Nhận Nhiệm Vụ ",
+		"Người Chơi"
+	}),
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("PlayerHunter")
+	end
+})
+L_3_[39]:AddToggle({
+	["Title"] = L_3_[168]({
+		"Auto Kill Player Que";
+		"st"
+	}),
+	["Description"] = L_3_[168]({
+		"Bay Đến Người ";
+		"Chơi Được Nhậ";
+		"n Nhiệm Vụ"
+	}),
+	["Value"] = false,
+	["Callback"] = function(L_1421_arg0)
+		local L_1422_ = {}
+		L_1422_[2] = L_1421_arg0
+		_G["AutoPlayerHunter"] = L_1422_[2]
+		StopTween(_G["AutoPlayerHunter"])
+	end
+})
+spawn(function()
+	(game:GetService("RunService"))["Heartbeat"]:connect(function()
+		pcall(function()
+			if _G["AutoPlayerHunter"] and (game:GetService("Players"))["LocalPlayer"]["Character"]:FindFirstChild("Humanoid") then
+				(game:GetService("Players"))["LocalPlayer"]["Character"]["Humanoid"]:ChangeState(11)
+			end
+		end)
+	end)
+end)
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["AutoPlayerHunter"] and (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["PvpDisabled"]["Visible"] == true then
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("EnablePvp")
+			end
+		end
+	end)
+end)
+spawn(function()
+	while wait() do
+		if _G["AutoPlayerHunter"] then
+			if (game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Visible"] == false then
+				wait(.5);
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("PlayerHunter")
+			else
+				for L_1423_forvar0, L_1424_forvar1 in pairs((game:GetService("Workspace"))["Characters"]:GetChildren()) do
+					local L_1425_ = {}
+					L_1425_[3], L_1425_[2] = L_1423_forvar0, L_1424_forvar1
+					if string["find"]((game:GetService("Players"))["LocalPlayer"]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], L_1425_[2]["Name"]) then
+						repeat
+							wait()
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							Useskill = true
+							topos(L_1425_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](1, 7, 3))
+							L_1425_[2]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60);
+							(game:GetService("VirtualUser")):CaptureController();
+							(game:GetService("VirtualUser")):Button1Down(Vector2["new"](1280, 672))
+						until _G["AutoPlayerHunter"] == false or L_1425_[2]["Humanoid"]["Health"] <= 0
+						Useskill = false;
+						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
+					end
+				end
+			end
+		end
+	end
+end)
+L_3_[39]:AddToggle({
+	["Name"] = "Auto Safe Mode";
+	["Description"] = L_3_[168]({
+		"Tự Động An Toà";
+		"n Di Chuyển Lên T";
+		"rời An Toàn"
+	}),
+	["Default"] = false,
+	["Callback"] = function(L_1426_arg0)
+		local L_1427_ = {}
+		L_1427_[1] = L_1426_arg0
+		_G["SafeMode"] = L_1427_[1]
+		StopTween(_G["SafeMode"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["SafeMode"] then
+				(game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 200, 0)
+			end
+		end
+	end)
+end)
+L_3_[70] = L_3_[39]:AddSection({
+	"Buff"
+})
+L_3_[9] = (game:GetService("Players"))["LocalPlayer"];
+(getgenv())["WalkSpeedValue"] = 30;
+(getgenv())["JumpValue"] = 50
+L_3_[25] = function(L_1428_arg0)
+	local L_1429_ = {}
+	L_1429_[3] = L_1428_arg0
+	L_1429_[2] = L_1429_[3]:WaitForChild("Humanoid", 5)
+	if L_1429_[2] then
+		L_1429_[2]["WalkSpeed"] = (getgenv())["WalkSpeedValue"]
+		L_1429_[2]["JumpPower"] = (getgenv())["JumpValue"];
+		(L_1429_[2]:GetPropertyChangedSignal("WalkSpeed")):Connect(function()
+			L_1429_[2]["WalkSpeed"] = (getgenv())["WalkSpeedValue"]
+		end)
+	end
+end
+L_3_[9]["CharacterAdded"]:Connect(function(L_1430_arg0)
+	local L_1431_ = {}
+	L_1431_[2] = L_1430_arg0
+	L_3_[25](L_1431_[2])
+end)
+if L_3_[9]["Character"] then
+	L_3_[25](L_3_[9]["Character"])
+end
+L_3_[39]:AddSlider({
+	["Title"] = "Speed Chạy",
+	["Min"] = 26;
+	["Max"] = 300;
+	["Default"] = (getgenv())["WalkSpeedValue"],
+	["Callback"] = function(L_1432_arg0)
+		local L_1433_ = {}
+		L_1433_[3] = L_1432_arg0;
+		(getgenv())["WalkSpeedValue"] = L_1433_[3]
+		L_1433_[2] = L_3_[9]["Character"] and L_3_[9]["Character"]:FindFirstChild("Humanoid")
+		if L_1433_[2] then
+			L_1433_[2]["WalkSpeed"] = L_1433_[3]
+		end
+	end
+})
+L_3_[39]:AddSlider({
+	["Title"] = "Nhảy Cao ",
+	["Min"] = 50;
+	["Max"] = 500;
+	["Default"] = (getgenv())["JumpValue"],
+	["Callback"] = function(L_1434_arg0)
+		local L_1435_ = {}
+		L_1435_[1] = L_1434_arg0;
+		(getgenv())["JumpValue"] = L_1435_[1]
+		L_1435_[2] = L_3_[9]["Character"] and L_3_[9]["Character"]:FindFirstChild("Humanoid")
+		if L_1435_[2] then
+			L_1435_[2]["JumpPower"] = L_1435_[1]
+		end
+	end
+})
+L_3_[39]:AddToggle({
+	["Name"] = "Delete Lava",
+	["Description"] = "Xóa lava",
+	["Default"] = false;
+	["Callback"] = function(L_1436_arg0)
+		local L_1437_ = {}
+		L_1437_[1] = L_1436_arg0
+		_G["RemoveLava"] = L_1437_[1]
+	end
+})
+spawn(function()
+	while task["wait"](1) do
+		if _G["RemoveLava"] then
+			for L_1438_forvar0, L_1439_forvar1 in pairs(workspace:GetDescendants()) do
+				local L_1440_ = {}
+				L_1440_[1], L_1440_[3] = L_1438_forvar0, L_1439_forvar1
+				do
+					local L_1441_ = {}
+					L_1441_[1] = L_1440_[3]
+					if L_1441_[1]:IsA("BasePart") and (string["lower"](L_1441_[1]["Name"])):find("lava") then
+						pcall(function()
+							L_1441_[1]:Destroy()
+						end)
+					end
+				end
+			end
+		end
+	end
+end)
+L_3_[97] = L_3_[39]:AddSection({
+	L_3_[168]({
+		"Esp | Định Vị..",
+		"."
+	})
+})
+L_3_[39]:AddToggle({
+	["Title"] = "Esp Players";
+	["Value"] = false,
+	["Callback"] = function(L_1442_arg0)
+		local L_1443_ = {}
+		L_1443_[1] = L_1442_arg0
+		ESPPlayer = L_1443_[1]
+		if ESPPlayer then
+			task["spawn"](function()
+				while ESPPlayer do
+					UpdatePlayerChams()
+					task["wait"](1)
+				end
+			end)
+		else
+			UpdatePlayerChams()
+		end
+	end
+})
+L_3_[39]:AddToggle({
+	["Title"] = "Esp Chest";
+	["Value"] = false,
+	["Callback"] = function(L_1444_arg0)
+		local L_1445_ = {}
+		L_1445_[1] = L_1444_arg0
+		_G["ChestESP"] = L_1445_[1]
+		if not _G["ChestESP"] then
+			UpdateChestESP()
+		else
+			task["spawn"](function()
+				while _G["ChestESP"] do
+					UpdateChestESP()
+					task["wait"](1)
+				end
+			end)
+		end
+	end
+})
+L_3_[39]:AddToggle({
+	["Title"] = "Esp Fruits";
+	["Value"] = false,
+	["Callback"] = function(L_1446_arg0)
+		local L_1447_ = {}
+		L_1447_[2] = L_1446_arg0
+		DevilFruitESP = L_1447_[2]
+		if DevilFruitESP then
+			task["spawn"](function()
+				while DevilFruitESP do
+					UpdateDevilChams()
+					task["wait"](1)
+				end
+			end)
+		else
+			UpdateDevilChams()
+		end
+	end
+})
+L_3_[39]:AddToggle({
+	["Title"] = "Esp Berry",
+	["Value"] = false,
+	["Callback"] = function(L_1448_arg0)
+		local L_1449_ = {}
+		L_1449_[1] = L_1448_arg0
+		Berry = L_1449_[1]
+		if not Berry then
+			for L_1450_forvar0, L_1451_forvar1 in pairs((game:GetService("CollectionService")):GetTagged("BerryBush")) do
+				local L_1452_ = {}
+				L_1452_[2], L_1452_[3] = L_1450_forvar0, L_1451_forvar1
+				if L_1452_[3]["Parent"]:FindFirstChild("BerryESP") then
+					L_1452_[3]["Parent"]["BerryESP"]:Destroy()
+				end
+			end
+		else
+			UpdateBerriesESP()
+		end
+	end
+})
+L_3_[90] = L_3_[203]:AddSection({
+	L_3_[168]({
+		"Muốn có, hãy và";
+		"o discord and wait"
+	})
+})
+L_3_[191] = L_3_[96]:AddSection({
+	"Settings Farming"
+})
+L_3_[96]:AddParagraph({
+	["Title"] = L_3_[168]({
+		"Unban Fast Attack - ";
+		"M1 Fruit"
+	});
+	["Content"] = "On: ✅"
+});
+(loadstring(game:HttpGet(L_3_[168]({
+	"https://raw.githubus",
+	"ercontent.com/AnhDan";
+	"gNhoEm/TuanAnhIOS/re",
+	"fs/heads/main/koby"
+}))))()
+L_3_[96]:AddToggle({
+	["Name"] = "Bring Mod";
+	["Description"] = L_3_[168]({
+		"Tự Động Gom Qu�";
+		"�i"
+	}),
+	["Default"] = true,
+	["Callback"] = function(L_1453_arg0)
+		local L_1454_ = {}
+		L_1454_[2] = L_1453_arg0
+		_G["BringMonster"] = L_1454_[2]
+		StopTween(_G["BringMonster"])
+	end
+})
+spawn(function()
+	while task["wait"]() do
+		pcall(function()
+			CheckQuest()
+			for L_1455_forvar0, L_1456_forvar1 in pairs((game:GetService("Workspace"))["Enemies"]:GetChildren()) do
+				local L_1457_ = {}
+				L_1457_[2], L_1457_[1] = L_1455_forvar0, L_1456_forvar1
+				if _G["BringMonster"] and (StartBring and L_1457_[1]["Name"] == MonFarm or L_1457_[1]["Name"] == Mon and (L_1457_[1]:FindFirstChild("Humanoid") and (L_1457_[1]:FindFirstChild("HumanoidRootPart") and (L_1457_[1]["Humanoid"]["Health"] > 0 and (L_1457_[1]["HumanoidRootPart"]["Position"] - (game:GetService("Players"))["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 320)))) then
+					if L_1457_[1]["Name"] == "Factory Staff" then
+						if (L_1457_[1]["HumanoidRootPart"]["Position"] - PosMon["Position"])["Magnitude"] <= 250 then
+							L_1457_[1]["Head"]["CanCollide"] = false
+							L_1457_[1]["HumanoidRootPart"]["CanCollide"] = false
+							L_1457_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+							L_1457_[1]["HumanoidRootPart"]["CFrame"] = PosMon
+							if L_1457_[1]["Humanoid"]:FindFirstChild("Animator") then
+								L_1457_[1]["Humanoid"]["Animator"]:Destroy()
+							end
+							sethiddenproperty((game:GetService("Players"))["LocalPlayer"], "SimulationRadius", math["huge"])
+						end
+					elseif (L_1457_[1]["Name"] == MonFarm or L_1457_[1]["Name"] == Mon) and (L_1457_[1]["HumanoidRootPart"]["Position"] - PosMon["Position"])["Magnitude"] <= 250 then
+						L_1457_[1]["HumanoidRootPart"]["Size"] = Vector3["new"](60, 60, 60)
+						L_1457_[1]["HumanoidRootPart"]["CFrame"] = PosMon
+						L_1457_[1]["HumanoidRootPart"]["CanCollide"] = false
+						L_1457_[1]["Head"]["CanCollide"] = false
+						if L_1457_[1]["Humanoid"]:FindFirstChild("Animator") then
+							L_1457_[1]["Humanoid"]["Animator"]:Destroy()
+						end
+						sethiddenproperty(game["Players"]["LocalPlayer"], "SimulationRadius", math["huge"])
+					end
+				end
+			end
+		end)
+	end
+end)
+function InMyNetWork(L_1458_arg0)
+	local L_1459_ = {}
+	L_1459_[1] = L_1458_arg0
+	if not isnetworkowner then
+		if (L_1459_[1]["Position"] - game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 300 then
+			return false
+		else
+			return true
+		end
+	else
+		return isnetworkowner(L_1459_[1])
+	end
+end
+L_3_[96]:AddToggle({
+	["Title"] = "Set Home Point";
+	["Description"] = L_3_[168]({
+		"Lưu Điểm Hồi S",
+		"inh"
+	});
+	["Value"] = false,
+	["Callback"] = function(L_1460_arg0)
+		local L_1461_ = {}
+		L_1461_[2] = L_1460_arg0
+		_G["CheckPoint"] = L_1461_[2]
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["CheckPoint"] then
+			game:GetService("SetSpawnPoint")
+		end
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Infinite Soru";
+	["Value"] = false;
+	["Callback"] = function(L_1462_arg0)
+		local L_1463_ = {}
+		L_1463_[1] = L_1462_arg0
+		_G["AutoHaki"] = L_1463_[1]
+	end
+})
+spawn(function()
+	while task["wait"](.1) do
+		if _G["AutoHaki"] then
+			pcall(AutoHaki)
+		end
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Auto Active Race V3";
+	["Description"] = L_3_[168]({
+		"Tự Động Bật T",
+		"ộc V3"
+	}),
+	["Value"] = false;
+	["Callback"] = function(L_1464_arg0)
+		local L_1465_ = {}
+		L_1465_[1] = L_1464_arg0
+		_G["AutoRaceV3"] = L_1465_[1]
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["AutoRaceV3"] then
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommE"]:FireServer("ActivateAbility")
+			end
+		end)
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Auto Active Race V4",
+	["Description"] = L_3_[168]({
+		"Tự Động Bật T";
+		"ộc V4"
+	});
+	["Value"] = false,
+	["Callback"] = function(L_1466_arg0)
+		local L_1467_ = {}
+		L_1467_[2] = L_1466_arg0
+		_G["AutoRaceV4"] = L_1467_[2]
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["AutoRaceV4"] then
+				(game:GetService("VirtualInputManager")):SendKeyEvent(true, "Y", false, game)
+				wait();
+				(game:GetService("VirtualInputManager")):SendKeyEvent(false, "Y", false, game)
+			end
+		end)
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Infinite Soru",
+	["Value"] = false,
+	["Callback"] = function(L_1468_arg0)
+		local L_1469_ = {}
+		L_1469_[2] = L_1468_arg0
+		InfiniteSoru = L_1469_[2]
+	end
+})
+spawn(function()
+	while task["wait"](1) do
+		if InfiniteSoru and (game:GetService("Players"))["LocalPlayer"]["Character"]:FindFirstChild("HumanoidRootPart") ~= "HumanoidRootPart" then
+			pcall(function()
+				for L_1470_forvar0, L_1471_forvar1 in next, getgc() do
+					local L_1472_ = {}
+					L_1472_[1], L_1472_[3] = L_1470_forvar0, L_1471_forvar1
+					if (getfenv(L_1472_[3]))["script"] == game["Players"]["LocalPlayer"]["Character"]:WaitForChild("Soru") then
+						for L_1473_forvar0, L_1474_forvar1 in pairs(debug["getupvalues"](L_1472_[3])) do
+							local L_1475_ = {}
+							L_1475_[1], L_1475_[2] = L_1473_forvar0, L_1474_forvar1
+							if type(L_1475_[2]) == "table" and L_1475_[2]["LastUse"] then
+								repeat
+									task["wait"](.1)
+									setupvalue(L_1472_[3], L_1475_[1], {
+										["LastAfter"] = 0;
+										["LastUse"] = 0
+									})
+								until not InfiniteSoru or (game:GetService("Players"))["LocalPlayer"]["Character"]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+PosY = 30
+L_3_[96]:AddToggle({
+	["Title"] = "Dodge No CD",
+	["Value"] = false,
+	["Callback"] = function(L_1476_arg0)
+		local L_1477_ = {}
+		L_1477_[2] = L_1476_arg0
+		DodgewithoutCool = L_1477_[2]
+	end
+})
+function NoCooldown()
+	for L_1478_forvar0, L_1479_forvar1 in next, getgc() do
+		local L_1480_ = {}
+		L_1480_[3], L_1480_[2] = L_1478_forvar0, L_1479_forvar1
+		if typeof(L_1480_[2]) == "function" and (getfenv(L_1480_[2]))["script"] == game["Players"]["LocalPlayer"]["Character"]:WaitForChild("Dodge") then
+			for L_1481_forvar0, L_1482_forvar1 in next, getupvalues(L_1480_[2]) do
+				local L_1483_ = {}
+				L_1483_[3], L_1483_[2] = L_1481_forvar0, L_1482_forvar1
+				if tostring(L_1483_[2]) == "0.4" then
+					setupvalue(L_1480_[2], L_1483_[3], 0)
+				end
+			end
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if DodgewithoutCool then
+			pcall(function()
+				NoCooldown()
+			end)
+		end
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Infinite Geppo";
+	["Value"] = false,
+	["Callback"] = function(L_1484_arg0)
+		local L_1485_ = {}
+		L_1485_[1] = L_1484_arg0
+		InfiniteGeppo = L_1485_[1]
+	end
+})
+spawn(function()
+	while task["wait"](1) do
+		if InfiniteGeppo then
+			pcall(function()
+				for L_1486_forvar0, L_1487_forvar1 in next, getgc() do
+					local L_1488_ = {}
+					L_1488_[3], L_1488_[2] = L_1486_forvar0, L_1487_forvar1
+					if (getfenv(L_1488_[2]))["script"] == game["Players"]["LocalPlayer"]["Character"]:WaitForChild("Geppo") then
+						for L_1489_forvar0, L_1490_forvar1 in next, getupvalues(L_1488_[2]) do
+							local L_1491_ = {}
+							L_1491_[1], L_1491_[3] = L_1489_forvar0, L_1490_forvar1
+							if tostring(L_1491_[3]) == "0" then
+								repeat
+									wait(.1)
+									setupvalue(L_1488_[2], L_1491_[1], 0)
+								until not InfiniteGeppo or (game:GetService("Players"))["LocalPlayer"]["Character"]["Humanoid"]["Health"] <= 0
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+L_3_[96]:AddToggle({
+	["Title"] = "Walk on Water";
+	["Value"] = true;
+	["Callback"] = function(L_1492_arg0)
+		local L_1493_ = {}
+		L_1493_[1] = L_1492_arg0
+		_G["WalkWater"] = L_1493_[1]
+	end
+})
+spawn(function()
+	while task["wait"]() do
+		pcall(function()
+			if not _G["WalkWater"] then
+				(game:GetService("Workspace"))["Map"]["WaterBase-Plane"]["Size"] = Vector3["new"](1000, 80, 1000)
+			else
+				(game:GetService("Workspace"))["Map"]["WaterBase-Plane"]["Size"] = Vector3["new"](1000, 112, 1000)
+			end
+		end)
+	end
+end)
+L_3_[105] = L_3_[96]:AddSection({
+	L_3_[168]({
+		"Auto Increase Skill ";
+		"Points"
+	})
+})
+L_3_[195] = game:GetService("Players")
+L_3_[83] = game:GetService("ReplicatedStorage")
+L_3_[63] = L_3_[195]["LocalPlayer"]
+L_3_[134] = false
+L_3_[40] = false
+L_3_[188] = false
+L_3_[56] = false
+L_3_[57] = false
+L_3_[10] = 1
+L_3_[96]:AddToggle({
+	["Title"] = "Melee";
+	["Description"] = L_3_[168]({
+		"Tự Động Nâng �";
+		"�iểm Melee"
+	}),
+	["Value"] = false;
+	["Callback"] = function(L_1494_arg0)
+		local L_1495_ = {}
+		L_1495_[1] = L_1494_arg0
+		L_3_[134] = L_1495_[1]
+	end
+})
+L_3_[96]:AddToggle({
+	["Title"] = "Defense",
+	["Description"] = L_3_[168]({
+		"Tự Động Nâng �";
+		"�iểm Năng Lượn";
+		"g"
+	}),
+	["Value"] = false,
+	["Callback"] = function(L_1496_arg0)
+		local L_1497_ = {}
+		L_1497_[2] = L_1496_arg0
+		L_3_[40] = L_1497_[2]
+	end
+})
+L_3_[96]:AddToggle({
+	["Title"] = "Sword",
+	["Description"] = L_3_[168]({
+		"Tự Động Nâng �",
+		"�iểm Kiếm"
+	}),
+	["Value"] = false;
+	["Callback"] = function(L_1498_arg0)
+		local L_1499_ = {}
+		L_1499_[1] = L_1498_arg0
+		L_3_[188] = L_1499_[1]
+	end
+})
+L_3_[96]:AddToggle({
+	["Title"] = "Gun",
+	["Description"] = L_3_[168]({
+		"Tự Động Nâng �",
+		"�iểm Súng"
+	}),
+	["Value"] = false,
+	["Callback"] = function(L_1500_arg0)
+		local L_1501_ = {}
+		L_1501_[1] = L_1500_arg0
+		L_3_[56] = L_1501_[1]
+	end
+})
+L_3_[96]:AddToggle({
+	["Title"] = "Fruis",
+	["Description"] = L_3_[168]({
+		"Tự Động Nâng �";
+		"�iểm Trái"
+	});
+	["Value"] = false;
+	["Callback"] = function(L_1502_arg0)
+		local L_1503_ = {}
+		L_1503_[2] = L_1502_arg0
+		L_3_[57] = L_1503_[2]
+	end
+})
+spawn(function()
+	while wait() do
+		if L_3_[63]["Data"]["Points"]["Value"] >= L_3_[10] then
+			local L_1504_ = {}
+			L_1504_[2] = function(L_1505_arg0)
+				local L_1506_ = {}
+				L_1506_[1] = L_1505_arg0
+				L_1506_[2] = {
+					[1] = "AddPoint";
+					[2] = L_1506_[1];
+					[3] = L_3_[10]
+				}
+				L_3_[83]["Remotes"]["CommF_"]:InvokeServer(unpack(L_1506_[2]))
+			end
+			if L_3_[134] then
+				L_1504_[2]("Melee")
+			end
+			if L_3_[40] then
+				L_1504_[2]("Defense")
+			end
+			if L_3_[188] then
+				L_1504_[2]("Sword")
+			end
+			if L_3_[56] then
+				L_1504_[2]("Gun")
+			end
+			if L_3_[57] then
+				L_1504_[2]("Demon Fruit")
+			end
+		end
+	end
+end)
+L_3_[190] = L_3_[96]:AddSection({
+	"Sea 1,2,3"
+})
+L_3_[96]:AddButton({
+	["Title"] = "Join Sea 1",
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelMain")
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "Join Sea 2";
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "Join Sea 3",
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("TravelZou")
+	end
+})
+L_3_[145] = L_3_[96]:AddSection({
+	"Other"
+})
+L_3_[96]:AddButton({
+	["Title"] = "Join Pirates Team",
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("SetTeam", "Pirates")
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "Join Marines Team";
+	["Callback"] = function()
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("SetTeam", "Marines")
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "Open Title Name";
+	["Callback"] = function()
+		local L_1507_ = {}
+		L_1507_[1] = {
+			[1] = "getTitles"
+		};
+		(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_1507_[1]))
+		game["Players"]["localPlayer"]["PlayerGui"]["Main"]["Titles"]["Visible"] = true
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "FPS Boost";
+	["Description"] = "Tăng Fps";
+	["Callback"] = function()
+		local L_1508_ = {}
+		L_1508_[1] = true
+		L_1508_[3] = game
+		L_1508_[4] = L_1508_[3]["Workspace"]
+		L_1508_[5] = L_1508_[3]["Lighting"]
+		L_1508_[6] = L_1508_[4]["Terrain"];
+		(settings())["Rendering"]["QualityLevel"] = "Level01"
+		for L_1509_forvar0, L_1510_forvar1 in pairs(L_1508_[3]:GetDescendants()) do
+			local L_1511_ = {}
+			L_1511_[1], L_1511_[3] = L_1509_forvar0, L_1510_forvar1
+			if not L_1511_[3]:IsA("Part") and (not L_1511_[3]:IsA("Union") and (not L_1511_[3]:IsA("CornerWedgePart") and not L_1511_[3]:IsA("TrussPart"))) then
+				if L_1511_[3]:IsA("Decal") or L_1511_[3]:IsA("Texture") and L_1508_[1] then
+					L_1511_[3]["Transparency"] = 1
+				elseif L_1511_[3]:IsA("ParticleEmitter") or L_1511_[3]:IsA("Trail") then
+					L_1511_[3]["Lifetime"] = NumberRange["new"](0)
+				elseif not L_1511_[3]:IsA("Explosion") then
+					if L_1511_[3]:IsA("Fire") or L_1511_[3]:IsA("SpotLight") or L_1511_[3]:IsA("Smoke") then
+						L_1511_[3]["Enabled"] = false
+					end
+				else
+					L_1511_[3]["BlastPressure"] = 1
+					L_1511_[3]["BlastRadius"] = 1
+				end
+			else
+				L_1511_[3]["Material"] = "Plastic"
+				L_1511_[3]["Reflectance"] = 0
+			end
+		end
+	end
+})
+L_3_[156] = L_3_[96]:AddSection({
+	"Auto Codes"
+})
+L_3_[47] = {
+	"NOMOREHACK",
+	"BANEXPLOIT",
+	"WildDares";
+	"BossBuild";
+	"GetPranked",
+	"EARN_FRUITS",
+	"FIGHT4FRUIT",
+	"NOEXPLOITER",
+	"NOOB2ADMIN";
+	"CODESLIDE";
+	"ADMINHACKED";
+	"ADMINDARES",
+	"fruitconcepts",
+	"krazydares",
+	"TRIPLEABUSE",
+	"SEATROLLING",
+	"24NOADMIN";
+	"REWARDFUN";
+	"Chandler",
+	"NEWTROLL";
+	"KITT_RESET",
+	"Sub2CaptainMaui",
+	"kittgaming";
+	"Sub2Fer999",
+	"Enyu_is_Pro";
+	"Magicbus",
+	"JCWK";
+	"Starcodeheo";
+	"Bluxxy",
+	"fudd10_v2";
+	"SUB2GAMERROBOT_EXP1";
+	"Sub2NoobMaster123";
+	"Sub2UncleKizaru",
+	"Sub2Daigrock",
+	"Axiore";
+	"TantaiGaming",
+	"StrawHatMaine",
+	"Sub2OfficialNoobie";
+	"Fudd10";
+	"Bignews",
+	"TheGreatAce";
+	"SECRET_ADMIN",
+	L_3_[168]({
+		"SUB2GAMERROBOT_RESET";
+		"1"
+	});
+	"SUB2OFFICIALNOOBIE",
+	"AXIORE";
+	"BIGNEWS";
+	"BLUXXY";
+	"CHANDLER";
+	"ENYU_IS_PRO";
+	"FUDD10";
+	"FUDD10_V2";
+	"KITTGAMING";
+	"MAGICBUS";
+	"STARCODEHEO";
+	"STRAWHATMAINE";
+	"SUB2CAPTAINMAUI",
+	"SUB2DAIGROCK";
+	"SUB2FER999";
+	"SUB2NOOBMASTER123";
+	"SUB2UNCLEKIZARU",
+	"TANTAIGAMING",
+	"THEGREATACE"
+}
+L_3_[96]:AddButton({
+	["Title"] = "Codes",
+	["Description"] = L_3_[168]({
+		"Tự Động Nhập ",
+		"Hết Code"
+	}),
+	["Callback"] = function()
+		for L_1512_forvar0, L_1513_forvar1 in ipairs(L_3_[47]) do
+			local L_1514_ = {}
+			L_1514_[4], L_1514_[3] = L_1512_forvar0, L_1513_forvar1
+			L_1514_[2] = {
+				L_1514_[3]
+			}
+			do
+				local L_1515_ = {}
+				L_1515_[1] = L_1514_[2]
+				pcall(function()
+					(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("Redeem")):InvokeServer(unpack(L_1515_[1]))
+				end)
+				task["wait"](.1)
+			end
+		end
+	end
+})
+L_3_[158] = L_3_[96]:AddSection({
+	"Sever Hop"
+})
+L_3_[96]:AddButton({
+	["Title"] = "Rejoin Server";
+	["Callback"] = function()
+		(game:GetService("TeleportService")):Teleport(game["PlaceId"], (game:GetService("Players"))["LocalPlayer"])
+	end
+})
+L_3_[96]:AddButton({
+	["Title"] = "Server Hop",
+	["Callback"] = function()
+		Hop()
+	end
+})

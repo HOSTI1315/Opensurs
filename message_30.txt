@@ -1,0 +1,477 @@
+local riftcc = {
+    ['autoparry'] = {
+        enable = true,
+        keybind = Enum.KeyCode.Q,
+        ['distance'] = {
+            parrydistance = 20
+        },
+        ['prediction'] = {
+            enable = true,
+            multiplier = 0.165
+        }
+    },
+    ['visuals'] = {
+        line = {true, Color3.new(1,1,1)},
+        distance = true,
+        playerinfo = true,
+    },
+    ['checks'] = {
+        ping = false,
+        speed = false,
+    },
+    ['rage'] = {
+        balltp = {
+            enable = false,
+            keybind = Enum.KeyCode.R,
+            radius = 0,
+            distance = 15
+        }
+    }
+}
+
+--------------------------[[ Variables ]]
+local cloneref = getgenv().cloneref or function(...) return ...; end
+local game = cloneref(game)
+local plyrs = game:GetService("Players")
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local plyr = plyrs.LocalPlayer or plyrs.PlayerAdded:Wait()
+local cc = workspace.CurrentCamera
+local repstorage = game:GetService("ReplicatedStorage")
+local rmts = repstorage:WaitForChild("Remotes", 9e9)
+local ball = workspace:WaitForChild("Balls", 9e9)
+
+local Library = {
+    Folders = {
+        Assets = "RiftCC/Assets"
+    }
+}
+
+local CustomFont = { } do
+    function CustomFont:New(Name, Weight, Style, Data)
+        if isfile(Library.Folders.Assets .. "/" .. Name .. ".json") then
+            return Font.new(getcustomasset(Library.Folders.Assets .. "/" .. Name .. ".json"))
+        end
+
+        if not isfile(Library.Folders.Assets .. "/" .. Name .. ".ttf") then 
+            writefile(Library.Folders.Assets .. "/" .. Name .. ".ttf", game:HttpGet(Data.Url))
+        end
+
+        local FontData = {
+            name = Name,
+            faces = { {
+                name = "Regular",
+                weight = Weight,
+                style = Style,
+                assetId = getcustomasset(Library.Folders.Assets .. "/" .. Name .. ".ttf")
+            } }
+        }
+
+        writefile(Library.Folders.Assets .. "/" .. Name .. ".json", HttpService:JSONEncode(FontData))
+        return Font.new(getcustomasset(Library.Folders.Assets .. "/" .. Name .. ".json"))
+    end
+
+    function CustomFont:Get(Name)
+        if isfile(Library.Folders.Assets .. "/" .. Name .. ".json") then
+            return Font.new(getcustomasset(Library.Folders.Assets .. "/" .. Name .. ".json"))
+        end
+    end
+
+    CustomFont:New("Windows-XP-Tahoma", 200, "Regular", {
+        Url = "https://github.com/sametexe001/luas/raw/refs/heads/main/fonts/windows-xp-tahoma.ttf"
+    })
+
+    Library.Font = CustomFont:Get("Windows-XP-Tahoma")
+end
+
+local function getmouse()
+    return uis:GetMouseLocation()
+end
+
+local script = {
+    funcs = {},
+    conns = {},
+    draws = {},
+    data = {
+        ball = nil,
+        target = false,
+        dist = 0,
+        playerLabels = {},
+        lastBallPressed = nil,
+        isKeyPressed = false
+    }
+}
+
+--------------------------[[ Functions ]]
+script.funcs.conn = function(c, f)
+    table.insert(script.conns, c:Connect(f))
+end
+
+script.funcs.draw = function(t, o)
+    if not Drawing then return {Visible = false, Remove = function() end} end
+    local obj = Drawing.new(t)
+    for opt, val in pairs(o) do
+        obj[opt] = val
+    end
+    return obj
+end
+
+script.funcs.target = function()
+    return plyr.Character and plyr.Character:FindFirstChild("Highlight")
+end
+
+script.funcs.findball = function()
+    local b = nil
+    for i, v in pairs(ball:GetChildren()) do
+        if v:GetAttribute("realBall") == true then
+            b = v
+            break
+        end
+    end
+    return b
+end
+
+script.funcs.verifyBall = function(ballObj)
+    if typeof(ballObj) == "Instance" and ballObj:IsA("BasePart") and ballObj:IsDescendantOf(ball) and ballObj:GetAttribute("realBall") == true then
+        return true
+    end
+    return false
+end
+
+script.funcs.isTarget = function()
+    return (plyr.Character and plyr.Character:FindFirstChild("Highlight"))
+end
+
+script.funcs.parry = function()
+    if not riftcc.autoparry.enable then return end
+    local vim = game:GetService("VirtualInputManager")
+    vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+    vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+end
+
+script.funcs.setupBallTracking = function()
+    spawn(function()
+        while wait() do
+            if not riftcc.autoparry.enable then continue end
+            
+            for _, ballObj in pairs(ball:GetChildren()) do
+                if script.funcs.verifyBall(ballObj) and script.funcs.isTarget() then
+                    local distance = (ballObj.Position - cc.Focus.Position).Magnitude
+                    local velocity = ballObj.Velocity.Magnitude
+                    
+                    if velocity > 0 and (distance / velocity) <= 0.5 and not script.data.isKeyPressed then
+                        script.funcs.parry()
+                        script.data.isKeyPressed = true
+                        spawn(function()
+                            wait(0.1)
+                            script.data.isKeyPressed = false
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+    
+    ball.ChildAdded:Connect(function(ballObj)
+        if not script.funcs.verifyBall(ballObj) then return end
+        
+        local oldPosition = ballObj.Position
+        local oldTick = tick()
+        
+        ballObj:GetPropertyChangedSignal("Position"):Connect(function()
+            if script.funcs.isTarget() and riftcc.autoparry.enable then
+                local distance = (ballObj.Position - cc.Focus.Position).Magnitude
+                local velocity = (oldPosition - ballObj.Position).Magnitude
+                
+                if velocity > 0 and (distance / velocity) <= 0.5 and not script.data.isKeyPressed then
+                    script.funcs.parry()
+                    script.data.isKeyPressed = true
+                    spawn(function()
+                        wait(0.1)
+                        script.data.isKeyPressed = false
+                    end)
+                end
+            end
+            
+            if (tick() - oldTick >= 1/60) then
+                oldTick = tick()
+                oldPosition = ballObj.Position
+            end
+        end)
+    end)
+end
+
+script.funcs.dist = function(pos)
+    local d = plyr:DistanceFromCharacter(pos)
+    script.data.dist = math.floor(d)
+    return d
+end
+
+script.funcs.getPlayerAbility = function(player)
+    if not player.Character then return "None" end
+    
+    for _, tool in pairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name ~= "Sword" then
+            return tool.Name
+        end
+    end
+    
+    if player.Backpack then
+        for _, tool in pairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name ~= "Sword" then
+                return tool.Name
+            end
+        end
+    end
+    
+    if player.Character:FindFirstChild("Ability") then
+        local abilityValue = player.Character.Ability
+        if abilityValue:IsA("StringValue") or abilityValue:IsA("ObjectValue") then
+            return abilityValue.Value or "Unknown"
+        end
+    end
+    
+    return "None"
+end
+
+script.funcs.updatePlayerLabels = function()
+    for _, label in pairs(script.data.playerLabels) do
+        if label.Remove then
+            label:Remove()
+        end
+    end
+    script.data.playerLabels = {}
+    
+    if not riftcc.visuals.playerinfo then return end
+    
+    for _, player in pairs(plyrs:GetPlayers()) do
+        if player ~= plyr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local ability = script.funcs.getPlayerAbility(player)
+            local text = player.Name .. "(" .. ability .. ")"
+            
+            local label = script.funcs.draw("Text", {
+                Size = 14,
+                Font = Library.Font or 2,
+                Text = text,
+                Center = true,
+                Outline = true,
+                Color = Color3.new(1, 1, 1),
+                Visible = false
+            })
+            
+            script.data.playerLabels[player.UserId] = label
+        end
+    end
+end
+
+script.funcs.check = function(b)
+    if not b then return false end
+    if not script.funcs.target() then return false end
+    if not riftcc.autoparry.enable then return false end
+    
+    local vel = b.AssemblyLinearVelocity.Magnitude
+    
+    if riftcc.checks.speed and vel == 0 then 
+        return false 
+    end
+    
+    local d = script.funcs.dist(b.Position)
+    
+    if riftcc.autoparry.prediction.enable then
+        local prediction = vel * riftcc.autoparry.prediction.multiplier
+        d = d - prediction
+    end
+    
+    if riftcc.checks.ping then
+        local ping = 0
+        if game.Stats and game.Stats.Network then
+            for _, item in pairs(game.Stats.Network:GetChildren()) do
+                if item.Name:find("Ping") or item.Name:find("ping") then
+                    ping = item.Value or 0
+                    break
+                end
+            end
+        end
+        d = d - (vel * (ping / 1000))
+    end
+    
+    return d <= riftcc.autoparry.distance.parrydistance
+end
+
+script.funcs.ballTeleport = function()
+    if not riftcc.rage.balltp.enable then return end
+    if not plyr.Character or not plyr.Character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local b = script.funcs.findball()
+    if not b then return end
+    
+    local playerPos = plyr.Character.HumanoidRootPart.Position
+    local ballPos = b.Position
+    local distance = (playerPos - ballPos).Magnitude
+    
+    if distance <= riftcc.rage.balltp.distance then
+        local offset = Vector3.new(
+            math.random(-riftcc.rage.balltp.radius, riftcc.rage.balltp.radius),
+            0,
+            math.random(-riftcc.rage.balltp.radius, riftcc.rage.balltp.radius)
+        )
+        
+        plyr.Character.HumanoidRootPart.CFrame = CFrame.new(ballPos + offset)
+    end
+end
+
+script.funcs.parry = function()
+    if not riftcc.autoparry.enable then return end
+    local remote = rmts:FindFirstChild("ParryButtonPress")
+    if remote then
+        remote:Fire()
+    end
+end
+
+script.funcs.antiOnDeath = function()
+    spawn(function()
+        while wait(1) do
+            local onDeathRemote = rmts:FindFirstChild("OnDeath")
+            if onDeathRemote then
+                pcall(function()
+                    onDeathRemote:Destroy()
+                end)
+            end
+        end
+    end)
+end
+
+script.funcs.vis = function()
+    local b = script.funcs.findball()
+    
+    if b and riftcc.visuals.line[1] then
+        local pos, onscreen = cc:WorldToViewportPoint(b.Position)
+        local mouse = getmouse()
+        
+        script.draws.lineOutline.From = Vector2.new(pos.X, pos.Y)
+        script.draws.lineOutline.To = mouse
+        script.draws.lineOutline.Visible = onscreen
+        
+        script.draws.line.From = Vector2.new(pos.X, pos.Y)
+        script.draws.line.To = mouse
+        script.draws.line.Visible = onscreen
+    else
+        script.draws.line.Visible = false
+        script.draws.lineOutline.Visible = false
+    end
+    
+    if riftcc.visuals.distance then
+        script.draws.text.Text = "Ball Distance: " .. script.data.dist .. "m"
+        script.draws.text.Visible = true
+    else
+        script.draws.text.Visible = false
+    end
+    
+    for userId, label in pairs(script.data.playerLabels) do
+        local player = plyrs:GetPlayerByUserId(userId)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local pos, onscreen = cc:WorldToViewportPoint(player.Character.HumanoidRootPart.Position + Vector3.new(0, 4, 0))
+            if onscreen then
+                label.Position = Vector2.new(pos.X, pos.Y)
+                label.Visible = true
+                local ability = script.funcs.getPlayerAbility(player)
+                label.Text = player.Name .. "(" .. ability .. ")"
+            else
+                label.Visible = false
+            end
+        else
+            label.Visible = false
+        end
+    end
+end
+
+script.funcs.main = function()
+    local b = script.funcs.findball()
+    if b then
+        script.funcs.dist(b.Position)
+    end
+    
+    script.funcs.ballTeleport()
+    script.funcs.vis()
+end
+
+script.funcs.toggle = function()
+    riftcc.autoparry.enable = not riftcc.autoparry.enable
+end
+
+script.funcs.toggleRage = function()
+    riftcc.rage.balltp.enable = not riftcc.rage.balltp.enable
+end
+
+script.draws.line = script.funcs.draw("Line", {
+    Thickness = 3,
+    Color = Color3.new(1, 1, 1),
+    Transparency = 0.8,
+    Visible = false
+})
+
+script.draws.lineOutline = script.funcs.draw("Line", {
+    Thickness = 5,
+    Color = Color3.new(0, 0, 0),
+    Transparency = 0.5,
+    Visible = false
+})
+
+script.draws.text = script.funcs.draw("Text", {
+    Size = 16,
+    Font = Library.Font or 2,
+    Text = "Ball Distance: 0m",
+    Position = Vector2.new(cc.ViewportSize.X / 2, 30),
+    Center = true,
+    Outline = true,
+    Color = Color3.new(1, 1, 1),
+    Visible = false
+})
+
+--------------------------[[ Connections ]]
+script.funcs.conn(rs.Heartbeat, function()
+    script.funcs.main()
+end)
+
+script.funcs.conn(uis.InputBegan, function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == riftcc.autoparry.keybind then
+        script.funcs.toggle()
+    elseif input.KeyCode == riftcc.rage.balltp.keybind then
+        script.funcs.toggleRage()
+    end
+end)
+
+script.funcs.conn(rs.Heartbeat, function()
+    if tick() % 120 == 0 then
+        script.funcs.updatePlayerLabels()
+    end
+end)
+
+script.funcs.setupBallTracking()
+script.funcs.antiOnDeath()
+
+script.funcs.updatePlayerLabels()
+
+script.funcs.cleanup = function()
+    for _, conn in pairs(script.conns) do
+        if conn then
+            conn:Disconnect()
+        end
+    end
+    script.conns = {}
+    
+    for _, draw in pairs(script.draws) do
+        if draw and draw.Remove then
+            draw:Remove()
+        end
+    end
+    
+    for _, label in pairs(script.data.playerLabels) do
+        if label and label.Remove then
+            label:Remove()
+        end
+    end
+    script.data.playerLabels = {}
+end

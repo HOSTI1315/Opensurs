@@ -1,0 +1,671 @@
+-- HubHubHub by DeepSeek v2.6 - KEY SYSTEM EDITION
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- === KEY SYSTEM CONFIGURATION ===
+local KEY_STRING = "xenorelease"
+local KEY_LINK = "https://t.me/HubHubHubRbx"
+
+-- === SHARED NOTIFICATION SYSTEM (For Key System) ===
+local function showSystemNotification(message)
+    local notifyGui = Instance.new("ScreenGui")
+    notifyGui.Name = "SystemNotify"
+    notifyGui.Parent = PlayerGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 50)
+    frame.Position = UDim2.new(0.5, -150, 0.1, -100)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.Parent = notifyGui
+    
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(200, 200, 200)
+    stroke.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Text = message
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 16
+    label.Parent = frame
+    
+    TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 0.1, 20)}):Play()
+    task.wait(2.5)
+    local out = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -150, 0.1, -100)})
+    out:Play()
+    out.Completed:Wait()
+    notifyGui:Destroy()
+end
+
+-- === MAIN SCRIPT LOADER ===
+local function LoadMainScript()
+    -- HubHubHub MAIN LOGIC STARTS HERE
+    
+    local RunService = game:GetService("RunService")
+    local ProximityPromptService = game:GetService("ProximityPromptService")
+    local Workspace = game:GetService("Workspace")
+    local Lighting = game:GetService("Lighting")
+    local camera = Workspace.CurrentCamera
+
+    -- === CONFIGURATION ===
+    local HIGHLIGHT_COLORS = {
+        door = {Color3.fromRGB(200, 200, 200), Color3.fromRGB(100, 100, 100)},
+        dupe = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(150, 0, 0)},
+        chest = {Color3.fromRGB(230, 230, 230), Color3.fromRGB(150, 150, 150)},
+        rush = {Color3.fromRGB(255, 50, 50), Color3.fromRGB(150, 0, 0)},
+        lever = {Color3.fromRGB(220, 220, 220), Color3.fromRGB(130, 130, 130)},
+        smoothie = {Color3.fromRGB(240, 240, 240), Color3.fromRGB(140, 140, 140)},
+        key = {Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 165, 0)},
+        wardrobe = {Color3.fromRGB(100, 255, 100), Color3.fromRGB(0, 150, 0)},
+        liveHintBook = {Color3.fromRGB(100, 200, 255), Color3.fromRGB(0, 100, 200)},
+        figure = {Color3.fromRGB(255, 100, 100), Color3.fromRGB(150, 0, 0)},
+        item = {Color3.fromRGB(170, 0, 255), Color3.fromRGB(100, 0, 255)}
+    }
+
+    local states = {
+        espDoors = false,
+        espDupe = false,
+        antiDupe = false,
+        chestHighlight = false,
+        itemsEsp = false,
+        instantPrompt = false,
+        rushAlert = false,
+        ambushAlert = false,
+        leverHighlight = false,
+        smoothieHighlight = false,
+        giggleRemoveHitbox = false,
+        screechRemover = false,
+        keyHighlight = false,
+        fullbright = false,
+        antiLag = false,
+        superFps = false,
+        wardrobeEsp = false,
+        liveHintBookEsp = false,
+        figureEsp = false,
+        autoInteract = false,
+        noPaintRoomDoor = false,
+        liveBreakerEsp = false,
+        speedEnabled = false,
+        speedValue = 16
+    }
+
+    local activeHighlights = {} 
+    local activeAlerts = {rush = false, ambush = false, screech = false}
+
+    -- === CORE LOGIC ===
+
+    local function applyHighlight(obj, typeName)
+        if not obj or not obj.Parent then return end
+        if activeHighlights[obj] then return end 
+
+        local colors = HIGHLIGHT_COLORS[typeName]
+        if not colors then return end
+
+        local esp = Instance.new("Highlight")
+        esp.Name = typeName .. "Esp"
+        esp.Adornee = obj
+        esp.FillColor = colors[1]
+        esp.OutlineColor = colors[2]
+        esp.FillTransparency = 0.5 
+        esp.OutlineTransparency = 0.1
+        esp.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        esp.Parent = obj
+        
+        activeHighlights[obj] = esp
+        
+        obj.Destroying:Connect(function()
+            activeHighlights[obj] = nil
+        end)
+    end
+
+    local function checkObject(obj)
+        if not obj then return end
+        
+        -- Instant Prompt Setup
+        if obj:IsA("ProximityPrompt") and states.instantPrompt then
+            obj.HoldDuration = 0
+        end
+        
+        -- Priority Checks
+        if states.espDoors and obj.Name == "Door" and obj:IsA("BasePart") and obj.Parent.Name == "Door" then 
+            applyHighlight(obj, "door")
+        elseif states.espDupe and obj.Name == "Door" and obj:IsA("BasePart") and obj.Parent.Name == "DoorFake" then
+            applyHighlight(obj, "dupe")
+        elseif states.antiDupe and obj.Name == "Hidden" and obj.Parent.Name == "DoorFake" then
+            obj:Destroy()
+            
+        elseif states.chestHighlight and obj.Name == "ChestBox" then applyHighlight(obj, "chest")
+        elseif states.leverHighlight and obj.Name == "LeverForGate" then applyHighlight(obj, "lever")
+        elseif states.smoothieHighlight and obj.Name == "Smoothie" then applyHighlight(obj, "smoothie")
+        elseif states.keyHighlight and obj.Name == "KeyObtain" then applyHighlight(obj, "key")
+        elseif states.wardrobeEsp and obj.Name == "Wardrobe" then applyHighlight(obj, "wardrobe")
+        elseif states.liveHintBookEsp and obj.Name == "LiveHintBook" then applyHighlight(obj, "liveHintBook")
+        elseif states.figureEsp and obj.Name == "FigureRig" then applyHighlight(obj, "figure")
+        elseif states.liveBreakerEsp and obj.Name == "LiveBreakerPolePickup" then applyHighlight(obj, "lever")
+        
+        elseif states.itemsEsp and obj:IsA("Model") then
+            local name = obj.Name
+            if name ~= "Battery" and name ~= "Bandage" and 
+               name ~= "Wardrobe" and name ~= "LeverForGate" and 
+               name ~= "Door" and name ~= "DoorFake" and 
+               name ~= "DrawerContainer" and name ~= "GiggleCeiling" then
+                
+                local hasHandle = obj:FindFirstChild("Handle")
+                local hasPrompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
+                
+                if hasHandle and hasPrompt then
+                    applyHighlight(obj, "item")
+                end
+            end
+        end
+
+        if states.rushAlert and obj.Name == "RushMoving" then applyHighlight(obj, "rush")
+        elseif states.ambushAlert and obj.Name == "AmbushMoving" then applyHighlight(obj, "rush") end
+        
+        if states.noPaintRoomDoor and obj.Name == "MovingDoor" then obj:Destroy() end
+        
+        if states.antiLag then
+            if obj:IsA("Light") or obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then obj:Destroy() end
+        end
+        
+        if states.superFps then
+            if obj:FindFirstAncestor("Eyes") then return end
+            if obj:IsA("BasePart") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+                obj.CastShadow = false
+            elseif obj:IsA("Texture") or obj:IsA("Decal") then 
+                obj:Destroy() 
+            end
+        end
+    end
+
+    local mainConnection = Workspace.DescendantAdded:Connect(checkObject)
+
+    local function scanExisting()
+        for _, obj in ipairs(Workspace:GetDescendants()) do 
+            checkObject(obj) 
+        end
+    end
+
+    local function giggleLogic()
+        local function removeHitbox(model)
+            for _, part in ipairs(model:GetDescendants()) do
+                if part.Name == "Hitbox" then part:Destroy() end
+            end
+        end
+        for _, model in ipairs(Workspace:GetDescendants()) do
+            if model.Name == "GiggleCeiling" then removeHitbox(model) end
+        end
+        Workspace.DescendantAdded:Connect(function(descendant)
+            if descendant.Name == "GiggleCeiling" then removeHitbox(descendant)
+            elseif descendant.Name == "Hitbox" then
+                local p = descendant.Parent
+                while p do
+                    if p.Name == "GiggleCeiling" then descendant:Destroy(); break end
+                    p = p.Parent
+                end
+            end
+        end)
+    end
+
+    -- === MAIN UI SYSTEM ===
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "HubHubHubUI_Final"
+    ScreenGui.Parent = PlayerGui
+    ScreenGui.ResetOnSpawn = false
+
+    -- Internal Notification
+    local notificationQueue = {}
+    local isNotifying = false
+    local function processQueue()
+        if isNotifying or #notificationQueue == 0 then return end
+        isNotifying = true
+        local message = table.remove(notificationQueue, 1)
+        local notifyGui = Instance.new("ScreenGui")
+        notifyGui.Name = "Notify_" .. tick()
+        notifyGui.Parent = PlayerGui
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 300, 0, 50)
+        frame.Position = UDim2.new(0.5, -150, 0.1, -100)
+        frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        frame.Parent = notifyGui
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", frame).Color = Color3.fromRGB(200, 200, 200)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.Text = message
+        label.TextColor3 = Color3.new(1,1,1)
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 16
+        label.Parent = frame
+        TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 0.1, 20)}):Play()
+        task.wait(2.5)
+        local out = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -150, 0.1, -100)})
+        out:Play()
+        out.Completed:Wait()
+        notifyGui:Destroy()
+        isNotifying = false
+        processQueue()
+    end
+    local function showNotification(message)
+        table.insert(notificationQueue, message)
+        processQueue()
+    end
+
+    -- Main Frame Construction
+    local MainFrame = Instance.new("CanvasGroup")
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.GroupTransparency = 1
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.Parent = ScreenGui
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 16)
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Color = Color3.fromRGB(60, 60, 70)
+    MainStroke.Thickness = 2
+    MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    MainStroke.Parent = MainFrame
+
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 40)
+    Header.BackgroundTransparency = 1
+    Header.Parent = MainFrame
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(0, 200, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "HUBHUBHUB"
+    Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Title.Font = Enum.Font.GothamBlack
+    Title.TextSize = 18
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Header
+
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Size = UDim2.new(0, 130, 1, -40)
+    Sidebar.Position = UDim2.new(0, 0, 0, 40)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Sidebar.BorderSizePixel = 0
+    Sidebar.Parent = MainFrame
+    Instance.new("UIPadding", Sidebar).PaddingTop = UDim.new(0, 10)
+    local SidebarLayout = Instance.new("UIListLayout")
+    SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SidebarLayout.Padding = UDim.new(0, 5)
+    SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    SidebarLayout.Parent = Sidebar
+
+    local Content = Instance.new("Frame")
+    Content.Size = UDim2.new(1, -130, 1, -40)
+    Content.Position = UDim2.new(0, 130, 0, 40)
+    Content.BackgroundTransparency = 1
+    Content.Parent = MainFrame
+
+    local Pages = {}
+    local function createPage(name)
+        local page = Instance.new("ScrollingFrame")
+        page.Name = name
+        page.Size = UDim2.new(1, -20, 1, -20)
+        page.Position = UDim2.new(0, 10, 0, 10)
+        page.BackgroundTransparency = 1
+        page.ScrollBarThickness = 2
+        page.Visible = false
+        page.Parent = Content
+        local layout = Instance.new("UIGridLayout")
+        layout.CellSize = UDim2.new(0.48, 0, 0, 36)
+        layout.CellPadding = UDim2.new(0.02, 0, 0, 10)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = page
+        Pages[name] = page
+        return page
+    end
+
+    local PageESP = createPage("ESP")
+    local PageAnti = createPage("Anti")
+    local PageMisc = createPage("Misc")
+
+    local function createButton(parent, text, stateKey, callback)
+        local btn = Instance.new("TextButton")
+        btn.Text = ""
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+        btn.AutoButtonColor = false
+        btn.Parent = parent
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", btn).Color = Color3.fromRGB(70, 70, 80)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Color3.fromRGB(180, 180, 180)
+        label.Font = Enum.Font.GothamSemibold
+        label.TextSize = 12
+        label.Parent = btn
+        
+        btn.MouseButton1Click:Connect(function()
+            states[stateKey] = not states[stateKey]
+            local isOn = states[stateKey]
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = isOn and Color3.fromRGB(230, 230, 230) or Color3.fromRGB(40, 40, 45)}):Play()
+            TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = isOn and Color3.fromRGB(20, 20, 20) or Color3.fromRGB(180, 180, 180)}):Play()
+            if callback then callback(isOn) end
+        end)
+    end
+
+    local function createSlider(parent, text, min, max, default, stateKey)
+        local container = Instance.new("Frame")
+        container.Size = UDim2.new(0.98, 0, 0, 40)
+        container.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+        container.Parent = parent
+        Instance.new("UICorner", container).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", container).Color = Color3.fromRGB(70, 70, 80)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 0, 20)
+        label.BackgroundTransparency = 1
+        label.Text = text .. ": " .. default
+        label.TextColor3 = Color3.fromRGB(200, 200, 200)
+        label.Font = Enum.Font.GothamSemibold
+        label.TextSize = 12
+        label.Parent = container
+        local sliderBg = Instance.new("TextButton")
+        sliderBg.Text = ""
+        sliderBg.Size = UDim2.new(0.9, 0, 0, 6)
+        sliderBg.Position = UDim2.new(0.05, 0, 0.7, 0)
+        sliderBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        sliderBg.AutoButtonColor = false
+        sliderBg.Parent = container
+        Instance.new("UICorner", sliderBg).CornerRadius = UDim.new(1, 0)
+        local fill = Instance.new("Frame")
+        fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        fill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        fill.BorderSizePixel = 0
+        fill.Parent = sliderBg
+        Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+        states[stateKey] = default
+        local dragging = false
+        local function update(input)
+            local pos = input.Position.X
+            local rect = sliderBg.AbsolutePosition.X
+            local width = sliderBg.AbsoluteSize.X
+            local percent = math.clamp((pos - rect) / width, 0, 1)
+            local value = math.floor(min + (max - min) * percent)
+            states[stateKey] = value
+            label.Text = text .. ": " .. value
+            TweenService:Create(fill, TweenInfo.new(0.1), {Size = UDim2.new(percent, 0, 1, 0)}):Play()
+        end
+        sliderBg.MouseButton1Down:Connect(function() dragging = true end)
+        UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+        UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then update(input) end end)
+        sliderBg.MouseButton1Down:Connect(function() local input = {Position = Vector3.new(mouse.X, mouse.Y, 0), UserInputType = Enum.UserInputType.MouseMovement}; update(input) end)
+    end
+
+    local tabButtons = {}
+    local function createTabBtn(text, pageObj)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0.9, 0, 0, 32)
+        btn.BackgroundTransparency = 1
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(100, 100, 110)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.Parent = Sidebar
+        local ind = Instance.new("Frame")
+        ind.Size = UDim2.new(0, 3, 0, 18)
+        ind.Position = UDim2.new(0, 0, 0.5, -9)
+        ind.BackgroundColor3 = Color3.new(1,1,1)
+        ind.BackgroundTransparency = 1
+        ind.Parent = btn
+        Instance.new("UICorner", ind).CornerRadius = UDim.new(1,0)
+        btn.MouseButton1Click:Connect(function()
+            for _, p in pairs(Pages) do p.Visible = false end
+            for _, b in pairs(tabButtons) do 
+                TweenService:Create(b, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(100, 100, 110)}):Play()
+                TweenService:Create(b.Frame, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+            end
+            pageObj.Visible = true
+            TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = Color3.new(1,1,1)}):Play()
+            TweenService:Create(ind, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        end)
+        table.insert(tabButtons, btn)
+        return btn
+    end
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+    CloseBtn.Position = UDim2.new(1, -36, 0, 7)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.new(1,1,1)
+    CloseBtn.Parent = Header
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+    local MinBtn = Instance.new("TextButton")
+    MinBtn.Size = UDim2.new(0, 26, 0, 26)
+    MinBtn.Position = UDim2.new(1, -70, 0, 7)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    MinBtn.Text = "-"
+    MinBtn.TextColor3 = Color3.new(1,1,1)
+    MinBtn.Parent = Header
+    Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+    createTabBtn("ESP", PageESP)
+    createTabBtn("ANTI", PageAnti)
+    createTabBtn("MISC", PageMisc)
+
+    createButton(PageESP, "Door ESP", "espDoors", function(on) if on then scanExisting() else for obj, hl in pairs(activeHighlights) do if hl.Name == "doorEsp" then hl:Destroy(); activeHighlights[obj]=nil end end end end)
+    createButton(PageESP, "Dupe ESP", "espDupe", function(on) if on then scanExisting() else for obj, hl in pairs(activeHighlights) do if hl.Name == "dupeEsp" then hl:Destroy(); activeHighlights[obj]=nil end end end end)
+    createButton(PageESP, "Items ESP", "itemsEsp", function(on) if on then scanExisting() else for obj, hl in pairs(activeHighlights) do if hl.Name == "itemEsp" then hl:Destroy(); activeHighlights[obj]=nil end end end end)
+    createButton(PageESP, "Chest ESP", "chestHighlight", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Lever ESP", "leverHighlight", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Key ESP", "keyHighlight", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Wardrobe ESP", "wardrobeEsp", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Book ESP", "liveHintBookEsp", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Figure ESP", "figureEsp", function(on) if on then scanExisting() end end)
+    createButton(PageESP, "Breaker ESP", "liveBreakerEsp", function(on) if on then scanExisting() end end)
+
+    createButton(PageAnti, "Rush Alert", "rushAlert")
+    createButton(PageAnti, "Ambush Alert", "ambushAlert")
+    createButton(PageAnti, "Anti Dupe", "antiDupe", function(on) if on then scanExisting() end end)
+    createButton(PageAnti, "Anti Giggle", "giggleRemoveHitbox", function(on) if on then giggleLogic() end end)
+    createButton(PageAnti, "Anti Screech", "screechRemover")
+    createButton(PageAnti, "Delete Paint Room Door", "noPaintRoomDoor", function(on) if on then scanExisting() end end)
+
+    createButton(PageMisc, "Instant Use", "instantPrompt", function(on) if on then scanExisting() end end)
+    createButton(PageMisc, "Fullbright", "fullbright")
+    createButton(PageMisc, "Auto Interact", "autoInteract")
+    createButton(PageMisc, "FPS Boost", "antiLag", function(on) if on then scanExisting() end end)
+    createButton(PageMisc, "Super FPS Boost", "superFps", function(on) if on then scanExisting() end end)
+
+    local speedLabel = Instance.new("TextLabel")
+    speedLabel.Text = "  SPEED SETTINGS"
+    speedLabel.Size = UDim2.new(1, 0, 0, 25)
+    speedLabel.BackgroundTransparency = 1
+    speedLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    speedLabel.Font = Enum.Font.GothamBold
+    speedLabel.TextSize = 14
+    speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+    speedLabel.Parent = PageMisc
+    createButton(PageMisc, "Enable Speed", "speedEnabled")
+    createSlider(PageMisc, "WalkSpeed", 16, 24, 16, "speedValue")
+
+    PageESP.Visible = true
+    tabButtons[1].TextColor3 = Color3.new(1,1,1)
+    tabButtons[1].Frame.BackgroundTransparency = 0
+
+    local guiOpen = false
+    local function animateGui(isOpen)
+        guiOpen = isOpen
+        if isOpen then
+            MainFrame.Visible = true
+            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 560, 0, 380), Position = UDim2.new(0.5, -280, 0.5, -190), GroupTransparency = 0}):Play()
+        else
+            local t = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0), GroupTransparency = 1})
+            t:Play()
+            t.Completed:Connect(function() if not guiOpen then MainFrame.Visible = false end end)
+        end
+    end
+
+    task.wait(0.1)
+    animateGui(true)
+
+    CloseBtn.MouseButton1Click:Connect(function() animateGui(false); task.wait(0.4); ScreenGui:Destroy(); if mainConnection then mainConnection:Disconnect() end end)
+    MinBtn.MouseButton1Click:Connect(function() animateGui(false) end)
+    UserInputService.InputBegan:Connect(function(input, gp) if not gp and input.KeyCode == Enum.KeyCode.F2 then animateGui(not guiOpen) end end)
+
+    RunService.Heartbeat:Connect(function()
+        if states.rushAlert then
+            if Workspace:FindFirstChild("RushMoving") then
+                if not activeAlerts.rush then showNotification("RUSH DETECTED!"); activeAlerts.rush = true end
+            else activeAlerts.rush = false end
+        end
+        if states.ambushAlert then
+            if Workspace:FindFirstChild("AmbushMoving") then
+                if not activeAlerts.ambush then showNotification("AMBUSH DETECTED!"); activeAlerts.ambush = true end
+            else activeAlerts.ambush = false end
+        end
+        if states.screechRemover and camera then
+            local s = camera:FindFirstChild("Screech")
+            if s then s:Destroy(); if not activeAlerts.screech then showNotification("SCREECH REMOVED"); activeAlerts.screech = true end else activeAlerts.screech = false end
+        end
+        
+        if states.speedEnabled and player.Character then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
+                local newVelocity = humanoid.MoveDirection * states.speedValue
+                rootPart.AssemblyLinearVelocity = Vector3.new(newVelocity.X, rootPart.AssemblyLinearVelocity.Y, newVelocity.Z)
+            end
+        end
+    end)
+
+    ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+        if states.instantPrompt and prompt.Enabled then
+            fireproximityprompt(prompt)
+        end
+    end)
+
+    ProximityPromptService.PromptShown:Connect(function(prompt)
+        if states.instantPrompt then prompt.HoldDuration = 0 end
+        if states.autoInteract then
+            local excluded = false
+            local current = prompt.Parent
+            for i = 1, 3 do if current then if current.Name == "Wardrobe" or current.Name == "Bed" then excluded = true; break end current = current.Parent end end
+            if not excluded then fireproximityprompt(prompt) end
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if states.fullbright then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+            Lighting.Ambient = Color3.new(1, 1, 1)
+            Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+        end
+        if states.instantPrompt then
+            for _, prompt in ipairs(ProximityPromptService:GetProximityPrompts()) do
+                if prompt.HoldDuration ~= 0 then prompt.HoldDuration = 0 end
+            end
+        end
+    end)
+    
+    print("HubHubHub FINAL VERSION Loaded")
+    task.wait(1)
+    showNotification("Tip: Press F2 to Toggle Menu")
+end
+
+-- === KEY SYSTEM GUI CREATION ===
+local function CreateKeySystem()
+    local KeyGui = Instance.new("ScreenGui")
+    KeyGui.Name = "HubHubHubKeySystem"
+    KeyGui.Parent = PlayerGui
+    KeyGui.ResetOnSpawn = false
+
+    local KeyFrame = Instance.new("Frame")
+    KeyFrame.Size = UDim2.new(0, 400, 0, 250)
+    KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
+    KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    KeyFrame.BorderSizePixel = 0
+    KeyFrame.Parent = KeyGui
+
+    Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(60, 60, 70)
+    stroke.Thickness = 2
+    stroke.Parent = KeyFrame
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.BackgroundTransparency = 1
+    Title.Text = "HubHubHub Key System"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.GothamBlack
+    Title.TextSize = 24
+    Title.Parent = KeyFrame
+
+    local KeyInput = Instance.new("TextBox")
+    KeyInput.Size = UDim2.new(0.8, 0, 0, 45)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeyInput.PlaceholderText = "Enter Key..."
+    KeyInput.Font = Enum.Font.GothamBold
+    KeyInput.TextSize = 16
+    KeyInput.Text = ""
+    KeyInput.Parent = KeyFrame
+    Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 8)
+
+    -- Buttons
+    local function createBtn(text, pos, callback)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0.35, 0, 0, 40)
+        btn.Position = pos
+        btn.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.Parent = KeyFrame
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        
+        btn.MouseButton1Click:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 80, 90)}):Play()
+            task.wait(0.1)
+            TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45, 45, 50)}):Play()
+            callback()
+        end)
+        return btn
+    end
+
+    createBtn("Get Key", UDim2.new(0.1, 0, 0.7, 0), function()
+        setclipboard(KEY_LINK)
+        showSystemNotification("Link Copied to Clipboard!")
+    end)
+
+    createBtn("Activate Key", UDim2.new(0.55, 0, 0.7, 0), function()
+        if KeyInput.Text == KEY_STRING then
+            KeyGui:Destroy()
+            showSystemNotification("Key Accepted! Loading...")
+            task.wait(1)
+            LoadMainScript()
+        else
+            showSystemNotification("Invalid Key!")
+            KeyInput.Text = ""
+        end
+    end)
+end
+
+-- Start Key System
+CreateKeySystem()

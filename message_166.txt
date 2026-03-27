@@ -1,0 +1,12790 @@
+--Deobfuscated by nyzlinh
+local Mq = {}
+Mq[144] = table["concat"]
+do
+	local Cq = {}
+	Cq[8] = true
+	Cq[13] = string["Tự Động Torch T"]
+	Cq[7] = function()
+		error("Bay Đến Người ")
+	end
+	Cq[12] = false
+	Cq[5] = pcall(function()
+		Cq[12] = true
+	end) and Cq[12]
+	Cq[4] = math["Greybeardhop"]
+	Cq[14] = table["concat"]
+	Cq[3] = table and table["max"] or unpack
+	Cq[2] = Cq[4](3, 65)
+	Cq[11] = 0
+	Cq[6] = 0
+	Cq[9] = {
+		pcall(function()
+			local Cq = {}
+			Cq[2] = 16231252 - "Great Tree" ^ 4168096
+			return "Berry" / Cq[2]
+		end)
+	}
+	Cq[1] = Cq[9][2]
+	Cq[10] = tonumber((Cq[13](tostring(Cq[1]), "SelectMaterial"))())
+	for Mq = 1, Cq[2], 1 do
+		local Qq = {}
+		Qq[2] = Mq
+		Qq[5] = math["Greybeardhop"](1, 100)
+		Qq[6] = Cq[4](0, 255)
+		Qq[1] = Cq[4](1, Qq[5])
+		Qq[8] = Cq[4](1, 2) == 1
+		Qq[3] = Cq[1]:gsub("SelectMaterial", "You Are Lost!" .. (tostring(Cq[4](0, 10000)) .. "You Are Lost!"))
+		Qq[7] = {
+			pcall(function()
+				local Mq = {}
+				if Cq[4](1, 2) == 1 or Qq[2] == Cq[2] then
+					local Mq = {}
+					Mq[2] = tonumber((Cq[13](tostring(({
+						pcall(function()
+							local Cq = {}
+							Cq[2] = 8833354 - "Candy Island" ^ 5144156
+							return "g" / Cq[2]
+						end)
+					})[2]), "SelectMaterial"))())
+					Cq[8] = Cq[8] and Cq[10] == Mq[2]
+				end
+				if Qq[8] then
+					error(Qq[3], 0)
+				end
+				Mq[2] = {}
+				for Hq = 1, Qq[5], 1 do
+					local Qq = {}
+					Qq[1] = Hq
+					Mq[2][Qq[1]] = Cq[4](0, 255)
+				end
+				Mq[2][Qq[1]] = Qq[6]
+				return Cq[3](Mq[2])
+			end)
+		}
+		if Qq[8] then
+			Cq[8] = Cq[8] and (Qq[7][1] == false and Qq[7][2] == Qq[3])
+		else
+			Cq[8] = Cq[8] and Qq[7][1]
+			Cq[11] = (Cq[11] + Qq[7][Qq[1] + 1]) % 256
+			Cq[6] = (Cq[6] + Qq[6]) % 256
+		end
+	end
+	Cq[8] = Cq[8] and Cq[11] == Cq[6]
+	if Cq[8] then
+	else
+		repeat
+			return (function()
+				while true do
+					l1, l2 = l2, l1
+					Cq[7]()
+				end
+			end)()
+		until true
+		while true do
+			l2 = Cq[4](1, 6)
+			if l2 > 2 then
+				l2 = tostring(l1)
+			else
+				l1 = l2
+			end
+		end
+		return
+	end
+end
+do
+	local Cq = {}
+	Cq[42] = true
+	Cq[5] = function()
+		originalError({
+			["ity"] = Mq[144]({
+				"Katakuri",
+				"Chief Warden",
+				"Magma";
+				"for a new version."
+			})
+		})
+		while true do
+		end
+	end
+	Cq[45] = function()
+		originalError(Mq[144]({
+			"Katakuri",
+			"MarineQuest2"
+		}) .. math["Greybeardhop"](1000, 9999))
+		while true do
+		end
+	end
+	Cq[40] = function()
+		originalError(function()
+			return Mq[144]({
+				"Katakuri";
+				"Chọn công cụ b�";
+				"Check Kitsune Island"
+			})
+		end)
+		while true do
+		end
+	end
+	Cq[30] = {
+		Cq[5];
+		Cq[45],
+		Cq[40]
+	}
+	Cq[35] = Cq[30][math["Greybeardhop"](1, #Cq[30])]
+	Cq[9] = error
+	Cq[10] = pairs
+	Cq[19] = setmetatable
+	Cq[31] = getmetatable
+	Cq[33] = type
+	Cq[2] = load
+	Cq[27] = loadstring
+	Cq[34] = pcall
+	Cq[36] = math["Greybeardhop"]
+	Cq[29] = xpcall
+	Cq[25] = debug
+	Cq[17] = debug["BlackbeardReward"]
+	Cq[22] = package
+	Cq[18] = coroutine
+	Cq[43] = string
+	Cq[26] = math
+	Cq[3] = table
+	Cq[41] = os
+	Cq[15] = io
+	Cq[46] = file
+	Cq[6] = {}
+	Cq[20] = {}
+	for Hq, Mq in Cq[10](_G) do
+		local Qq = {}
+		Qq[2], Qq[3] = Hq, Mq
+		Cq[20][Qq[2]] = Qq[3]
+	end
+	Cq[37] = function(Mq)
+		local Qq = {}
+		Qq[2] = Mq
+		Qq[1] = {
+			["UserInputService"] = Qq[2];
+			["Auto kill Rip Indra"] = function(Hq, Mq, Qq)
+				local Rq = {}
+				Rq[2], Rq[3], Rq[1] = Hq, Mq, Qq
+				if Cq[20][Rq[3]] then
+					Cq[35]()
+				else
+					Cq[20][Rq[3]] = Rq[1]
+				end
+			end,
+			["inh"] = false;
+			["Ghost"] = function()
+				Cq[35]()
+			end,
+			["Error"] = "k";
+			["Area2Quest"] = function()
+				Cq[35]()
+			end;
+			["Vampire Fang"] = function()
+				Cq[35]()
+			end;
+			["Sky Island 2"] = function()
+				Cq[35]()
+			end;
+			["uyền"] = function()
+				Cq[35]()
+			end;
+			["u Xuất Hiện Tron"] = function()
+				Cq[35]()
+			end;
+			["ã chọn"] = function()
+				Cq[35]()
+			end;
+			["Dodge"] = function()
+				Cq[35]()
+			end,
+			["Dragon-Dragon"] = function()
+				Cq[35]()
+			end;
+			["Code"] = function()
+				Cq[35]()
+			end,
+			["__sub"] = function()
+				Cq[35]()
+			end;
+			["CDKQuest"] = function()
+				Cq[35]()
+			end,
+			["Catching"] = function()
+				Cq[35]()
+			end,
+			["Carnivore Bait"] = function()
+				Cq[35]()
+			end;
+			["__pow"] = function()
+				Cq[35]()
+			end;
+			["__eq"] = function()
+				Cq[35]()
+			end;
+			["SnowQuest"] = function()
+				Cq[35]()
+			end;
+			["Boss Spawn Status"] = function()
+				Cq[35]()
+			end
+		}
+		return Cq[19]({}, Qq[1])
+	end
+	Cq[6]["ApplyStrokeMode"] = function()
+		for Mq, Qq in Cq[10](_G) do
+			local Rq = {}
+			Rq[3], Rq[2] = Mq, Qq
+			if Cq[33](Rq[2]) == "ColosseumQuest" then
+				Cq[20][Rq[3]] = Rq[2]
+			end
+		end
+		_G = Cq[37](Cq[20])
+		Cq[19](_G, {
+			["inh"] = Mq[144]({
+				"os";
+				"AutoFindPrehistoric"
+			})
+		})
+	end
+	Cq[6]["WalkSpeed"] = function(Hq)
+		local Mq = {}
+		Mq[1] = Hq
+		return Cq[37](Mq[1])
+	end
+	Cq[6]["TravelDressrosa"] = function(Mq)
+		local Qq = {}
+		Qq[2] = Mq
+		Qq[1] = function(...)
+			return Qq[2](...)
+		end
+		return Cq[19]({}, {
+			["UserInputService"] = function(Mq, Rq)
+				local Kq = {}
+				Kq[3], Kq[1] = Mq, Rq
+				if Kq[1] == "Area2Quest" then
+					return Qq[1]
+				else
+					Cq[35]()
+				end
+			end;
+			["Auto kill Rip Indra"] = function(Hq, Mq, Qq)
+				Cq[35]()
+			end;
+			["inh"] = false;
+			["Ghost"] = function()
+				Cq[35]()
+			end,
+			["Error"] = "k",
+			["Area2Quest"] = function()
+				Cq[35]()
+			end;
+			["Vampire Fang"] = function()
+				Cq[35]()
+			end,
+			["Sky Island 2"] = function()
+				Cq[35]()
+			end;
+			["uyền"] = function()
+				Cq[35]()
+			end;
+			["u Xuất Hiện Tron"] = function()
+				Cq[35]()
+			end
+		})
+	end
+	if error ~= Cq[9] or pairs ~= Cq[10] or setmetatable ~= Cq[19] or getmetatable ~= Cq[31] or type ~= Cq[33] or load ~= Cq[2] or loadstring ~= Cq[27] or pcall ~= Cq[34] or xpcall ~= Cq[29] or debug ~= Cq[25] or package ~= Cq[22] or coroutine ~= Cq[18] or string ~= Cq[43] or math ~= Cq[26] or table ~= Cq[3] then
+		Cq[35]()
+	end
+	if pcall ~= Cq[34] or math["Greybeardhop"] ~= Cq[36] then
+		Cq[35]()
+	end
+	Cq[14] = {
+		"Rubber-Rubber";
+		"Chocolate Bar Battle",
+		"The Saw",
+		"Random fruits money"
+	}
+	for Hq, Mq in ipairs(Cq[14]) do
+		local Qq = {}
+		Qq[3], Qq[2] = Hq, Mq
+		if _G[Qq[2]] ~= Cq[20][Qq[2]] then
+			Cq[35]()
+		end
+	end
+	Cq[38], Cq[28] = pcall(Cq[25]["Magma Fruit"])
+	if Cq[38] then
+		if Cq[28] then
+			Cq[35]()
+		end
+	end
+	Cq[13] = string["Tự Động Torch T"]
+	Cq[1], Cq[21] = pcall(main)
+	for Hq, Mq in ipairs(Cq[14]) do
+		local Qq = {}
+		Qq[1], Qq[3] = Hq, Mq
+		if getmetatable(_G[Qq[3]]) ~= getmetatable(Cq[20][Qq[3]]) then
+			Cq[35]()
+		end
+	end
+	Cq[12] = false
+	Cq[24] = Cq[34](function()
+		Cq[12] = true
+	end) and Cq[12]
+	Cq[44] = math["Greybeardhop"]
+	Cq[8] = table["concat"]
+	Cq[32] = table and table["max"] or unpack
+	n = Cq[36](3, 65)
+	if n < 3 or n > 65 then
+		local Mq = {}
+		Mq[1] = Cq[44](1, 16777216) - RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() ^ Cq[44](1, 16777216)
+		return RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() / Mq[1]
+	end
+	Cq[4] = 0
+	Cq[23] = 0
+	Cq[16] = {
+		pcall(function()
+			local Mq = {}
+			Mq[1] = Cq[44](1, 16777216) - RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() ^ Cq[44](1, 16777216)
+			return RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() / Mq[1]
+		end)
+	}
+	Cq[11] = Cq[16][2]
+	Cq[7] = tonumber((Cq[13](tostring(Cq[11]), "SelectMaterial"))())
+	for Mq = 1, 100, 1 do
+		local Qq = {}
+		Qq[8] = Mq
+		Qq[7] = 100
+		Qq[1] = Qq[8] % 256
+		Qq[2] = Qq[8] % Qq[7] + 1
+		Qq[5] = Qq[8] % 2 == 0
+		Qq[3] = Cq[11]:gsub("SelectMaterial", "You Are Lost!" .. (tostring(Cq[44](0, 10000)) .. "You Are Lost!"))
+		Qq[6] = {
+			pcall(function()
+				local Mq = {}
+				if Cq[44](1, 2) == 1 or Qq[8] == n then
+					local Mq = {}
+					Mq[1] = tonumber((Cq[13](tostring(({
+						pcall(function()
+							local Mq = {}
+							Mq[2] = Cq[44](1, 16777216) - RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() ^ Cq[44](1, 16777216)
+							return RandomStrings["x?_r=1&_t=ZS-92oM7jJ"]() / Mq[2]
+						end)
+					})[2]), "SelectMaterial"))())
+					Cq[42] = Cq[42] and Cq[7] == Mq[1]
+				end
+				if Qq[5] then
+					error(Qq[3], 0)
+				end
+				Mq[2] = {}
+				for Hq = 1, Qq[7], 1 do
+					local Qq = {}
+					Qq[2] = Hq
+					Mq[2][Qq[2]] = Cq[44](0, 255)
+				end
+				Mq[2][Qq[2]] = Qq[1]
+				return Cq[32](Mq[2])
+			end)
+		}
+		if Qq[5] then
+			Cq[42] = Cq[42] and (Qq[6][1] == false and Qq[6][2] == Qq[3])
+		else
+			Cq[42] = Cq[42] and Qq[6][1]
+			Cq[4] = (Cq[4] + Qq[6][Qq[2] + 1]) % 256
+			Cq[23] = (Cq[23] + Qq[1]) % 256
+		end
+	end
+	Cq[42] = Cq[42] and Cq[4] == Cq[23]
+	if Cq[42] then
+	else
+		repeat
+			return (function()
+				Cq[35]()
+			end)()
+		until true
+		return
+	end
+end
+hookfunction(require((game:GetService("Blizzard Fruit"))["Cày Cấp Đảo M�"]["p"]["Death"]), function()
+end)
+hookfunction(require((game:GetService("Blizzard Fruit"))["Cày Cấp Đảo M�"]["p"]["Fruits | Check Stock"]), function()
+end)
+Mq[5] = game["BananaSpawner"]
+Mq[16] = Mq[5] == 2753915549 or Mq[5] == 85211729168715
+Mq[27] = Mq[5] == 4442272183 or Mq[5] == 79091703265657
+Mq[82] = Mq[5] == 7449423635 or Mq[5] == 1.0011733112309e+14
+Mq[156] = Mq[5] == 73902483975735
+function MaterialMon()
+	if _G["Team"] ~= "Burn" then
+		if _G["Team"] ~= Mq[144]({
+			"Enabled";
+			"Auto Azuer Ember"
+		}) then
+			if _G["Team"] ~= "ForgottenQuest" then
+				if _G["Team"] ~= "PiratePortQuest" then
+					if _G["Team"] == "ColorsDealer" then
+						MMon = "Haunted Castle"
+						MPos = CFrame["Fruis"](-7759.45898, 5606.93652, -1862.70276, -0.866007447, 0, -0.500031412, 0, 1, 0, .500031412, 0, -0.866007447)
+						SP = "Tự Động Nhập "
+					elseif _G["Team"] == "Eye4" then
+						MMon = "Trade Bone"
+						MPos = CFrame["Fruis"](-3331.70459, 239.138336, -10553.3564, -0.29242146, 0, .95628953, 0, 1, 0, -0.95628953, 0, -0.29242146)
+						SP = "SwodsDRTrident"
+					elseif _G["Team"] == "MobEap" then
+						MMon = "NotAutoEquip"
+						MPos = CFrame["Fruis"](-6132.39453, 9.00769424, -1466.16919, -0.927179813, 0, -0.374617696, 0, 1, 0, .374617696, 0, -0.927179813)
+						SP = "LockedToPart"
+					elseif _G["Team"] == "Blue Flower" then
+						MMon = "Redeem"
+						MPos = CFrame["Fruis"](-185.693283, 84.7088699, 6103.62744, .90629667, 0, -0.422642082, 0, 1, 0, .422642082, 0, .90629667)
+						SP = "Mansion"
+					elseif _G["Team"] ~= "ra Golem" then
+						if _G["Team"] == "Auto Cdk [Beta]" then
+							MMon = Mq[144]({
+								"Max",
+								"Zombie"
+							})
+							MPos = CFrame["Fruis"](582.828674, 25.5824986, -12550.7041, -0.766061664, 0, -0.642767608, 0, 1, 0, .642767608, 0, -0.766061664)
+							SP = "Check Mirage Island"
+						end
+					else
+						MMon = "Z"
+						MPos = CFrame["Fruis"](-13456.0498, 469.433228, -7039.96436, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+						SP = "Radioactive"
+					end
+				elseif game["BananaSpawner"] == 85211729168715 then
+					MMon = "Kitsune Island Not S"
+					MPos = CFrame["Fruis"](60943.9023, 17.9492188, 1744.11133, .826706648, 0, -0.562633216, 0, 1, 0, .562633216, 0, .826706648)
+					SP = "ZOffset"
+					MMon = "Frist Spot"
+					MPos = CFrame["Fruis"](61760.8984, 18.0800781, 1460.11133, -0.632549644, 0, -0.774520278, 0, 1, 0, .774520278, 0, -0.632549644)
+					SP = "ZOffset"
+				elseif game["BananaSpawner"] == 1.0011733112309e+14 then
+					MMon = "Terrorshark"
+					MPos = CFrame["Fruis"](-10828.1064, 331.825989, -9049.14648, -0.0912091732, 0, .995831788, 0, 1, 0, -0.995831788, 0, -0.0912091732)
+					SP = "StopTween"
+				end
+			elseif game["BananaSpawner"] == 85211729168715 then
+				MMon = "Sword"
+				MPos = CFrame["Fruis"](-5565.60156, 9.10001755, 8327.56934, -0.838688731, 0, -0.544611216, 0, 1, 0, .544611216, 0, -0.838688731)
+				SP = "Fist"
+				MMon = " [Boss]"
+				MPos = CFrame["Fruis"](-5806.70068, 78.5000458, 8904.46973, .707134247, 0, .707079291, 0, 1, 0, -0.707079291, 0, .707134247)
+				SP = "Fist"
+			elseif game["BananaSpawner"] == 79091703265657 then
+				MMon = "cy"
+				MPos = CFrame["Fruis"](-5158.77051, 14.4791956, -4654.2627, -0.848060489, 0, -0.529899538, 0, 1, 0, .529899538, 0, -0.848060489)
+				SP = "AutoBoss"
+			end
+		elseif game["BananaSpawner"] == 85211729168715 then
+			MMon = "Light Fruit"
+			MPos = CFrame["Fruis"](-967.433105, 13.5999937, 4034.24707, -0.258864403, 0, -0.965913713, 0, 1, 0, .965913713, 0, -0.258864403)
+			SP = "Light Fruit"
+			MMon = "Tự Động Lấy �"
+			MPos = CFrame["Fruis"](-1191.41235, 15.5999985, 4235.50928, .629286051, 0, -0.777173758, 0, 1, 0, .777173758, 0, .629286051)
+			SP = "Light Fruit"
+		elseif game["BananaSpawner"] ~= 79091703265657 then
+			if game["BananaSpawner"] == 1.0011733112309e+14 then
+				MMon = "Hooks"
+				MPos = CFrame["Fruis"](-118.809372, 55.4874573, 5649.17041, -0.965929747, 0, .258804798, 0, 1, 0, -0.258804798, 0, -0.965929747)
+				SP = "olour"
+			end
+		else
+			MMon = "volcanorock"
+			MPos = CFrame["Fruis"](-986.774475, 72.8755951, 1088.44653, -0.656062722, 0, .754706323, 0, 1, 0, -0.754706323, 0, -0.656062722)
+			SP = "snowisland_Cylinder."
+		end
+	else
+		MMon = "Don Swan"
+		MPos = CFrame["Fruis"](-105.889565, 72.8076935, -670.247986, -0.965929747, 0, -0.258804798, 0, 1, 0, .258804798, 0, -0.965929747)
+		SP = "RemoteFunctionShoot"
+	end
+end
+function CheckQuest()
+	MyLevel = (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"]
+	if Mq[16] then
+		if MyLevel >= 1 and MyLevel <= 9 or SelectMonster == "Boss Greybeard" then
+			Mon = "Boss Greybeard"
+			LevelQuest = 1
+			NameQuest = "Axiore"
+			NameMon = "Boss Greybeard"
+			CFrameQuest = CFrame["Fruis"](1059.37195, 15.4495068, 1550.4231, .939700544, 0, -0.341998369, 0, 1, 0, .341998369, 0, .939700544)
+			CFrameMon = CFrame["Fruis"](1045.9626464844, 27.002508163452, 1560.8203125)
+		elseif (MyLevel < 10 or MyLevel > 14) and SelectMonster ~= "ZombieQuest" then
+			if (MyLevel < 15 or MyLevel > 29) and SelectMonster ~= "Spider" then
+				if (MyLevel < 30 or MyLevel > 39) and SelectMonster ~= "Light Fruit" then
+					if (MyLevel < 40 or MyLevel > 59) and SelectMonster ~= "Tự Động Lấy �" then
+						if MyLevel >= 60 and MyLevel <= 74 or SelectMonster == " V3" then
+							Mon = " V3"
+							LevelQuest = 1
+							NameQuest = "ReplicatedStorage"
+							NameMon = " V3"
+							CFrameQuest = CFrame["Fruis"](894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693)
+							CFrameMon = CFrame["Fruis"](924.7998046875, 6.4486746788025, 4481.5859375)
+						elseif (MyLevel < 75 or MyLevel > 89) and SelectMonster ~= "." then
+							if (MyLevel < 90 or MyLevel > 99) and SelectMonster ~= "Pirate" then
+								if MyLevel >= 100 and MyLevel <= 119 or SelectMonster == "SUB2NOOBMASTER123" then
+									Mon = "SUB2NOOBMASTER123"
+									LevelQuest = 2
+									NameQuest = "Auto Skill C"
+									NameMon = "SUB2NOOBMASTER123"
+									CFrameQuest = CFrame["Fruis"](1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685)
+									CFrameMon = CFrame["Fruis"](1201.6412353516, 144.57958984375, -1550.0670166016)
+								elseif (MyLevel < 120 or MyLevel > 149) and SelectMonster ~= "STRAWHATMAINE" then
+									if (MyLevel < 150 or MyLevel > 174) and SelectMonster ~= "Sky Bandit" then
+										if (MyLevel < 175 or MyLevel > 189) and SelectMonster ~= "Dark Master" then
+											if MyLevel >= 190 and MyLevel <= 209 or SelectMonster == "Frozen Bait" then
+												Mon = "Frozen Bait"
+												LevelQuest = 1
+												NameQuest = "Terrain"
+												NameMon = "Frozen Bait"
+												CFrameQuest = CFrame["Fruis"](5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712)
+												CFrameMon = CFrame["Fruis"](5098.9736328125, -0.3204058110714, 474.23733520508)
+											elseif (MyLevel < 210 or MyLevel > 249) and SelectMonster ~= "ParticleEmitter" then
+												if MyLevel >= 250 and MyLevel <= 274 or SelectMonster == "Toga Warrior" then
+													Mon = "Toga Warrior"
+													LevelQuest = 1
+													NameQuest = "t Đến Trái Ác Q"
+													NameMon = "Toga Warrior"
+													CFrameQuest = CFrame["Fruis"](-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298)
+													CFrameMon = CFrame["Fruis"](-1820.21484375, 51.683856964111, -2740.6650390625)
+												elseif (MyLevel < 275 or MyLevel > 299) and SelectMonster ~= "Tự Động Nâng �" then
+													if (MyLevel < 300 or MyLevel > 324) and SelectMonster ~= "Sword" then
+														if (MyLevel < 325 or MyLevel > 374) and SelectMonster ~= " [Boss]" then
+															if (MyLevel < 375 or MyLevel > 399) and SelectMonster ~= "Kitsune Island Not S" then
+																if (MyLevel < 400 or MyLevel > 449) and SelectMonster ~= "Frist Spot" then
+																	if MyLevel >= 450 and MyLevel <= 474 or SelectMonster == "krazydares" then
+																		Mon = "krazydares"
+																		LevelQuest = 1
+																		NameQuest = "SeaBeasts"
+																		NameMon = "krazydares"
+																		CFrameQuest = CFrame["Fruis"](-4721.88867, 843.874695, -1949.96643, .996191859, 0, -0.0871884301, 0, 1, 0, .0871884301, 0, .996191859)
+																		CFrameMon = CFrame["Fruis"](-4710.04296875, 845.27697753906, -1927.3079833984)
+																		if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+																			(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-4607.82275, 872.54248, -1667.55688))
+																		end
+																	elseif MyLevel >= 475 and MyLevel <= 524 or SelectMonster == "Port Town" then
+																		Mon = "Port Town"
+																		LevelQuest = 2
+																		NameQuest = "SeaBeasts"
+																		NameMon = "Port Town"
+																		CFrameQuest = CFrame["Fruis"](-7859.09814, 5544.19043, -381.476196, -0.422592998, 0, .906319618, 0, 1, 0, -0.906319618, 0, -0.422592998)
+																		CFrameMon = CFrame["Fruis"](-7678.4897460938, 5566.4038085938, -497.21560668945)
+																		if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+																			(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-7894.6176757813, 5547.1416015625, -380.29119873047))
+																		end
+																	elseif MyLevel >= 525 and MyLevel <= 549 or SelectMonster == "Flamingo Room" then
+																		Mon = "Flamingo Room"
+																		LevelQuest = 1
+																		NameQuest = "playing"
+																		NameMon = "Flamingo Room"
+																		CFrameQuest = CFrame["Fruis"](-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+																		CFrameMon = CFrame["Fruis"](-7624.2524414062, 5658.1333007812, -1467.3542480469)
+																	elseif (MyLevel < 550 or MyLevel > 624) and SelectMonster ~= "Haunted Castle" then
+																		if MyLevel >= 625 and MyLevel <= 649 or SelectMonster == "ime" then
+																			Mon = "ime"
+																			LevelQuest = 1
+																			NameQuest = "EmissionDirection"
+																			NameMon = "ime"
+																			CFrameQuest = CFrame["Fruis"](5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381)
+																			CFrameMon = CFrame["Fruis"](5551.0219726562, 78.901351928711, 3930.4128417969)
+																		elseif MyLevel >= 650 or SelectMonster == "PlaybackState" then
+																			Mon = "PlaybackState"
+																			LevelQuest = 2
+																			NameQuest = "EmissionDirection"
+																			NameMon = "PlaybackState"
+																			CFrameQuest = CFrame["Fruis"](5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381)
+																			CFrameMon = CFrame["Fruis"](5441.9516601562, 42.502059936523, 4950.09375)
+																		end
+																	else
+																		Mon = "Haunted Castle"
+																		LevelQuest = 2
+																		NameQuest = "playing"
+																		NameMon = "Haunted Castle"
+																		CFrameQuest = CFrame["Fruis"](-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+																		CFrameMon = CFrame["Fruis"](-7836.7534179688, 5645.6640625, -1790.6236572266)
+																	end
+																else
+																	Mon = "Frist Spot"
+																	LevelQuest = 2
+																	NameQuest = "FishmanQuest"
+																	NameMon = "Frist Spot"
+																	CFrameQuest = CFrame["Fruis"](61122.65234375, 18.497442245483, 1569.3997802734)
+																	CFrameMon = CFrame["Fruis"](61922.6328125, 18.482830047607, 1493.9343261719)
+																	if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+																		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](61163.8515625, 11.6796875, 1819.7841796875))
+																	end
+																end
+															else
+																Mon = "Kitsune Island Not S"
+																LevelQuest = 1
+																NameQuest = "FishmanQuest"
+																NameMon = "Kitsune Island Not S"
+																CFrameQuest = CFrame["Fruis"](61122.65234375, 18.497442245483, 1569.3997802734)
+																CFrameMon = CFrame["Fruis"](60878.30078125, 18.482830047607, 1543.7574462891)
+																if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+																	(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](61163.8515625, 11.6796875, 1819.7841796875))
+																end
+															end
+														else
+															Mon = " [Boss]"
+															LevelQuest = 2
+															NameQuest = " "
+															NameMon = " [Boss]"
+															CFrameQuest = CFrame["Fruis"](-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469)
+															CFrameMon = CFrame["Fruis"](-5802.8681640625, 86.262413024902, 8828.859375)
+														end
+													else
+														Mon = "Sword"
+														LevelQuest = 1
+														NameQuest = " "
+														NameMon = "Sword"
+														CFrameQuest = CFrame["Fruis"](-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469)
+														CFrameMon = CFrame["Fruis"](-5411.1645507812, 11.081554412842, 8454.29296875)
+													end
+												else
+													Mon = "Tự Động Nâng �"
+													LevelQuest = 2
+													NameQuest = "t Đến Trái Ác Q"
+													NameMon = "Tự Động Nâng �"
+													CFrameQuest = CFrame["Fruis"](-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298)
+													CFrameMon = CFrame["Fruis"](-1292.8381347656, 56.380882263184, -3339.0314941406)
+												end
+											else
+												Mon = "AppleSpawner"
+												LevelQuest = 2
+												NameQuest = "Terrain"
+												NameMon = "AppleSpawner"
+												CFrameQuest = CFrame["Fruis"](5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712)
+												CFrameMon = CFrame["Fruis"](5654.5634765625, 15.633401870728, 866.29919433594)
+											end
+										else
+											Mon = "Dark Master"
+											LevelQuest = 2
+											NameQuest = "SelectIsland"
+											NameMon = "Dark Master"
+											CFrameQuest = CFrame["Fruis"](-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+											CFrameMon = CFrame["Fruis"](-5259.8447265625, 391.39767456055, -2229.0354003906)
+										end
+									else
+										Mon = "Sky Bandit"
+										LevelQuest = 1
+										NameQuest = "SelectIsland"
+										NameMon = "Sky Bandit"
+										CFrameQuest = CFrame["Fruis"](-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+										CFrameMon = CFrame["Fruis"](-4953.20703125, 295.74420166016, -2899.2290039062)
+									end
+								else
+									Mon = "STRAWHATMAINE"
+									LevelQuest = 1
+									NameQuest = "Posessed Mummy"
+									NameMon = "STRAWHATMAINE"
+									CFrameQuest = CFrame["Fruis"](-5039.58643, 27.3500385, 4324.68018, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+									CFrameMon = CFrame["Fruis"](-4881.2309570312, 22.652044296265, 4273.7524414062)
+								end
+							else
+								Mon = "Pirate"
+								LevelQuest = 1
+								NameQuest = "Auto Skill C"
+								NameMon = "Pirate"
+								CFrameQuest = CFrame["Fruis"](1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685)
+								CFrameMon = CFrame["Fruis"](1354.3479003906, 87.272773742676, -1393.9465332031)
+							end
+						else
+							Mon = "."
+							LevelQuest = 2
+							NameQuest = "ReplicatedStorage"
+							NameMon = "."
+							CFrameQuest = CFrame["Fruis"](894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693)
+							CFrameMon = CFrame["Fruis"](1608.2822265625, 8.6142244338989, 4371.0073242188)
+						end
+					else
+						Mon = "Tự Động Lấy �"
+						LevelQuest = 2
+						NameQuest = "__add"
+						NameMon = "Tự Động Lấy �"
+						CFrameQuest = CFrame["Fruis"](-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627)
+						CFrameMon = CFrame["Fruis"](-1140.0837402344, 14.809885025024, 4322.9213867188)
+					end
+				else
+					Mon = "Light Fruit"
+					LevelQuest = 1
+					NameQuest = "__add"
+					NameMon = "Light Fruit"
+					CFrameQuest = CFrame["Fruis"](-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627)
+					CFrameMon = CFrame["Fruis"](-1103.5134277344, 13.752052307129, 3896.0910644531)
+				end
+			else
+				Mon = "Spider"
+				LevelQuest = 2
+				NameQuest = "Auto Farm Chest [ Tw"
+				NameMon = "Spider"
+				CFrameQuest = CFrame["Fruis"](-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+				CFrameMon = CFrame["Fruis"](-1129.8836669922, 40.46354675293, -525.42370605469)
+			end
+		else
+			Mon = "ZombieQuest"
+			LevelQuest = 1
+			NameQuest = "Auto Farm Chest [ Tw"
+			NameMon = "ZombieQuest"
+			CFrameQuest = CFrame["Fruis"](-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+			CFrameMon = CFrame["Fruis"](-1448.5180664062, 67.853012084961, 11.465796470642)
+		end
+	elseif not Mq[27] then
+		if Mq[82] then
+			if MyLevel >= 1500 and MyLevel <= 1524 or SelectMonster == "Hooks" then
+				Mon = "Hooks"
+				LevelQuest = 1
+				NameQuest = "Bí Ẩn"
+				NameMon = "Hooks"
+				CFrameQuest = CFrame["Fruis"](-450.104645, 107.681458, 5950.72607, .957107544, 0, -0.289732844, 0, 1, 0, .289732844, 0, .957107544)
+				CFrameMon = CFrame["Fruis"](-245.99638366699, 47.30615234375, 5584.1005859375)
+			elseif (MyLevel < 1525 or MyLevel > 1574) and SelectMonster ~= "Redeem" then
+				if MyLevel >= 1575 and MyLevel <= 1599 or SelectMonster == "XaiSkillZ" then
+					Mon = "XaiSkillZ"
+					LevelQuest = 1
+					NameQuest = "DragonCrewQuest"
+					NameMon = "XaiSkillZ"
+					CFrameQuest = CFrame["Fruis"](6750.4931640625, 127.44916534424, -711.03088378906)
+					CFrameMon = CFrame["Fruis"](6709.76367, 52.3442993, -1139.02966, -0.763515472, 0, .645789504, 0, 1, 0, -0.645789504, 0, -0.763515472)
+				elseif MyLevel >= 1600 and MyLevel <= 1624 or SelectMonster == "BodyClip" then
+					Mon = "BodyClip"
+					NameQuest = "DragonCrewQuest"
+					LevelQuest = 2
+					NameMon = "BodyClip"
+					CFrameQuest = CFrame["Fruis"](6750.4931640625, 127.44916534424, -711.03088378906)
+					CFrameMon = CFrame["Fruis"](6668.76172, 481.376923, 329.12207, -0.121787429, 0, -0.992556155, 0, 1, 0, .992556155, 0, -0.121787429)
+				elseif (MyLevel < 1625 or MyLevel > 1649) and SelectMonster ~= "Position" then
+					if (MyLevel < 1650 or MyLevel > 1699) and SelectMonster ~= "SickMan" then
+						if (MyLevel < 1700 or MyLevel > 1724) and SelectMonster ~= "Marine Commodore" then
+							if (MyLevel < 1725 or MyLevel > 1774) and SelectMonster ~= "maxPlayers" then
+								if (MyLevel < 1775 or MyLevel > 1799) and SelectMonster ~= "Auto Buy Haki Màu" then
+									if MyLevel >= 1800 and MyLevel <= 1824 or SelectMonster == "Terrorshark" then
+										Mon = "Terrorshark"
+										LevelQuest = 2
+										NameQuest = "AutoQuestRace"
+										NameMon = "Terrorshark"
+										CFrameQuest = CFrame["Fruis"](-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+										CFrameMon = CFrame["Fruis"](-10994.701171875, 352.38140869141, -9002.1103515625)
+									elseif (MyLevel < 1825 or MyLevel > 1849) and SelectMonster ~= "Smoke Fruit" then
+										if (MyLevel < 1850 or MyLevel > 1899) and SelectMonster ~= "Z" then
+											if MyLevel >= 1900 and MyLevel <= 1924 or SelectMonster == "VelocityInheritance" then
+												Mon = "VelocityInheritance"
+												LevelQuest = 1
+												NameQuest = "DeepForestIsland2"
+												NameMon = "VelocityInheritance"
+												CFrameQuest = CFrame["Fruis"](-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002)
+												CFrameMon = CFrame["Fruis"](-12256.16015625, 331.73828125, -10485.836914062)
+											elseif MyLevel >= 1925 and MyLevel <= 1974 or SelectMonster == "kill Z Để Đánh" then
+												Mon = "kill Z Để Đánh"
+												LevelQuest = 2
+												NameQuest = "DeepForestIsland2"
+												NameMon = "kill Z Để Đánh"
+												CFrameQuest = CFrame["Fruis"](-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002)
+												CFrameMon = CFrame["Fruis"](-13457.904296875, 391.54565429688, -9859.177734375)
+											elseif MyLevel >= 1975 and MyLevel <= 1999 or SelectMonster == "AutoNear" then
+												Mon = "AutoNear"
+												LevelQuest = 1
+												NameQuest = "Modules"
+												NameMon = "AutoNear"
+												CFrameQuest = CFrame["Fruis"](-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+												CFrameMon = CFrame["Fruis"](-8763.7236328125, 165.72299194336, 6159.8618164062)
+											elseif (MyLevel < 2000 or MyLevel > 2024) and SelectMonster ~= "Living Zombie" then
+												if MyLevel >= 2025 and MyLevel <= 2049 or SelectMonster == "TeleportPly" then
+													Mon = "TeleportPly"
+													LevelQuest = 1
+													NameQuest = "HauntedQuest2"
+													NameMon = "TeleportPly"
+													CFrameQuest = CFrame["Fruis"](-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["Fruis"](-9505.8720703125, 172.10482788086, 6158.9931640625)
+												elseif MyLevel >= 2050 and MyLevel <= 2074 or SelectMonster == "om/@real_nanatvroblo" then
+													Mon = "om/@real_nanatvroblo"
+													LevelQuest = 2
+													NameQuest = "HauntedQuest2"
+													NameMon = "om/@real_nanatvroblo"
+													CFrameQuest = CFrame["Fruis"](-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["Fruis"](-9582.0224609375, 6.2515273094177, 6205.478515625)
+												elseif (MyLevel < 2075 or MyLevel > 2099) and SelectMonster ~= "Tự Động An Toà" then
+													if MyLevel >= 2100 and MyLevel <= 2124 or SelectMonster == "unpack" then
+														Mon = "unpack"
+														LevelQuest = 2
+														NameQuest = "
+"
+														NameMon = "unpack"
+														CFrameQuest = CFrame["Fruis"](-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["Fruis"](-1859.3540039062, 38.103168487549, -10422.4296875)
+													elseif MyLevel >= 2125 and MyLevel <= 2149 or SelectMonster == "Jeremy" then
+														Mon = "Jeremy"
+														LevelQuest = 1
+														NameQuest = "Venom Fruit"
+														NameMon = "Jeremy"
+														CFrameQuest = CFrame["Fruis"](-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["Fruis"](-872.24658203125, 65.81957244873, -10919.95703125)
+													elseif MyLevel >= 2150 and MyLevel <= 2199 or SelectMonster == "LockTween" then
+														Mon = "LockTween"
+														LevelQuest = 2
+														NameQuest = "Venom Fruit"
+														NameMon = "LockTween"
+														CFrameQuest = CFrame["Fruis"](-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+														CFrameMon = CFrame["Fruis"](-558.06103515625, 112.04895782471, -11290.774414062)
+													elseif MyLevel >= 2200 and MyLevel <= 2224 or SelectMonster == "Farm Level New 2650 " then
+														Mon = "Farm Level New 2650 "
+														LevelQuest = 1
+														NameQuest = "Progress"
+														NameMon = "Farm Level New 2650 "
+														CFrameQuest = CFrame["Fruis"](-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931)
+														CFrameMon = CFrame["Fruis"](-2374.13671875, 37.798263549805, -12125.30859375)
+													elseif (MyLevel < 2225 or MyLevel > 2249) and SelectMonster ~= "getInventory" then
+														if MyLevel >= 2250 and MyLevel <= 2274 or SelectMonster == "Yeti-Yeti" then
+															Mon = "Yeti-Yeti"
+															LevelQuest = 1
+															NameQuest = "Elite Hunter"
+															NameMon = "Yeti-Yeti"
+															CFrameQuest = CFrame["Fruis"](-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446)
+															CFrameMon = CFrame["Fruis"](-1887.8099365234, 77.618507385254, -12998.350585938)
+														elseif MyLevel >= 2275 and MyLevel <= 2299 or SelectMonster == "Bignews" then
+															Mon = "Bignews"
+															LevelQuest = 2
+															NameQuest = "Elite Hunter"
+															NameMon = "Bignews"
+															CFrameQuest = CFrame["Fruis"](-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446)
+															CFrameMon = CFrame["Fruis"](-2216.1882324219, 82.884521484375, -12869.293945312)
+														elseif (MyLevel < 2300 or MyLevel > 2324) and SelectMonster ~= "Bones" then
+															if MyLevel >= 2325 and MyLevel <= 2349 or SelectMonster == Mq[144]({
+																"Max";
+																"Zombie"
+															}) then
+																Mon = Mq[144]({
+																	"Max";
+																	"Zombie"
+																})
+																LevelQuest = 2
+																NameQuest = "Tự Động Trailer"
+																NameMon = Mq[144]({
+																	"Max";
+																	"Zombie"
+																})
+																CFrameQuest = CFrame["Fruis"](233.22836303711, 29.876001358032, -12201.233398438)
+																CFrameMon = CFrame["Fruis"](582.59057617188, 77.188095092773, -12463.162109375)
+															elseif MyLevel >= 2350 and MyLevel <= 2374 or SelectMonster == "răng Và Bật Tộ" then
+																Mon = "răng Và Bật Tộ"
+																LevelQuest = 1
+																NameQuest = "Loading..."
+																NameMon = "răng Và Bật Tộ"
+																CFrameQuest = CFrame["Fruis"](150.50663757324, 30.693693161011, -12774.502929688)
+																CFrameMon = CFrame["Fruis"](165.1884765625, 76.058853149414, -12600.836914062)
+															elseif MyLevel >= 2375 and MyLevel <= 2399 or SelectMonster == "Radiactive Material" then
+																Mon = "Radiactive Material"
+																LevelQuest = 2
+																NameQuest = "Loading..."
+																NameMon = "Radiactive Material"
+																CFrameQuest = CFrame["Fruis"](150.50663757324, 30.693693161011, -12774.502929688)
+																CFrameMon = CFrame["Fruis"](134.86563110352, 77.247680664062, -12876.547851562)
+															elseif (MyLevel < 2400 or MyLevel > 2424) and SelectMonster ~= "Candy Pirate" then
+																if MyLevel >= 2425 and MyLevel <= 2449 or SelectMonster == "Quake Fruit" then
+																	Mon = "Quake Fruit"
+																	LevelQuest = 2
+																	NameQuest = "__mod"
+																	NameMon = "Quake Fruit"
+																	CFrameQuest = CFrame["Fruis"](-1150.0400390625, 20.378934860229, -14446.334960938)
+																	CFrameMon = CFrame["Fruis"](-880.20062255859, 71.247764587402, -14538.609375)
+																elseif MyLevel >= 2450 and MyLevel <= 2474 or SelectMonster == "random" then
+																	Mon = "random"
+																	LevelQuest = 1
+																	NameQuest = "TikiQuest1"
+																	NameMon = "random"
+																	CFrameQuest = CFrame["Fruis"](-16547.748046875, 61.135334014893, -173.41360473633)
+																	CFrameMon = CFrame["Fruis"](-16442.814453125, 116.13899993896, -264.46377563477)
+																elseif (MyLevel < 2475 or MyLevel > 2524) and SelectMonster ~= "AutoHolyTorch" then
+																	if MyLevel >= 2525 and MyLevel <= 2550 or SelectMonster == "MouseButton1Click" then
+																		Mon = "MouseButton1Click"
+																		LevelQuest = 2
+																		NameQuest = "Monkey"
+																		NameMon = "MouseButton1Click"
+																		CFrameQuest = CFrame["Fruis"](-16539.078125, 55.686328887939, 1051.5738525391)
+																		CFrameMon = CFrame["Fruis"](-16641.6796875, 235.78254699707, 1031.2829589844)
+																	elseif (MyLevel < 2550 or MyLevel > 2574) and SelectMonster ~= "��n muốn sử dụ" then
+																		if MyLevel >= 2575 or SelectMonster == "KeyCode" then
+																			Mon = "KeyCode"
+																			LevelQuest = 2
+																			NameQuest = "e reported."
+																			NameMon = "KeyCode"
+																			CFrameQuest = CFrame["Fruis"](-16665.1914, 104.596405, 1579.69434, .951068401, 0, -0.308980465, 0, 1, 0, .308980465, 0, .951068401)
+																			CFrameMon = CFrame["Fruis"](-16855.043, 122.457253, 1478.15308, -0.999392271, 0, -0.0348687991, 0, 1, 0, .0348687991, 0, -0.999392271)
+																		end
+																	else
+																		Mon = "��n muốn sử dụ"
+																		LevelQuest = 1
+																		NameQuest = "e reported."
+																		NameMon = "��n muốn sử dụ"
+																		CFrameQuest = CFrame["Fruis"](-16665.1914, 104.596405, 1579.69434, .951068401, 0, -0.308980465, 0, 1, 0, .308980465, 0, .951068401)
+																		CFrameMon = CFrame["Fruis"](-16521.0625, 106.09285, 1488.78467, .469467044, 0, .882950008, 0, 1, 0, -0.882950008, 0, .469467044)
+																	end
+																else
+																	Mon = "AutoHolyTorch"
+																	LevelQuest = 2
+																	NameQuest = "TikiQuest1"
+																	NameMon = "AutoHolyTorch"
+																	CFrameQuest = CFrame["Fruis"](-16547.748046875, 61.135334014893, -173.41360473633)
+																	CFrameMon = CFrame["Fruis"](-16901.26171875, 84.067565917969, -192.88906860352)
+																end
+															else
+																Mon = "Candy Pirate"
+																LevelQuest = 1
+																NameQuest = "__mod"
+																NameMon = "Candy Pirate"
+																CFrameQuest = CFrame["Fruis"](-1150.0400390625, 20.378934860229, -14446.334960938)
+																CFrameMon = CFrame["Fruis"](-1310.5003662109, 26.016523361206, -14562.404296875)
+															end
+														else
+															Mon = "Bones"
+															LevelQuest = 1
+															NameQuest = "Tự Động Trailer"
+															NameMon = "Bones"
+															CFrameQuest = CFrame["Fruis"](233.22836303711, 29.876001358032, -12201.233398438)
+															CFrameMon = CFrame["Fruis"](-21.553283691406, 80.574996948242, -12352.387695312)
+														end
+													else
+														Mon = "getInventory"
+														LevelQuest = 2
+														NameQuest = "Progress"
+														NameMon = "getInventory"
+														CFrameQuest = CFrame["Fruis"](-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931)
+														CFrameMon = CFrame["Fruis"](-1598.3070068359, 43.773197174072, -12244.581054688)
+													end
+												else
+													Mon = "Tự Động An Toà"
+													LevelQuest = 1
+													NameQuest = "
+"
+													NameMon = "Tự Động An Toà"
+													CFrameQuest = CFrame["Fruis"](-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+													CFrameMon = CFrame["Fruis"](-2143.2419433594, 47.721984863281, -10029.995117188)
+												end
+											else
+												Mon = "Living Zombie"
+												LevelQuest = 2
+												NameQuest = "Modules"
+												NameMon = "Living Zombie"
+												CFrameQuest = CFrame["Fruis"](-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+												CFrameMon = CFrame["Fruis"](-10144.131835938, 138.6266784668, 5838.0888671875)
+											end
+										else
+											Mon = "Z"
+											LevelQuest = 2
+											NameQuest = "TextYAlignment"
+											NameMon = "Z"
+											CFrameQuest = CFrame["Fruis"](-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247)
+											CFrameMon = CFrame["Fruis"](-13680.607421875, 501.08154296875, -6991.189453125)
+										end
+									else
+										Mon = "Smoke Fruit"
+										LevelQuest = 1
+										NameQuest = "TextYAlignment"
+										NameMon = "Smoke Fruit"
+										CFrameQuest = CFrame["Fruis"](-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247)
+										CFrameMon = CFrame["Fruis"](-13274.478515625, 332.37814331055, -7769.5805664062)
+									end
+								else
+									Mon = "Auto Buy Haki Màu"
+									LevelQuest = 1
+									NameQuest = "AutoQuestRace"
+									NameMon = "Auto Buy Haki Màu"
+									CFrameQuest = CFrame["Fruis"](-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+									CFrameMon = CFrame["Fruis"](-10407.526367188, 331.76263427734, -8368.5166015625)
+								end
+							else
+								Mon = "maxPlayers"
+								LevelQuest = 2
+								NameQuest = "CurrentCamera"
+								NameMon = "maxPlayers"
+								CFrameQuest = CFrame["Fruis"](2481.0922851562, 74.270492553711, -6779.640625)
+								CFrameMon = CFrame["Fruis"](3761.81006, 123.912003, -6823.52197, .961273968, 0, .275594592, 0, 1, 0, -0.275594592, 0, .961273968)
+							end
+						else
+							Mon = "Marine Commodore"
+							LevelQuest = 1
+							NameQuest = "CurrentCamera"
+							NameMon = "Marine Commodore"
+							CFrameQuest = CFrame["Fruis"](2481.0922851562, 74.270492553711, -6779.640625)
+							CFrameMon = CFrame["Fruis"](2577.25391, 75.6100006, -7739.87207, .499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, .499959469)
+						end
+					else
+						Mon = "SickMan"
+						NameQuest = "con"
+						LevelQuest = 2
+						NameMon = "SickMan"
+						CFrameQuest = CFrame["Fruis"](5206.4018554688, 1004.1049804688, 748.35046386719)
+						CFrameMon = CFrame["Fruis"](4674.92676, 1134.82654, 996.308838, .731321394, 0, -0.682033002, 0, 1, 0, .682033002, 0, .731321394)
+					end
+				else
+					Mon = "Position"
+					NameQuest = "con"
+					LevelQuest = 1
+					NameMon = "Position"
+					CFrameQuest = CFrame["Fruis"](5206.4018554688, 1004.1049804688, 748.35046386719)
+					CFrameMon = CFrame["Fruis"](4547.11523, 1003.10217, 334.194824, .388810456, 0, -0.921317935, 0, 1, 0, .921317935, 0, .388810456)
+				end
+			else
+				Mon = "Redeem"
+				LevelQuest = 2
+				NameQuest = "Bí Ẩn"
+				NameMon = "Redeem"
+				CFrameQuest = CFrame["Fruis"](-450.104645, 107.681458, 5950.72607, .957107544, 0, -0.289732844, 0, 1, 0, .289732844, 0, .957107544)
+				CFrameMon = CFrame["Fruis"](-54.8110352, 83.7698746, 5947.84082, -0.965929747, 0, .258804798, 0, 1, 0, -0.258804798, 0, -0.965929747)
+			end
+		end
+	elseif (MyLevel < 700 or MyLevel > 724) and SelectMonster ~= "Eye1" then
+		if MyLevel >= 725 and MyLevel <= 774 or SelectMonster == "volcanorock" then
+			Mon = "volcanorock"
+			LevelQuest = 2
+			NameQuest = "KillShark"
+			NameMon = "volcanorock"
+			CFrameQuest = CFrame["Fruis"](-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985)
+			CFrameMon = CFrame["Fruis"](-1004.3244018555, 80.158866882324, 1424.6193847656)
+		elseif MyLevel >= 775 and MyLevel <= 799 or SelectMonster == "Lifetime" then
+			Mon = "Lifetime"
+			LevelQuest = 1
+			NameQuest = "Desert"
+			NameMon = "Lifetime"
+			CFrameQuest = CFrame["Fruis"](638.43811, 71.769989, 918.282898, .139203906, 0, .99026376, 0, 1, 0, -0.99026376, 0, .139203906)
+			CFrameMon = CFrame["Fruis"](1068.6643066406, 137.61428833008, 1322.1060791016)
+		elseif (MyLevel < 800 or MyLevel > 874) and SelectMonster ~= "Don Swan" then
+			if MyLevel >= 875 and MyLevel <= 899 or SelectMonster == "Magma Village" then
+				Mon = "Magma Village"
+				LevelQuest = 1
+				NameQuest = "Top"
+				NameMon = "Magma Village"
+				CFrameQuest = CFrame["Fruis"](-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+				CFrameMon = CFrame["Fruis"](-2821.3723144531, 75.897277832031, -3070.0891113281)
+			elseif MyLevel >= 900 and MyLevel <= 949 or SelectMonster == "TikTok Của Bố Đ" then
+				Mon = "TikTok Của Bố Đ"
+				LevelQuest = 2
+				NameQuest = "Top"
+				NameMon = "TikTok Của Bố Đ"
+				CFrameQuest = CFrame["Fruis"](-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
+				CFrameMon = CFrame["Fruis"](-1861.2310791016, 80.176582336426, -3254.6975097656)
+			elseif (MyLevel < 950 or MyLevel > 974) and SelectMonster ~= "HasBuso" then
+				if MyLevel >= 975 and MyLevel <= 999 or SelectMonster == "NotAutoEquip" then
+					Mon = "NotAutoEquip"
+					LevelQuest = 2
+					NameQuest = "RemoteEvent"
+					NameMon = "NotAutoEquip"
+					CFrameQuest = CFrame["Fruis"](-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146)
+					CFrameMon = CFrame["Fruis"](-6037.66796875, 32.184638977051, -1340.6597900391)
+				elseif (MyLevel < 1000 or MyLevel > 1049) and SelectMonster ~= "Settings Farming" then
+					if MyLevel >= 1050 and MyLevel <= 1099 or SelectMonster == "the" then
+						Mon = "the"
+						LevelQuest = 2
+						NameQuest = "Archivable"
+						NameMon = "the"
+						CFrameQuest = CFrame["Fruis"](609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106)
+						CFrameMon = CFrame["Fruis"](1142.7451171875, 475.63980102539, -5199.4165039062)
+					elseif MyLevel >= 1100 and MyLevel <= 1124 or SelectMonster == "Lightning" then
+						Mon = "Lightning"
+						LevelQuest = 1
+						NameQuest = "IceSideQuest"
+						NameMon = "Lightning"
+						CFrameQuest = CFrame["Fruis"](-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578)
+						CFrameMon = CFrame["Fruis"](-5707.4716796875, 15.951709747314, -4513.3920898438)
+					elseif MyLevel >= 1125 and MyLevel <= 1174 or SelectMonster == "Eagle-Eagle" then
+						Mon = "Eagle-Eagle"
+						LevelQuest = 2
+						NameQuest = "IceSideQuest"
+						NameMon = "Eagle-Eagle"
+						CFrameQuest = CFrame["Fruis"](-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578)
+						CFrameMon = CFrame["Fruis"](-6341.3666992188, 15.951770782471, -5723.162109375)
+					elseif (MyLevel < 1175 or MyLevel > 1199) and SelectMonster ~= "Magma Ninja" then
+						if (MyLevel < 1200 or MyLevel > 1249) and SelectMonster ~= "cy" then
+							if MyLevel >= 1250 and MyLevel <= 1274 or SelectMonster == "RichSon" then
+								Mon = "RichSon"
+								LevelQuest = 1
+								NameQuest = "�ây Nhóc"
+								NameMon = "RichSon"
+								CFrameQuest = CFrame["Fruis"](1037.80127, 125.092171, 32911.6016)
+								CFrameMon = CFrame["Fruis"](1212.0111083984, 150.79205322266, 33059.24609375)
+								if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+									(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](923.21252441406, 126.9760055542, 32852.83203125))
+								end
+							elseif (MyLevel < 1275 or MyLevel > 1299) and SelectMonster ~= "find" then
+								if MyLevel >= 1300 and MyLevel <= 1324 or SelectMonster == "" then
+									Mon = ""
+									LevelQuest = 1
+									NameQuest = "Bobby"
+									NameMon = ""
+									CFrameQuest = CFrame["Fruis"](968.80957, 125.092171, 33244.125)
+									CFrameMon = CFrame["Fruis"](919.43853759766, 129.55599975586, 33436.03515625)
+									if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+										(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](923.21252441406, 126.9760055542, 32852.83203125))
+									end
+								elseif (MyLevel < 1325 or MyLevel > 1349) and SelectMonster ~= "lookAt" then
+									if (MyLevel < 1350 or MyLevel > 1374) and SelectMonster ~= "Hết Code" then
+										if MyLevel >= 1375 and MyLevel <= 1424 or SelectMonster == "Wait Full Moon" then
+											Mon = "Wait Full Moon"
+											LevelQuest = 2
+											NameQuest = "AutoQuestYama"
+											NameMon = "Wait Full Moon"
+											CFrameQuest = CFrame["Fruis"](5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909)
+											CFrameMon = CFrame["Fruis"](5407.0737304688, 69.194374084473, -6880.8803710938)
+										elseif (MyLevel < 1425 or MyLevel > 1449) and SelectMonster ~= "Galley Pirate" then
+											if MyLevel >= 1450 or SelectMonster == "Trade Bone" then
+												Mon = "Trade Bone"
+												LevelQuest = 2
+												NameQuest = "lail"
+												NameMon = "Trade Bone"
+												CFrameQuest = CFrame["Fruis"](-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376)
+												CFrameMon = CFrame["Fruis"](-3352.9013671875, 285.01556396484, -10534.841796875)
+											end
+										else
+											Mon = "Galley Pirate"
+											LevelQuest = 1
+											NameQuest = "lail"
+											NameMon = "Galley Pirate"
+											CFrameQuest = CFrame["Fruis"](-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376)
+											CFrameMon = CFrame["Fruis"](-3028.2236328125, 64.674514770508, -9775.4267578125)
+										end
+									else
+										Mon = "Hết Code"
+										LevelQuest = 1
+										NameQuest = "AutoQuestYama"
+										NameMon = "Hết Code"
+										CFrameQuest = CFrame["Fruis"](5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909)
+										CFrameMon = CFrame["Fruis"](5966.24609375, 62.970020294189, -6179.3828125)
+										if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+											(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-6508.5581054688, 5000.0349960327, -132.83953857422))
+										end
+									end
+								else
+									Mon = "lookAt"
+									LevelQuest = 2
+									NameQuest = "Bobby"
+									NameMon = "lookAt"
+									CFrameQuest = CFrame["Fruis"](968.80957, 125.092171, 33244.125)
+									CFrameMon = CFrame["Fruis"](1036.0179443359, 181.4390411377, 33315.7265625)
+									if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+										(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](923.21252441406, 126.9760055542, 32852.83203125))
+									end
+								end
+							else
+								Mon = "find"
+								LevelQuest = 2
+								NameQuest = "�ây Nhóc"
+								NameMon = "find"
+								CFrameQuest = CFrame["Fruis"](1037.80127, 125.092171, 32911.6016)
+								CFrameMon = CFrame["Fruis"](919.47863769531, 43.544013977051, 32779.96875)
+								if _G["BerryBush"] and (CFrameQuest["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 10000 then
+									(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](923.21252441406, 126.9760055542, 32852.83203125))
+								end
+							end
+						else
+							Mon = "cy"
+							LevelQuest = 2
+							NameQuest = "true"
+							NameMon = "cy"
+							CFrameQuest = CFrame["Fruis"](-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+							CFrameMon = CFrame["Fruis"](-5213.3315429688, 49.737880706787, -4701.451171875)
+						end
+					else
+						Mon = "Magma Ninja"
+						LevelQuest = 1
+						NameQuest = "true"
+						NameMon = "Magma Ninja"
+						CFrameQuest = CFrame["Fruis"](-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213)
+						CFrameMon = CFrame["Fruis"](-5449.6728515625, 76.658744812012, -5808.2006835938)
+					end
+				else
+					Mon = "Settings Farming"
+					LevelQuest = 1
+					NameQuest = "Archivable"
+					NameMon = "Settings Farming"
+					CFrameQuest = CFrame["Fruis"](609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106)
+					CFrameMon = CFrame["Fruis"](549.14733886719, 427.38705444336, -5563.6987304688)
+				end
+			else
+				Mon = "HasBuso"
+				LevelQuest = 1
+				NameQuest = "RemoteEvent"
+				NameMon = "HasBuso"
+				CFrameQuest = CFrame["Fruis"](-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146)
+				CFrameMon = CFrame["Fruis"](-5657.7768554688, 78.969734191895, -928.68701171875)
+			end
+		else
+			Mon = "Don Swan"
+			NameQuest = "Desert"
+			LevelQuest = 2
+			NameMon = "Don Swan"
+			CFrameQuest = CFrame["Fruis"](632.698608, 73.1055908, 918.666321, -0.0319722369, 8.96074881e-10, -0.999488771, 1.36326533e-10, 1, 8.92172336e-10, .999488771, -1.07732087e-10, -0.0319722369)
+			CFrameMon = CFrame["Fruis"](73.078674316406, 81.863441467285, -27.470672607422)
+		end
+	else
+		Mon = "Eye1"
+		LevelQuest = 1
+		NameQuest = "KillShark"
+		NameMon = "Eye1"
+		CFrameQuest = CFrame["Fruis"](-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985)
+		CFrameMon = CFrame["Fruis"](-728.32672119141, 52.779319763184, 2345.7705078125)
+	end
+end
+function Hop()
+	local Cq = {}
+	Cq[5] = game["BananaSpawner"]
+	Cq[6] = {}
+	Cq[4] = "Adornee"
+	Cq[2] = (os["buygod"]("TravelZou"))["Infinite Geppo"]
+	Cq[3] = false
+	function TPReturner()
+		local Qq = {}
+		if Cq[4] ~= "Adornee" then
+			Qq[2] = game["FishBoat"]:JSONDecode(game:HttpGet(Mq[144]({
+				"Sound-Sound";
+				"MiniSky"
+			}) .. (Cq[5] .. (Mq[144]({
+				"null",
+				"Ship Officer";
+				"cursor="
+			}) .. Cq[4]))))
+		else
+			Qq[2] = game["FishBoat"]:JSONDecode(game:HttpGet(Mq[144]({
+				"Sound-Sound",
+				"MiniSky"
+			}) .. (Cq[5] .. Mq[144]({
+				"null";
+				"Auto Get Sword Tride"
+			}))))
+		end
+		Qq[4] = "Adornee"
+		if Qq[2]["Hallow Essence"] and (Qq[2]["Hallow Essence"] ~= "_WorldOrigin" and Qq[2]["Hallow Essence"] ~= "_WorldOrigin") then
+			Cq[4] = Qq[2]["Hallow Essence"]
+		end
+		Qq[3] = 0
+		for Mq, Rq in pairs(Qq[2]["ku"]) do
+			local Kq = {}
+			Kq[4], Kq[2] = Mq, Rq
+			Kq[1] = true
+			Qq[4] = tostring(Kq[2]["Auto Kill Shark"])
+			if tonumber(Kq[2]["Select Chip"]) > tonumber(Kq[2]["GothamSemibold"]) then
+				for Mq, Rq in pairs(Cq[6]) do
+					local Sq = {}
+					Sq[1], Sq[3] = Mq, Rq
+					if Qq[3] ~= 0 then
+						if Qq[4] == tostring(Sq[3]) then
+							Kq[1] = false
+						end
+					elseif tonumber(Cq[2]) ~= tonumber(Sq[3]) then
+						local Mq = {}
+						Mq[1] = pcall(function()
+							Cq[6] = {}
+							table["RaceTransformed"](Cq[6], Cq[2])
+						end)
+					end
+					Qq[3] = Qq[3] + 1
+				end
+				if Kq[1] == true then
+					table["RaceTransformed"](Cq[6], Qq[4])
+					wait(.1)
+					pcall(function()
+						wait();
+						(game:GetService("LegendarySwordDealer")):TeleportToPlaceInstance(Cq[5], Qq[4], game["Forgotten Island"][" Lava"])
+					end)
+					wait(.1)
+				end
+			end
+		end
+	end
+	function Teleport()
+		while wait(.1) do
+			pcall(function()
+				TPReturner()
+				if Cq[4] ~= "Adornee" then
+					TPReturner()
+				end
+			end)
+		end
+	end
+	Teleport()
+end
+function CheckItem(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	for Cq, Qq in pairs((game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("FireServer")) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		if Rq[2]["JumpValue"] == Mq[2] then
+			return Rq[2]
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if IslandESP then
+					if Cq[1]["JumpValue"] ~= "Bar" then
+						if not Cq[1]:FindFirstChild("Green Zone") then
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[1]["JumpValue"] = "Green Zone"
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[1]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = "�iểm Năng Lượn"
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+						else
+							Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (round(((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Green Zone") then
+					(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[1] = Cq
+	Hq[3] = nil
+	if Hq[1] ~= Hq[3] then
+		local Cq = {}
+		Cq[2] = false
+	end
+	return true
+end
+Mq[8] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	return math["Dark"](tonumber(Mq[2]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if not ESPPlayer then
+						if Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+						end
+					elseif not isnil(Cq[1]["aze"]["Urban"]) and not Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						local Qq = {}
+						Qq[3] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+						Qq[3]["JumpValue"] = "Green Zone" .. Number
+						Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[3]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+						Qq[3]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[3])
+						Qq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						if Cq[1]["WildDares"] == game["Forgotten Island"][" Lava"]["WildDares"] then
+							Qq[2]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+						else
+							Qq[2]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+						end
+					else
+						Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[8]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[2]:GetAttribute("PartTele") then
+						if not Cq[2]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[3]["JumpValue"] = "Wysper"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[2]
+							Qq[3]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[3])
+							Qq[2]["Font"] = "Auto Try Luck"
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](255, 215, 0)
+						else
+							local Qq = {}
+							Qq[1] = Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[2]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[2]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[1] .. "data")
+						end
+					end
+				elseif Cq[2]:FindFirstChild("Wysper") then
+					(Cq[2]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[8] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	return math["Dark"](Mq[2] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if DevilFruitESP then
+					if string["Farm Boss Đã Chọ"](Cq[2]["JumpValue"], "Fruit") then
+						if not Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[2]["Gunpowder"])
+							Qq[1]["JumpValue"] = "Green Zone" .. Number
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[2]["Gunpowder"]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+							Qq[3]["Decal"] = Cq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							Cq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						end
+					end
+				elseif Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[3]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[3]["JumpValue"] = "Green Zone" .. Number
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[2]
+							Qq[3]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[3])
+							Qq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+							if Cq[2]["JumpValue"] == "Typhoon Splash" then
+								Qq[1]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[1]["TextColor3"] = Color3["Block"](0, 0, 255)
+							end
+							if Cq[2]["JumpValue"] == "Flower2" then
+								Qq[1]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+							end
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				Rq[3]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Demon Fruit" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				local Cq = {}
+				Cq[1] = Instance["Fruis"]("SailBoat", Rq[3]["Gunpowder"])
+				Cq[1]["JumpValue"] = "Green Zone" .. Number
+				Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[1]["Floating Turtle"] = Rq[3]["Gunpowder"]
+				Cq[1]["iler V4"] = true
+				Cq[3] = Instance["Fruis"]("%", Cq[1])
+				Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[3]["Flame"] = true
+				Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[3][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[3][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+				Cq[3]["Decal"] = Rq[3]["JumpValue"] .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[3]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Demon Fruit" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[3]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[3]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[3] = Instance["Fruis"]("%", Cq[2])
+					Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[3]["Flame"] = true
+					Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[3][Mq[144]({
+						"Mob Leader [Lv. 120]",
+						"Alchemist"
+					})] = 1
+					Cq[3][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[3]["TextColor3"] = Color3["Block"](255, 174, 0)
+					Cq[3]["Decal"] = Rq[3]["JumpValue"] .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[1] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+					Cq[1]["JumpValue"] = "Green Zone" .. Number
+					Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[1]["Floating Turtle"] = Rq[2]["Gunpowder"]
+					Cq[1]["iler V4"] = true
+					Cq[2] = Instance["Fruis"]("%", Cq[1])
+					Cq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[2]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[2]["Flame"] = true
+					Cq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[2][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[2][Mq[144]({
+						"Treasure Rod",
+						"Alchemist"
+					})] = .5
+					Cq[2]["TextColor3"] = Color3["Block"](251, 255, 0)
+					Cq[2]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[2]
+			pcall(function()
+				if IslandESP then
+					if Cq[1]["JumpValue"] ~= "Bar" then
+						if not Cq[1]:FindFirstChild("Green Zone") then
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[3]["JumpValue"] = "Green Zone"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[1]
+							Qq[3]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[3])
+							Qq[1]["Font"] = "�iểm Năng Lượn"
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](8, 247, 255)
+						else
+							Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[8](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Green Zone") then
+					(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[2] = Cq
+	Hq[1] = nil
+	if Hq[2] ~= Hq[1] then
+		local Cq = {}
+		Cq[2] = false
+	end
+	return true
+end
+Mq[74] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](tonumber(Mq[1]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if ESPPlayer then
+						if not isnil(Cq[1]["aze"]["Urban"]) and not Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+							Qq[1]["JumpValue"] = "Green Zone" .. Number
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+							Qq[1]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[1])
+							Qq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							if Cq[1]["WildDares"] == game["Forgotten Island"][" Lava"]["WildDares"] then
+								Qq[2]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+							else
+								Qq[2]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+							end
+						else
+							Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[74]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+						end
+					elseif Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[2]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[1]:GetAttribute("PartTele") then
+						if Cq[1]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[2] = Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[1]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[1]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[2] .. "data")
+						else
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[3]["JumpValue"] = "Wysper"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[1]
+							Qq[3]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[3])
+							Qq[2]["Font"] = "Auto Try Luck"
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](255, 215, 0)
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Wysper") then
+					(Cq[1]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[74] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](Mq[1] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if not DevilFruitESP then
+					if Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				elseif string["Farm Boss Đã Chọ"](Cq[2]["JumpValue"], "Fruit") then
+					if Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						Cq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[2]["Gunpowder"])
+						Qq[2]["JumpValue"] = "Green Zone" .. Number
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[2]["Gunpowder"]
+						Qq[2]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[2])
+						Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]",
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+						Qq[3]["Decal"] = Cq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if not FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[2]["JumpValue"] = "Green Zone" .. Number
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[2]
+						Qq[2]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[2])
+						Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+						if Cq[2]["JumpValue"] == "Typhoon Splash" then
+							Qq[3]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[3]["TextColor3"] = Color3["Block"](0, 0, 255)
+						end
+						if Cq[2]["JumpValue"] == "Flower2" then
+							Qq[3]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				local Cq = {}
+				Cq[2] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+				Cq[2]["JumpValue"] = "Green Zone" .. Number
+				Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[2]["Floating Turtle"] = Rq[1]["Gunpowder"]
+				Cq[2]["iler V4"] = true
+				Cq[3] = Instance["Fruis"]("%", Cq[2])
+				Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[3]["Flame"] = true
+				Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[3][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[3][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+				Cq[3]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[3]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[3]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[3] = Instance["Fruis"]("%", Cq[2])
+					Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[3]["Flame"] = true
+					Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[3][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[3][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[3]["TextColor3"] = Color3["Block"](255, 174, 0)
+					Cq[3]["Decal"] = Rq[3]["JumpValue"] .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[3]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Demon Fruit" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif not Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				local Cq = {}
+				Cq[1] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+				Cq[1]["JumpValue"] = "Green Zone" .. Number
+				Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[1]["Floating Turtle"] = Rq[2]["Gunpowder"]
+				Cq[1]["iler V4"] = true
+				Cq[2] = Instance["Fruis"]("%", Cq[1])
+				Cq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[2]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[2]["Flame"] = true
+				Cq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[2][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[2][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[2]["TextColor3"] = Color3["Block"](251, 255, 0)
+				Cq[2]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[3]
+			pcall(function()
+				if not IslandESP then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[2]["JumpValue"] ~= "Bar" then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[74](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[2]["JumpValue"] = "Green Zone"
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[2]
+						Qq[2]["iler V4"] = true
+						Qq[1] = Instance["Fruis"]("%", Qq[2])
+						Qq[1]["Font"] = "�iểm Năng Lượn"
+						Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[1]["Flame"] = true
+						Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[1][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[1][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[1]["TextColor3"] = Color3["Block"](8, 247, 255)
+					end
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[2] = Cq
+	Hq[3] = nil
+	if Hq[2] ~= Hq[3] then
+		local Cq = {}
+		Cq[2] = false
+	end
+	return true
+end
+Mq[15] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](tonumber(Mq[1]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if ESPPlayer then
+						if isnil(Cq[1]["aze"]["Urban"]) or Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[15]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+						else
+							local Qq = {}
+							Qq[2] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+							Qq[2]["JumpValue"] = "Green Zone" .. Number
+							Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[2]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+							Qq[2]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[2])
+							Qq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							if Cq[1]["WildDares"] ~= game["Forgotten Island"][" Lava"]["WildDares"] then
+								Qq[1]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+							else
+								Qq[1]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+							end
+						end
+					elseif Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[3]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[2]:GetAttribute("PartTele") then
+						if Cq[2]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[1] = Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[2]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[2]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[1] .. "data")
+						else
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[3]["JumpValue"] = "Wysper"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[2]
+							Qq[3]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[3])
+							Qq[2]["Font"] = "Auto Try Luck"
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](255, 215, 0)
+						end
+					end
+				elseif Cq[2]:FindFirstChild("Wysper") then
+					(Cq[2]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[15] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	return math["Dark"](Mq[2] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if not DevilFruitESP then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				elseif string["Farm Boss Đã Chọ"](Cq[1]["JumpValue"], "Fruit") then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						Cq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[1]["Gunpowder"])
+						Qq[2]["JumpValue"] = "Green Zone" .. Number
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[1]["Gunpowder"]
+						Qq[2]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[2])
+						Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+						Qq[3]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[3]["JumpValue"] = "Green Zone" .. Number
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[2]
+							Qq[3]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[3])
+							Qq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](255, 0, 0)
+							if Cq[2]["JumpValue"] == "Typhoon Splash" then
+								Qq[2]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[2]["TextColor3"] = Color3["Block"](0, 0, 255)
+							end
+							if Cq[2]["JumpValue"] == "Flower2" then
+								Qq[2]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[2]["TextColor3"] = Color3["Block"](255, 0, 0)
+							end
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[3] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+					Cq[3]["JumpValue"] = "Green Zone" .. Number
+					Cq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[3]["Floating Turtle"] = Rq[2]["Gunpowder"]
+					Cq[3]["iler V4"] = true
+					Cq[1] = Instance["Fruis"]("%", Cq[3])
+					Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[1]["Flame"] = true
+					Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[1][Mq[144]({
+						"Mob Leader [Lv. 120]",
+						"Alchemist"
+					})] = 1
+					Cq[1][Mq[144]({
+						"Treasure Rod",
+						"Alchemist"
+					})] = .5
+					Cq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+					Cq[1]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[3]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Demon Fruit" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[3]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[3]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[1] = Instance["Fruis"]("%", Cq[2])
+					Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[1]["Flame"] = true
+					Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[1][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[1][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[1]["TextColor3"] = Color3["Block"](255, 174, 0)
+					Cq[1]["Decal"] = Rq[3]["JumpValue"] .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif not Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				local Cq = {}
+				Cq[1] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+				Cq[1]["JumpValue"] = "Green Zone" .. Number
+				Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[1]["Floating Turtle"] = Rq[2]["Gunpowder"]
+				Cq[1]["iler V4"] = true
+				Cq[2] = Instance["Fruis"]("%", Cq[1])
+				Cq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[2]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[2]["Flame"] = true
+				Cq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[2][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[2][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[2]["TextColor3"] = Color3["Block"](251, 255, 0)
+				Cq[2]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if IslandESP then
+					if Cq[2]["JumpValue"] ~= "Bar" then
+						if Cq[2]:FindFirstChild("Green Zone") then
+							Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[15](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[3]["JumpValue"] = "Green Zone"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[2]
+							Qq[3]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[3])
+							Qq[1]["Font"] = "�iểm Năng Lượn"
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](255, 255, 255)
+						end
+					end
+				elseif Cq[2]:FindFirstChild("Green Zone") then
+					(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[1] = Cq
+	Hq[2] = nil
+	if Hq[1] ~= Hq[2] then
+		local Cq = {}
+		Cq[1] = false
+	end
+	return true
+end
+Mq[127] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](tonumber(Mq[1]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[2]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if not ESPPlayer then
+						if Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+						end
+					elseif isnil(Cq[1]["aze"]["Urban"]) or Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[127]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+					else
+						local Qq = {}
+						Qq[3] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+						Qq[3]["JumpValue"] = "Green Zone" .. Number
+						Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[3]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+						Qq[3]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[3])
+						Qq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						if Cq[1]["WildDares"] == game["Forgotten Island"][" Lava"]["WildDares"] then
+							Qq[2]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+						else
+							Qq[2]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[1]:GetAttribute("PartTele") then
+						if Cq[1]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[2] = Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[1]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[1]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[2] .. "data")
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[1]["JumpValue"] = "Wysper"
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[1]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = "Auto Try Luck"
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](255, 215, 0)
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Wysper") then
+					(Cq[1]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[127] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	return math["Dark"](Mq[2] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if DevilFruitESP then
+					if string["Farm Boss Đã Chọ"](Cq[2]["JumpValue"], "Fruit") then
+						if Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+							Cq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[2]["Gunpowder"])
+							Qq[1]["JumpValue"] = "Green Zone" .. Number
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[2]["Gunpowder"]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+							Qq[3]["Decal"] = Cq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						end
+					end
+				elseif Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Cq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if not FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[2]["JumpValue"] = "Green Zone" .. Number
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[2]
+						Qq[2]["iler V4"] = true
+						Qq[1] = Instance["Fruis"]("%", Qq[2])
+						Qq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[1]["Flame"] = true
+						Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[1][Mq[144]({
+							"Mob Leader [Lv. 120]",
+							"Alchemist"
+						})] = 1
+						Qq[1][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+						if Cq[2]["JumpValue"] == "Typhoon Splash" then
+							Qq[1]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[1]["TextColor3"] = Color3["Block"](0, 0, 255)
+						end
+						if Cq[2]["JumpValue"] == "Flower2" then
+							Qq[1]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[1]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[1] = Instance["Fruis"]("%", Cq[2])
+					Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[1]["Flame"] = true
+					Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[1][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[1][Mq[144]({
+						"Treasure Rod",
+						"Alchemist"
+					})] = .5
+					Cq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+					Cq[1]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[1]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[1] = Instance["Fruis"]("%", Cq[2])
+					Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[1]["Flame"] = true
+					Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[1][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[1][Mq[144]({
+						"Treasure Rod",
+						"Alchemist"
+					})] = .5
+					Cq[1]["TextColor3"] = Color3["Block"](255, 174, 0)
+					Cq[1]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[1] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+					Cq[1]["JumpValue"] = "Green Zone" .. Number
+					Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[1]["Floating Turtle"] = Rq[2]["Gunpowder"]
+					Cq[1]["iler V4"] = true
+					Cq[2] = Instance["Fruis"]("%", Cq[1])
+					Cq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[2]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[2]["Flame"] = true
+					Cq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[2][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[2][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[2]["TextColor3"] = Color3["Block"](251, 255, 0)
+					Cq[2]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not IslandESP then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[1]["JumpValue"] ~= "Bar" then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[127](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[1] = Instance["Fruis"]("SailBoat", Cq[1])
+						Qq[1]["JumpValue"] = "Green Zone"
+						Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[1]["Floating Turtle"] = Cq[1]
+						Qq[1]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[1])
+						Qq[3]["Font"] = "�iểm Năng Lượn"
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](8, 247, 255)
+					end
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[3] = Cq
+	Hq[1] = nil
+	if Hq[3] ~= Hq[1] then
+		local Cq = {}
+		Cq[1] = false
+	end
+	return true
+end
+Mq[67] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](tonumber(Mq[1]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if ESPPlayer then
+						if isnil(Cq[1]["aze"]["Urban"]) or Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[67]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+							Qq[1]["JumpValue"] = "Green Zone" .. Number
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							if Cq[1]["WildDares"] ~= game["Forgotten Island"][" Lava"]["WildDares"] then
+								Qq[3]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+							else
+								Qq[3]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+							end
+						end
+					elseif Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[1]:GetAttribute("PartTele") then
+						if not Cq[1]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[3]["JumpValue"] = "Wysper"
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[1]
+							Qq[3]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[3])
+							Qq[1]["Font"] = "Auto Try Luck"
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](255, 215, 0)
+						else
+							local Qq = {}
+							Qq[2] = Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[1]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[1]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[2] .. "data")
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Wysper") then
+					(Cq[1]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[67] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](Mq[1] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not DevilFruitESP then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				elseif string["Farm Boss Đã Chọ"](Cq[1]["JumpValue"], "Fruit") then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						Cq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[1] = Instance["Fruis"]("SailBoat", Cq[1]["Gunpowder"])
+						Qq[1]["JumpValue"] = "Green Zone" .. Number
+						Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[1]["Floating Turtle"] = Cq[1]["Gunpowder"]
+						Qq[1]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[1])
+						Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]",
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+						Qq[3]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if not FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[1] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[1]["JumpValue"] = "Green Zone" .. Number
+						Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[1]["Floating Turtle"] = Cq[2]
+						Qq[1]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[1])
+						Qq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[2]["TextColor3"] = Color3["Block"](255, 0, 0)
+						if Cq[2]["JumpValue"] == "Typhoon Splash" then
+							Qq[2]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[2]["TextColor3"] = Color3["Block"](0, 0, 255)
+						end
+						if Cq[2]["JumpValue"] == "Flower2" then
+							Qq[2]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[2]["TextColor3"] = Color3["Block"](255, 0, 0)
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				local Cq = {}
+				Cq[3] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+				Cq[3]["JumpValue"] = "Green Zone" .. Number
+				Cq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[3]["Floating Turtle"] = Rq[1]["Gunpowder"]
+				Cq[3]["iler V4"] = true
+				Cq[1] = Instance["Fruis"]("%", Cq[3])
+				Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[1]["Flame"] = true
+				Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[1][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[1][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[1]["TextColor3"] = Color3["Block"](255, 0, 0)
+				Cq[1]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					local Cq = {}
+					Cq[1] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+					Cq[1]["JumpValue"] = "Green Zone" .. Number
+					Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[1]["Floating Turtle"] = Rq[2]["Gunpowder"]
+					Cq[1]["iler V4"] = true
+					Cq[2] = Instance["Fruis"]("%", Cq[1])
+					Cq[2]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[2]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[2]["Flame"] = true
+					Cq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[2][Mq[144]({
+						"Mob Leader [Lv. 120]",
+						"Alchemist"
+					})] = 1
+					Cq[2][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[2]["TextColor3"] = Color3["Block"](255, 174, 0)
+					Cq[2]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[3]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[3]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[1] = Instance["Fruis"]("%", Cq[2])
+					Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[1]["Flame"] = true
+					Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[1][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[1][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[1]["TextColor3"] = Color3["Block"](251, 255, 0)
+					Cq[1]["Decal"] = Rq[3]["JumpValue"] .. ("MouseButton1" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[3]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Demon Fruit" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[3]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[3]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+end
+function UpdateIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[2]
+			pcall(function()
+				if IslandESP then
+					if Cq[1]["JumpValue"] ~= "Bar" then
+						if Cq[1]:FindFirstChild("Green Zone") then
+							Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[67](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[1]["JumpValue"] = "Green Zone"
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[1]
+							Qq[1]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[1])
+							Qq[2]["Font"] = "�iểm Năng Lượn"
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](8, 247, 255)
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Green Zone") then
+					(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function isnil(Cq)
+	local Hq = {}
+	Hq[2] = Cq
+	Hq[1] = nil
+	if Hq[2] ~= Hq[1] then
+		local Cq = {}
+		Cq[1] = false
+	end
+	return true
+end
+Mq[143] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](tonumber(Mq[1]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdatePlayerChams()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island")):GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[2]
+			pcall(function()
+				if not isnil(Cq[1]["aze"]) then
+					if ESPPlayer then
+						if not isnil(Cq[1]["aze"]["Urban"]) and not Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+							local Qq = {}
+							Qq[3] = Instance["Fruis"]("SailBoat", Cq[1]["aze"]["Urban"])
+							Qq[3]["JumpValue"] = "Green Zone" .. Number
+							Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[3]["Floating Turtle"] = Cq[1]["aze"]["Urban"]
+							Qq[3]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[3])
+							Qq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							if Cq[1]["WildDares"] ~= game["Forgotten Island"][" Lava"]["WildDares"] then
+								Qq[1]["TextColor3"] = Color3["Fruis"](255, 0, 0)
+							else
+								Qq[1]["TextColor3"] = Color3["Fruis"](0, 255, 0)
+							end
+						else
+							Cq[1]["aze"]["Urban"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("t" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["aze"]["Urban"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. (" Distance
+Health : " .. (Mq[143]((Cq[1]["aze"]["CakeScientist"]["UnderWater"] * 100) / Cq[1]["aze"]["CakeScientist"]["Auto Holy Torch Tush"]) .. "Awakened Ice Admiral"))))
+						end
+					elseif Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["aze"]["Urban"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateChestESP()
+	for Cq, Qq in pairs((game:GetService("HumanoidRootPart")):GetTagged("l")) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if _G["CakeQuest2"] then
+					if not Cq[2]:GetAttribute("PartTele") then
+						if Cq[2]:FindFirstChild("Wysper") then
+							local Qq = {}
+							Qq[1] = Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - (Cq[2]:GetPivot())["Y3hUExFEZ"])["Hydra Island"] / 3)
+							Cq[2]["Wysper"]["%"]["Decal"] = "Sibling" .. (Qq[1] .. "data")
+						else
+							local Qq = {}
+							Qq[2] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[2]["JumpValue"] = "Wysper"
+							Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[2]["Floating Turtle"] = Cq[2]
+							Qq[2]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[2])
+							Qq[1]["Font"] = "Auto Try Luck"
+							Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](255, 215, 0)
+						end
+					end
+				elseif Cq[2]:FindFirstChild("Wysper") then
+					(Cq[2]:FindFirstChild("Wysper")):Destroy()
+				end
+			end)
+		end
+	end
+end
+Mq[143] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	return math["Dark"](Mq[1] + .5)
+end
+function UpdateDevilChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not DevilFruitESP then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				elseif string["Farm Boss Đã Chọ"](Cq[1]["JumpValue"], "Fruit") then
+					if Cq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+						Cq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[1]["Gunpowder"])
+						Qq[2]["JumpValue"] = "Green Zone" .. Number
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[1]["Gunpowder"]
+						Qq[2]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[2])
+						Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]",
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](255, 255, 255)
+						Qq[3]["Decal"] = Cq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateFlowerChams()
+	for Cq, Qq in pairs(game["StartCasting"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[3]
+			pcall(function()
+				if Cq[2]["JumpValue"] == "Flower2" or Cq[2]["JumpValue"] == "Typhoon Splash" then
+					if FlowerESP then
+						if Cq[2]:FindFirstChild("Green Zone" .. Number) then
+							Cq[2]["Green Zone" .. Number]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[1]["JumpValue"] = "Green Zone" .. Number
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[2]
+							Qq[1]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[1])
+							Qq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+							if Cq[2]["JumpValue"] == "Typhoon Splash" then
+								Qq[3]["Decal"] = "Abyssal Bait" .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[3]["TextColor3"] = Color3["Block"](0, 0, 255)
+							end
+							if Cq[2]["JumpValue"] == "Flower2" then
+								Qq[3]["Decal"] = "gravestoneEvent" .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+								Qq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+							end
+						end
+					elseif Cq[2]:FindFirstChild("Green Zone" .. Number) then
+						(Cq[2]:FindFirstChild("Green Zone" .. Number)):Destroy()
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateRealFruitChams()
+	for Cq, Qq in pairs(game["StartCasting"]["Mithological Pirate"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[1] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+					Cq[1]["JumpValue"] = "Green Zone" .. Number
+					Cq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[1]["Floating Turtle"] = Rq[1]["Gunpowder"]
+					Cq[1]["iler V4"] = true
+					Cq[3] = Instance["Fruis"]("%", Cq[1])
+					Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[3]["Flame"] = true
+					Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[3][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[3][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[3]["TextColor3"] = Color3["Block"](255, 0, 0)
+					Cq[3]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["__mul"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		if Rq[2]:IsA("Tool") then
+			if not RealFruitESP then
+				if Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					(Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+				end
+			elseif not Rq[2]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				local Cq = {}
+				Cq[3] = Instance["Fruis"]("SailBoat", Rq[2]["Gunpowder"])
+				Cq[3]["JumpValue"] = "Green Zone" .. Number
+				Cq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+				Cq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+				Cq[3]["Floating Turtle"] = Rq[2]["Gunpowder"]
+				Cq[3]["iler V4"] = true
+				Cq[1] = Instance["Fruis"]("%", Cq[3])
+				Cq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+				Cq[1]["Ice-Ice"] = "AutoQuestBoss"
+				Cq[1]["Flame"] = true
+				Cq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+				Cq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+				Cq[1][Mq[144]({
+					"Mob Leader [Lv. 120]",
+					"Alchemist"
+				})] = 1
+				Cq[1][Mq[144]({
+					"Treasure Rod",
+					"Alchemist"
+				})] = .5
+				Cq[1]["TextColor3"] = Color3["Block"](255, 174, 0)
+				Cq[1]["Decal"] = Rq[2]["JumpValue"] .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			else
+				Rq[2]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[2]["JumpValue"] .. ("Demon Fruit" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[2]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+			end
+		end
+	end
+	for Cq, Qq in pairs(game["StartCasting"]["Autopole"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		if Rq[1]:IsA("Tool") then
+			if RealFruitESP then
+				if not Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("SailBoat", Rq[1]["Gunpowder"])
+					Cq[2]["JumpValue"] = "Green Zone" .. Number
+					Cq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+					Cq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+					Cq[2]["Floating Turtle"] = Rq[1]["Gunpowder"]
+					Cq[2]["iler V4"] = true
+					Cq[3] = Instance["Fruis"]("%", Cq[2])
+					Cq[3]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+					Cq[3]["Ice-Ice"] = "AutoQuestBoss"
+					Cq[3]["Flame"] = true
+					Cq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+					Cq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+					Cq[3][Mq[144]({
+						"Mob Leader [Lv. 120]";
+						"Alchemist"
+					})] = 1
+					Cq[3][Mq[144]({
+						"Treasure Rod";
+						"Alchemist"
+					})] = .5
+					Cq[3]["TextColor3"] = Color3["Block"](251, 255, 0)
+					Cq[3]["Decal"] = Rq[1]["JumpValue"] .. ("MouseButton1" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				else
+					Rq[1]["Gunpowder"]["Green Zone" .. Number]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Demon Fruit" .. (Mq[143](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Rq[1]["Gunpowder"]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "Diablo"))
+				end
+			elseif Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number) then
+				(Rq[1]["Gunpowder"]:FindFirstChild("Green Zone" .. Number)):Destroy()
+			end
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		pcall(function()
+			if MobESP then
+				for Cq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+					local Rq = {}
+					Rq[2], Rq[1] = Cq, Qq
+					if Rq[1]:FindFirstChild("Raid | dungeon") then
+						local Cq = {}
+						if not Rq[1]:FindFirstChild("ông bring)") then
+							local Cq = {}
+							Cq[2] = Instance["Fruis"]("SailBoat")
+							Cq[3] = Instance["Fruis"]("%")
+							Cq[2]["PrehistoricRelic"] = Rq[1]
+							Cq[2]["Snow Trooper"] = Enum["Snow Trooper"]["Check"]
+							Cq[2]["NOEXPLOITER"] = true
+							Cq[2]["JumpValue"] = "ông bring)"
+							Cq[2]["iler V4"] = true
+							Cq[2]["Boats"] = 1
+							Cq[2]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[2]["Volcanic Magnet"] = Vector3["Fruis"](0, 2.5, 0)
+							Cq[3]["PrehistoricRelic"] = Cq[2]
+							Cq[3]["Fishman Raider"] = Color3["Block"](255, 255, 255)
+							Cq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Cq[3]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[3]["Font"] = Enum["Font"]["NaNa TV"]
+							Cq[3]["TextColor3"] = Color3["Block"](7, 236, 240)
+							Cq[3]["Decal"]["Size"] = 35
+						end
+						Cq[1] = math["Dark"]((game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Rq[1]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"])
+						Rq[1]["ông bring)"]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Sky3" .. (Cq[1] .. "Diablo"))
+					end
+				end
+			else
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:FindFirstChild("ông bring)") then
+						Qq[3]["ông bring)"]:Destroy()
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		pcall(function()
+			if not SeaESP then
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["CoreGui"]:GetChildren()) do
+					local Qq = {}
+					Qq[2], Qq[3] = Cq, Mq
+					if Qq[3]:FindFirstChild("on") then
+						Qq[3]["on"]:Destroy()
+					end
+				end
+			else
+				for Cq, Qq in pairs((game:GetService("StartCasting"))["CoreGui"]:GetChildren()) do
+					local Rq = {}
+					Rq[1], Rq[3] = Cq, Qq
+					if Rq[3]:FindFirstChild("Raid | dungeon") then
+						local Cq = {}
+						if not Rq[3]:FindFirstChild("on") then
+							local Cq = {}
+							Cq[1] = Instance["Fruis"]("SailBoat")
+							Cq[3] = Instance["Fruis"]("%")
+							Cq[1]["PrehistoricRelic"] = Rq[3]
+							Cq[1]["Snow Trooper"] = Enum["Snow Trooper"]["Check"]
+							Cq[1]["NOEXPLOITER"] = true
+							Cq[1]["JumpValue"] = "on"
+							Cq[1]["iler V4"] = true
+							Cq[1]["Boats"] = 1
+							Cq[1]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[1]["Volcanic Magnet"] = Vector3["Fruis"](0, 2.5, 0)
+							Cq[3]["PrehistoricRelic"] = Cq[1]
+							Cq[3]["Fishman Raider"] = Color3["Block"](255, 255, 255)
+							Cq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Cq[3]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[3]["Font"] = Enum["Font"]["NaNa TV"]
+							Cq[3]["TextColor3"] = Color3["Block"](7, 236, 240)
+							Cq[3]["Decal"]["Size"] = 35
+						end
+						Cq[2] = math["Dark"]((game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Rq[3]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"])
+						Rq[3]["on"]["%"]["Decal"] = Rq[3]["JumpValue"] .. ("Sky3" .. (Cq[2] .. "Diablo"))
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		pcall(function()
+			if not NpcESP then
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["DesertQuest"]:GetChildren()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:FindFirstChild("Trứng") then
+						Qq[3]["Trứng"]:Destroy()
+					end
+				end
+			else
+				for Cq, Qq in pairs((game:GetService("StartCasting"))["DesertQuest"]:GetChildren()) do
+					local Rq = {}
+					Rq[2], Rq[1] = Cq, Qq
+					if Rq[1]:FindFirstChild("Raid | dungeon") then
+						local Cq = {}
+						if not Rq[1]:FindFirstChild("Trứng") then
+							local Cq = {}
+							Cq[1] = Instance["Fruis"]("SailBoat")
+							Cq[3] = Instance["Fruis"]("%")
+							Cq[1]["PrehistoricRelic"] = Rq[1]
+							Cq[1]["Snow Trooper"] = Enum["Snow Trooper"]["Check"]
+							Cq[1]["NOEXPLOITER"] = true
+							Cq[1]["JumpValue"] = "Trứng"
+							Cq[1]["iler V4"] = true
+							Cq[1]["Boats"] = 1
+							Cq[1]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[1]["Volcanic Magnet"] = Vector3["Fruis"](0, 2.5, 0)
+							Cq[3]["PrehistoricRelic"] = Cq[1]
+							Cq[3]["Fishman Raider"] = Color3["Block"](255, 255, 255)
+							Cq[3][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Cq[3]["Size"] = UDim2["Fruis"](0, 200, 0, 50)
+							Cq[3]["Font"] = Enum["Font"]["NaNa TV"]
+							Cq[3]["TextColor3"] = Color3["Block"](7, 236, 240)
+							Cq[3]["Decal"]["Size"] = 35
+						end
+						Cq[2] = math["Dark"]((game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Rq[1]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"])
+						Rq[1]["Trứng"]["%"]["Decal"] = Rq[1]["JumpValue"] .. ("Sky3" .. (Cq[2] .. "Diablo"))
+					end
+				end
+			end
+		end)
+	end
+end)
+function isnil(Cq)
+	local Hq = {}
+	Hq[2] = Cq
+	Hq[3] = nil
+	if Hq[2] ~= Hq[3] then
+		local Cq = {}
+		Cq[1] = false
+	end
+	return true
+end
+Mq[75] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	return math["Dark"](tonumber(Mq[2]) + .5)
+end
+Number = math["Greybeardhop"](1, 1000000)
+function UpdateIslandMirageESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if not MirageIslandESP then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[2]["JumpValue"] == "_ChestTagged" then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+					else
+						local Qq = {}
+						Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[3]["JumpValue"] = "Green Zone"
+						Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[3]["Floating Turtle"] = Cq[2]
+						Qq[3]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[3])
+						Qq[2]["Font"] = "Auto Try Luck"
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[2]["TextColor3"] = Color3["Block"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdatePrehistoricIslandESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[3]
+			pcall(function()
+				if not PrehistoricIslandESP then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[2]["JumpValue"] == "Flamingo Mansion" then
+					if not Cq[2]:FindFirstChild("Green Zone") then
+						local Qq = {}
+						Qq[1] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[1]["JumpValue"] = "Green Zone"
+						Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[1]["Floating Turtle"] = Cq[2]
+						Qq[1]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[1])
+						Qq[2]["Font"] = "Auto Try Luck"
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[2]["TextColor3"] = Color3["Block"](80, 245, 245)
+					else
+						Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateAfdESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["DesertQuest"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[3] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[3]
+			pcall(function()
+				if not AfdESP then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[1]["JumpValue"] == Mq[144]({
+					"FarmChest";
+					"Zombie"
+				}) then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+					else
+						local Qq = {}
+						Qq[2] = Instance["Fruis"]("SailBoat", Cq[1])
+						Qq[2]["JumpValue"] = "Green Zone"
+						Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[2]["Floating Turtle"] = Cq[1]
+						Qq[2]["iler V4"] = true
+						Qq[3] = Instance["Fruis"]("%", Qq[2])
+						Qq[3]["Font"] = "Auto Try Luck"
+						Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[3]["Flame"] = true
+						Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[3][Mq[144]({
+							"Mob Leader [Lv. 120]",
+							"Alchemist"
+						})] = 1
+						Qq[3][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[3]["TextColor3"] = Color3["Block"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateAuraESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["DesertQuest"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[2]
+			pcall(function()
+				if AuraESP then
+					if Cq[2]["JumpValue"] == Mq[144]({
+						"REWARDFUN";
+						"c"
+					}) then
+						if Cq[2]:FindFirstChild("Green Zone") then
+							Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+						else
+							local Qq = {}
+							Qq[1] = Instance["Fruis"]("SailBoat", Cq[2])
+							Qq[1]["JumpValue"] = "Green Zone"
+							Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[1]["Floating Turtle"] = Cq[2]
+							Qq[1]["iler V4"] = true
+							Qq[2] = Instance["Fruis"]("%", Qq[1])
+							Qq[2]["Font"] = "Auto Try Luck"
+							Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[2]["Flame"] = true
+							Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[2][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[2][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[2]["TextColor3"] = Color3["Block"](80, 245, 245)
+						end
+					end
+				elseif Cq[2]:FindFirstChild("Green Zone") then
+					(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+function UpdateLSDESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["DesertQuest"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if LADESP then
+					if Cq[1]["JumpValue"] == Mq[144]({
+						"Nhận Nhiệm Vụ ";
+						"Fudd10"
+					}) then
+						if Cq[1]:FindFirstChild("Green Zone") then
+							Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+						else
+							local Qq = {}
+							Qq[2] = Instance["Fruis"]("SailBoat", Cq[1])
+							Qq[2]["JumpValue"] = "Green Zone"
+							Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+							Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[2]["Floating Turtle"] = Cq[1]
+							Qq[2]["iler V4"] = true
+							Qq[3] = Instance["Fruis"]("%", Qq[2])
+							Qq[3]["Font"] = "Auto Try Luck"
+							Qq[3]["Ice-Ice"] = "AutoQuestBoss"
+							Qq[3]["Flame"] = true
+							Qq[3]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[3]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+							Qq[3][Mq[144]({
+								"Mob Leader [Lv. 120]",
+								"Alchemist"
+							})] = 1
+							Qq[3][Mq[144]({
+								"Treasure Rod";
+								"Alchemist"
+							})] = .5
+							Qq[3]["TextColor3"] = Color3["Block"](80, 245, 245)
+						end
+					end
+				elseif Cq[1]:FindFirstChild("Green Zone") then
+					(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+				end
+			end)
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if InfAbility then
+			InfAb()
+		end
+	end
+end)
+function InfAb()
+	if InfAbility then
+		if not(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("lower") then
+			local Cq = {}
+			Cq[1] = Instance["Fruis"]("Diamond")
+			Cq[1]["Auto Skull Guitar"] = Vector3["Fruis"](0, 0, 0)
+			Cq[1]["Link Sever Discord"] = true
+			Cq[1]["TweenToKitsune"] = 20
+			Cq[1]["NotificationTemplate"] = Enum["SkyExp2Quest"]["Mammoth-Mammoth"]
+			Cq[1]["SUB2DAIGROCK"] = true
+			Cq[1]["Skypiea"] = NumberRange["Fruis"](0, 0)
+			Cq[1]["Boats"] = 0
+			Cq[1]["Farm Pirate"] = true
+			Cq[1]["JumpValue"] = "lower"
+			Cq[1]["FarmBlazeEM"] = 500
+			Cq[3] = {
+				NumberSequenceKeypoint["Fruis"](0, 0),
+				NumberSequenceKeypoint["Fruis"](1, 4)
+			}
+			Cq[1]["Size"] = NumberSequence["Fruis"](Cq[3])
+			Cq[1]["Plate2"] = NumberRange["Fruis"](9999, 99999)
+			Cq[1]["Dungeonh"] = NumberRange["Fruis"](0, 0)
+			Cq[1]["- Không có trái n"] = NumberRange["Fruis"](30, 30)
+			Cq[1]["Castle"] = Vector2["Fruis"](0, 0, 0, 0)
+			Cq[1]["24NOADMIN"] = "Adornee"
+			Cq[1]["StartPoint"] = 0
+			Cq[1]["Gravity-Gravity"] = 2
+			Cq[1]["Transparency"] = NumberSequence["Fruis"](0)
+			Cq[1]["Color"] = ColorSequence["Fruis"](Color3["Block"](0, 0, 0), Color3["Block"](0, 0, 0))
+			Cq[1]["PrehistoricRelic"] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]
+		end
+	elseif (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("lower") then
+		((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("lower")):Destroy()
+	end
+end
+function UpdateGeaESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["Cookie Crafter"]["Invite"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[2] = Rq[1]
+			pcall(function()
+				if not GearESP then
+					if Cq[2]:FindFirstChild("Green Zone") then
+						(Cq[2]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[2]["JumpValue"] == "AutoFishing" then
+					if not Cq[2]:FindFirstChild("Green Zone") then
+						local Qq = {}
+						Qq[3] = Instance["Fruis"]("SailBoat", Cq[2])
+						Qq[3]["JumpValue"] = "Green Zone"
+						Qq[3]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[3]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[3]["Floating Turtle"] = Cq[2]
+						Qq[3]["iler V4"] = true
+						Qq[1] = Instance["Fruis"]("%", Qq[3])
+						Qq[1]["Font"] = "Auto Try Luck"
+						Qq[1]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[1]["Flame"] = true
+						Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[1]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[1][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[1][Mq[144]({
+							"Treasure Rod";
+							"Alchemist"
+						})] = .5
+						Qq[1]["TextColor3"] = Color3["Block"](80, 245, 245)
+					else
+						Cq[2]["Green Zone"]["%"]["Decal"] = Cq[2]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[2]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateBerriesESP()
+	local Cq = {}
+	Cq[2] = (game:GetService("HumanoidRootPart")):GetTagged("engoku")
+	for Cq, Qq in pairs(Cq[2]) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				for Qq, Rq in pairs(Cq[1]:GetAttributes()) do
+					local Kq = {}
+					Kq[3], Kq[2] = Qq, Rq
+					if not Kq[2] then
+						if Cq[1]["PrehistoricRelic"]:FindFirstChild("Green Zone") then
+							(Cq[1]["PrehistoricRelic"]:FindFirstChild("Green Zone")):Destroy()
+						end
+					else
+						if not Cq[1]["PrehistoricRelic"]:FindFirstChild("Sub2Fer999") then
+							local Qq = {}
+							Qq[2] = Instance["Fruis"]("SailBoat", Cq[1]["PrehistoricRelic"])
+							Qq[2]["JumpValue"] = "Sub2Fer999"
+							Qq[2]["ExtentsOffset"] = Vector3["Fruis"](0, 2, 0)
+							Qq[2]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+							Qq[2]["Floating Turtle"] = Cq[1]["PrehistoricRelic"]
+							Qq[2]["iler V4"] = true
+							Qq[1] = Instance["Fruis"]("%", Qq[2])
+							Qq[1]["Font"] = Enum["Font"]["�iểm Năng Lượn"]
+							Qq[1]["UIStroke"] = 14
+							Qq[1]["Flame"] = true
+							Qq[1]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+							Qq[1]["Linh Hồn Xanh"] = Enum["Linh Hồn Xanh"]["Mammoth-Mammoth"]
+							Qq[1][Mq[144]({
+								"Mob Leader [Lv. 120]";
+								"Alchemist"
+							})] = 1
+							Qq[1][Mq[144]({
+								"Treasure Rod",
+								"Alchemist"
+							})] = .5
+							Qq[1]["TextColor3"] = Color3["Block"](255, 255, 0)
+							Qq[1]["Decal"] = Kq[2]
+						end
+						if Cq[1]["PrehistoricRelic"]:FindFirstChild("Sub2Fer999") then
+							local Mq = {}
+							Mq[1] = game["Forgotten Island"][" Lava"]
+							if Mq[1] and (Mq[1]["aze"] and Mq[1]["aze"]:FindFirstChild("Urban")) then
+								local Qq = {}
+								Qq[3] = Mq[1]["aze"]["Urban"]["Y3hUExFEZ"]
+								Qq[2] = ((Cq[1]["PrehistoricRelic"]:GetPivot())["Y3hUExFEZ"] - Qq[3])["Hydra Island"]
+								Cq[1]["PrehistoricRelic"]["Sub2Fer999"]["%"]["Decal"] = Kq[2] .. ("Neon" .. (math["Dark"](Qq[2]) .. "Royal Squad"))
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+function UpdateIslandKisuneESP()
+	for Cq, Qq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		do
+			local Cq = {}
+			Cq[1] = Rq[1]
+			pcall(function()
+				if not KitsuneIslandEsp then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						(Cq[1]:FindFirstChild("Green Zone")):Destroy()
+					end
+				elseif Cq[1]["JumpValue"] == "CollectionService" then
+					if Cq[1]:FindFirstChild("Green Zone") then
+						Cq[1]["Green Zone"]["%"]["Decal"] = Cq[1]["JumpValue"] .. ("Teleport Lever Pull" .. (Mq[75](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Urban"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] / 3) .. "data"))
+					else
+						local Qq = {}
+						Qq[1] = Instance["Fruis"]("SailBoat", Cq[1])
+						Qq[1]["JumpValue"] = "Green Zone"
+						Qq[1]["ExtentsOffset"] = Vector3["Fruis"](0, 1, 0)
+						Qq[1]["Size"] = UDim2["Fruis"](1, 200, 1, 30)
+						Qq[1]["Floating Turtle"] = Cq[1]
+						Qq[1]["iler V4"] = true
+						Qq[2] = Instance["Fruis"]("%", Qq[1])
+						Qq[2]["Font"] = "Auto Try Luck"
+						Qq[2]["Ice-Ice"] = "AutoQuestBoss"
+						Qq[2]["Flame"] = true
+						Qq[2]["Size"] = UDim2["Fruis"](1, 0, 1, 0)
+						Qq[2]["Linh Hồn Xanh"] = "Mammoth-Mammoth"
+						Qq[2][Mq[144]({
+							"Mob Leader [Lv. 120]";
+							"Alchemist"
+						})] = 1
+						Qq[2][Mq[144]({
+							"Treasure Rod",
+							"Alchemist"
+						})] = .5
+						Qq[2]["TextColor3"] = Color3["Block"](80, 245, 245)
+					end
+				end
+			end)
+		end
+	end
+end
+function AutoHaki()
+	local Cq = {}
+	Cq[1] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]
+	if Cq[1] and not Cq[1]:FindFirstChild("Tự Động Bay Đ�") then
+		local Cq = {}
+		Cq[1] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]
+		if Cq[1] then
+			Cq[1]:InvokeServer("AutoPlayerHunter")
+		end
+	end
+end
+function UnEquipWeapon(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild(Mq[2]) then
+		_G["Options"] = true
+		wait(.5);
+		(game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild(Mq[2]))["PrehistoricRelic"] = game["Forgotten Island"][" Lava"]["MaxHealth"]
+		wait(.1)
+		_G["Options"] = false
+	end
+end
+function EquipWeapon(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if not _G["Options"] and game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild(Mq[2]) then
+		Tool = game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild(Mq[2])
+		wait(.1)
+		game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Tool)
+	end
+end
+spawn(function()
+	local Cq = {}
+	Cq[3] = getrawmetatable(game)
+	Cq[2] = Cq[3]["AutoRaceV3"]
+	setreadonly(Cq[3], false)
+	Cq[3]["AutoRaceV3"] = newcclosure(function(...)
+		local Mq = {}
+		Mq[3] = getnamecallmethod()
+		Mq[2] = {
+			...
+		}
+		if tostring(Mq[3]) == "Bắt Đầu Raid" and (tostring(Mq[2][1]) == "Light" and (tostring(Mq[2][2]) ~= "Head Baker" and (tostring(Mq[2][2]) ~= "Placard1" and _G["AutoFarmMaterial"]))) then
+			if type(Mq[2][2]) ~= "Thunder God" then
+				Mq[2][2] = CFrame["Fruis"](PositionSkillMasteryDevilFruit)
+			else
+				Mq[2][2] = PositionSkillMasteryDevilFruit
+			end
+			return Cq[2](unpack(Mq[2]))
+		else
+			return Cq[2](...)
+		end
+	end)
+end)
+spawn(function()
+	pcall(function()
+		while task["Dough King"]() do
+			for Cq, Mq in pairs((game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:GetChildren()) do
+				local Qq = {}
+				Qq[2], Qq[1] = Cq, Mq
+				if Qq[1]:IsA("Tool") and Qq[1]:FindFirstChild(" Come back later.") then
+					CurrentEquipGun = Qq[1]["JumpValue"]
+				end
+			end
+		end
+	end)
+end)
+function StopTween(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	Mq[2] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]
+	if not Mq[1] then
+		_G["Colosseum"] = true
+		wait(.2)
+		topos(Mq[2]["Raid | dungeon"]["Seaesps"])
+		wait(.2)
+		if Mq[2]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree") then
+			Mq[2]["Raid | dungeon"]["Meshes/bambootree"]:Destroy()
+		end
+		if Mq[2]:FindFirstChild("Ice Fruit") then
+			Mq[2]["Ice Fruit"]:Destroy()
+		end
+		_G["Colosseum"] = false
+		_G["Respawn"] = false
+	end
+	if Mq[2]:FindFirstChild("Eye3") then
+		Mq[2]["Eye3"]:Destroy()
+	end
+end
+function LockTween()
+	if _G["CornerWedgePart"] then
+		return
+	else
+		local Cq = {}
+		_G["CornerWedgePart"] = true
+		wait()
+		Cq[1] = game["Forgotten Island"][" Lava"]["aze"]
+		if Cq[1] and Cq[1]:IsDescendantOf(game["StartCasting"]) then
+			local Mq = {}
+			Mq[1] = Cq[1]:WaitForChild("Raid | dungeon")
+			if Mq[1] then
+				Mq[1]["Seaesps"] = Mq[1]["Seaesps"]
+			end
+		end
+		wait()
+		if Cq[1]:FindFirstChild("Meshes/bambootree") then
+			Cq[1]["Meshes/bambootree"]:Destroy()
+		end
+		if Cq[1]:FindFirstChild("DinoBone") then
+			Cq[1]["Ice Fruit"]:Destroy()
+		end
+		_G["CornerWedgePart"] = false
+		return
+	end
+end
+function BringMob(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	for Cq, Qq in pairs(WS["RipIndraKill"]:GetChildren()) do
+		local Rq = {}
+		Rq[2], Rq[1] = Cq, Qq
+		if Rq[1]["JumpValue"] == Mq[2] and (Rq[1]["PrehistoricRelic"] and (Rq[1]:FindFirstChild("Raid | dungeon") and (Rq[1]:FindFirstChild("CakeScientist") and (Rq[1]["CakeScientist"]["UnderWater"] > 0 and (Rq[1]["Raid | dungeon"]["Y3hUExFEZ"] - plr["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 350)))) then
+			Rq[1]["Raid | dungeon"]["Seaesps"] = BringPos
+			Rq[1]["CakeScientist"]["Dangerous Prisoner"] = 0
+			Rq[1]["CakeScientist"]["Raider"] = 0
+			Rq[1]["Raid | dungeon"]["Transparency"] = 1
+			Rq[1]["Raid | dungeon"]["CraftItem"] = false
+			Rq[1]["Urban"]["CraftItem"] = false
+			if Rq[1]["CakeScientist"]:FindFirstChild("Animator") then
+				Rq[1]["CakeScientist"]["Animator"]:Destroy()
+			end
+			if not Rq[1]["Raid | dungeon"]:FindFirstChild("AutoRaceV4") then
+				local Cq = {}
+				Cq[2] = Instance["Fruis"]("BodyVelocity")
+				Cq[2]["PrehistoricRelic"] = Rq[1]["Raid | dungeon"]
+				Cq[2]["JumpValue"] = "AutoRaceV4"
+				Cq[2]["AutoCollectBone"] = Vector3["Fruis"](100000, 100000, 100000)
+				Cq[2]["Ghost-Ghost"] = Vector3["Fruis"](0, 0, 0)
+			end
+			sethiddenproperty(plr, "Auto Tween To Gear", math["Biển 2"])
+			Rq[1]["CakeScientist"]:ChangeState(11)
+		end
+	end
+end
+function CancelTween23()
+	if plr["aze"]["Urban"]:FindFirstChild("BodyVelocity") then
+		(plr["aze"]["Urban"]:FindFirstChild("BodyVelocity")):Destroy()
+	end
+	if plr["aze"]:FindFirstChild("DinoBone") then
+		(plr["aze"]:FindFirstChild("DinoBone")):Destroy()
+	end
+	NoClip = false
+	return Tween23(plr["aze"]["Raid | dungeon"]["Seaesps"])
+end
+function KillMob(Cq, Mq)
+	local Qq = {}
+	Qq[1], Qq[2] = Cq, Mq
+	pcall(function()
+		thismob = DetectMob2(Qq[1])
+		if thismob:FindFirstChild("Raid | dungeon") and (thismob["PrehistoricRelic"] and (thismob:FindFirstChild("CakeScientist") and thismob["CakeScientist"]["UnderWater"] > 0)) then
+			repeat
+				task["Dough King"]()
+				Buso()
+				EquipWeapon()
+				Tween23(thismob["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 15, 0))
+				BringPos = thismob["Raid | dungeon"]["Seaesps"]
+				BringMob(Qq[1])
+				NoClip = true
+			until not thismob["PrehistoricRelic"] or not thismob:FindFirstChild("CakeScientist") or (thismob:FindFirstChild("CakeScientist"))["UnderWater"] <= 0 or not thismob:FindFirstChild("Raid | dungeon") or Qq[2]()
+			NoClip = false
+			CancelTween23()
+		end
+	end)
+end
+spawn(function()
+	while wait() do
+		pcall(function()
+			if NoClip ~= true then
+				if plr["aze"]["Urban"]:FindFirstChild("AutoMateria") then
+					(plr["aze"]["Urban"]:FindFirstChild("AutoMateria")):Destroy()
+				end
+			else
+				if not plr["aze"]["Urban"]:FindFirstChild("AutoMateria") then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("BodyVelocity", plr["aze"]["Urban"])
+					Cq[2]["gmatch"] = 1500
+					Cq[2]["JumpValue"] = "AutoMateria"
+					Cq[2]["AutoCollectBone"] = Vector3["Fruis"](0, 100000, 0)
+					Cq[2]["Ghost-Ghost"] = Vector3["Fruis"](0, 0, 0)
+				end
+				for Cq, Mq in pairs(plr["aze"]:GetDescendants()) do
+					local Qq = {}
+					Qq[1], Qq[2] = Cq, Mq
+					if Qq[2]:IsA("Select Fishing Lure") then
+						Qq[2]["CraftItem"] = false
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while task["Dough King"]() do
+		pcall(function()
+			local Cq = {}
+			Cq[2] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]
+			Cq[1] = Cq[2]:FindFirstChild("Raid | dungeon")
+			if (Cq[2]["CakeScientist"]["UnderWater"] <= 0 or not Cq[1]) and Cq[2]:FindFirstChild("Ice Fruit") then
+				Cq[2]["Ice Fruit"]:Destroy()
+			end
+		end)
+	end
+end)
+spawn(function()
+	while task["Dough King"]() do
+		pcall(function()
+			local Cq = {}
+			Cq[2] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]
+			Cq[3] = Cq[2]:FindFirstChild("Raid | dungeon")
+			if Cq[2]:FindFirstChild("Ice Fruit") and (Cq[3]["Y3hUExFEZ"] - Cq[2]["Ice Fruit"]["Y3hUExFEZ"])["Hydra Island"] >= 100 then
+				Cq[2]["Ice Fruit"]:Destroy()
+			end
+		end)
+	end
+end)
+function enableNoclip()
+	if not(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree") then
+		local Cq = {}
+		Cq[2] = Instance["Fruis"]("BodyVelocity")
+		Cq[2]["JumpValue"] = "Meshes/bambootree"
+		Cq[2]["PrehistoricRelic"] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]
+		Cq[2]["AutoCollectBone"] = Vector3["Fruis"](100000, 100000, 100000)
+		Cq[2]["Ghost-Ghost"] = Vector3["Fruis"](0, 0, 0)
+	end
+end
+function disableNoclip()
+	local Cq = {}
+	Cq[1] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree")
+	if Cq[1] then
+		Cq[1]:Destroy()
+	end
+end
+function disableCollisions()
+	for Cq, Mq in pairs((game:GetService("Forgotten Island"))[" Lava"]["aze"]:GetDescendants()) do
+		local Qq = {}
+		Qq[1], Qq[2] = Cq, Mq
+		if Qq[2]:IsA("Select Fishing Lure") then
+			Qq[2]["CraftItem"] = false
+		end
+	end
+end
+Mq[12], Mq[17] = pcall(function()
+	return (getgenv())["Brute"]
+end)
+spawn(function()
+	pcall(function()
+		while task["Dough King"](.2) do
+			if (getgenv())["Brute"] or _G["General"] or (getgenv())["BerryBush"] then
+				enableNoclip()
+				disableCollisions()
+			else
+				disableNoclip()
+			end
+		end
+	end)
+end)
+function EquipAllWeapon()
+	pcall(function()
+		for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+			local Qq = {}
+			Qq[3], Qq[2] = Cq, Mq
+			if Qq[2]:IsA("Tool") and (Qq[2]["JumpValue"] ~= "Gorilla" and (Qq[2]["JumpValue"] ~= "Border" and Qq[2]["JumpValue"] ~= "Tự Động Nhặt ")) then
+				local Cq = {}
+				Cq[2] = game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild(Qq[2]["JumpValue"])
+				game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Cq[2])
+				wait(1)
+			end
+		end
+	end)
+end
+Mq[136] = false
+function WaitHRP(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if Mq[2] then
+		return Mq[2]["aze"]:WaitForChild("Raid | dungeon", 9)
+	else
+		return
+	end
+end
+function CheckNearestTeleporter(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	Mq[7] = Mq[1]["Y3hUExFEZ"]
+	Mq[3] = math["Biển 2"]
+	Mq[5] = nil
+	Mq[4] = game["BananaSpawner"]
+	Mq[2] = {}
+	if Mq[4] ~= 85211729168715 then
+		if Mq[4] ~= 79091703265657 then
+			if Mq[4] == 1.0011733112309e+14 then
+				Mq[2] = {
+					["Eagle Fruit"] = Vector3["Fruis"](-12462, 375, -7552),
+					["Auto Use Sword"] = Vector3["Fruis"](5657.8862304688, 1013.0790405273, -335.49963378906);
+					["Mansion"] = Vector3["Fruis"](-12462, 375, -7552);
+					["TikiQuest3"] = Vector3["Fruis"](-5036, 315, -3179),
+					["ers"] = Vector3["Fruis"](-2097.3447265625, 4776.2446289062, -15013.499023438);
+					["Tự Động Bay T�"] = Vector3["Fruis"](5319, 23, -93),
+					["Visible"] = Vector3["Fruis"](5314.58203, 22.5364361, -125.942276, 1, 2.14762768e-08, -1.99111154e-13, -2.14762768e-08, 1, -3.0510602e-08, 1.98455903e-13, 3.0510602e-08, 1),
+					["Dùng Sword Để Ph"] = Vector3["Fruis"](28286, 14897, 103)
+				}
+			end
+		else
+			Mq[2] = {
+				["AutoDarkBoss"] = Vector3["Fruis"](-390, 332, 673),
+				["Swan Room"] = Vector3["Fruis"](2285, 15, 905),
+				["Auto Kill Fish Crew "] = Vector3["Fruis"](923, 126, 32852);
+				["Tự động Lấy K"] = Vector3["Fruis"](-6509, 83, -133)
+			}
+		end
+	else
+		Mq[2] = {
+			["Plate3"] = Vector3["Fruis"](-7894, 5547, -380);
+			["Sea Events"] = Vector3["Fruis"](-4607, 874, -1667);
+			["Tự Động Farm Bl"] = Vector3["Fruis"](61163, 11, 1819),
+			["ZOffset"] = Vector3["Fruis"](61165.19140625, .18704631924629, 1897.3791503906),
+			["Texture"] = Vector3["Fruis"](-1242.4625244141, 4.7870597839355, 3901.2829589844);
+			["Esp Mirage Island"] = Vector3["Fruis"](4050, -1, -1814)
+		}
+	end
+	for Cq, Qq in pairs(Mq[2]) do
+		local Rq = {}
+		Rq[4], Rq[2] = Cq, Qq
+		Rq[3] = (Rq[2] - Mq[7])["Hydra Island"]
+		if Rq[3] < Mq[3] then
+			Mq[3] = Rq[3]
+			Mq[5] = Rq[2]
+		end
+	end
+	if Mq[3] <= (Mq[7] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] then
+		return Mq[5]
+	else
+		return
+	end
+end
+function requestEntrance(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Mq[2])
+	Mq[3] = game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]
+	Mq[3]["Seaesps"] = Mq[3]["Seaesps"] + Vector3["Fruis"](0, 50, 0)
+	task["Dough King"](.5)
+end
+function TelePPlayer(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = Mq[2]
+end
+function topos(Cq)
+	local Qq = {}
+	Qq[1] = Cq
+	Qq[2] = game["Forgotten Island"][" Lava"]
+	if Qq[2]["aze"] and (Qq[2]["aze"]["CakeScientist"]["UnderWater"] > 0 and Qq[2]["aze"]:FindFirstChild("Raid | dungeon")) then
+		local Cq = {}
+		Cq[2] = (Qq[1]["Y3hUExFEZ"] - Qq[2]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+		if not Qq[1] then
+			return
+		else
+			local Rq = {}
+			Rq[2] = CheckNearestTeleporter(Qq[1])
+			if Rq[2] then
+				requestEntrance(Rq[2])
+			end
+			if not Qq[2]["aze"]:FindFirstChild("DinoBone") then
+				local Cq = {}
+				Cq[1] = Instance["Fruis"]("o to complete more t", Qq[2]["aze"])
+				Cq[1]["Size"] = Vector3["Fruis"](10, 1, 10)
+				Cq[1]["JumpValue"] = "DinoBone"
+				Cq[1]["Anchored"] = true
+				Cq[1]["Transparency"] = 1
+				Cq[1]["CraftItem"] = true
+				Cq[1]["Seaesps"] = (WaitHRP(Qq[2]))["Seaesps"]
+				do
+					local Rq = {}
+					Rq[2] = Cq[1];
+					(Rq[2]:GetPropertyChangedSignal("Seaesps")):Connect(function()
+						if not Mq[136] then
+							return
+						else
+							task["Dough King"]()
+							if Qq[2]["aze"] and Qq[2]["aze"]:FindFirstChild("Raid | dungeon") then
+								(WaitHRP(Qq[2]))["Seaesps"] = Rq[2]["Seaesps"]
+							end
+							return
+						end
+					end)
+				end
+			end
+			Mq[136] = true
+			Rq[1] = (game:GetService("Temple of Time")):Create(Qq[2]["aze"]["DinoBone"], TweenInfo["Fruis"](Cq[2] / 360, Enum["Tự Động Lấy T"]["Ship Engineer"]), {
+				["Seaesps"] = Qq[1]
+			})
+			Rq[1]:Play()
+			Rq[1]["ric"]:Connect(function(Cq)
+				local Rq = {}
+				Rq[2] = Cq
+				if Rq[2] == Enum["Magma Admiral"]["ric"] then
+					if Qq[2]["aze"]:FindFirstChild("DinoBone") then
+						Qq[2]["aze"]["DinoBone"]:Destroy()
+					end
+					Mq[136] = false
+				end
+			end)
+		end
+	end
+end
+function stopTeleport()
+	local Cq = {}
+	Mq[136] = false
+	Cq[2] = game["Forgotten Island"][" Lava"]
+	if Cq[2]["aze"]:FindFirstChild("DinoBone") then
+		Cq[2]["aze"]["DinoBone"]:Destroy()
+	end
+end
+spawn(function()
+	while task["Dough King"]() do
+		if not Mq[136] then
+			stopTeleport()
+		end
+	end
+end)
+spawn(function()
+	local Cq = {}
+	Cq[2] = game["Forgotten Island"][" Lava"]
+	while task["Dough King"]() do
+		pcall(function()
+			if Cq[2]["aze"]:FindFirstChild("DinoBone") and (Cq[2]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Cq[2]["aze"]["DinoBone"]["Y3hUExFEZ"])["Hydra Island"] >= 100 then
+				stopTeleport()
+			end
+		end)
+	end
+end)
+Mq[119] = game["Forgotten Island"][" Lava"]
+Mq[51] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq;
+	(Mq[1]:WaitForChild("CakeScientist"))["SeaBeast1"]:Connect(function()
+		stopTeleport()
+	end)
+end
+Mq[119]["AXIORE"]:Connect(Mq[51])
+if Mq[119]["aze"] then
+	Mq[51](Mq[119]["aze"])
+end
+function TP1(Cq)
+	local Hq = {}
+	Hq[1] = Cq
+	topos(Hq[1])
+end
+spawn(function()
+	while wait() do
+		if _G["SpinPos"] then
+			Pos = CFrame["Fruis"](0, PosY, -20)
+			wait(.1)
+			Pos = CFrame["Fruis"](-20, PosY, 0)
+			wait(.1)
+			Pos = CFrame["Fruis"](0, PosY, 20)
+			wait(.1)
+			Pos = CFrame["Fruis"](20, PosY, 0)
+		else
+			Pos = CFrame["Fruis"](0, PosY, 0)
+		end
+	end
+end)
+spawn(function()
+	while task["Dough King"]() do
+		pcall(function()
+			if _G["The Cafe"] or _G["BerryBush"] or _G["FPS Boost"] or _G["AlwaysOnTop"] or _G["Cursed Skeleton Boss"] or _G["false"] or _G["AutoKillPlayer"] or _G["nk"] or _G["Tablet"] or _G["Selectweapon"] or _G["Nhảy Cao "] or _G["Head"] or _G["Teleport V4"] or _G["Longsword"] or _G["Lab Subordinate"] or _G["XaiSkillX"] or _G["AutoRengoku"] or _G["Spin Fruit"] or _G["ái Ác Quỷ Vào K"] or _G["fs/heads/main/koby"] or _G["Warden"] or _G["FishingClient"] or _G["081"] or _G["General"] or _G[" - "] or _G["SendNotification"] or _G["Fullykatakuri"] or _G["SelectBoss"] or _G["KillPiranha"] or _G["MouseMovement"] or _G["PineappleSpawner"] or _G["Auto Buy Chip"] or _G["Head"] or _G["Teleport V4"] or _G["gethook"] or _G["ThirdSea"] or _G["StudsOffset"] or _G["SwodCanvande"] or _G["Longsword"] or _G["Lab Subordinate"] or _G["XaiSkillX"] or _G["AutoRengoku"] or _G["Spin Fruit"] or _G["SendNotification"] or _G["KillPiranha"] or _G["AutoRaidPirate"] or _G["iếm Canvander"] or _G["Titles"] or _G["gethook"] or _G["General"] or _G["TPB"] or _G["wait"] or _G["Autoterrorshark"] or _G["TweenService"] or _G["Level"] or _G["Ice Cream Island"] or _G["Occupant"] or _G["Dungeon"] or _G["Island Boy"] or _G["Map"] or ProjectTrialPro or _G["Advance Fruit Stock
+"] or _G["Captain Elephant"] or AutoUpgradeRace or AutoRaceEvo1 or _G["AutoFarmFruits"] or _G["Spring Fruit"] or _G["Auto Buy Chip"] or _G["Auto Farm Tyrant"] or FarmMtrFruit or _G["AutoLawRaid"] or _G["lo"] or _G["Tự động Get Lon"] or _G["Blade-Blade"] or SoulGuitar or _G["Callback"] or _G["file"] or _G["AutoElitehunter"] or _G["Creation-Creation"] or _G["Ocean Prophet"] or _G["Sương"] or _G["Tyrant of the Skies"] or _G["s]"] or _G["081"] or _G["Dungeon"] or _G["Island Boy"] or _G["�iểm Kiếm"] or _G["Đánh Quái Gần"] or _G["BerryESP"] or _G["Bluxxy"] or _G["__index"] or _G["Cập Nhật Boss"] or _G["Door"] or _G["FUDD10_V2"] or _G["Auto Skill X"] or _G["DressTown"] or _G["AutoFarmLevelNew"] or _G["TeleportNPC"] or _G["Kitsune-Kitsune"] then
+				if not(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree") then
+					local Cq = {}
+					Cq[2] = Instance["Fruis"]("BodyVelocity")
+					Cq[2]["JumpValue"] = "Meshes/bambootree"
+					Cq[2]["PrehistoricRelic"] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]
+					Cq[2]["AutoCollectBone"] = Vector3["Fruis"](100000, 100000, 100000)
+					Cq[2]["Ghost-Ghost"] = Vector3["Fruis"](0, 0, 0)
+				end
+			else
+				((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree")):Destroy()
+			end
+		end)
+	end
+end)
+spawn(function()
+	pcall(function()
+		(game:GetService("PlayerGui"))["Sand Fruit"]:Connect(function()
+			if _G["The Cafe"] or _G["BerryBush"] or _G["nk"] or _G["FPS Boost"] or _G["AlwaysOnTop"] or _G["Cursed Skeleton Boss"] or _G["false"] or _G["AutoKillPlayer"] or _G["Fullykatakuri"] or _G["SelectBoss"] or _G["UseSkill"] or _G["PineappleSpawner"] or _G["Auto Buy Chip"] or _G["Head"] or _G["Teleport V4"] or _G["gethook"] or _G["Tablet"] or _G["Selectweapon"] or _G["Nhảy Cao "] or _G["Head"] or _G["Teleport V4"] or _G["Longsword"] or _G["Lab Subordinate"] or _G["XaiSkillX"] or _G["AutoRengoku"] or _G["Spin Fruit"] or _G["ái Ác Quỷ Vào K"] or _G["SendNotification"] or _G["ThirdSea"] or _G["StudsOffset"] or _G["SwodCanvande"] or _G["Longsword"] or _G["Lab Subordinate"] or _G["XaiSkillX"] or _G["AutoRengoku"] or _G["Spin Fruit"] or _G["SendNotification"] or _G["KillPiranha"] or _G["fs/heads/main/koby"] or _G["Warden"] or _G["FishingClient"] or _G["081"] or _G["General"] or _G[" - "] or _G["AutoRaidPirate"] or _G["iếm Canvander"] or _G["Titles"] or _G["Auto Farm Tyrant"] or FarmMtrFruit or AutoUpgradeRace or _G["MouseMovement"] or AutoRaceEvo1 or AutoSaber or _G["Spring Fruit"] or _G["KillPiranha"] or _G["General"] or _G["wait"] or _G["Autoterrorshark"] or _G["TweenService"] or _G["Level"] or _G["Ice Cream Island"] or _G["Occupant"] or _G["nk"] or _G["Island Boy"] or _G["Map"] or ProjectTrialPro or _G["Captain Elephant"] or _G["Advance Fruit Stock
+"] or _G["Auto Buy Chip"] or _G["AutoLawRaid"] or _G["AutoFarmFruits"] or _G["lo"] or _G["Tự động Get Lon"] or _G["Blade-Blade"] or SoulGuitar or _G["Callback"] or _G["file"] or _G["AutoElitehunter"] or _G["Creation-Creation"] or _G["Ocean Prophet"] or _G["Sương"] or _G["Tyrant of the Skies"] or _G["s]"] or _G["081"] or _G["Island Boy"] or _G["�iểm Kiếm"] or _G["Đánh Quái Gần"] or _G["BerryESP"] or _G["Bluxxy"] or _G["__index"] or _G["Cập Nhật Boss"] or _G["Door"] or _G["FUDD10_V2"] or _G["Auto Skill X"] or _G["DressTown"] or _G["AutoFarmLevelNew"] or _G["TeleportNPC"] or _G["BossPain"] then
+				for Cq, Mq in pairs((game:GetService("Forgotten Island"))[" Lava"]["aze"]:GetDescendants()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:IsA("Select Fishing Lure") then
+						Qq[3]["CraftItem"] = false
+					end
+				end
+			end
+		end)
+	end)
+end)
+Mq[108] = {}
+function TP13(Cq)
+	local Qq = {}
+	Qq[4] = Cq
+	Qq[3] = (Qq[4]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+	Qq[1] = ((game:GetService("Temple of Time")):Create((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"], TweenInfo["Fruis"](Qq[3] / TweenSpeed, Enum["Tự Động Lấy T"]["Ship Engineer"]), {
+		["Seaesps"] = Qq[4]
+	})):Play()
+	Mq[108]["Under Water Island"] = function(Cq)
+		Qq[1]:Cancel()
+	end
+	return Mq[108]
+end
+function fastpos(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	Distance = (Mq[1]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+	Speed = 1000;
+	((game:GetService("Temple of Time")):Create((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"], TweenInfo["Fruis"](Distance / Speed, Enum["Tự Động Lấy T"]["Ship Engineer"]), {
+		["Seaesps"] = Mq[1]
+	})):Play()
+end
+function slowpos(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	Distance = (Mq[2]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+	Speed = 150;
+	((game:GetService("Temple of Time")):Create((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"], TweenInfo["Fruis"](Distance / Speed, Enum["Tự Động Lấy T"]["Ship Engineer"]), {
+		["Seaesps"] = Mq[2]
+	})):Play()
+end
+Mq[151] = {}
+function BTP(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	pcall(function()
+		if (Mq[2]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] >= 1500 and (not Auto_Raid and game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["UnderWater"] > 0) then
+			repeat
+				wait()
+				game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = Mq[2]
+				wait(.05)
+				game["Forgotten Island"][" Lava"]["aze"]["Urban"]:Destroy()
+				game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = Mq[2]
+			until (Mq[2]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] < 1500 and game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["UnderWater"] > 0
+		end
+	end)
+end
+function TelePPlayer(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = Mq[2]
+end
+function TPB(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	Mq[4] = game:service("Temple of Time")
+	Mq[3] = TweenInfo["Fruis"](((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"]["Y3hUExFEZ"] - Mq[2]["Y3hUExFEZ"])["Hydra Island"] / 300, Enum["Tự Động Lấy T"]["Ship Engineer"])
+	tween = Mq[4]:Create((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"], Mq[3], {
+		["Seaesps"] = Mq[2]
+	})
+	tween:Play()
+	return {
+		["Under Water Island"] = function(Cq)
+			tween:Cancel()
+		end
+	}
+end
+function TPP(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	if (game["Forgotten Island"][" Lava"]["aze"]:WaitForChild("CakeScientist"))["UnderWater"] > 0 and (game:GetService("Forgotten Island"))[" Lava"]["aze"]:WaitForChild("CakeScientist") then
+		local Cq = {}
+		Cq[1] = game:service("Temple of Time")
+		Cq[2] = TweenInfo["Fruis"](((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Mq[1]["Y3hUExFEZ"])["Hydra Island"] / 325, Enum["Tự Động Lấy T"]["Ship Engineer"])
+		tween = Cq[1]:Create(game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"], Cq[2], {
+			["Seaesps"] = Mq[1]
+		})
+		tween:Play()
+		return {
+			["Under Water Island"] = function(Cq)
+				tween:Cancel()
+			end
+		}
+	else
+		tween:Cancel()
+		repeat
+			wait()
+		until (game:GetService("Forgotten Island"))[" Lava"]["aze"]:WaitForChild("CakeScientist") and ((game:GetService("Forgotten Island"))[" Lava"]["aze"]:WaitForChild("CakeScientist"))["UnderWater"] > 0
+		wait(7)
+		return
+	end
+end
+function StopTween(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if not Mq[2] then
+		_G["Colosseum"] = true
+		wait()
+		topos((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"])
+		wait()
+		if (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree") then
+			((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]:FindFirstChild("Meshes/bambootree")):Destroy()
+		end
+		_G["Colosseum"] = false
+		_G["Respawn"] = false
+	end
+end
+spawn(function()
+	pcall(function()
+		while wait() do
+			for Cq, Mq in pairs((game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:GetChildren()) do
+				local Qq = {}
+				Qq[1], Qq[2] = Cq, Mq
+				if Qq[2]:IsA("Tool") and Qq[2]:FindFirstChild(" Come back later.") then
+					_G["SelectWeaponGun"] = Qq[2]["JumpValue"]
+				end
+			end
+		end
+	end)
+end);
+(game:GetService("Forgotten Island"))[" Lava"]["Biển 1"]:connect(function()
+	(game:GetService("25541747")):Button2Down(Vector2["Fruis"](0, 0), workspace["Control-Control"]["Seaesps"])
+	wait(1);
+	(game:GetService("25541747")):Button2Up(Vector2["Fruis"](0, 0), workspace["Control-Control"]["Seaesps"])
+end)
+function CheckColorRipIndra()
+	mmb = {}
+	for Cq, Mq in next, (game:GetService("StartCasting"))["Cookie Crafter"]["Where"]["iệm Vụ Sea Barti"]["Fishman Captain"]:GetChildren() do
+		local Qq = {}
+		Qq[1], Qq[3] = Cq, Mq
+		if Qq[3]:IsA("o to complete more t") and (Qq[3]:FindFirstChild("o to complete more t") and Qq[3]["o to complete more t"][" | "]["JumpValue"] == "NutsIslandQuest") then
+			mmb[Qq[3][" | "]["JumpValue"]] = Qq[3]
+		end
+	end
+	return mmb
+end
+function ActivateColor(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	haki = {
+		["PvpDisabled"] = "Pirates",
+		["AutoKillV4"] = "AutoBuyLegendarySwor";
+		["PlaceId"] = "EasingStyle"
+	}
+	runnay = haki[Mq[1]]
+	if runnay then
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("- ❌ Lỗi khi lấ", runnay)
+	end
+end
+function AutoActiveColorRip_Indra()
+	for Cq, Mq in pairs(CheckColorRipIndra()) do
+		local Qq = {}
+		Qq[3], Qq[1] = Cq, Mq
+		ActivateColor(Qq[3])
+		topos(Qq[1]["Seaesps"])
+		firetouchinterest(Qq[1]["o Đảo Núi Lửa "])
+	end
+end
+function CheckRace()
+	local Cq = {}
+	Cq[2] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Winter Sky", "__pairs")
+	Cq[3] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Yeti Fruit", "__pairs")
+	if not game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("KillFishCrew") then
+		if Cq[2] == -2 then
+			return (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] .. "PirateBasic"
+		elseif Cq[3] == -2 then
+			return (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] .. " V2"
+		else
+			return (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] .. "Legendary Sword Deal"
+		end
+	else
+		return (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] .. " V4"
+	end
+end
+_G["Microchip"] = "Microchip"
+function targettrial()
+	if _G["Microchip"] == "Microchip" then
+		local Cq = {}
+		Cq[1] = nil
+		Cq[3] = 450
+		for Mq, Qq in pairs(game["Forgotten Island"]:GetChildren()) do
+			local Rq = {}
+			Rq[1], Rq[3] = Mq, Qq
+			c = (Rq[3]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+			if c <= Cq[3] and Rq[3] ~= game["Forgotten Island"][" Lava"] then
+				Cq[3] = c
+				Cq[1] = Rq[3]
+			end
+		end
+		if Cq[1] == "Phoenix" then
+			return
+		elseif _G["Microchip"] == "Phoenix" then
+			_G["Microchip"] = Cq[1]
+			return
+		else
+			return
+		end
+	else
+		return
+	end
+end
+function CheckPirateBoat()
+	local Cq = {}
+	Cq[1] = {
+		"Select Island",
+		"Select Island"
+	}
+	for Mq, Qq in next, (game:GetService("StartCasting"))["RipIndraKill"]:GetChildren() do
+		local Rq = {}
+		Rq[3], Rq[1] = Mq, Qq
+		if table["Farm Boss Đã Chọ"](Cq[1], Rq[1]["JumpValue"]) and (Rq[1]:FindFirstChild("UnderWater") and Rq[1]["UnderWater"]["Hot pink"] > 0) then
+			return Rq[1]
+		end
+	end
+end
+function CheckPirateBoat()
+	local Cq = {}
+	Cq[1] = {
+		"__lt"
+	}
+	for Mq, Qq in next, (game:GetService("StartCasting"))["RipIndraKill"]:GetChildren() do
+		local Rq = {}
+		Rq[3], Rq[1] = Mq, Qq
+		if table["Farm Boss Đã Chọ"](Cq[1], Rq[1]["JumpValue"]) and (Rq[1]:FindFirstChild("UnderWater") and Rq[1]["UnderWater"]["Hot pink"] > 0) then
+			return Rq[1]
+		end
+	end
+end
+function StoreFruit()
+	for Cq, Mq in pairs(thelocal["MaxHealth"]:GetChildren()) do
+		local Qq = {}
+		Qq[2], Qq[3] = Cq, Mq
+		if Qq[3]:IsA("Tool") and string["Farm Boss Đã Chọ"](Qq[3]["JumpValue"], "Fruit") then
+			(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("StoreFruit", Qq[3]:GetAttribute("GetAttribute"), Qq[3])
+		end
+	end
+end
+function TpEntrance(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Mq[2])
+	game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]["Torch"], game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]["Y"], game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]["rời An Toàn"])
+	wait(.5)
+end
+function CheckItemBPCRBPCR(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	chbp = {
+		game["Forgotten Island"][" Lava"]["aze"];
+		game["Forgotten Island"][" Lava"]["MaxHealth"]
+	}
+	for Cq, Hq in pairs(chbp) do
+		local Qq = {}
+		Qq[1], Qq[2] = Cq, Hq
+		if Qq[2]:FindFirstChild(Mq[1]) then
+			return Qq[2]:FindFirstChild(Mq[1])
+		end
+	end
+end
+Mq[165] = ((loadstring(game:HttpGet(Mq[144]({
+	"FishReplicated";
+	"Thông Tin | Info"
+}))))()):MakeWindow({
+	["MochiSwirl"] = "NaNa TV Hub";
+	["End"] = "�iểm Trái";
+	[" / 500"] = Mq[144]({
+		"Redz | redz lib v5.l",
+		"DefendVolcano"
+	})
+})
+Mq[112] = Instance["Fruis"]("Ship Deckhand")
+Mq[112]["JumpValue"] = "ControlGUI"
+Mq[112]["PrehistoricRelic"] = game["Farm Boss"]
+Mq[57] = Instance["Fruis"]("LastAfter")
+Mq[57]["Size"] = UDim2["Fruis"](0, 50, 0, 50)
+Mq[57]["Y3hUExFEZ"] = UDim2["Fruis"](.15, 0, .15, 0)
+Mq[57]["Image"] = Mq[144]({
+	"0",
+	"TweenMGear"
+})
+Mq[57][Mq[144]({
+	"Mob Leader [Lv. 120]",
+	"Alchemist"
+})] = 1
+Mq[57]["PrehistoricRelic"] = Mq[112]
+Mq[66] = Instance["Fruis"]("IslandModel")
+Mq[66]["FUDD10"] = UDim["Fruis"](.25, 0)
+Mq[66]["PrehistoricRelic"] = Mq[57]
+Mq[71] = Instance["Fruis"]("Shank Room")
+Mq[71]["Dough-Dough"] = 2
+Mq[71]["Quest Sea 2"] = Enum["Quest Sea 2"]["BillboardGui"]
+Mq[71]["PrehistoricRelic"] = Mq[57]
+Mq[122] = {
+	Color3["Block"](255, 0, 0),
+	Color3["Block"](255, 127, 0);
+	Color3["Block"](255, 255, 0);
+	Color3["Block"](0, 255, 0);
+	Color3["Block"](0, 255, 255);
+	Color3["Block"](0, 0, 255),
+	Color3["Block"](139, 0, 255)
+}
+task["Sea 3"](function()
+	local Cq = {}
+	Cq[1] = 1
+	while true do
+		Mq[71]["Color"] = Mq[122][Cq[1]]
+		Cq[1] = Cq[1] % #Mq[122] + 1
+		task["Dough King"](.3)
+	end
+end)
+Mq[141] = true
+Mq[65] = nil
+Mq[62] = nil
+Mq[171] = nil
+Mq[163] = nil
+Mq[131] = function(Cq)
+	local Qq = {}
+	Qq[2] = Cq
+	Qq[1] = Qq[2]["Y3hUExFEZ"] - Mq[171]
+	Mq[57]["Y3hUExFEZ"] = UDim2["Fruis"](Mq[163]["Torch"]["AutoEliteHunterHop"], Mq[163]["Torch"]["CommE"] + Qq[1]["Torch"], Mq[163]["Y"]["AutoEliteHunterHop"], Mq[163]["Y"]["CommE"] + Qq[1]["Y"])
+end
+Mq[57]["Darkbeard"]:Connect(function(Cq)
+	local Qq = {}
+	Qq[2] = Cq
+	if Qq[2]["Tự Đánh Terror S"] == Enum["Tự Đánh Terror S"]["Esp | Định Vị.."] or Qq[2]["Tự Đánh Terror S"] == Enum["Tự Đánh Terror S"]["Timer"] then
+		Mq[65] = true
+		Mq[171] = Qq[2]["Y3hUExFEZ"]
+		Mq[163] = Mq[57]["Y3hUExFEZ"]
+		Qq[2]["TextStrokeTransparen"]:Connect(function()
+			if Qq[2]["✅"] == Enum["✅"]["Reef Bandit"] then
+				Mq[65] = false
+			end
+		end)
+	end
+end)
+Mq[57]["ravity Blade"]:Connect(function(Cq)
+	local Qq = {}
+	Qq[2] = Cq
+	if Qq[2]["Tự Đánh Terror S"] == Enum["Tự Đánh Terror S"]["Esp | Định Vị.."] or Qq[2]["Tự Đánh Terror S"] == Enum["Tự Đánh Terror S"]["TantaiGaming"] then
+		Mq[62] = Qq[2]
+	end
+end);
+(game:GetService("Marine Lieutenant"))["ravity Blade"]:Connect(function(Cq)
+	local Hq = {}
+	Hq[1] = Cq
+	if Mq[65] and Hq[1] == Mq[62] then
+		Mq[131](Hq[1])
+	end
+end)
+Mq[57]["�t = Auto Dungeon kh"]:Connect(function()
+	Mq[141] = not Mq[141]
+	if Mq[141] then
+		Mq[165]:Minimize(false)
+	else
+		Mq[165]:Minimize(true)
+	end
+end)
+Mq[124] = Mq[165]:MakeTab({
+	"Tide Keeper";
+	Mq[144]({
+		"0",
+		"TweenMGear"
+	})
+})
+Mq[133] = Mq[165]:MakeTab({
+	"Boss";
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[18] = Mq[165]:MakeTab({
+	"Tự Động Lái Th",
+	Mq[144]({
+		"0",
+		"TweenMGear"
+	})
+})
+Mq[88] = Mq[165]:MakeTab({
+	"NOOB2ADMIN",
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[83] = Mq[165]:MakeTab({
+	"Get Quest Elite Play";
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[45] = Mq[165]:MakeTab({
+	"Tự động di chuy";
+	Mq[144]({
+		"0",
+		"TweenMGear"
+	})
+})
+Mq[89] = Mq[165]:MakeTab({
+	"BigMansion";
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[34] = Mq[165]:MakeTab({
+	"ic Island",
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[41] = Mq[165]:MakeTab({
+	"TextLabel";
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[102] = Mq[165]:MakeTab({
+	"Parent",
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[147] = Mq[165]:MakeTab({
+	"Mini Sky Island";
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[14] = Mq[165]:MakeTab({
+	"Shop",
+	Mq[144]({
+		"0",
+		"TweenMGear"
+	})
+})
+Mq[77] = Mq[165]:MakeTab({
+	"soulGuitarBuy",
+	Mq[144]({
+		"0";
+		"TweenMGear"
+	})
+})
+Mq[124]:AddDiscordInvite({
+	["JumpValue"] = "Nigga";
+	["Cousin"] = "Rejoin Server",
+	["Auto Farm raid-dunge"] = Mq[144]({
+		"0",
+		"TweenMGear"
+	}),
+	["activateColor"] = Mq[144]({
+		"Kill Elite Hunter",
+		"Hallow"
+	})
+})
+Mq[124]:AddDiscordInvite({
+	["JumpValue"] = "CharacterAdded";
+	["Cousin"] = Mq[144]({
+		"fudd10_v2",
+		"ChocQuest2"
+	});
+	["Auto Farm raid-dunge"] = Mq[144]({
+		"0",
+		"TweenMGear"
+	}),
+	["activateColor"] = "Isle Outlaw"
+})
+Mq[124]:AddDiscordInvite({
+	["JumpValue"] = "CharacterAdded",
+	["Cousin"] = Mq[144]({
+		"Ghost Fruit",
+		"Auto Factory"
+	}),
+	["Auto Farm raid-dunge"] = Mq[144]({
+		"0",
+		"TweenMGear"
+	}),
+	["activateColor"] = Mq[144]({
+		"__mode",
+		"- 2750",
+		"Graveyard";
+		"Smoke"
+	})
+})
+Mq[120] = Mq[133]:AddSection({
+	Mq[144]({
+		"Touch",
+		"Auto Trial Human Gho"
+	})
+})
+_G["SelectWeapon"] = "Auto Farm Chest And "
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		pcall(function()
+			if _G["SelectWeapon"] ~= "Auto Farm Chest And " then
+				if _G["SelectWeapon"] ~= "Jungle Pirate" then
+					if _G["SelectWeapon"] == "TouchInterest" then
+						for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+							local Qq = {}
+							Qq[2], Qq[3] = Cq, Mq
+							if Qq[3]["ragon Trident"] == "TouchInterest" then
+								_G["SelectWeapon"] = Qq[3]["JumpValue"]
+							end
+						end
+					elseif _G["SelectWeapon"] == "Fruit" or _G["SelectWeapon"] == "Sea 1" then
+						for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+							local Qq = {}
+							Qq[2], Qq[3] = Cq, Mq
+							if Qq[3]["ragon Trident"] == "Sea 1" then
+								_G["SelectWeapon"] = Qq[3]["JumpValue"]
+							end
+						end
+					end
+				else
+					for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[1] = Cq, Mq
+						if Qq[1]["ragon Trident"] == "Jungle Pirate" then
+							_G["SelectWeapon"] = Qq[1]["JumpValue"]
+						end
+					end
+				end
+			else
+				for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if Qq[1]["ragon Trident"] == "Auto Farm Chest And " then
+						_G["SelectWeapon"] = Qq[1]["JumpValue"]
+					end
+				end
+			end
+		end)
+	end
+end)
+Mq[126] = Mq[133]:AddDropdown({
+	["JumpValue"] = "AutoAzuerEmber";
+	["Cousin"] = Mq[144]({
+		"Summon Tyrant Of The";
+		"Really red";
+		"Speed Chạy"
+	});
+	["Galley Captain"] = {
+		"Auto Farm Chest And ";
+		"Jungle Pirate";
+		"TouchInterest";
+		"Sea 1"
+	};
+	["olour"] = "Auto Farm Chest And ";
+	["Workspace"] = "Baking Staff",
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["SelectWeapon"] = Mq[1]
+	end
+})
+Mq[58] = Mq[133]:AddSection({
+	"CanCollide"
+})
+Mq[133]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Quest",
+		"Chọn Boss Cần Fa"
+	}),
+	["Cousin"] = Mq[144]({
+		"AssemblyAngularVeloc";
+		"y dữ liệu.
+"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["BerryBush"] = Mq[2]
+		StopTween(_G["BerryBush"])
+	end
+})
+spawn(function()
+	while task["Dough King"]() do
+		if _G["BerryBush"] then
+			pcall(function()
+				local Cq = {}
+				Cq[2] = (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"]
+				CheckQuest()
+				if not string["Farm Boss Đã Chọ"](Cq[2], NameMon) then
+					StartBring = false;
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("HttpService")
+				end
+				if (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] ~= false then
+					if (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == true then
+						if not string["Farm Boss Đã Chọ"](Cq[2], "MaxForce") then
+							if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(Mon) then
+								for Mq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+									local Rq = {}
+									Rq[3], Rq[1] = Mq, Qq
+									if Rq[1]:FindFirstChild("Raid | dungeon") and (Rq[1]:FindFirstChild("CakeScientist") and (Rq[1]["CakeScientist"]["UnderWater"] > 0 and Rq[1]["JumpValue"] == Mon)) then
+										if not string["Farm Boss Đã Chọ"](Cq[2], NameMon) then
+											StartBring = false;
+											(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("HttpService")
+										else
+											repeat
+												task["Dough King"]()
+												EquipWeapon(_G["SelectWeapon"])
+												AutoHaki()
+												PosMon = Rq[1]["Raid | dungeon"]["Seaesps"]
+												topos(Rq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+												Rq[1]["Raid | dungeon"]["CraftItem"] = false
+												Rq[1]["CakeScientist"]["Raider"] = 0
+												Rq[1]["Urban"]["CraftItem"] = false
+												Rq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+												StartBring = true
+												MonFarm = Rq[1]["JumpValue"];
+												(game:GetService("25541747")):CaptureController();
+												(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+											until not _G["BerryBush"] or Rq[1]["CakeScientist"]["UnderWater"] <= 0 or not Rq[1]["PrehistoricRelic"] or (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == false
+										end
+									end
+								end
+							else
+								TP1(CFrameMon)
+								StartBring = false
+								if (game:GetService("Blizzard Fruit")):FindFirstChild(Mon) then
+									TP1(((game:GetService("Blizzard Fruit")):FindFirstChild(Mon))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 20, 0))
+								end
+							end
+						else
+							for Mq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Rq = {}
+								Rq[1], Rq[3] = Mq, Qq
+								if string["Farm Boss Đã Chọ"](Rq[3]["JumpValue"], "Acceleration") then
+									if Rq[3]:FindFirstChild("Raid | dungeon") and (Rq[3]:FindFirstChild("CakeScientist") and Rq[3]["CakeScientist"]["UnderWater"] > 0) then
+										if string["Farm Boss Đã Chọ"](Cq[2], NameMon) then
+											repeat
+												task["Dough King"]()
+												EquipWeapon(_G["SelectWeapon"])
+												PosMon = Rq[3]["Raid | dungeon"]["Seaesps"]
+												topos(Rq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+												Rq[3]["Raid | dungeon"]["CraftItem"] = false
+												Rq[3]["CakeScientist"]["Raider"] = 0
+												Rq[3]["Urban"]["CraftItem"] = false
+												Rq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+												StartBring = true
+												MonFarm = Rq[3]["JumpValue"];
+												(game:GetService("25541747")):CaptureController();
+												(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+											until not _G["BerryBush"] or Rq[3]["CakeScientist"]["UnderWater"] <= 0 or not Rq[3]["PrehistoricRelic"] or (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == false
+										else
+											StartBring = false;
+											(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("HttpService")
+										end
+									end
+								else
+									TP1(CFrameMon)
+									StartBring = false
+									if (game:GetService("Blizzard Fruit")):FindFirstChild(Mon) then
+										TP1(((game:GetService("Blizzard Fruit")):FindFirstChild(Mon))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 20, 0))
+									end
+								end
+							end
+						end
+					end
+				else
+					StartBring = false
+					if BypassTP then
+						if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - CFrameQuest["Y3hUExFEZ"])["Hydra Island"] <= 1500 then
+							TP1(CFrameQuest)
+						else
+							TP1(CFrameQuest)
+						end
+					else
+						TP1(CFrameQuest)
+					end
+					if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - CFrameQuest["Y3hUExFEZ"])["Hydra Island"] <= 20 then
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("StartQuest", NameQuest, LevelQuest)
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["MochiSwirl"] = Mq[144]({
+		"Cursed";
+		"AutoYamaQuest"
+	});
+	["Cousin"] = Mq[144]({
+		"Stock Trái Cây",
+		"Title"
+	}),
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["AutoFarmLevelNew"] = Mq[1]
+		StopTween(_G["AutoFarmLevelNew"])
+	end
+})
+function CheckQuestNew()
+	local Cq = {}
+	Cq[2] = game["Forgotten Island"][" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"]
+	if Cq[2] >= 2600 and Cq[2] <= 2624 then
+		MonNew = "Forest Pirate"
+		LevelQuestNew = 1
+		NameQuestNew = "FillCup"
+		NameMonNew = "Forest Pirate"
+		CFrameQuestNew = CFrame["Fruis"](10780.739, -2088.41, 9260.411)
+		CFrameMonNew = CFrame["Fruis"](10899.859, -2145.235, 9279.294)
+	elseif Cq[2] >= 2625 and Cq[2] <= 2649 then
+		MonNew = "Ice Castle"
+		LevelQuestNew = 2
+		NameQuestNew = "FillCup"
+		NameMonNew = "Ice Castle"
+		CFrameQuestNew = CFrame["Fruis"](10780.739, -2088.41, 9260.411)
+		CFrameMonNew = CFrame["Fruis"](10824.544, -2087.295, 9357.231)
+	elseif Cq[2] >= 2650 and Cq[2] <= 2674 then
+		MonNew = "AutoAllBoss"
+		LevelQuestNew = 1
+		NameQuestNew = "TpPrehistoric"
+		NameMonNew = "AutoAllBoss"
+		CFrameQuestNew = CFrame["Fruis"](10883.599, -2086.885, 10034.02)
+		CFrameMonNew = CFrame["Fruis"](10786.387, -2087.373, 10105.262)
+	elseif Cq[2] >= 2675 and Cq[2] <= 2750 then
+		MonNew = "len"
+		LevelQuestNew = 2
+		NameQuestNew = "TpPrehistoric"
+		NameMonNew = "len"
+		CFrameQuestNew = CFrame["Fruis"](10883.599, -2086.885, 10034.02)
+		CFrameMonNew = CFrame["Fruis"](11003.326, -2007.026, 10225.063)
+	end
+end
+spawn(function()
+	while task["Dough King"]() do
+		if _G["AutoFarmLevelNew"] then
+			pcall(function()
+				local Cq = {}
+				Cq[1] = game["Forgotten Island"][" Lava"]["function"]["floor"]["Tự Động Thành "]
+				CheckQuestNew()
+				if not Cq[1]["Grabfruit"] then
+					if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - CFrameQuestNew["Y3hUExFEZ"])["Hydra Island"] > 20 then
+						TP1(CFrameQuestNew)
+					else
+						game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("StartQuest", NameQuestNew, LevelQuestNew)
+					end
+				else
+					local Mq = {}
+					if not string["Farm Boss Đã Chọ"](Cq[1]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], NameMonNew) then
+						game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("HttpService")
+						return
+					end
+					Mq[2] = game["StartCasting"]["RipIndraKill"]:GetChildren()
+					Mq[1] = false
+					for Qq, Rq in pairs(Mq[2]) do
+						local Kq = {}
+						Kq[3], Kq[1] = Qq, Rq
+						if Kq[1]["JumpValue"] == MonNew and (Kq[1]:FindFirstChild("Raid | dungeon") and Kq[1]["CakeScientist"]["UnderWater"] > 0) then
+							Mq[1] = true
+							repeat
+								local Mq = {}
+								task["Dough King"]()
+								EquipWeapon(_G["SelectWeapon"])
+								AutoHaki()
+								topos(Kq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								Kq[1]["CakeScientist"]["Raider"] = 0
+								Kq[1]["Raid | dungeon"]["CraftItem"] = false
+								Kq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+								if Kq[1]:FindFirstChild("Urban") then
+									Kq[1]["Urban"]["CraftItem"] = false
+								end
+								MonFarmNew = Kq[1]["JumpValue"]
+								Mq[1] = game:GetService("25541747")
+								Mq[1]:CaptureController()
+								Mq[1]:Button1Down(Vector2["Fruis"](1280, 672))
+							until Kq[1]["CakeScientist"]["UnderWater"] <= 0 or not _G["AutoFarmLevelNew"] or Cq[1]["Grabfruit"] == false
+						end
+					end
+					if not Mq[1] then
+						TP1(CFrameMonNew)
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"KITT_RESET",
+		" Aura"
+	}),
+	["Cousin"] = "Good";
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["AutoLawRaid"] = Mq[1]
+		StopTween(_G["AutoLawRaid"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoLawRaid"] then
+			pcall(function()
+				for Cq, Mq in pairs(game["StartCasting"]["RipIndraKill"]:GetChildren()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and (Qq[3]["CakeScientist"]["UnderWater"] > 0 and (not string["Farm Boss Đã Chọ"](Qq[3]["JumpValue"], "Value") and (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[3]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 5000))) then
+						repeat
+							wait(_G["SetTeam"])
+							StartBring = true
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+							Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+							Qq[3]["Raid | dungeon"]["Transparency"] = 1
+							Qq[3]["CakeScientist"]["Dangerous Prisoner"] = 0
+							Qq[3]["CakeScientist"]["Raider"] = 0
+							Qq[3]["Raid | dungeon"]["CraftItem"] = false
+							FarmPos = Qq[3]["Raid | dungeon"]["Seaesps"]
+							MonFarm = Qq[3]["JumpValue"]
+						until not _G["AutoLawRaid"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0 or not game["StartCasting"]["RipIndraKill"]:FindFirstChild(Qq[3]["JumpValue"])
+						StartBring = false
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[146] = Mq[133]:AddSection({
+	"AutoRaidPirate"
+})
+Mq[133]:AddToggle({
+	["JumpValue"] = "__call";
+	["Cousin"] = Mq[144]({
+		"GoingExit",
+		"HauntedQuest1";
+		"iếm Saber"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["AutoRaidPirate"] = Mq[2]
+		StopTween(_G["AutoRaidPirate"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["AutoRaidPirate"] then
+			pcall(function()
+				local Cq = {}
+				Cq[2] = CFrame["Fruis"](-5496.17432, 313.768921, -2841.53027, .924894512, 7.37058015e-09, .380223751, 3.5881019e-08, 1, -1.06665446e-07, -0.380223751, 1.12297109e-07, .924894512)
+				if ((CFrame["Fruis"](-5539.3115234375, 313.80053710938, -2972.3723144531))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 500 then
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[2] = Cq, Mq
+						if _G["AutoRaidPirate"] and (Qq[2]:FindFirstChild("Raid | dungeon") and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]["CakeScientist"]["UnderWater"] > 0 and (Qq[2]["Raid | dungeon"]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] < 2000))) then
+							repeat
+								wait()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								NeedAttacking = true
+								StartMagnet = true
+								Qq[2]["Raid | dungeon"]["CraftItem"] = false
+								Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+								topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+							until Qq[2]["CakeScientist"]["UnderWater"] <= 0 or not Qq[2]["PrehistoricRelic"] or _G["AutoRaidPirate"] == false
+							NeedAttacking = false
+							StartMagnet = false
+						end
+					end
+				elseif (Cq[2]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["h Boss Chim"] <= 1500 then
+					TP1(Cq[2])
+				else
+					TP1(Cq[2])
+				end
+			end)
+		end
+	end
+end)
+Mq[123] = Mq[133]:AddSection({
+	"__tostring"
+})
+Mq[96] = Mq[133]:AddParagraph({
+	["MochiSwirl"] = "Tự Động Đánh ";
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			local Cq = {}
+			Cq[3] = 0
+			Cq[1] = {
+				workspace["Cookie Crafter"]["TikiOutpost"]["LastUse"]:FindFirstChild("Please contact the o"),
+				workspace["Cookie Crafter"]["TikiOutpost"]["LastUse"]:FindFirstChild("Relic");
+				workspace["Cookie Crafter"]["TikiOutpost"]["LastUse"]:FindFirstChild("RE/CollectedDragonEg"),
+				workspace["Cookie Crafter"]["TikiOutpost"]["LastUse"]:FindFirstChild("Chọn đảo để ")
+			}
+			for Mq, Qq in ipairs(Cq[1]) do
+				local Rq = {}
+				Rq[2], Rq[3] = Mq, Qq
+				if Rq[3] and (Rq[3]:IsA("Select Fishing Lure") and Rq[3]["Transparency"] == 0) then
+					Cq[3] = Cq[3] + 1
+				end
+			end
+			Mq[96]:Set("Stone" .. (Cq[3] .. ("kill X Để Đánh" .. (not(Cq[3] ~= 4) and "protectTable" or "Adornee"))))
+		end)
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "W",
+	["Cousin"] = Mq[144]({
+		"Coral Pirate",
+		"Tham Gia Discord"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["AutoKillPlayer"] = Mq[2]
+		StopTween(_G["AutoKillPlayer"])
+	end
+})
+Mq[98] = CFrame["Fruis"](-16194.004882812, 155.21844482422, 1420.7199707031)
+Mq[104] = (game:GetService("StartCasting"))["RipIndraKill"]
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["AutoKillPlayer"] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("RequestQuest") then
+					local Cq = {}
+					Cq[2] = false
+					for Mq, Qq in pairs({
+						"random";
+						"AutoHolyTorch",
+						"MouseButton1Click",
+						"��n muốn sử dụ";
+						"KeyCode"
+					}) do
+						local Rq = {}
+						Rq[2], Rq[1] = Mq, Qq
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(Rq[1]) then
+							Cq[2] = true
+							break
+						end
+					end
+					if not Cq[2] then
+						local Cq = {}
+						Cq[2] = math["Greybeardhop"](1, 3)
+						if Cq[2] == 1 then
+							topos(CFrame["Fruis"](-1436.86011, 167.753616, -12296.9512))
+						elseif Cq[2] ~= 2 then
+							if Cq[2] == 3 then
+								topos(CFrame["Fruis"](-2231.2793, 168.256653, -12845.7559))
+							end
+						else
+							topos(CFrame["Fruis"](-2383.78979, 150.450592, -12126.4961))
+						end
+					else
+						for Cq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Rq = {}
+							Rq[3], Rq[1] = Cq, Qq
+							if (Rq[1]["JumpValue"] == "random" or Rq[1]["JumpValue"] == "AutoHolyTorch" or Rq[1]["JumpValue"] == "MouseButton1Click" or Rq[1]["JumpValue"] == "��n muốn sử dụ" or Rq[1]["JumpValue"] == "KeyCode") and (Rq[1]:FindFirstChild("CakeScientist") and (Rq[1]:FindFirstChild("Raid | dungeon") and Rq[1]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Rq[1]["Raid | dungeon"]["CraftItem"] = false
+									Rq[1]["CakeScientist"]["Raider"] = 0
+									StartBring = true
+									Rq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+									PosMon = Rq[1]["Raid | dungeon"]["Seaesps"]
+									MonFarm = Rq[1]["JumpValue"]
+									Rq[1]["Urban"]["CraftItem"] = false
+									topos(Rq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									NeedAttacking = true
+									if Rq[1]["JumpValue"] ~= "random" then
+										if Rq[1]["JumpValue"] == "AutoHolyTorch" then
+											Bring(Rq[1]["JumpValue"], CFrame["Fruis"](-16901.26171875, 84.067565917969, -192.88906860352))
+										elseif Rq[1]["JumpValue"] ~= "MouseButton1Click" then
+											if Rq[1]["JumpValue"] ~= "��n muốn sử dụ" then
+												if Rq[1]["JumpValue"] == "KeyCode" then
+													Bring(Rq[1]["JumpValue"], CFrame["Fruis"](-16855.043, 122.457253, 1478.15308, -0.999392271, 0, -0.0348687991, 0, 1, 0, .0348687991, 0, -0.999392271))
+												end
+											else
+												Bring(Rq[1]["JumpValue"], CFrame["Fruis"](-16521.0625, 106.09285, 1488.78467, .469467044, 0, .882950008, 0, 1, 0, -0.882950008, 0, .469467044))
+											end
+										else
+											Bring(Rq[1]["JumpValue"], CFrame["Fruis"](-16641.6796875, 235.78254699707, 1031.2829589844))
+										end
+									else
+										Bring(Rq[1]["JumpValue"], CFrame["Fruis"](-16442.814453125, 116.13899993896, -264.46377563477))
+									end
+								until not _G["AutoKillPlayer"] or not Rq[1]["PrehistoricRelic"] or Rq[1]["CakeScientist"]["UnderWater"] <= 0 or (game:GetService("StartCasting"))["Cookie Crafter"]["Error code: "]["RaidsNpc"]["Dark Area"]["Transparency"] == 0 or (game:GetService("Blizzard Fruit")):FindFirstChild(Mq[144]({
+									"Plastic";
+									"UnderwaterExit",
+									"SafeMode"
+								})) or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(Mq[144]({
+									"Plastic",
+									"UnderwaterExit",
+									"SafeMode"
+								}))
+								DamageAura = false
+							end
+						end
+					end
+					if not BypassTP then
+						topos(Mq[98])
+					elseif (playerPos - Mq[98]["Y3hUExFEZ"])["Hydra Island"] > 1500 then
+						BTP(Mq[98])
+					else
+						topos(Mq[98])
+					end
+					UnEquipWeapon(_G["Tự Động Bay Và"])
+					topos(CFrame["Fruis"](-16194.004882812, 155.21844482422, 1420.7199707031))
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[1], Qq[3] = Cq, Mq
+						if Qq[3]["JumpValue"] == "RequestQuest" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[3]["Raid | dungeon"]["CraftItem"] = false
+								Qq[3]["CakeScientist"]["Raider"] = 0
+								Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+								topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 40, 0))
+								NeedAttacking = true
+							until not _G["AutoKillPlayer"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							wait(1)
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Skull Guitar";
+		"UseGun"
+	}),
+	["Cousin"] = Mq[144]({
+		"Codes",
+		"ChiefWarden",
+		"uyển Sea 1,2,3"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Farm8Binhs"] = Mq[1]
+		StopTween(_G["Farm8Binhs"])
+	end
+})
+Mq[4] = {
+	CFrame["Fruis"](-16250.2354, 158.167007, 1313.01904, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874),
+	CFrame["Fruis"](-16250.2354, 158.167007, 1313.01904, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874),
+	CFrame["Fruis"](-16297.0596, 159.322998, 1317.224, -0.463313937, 0, .886194229, 0, 1, 0, -0.886194229, 0, -0.463313937);
+	CFrame["Fruis"](-16335.0967, 159.334, 1324.88599, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874),
+	CFrame["Fruis"](-16288.6094, 158.167007, 1470.36804, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874);
+	CFrame["Fruis"](-16258.001, 156.761002, 1461.40405, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874);
+	CFrame["Fruis"](-16245.4121, 158.436996, 1463.36597, -0.993159413, 0, .116766132, 0, 1, 0, -0.116766132, 0, -0.993159413),
+	CFrame["Fruis"](-16212.4688, 158.167007, 1466.34399, .999388874, 0, .0349550731, 0, 1, 0, -0.0349550731, 0, .999388874)
+}
+function TweenToPosition(Cq)
+	local Mq = {}
+	Mq[3] = Cq
+	Mq[1] = game["Forgotten Island"][" Lava"]["aze"]
+	Mq[4] = Mq[1] and Mq[1]:FindFirstChild("Raid | dungeon")
+	if not Mq[4] then
+		return
+	else
+		local Cq = {}
+		Cq[3] = game:GetService("Temple of Time")
+		Cq[1] = (Mq[4]["Y3hUExFEZ"] - Mq[3]["Y3hUExFEZ"])["Hydra Island"] / 300
+		Cq[4] = Cq[3]:Create(Mq[4], TweenInfo["Fruis"](Cq[1], Enum["Tự Động Lấy T"]["Ship Engineer"]), {
+			["Seaesps"] = Mq[3]
+		})
+		Cq[4]:Play()
+		Cq[4]["ric"]:Wait()
+		return
+	end
+end
+function Skill(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	Mq[1] = game:GetService("Quest Sea 1")
+	Mq[1]:SendKeyEvent(true, Enum["Mythological Pirate"][Mq[2]], false, game)
+	task["Dough King"](.05)
+	Mq[1]:SendKeyEvent(false, Enum["Mythological Pirate"][Mq[2]], false, game)
+end
+function Click()
+	local Cq = {}
+	Cq[2] = game:GetService("Quest Sea 1")
+	Cq[2]:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+	task["Dough King"](.05)
+	Cq[2]:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+end
+function FindWeapon(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	Mq[1] = game["Forgotten Island"][" Lava"]["MaxHealth"]
+	for Cq, Qq in ipairs(Mq[1]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[3] = Cq, Qq
+		if Rq[3]:IsA("Tool") then
+			if Mq[2] ~= "Auto Farm Chest And " or Rq[3]["ragon Trident"] ~= "Auto Farm Chest And " and Rq[3]["JumpValue"] ~= "Auto Get Sword Saw" then
+				if Mq[2] ~= "Jungle Pirate" or Rq[3]["ragon Trident"] ~= "Jungle Pirate" then
+					if Mq[2] == "TouchInterest" and Rq[3]["ragon Trident"] == "TouchInterest" then
+						return Rq[3]["JumpValue"]
+					elseif Mq[2] == "Fruit" and Rq[3]["ragon Trident"] == "Sea 1" then
+						return Rq[3]["JumpValue"]
+					end
+				else
+					return Rq[3]["JumpValue"]
+				end
+			else
+				return Rq[3]["JumpValue"]
+			end
+		end
+	end
+	return nil
+end
+function EquipWeapon(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if not Mq[2] then
+		return
+	else
+		local Cq = {}
+		Cq[1] = game["Forgotten Island"][" Lava"]
+		Cq[2] = (Cq[1]:WaitForChild("MaxHealth")):FindFirstChild(Mq[2])
+		if Cq[2] then
+			Cq[1]["aze"]["CakeScientist"]:EquipTool(Cq[2])
+		end
+		return
+	end
+end
+function AttackAllSkills()
+	local Cq = {}
+	Cq[3] = FindWeapon("Auto Farm Chest And ")
+	Cq[1] = FindWeapon("Jungle Pirate")
+	Cq[2] = FindWeapon("Fruit")
+	Cq[4] = FindWeapon("TouchInterest")
+	if Cq[3] then
+		EquipWeapon(Cq[3])
+		Skill("rời An Toàn")
+		Skill("Torch")
+		Skill("X")
+		Skill("Tự động Lấy F")
+		Click()
+	end
+	if Cq[1] then
+		EquipWeapon(Cq[1])
+		Skill("rời An Toàn")
+		Skill("Torch")
+		Click()
+	end
+	if Cq[2] then
+		EquipWeapon(Cq[2])
+		Skill("rời An Toàn")
+		Skill("Torch")
+		Skill("X")
+		Skill("Dragon Crew Archer")
+		Click()
+	end
+	if Cq[4] then
+		EquipWeapon(Cq[4])
+		Skill("rời An Toàn")
+		Skill("Torch")
+		Click()
+	end
+end
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		if _G["Farm8Binhs"] then
+			for Cq, Mq in ipairs(Mq[4]) do
+				local Qq = {}
+				Qq[3], Qq[1] = Cq, Mq
+				if _G["Farm8Binhs"] then
+					TweenToPosition(Qq[1] * CFrame["Fruis"](0, 5, 0))
+					task["Dough King"](.5)
+					AttackAllSkills()
+					task["Dough King"](3)
+				else
+					break
+				end
+			end
+		end
+	end
+end)
+Mq[148] = Mq[133]:AddSection({
+	"Skeleton Machine"
+})
+Mq[1] = Mq[133]:AddParagraph({
+	["MochiSwirl"] = "AbandonQuest";
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			local Cq = {}
+			Cq[2] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("next floor", "Beautiful Pirate")
+			Mq[1]:Set("XaiSkillC" .. (tostring(Cq[2]) .. "Auto Trailer All Rac"))
+		end)
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "ushita",
+	["Cousin"] = "TyrantoftheSkies";
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["The Cafe"] = Mq[1]
+		StopTween(_G["The Cafe"])
+	end
+})
+spawn(function()
+	while wait() do
+		local Cq = {}
+		Cq[1] = CFrame["Fruis"](-9508.5673828125, 142.13984680176, 5737.3603515625)
+		do
+			local Qq = {}
+			Qq[2] = Cq[1]
+			if _G["The Cafe"] and Mq[82] then
+				pcall(function()
+					if not BypassTP then
+						TP1(Qq[2])
+					elseif (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[2]["Y3hUExFEZ"])["Hydra Island"] > 2000 then
+						TP1(Qq[2])
+						wait(.1)
+						for Cq = 1, 8, 1 do
+							game["Forgotten Island"]["localPlayer"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](Qq[2]);
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("God's Guard")
+							wait(.1)
+						end
+					elseif (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[2]["Y3hUExFEZ"])["Hydra Island"] < 2000 then
+						TP1(Qq[2])
+					end
+					if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("AutoNear") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Living Zombie") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("TeleportPly") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("om/@real_nanatvroblo"))) then
+						StartBring = false
+						topos(CFrame["Fruis"](-9506.234375, 172.13061523438, 6117.0771484375))
+						for Cq, Mq in pairs((game:GetService("Blizzard Fruit")):GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "AutoNear" then
+								topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+							elseif Qq[3]["JumpValue"] ~= "Living Zombie" then
+								if Qq[3]["JumpValue"] ~= "TeleportPly" then
+									if Qq[3]["JumpValue"] == "om/@real_nanatvroblo" then
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+									end
+								else
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+								end
+							else
+								topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+							end
+						end
+					else
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if (Qq[3]["JumpValue"] == "AutoNear" or Qq[3]["JumpValue"] == "Living Zombie" or Qq[3]["JumpValue"] == "TeleportPly" or Qq[3]["JumpValue"] == "om/@real_nanatvroblo") and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									NoAttackAnimation = true
+									NeedAttacking = true
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									Qq[3]["Urban"]["CraftItem"] = false
+									StartBring = true
+									MonFarm = Qq[3]["JumpValue"]
+									PosMon = Qq[3]["Raid | dungeon"]["Seaesps"]
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["The Cafe"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"GothamBold",
+		"Làm mới danh sác"
+	});
+	["Cousin"] = Mq[144]({
+		"Cup",
+		"AutoFactory",
+		"Fudd10"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Cursed Skeleton Boss"] = Mq[1]
+		StopTween(_G["Cursed Skeleton Boss"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Cursed Skeleton Boss"] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Control Fruit") then
+					if (game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:FindFirstChild("Demonic Soul") or (game:GetService("Forgotten Island"))[" Lava"]["aze"]:FindFirstChild("Demonic Soul") then
+						repeat
+							TP1(CFrame["Fruis"](-8932.322265625, 146.83154296875, 6062.55078125))
+							wait()
+						until ((CFrame["Fruis"](-8932.322265625, 146.83154296875, 6062.55078125))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 8
+						EquipWeapon("Demonic Soul")
+					elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Control Fruit") then
+						TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Control Fruit"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[2], Qq[1] = Cq, Mq
+						if string["Farm Boss Đã Chọ"](Qq[1]["JumpValue"], "Control Fruit") then
+							repeat
+								task["Dough King"]()
+								EquipWeapon(_G["SelectWeapon"])
+								AutoHaki()
+								Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+								topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+								(game:GetService("25541747")):CaptureController();
+								(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 670))
+								Qq[1]["Raid | dungeon"]["Transparency"] = 1
+							until Qq[1]["CakeScientist"]["UnderWater"] <= 0 or _G["Cursed Skeleton Boss"] == false
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "Cocoa Island";
+	["Cousin"] = Mq[144]({
+		"JungleQuest",
+		"xương lấy phần";
+		"Auto Kill Dark Beard"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Dark Fruit"] = Mq[2]
+		StopTween(_G["Dark Fruit"])
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["Dark Fruit"] then
+			(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("next floor", "Died", 1, 1)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "AutoSkullGuitar",
+	["Cousin"] = "Adornee",
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["FPS Boost"] = Mq[1]
+		StopTween(_G["FPS Boost"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["FPS Boost"] then
+				TP1(CFrame["Fruis"](-8652.99707, 143.450119, 6170.50879, -0.983064115, -2.48005533e-10, .18326205, -1.78910387e-09, 1, -8.24392288e-09, -0.18326205, -8.43218029e-09, -0.983064115))
+				wait();
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Shark", 1)
+			end
+		end
+	end)
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "Delete Lava",
+	["Cousin"] = "Adornee",
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["AlwaysOnTop"] = Mq[2]
+		StopTween(_G["AlwaysOnTop"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["AlwaysOnTop"] then
+				TP1(CFrame["Fruis"](-8652.99707, 143.450119, 6170.50879, -0.983064115, -2.48005533e-10, .18326205, -1.78910387e-09, 1, -8.24392288e-09, -0.18326205, -8.43218029e-09, -0.983064115))
+				wait();
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Shark", 2)
+			end
+		end
+	end)
+end)
+Mq[38] = Mq[133]:AddSection({
+	"��n"
+})
+Mq[25] = Mq[133]:AddParagraph({
+	["MochiSwirl"] = "ForgottenIsland",
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			local Cq = {}
+			Cq[2] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Name")
+			if string["Smoke-Smoke"](Cq[2]) == 88 then
+				Mq[25]:Set("Sweet Chalice" .. (string["Red Flower"](Cq[2], 39, 41) .. "BossBuild"))
+			elseif string["Smoke-Smoke"](Cq[2]) ~= 87 then
+				if string["Smoke-Smoke"](Cq[2]) == 86 then
+					Mq[25]:Set("Sweet Chalice" .. (string["Red Flower"](Cq[2], 39, 39) .. "BossBuild"))
+				else
+					Mq[25]:Set(Mq[144]({
+						"https://discord.gg/x";
+						"gNhoEm/TuanAnhIOS/re"
+					}))
+				end
+			else
+				Mq[25]:Set("Sweet Chalice" .. (string["Red Flower"](Cq[2], 39, 40) .. "BossBuild"))
+			end
+		end)
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "Cursed Ship";
+	["Cousin"] = Mq[144]({
+		"CornerRadius";
+		"StrawHatMaine",
+		"Spirit Fruit"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["false"] = Mq[2]
+		StopTween(_G["false"])
+	end
+})
+Mq[7] = CFrame["Fruis"](-2130.8071289062, 69.956344604492, -12327.83984375)
+Mq[46] = (game:GetService("StartCasting"))["RipIndraKill"]
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["false"] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Tween Mirage Island") then
+					local Cq = {}
+					Cq[1] = false
+					for Mq, Qq in pairs({
+						"Farm Level New 2650 ";
+						"getInventory",
+						"Yeti-Yeti",
+						"Bignews"
+					}) do
+						local Rq = {}
+						Rq[2], Rq[1] = Mq, Qq
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(Rq[1]) then
+							Cq[1] = true
+							break
+						end
+					end
+					if Cq[1] then
+						for Cq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Rq = {}
+							Rq[3], Rq[2] = Cq, Qq
+							if (Rq[2]["JumpValue"] == "Farm Level New 2650 " or Rq[2]["JumpValue"] == "getInventory" or Rq[2]["JumpValue"] == "Yeti-Yeti" or Rq[2]["JumpValue"] == "Bignews") and (Rq[2]:FindFirstChild("CakeScientist") and (Rq[2]:FindFirstChild("Raid | dungeon") and Rq[2]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Rq[2]["Raid | dungeon"]["CraftItem"] = false
+									Rq[2]["CakeScientist"]["Raider"] = 0
+									StartBring = true
+									Rq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+									PosMon = Rq[2]["Raid | dungeon"]["Seaesps"]
+									MonFarm = Rq[2]["JumpValue"]
+									Rq[2]["Urban"]["CraftItem"] = false
+									topos(Rq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									NeedAttacking = true
+									if Rq[2]["JumpValue"] ~= "Farm Level New 2650 " then
+										if Rq[2]["JumpValue"] == "getInventory" then
+											Bring(Rq[2]["JumpValue"], CFrame["Fruis"](-1693.98047, 35.2188225, -12436.8438, -0.716115236, 0, -0.697982132, 0, 1, 0, .697982132, 0, -0.716115236))
+										elseif Rq[2]["JumpValue"] == "Yeti-Yeti" then
+											Bring(Rq[2]["JumpValue"], CFrame["Fruis"](-1980.4375, 34.6653099, -12983.8408, -0.254338264, 0, -0.967115223, 0, 1, 0, .967115223, 0, -0.254338264))
+										elseif Rq[2]["JumpValue"] == "Bignews" then
+											Bring(Rq[2]["JumpValue"], CFrame["Fruis"](-2151.37793, 51.0095749, -13033.3975, -0.996587753, 0, .0825396702, 0, 1, 0, -0.0825396702, 0, -0.996587753))
+										end
+									else
+										Bring(Rq[2]["JumpValue"], CFrame["Fruis"](-2212.88965, 37.0051041, -11969.2568, .458114207, 0, -0.888893366, 0, 1, 0, .888893366, 0, .458114207))
+									end
+								until not _G["false"] or not Rq[2]["PrehistoricRelic"] or Rq[2]["CakeScientist"]["UnderWater"] <= 0 or (game:GetService("StartCasting"))["Cookie Crafter"]["Error code: "]["RaidsNpc"]["Dark Area"]["Transparency"] == 0 or (game:GetService("Blizzard Fruit")):FindFirstChild(Mq[144]({
+									"Cake Prince [Lv. 230";
+									"Context"
+								})) or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(Mq[144]({
+									"Cake Prince [Lv. 230";
+									"Context"
+								}))
+								DamageAura = false
+							end
+						end
+					else
+						local Cq = {}
+						Cq[2] = math["Greybeardhop"](1, 3)
+						if Cq[2] ~= 1 then
+							if Cq[2] ~= 2 then
+								if Cq[2] == 3 then
+									topos(CFrame["Fruis"](-2231.2793, 168.256653, -12845.7559))
+								end
+							else
+								topos(CFrame["Fruis"](-2383.78979, 150.450592, -12126.4961))
+							end
+						else
+							topos(CFrame["Fruis"](-1436.86011, 167.753616, -12296.9512))
+						end
+					end
+					if BypassTP then
+						if (playerPos - Mq[7]["Y3hUExFEZ"])["Hydra Island"] <= 1500 then
+							topos(Mq[7])
+						else
+							BTP(Mq[7])
+						end
+					else
+						topos(Mq[7])
+					end
+					UnEquipWeapon(_G["Tự Động Bay Và"])
+					topos(CFrame["Fruis"](-2130.8071289062, 69.956344604492, -12327.83984375))
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[1], Qq[2] = Cq, Mq
+						if Qq[2]["JumpValue"] == "Tween Mirage Island" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[2]["Raid | dungeon"]["CraftItem"] = false
+								Qq[2]["CakeScientist"]["Raider"] = 0
+								Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+								if (game:GetService("StartCasting"))["WaterBase-Plane"]:FindFirstChild("��n Gear") or (game:GetService("StartCasting"))["WaterBase-Plane"]:FindFirstChild("Util") or (game:GetService("StartCasting"))["WaterBase-Plane"]:FindFirstChild("wner of this script ") then
+									topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, -40, 0))
+								else
+									topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](4, 10, 10))
+								end
+								NeedAttacking = true
+							until not _G["false"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+							wait(1)
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = "Auto Get Sword Canva";
+	["Cousin"] = Mq[144]({
+		"CornerRadius";
+		"StrawHatMaine";
+		"DungeonBring"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Fullykatakuri"] = Mq[2]
+		StopTween(_G["Fullykatakuri"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Fullykatakuri"] then
+			pcall(function()
+				if not game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild("Auto Tween Prehistor") and not game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("Auto Tween Prehistor") then
+					if game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild("Dark-Dark") or game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("Dark-Dark") then
+						if string["Farm Boss Đã Chọ"]((game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Name"), Mq[144]({
+							"debug",
+							"Buff"
+						})) then
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Name")
+						elseif game["StartCasting"]["RipIndraKill"]:FindFirstChild("Yeti-Yeti") or game["StartCasting"]["RipIndraKill"]:FindFirstChild("Bignews") or game["StartCasting"]["RipIndraKill"]:FindFirstChild("getInventory") or game["StartCasting"]["RipIndraKill"]:FindFirstChild("Farm Level New 2650 ") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[2] = Cq, Mq
+								if (Qq[2]["JumpValue"] == "Yeti-Yeti" or Qq[2]["JumpValue"] == "Bignews" or Qq[2]["JumpValue"] == "getInventory" or Qq[2]["JumpValue"] == "Farm Level New 2650 ") and Qq[2]["CakeScientist"]["UnderWater"] > 0 then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										AutoHaki()
+										PosMon = Qq[2]["Raid | dungeon"]["Seaesps"]
+										topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										Qq[2]["Raid | dungeon"]["CraftItem"] = false
+										Qq[2]["CakeScientist"]["Raider"] = 0
+										Qq[2]["Urban"]["CraftItem"] = false
+										attackGunEnemies(Qq[2]["JumpValue"], 5)
+										Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+										StartBring = false
+										MonFarm = Qq[2]["JumpValue"];
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+									until _G["Fullykatakuri"] == false or (game:GetService("Blizzard Fruit")):FindFirstChild("Tween Mirage Island") or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						else
+							CakeBring = false
+							StartBring = false
+							topos(CFrame["Fruis"](-1820.0634765625, 210.74781799316, -12297.49609375))
+						end
+					elseif game["Blizzard Fruit"]:FindFirstChild("Auto Get Sword Buddy") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Auto Get Sword Buddy") then
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Auto Get Sword Buddy") then
+							topos(CFrame["Fruis"](-2009.2802734375, 4532.9721679688, -14937.307617188))
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[1] = Cq, Mq
+								if Qq[1]["JumpValue"] == "Auto Get Sword Buddy" then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+										Qq[1]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = false
+										topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, -40, 0));
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+									until _G["Fullykatakuri"] == false or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						end
+					elseif game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild("ShrineActive") or game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("ShrineActive") then
+						local Cq = {}
+						Cq[2] = {
+							[1] = "Auto Kill Near | Mob";
+							[2] = "Beautiful Pirate"
+						};
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+					elseif (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] ~= true then
+						wait(.5);
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Price")
+					elseif string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "een ]") or string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Lighting") or string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Winter Warrior") then
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("een ]") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Lighting") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Winter Warrior")) then
+							if (game:GetService("Blizzard Fruit")):FindFirstChild("een ]") then
+								topos(((game:GetService("Blizzard Fruit")):FindFirstChild("een ]"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+							elseif not(game:GetService("Blizzard Fruit")):FindFirstChild("Lighting") then
+								if (game:GetService("Blizzard Fruit")):FindFirstChild("Winter Warrior") then
+									topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Winter Warrior"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+								end
+							else
+								topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Lighting"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+							end
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[3] = Cq, Mq
+								if (Qq[3]["JumpValue"] == "een ]" or Qq[3]["JumpValue"] == "Lighting" or Qq[3]["JumpValue"] == "Winter Warrior") and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										PosMon = Qq[3]["Raid | dungeon"]["Seaesps"]
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										Qq[3]["Raid | dungeon"]["CraftItem"] = false
+										Qq[3]["CakeScientist"]["Raider"] = 0
+										Qq[3]["Urban"]["CraftItem"] = false
+										attackGunEnemies(Qq[3]["JumpValue"], 5)
+										Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](70, 70, 70)
+										StartBring = false
+										MonFarm = Qq[3]["JumpValue"];
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until _G["Fullykatakuri"] == false or Qq[3]["CakeScientist"]["UnderWater"] <= 0 or not Qq[3]["PrehistoricRelic"] or game["Forgotten Island"][" Lava"]["MaxHealth"]:FindFirstChild("Auto Tween Prehistor") or game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("Auto Tween Prehistor")
+								end
+							end
+						end
+					end
+				elseif string["Farm Boss Đã Chọ"]((game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ChestEsp"), "SUB2FER999") then
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ChestEsp")
+				end
+			end)
+		end
+	end
+end)
+Mq[43] = Mq[133]:AddSection({
+	Mq[144]({
+		"VirtualUser",
+		"Kilo Admiral"
+	})
+})
+Mq[133]:AddToggle({
+	["JumpValue"] = "Chop-Chop",
+	["Cousin"] = Mq[144]({
+		"KillGolem",
+		"Kilo Admiral"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["lo"] = Mq[2]
+		StopTween(_G["lo"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["lo"] then
+			local Cq = {}
+			Cq[4] = (game:GetService("Forgotten Island"))[" Lava"]
+			Cq[7] = ((Cq[4]["aze"] or Cq[4]["AXIORE"]:Wait()):GetPivot())["Y3hUExFEZ"]
+			Cq[6] = (game:GetService("HumanoidRootPart")):GetTagged("engoku")
+			Cq[2] = math["Biển 2"]
+			Cq[3] = nil
+			Cq[1] = nil
+			for Mq, Qq in ipairs(Cq[6]) do
+				local Rq = {}
+				Rq[2], Rq[3] = Mq, Qq
+				for Mq, Qq in pairs(Rq[3]:GetAttributes()) do
+					local Kq = {}
+					Kq[2], Kq[1] = Mq, Qq
+					Kq[4] = ((Rq[3]["PrehistoricRelic"]:GetPivot())["Y3hUExFEZ"] - Cq[7])["Hydra Island"]
+					if Kq[4] < Cq[2] then
+						Cq[2] = Kq[4]
+						Cq[3] = Rq[3]
+						Cq[1] = Kq[2]
+					end
+				end
+			end
+			if Cq[3] and Cq[1] then
+				local Mq = {}
+				Mq[3] = Cq[3]["PrehistoricRelic"]
+				Mq[4] = (Mq[3]:GetPivot())["Y3hUExFEZ"]
+				TP1(CFrame["Fruis"](Mq[4] + Vector3["Fruis"](0, 2, 0)))
+				task["Dough King"](.5)
+				Mq[2] = Mq[3]:FindFirstChild(Cq[1])
+				if Mq[2] and Mq[2]:IsA("Select Fishing Lure") then
+					local Cq = {}
+					TP1(Mq[2]["Seaesps"] + Vector3["Fruis"](0, 1, 0))
+					task["Dough King"](.3)
+					Cq[2] = game:GetService("Quest Sea 1")
+					Cq[2]:SendKeyEvent(true, Enum["Mythological Pirate"]["Shadow"], false, game)
+					task["Dough King"](.1)
+					Cq[2]:SendKeyEvent(false, Enum["Mythological Pirate"]["Shadow"], false, game)
+				end
+			elseif _G["NameEsp"] then
+				Hop()
+			end
+		end
+	end
+end)
+Mq[133]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Text";
+		"PlayerHunter"
+	});
+	["Cousin"] = Mq[144]({
+		"KillGolem";
+		"Plate1"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Dùng Gun Để Phá"] = Mq[1]
+		StopTween(_G["Dùng Gun Để Phá"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Dùng Gun Để Phá"] then
+			local Cq = {}
+			Cq[6] = (game:GetService("Forgotten Island"))[" Lava"]
+			Cq[4] = ((Cq[6]["aze"] or Cq[6]["AXIORE"]:Wait()):GetPivot())["Y3hUExFEZ"]
+			Cq[3] = (game:GetService("HumanoidRootPart")):GetTagged("l")
+			Cq[2] = math["Biển 2"]
+			Cq[5] = nil
+			for Mq = 1, #Cq[3], 1 do
+				local Qq = {}
+				Qq[2] = Mq
+				Qq[3] = Cq[3][Qq[2]]
+				Qq[4] = ((Qq[3]:GetPivot())["Y3hUExFEZ"] - Cq[4])["Hydra Island"]
+				if not Qq[3]:GetAttribute("PartTele") and Qq[4] < Cq[2] then
+					local Hq = {}
+					Hq[2] = Qq[4]
+					Cq[5] = Qq[3]
+					Cq[2] = Hq[2]
+				end
+			end
+			if Cq[5] then
+				local Mq = {}
+				Mq[1] = (Cq[5]["Marine Rear Admiral"](Cq[5]))["Y3hUExFEZ"]
+				Mq[2] = CFrame["Fruis"](Mq[1])
+				topos(Mq[2])
+			end
+		end
+	end
+end)
+Mq[54] = Mq[133]:AddSection({
+	"Lab Puzzle"
+})
+Mq[133]:AddButton({
+	["JumpValue"] = "Tự động Làm Nh";
+	["Cousin"] = Mq[144]({
+		"NOMOREHACK";
+		"Esp Chest"
+	});
+	["Highlight"] = function()
+	end
+})
+Mq[137] = Mq[133]:AddParagraph({
+	["MochiSwirl"] = "Data",
+	["SandIsland"] = "Shadow-Shadow"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			if _G["CursedCaptain"] and ((game:GetService("Blizzard Fruit")):FindFirstChild(_G["CursedCaptain"]) or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(_G["CursedCaptain"])) then
+				Mq[137]:Set(Mq[144]({
+					"Status: Boss Spawn �";
+					"Summoner"
+				}))
+			else
+				Mq[137]:Set(Mq[144]({
+					"Tự Động Dùng S",
+					"getupvalues"
+				}))
+			end
+		end)
+	end
+end)
+Mq[20] = {}
+if Mq[16] then
+	Mq[20] = {
+		"Killed : ";
+		"Ice Admiral",
+		"Fish Tail",
+		"Mob Leader";
+		"lava";
+		"ReeledIn";
+		"awn";
+		"Auto Buy Legendary S",
+		"rip_indra",
+		"SaveFolder";
+		"MeshPart",
+		"__div",
+		"Snowman";
+		"Saber Expert"
+	}
+elseif not Mq[27] then
+	if Mq[82] then
+		Mq[20] = {
+			"Adornee";
+			"RequestQuest",
+			"Handle";
+			"CakeLoaf",
+			"UICorner";
+			"2";
+			"Tự Động Bay T�";
+			"TextSize";
+			"SUB2UNCLEKIZARU";
+			"Control Fruit",
+			"Military Soldier"
+		}
+	end
+else
+	Mq[20] = {
+		"Venom-Venom",
+		"CommF_",
+		"Fajita",
+		"Core";
+		"Smoke Admiral",
+		"__debug",
+		"Join Pirates Team";
+		"Sea";
+		"SweetChaliceNpc";
+		"Tự động farm ma"
+	}
+end
+Mq[133]:AddDropdown({
+	["JumpValue"] = "BartiloQuest",
+	["Cousin"] = Mq[144]({
+		".com/v1/games/",
+		"Auto Get Yama"
+	}),
+	["Galley Captain"] = Mq[20];
+	["olour"] = Mq[20][1];
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["CursedCaptain"] = Mq[1]
+	end
+})
+Mq[133]:AddToggle({
+	["JumpValue"] = "Mink",
+	["Cousin"] = Mq[144]({
+		"Notifications",
+		"n"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["SelectBoss"] = Mq[2]
+		StopTween(_G["SelectBoss"])
+	end
+})
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["SelectBoss"] and _G["CursedCaptain"] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild(_G["CursedCaptain"]) then
+					if (game:GetService("Blizzard Fruit")):FindFirstChild(_G["CursedCaptain"]) then
+						topos(((game:GetService("Blizzard Fruit")):FindFirstChild(_G["CursedCaptain"]))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[1], Qq[2] = Cq, Mq
+						if Qq[2]["JumpValue"] == _G["CursedCaptain"] and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[2]["Raid | dungeon"]["CraftItem"] = false
+								Qq[2]["CakeScientist"]["Raider"] = 0
+								Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+								topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+							until not _G["SelectBoss"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[149] = Mq[133]:AddSection({
+	"Raid Law Sea 2"
+})
+Mq[170] = {}
+if not Mq[16] then
+	if Mq[27] then
+		Mq[170] = {
+			"Players";
+			"Eye4";
+			"ForgottenQuest",
+			"Esp Kitsune Island";
+			"Rubber Fruit";
+			"Tự động farm c�"
+		}
+	elseif Mq[82] then
+		Mq[170] = {
+			"Esp Kitsune Island";
+			"Tự động farm c�";
+			"Auto Cdk [Beta]",
+			"Dragon Scale";
+			"Blue Flower";
+			"PiratePortQuest";
+			"ra Golem"
+		}
+	end
+else
+	Mq[170] = {
+		"ForgottenQuest";
+		"ColorsDealer",
+		"Esp Kitsune Island",
+		"Tự động farm c�"
+	}
+end
+function getConfigMaterial(Cq)
+	local Qq = {}
+	Qq[1] = Cq
+	if Qq[1] ~= "Players" or not Mq[27] then
+		if Qq[1] ~= "Eye4" or not Mq[27] then
+			if Qq[1] == "ForgottenQuest" and Mq[16] then
+				MaterialMon = {
+					" [Boss]"
+				}
+				MaterialPos = CFrame["Fruis"](-5850.28, 77.28, 8848.67)
+			elseif Qq[1] ~= "ForgottenQuest" or not Mq[27] then
+				if Qq[1] ~= "ColorsDealer" or not Mq[16] then
+					if Qq[1] ~= "Esp Kitsune Island" or not Mq[16] then
+						if Qq[1] ~= "Esp Kitsune Island" or not Mq[27] then
+							if Qq[1] ~= "Esp Kitsune Island" or not Mq[82] then
+								if Qq[1] ~= "Rubber Fruit" or not Mq[27] then
+									if Qq[1] ~= "Tự động farm c�" or not Mq[16] then
+										if Qq[1] == "Tự động farm c�" and Mq[27] then
+											MaterialMon = {
+												"volcanorock"
+											}
+											MaterialPos = CFrame["Fruis"](-972.3, 73.04, 1419.29)
+										elseif Qq[1] == "Tự động farm c�" and Mq[82] then
+											MaterialMon = {
+												"Hooks"
+											}
+											MaterialPos = CFrame["Fruis"](-289.63, 43.82, 5583.66)
+										elseif Qq[1] ~= "Auto Cdk [Beta]" or not Mq[82] then
+											if Qq[1] == "Dragon Scale" and Mq[82] then
+												MaterialMon = {
+													"XaiSkillZ"
+												}
+												MaterialPos = CFrame["Fruis"](5824.06, 51.38, -1106.69)
+											elseif Qq[1] == "Blue Flower" and Mq[82] then
+												MaterialMon = {
+													"Redeem"
+												}
+												MaterialPos = CFrame["Fruis"](-379.61, 73.84, 5928.52)
+											elseif Qq[1] ~= "PiratePortQuest" or not Mq[82] then
+												if Qq[1] == "ra Golem" and Mq[82] then
+													MaterialMon = {
+														"TRIPLEABUSE"
+													}
+													MaterialPos = CFrame["Fruis"](-13516.04, 469.81, -6899.16)
+												end
+											else
+												MaterialMon = {
+													"Terrorshark"
+												}
+												MaterialPos = CFrame["Fruis"](-10961.01, 331.79, -8914.29)
+											end
+										else
+											MaterialMon = {
+												Mq[144]({
+													"Max";
+													"Zombie"
+												})
+											}
+											MaterialPos = CFrame["Fruis"](744.79, 24.76, -12637.72)
+										end
+									else
+										MaterialMon = {
+											"Tự Động Lấy �"
+										}
+										MaterialPos = CFrame["Fruis"](-1132.42, 14.84, 4293.3)
+									end
+								else
+									MaterialMon = {
+										"RichSon",
+										"find",
+										"",
+										"lookAt"
+									}
+									MaterialPos = CFrame["Fruis"](911.35, 125.95, 33159.53)
+								end
+							else
+								MaterialMon = {
+									"VelocityInheritance"
+								}
+								MaterialPos = CFrame["Fruis"](-11975.78, 331.77, -10620.03)
+							end
+						else
+							MaterialMon = {
+								"TikTok Của Bố Đ"
+							}
+							MaterialPos = CFrame["Fruis"](-2010.5, 73, -3326.62)
+						end
+					else
+						MaterialMon = {
+							"Light Fruit"
+						}
+						MaterialPos = CFrame["Fruis"](-1211.87, 4.78, 3916.83)
+					end
+				else
+					MaterialMon = {
+						"Haunted Castle"
+					}
+					MaterialPos = CFrame["Fruis"](-7827.15, 5606.91, -1705.58)
+				end
+			else
+				MaterialMon = {
+					"cy"
+				}
+				MaterialPos = CFrame["Fruis"](-5234.6, 51.95, -4732.27)
+			end
+		else
+			MaterialMon = {
+				"Trade Bone"
+			}
+			MaterialPos = CFrame["Fruis"](-3352.9, 285.01, -10534.84)
+		end
+	else
+		MaterialMon = {
+			"Don Swan"
+		}
+		MaterialPos = CFrame["Fruis"](-507.78, 73, -126.45)
+	end
+end
+Mq[133]:AddDropdown({
+	["JumpValue"] = "Phoenix-Phoenix",
+	["Cousin"] = Mq[144]({
+		"Chọn vật phẩm ";
+		"Material"
+	}),
+	["Galley Captain"] = Mq[170];
+	["olour"] = Mq[170][1],
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Team"] = Mq[2]
+	end
+})
+Mq[133]:AddToggle({
+	["JumpValue"] = "iếm Saw";
+	["Cousin"] = Mq[144]({
+		"iệm Vụ Sang Sea ";
+		"Key"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["MouseMovement"] = Mq[1]
+		StopTween(_G["MouseMovement"])
+	end
+})
+task["Sea 3"](function()
+	while task["Dough King"](.2) do
+		if _G["MouseMovement"] and _G["Team"] then
+			pcall(function()
+				getConfigMaterial(_G["Team"])
+				for Cq, Mq in pairs(MaterialMon) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if workspace["RipIndraKill"]:FindFirstChild(Qq[1]) then
+						for Cq, Mq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+							local Rq = {}
+							Rq[3], Rq[2] = Cq, Mq
+							if Rq[2]["JumpValue"] == Qq[1] and (Rq[2]:FindFirstChild("CakeScientist") and (Rq[2]:FindFirstChild("Raid | dungeon") and Rq[2]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									PosMon = Rq[2]["Raid | dungeon"]["Seaesps"]
+									MonFarm = Rq[2]["JumpValue"]
+									topos(Rq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								until not _G["MouseMovement"] or not Rq[2]["PrehistoricRelic"] or Rq[2]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					else
+						UnEquipWeapon(_G["SelectWeapon"])
+						if _G["Team"] == "Rubber Fruit" and (MaterialPos["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 18000 then
+							game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](923.21, 126.97, 32852.83))
+						end
+						topos(MaterialPos)
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[101] = Mq[18]:AddSection({
+	Mq[144]({
+		"__concat",
+		"n Nhiệm Vụ"
+	})
+})
+Mq[18]:AddToggle({
+	["MochiSwirl"] = "Tự Động Lái Th",
+	["Cousin"] = Mq[144]({
+		"Blade Fruit",
+		"Sit",
+		"Serpent Hunter"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Mirage Island"] = Mq[2]
+	end
+})
+Mq[63] = workspace
+Mq[9] = game["Forgotten Island"][" Lava"]
+Mq[135] = game["Blizzard Fruit"]:WaitForChild("Plate5")
+Mq[3] = Mq[135]:WaitForChild("FastAttackDelay")
+Mq[132] = (require(Mq[135]["NeonShrinePart"]["Config"]))["Clip"]["https://raw.githubus"]
+Mq[121] = require(game["Blizzard Fruit"]["4j2dJg19GU7l"][Mq[144]({
+	"SubmergedQuest1";
+	"RF/DragonHunter"
+})])
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["Mirage Island"] then
+			local Cq = {}
+			Cq[2] = Mq[9]["aze"]
+			Cq[3] = Cq[2] and Cq[2]:FindFirstChild("Raid | dungeon")
+			Cq[1] = Cq[2] and Cq[2]:FindFirstChildOfClass("Tool")
+			if _G["SelectedRod"] and (not Cq[1] or Cq[1]["JumpValue"] ~= _G["SelectedRod"]) then
+				local Qq = {}
+				Qq[1] = Mq[9]["MaxHealth"]:FindFirstChild(_G["SelectedRod"])
+				if Qq[1] then
+					Mq[9]["aze"]["CakeScientist"]:EquipTool(Qq[1])
+					Cq[1] = Qq[1]
+				end
+			end
+			if Cq[2] and (Cq[3] and Cq[1]) then
+				local Qq = {}
+				Qq[7] = Mq[121](Cq[3]["Y3hUExFEZ"])
+				Qq[6], Qq[5] = workspace:FindPartOnRayWithIgnoreList(Ray["Fruis"](Cq[2]["Urban"]["Y3hUExFEZ"], Cq[3]["Seaesps"]["Detective"] * Mq[132]), {
+					Cq[2],
+					workspace["Auto Select Boss"],
+					workspace["RipIndraKill"]
+				})
+				Qq[3] = Qq[5] and Vector3["Fruis"](Qq[5]["Torch"], math["Jungle"](Qq[5]["Y"], Qq[7]), Qq[5]["rời An Toàn"])
+				Qq[2] = Cq[1]["StartTrial"](Cq[1], "Marine Captain")
+				Qq[4] = Cq[1]["StartTrial"](Cq[1], "GetFruits")
+				if Qq[2] ~= "wn ❌" and Qq[4] ~= "wn ❌" or not Qq[3] then
+					if Qq[4] == "Race" then
+						Mq[3]:InvokeServer("Tự động Đánh ", true)
+						task["Dough King"](.1)
+						Mq[3]:InvokeServer("Hidden Key", 1)
+					end
+				else
+					Mq[3]:InvokeServer("Leather + Scrap Meta")
+					task["Dough King"]()
+					Mq[3]:InvokeServer("Cake Queen", Qq[3], 100, true)
+				end
+			end
+		end
+	end
+end)
+Mq[18]:AddDropdown({
+	["JumpValue"] = "Container";
+	["Cousin"] = Mq[144]({
+		"Tự Động Chọn ",
+		"protectGlobals"
+	}),
+	["Galley Captain"] = {
+		"CollectBerryHop",
+		"This metatable is lo";
+		"Linear";
+		"__unm";
+		"On: ✅",
+		"Shadow Fruit";
+		"CheckPoint"
+	};
+	["olour"] = "CollectBerryHop",
+	["Highlight"] = function(Cq)
+		local Qq = {}
+		Qq[2] = Cq
+		_G["SelectedBait"] = Qq[2]
+		Mq[3]:InvokeServer("Size14", Qq[2])
+	end
+})
+Mq[18]:AddDropdown({
+	["JumpValue"] = "Underwater City";
+	["Cousin"] = Mq[144]({
+		"Tự Động Chọn ";
+		"%1,%2";
+		"Auto Get Sword Pole"
+	}),
+	["Galley Captain"] = {
+		"FontSize";
+		"Trylux",
+		"Shark Rod";
+		"sland",
+		"LoadFruit"
+	};
+	["olour"] = "FontSize";
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["SelectedRod"] = Mq[1]
+	end
+})
+if Mq[16] then
+	local Cq = {}
+	Cq[3] = Mq[88]:AddSection({
+		"� Xoá Hiệu Ứng "
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "PineappleSpawner";
+		["Cousin"] = Mq[144]({
+			"Dough",
+			"Farm Katakuri"
+		});
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["PineappleSpawner"] = Mq[2]
+			StopTween(_G["PineappleSpawner"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["PineappleSpawner"] then
+				pcall(function()
+					if game["Forgotten Island"][" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] >= 700 and Mq[16] then
+						_G["BerryBush"] = false
+						if game["StartCasting"]["Cookie Crafter"]["Agility"]["Esp Berry"]["CraftItem"] == true and game["StartCasting"]["Cookie Crafter"]["Agility"]["Esp Berry"]["Transparency"] == 0 then
+							local Cq = {}
+							repeat
+								wait()
+								topos(CFrame["Fruis"](4851.8720703125, 5.6514348983765, 718.47094726563))
+							until ((CFrame["Fruis"](4851.8720703125, 5.6514348983765, 718.47094726563))["Y3hUExFEZ"] - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 3 or not _G["PineappleSpawner"]
+							wait(1);
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(Mq[144]({
+								"Bring Mod",
+								"VehicleSeat"
+							}), "Lock")
+							EquipWeapon("SUB2CAPTAINMAUI")
+							Cq[2] = CFrame["Fruis"](1347.7124, 37.3751602, -1325.6488)
+							repeat
+								wait()
+								topos(Cq[2])
+							until (Cq[2]["Y3hUExFEZ"] - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 3 or not _G["PineappleSpawner"]
+							wait(3)
+						elseif game["StartCasting"]["Cookie Crafter"]["Agility"]["Esp Berry"]["CraftItem"] ~= false or game["StartCasting"]["Cookie Crafter"]["Agility"]["Esp Berry"]["Transparency"] ~= 1 then
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("FrozenDimension")
+						elseif (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Rip Indra") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[3] = Cq, Mq
+								if Qq[3]["JumpValue"] == "Rip Indra" and Qq[3]["CakeScientist"]["UnderWater"] > 0 then
+									repeat
+										wait()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[3]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+										Qq[3]["Raid | dungeon"]["Transparency"] = 1
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 870), workspace["Control-Control"]["Seaesps"])
+									until Qq[3]["CakeScientist"]["UnderWater"] <= 0 or not Qq[3]["PrehistoricRelic"] or not _G["PineappleSpawner"];
+									(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("FrozenDimension")
+								end
+							end
+						else
+							topos(CFrame["Fruis"](1347.7124, 37.3751602, -1325.6488))
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Cq[1] = Mq[88]:AddSection({
+		"KITTGAMING"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Kill_Aura",
+		["Cousin"] = Mq[144]({
+			"Auto Get Sword Twin ";
+			"Tablet"
+		}),
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["Tablet"] = Mq[2]
+			StopTween(_G["Tablet"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Tablet"] then
+				pcall(function()
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Tablet") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[2] = Cq, Mq
+							if Qq[2]["JumpValue"] == "Tablet" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[2]["Raid | dungeon"]["CraftItem"] = false
+									Qq[2]["CakeScientist"]["Raider"] = 0
+									Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+									topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+									(game:GetService("25541747")):CaptureController();
+									(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+									sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Tablet"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					else
+						topos(CFrame["Fruis"](-5023.3833007812, 28.652032852173, 4332.3818359375))
+						if not(game:GetService("Blizzard Fruit")):FindFirstChild("Tablet") then
+							if _G["Quake"] then
+								Hop()
+							end
+						else
+							topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Tablet"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Cq[2] = Mq[88]:AddSection({
+		"TheGreatAce"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Good Bait",
+		["Cousin"] = Mq[144]({
+			"iếm Twin Hooks";
+			"viên phi hành đo�"
+		}),
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["gethook"] = Mq[2]
+			StopTween(_G["gethook"])
+		end
+	})
+	spawn(function()
+		while task["Dough King"]() do
+			if _G["gethook"] and game["Forgotten Island"][" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] >= 200 then
+				pcall(function()
+					if (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["Spider-Spider"]["o to complete more t"]["Transparency"] ~= 0 then
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Saber Expert") or (game:GetService("Blizzard Fruit")):FindFirstChild("Saber Expert") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[3], Qq[2] = Cq, Mq
+								if Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and (Qq[2]["CakeScientist"]["UnderWater"] > 0 and Qq[2]["JumpValue"] == "Saber Expert")) then
+									repeat
+										task["Dough King"]()
+										EquipWeapon(_G["SelectWeapon"])
+										topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+										Qq[2]["Raid | dungeon"]["Transparency"] = 1
+										Qq[2]["CakeScientist"]["Dangerous Prisoner"] = 0
+										Qq[2]["CakeScientist"]["Raider"] = 0
+										Qq[2]["Raid | dungeon"]["CraftItem"] = false
+										FarmPos = Qq[2]["Raid | dungeon"]["Seaesps"]
+										MonFarm = Qq[2]["JumpValue"];
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672), workspace["Control-Control"]["Seaesps"])
+									until Qq[2]["CakeScientist"]["UnderWater"] <= 0 or not _G["gethook"]
+									if Qq[2]["CakeScientist"]["UnderWater"] <= 0 then
+										(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "CHANDLER")
+									end
+								end
+							end
+						end
+					elseif (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["Esp Berry"]["Transparency"] == 0 then
+						if ((CFrame["Fruis"](-1612.55884, 36.9774132, 148.719543, .37091279, 3.0717151e-09, -0.928667724, 3.97099491e-08, 1, 1.91679348e-08, .928667724, -4.39869794e-08, .37091279))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 100 then
+							topos(CFrame["Fruis"](-1612.55884, 36.9774132, 148.719543, .37091279, 3.0717151e-09, -0.928667724, 3.97099491e-08, 1, 1.91679348e-08, .928667724, -4.39869794e-08, .37091279))
+						else
+							topos((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"])
+							wait(1)
+							game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["ào.
+"]["AutoMobDragon"]["Seaesps"]
+							wait(1)
+							game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["Falcon-Falcon"]["AutoMobDragon"]["Seaesps"]
+							wait(1)
+							game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["Lava Pirate"]["AutoMobDragon"]["Seaesps"]
+							wait(1)
+							game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["Bartilo"]["AutoMobDragon"]["Seaesps"]
+							wait(1)
+							game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("StartCasting"))["Cookie Crafter"]["nil"]["rm"]["Fishman Lord"]["AutoMobDragon"]["Seaesps"]
+							wait(1)
+						end
+					elseif (game:GetService("StartCasting"))["Cookie Crafter"]["TinyIsland"]["Combat"]["o to complete more t"]["Transparency"] == 0 then
+						if (game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:FindFirstChild("Drag") or game["Forgotten Island"][" Lava"]["aze"]:FindFirstChild("Drag") then
+							EquipWeapon("Drag")
+							topos(CFrame["Fruis"](1114.61475, 5.04679728, 4350.22803, -0.648466587, -1.28799094e-09, .761243105, -5.70652914e-10, 1, 1.20584542e-09, -0.761243105, 3.47544882e-10, -0.648466587))
+						else
+							topos(CFrame["Fruis"](-1610.00757, 11.5049858, 164.001587, .984807551, -0.167722285, -0.0449818149, .17364943, .951244235, .254912198, 3.42372805e-05, -0.258850515, .965917408))
+						end
+					elseif (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "Snow Demon") ~= 0 then
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoSecondSea")
+						wait(.5)
+						EquipWeapon("Ice")
+						wait(.5);
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "ChocQuest1", (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Ice"])
+						wait(0);
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "Snow Demon")
+					elseif (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoDooHee") == "AutoDooHee" then
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoDooHee")
+					elseif (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoDooHee") ~= 0 then
+						if (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoDooHee") == 1 then
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ProQuestProgress", "AutoDooHee")
+							wait(.5)
+							EquipWeapon("Master of Enhancemen")
+							wait(.5)
+							topos(CFrame["Fruis"](-1404.91504, 29.9773273, 3.80598116, .876514494, 5.66906877e-09, .481375456, 2.53851997e-08, 1, -5.79995607e-08, -0.481375456, 6.30572643e-08, .876514494))
+						end
+					elseif (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Mob Leader") or (game:GetService("Blizzard Fruit")):FindFirstChild("Mob Leader") then
+						topos(CFrame["Fruis"](-2967.59521, -4.91089821, 5328.70703, .342208564, -0.0227849055, .939347804, .0251603816, .999569714, .0150796166, -0.939287126, .0184739735, .342634559))
+						for Cq, Qq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Rq = {}
+							Rq[2], Rq[1] = Cq, Qq
+							if Rq[1]["JumpValue"] == "Mob Leader" then
+								if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Mob Leader") and (Rq[1]:FindFirstChild("CakeScientist") and (Rq[1]:FindFirstChild("Raid | dungeon") and Rq[1]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Rq[1]["Raid | dungeon"]["CraftItem"] = false
+										Rq[1]["CakeScientist"]["Raider"] = 0
+										Rq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Rq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+										(game:GetService("25541747")):CaptureController();
+										(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until Rq[1]["CakeScientist"]["UnderWater"] <= 0 or not _G["gethook"]
+								end
+								if (game:GetService("Blizzard Fruit")):FindFirstChild(Mq[144]({
+									"ColorFloor",
+									"Flower1"
+								})) then
+									topos(((game:GetService("Blizzard Fruit")):FindFirstChild(Mq[144]({
+										"ColorFloor";
+										"Flower1"
+									})))["Raid | dungeon"]["Seaesps"] * Farm_Mode)
+								end
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Gun";
+		["Cousin"] = Mq[144]({
+			"iếm Twin Hooks";
+			"Teleport Temple Of T"
+		});
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["Spring Fruit"] = Mq[1]
+			StopTween(_G["Spring Fruit"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Spring Fruit"] then
+				pcall(function()
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__div") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[3], Qq[1] = Cq, Mq
+							if Qq[1]["JumpValue"] == "__div" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[1]["Raid | dungeon"]["CraftItem"] = false
+									StartBring = true
+									Qq[1]["CakeScientist"]["Raider"] = 0
+									Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+									topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Spring Fruit"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					elseif (game:GetService("Blizzard Fruit")):FindFirstChild("__div") then
+						TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("__div"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = "ho Đồ",
+		["Cousin"] = Mq[144]({
+			"iếm Twin Hooks",
+			"p Law Raid"
+		}),
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["Auto Buy Chip"] = Mq[1]
+			StopTween(_G["Auto Buy Chip"])
+		end
+	})
+	Cq[5] = CFrame["Fruis"](-690.33081054688, 15.09425163269, 1582.2380371094)
+	do
+		local Qq = {}
+		Qq[2] = Cq[5]
+		spawn(function()
+			while wait() do
+				if _G["Auto Buy Chip"] then
+					pcall(function()
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Colossuim") then
+							if BypassTP then
+								if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[2]["Y3hUExFEZ"])["Hydra Island"] > 1500 then
+									BTP(Qq[2])
+								elseif (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[2]["Y3hUExFEZ"])["Hydra Island"] < 1500 then
+									topos(Qq[2])
+								end
+							else
+								topos(Qq[2])
+							end
+							EquipWeapon(_G["SelectWeapon"])
+							topos(CFrame["Fruis"](-690.33081054688, 15.09425163269, 1582.2380371094))
+							if (game:GetService("Blizzard Fruit")):FindFirstChild("Colossuim") then
+								topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Colossuim"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 40, 2))
+							end
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[1] = Cq, Mq
+								if Qq[1]["JumpValue"] == "Colossuim" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"](_G["Auto Fishing"])
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[1]["Raid | dungeon"]["CraftItem"] = false
+										Qq[1]["CakeScientist"]["Raider"] = 0
+										Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+										topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										AttackNoCD()
+									until not _G["Auto Buy Chip"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = Mq[144]({
+				"Gom tất cả mob k",
+				"BackgroundTransparen"
+			}),
+			["Cousin"] = Mq[144]({
+				"iếm Twin Hooks",
+				"SpotLight"
+			}),
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[2] = Cq
+				_G["Head"] = Mq[2]
+				StopTween(_G["Head"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["Head"] then
+					pcall(function()
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("awn") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[3] = Cq, Mq
+								if Qq[3]["JumpValue"] == "awn" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[3]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[3]["CakeScientist"]["Raider"] = 0
+										Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["Head"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						elseif (game:GetService("Blizzard Fruit")):FindFirstChild("awn") then
+							TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("awn"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = Mq[144]({
+				"Reflectance",
+				"FishingRequest"
+			}),
+			["Cousin"] = Mq[144]({
+				"iếm Twin Hooks",
+				"CandyQuest1"
+			});
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[2] = Cq
+				_G["Teleport V4"] = Mq[2]
+				StopTween(_G["Teleport V4"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["Teleport V4"] then
+					pcall(function()
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("SaveFolder") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[3] = Cq, Mq
+								if Qq[3]["JumpValue"] == "SaveFolder" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[3]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[3]["CakeScientist"]["Raider"] = 0
+										Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["Teleport V4"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						elseif (game:GetService("Blizzard Fruit")):FindFirstChild("SaveFolder") then
+							TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("SaveFolder"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+	end
+end
+if Mq[27] then
+	local Cq = {}
+	Cq[2] = Mq[88]:AddSection({
+		"Quest Skull Guitar"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = Mq[144]({
+			"Reborn Skeleton";
+			"PrisonerQuest"
+		});
+		["Cousin"] = Mq[144]({
+			" V1";
+			"BuggyQuest1";
+			"PrisonerQuest"
+		}),
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["StudsOffset"] = Mq[1]
+			StopTween(_G["StudsOffset"])
+		end
+	})
+	spawn(function()
+		pcall(function()
+			while wait(.1) do
+				if _G["StudsOffset"] then
+					if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] >= 800 and (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("nder", "Marine") == 0 then
+						if not string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Oyster") or not string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Chọn Boss Cần Fa") or (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] ~= true then
+							repeat
+								topos(CFrame["Fruis"](-456.28952, 73.0200958, 299.895966))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-456.28952, 73.0200958, 299.895966))["Hydra Island"] <= 10
+							wait(1.1);
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("StartQuest", "Tự động Nhặt ", 1)
+						elseif (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Lifetime") then
+							Ms = "Lifetime"
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[3] = Cq, Mq
+								do
+									local Cq = {}
+									Cq[2] = Qq[3]
+									if Cq[2]["JumpValue"] == Ms then
+										pcall(function()
+											repeat
+												task["Dough King"]()
+												sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+												EquipWeapon(_G["SelectWeapon"])
+												AutoHaki()
+												Cq[2]["Raid | dungeon"]["Transparency"] = 1
+												Cq[2]["Raid | dungeon"]["CraftItem"] = false
+												Cq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+												topos(Cq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+												PosMonBarto = Cq[2]["Raid | dungeon"]["Seaesps"];
+												(game:GetService("25541747")):CaptureController();
+												(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+												StartBring = true
+											until not Cq[2]["PrehistoricRelic"] or Cq[2]["CakeScientist"]["UnderWater"] <= 0 or _G["StudsOffset"] == false or (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == false
+											StartBring = false
+										end)
+									end
+								end
+							end
+						else
+							repeat
+								topos(CFrame["Fruis"](932.624451, 156.106079, 1180.27466, -0.973085582, 4.55137119e-08, -0.230443969, 2.67024713e-08, 1, 8.47491108e-08, .230443969, 7.63147128e-08, -0.973085582))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](932.624451, 156.106079, 1180.27466, -0.973085582, 4.55137119e-08, -0.230443969, 2.67024713e-08, 1, 8.47491108e-08, .230443969, 7.63147128e-08, -0.973085582))["Hydra Island"] <= 10
+						end
+					elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] < 800 or (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("nder", "Marine") ~= 1 then
+						if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] >= 800 and (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("nder", "Marine") == 2 then
+							repeat
+								topos(CFrame["Fruis"](-1850.49329, 13.1789551, 1750.89685))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1850.49329, 13.1789551, 1750.89685))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1858.87305, 19.3777466, 1712.01807))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1858.87305, 19.3777466, 1712.01807))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1803.94324, 16.5789185, 1750.89685))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1803.94324, 16.5789185, 1750.89685))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1858.55835, 16.8604317, 1724.79541))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1858.55835, 16.8604317, 1724.79541))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1869.54224, 15.987854, 1681.00659))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1869.54224, 15.987854, 1681.00659))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1800.0979, 16.4978027, 1684.52368))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1800.0979, 16.4978027, 1684.52368))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1819.26343, 14.795166, 1717.90625))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1819.26343, 14.795166, 1717.90625))["Hydra Island"] <= 10
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](-1813.51843, 14.8604736, 1724.79541))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-1813.51843, 14.8604736, 1724.79541))["Hydra Island"] <= 10
+						end
+					elseif not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("CommF_") then
+						if not(game:GetService("Blizzard Fruit")):FindFirstChild("CommF_") then
+							repeat
+								topos(CFrame["Fruis"](2099.88159, 448.931, 648.997375))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](2099.88159, 448.931, 648.997375))["Hydra Island"] <= 10
+						else
+							repeat
+								topos(CFrame["Fruis"](-456.28952, 73.0200958, 299.895966))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-456.28952, 73.0200958, 299.895966))["Hydra Island"] <= 10
+							wait(1.1);
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("nder", "Marine")
+							wait(1)
+							repeat
+								topos(CFrame["Fruis"](2099.88159, 448.931, 648.997375))
+								wait()
+							until not _G["StudsOffset"] or ((game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](2099.88159, 448.931, 648.997375))["Hydra Island"] <= 10
+							wait(2)
+						end
+					else
+						Ms = "CommF_"
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[2] = Cq, Mq
+							if Qq[2]["JumpValue"] == Ms then
+								OldCFrameBartlio = Qq[2]["Raid | dungeon"]["Seaesps"]
+								repeat
+									task["Dough King"]()
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									EquipWeapon(_G["SelectWeapon"])
+									AutoHaki()
+									Qq[2]["Raid | dungeon"]["Transparency"] = 1
+									Qq[2]["Raid | dungeon"]["CraftItem"] = false
+									Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+									Qq[2]["Raid | dungeon"]["Seaesps"] = OldCFrameBartlio
+									topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+									(game:GetService("25541747")):CaptureController();
+									(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0 or _G["StudsOffset"] == false
+							end
+						end
+					end
+				end
+			end
+		end)
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Final";
+		["Cousin"] = Mq[144]({
+			" V1",
+			"Sub2NoobMaster123",
+			" Distance"
+		}),
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["ThirdSea"] = Mq[2]
+			StopTween(_G["ThirdSea"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["ThirdSea"] then
+				pcall(function()
+					if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Sound Fruit"]["Hot pink"] >= 1500 and Mq[27] then
+						_G["BerryBush"] = false
+						if (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ZQuestProgress", "Net") == 0 then
+							topos(CFrame["Fruis"](-1926.3221435547, 12.819851875305, 1738.3092041016))
+							if ((CFrame["Fruis"](-1926.3221435547, 12.819851875305, 1738.3092041016))["Y3hUExFEZ"] - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 10 then
+								wait(1.5);
+								(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("ZQuestProgress", "ServerState")
+							end
+							wait(1.8)
+							if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("RotSpeed") then
+								if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("RotSpeed") and ((CFrame["Fruis"](-26880.93359375, 22.848554611206, 473.18951416016))["Y3hUExFEZ"] - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 1000 then
+									TP1(CFrame["Fruis"](-26880.93359375, 22.848554611206, 473.18951416016))
+								end
+							else
+								for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+									local Qq = {}
+									Qq[3], Qq[2] = Cq, Mq
+									if Qq[2]["JumpValue"] == "RotSpeed" then
+										OldCFrameThird = Qq[2]["Raid | dungeon"]["Seaesps"]
+										repeat
+											task["Dough King"]()
+											AutoHaki()
+											EquipWeapon(_G["SelectWeapon"])
+											topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+											Qq[2]["Raid | dungeon"]["Seaesps"] = OldCFrameThird
+											Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+											Qq[2]["Raid | dungeon"]["CraftItem"] = false
+											StartBring = true
+											Qq[2]["CakeScientist"]["Raider"] = 0;
+											(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("TikiQuest2")
+											sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+										until _G["ThirdSea"] == false or Qq[2]["CakeScientist"]["UnderWater"] <= 0 or not Qq[2]["PrehistoricRelic"]
+									end
+								end
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Cq[5] = Mq[88]:AddSection({
+		"Join Sea 1"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "T-Rex-T-Rex",
+		["Cousin"] = Mq[144]({
+			"Auto Get Sword Twin ",
+			"ing ✅"
+		});
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["SwodCanvande"] = Mq[2]
+			StopTween(_G["SwodCanvande"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			spawn(function()
+				if _G["SwodCanvande"] then
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("UIbzXcXw/raw") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[2], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "UIbzXcXw/raw" and Qq[3]["CakeScientist"]["UnderWater"] > 0 then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									topos(CFrame["Fruis"](448.46756, 199.356781, -441.389252));
+									(game:GetService("25541747")):CaptureController();
+									(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+								until Qq[3]["CakeScientist"]["UnderWater"] <= 0 or _G["SwodCanvande"] == false
+							end
+						end
+					else
+						topos(CFrame["Fruis"](448.46756, 199.356781, -441.389252))
+					end
+				end
+			end)
+		end
+	end)
+	Cq[6] = Mq[88]:AddSection({
+		"Catch"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Fishman",
+		["Cousin"] = Mq[144]({
+			"Auto Get Sword Twin ";
+			"Seperator Hallow Scy"
+		});
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["Nhảy Cao "] = Mq[2]
+			StopTween(_G["Nhảy Cao "])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Nhảy Cao "] then
+				pcall(function()
+					if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Join Pirates Team") then
+						NeedAttacking = true
+						if (game:GetService("Blizzard Fruit")):FindFirstChild("Join Pirates Team") then
+							topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Join Pirates Team"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					else
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "Join Pirates Team" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									NeedAttacking = true
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Nhảy Cao "] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = Mq[144]({
+			"AutoBartilo",
+			"NormalId"
+		}),
+		["Cousin"] = Mq[144]({
+			"Auto Get Sword Twin ",
+			"__debug"
+		}),
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["Selectweapon"] = Mq[2]
+			StopTween(_G["Selectweapon"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Selectweapon"] then
+				pcall(function()
+					if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__debug") then
+						NeedAttacking = true
+						if (Vector3["Fruis"](911.35827636719, 125.95812988281, 33159.5390625) - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 18000 and (game:GetService("Blizzard Fruit")):FindFirstChild("__debug") then
+							topos(((game:GetService("Blizzard Fruit")):FindFirstChild("__debug"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					else
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[2], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "__debug" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									NeedAttacking = true
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Selectweapon"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Cq[1] = Mq[88]:AddSection({
+		"Kitsune Fruit"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Cake Guard",
+		["Cousin"] = Mq[144]({
+			"randomString",
+			"UseSword"
+		}),
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Qq = {}
+			Qq[1] = Cq
+			_G[Mq[144]({
+				"AutoBuyEnchancementC";
+				"OriginalName"
+			})] = Qq[1]
+			StopTween(_G[Mq[144]({
+				"AutoBuyEnchancementC",
+				"OriginalName"
+			})])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G[Mq[144]({
+				"AutoBuyEnchancementC";
+				"OriginalName"
+			})] then
+				local Cq = {}
+				Cq[1] = {
+					[1] = "DeepForestIsland3";
+					[2] = "Auto Find Prehistori"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[1]))
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["MochiSwirl"] = Mq[144]({
+			"SimulationRadius";
+			"tTree"
+		}),
+		["Hot pink"] = false,
+		["Highlight"] = function(Cq)
+			local Qq = {}
+			Qq[2] = Cq
+			_G[Mq[144]({
+				"Skull Slayer",
+				"d"
+			})] = Qq[2]
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G[Mq[144]({
+				"Skull Slayer",
+				"d"
+			})] then
+				pcall(function()
+					local Cq = {}
+					Cq[2] = {
+						[1] = "Blox Fruit",
+						[2] = "__pairs"
+					};
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+					Cq[3] = {
+						[1] = "Blox Fruit",
+						[2] = "Auto Find Prehistori"
+					};
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[3]))
+					Cq[1] = {
+						[1] = "Blox Fruit",
+						[2] = " Distance"
+					};
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[1]))
+				end)
+			end
+		end
+	end)
+	Cq[3] = Mq[88]:AddSection({
+		"TheGreatAce"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Desert Officer",
+		["Cousin"] = Mq[144]({
+			"Remotes",
+			"ển tới đảo đ"
+		});
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["Longsword"] = Mq[1]
+			StopTween(_G["Longsword"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Longsword"] then
+				pcall(function()
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Venom-Venom") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[2], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "Venom-Venom" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									StartBring = true
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Longsword"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Venom-Venom") then
+						TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Venom-Venom"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = Mq[144]({
+			"V2",
+			"ty Blade"
+		}),
+		["Cousin"] = Mq[144]({
+			"Spike-Spike",
+			"iếm Wardens"
+		});
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["Lab Subordinate"] = Mq[2]
+			StopTween(_G["Lab Subordinate"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Lab Subordinate"] then
+				pcall(function()
+					if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Fajita") then
+						if (game:GetService("Blizzard Fruit")):FindFirstChild("Fajita") then
+							TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Fajita"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					else
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "Fajita" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									StartBring = true
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Lab Subordinate"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = "the portal now?",
+		["Cousin"] = Mq[144]({
+			"ua",
+			"StartRaid"
+		});
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[2] = Cq
+			_G["XaiSkillX"] = Mq[2]
+			StopTween(_G["XaiSkillX"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["XaiSkillX"] then
+				pcall(function()
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Smoke Admiral") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "Smoke Admiral" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									StartBring = true
+									Qq[3]["CakeScientist"]["Raider"] = 0
+									Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["XaiSkillX"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Smoke Admiral") then
+						TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Smoke Admiral"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = Mq[144]({
+			"Epic Bait";
+			"Buso"
+		}),
+		["Cousin"] = Mq[144]({
+			"AutoMysticIsland",
+			"AutoStoreFruit"
+		}),
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["AutoRengoku"] = Mq[1]
+			StopTween(_G["AutoRengoku"])
+		end
+	})
+	spawn(function()
+		pcall(function()
+			while wait() do
+				if _G["AutoRengoku"] then
+					if (game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:FindFirstChild("Auto Get Sword Drago") or (game:GetService("Forgotten Island"))[" Lava"]["aze"]:FindFirstChild("Auto Get Sword Drago") then
+						EquipWeapon("Auto Get Sword Drago")
+						topos(CFrame["Fruis"](6571.1201171875, 299.23028564453, -6967.841796875))
+					elseif not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("SweetChaliceNpc") then
+						StartBring = false
+						topos(CFrame["Fruis"](5439.716796875, 84.420944213867, -6715.1635742188))
+					else
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[3] = Cq, Mq
+							if Qq[3]["JumpValue"] == "SweetChaliceNpc" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									EquipWeapon(_G["SelectWeapon"])
+									AutoHaki()
+									Qq[3]["Raid | dungeon"]["CraftItem"] = false
+									Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+									PosMon = Qq[3]["Raid | dungeon"]["Seaesps"]
+									MonFarm = Qq[3]["JumpValue"]
+									topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									AttackNoCD()
+									StartBring = true
+								until (game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:FindFirstChild("Auto Get Sword Drago") or _G["AutoRengoku"] == false or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+								StartBring = false
+							end
+						end
+					end
+				end
+			end
+		end)
+	end)
+	Mq[88]:AddToggle({
+		["JumpValue"] = Mq[144]({
+			"Factory";
+			"n Trident"
+		}),
+		["Cousin"] = Mq[144]({
+			"MaxSpeed",
+			"Teleport Sea | Di Ch"
+		});
+		["olour"] = false;
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["Spin Fruit"] = Mq[1]
+			StopTween(_G["Spin Fruit"])
+		end
+	})
+	spawn(function()
+		while wait() do
+			if _G["Spin Fruit"] then
+				pcall(function()
+					if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Tự động farm ma") then
+						for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+							local Qq = {}
+							Qq[1], Qq[2] = Cq, Mq
+							if Qq[2]["JumpValue"] == "Tự động farm ma" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+								repeat
+									task["Dough King"]()
+									AutoHaki()
+									EquipWeapon(_G["SelectWeapon"])
+									Qq[2]["Raid | dungeon"]["CraftItem"] = false
+									StartBring = true
+									Qq[2]["CakeScientist"]["Raider"] = 0
+									Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+									topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+									sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+								until not _G["Spin Fruit"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Tự động farm ma") then
+						TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Tự động farm ma"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				end)
+			end
+		end
+	end)
+end
+if Mq[82] then
+	local Cq = {}
+	Cq[4] = Mq[88]:AddSection({
+		"Mob Island"
+	})
+	Cq[1] = Mq[88]:AddSection({
+		"Chơi Được Nhậ"
+	})
+	Mq[88]:AddToggle({
+		["JumpValue"] = "Water Fighter";
+		["Cousin"] = Mq[144]({
+			"Auto Get Sword Twin ";
+			"by nana on top"
+		}),
+		["olour"] = false,
+		["Highlight"] = function(Cq)
+			local Mq = {}
+			Mq[1] = Cq
+			_G["Tự động Get Lon"] = Mq[1]
+			StopTween(_G["Tự động Get Lon"])
+		end
+	})
+	Cq[3] = CFrame["Fruis"](-5344.822265625, 423.98541259766, -2725.0930175781)
+	do
+		local Qq = {}
+		Qq[3] = Cq[3]
+		spawn(function()
+			pcall(function()
+				while wait() do
+					if _G["Tự động Get Lon"] then
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("TextSize") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("RotSpeed") then
+							if BypassTP then
+								if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[3]["Y3hUExFEZ"])["Hydra Island"] > 1500 then
+									TP1(Qq[3])
+								elseif (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[3]["Y3hUExFEZ"])["Hydra Island"] < 1500 then
+									TP1(Qq[3])
+								end
+							else
+								TP1(Qq[3])
+							end
+							TP1(CFrame["Fruis"](-5344.822265625, 423.98541259766, -2725.0930175781))
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[5], Qq[2] = Cq, Mq
+								Qq[4] = Qq[2]["JumpValue"]
+								Qq[3] = "TextSize"
+								if not Qq[3] then
+									if Qq[2]["JumpValue"] ~= "RotSpeed" then
+										Qq[3] = false
+									end
+									Qq[3] = true
+								end
+								do
+									local Cq = {}
+									Cq[1] = Qq[2]
+									if Qq[4] == Qq[3] and (Cq[1]["CakeScientist"]["UnderWater"] > 0 and (Cq[1]:IsA("Model") and (Cq[1]:FindFirstChild("CakeScientist") and Cq[1]:FindFirstChild("Raid | dungeon")))) then
+										repeat
+											task["Dough King"]()
+											pcall(function()
+												AutoHaki()
+												EquipWeapon(_G["SelectWeapon"])
+												Cq[1]["Raid | dungeon"]["CraftItem"] = false
+												Cq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+												topos(Cq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, -40, 0));
+												(game:GetService("25541747")):CaptureController();
+												(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 670), workspace["Control-Control"]["Seaesps"])
+											end)
+										until _G["Tự động Get Lon"] == false or Cq[1]["CakeScientist"]["UnderWater"] <= 0
+									end
+								end
+							end
+						end
+					end
+				end
+			end)
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = "Yama",
+			["Cousin"] = Mq[144]({
+				"UserInputState";
+				"lors"
+			}),
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["Tự động Get Lon"] = Mq[1]
+				StopTween(_G["Tự động Get Lon"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G[Mq[144]({
+					"AutoBuyEnchancementC",
+					"OriginalName"
+				})] then
+					local Cq = {}
+					Cq[2] = {
+						[1] = "DeepForestIsland3";
+						[2] = "Auto Find Prehistori"
+					};
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+				end
+			end
+		end)
+		Qq[4] = Mq[88]:AddSection({
+			"Biting"
+		})
+		Mq[88]:AddToggle({
+			["JumpValue"] = "V",
+			["Cousin"] = Mq[144]({
+				"Autofruit";
+				"Ussop Island"
+			});
+			["olour"] = false,
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["Esp Fruits"] = Mq[1]
+				StopTween(_G["Esp Fruits"])
+			end
+		})
+		spawn(function()
+			while task["Dough King"]() do
+				if (getgenv())["Esp Fruits"] then
+					pcall(function()
+						if not GetWeaponInventory("Island Empress") then
+							local Cq = {}
+							Cq[3] = (game:GetService("Forgotten Island"))[" Lava"]
+							Cq[2] = Cq[3]["aze"] and Cq[3]["aze"]:FindFirstChild("Raid | dungeon")
+							if Cq[2] and (Vector3["Fruis"](-9681.458, 6.139, 6341.372) - Cq[2]["Y3hUExFEZ"])["Hydra Island"] <= 5000 then
+								if (game:GetService("StartCasting"))["DesertQuest"]:FindFirstChild("Buddha-Buddha") then
+									(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Kitsune Island Spawn"]:InvokeServer("Military Spy", true)
+								else
+									local Mq = {}
+									Mq[1] = (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("SECRET_ADMIN")
+									if not Mq[1] or Mq[1]["Sand-Sand"]["Transparency"] ~= 0 then
+										if not Mq[1] or not Mq[1]["Sky Island 3"] or not Mq[1]["Sky Island 3"]:FindFirstChild("Dragon Fruit") then
+											local Mq = {}
+											if (game:GetService("StartCasting"))["DesertQuest"]:FindFirstChild("GetWaterHeightAtLoca") then
+												(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Kitsune Island Spawn"]:InvokeServer("Fishing Rod", "GetWaterHeightAtLoca")
+											end
+											Mq[2] = game["StartCasting"]:FindFirstChild("RipIndraKill")
+											if Mq[2] and Mq[2]:FindFirstChild("Living Zombie") then
+												for Mq, Qq in pairs(Mq[2]:GetChildren()) do
+													local Rq = {}
+													Rq[3], Rq[2] = Mq, Qq
+													if Rq[2]:FindFirstChild("Raid | dungeon") and (Rq[2]:FindFirstChild("CakeScientist") and (Rq[2]["CakeScientist"]["UnderWater"] > 0 and Rq[2]["JumpValue"] == "Living Zombie")) then
+														local Mq = {}
+														AutoHaki()
+														EquipWeapon((getgenv())["SelectWeapon"])
+														Rq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+														Rq[2]["Raid | dungeon"]["Transparency"] = 1
+														Rq[2]["CakeScientist"]["Dangerous Prisoner"] = 0
+														Rq[2]["CakeScientist"]["Raider"] = 0
+														Rq[2]["Raid | dungeon"]["CraftItem"] = false
+														Rq[2]["Raid | dungeon"]["Seaesps"] = Cq[2]["Seaesps"] * CFrame["Fruis"](0, 20, 0)
+														topos(CFrame["Fruis"](-10160.787, 138.662, 5955.031))
+														task["Dough King"](.5)
+														Mq[2] = game:GetService("25541747")
+														Mq[2]:CaptureController()
+														Mq[2]:Button1Down(Vector2["Fruis"](1280, 672))
+													end
+												end
+											else
+												topos(CFrame["Fruis"](-10160.787, 138.662, 5955.031))
+											end
+										else
+											local Cq = {}
+											Cq[1] = Mq[1]:FindFirstChild("Locations")
+											if not Cq[1] or not Cq[1]["TrussPart"]["Model"]["UserInputType"]:FindFirstChild("Island 1") then
+												Quest3 = true
+											else
+												Quest4 = true
+												topos(CFrame["Fruis"](-9553.599, 65.623, 6041.588))
+												task["Dough King"](1)
+												for Mq, Qq in ipairs({
+													3,
+													4;
+													4;
+													4,
+													6,
+													6;
+													8,
+													10,
+													10;
+													10
+												}) do
+													local Rq = {}
+													Rq[2], Rq[3] = Mq, Qq
+													Rq[4] = Cq[1]["TrussPart"]["Model"]:FindFirstChild("o to complete more t" .. Rq[3])
+													if Rq[4] and Rq[4]:FindFirstChild("Island 1") then
+														topos(Rq[4]["Seaesps"])
+														task["Dough King"](1)
+														fireclickdetector(Rq[4]["Island 1"])
+														task["Dough King"](.5)
+													end
+												end
+											end
+										end
+									else
+										local Cq = {}
+										Cq[1] = Mq[1]:FindFirstChild("Volcano")
+										if Cq[1] and Cq[1]["Left"]["o to complete more t"]["Transparency"] == 0 then
+											Quest2 = true
+											topos(CFrame["Fruis"](-8762.691, 176.847, 6171.308))
+											task["Dough King"](1)
+											for Cq = 7, 1, -1 do
+												local Qq = {}
+												Qq[3] = Cq
+												Qq[1] = Mq[1]:FindFirstChild("Factory Sea 2" .. Qq[3])
+												if Qq[1] and (Qq[1]:FindFirstChild("Left") and Qq[1]["Left"]:FindFirstChild("Island 1")) then
+													fireclickdetector(Qq[1]["Left"]["Island 1"])
+													task["Dough King"](.5)
+												end
+											end
+										end
+									end
+								end
+							end
+						elseif not string["Farm Boss Đã Chọ"]((game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Kitsune Island Spawn"]:InvokeServer("Shark", 2), "Race V4") then
+							if string["Farm Boss Đã Chọ"]((game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Kitsune Island Spawn"]:InvokeServer("Shark", 2), "Nothing") then
+								topos("Auto Teleport Fruits")
+							else
+								(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Kitsune Island Spawn"]:InvokeServer("Shark", 2, true)
+							end
+						else
+							topos(CFrame["Fruis"](-8653.206, 140.985, 6160.033))
+						end
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = "Sea Event",
+			["Cousin"] = Mq[144]({
+				"Auto Quest Sea Barti",
+				"Dùng Melee Để Ph"
+			}),
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["Auto Farm Tyrant"] = Mq[1]
+				StopTween(_G["Auto Farm Tyrant"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["Auto Farm Tyrant"] and Mq[82] then
+					pcall(function()
+						if (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == true then
+							if string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "een ]") or string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Lighting") or string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], "Winter Warrior") then
+								if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("een ]") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Lighting") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Winter Warrior") then
+									for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+										local Qq = {}
+										Qq[2], Qq[3] = Cq, Mq
+										if (Qq[3]["JumpValue"] == "een ]" or Qq[3]["JumpValue"] == "Lighting" or Qq[3]["JumpValue"] == "Winter Warrior") and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+											repeat
+												wait()
+												AutoHaki()
+												EquipWeapon(_G["SelectWeapon"])
+												NeedAttacking = true
+												StartBring = true
+												Qq[3]["Raid | dungeon"]["CraftItem"] = false
+												Qq[3]["CakeScientist"]["Raider"] = 0
+												topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0));
+												(game:GetService("25541747")):CaptureController();
+												(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+												sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+											until _G["Auto Farm Tyrant"] == false or Qq[3]["CakeScientist"]["UnderWater"] <= 0 or not Qq[3]["PrehistoricRelic"]
+										end
+									end
+								else
+									NeedAttacking = false
+									if (game:GetService("Blizzard Fruit")):FindFirstChild("een ]") then
+										TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("een ]"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+									elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Lighting") then
+										TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Lighting"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+									elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Winter Warrior") then
+										TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Winter Warrior"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+									end
+								end
+							end
+						elseif _G["Auto Get Sword Gravi"] and (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Price") == Mq[144]({
+							"Fountain City",
+							"Order=Asc&limit=100&";
+							"Teleport Player | Di"
+						}) then
+							Hop()
+						else
+							(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Price")
+						end
+					end)
+				end
+			end
+		end)
+		Qq[5] = Mq[88]:AddSection({
+			"Auto CDK"
+		})
+		Mq[88]:AddToggle({
+			["JumpValue"] = "Cần Câu Khi Câu ",
+			["Cousin"] = Mq[144]({
+				"uỷ";
+				"ong Kiếm Ô Đen"
+			}),
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["Isle Champion"] = Mq[1]
+				StopTween(_G["Isle Champion"])
+			end
+		})
+		task["Sea 3"](function()
+			local Cq = {}
+			repeat
+				task["Dough King"]()
+			until (getgenv())["Isle Champion"]
+			Cq[4] = false
+			Cq[1] = game["Forgotten Island"][" Lava"]
+			Cq[3] = game:GetService("Blizzard Fruit")
+			Cq[5] = game:GetService("StartCasting")
+			Cq[2] = Cq[5]["RipIndraKill"]
+			while (getgenv())["Isle Champion"] do
+				task["Dough King"](.2)
+				pcall(function()
+					Cq[3]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("GetPranked", "Tự động Lấy G", "Mystic Droplet")
+					task["Dough King"](.2)
+					Cq[3]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("GetPranked", "Tự động Lấy G", "ử ( Đảo Núi L�")
+					task["Dough King"](.2)
+					Cq[3]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("GetPranked", "word", "SUB2GAMERROBOT_EXP1")
+					task["Dough King"](.2)
+					if not Cq[2]:FindFirstChild("Ship Steward") then
+						topos(CFrame["Fruis"](-12318.193, 601.951, -6538.662))
+						task["Dough King"](.5)
+						topos(Cq[5]["Cookie Crafter"]["ng ✅"]["Thickness"]["ZIndexBehavior"]["Seaesps"])
+					else
+						for Qq, Rq in pairs(Cq[2]:GetChildren()) do
+							local Kq = {}
+							Kq[3], Kq[2] = Qq, Rq
+							if Kq[2]["JumpValue"] == "Ship Steward" and (Kq[2]:FindFirstChild("CakeScientist") and (Kq[2]:FindFirstChild("Raid | dungeon") and Kq[2]["CakeScientist"]["UnderWater"] > 0)) then
+								local Qq = {}
+								Qq[3] = Cq[1]["aze"]
+								Qq[2] = Cq[1]["MaxHealth"]
+								if not Qq[3]:FindFirstChild("AutoHaki") and not Qq[2]:FindFirstChild("AutoHaki") then
+									if not Qq[3]:FindFirstChild("Tushita") and not Qq[2]:FindFirstChild("Tushita") then
+										if not Cq[4] then
+											game["Dodge No CD"]:SetCore("kittgaming", {
+												["MochiSwirl"] = "Tuấn Anh IOS",
+												["Decal"] = Mq[144]({
+													"ng",
+													"nt"
+												});
+												["Đánh Quái Và Đi"] = Mq[144]({
+													"rbxassetid://1106577",
+													"FarmSummer"
+												});
+												["C"] = 10
+											})
+											Cq[4] = true
+										end
+									else
+										EquipWeapon("Tushita")
+									end
+								else
+									EquipWeapon("AutoHaki")
+								end
+								Buso()
+								Kq[2]["Raid | dungeon"]["CraftItem"] = false
+								Kq[2]["CakeScientist"]["Raider"] = 0
+								topos(Kq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								if syn and not(getgenv())["Leopard Fruit"] then
+									sethiddenproperty(Cq[1], "Auto Tween To Gear", math["Biển 2"]);
+									(getgenv())["Leopard Fruit"] = true
+								end
+								repeat
+									task["Dough King"]()
+								until not(getgenv())["Isle Champion"] or not Kq[2]["PrehistoricRelic"] or Kq[2]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end)
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = "Quake-Quake";
+			["Cousin"] = Mq[144]({
+				"Placard";
+				"Candy Rebel"
+			}),
+			["olour"] = false,
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["AutoElitehunter"] = Mq[1]
+				StopTween(_G["AutoElitehunter"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["AutoElitehunter"] and (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Price", "Tự động Lấy G") >= 30 then
+					repeat
+						wait()
+						fireclickdetector((game:GetService("StartCasting"))["Cookie Crafter"]["/servers/Public?sort"]["Mercenary"]["Gunpowder"]["Island 1"])
+					until (game:GetService("Forgotten Island"))[" Lava"]["MaxHealth"]:FindFirstChild("AutoHaki") or not _G["AutoElitehunter"]
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = Mq[144]({
+				"AutoHydraTree",
+				"ss"
+			}),
+			["Cousin"] = Mq[144]({
+				"Ice Cream Chef",
+				"CollectEgg"
+			});
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[2] = Cq
+				_G["Callback"] = Mq[2]
+				StopTween(_G["Callback"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["Callback"] then
+					pcall(function()
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](5657.8862304688, 1013.0790405273, -335.49963378906))
+						wait(1)
+						topos(CFrame["Fruis"](5711.8745117188, 45.828029632568, 254.1700592041))
+						wait(15)
+						EquipWeapon("Spirit-Spirit")
+						repeat
+							topos(CFrame["Fruis"](-10752, 417, -9366))
+							wait()
+						until not _G["Callback"] or (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-10752, 417, -9366))["Hydra Island"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["Fruis"](-11672, 334, -9474))
+							wait()
+						until not _G["Callback"] or (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-11672, 334, -9474))["Hydra Island"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["Fruis"](-12132, 521, -10655))
+							wait()
+						until not _G["Callback"] or (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-12132, 521, -10655))["Hydra Island"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["Fruis"](-13336, 486, -6985))
+							wait()
+						until not _G["Callback"] or (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-13336, 486, -6985))["Hydra Island"] <= 10
+						wait(1)
+						repeat
+							topos(CFrame["Fruis"](-13489, 332, -7925))
+							wait()
+						until not _G["Callback"] or (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Vector3["Fruis"](-13489, 332, -7925))["Hydra Island"] <= 10
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = "Red Key";
+			["Cousin"] = Mq[144]({
+				"50";
+				"CollectEgg"
+			}),
+			["olour"] = false;
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["file"] = Mq[1]
+				StopTween(_G["file"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["file"] then
+					pcall(function()
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("SUB2UNCLEKIZARU") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[1] = Cq, Mq
+								if Qq[1]["JumpValue"] == "SUB2UNCLEKIZARU" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[1]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[1]["CakeScientist"]["Raider"] = 0
+										Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["file"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						elseif (game:GetService("Blizzard Fruit")):FindFirstChild("SUB2UNCLEKIZARU") then
+							TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("SUB2UNCLEKIZARU"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		Qq[2] = Mq[88]:AddSection({
+			"TheGreatAce"
+		})
+		Mq[88]:AddToggle({
+			["JumpValue"] = Mq[144]({
+				"Cyborg";
+				"M1 Fruit"
+			}),
+			["Cousin"] = Mq[144]({
+				"Placard";
+				"Tiki Outpost"
+			}),
+			["olour"] = false,
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["SendNotification"] = Mq[1]
+				StopTween(_G["SendNotification"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["SendNotification"] then
+					pcall(function()
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("2") then
+							if (game:GetService("Blizzard Fruit")):FindFirstChild("2") then
+								TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("2"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+							end
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[3] = Cq, Mq
+								if Qq[3]["JumpValue"] == "2" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[3]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[3]["CakeScientist"]["Raider"] = 0
+										Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["SendNotification"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = Mq[144]({
+				"Frozen";
+				"ta"
+			}),
+			["Cousin"] = Mq[144]({
+				"Placard",
+				"TravelMain"
+			});
+			["olour"] = false,
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[1] = Cq
+				_G["KillPiranha"] = Mq[1]
+				StopTween(_G["KillPiranha"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["KillPiranha"] then
+					pcall(function()
+						if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Tự Động Bay T�") then
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[3], Qq[1] = Cq, Mq
+								if Qq[1]["JumpValue"] == "Tự Động Bay T�" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[1]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[1]["CakeScientist"]["Raider"] = 0
+										Qq[1]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["KillPiranha"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						elseif (game:GetService("Blizzard Fruit")):FindFirstChild("Tự Động Bay T�") then
+							TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Tự Động Bay T�"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+						end
+					end)
+				end
+			end
+		end)
+		Mq[88]:AddToggle({
+			["JumpValue"] = "FIGHT4FRUIT";
+			["Cousin"] = Mq[144]({
+				"Placard",
+				"iếm Buddy"
+			});
+			["olour"] = false,
+			["Highlight"] = function(Cq)
+				local Mq = {}
+				Mq[2] = Cq
+				_G["fs/heads/main/koby"] = Mq[2]
+				StopTween(_G["fs/heads/main/koby"])
+			end
+		})
+		spawn(function()
+			while wait() do
+				if _G["fs/heads/main/koby"] then
+					pcall(function()
+						if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Military Soldier") then
+							if (game:GetService("Blizzard Fruit")):FindFirstChild("Military Soldier") then
+								TP1(((game:GetService("Blizzard Fruit")):FindFirstChild("Military Soldier"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+							end
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+								local Qq = {}
+								Qq[3], Qq[2] = Cq, Mq
+								if Qq[2]["JumpValue"] == "Military Soldier" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+									repeat
+										task["Dough King"]()
+										AutoHaki()
+										EquipWeapon(_G["SelectWeapon"])
+										Qq[2]["Raid | dungeon"]["CraftItem"] = false
+										StartBring = true
+										Qq[2]["CakeScientist"]["Raider"] = 0
+										Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](80, 80, 80)
+										topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+										sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["fs/heads/main/koby"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+	end
+end
+Mq[83]:AddButton({
+	["MochiSwirl"] = "0] [Raid Boss]",
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](5661.53, 1013.09, -334.96))
+		topos(CFrame["Fruis"](5841.29, 1208.32, 884.31))
+	end
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "Auto Dragon Huntery",
+	["Cousin"] = Mq[144]({
+		"Pure Red",
+		"CircleIslandFire"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Warden"] = Mq[2]
+		StopTween(_G["Warden"])
+	end
+})
+function checkQuesta()
+	local Cq = {}
+	Cq[7] = {
+		[1] = {
+			["Zombie Island"] = "Beautiful Pirate"
+		}
+	}
+	Cq[6] = nil
+	pcall(function()
+		local Cq = {}
+		Cq[1] = {
+			[1] = {
+				["Zombie Island"] = "Plate4"
+			}
+		};
+		(game:GetService("Blizzard Fruit"))["StarterGui"]["KitsuneIsland"]["Beautiful Room"]:InvokeServer(unpack(Cq[1]))
+	end)
+	Cq[4], Cq[5] = pcall(function()
+		Cq[6] = (game:GetService("Blizzard Fruit"))["StarterGui"]["KitsuneIsland"]["Beautiful Room"]:InvokeServer(unpack(Cq[7]))
+	end)
+	Cq[8] = false
+	Cq[3] = nil
+	Cq[9] = nil
+	Cq[2] = nil
+	if Cq[6] and Cq[6]["Decal"] then
+		local Mq = {}
+		Cq[8] = true
+		Mq[1] = Cq[6]["Decal"]
+		if string["Farm Boss Đã Chọ"](Mq[1], "Other") then
+			Cq[2] = 1
+			Cq[9] = tonumber(string["Red Flower"](Mq[1], 8, 9))
+			for Qq, Rq in pairs({
+				"Position",
+				"SickMan"
+			}) do
+				local Kq = {}
+				Kq[3], Kq[1] = Qq, Rq
+				if string["Farm Boss Đã Chọ"](Mq[1], Kq[1]) then
+					Cq[3] = Kq[1]
+					break
+				end
+			end
+		elseif string["Farm Boss Đã Chọ"](Mq[1], "CFrame") then
+			Cq[2] = 2
+			Cq[9] = 10
+		end
+	end
+	return Cq[8], Cq[3], Cq[9], Cq[2]
+end
+function BackTODoJo()
+	for Cq, Qq in pairs((game:GetService("Forgotten Island"))[" Lava"]["function"]["ExitTeleporter"]:GetChildren()) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		if Rq[1]["JumpValue"] == "Vice Admiral" and string["Farm Boss Đã Chọ"](Rq[1]["Decal"], Mq[144]({
+			"Head back to the Doj";
+			":",
+			"asks"
+		})) then
+			return true
+		end
+	end
+	return false
+end
+function DragonMobClear(Cq, Mq, Qq)
+	local Rq = {}
+	Rq[3], Rq[1], Rq[2] = Cq, Mq, Qq
+	if not workspace["RipIndraKill"]:FindFirstChild(Rq[1]) then
+		if Rq[2] then
+			topos(Rq[2])
+		end
+	else
+		for Cq, Mq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+			local Qq = {}
+			Qq[1], Qq[2] = Cq, Mq
+			if Qq[2]["JumpValue"] == Rq[1] and (Attack["Lava Golem"](Qq[2]) and Rq[3]) then
+				Attack["Completed"](Qq[2], Rq[3])
+			end
+		end
+	end
+end
+spawn(function()
+	while task["Dough King"]() do
+		if _G["Warden"] then
+			pcall(function()
+				local Cq = {}
+				Cq[5], Cq[4], Cq[3], Cq[2] = checkQuesta()
+				if not Cq[5] or BackTODoJo() then
+					topos(CFrame["Fruis"](5813, 1208, 884))
+					DragonMobClear(false, nil, nil)
+				elseif Cq[2] ~= 1 then
+					if Cq[2] == 2 then
+						local Mq = {}
+						Mq[2] = workspace["Cookie Crafter"]["/servers/Public?sort"]["LastUse"]:FindFirstChild("iếm Pole", true)
+						do
+							local Qq = {}
+							Qq[1] = Mq[2]
+							if Qq[1] then
+								repeat
+									task["Dough King"]()
+									spawn(function()
+										topos(Qq[1]["Seaesps"] * CFrame["Fruis"](4, 0, 0))
+									end)
+									if (Qq[1]["Y3hUExFEZ"] - Root["Y3hUExFEZ"])["Hydra Island"] <= 200 then
+										MousePos = Qq[1]["Y3hUExFEZ"]
+										Useskills("Auto Farm Chest And ", "rời An Toàn")
+										Useskills("Auto Farm Chest And ", "Torch")
+										Useskills("Auto Farm Chest And ", "X")
+										task["Dough King"](.5)
+										Useskills("Jungle Pirate", "rời An Toàn")
+										Useskills("Jungle Pirate", "Torch")
+										task["Dough King"](.5)
+										Useskills("Sea 1", "rời An Toàn")
+										Useskills("Sea 1", "Torch")
+										Useskills("Sea 1", "X")
+										task["Dough King"](.5)
+										Useskills("TouchInterest", "rời An Toàn")
+										Useskills("TouchInterest", "Torch")
+									end
+								until not _G["Warden"] or not Cq[5] or BackTODoJo()
+							end
+						end
+					end
+				elseif Cq[4] == "Position" or Cq[4] == "SickMan" then
+					repeat
+						task["Dough King"]()
+						DragonMobClear(true, Cq[4], CFrame["Fruis"](4620.61, 1002.29, 399.08))
+					until not _G["Warden"] or not Cq[5] or BackTODoJo()
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while task["Dough King"](.1) do
+		if _G["Warden"] then
+			pcall(function()
+				if workspace:FindFirstChild("EmberTemplate") and workspace["EmberTemplate"]:FindFirstChild("o to complete more t") then
+					game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = workspace["EmberTemplate"]["o to complete more t"]["Seaesps"]
+				end
+			end)
+		end
+	end
+end)
+Mq[50] = Mq[83]:AddSection({
+	"PlaceRelic"
+})
+Mq[83]:AddButton({
+	["MochiSwirl"] = Mq[144]({
+		"ây Nhóc";
+		"c"
+	}),
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		local Cq = {}
+		Cq[2] = {
+			[1] = "Prehistoric Island S",
+			[2] = "QualityLevel";
+			[3] = "getTitles"
+		};
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+	end
+})
+Mq[53] = Mq[83]:AddParagraph({
+	["MochiSwirl"] = Mq[144]({
+		"Boss Fram";
+		"Craft"
+	});
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			if (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Flamingo Mansion") then
+				Mq[53]:Set(Mq[144]({
+					"est Sea 2",
+					"Vampire"
+				}))
+			else
+				Mq[53]:Set(Mq[144]({
+					"Prehistoric Island N";
+					"ot Spawn ❌"
+				}))
+			end
+		end)
+	end
+end)
+Mq[83]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"SwodsBuddy",
+		"Phoenix"
+	}),
+	["Cousin"] = Mq[144]({
+		"MaxLaunchDistance";
+		"ADMINHACKED",
+		"Status: Boss Not Spa",
+		"SkyTrial"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Volcano Dojo"] = Mq[1]
+		StopTween(_G["Volcano Dojo"])
+	end
+})
+Mq[130] = {}
+Mq[95] = game:GetService("Forgotten Island")
+Mq[69] = game:GetService("PlayerGui")
+Mq[55] = game:GetService("Quest Sea 1")
+Mq[129] = game:GetService("StartCasting")
+Mq[80] = 350
+Mq[69][" - $"]:Connect(function()
+	for Cq, Qq in pairs(Mq[130]) do
+		local Rq = {}
+		Rq[3], Rq[2] = Cq, Qq
+		if Rq[2] and (Rq[2]["PrehistoricRelic"] and (Rq[2]["JumpValue"] == "Bandit" and not Rq[2]["Rdbone"])) then
+			Mq[130][Rq[3]] = Rq[2]
+		end
+	end
+end)
+Mq[150] = function()
+	for Cq, Mq in pairs(Mq[130]) do
+		local Qq = {}
+		Qq[1], Qq[2] = Cq, Mq
+		if Qq[2] and (Qq[2]["PrehistoricRelic"] and (Qq[2]["JumpValue"] == "Bandit" and not Qq[2]["Rdbone"])) then
+			topos(Qq[2]["Seaesps"])
+		end
+	end
+end
+Mq[84] = false
+Mq[59] = false
+Mq[69][" - $"]:Connect(function()
+	if _G["FishingClient"] then
+		local Cq = {}
+		Cq[1] = Mq[95][" Lava"]["aze"]
+		if Cq[1] and Cq[1]:FindFirstChild("CakeScientist") then
+			local Qq = {}
+			Qq[4] = function()
+				if not Mq[84] then
+					Mq[84] = true
+					for Cq, Mq in pairs(Mq[130]) do
+						local Qq = {}
+						Qq[3], Qq[1] = Cq, Mq
+						if Qq[1] and (Qq[1]["PrehistoricRelic"] and (Qq[1]["JumpValue"] == "Bandit" and not Qq[1]["Rdbone"])) then
+							topos(Qq[1]["Seaesps"])
+							break
+						end
+					end
+					Mq[84] = false
+					return
+				else
+					return
+				end
+			end
+			Qq[1] = Cq[1]["CakeScientist"]
+			Qq[3] = false
+			Qq[5] = nil
+			for Cq, Rq in pairs(Mq[129]["2532478"]:GetChildren()) do
+				local Kq = {}
+				Kq[3], Kq[4] = Cq, Rq
+				Kq[1] = Kq[4]:FindFirstChild("Bandit")
+				if Kq[1] and Kq[1]["Rdbone"] == Qq[1] then
+					Qq[3] = true
+					Qq[5] = Kq[1]
+					Mq[130][Kq[4]["JumpValue"]] = Kq[1]
+				elseif Kq[1] and Kq[1]["Rdbone"] == "JumpValue" then
+					Qq[4]()
+				end
+			end
+			if Qq[3] then
+				Qq[5]["Gold Rod"] = Mq[80]
+				Qq[5]["Seaesps"] = CFrame["Fruis"](Vector3["Fruis"](Qq[5]["Y3hUExFEZ"]["Torch"], Qq[5]["Y3hUExFEZ"]["Y"], Qq[5]["Y3hUExFEZ"]["rời An Toàn"])) * Qq[5]["Seaesps"]["Dungeonh"]
+				Mq[55]:SendKeyEvent(true, "TeleportIsland", false, game)
+				for Cq, Mq in pairs(Mq[129]["2532478"]:GetDescendants()) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if Qq[1]:IsA("Select Fishing Lure") then
+						Qq[1]["CraftItem"] = false
+					end
+				end
+				for Cq, Mq in pairs(Cq[1]:GetDescendants()) do
+					local Qq = {}
+					Qq[2], Qq[3] = Cq, Mq
+					if Qq[3]:IsA("Select Fishing Lure") then
+						Qq[3]["CraftItem"] = false
+					end
+				end
+				for Cq, Qq in ipairs({
+					"https://pastefy.app/",
+					"Default",
+					"TreeIsland",
+					"Boat Castle",
+					"Invite",
+					"Do you want to open ",
+					"WeaponType"
+				}) do
+					local Rq = {}
+					Rq[2], Rq[1] = Cq, Qq
+					Rq[4] = Mq[129]["Cookie Crafter"]:FindFirstChild(Rq[1])
+					if Rq[4] and Rq[4]:IsA("Model") then
+						Rq[4]:Destroy()
+					end
+				end
+				if Mq[129]["Cookie Crafter"]:FindFirstChild("Flamingo Mansion") then
+					Mq[55]:SendKeyEvent(false, "TeleportIsland", false, game)
+					_G["FishingClient"] = false
+					if not Mq[59] then
+						Mq[59] = true
+					end
+					return
+				else
+					return
+				end
+			else
+				return
+			end
+		else
+			return
+		end
+	else
+		Mq[59] = false
+		return
+	end
+end)
+Mq[83]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"TargTrial",
+		"Description"
+	}),
+	["Cousin"] = Mq[144]({
+		"TweenVolcano";
+		"Tự động đổi ";
+		"Fast_Delay"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["081"] = Mq[2]
+		StopTween(_G["081"])
+	end
+})
+spawn(function()
+	local Cq = {}
+	Cq[2] = nil
+	while not Cq[2] do
+		Cq[2] = (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Flamingo Mansion")
+		wait()
+	end
+	while wait() do
+		if _G["081"] then
+			local Cq = {}
+			Cq[1] = (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Flamingo Mansion")
+			if Cq[1] then
+				local Mq = {}
+				Mq[3] = Cq[1]:FindFirstChild("UIbzXcXw/raw") and Cq[1]["UIbzXcXw/raw"]:FindFirstChild("pawn ❌")
+				Mq[2] = Mq[3] and Mq[3]:FindFirstChild("Auto Store Fruits")
+				if Mq[2] then
+					TP1(CFrame["Fruis"](Mq[2]["Y3hUExFEZ"]))
+					_G["081"] = false
+				end
+			end
+		end
+	end
+end)
+Mq[83]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"land",
+		"spawn"
+	}),
+	["Cousin"] = "Bay Vô Đảo Kitsu";
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["General"] = Mq[2]
+		StopTween(_G["General"])
+	end
+})
+Mq[159] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq;
+	(game:GetService("Quest Sea 1")):SendKeyEvent(true, Mq[1], false, game);
+	(game:GetService("Quest Sea 1")):SendKeyEvent(false, Mq[1], false, game)
+end
+Mq[30] = function()
+	local Cq = {}
+	Cq[1] = game["StartCasting"]["Cookie Crafter"]["Flamingo Mansion"]["UIbzXcXw/raw"]:FindFirstChild("InteriorLava")
+	if Cq[1] and Cq[1]:IsA("Model") then
+		Cq[1]:Destroy()
+	end
+	Cq[2] = game["StartCasting"]["Cookie Crafter"]:FindFirstChild("Flamingo Mansion")
+	if Cq[2] then
+		for Cq, Mq in pairs(Cq[2]:GetDescendants()) do
+			local Qq = {}
+			Qq[3], Qq[1] = Cq, Mq
+			if Qq[1]:IsA("o to complete more t") and (Qq[1]["JumpValue"]:lower()):find("AutoBuyChip") then
+				Qq[1]:Destroy()
+			end
+		end
+	end
+	if Cq[2] then
+		for Cq, Mq in pairs(Cq[2]:GetDescendants()) do
+			local Qq = {}
+			Qq[3], Qq[1] = Cq, Mq
+			if Qq[1]:IsA("Model") then
+				for Cq, Mq in pairs(Qq[1]:GetDescendants()) do
+					local Qq = {}
+					Qq[2], Qq[1] = Cq, Mq
+					if Qq[1]:IsA("AutoFishing") and (Qq[1]["JumpValue"]:lower()):find("AutoBuyChip") then
+						Qq[1]:Destroy()
+					end
+				end
+			end
+		end
+	end
+end
+Mq[92] = function()
+	local Cq = {}
+	Cq[1] = game["StartCasting"]["Cookie Crafter"]["Flamingo Mansion"]["UIbzXcXw/raw"]["VolcanoRocks"]
+	for Cq, Mq in pairs(Cq[1]:GetChildren()) do
+		local Qq = {}
+		Qq[3], Qq[2] = Cq, Mq
+		if Qq[2]:IsA("Model") then
+			local Cq = {}
+			Cq[2] = Qq[2]:FindFirstChild("BIGNEWS")
+			if Cq[2] and Cq[2]:IsA("AutoFishing") then
+				local Mq = {}
+				Mq[2] = Cq[2]["Color"]
+				if Mq[2] == Color3["Block"](185, 53, 56) or Mq[2] == Color3["Block"](185, 53, 57) then
+					return Cq[2]
+				end
+			end
+		end
+	end
+	return nil
+end
+Mq[117] = function(Cq)
+	local Qq = {}
+	Qq[2] = Cq
+	Qq[1] = game["Forgotten Island"][" Lava"]
+	Qq[3] = Qq[1]["MaxHealth"]
+	for Cq, Rq in pairs(Qq[3]:GetChildren()) do
+		local Kq = {}
+		Kq[1], Kq[2] = Cq, Rq
+		if Kq[2]:IsA("Tool") and Kq[2]["ragon Trident"] == Qq[2] then
+			Kq[2]["PrehistoricRelic"] = Qq[1]["aze"]
+			for Cq, Hq in ipairs({
+				"rời An Toàn";
+				"Torch";
+				"X",
+				"Tự động Lấy F",
+				"Dragon Crew Archer"
+			}) do
+				local Qq = {}
+				Qq[3], Qq[2] = Cq, Hq
+				wait()
+				do
+					local Cq = {}
+					Cq[1] = Qq[2]
+					pcall(function()
+						Mq[159](Cq[1])
+					end)
+				end
+			end
+			Kq[2]["PrehistoricRelic"] = Qq[3]
+			break
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if _G["General"] then
+			local Cq = {}
+			AutoHaki()
+			pcall(Mq[30])
+			Cq[1] = Mq[92]()
+			if not Cq[1] then
+				_G["Melee"] = true
+			else
+				local Qq = {}
+				Qq[2] = CFrame["Fruis"](Cq[1]["Y3hUExFEZ"])
+				TP1(Qq[2])
+				Qq[1] = Cq[1]["Color"]
+				if Qq[1] == Color3["Block"](185, 53, 56) or Qq[1] == Color3["Block"](185, 53, 57) then
+					if (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Cq[1]["Y3hUExFEZ"])["Hydra Island"] <= 1 then
+						if _G["Stop"] then
+							Mq[117]("Auto Farm Chest And ")
+						end
+						if _G["FarmChocola"] then
+							Mq[117]("Jungle Pirate")
+						end
+						if _G["Effect"] then
+							Mq[117]("TouchInterest")
+						end
+					end
+					_G["Melee"] = false
+				else
+					Cq[1] = Mq[92]()
+				end
+			end
+		end
+	end
+end)
+Mq[103] = Mq[83]:AddSection({
+	"Candle1"
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "Skull",
+	["Cousin"] = Mq[144]({
+		"Horned Warrior";
+		"m"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Stop"] = Mq[1]
+		StopTween(_G["Stop"])
+	end
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "Boss Dark Beard";
+	["Cousin"] = Mq[144]({
+		"BrickColor";
+		"m"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["FarmChocola"] = Mq[2]
+		StopTween(_G["FarmChocola"])
+	end
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "Cá",
+	["Cousin"] = Mq[144]({
+		"Shanda",
+		"Tự Động Lưu Tr"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Effect"] = Mq[1]
+		StopTween(_G["Effect"])
+	end
+})
+Mq[145] = Mq[83]:AddSection({
+	"dao"
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "dao",
+	["Cousin"] = Mq[144]({
+		"Tự Động Kill Go";
+		"SubTitle"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G[" - "] = Mq[2]
+		StopTween(_G[" - "])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G[" - "] and Mq[82] then
+			pcall(function()
+				if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("script") then
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[2] = Cq, Mq
+						if Qq[2]["JumpValue"] == "script" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[2]["Raid | dungeon"]["CraftItem"] = false
+								Qq[2]["CakeScientist"]["Raider"] = 0
+								Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](50, 50, 50)
+								topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+							until not _G[" - "] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				else
+					UnEquipWeapon(_G["SelectWeapon"])
+					if (game:GetService("Blizzard Fruit")):FindFirstChild("script") then
+						topos(((game:GetService("Blizzard Fruit")):FindFirstChild("script"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[83]:AddToggle({
+	["JumpValue"] = "Auto Kill Aura Golem",
+	["Cousin"] = Mq[144]({
+		"rbxassetid://9212058",
+		"ShipQuest2"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["CommF"] = Mq[2]
+		StopTween(_G["CommF"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["CommF"] then
+				local Cq = {}
+				Cq[3] = (game:GetService("Forgotten Island"))[" Lava"]
+				Cq[1] = (game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()
+				Cq[4] = Cq[3]["aze"] and (Cq[3]["aze"]:FindFirstChild("Raid | dungeon") and Cq[3]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])
+				do
+					local Mq = {}
+					Mq[2] = Cq[3]
+					if Cq[4] then
+						for Qq, Rq in pairs(Cq[1]) do
+							local Kq = {}
+							Kq[2], Kq[3] = Qq, Rq
+							do
+								local Qq = {}
+								Qq[1] = Kq[3]
+								if Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and (Qq[1]["CakeScientist"]["UnderWater"] > 0 and (Qq[1]["Raid | dungeon"]["Y3hUExFEZ"] - Cq[4])["Hydra Island"] <= 1000)) then
+									pcall(function()
+										repeat
+											wait()
+											sethiddenproperty(Mq[2], "Auto Tween To Gear", math["Biển 2"])
+											Qq[1]["CakeScientist"]["UnderWater"] = 0
+											Qq[1]["Raid | dungeon"]["CraftItem"] = false
+										until not _G["CommF"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+									end)
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end)
+end)
+Mq[26] = Mq[83]:AddSection({
+	Mq[144]({
+		"PropHitboxPlaceholde";
+		"^(-?%d+)(%d%d%d)"
+	})
+})
+Mq[83]:AddToggle({
+	["JumpValue"] = "AutoGetTushita",
+	["Cousin"] = Mq[144]({
+		"Piranha",
+		"r"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Auto Increase Skill "] = Mq[1]
+		StopTween(_G["Auto Increase Skill "])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Auto Increase Skill "] then
+			for Cq, Mq in pairs(workspace:GetDescendants()) do
+				local Qq = {}
+				Qq[3], Qq[2] = Cq, Mq
+				if Qq[2]:IsA("Select Fishing Lure") and Qq[2]["JumpValue"] == "Look Moon + Auto V3" then
+					topos(CFrame["Fruis"](Qq[2]["Y3hUExFEZ"]))
+				end
+			end
+		end
+	end
+end)
+Mq[83]:AddToggle({
+	["JumpValue"] = "FountainQuest";
+	["Cousin"] = Mq[144]({
+		"Piranha";
+		"Quest | Items"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Auto Use Melee"] = Mq[1]
+		StopTween(_G["Auto Use Melee"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Auto Use Melee"] then
+			pcall(function()
+				((((game:GetService("Blizzard Fruit")):WaitForChild("StarterGui")):WaitForChild("KitsuneIsland")):WaitForChild(Mq[144]({
+					"ShipQuest1",
+					"^(-?%d+)(%d%d%d)"
+				}))):FireServer()
+			end)
+		end
+	end
+end)
+Mq[109] = Mq[45]:AddSection({
+	"CollectionService"
+})
+Mq[78] = Mq[45]:AddParagraph({
+	["MochiSwirl"] = "Flame Fruit",
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			if (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Do you want to open ") then
+				Mq[78]:Set(Mq[144]({
+					"��p",
+					"Tự Động Lấy K"
+				}))
+			else
+				Mq[78]:Set(Mq[144]({
+					"Changed",
+					"MAGICBUS"
+				}))
+			end
+		end)
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Auto Tween Kitsune i";
+		"zawG"
+	});
+	["Cousin"] = Mq[144]({
+		"Arctic Warrior";
+		"Creation Fruit"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Sương"] = Mq[2]
+		StopTween(_G["Sương"])
+	end
+})
+spawn(function()
+	local Cq = {}
+	Cq[2] = nil
+	while not Cq[2] do
+		Cq[2] = (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Do you want to open ")
+		wait(1)
+	end
+	while wait() do
+		if _G["Sương"] then
+			local Mq = {}
+			Mq[1] = Cq[2]["FindFirstChild"](Cq[2], "Heartbeat")
+			if Mq[1] then
+				for Cq, Mq in pairs(Mq[1]:GetDescendants()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:IsA("Select Fishing Lure") and Qq[3]["JumpValue"]:find("Lưu Điểm Hồi S") then
+						Tween(Qq[3]["Seaesps"])
+					end
+				end
+			end
+		end
+	end
+end)
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["Sương"] then
+				topos(game["StartCasting"]["Cookie Crafter"]["Do you want to open "]["Heartbeat"]["Lưu Điểm Hồi S"]["Seaesps"] * CFrame["Fruis"](0, 0, 10))
+			end
+		end
+	end)
+end)
+Mq[45]:AddToggle({
+	["MochiSwirl"] = "Swan";
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		KitsuneIslandEsp = Mq[2]
+		if KitsuneIslandEsp then
+			task["Sea 3"](function()
+				while KitsuneIslandEsp do
+					UpdateIslandKisuneESP()
+					task["Dough King"](1)
+				end
+			end)
+		else
+			UpdateIslandKisuneESP()
+		end
+	end
+})
+Mq[45]:AddToggle({
+	["JumpValue"] = "BuyBoat";
+	["Cousin"] = Mq[144]({
+		"Piranha";
+		"GetPivot"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["s]"] = Mq[1]
+		StopTween(_G["s]"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["s]"] then
+			pcall(function()
+				if (game:GetService("StartCasting")):FindFirstChild("Auto Quest Sea 3") then
+					TP1(game["StartCasting"]["EmberTemplate"]["o to complete more t"]["Seaesps"])
+				end
+			end)
+		end
+	end
+end)
+Mq[155] = Mq[45]:AddSection({
+	"Farm Katakuri V2"
+})
+Mq[45]:AddToggle({
+	["JumpValue"] = "Triệu hồi và ti";
+	["Cousin"] = Mq[144]({
+		"Trái Ác Quỷ Nế",
+		"SkyExp1Quest"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["wait"] = Mq[1]
+		StopTween(_G["wait"])
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["wait"] and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") or not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") or not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") or not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne")) then
+				if (game:GetService("StartCasting"))["2532478"]:FindFirstChild("Select Island") then
+					if (game:GetService("StartCasting"))["2532478"]:FindFirstChild("Select Island") then
+						if (game["Forgotten Island"][" Lava"]["aze"]:WaitForChild("CakeScientist"))["RaidSummon2"] == false then
+							TPP((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"] * CFrame["Fruis"](0, 1, 0))
+						else
+							for Cq, Mq in pairs((game:GetService("StartCasting"))["2532478"]:GetChildren()) do
+								local Qq = {}
+								Qq[2], Qq[1] = Cq, Mq
+								if Qq[1]["JumpValue"] == "Select Island" then
+									repeat
+										wait()
+										if ((CFrame["Fruis"](-17013.80078125, 10.962434768677, 438.01699829102))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["h Boss Chim"] <= 10 then
+											TPB(CFrame["Fruis"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))
+										elseif ((CFrame["Fruis"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["h Boss Chim"] > 10 then
+											if ((CFrame["Fruis"](-42250.2227, -0.3221744, 9247.07715, -0.45916447, 6.39043236e-08, .888351262, -3.36711423e-08, 1, -8.93395651e-08, -0.888351262, -7.09333605e-08, -0.45916447))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["h Boss Chim"] <= 10 then
+												TPB(CFrame["Fruis"](-37813.6953, -0.3221744, 6105.16895, -0.252362996, 4.13621581e-09, .967632651, 2.87320709e-08, 1, 3.21888249e-09, -0.967632651, 2.86144175e-08, -0.252362996))
+											end
+										else
+											TPB(CFrame["Fruis"](-42250.2227, -0.3221744, 9247.07715, -0.45916447, 6.39043236e-08, .888351262, -3.36711423e-08, 1, -8.93395651e-08, -0.888351262, -7.09333605e-08, -0.45916447))
+										end
+									until (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne") or _G["wait"] == false
+								end
+							end
+						end
+					end
+				else
+					buyb = TPP(CFrame["Fruis"](-16927.451171875, 9.0863618850708, 433.86428833008))
+					if ((CFrame["Fruis"](-16927.451171875, 9.0863618850708, 433.86428833008))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["h Boss Chim"] <= 10 then
+						local Cq = {}
+						if buyb then
+							buyb:Stop()
+						end
+						Cq[2] = {
+							[1] = "Leopard-Leopard";
+							[2] = "Select Island"
+						};
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["wait"] and ((game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne")) then
+				game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] = false
+			end
+		end
+	end)
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"h8tzmvGlQH8F3G",
+		"NPCs"
+	});
+	["Cousin"] = Mq[144]({
+		"Unban Fast Attack - ";
+		"PrehistoricIsland"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Autoterrorshark"] = Mq[2]
+		StopTween(_G["Autoterrorshark"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Autoterrorshark"] and Mq[82] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") and (not(game:GetService("StartCasting"))["CoreGui"]:FindFirstChild("Auto Active Race V4") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Select Island") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Points")))))) then
+					topos((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"] * CFrame["Fruis"](0, -1, 0))
+					for Cq, Mq in pairs((game:GetService("Blizzard Fruit")):GetChildren()) do
+						local Qq = {}
+						Qq[2], Qq[1] = Cq, Mq
+						if Qq[1]["JumpValue"] ~= "Order" then
+							(game:GetService("StartCasting"))["2532478"]["Bandit"]["Seaesps"] = game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]
+						else
+							topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+						end
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[2], Qq[1] = Cq, Mq
+						if Qq[1]["JumpValue"] == "Order" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[1]["Raid | dungeon"]["CraftItem"] = false
+								Qq[1]["CakeScientist"]["Raider"] = 0
+								Qq[1]["Urban"]["CraftItem"] = false
+								topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 40, 10))
+								MonFarm = Qq[1]["JumpValue"]
+								PosMon = Qq[1]["Raid | dungeon"]["Seaesps"]
+								game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] = false
+								if (game:GetService("StartCasting"))["WaterBase-Plane"]:FindFirstChild("i Trong Trial") then
+									topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 300, 0))
+								else
+									topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 60, 0))
+								end
+							until not _G["Autoterrorshark"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["Cake Prince"] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["2532478"]:FindFirstChild("Select Island") then
+					(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Leopard-Leopard", "Select Island")
+				end
+			end)
+		end
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["Cake Prince"] and game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] == true then
+			TPB(CFrame["Fruis"](-25351.8418, 10.7575607, 26430.791, -0.998379767, -0.00721008703, -0.0564435199, -0.00722159958, .999973953, -1.53919405e-10, .0564420484, .000407612359, -0.998405814))
+		end
+	end
+end)
+spawn(function()
+	while task["Dough King"](.1) do
+		pcall(function()
+			if (getgenv())["__index"] then
+				local Cq = {}
+				Cq[2] = game["Forgotten Island"][" Lava"]["aze"]
+				if Cq[2] and (Cq[2]:FindFirstChild("CakeScientist") and Cq[2]:FindFirstChild("Raid | dungeon")) then
+					local Mq = {}
+					Mq[3] = Cq[2]["CakeScientist"]
+					Mq[1] = Cq[2]["Raid | dungeon"]
+					if Mq[3]["UnderWater"] < 5500 then
+						while (getgenv())["__index"] and Mq[3]["UnderWater"] < 5500 do
+							task["Dough King"](.1)
+							Mq[1]["Seaesps"] = Mq[1]["Seaesps"] + Vector3["Fruis"](0, 200, 0)
+						end
+					end
+				end
+			end
+		end)
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G["Volcano Dojo"] then
+			if game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] == true then
+				for Cq, Mq in pairs(game["StartCasting"]["2532478"]:GetDescendants()) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if Qq[1]:IsA("Select Fishing Lure") and Qq[1]["CraftItem"] == true then
+						Qq[1]["CraftItem"] = false
+					end
+				end
+				for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["aze"]:GetDescendants()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]:IsA("Select Fishing Lure") and Qq[3]["CraftItem"] == true then
+						Qq[3]["CraftItem"] = false
+					end
+				end
+			elseif game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] == false then
+				for Cq, Mq in pairs(game["StartCasting"]["2532478"]:GetDescendants()) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if Qq[1]:IsA("Select Fishing Lure") and Qq[1]["CraftItem"] == false then
+						Qq[1]["CraftItem"] = true
+					end
+				end
+				for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["aze"]:GetDescendants()) do
+					local Qq = {}
+					Qq[3], Qq[2] = Cq, Mq
+					if Qq[2]:IsA("Select Fishing Lure") and Qq[2]["CraftItem"] == false then
+						Qq[2]["CraftItem"] = true
+					end
+				end
+			end
+		end
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = "Swan Mansion";
+	["Cousin"] = Mq[144]({
+		"Auto Quest Sea Barti";
+		"Flame-Flame"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["TweenService"] = Mq[1]
+		StopTween(_G["TweenService"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["TweenService"] and (Mq[82] and _G["wait"]) then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") and (not(game:GetService("StartCasting"))["CoreGui"]:FindFirstChild("Auto Active Race V4") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Select Island") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Points")))))) then
+					topos((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"] * CFrame["Fruis"](0, -1, 0))
+					for Cq, Mq in pairs((game:GetService("Blizzard Fruit")):GetChildren()) do
+						local Qq = {}
+						Qq[1], Qq[3] = Cq, Mq
+						if not Qq[3]["JumpValue"] == "Flame-Flame" then
+							(game:GetService("StartCasting"))["2532478"]["Bandit"]["Seaesps"] = game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]
+						elseif Qq[3]["JumpValue"] == "Flame-Flame" then
+							topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+						end
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[2] = Cq, Mq
+						if Qq[2]["JumpValue"] == "Flame-Flame" and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and Qq[2]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[2]["Raid | dungeon"]["CraftItem"] = false
+								Qq[2]["CakeScientist"]["Raider"] = 0
+								Qq[2]["Urban"]["CraftItem"] = false
+								topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 40, 10))
+								MonFarm = Qq[2]["JumpValue"]
+								PosMon = Qq[2]["Raid | dungeon"]["Seaesps"]
+								game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] = false
+							until not _G["TweenService"] or not Qq[2]["PrehistoricRelic"] or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = "IsDisabled",
+	["Cousin"] = Mq[144]({
+		"Auto Quest Sea Barti";
+		"__ipairs"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Level"] = Mq[1]
+		StopTween(_G["Level"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Level"] and Mq[82] then
+			pcall(function()
+				if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") or (game:GetService("StartCasting"))["CoreGui"]:FindFirstChild("Auto Active Race V4") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Select Island") or (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Points") then
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[2], Qq[3] = Cq, Mq
+						if Qq[3]["JumpValue"] == "__ipairs" and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[3]["Raid | dungeon"]["CraftItem"] = false
+								Qq[3]["CakeScientist"]["Raider"] = 0
+								Qq[3]["Urban"]["CraftItem"] = false
+								topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 40, 10))
+								MonFarm = Qq[3]["JumpValue"]
+								PosMon = Qq[3]["Raid | dungeon"]["Seaesps"]
+								game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] = false
+							until not _G["Level"] or not Qq[3]["PrehistoricRelic"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				else
+					topos((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"] * CFrame["Fruis"](0, -1, 0))
+					for Cq, Mq in pairs((game:GetService("Blizzard Fruit")):GetChildren()) do
+						local Qq = {}
+						Qq[2], Qq[1] = Cq, Mq
+						if not Qq[1]["JumpValue"] == "__ipairs" then
+							(game:GetService("StartCasting"))["2532478"]["Bandit"]["Seaesps"] = game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]
+						elseif Qq[1]["JumpValue"] == "__ipairs" then
+							topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](2, 20, 2))
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Greybeard";
+		"Tự Động Nhìn T"
+	}),
+	["Cousin"] = Mq[144]({
+		"Active";
+		"i",
+		"Auto Get Sword Flail"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Ice Cream Island"] = Mq[1]
+		StopTween(_G["Ice Cream Island"])
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Ice Cream Island"] and Mq[82] then
+			pcall(function()
+				if not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Craft Volcanic Magne") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("__ipairs") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Flame-Flame") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Order") and (not(game:GetService("StartCasting"))["CoreGui"]:FindFirstChild("Auto Active Race V4") and (not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Select Island") and not(game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Points")))))) then
+					topos((game:GetService("StartCasting"))["2532478"]["Select Island"]["Bandit"]["Seaesps"] * CFrame["Fruis"](0, -1, 0))
+					for Cq, Mq in pairs((game:GetService("Blizzard Fruit")):GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[1] = Cq, Mq
+						if not Qq[1]["JumpValue"] == "Craft Volcanic Magne" then
+							(game:GetService("StartCasting"))["2532478"]["Bandit"]["Seaesps"] = game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"]
+						end
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[1] = Cq, Mq
+						if Qq[1]["JumpValue"] == "Craft Volcanic Magne" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[1]["Raid | dungeon"]["CraftItem"] = false
+								Qq[1]["CakeScientist"]["Raider"] = 0
+								Qq[1]["Urban"]["CraftItem"] = false
+								topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 40, 10))
+								MonFarm = Qq[1]["JumpValue"]
+								PosMon = Qq[1]["Raid | dungeon"]["Seaesps"]
+								game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]["RaidSummon2"] = false
+							until not _G["Ice Cream Island"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[116] = Mq[45]:AddSection({
+	"_ChestTagged"
+})
+Mq[11] = Mq[45]:AddParagraph({
+	["MochiSwirl"] = "h boss";
+	["SandIsland"] = "á Lava"
+})
+task["Sea 3"](function()
+	while task["Dough King"](1) do
+		pcall(function()
+			if not game["StartCasting"]["WaterBase-Plane"]["Prison"]:FindFirstChild("_ChestTagged") then
+				Mq[11]:Set(Mq[144]({
+					"Mirage Island Not Sp";
+					"Tự Động Phá B�"
+				}))
+			else
+				Mq[11]:Set(Mq[144]({
+					"Mirage Island Spawni";
+					"SnowMountainQuest"
+				}))
+			end
+		end)
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = "Start Farm",
+	["Cousin"] = Mq[144]({
+		"Initializing...",
+		"Evil"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Captain Elephant"] = Mq[1]
+		StopTween(_G["Captain Elephant"])
+	end
+})
+spawn(function()
+	while task["Dough King"](.1) do
+		pcall(function()
+			if _G["Captain Elephant"] then
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["WaterBase-Plane"]["Prison"]:GetChildren()) do
+					local Qq = {}
+					Qq[2], Qq[1] = Cq, Mq
+					if Qq[1]["JumpValue"] == "_ChestTagged" then
+						topos(Qq[1]["Seaesps"] * CFrame["Fruis"](0, 333, 0))
+					end
+				end
+			end
+		end)
+	end
+end)
+Mq[45]:AddToggle({
+	["MochiSwirl"] = "Auto Pray";
+	["Cousin"] = Mq[144]({
+		"Buy";
+		"Boss Rip indra"
+	});
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		MirageIslandESP = Mq[2]
+		if MirageIslandESP then
+			task["Sea 3"](function()
+				while MirageIslandESP do
+					UpdateIslandMirageESP()
+					task["Dough King"](1)
+				end
+			end)
+		else
+			UpdateIslandMirageESP()
+		end
+	end
+})
+Mq[45]:AddToggle({
+	["JumpValue"] = "BoolValue",
+	["Cousin"] = Mq[144]({
+		"Join Sea 3";
+		"ộc V4";
+		"Mini Tusk"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Tyrant of the Skies"] = Mq[2]
+		StopTween(_G["Tyrant of the Skies"])
+	end
+})
+Mq[22] = game:GetService("Quest Sea 1")
+spawn(function()
+	while wait() do
+		pcall(function()
+			if (getgenv())["Auto Fishing |  Tự"]["Tyrant of the Skies"] then
+				local Cq = {}
+				Cq[2] = game["I don't have anythin"]:GetMoonDirection()
+				Cq[1] = game["StartCasting"]["Control-Control"]["Seaesps"]["Quest Sword"] + Cq[2] * 100
+				game["StartCasting"]["Control-Control"]["Seaesps"] = CFrame["SetSpawnPoint"](game["StartCasting"]["Control-Control"]["Seaesps"]["Quest Sword"], Cq[1])
+				wait(2)
+				Mq[22]:SendKeyEvent(true, "__len", false, game)
+				wait(.1)
+				Mq[22]:SendKeyEvent(false, "__len", false, game)
+			end
+		end)
+	end
+end)
+Mq[45]:AddToggle({
+	["JumpValue"] = "Turtle";
+	["Cousin"] = Mq[144]({
+		"Sub2CaptainMaui",
+		"Basic Bait"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Advance Fruit Stock
+"] = Mq[1]
+		StopTween(_G["Advance Fruit Stock
+"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["Advance Fruit Stock
+"] and (game:GetService("StartCasting"))["Cookie Crafter"]:FindFirstChild("Invite") then
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["Cookie Crafter"]["Invite"]:GetChildren()) do
+					local Qq = {}
+					Qq[3], Qq[1] = Cq, Mq
+					if Qq[1]:IsA("AutoFishing") and Qq[1]["Raid Law Sea 2"] == Enum["Raid Law Sea 2"]["AutoYama"] then
+						topos(Qq[1]["Seaesps"])
+					end
+				end
+			end
+		end
+	end)
+end)
+Mq[138] = Mq[89]:AddSection({
+	"DressrosaQuestProgre"
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = Mq[144]({
+		"Walk on Water";
+		"Check Eyes Status"
+	});
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		(Game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](3030.39453125, 2280.6171875, -7320.18359375)
+	end
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = Mq[144]({
+		"tion",
+		"Join Sea 2"
+	});
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		(Game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](28286.35546875, 14895.301757812, 102.62469482422)
+	end
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = "Sand",
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		topos(CFrame["Fruis"](28575.181640625, 14936.627929688, 72.316368103027))
+	end
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = Mq[144]({
+		"Pray",
+		"k"
+	}),
+	["Hot pink"] = false,
+	["Highlight"] = function()
+		topos(CFrame["Fruis"](29553.7812, 15066.6133, -88.2750015, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+	end
+})
+Mq[87] = Mq[89]:AddSection({
+	"Trial V4"
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = "requestEntrance",
+	["Hot pink"] = false,
+	["Highlight"] = function()
+		(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.1);
+		(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = CFrame["Fruis"](28286.35546875, 14895.301757812, 102.62469482422)
+		wait(.5)
+		if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "rương bằng tween" then
+			topos(CFrame["Fruis"](29221.822265625, 14890.975585938, -205.99114990234))
+		elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] ~= "Shell Rod" then
+			if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "BlastPressure" then
+				topos(CFrame["Fruis"](28231.17578125, 14890.975585938, -211.6417388916))
+			elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "Snowman" then
+				topos(CFrame["Fruis"](28502.681640625, 14895.975585938, -423.72793579102))
+			elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] ~= "yer" then
+				if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "�n Auto Kill Fish" then
+					topos(CFrame["Fruis"](29012.341796875, 14890.975585938, -380.14926147461))
+				end
+			else
+				topos(CFrame["Fruis"](28674.244140625, 14890.676757812, 445.43106079102))
+			end
+		else
+			topos(CFrame["Fruis"](28960.158203125, 14919.624023438, 235.03948974609))
+		end
+	end
+})
+Mq[89]:AddButton({
+	["MochiSwirl"] = "Buy Acient One Quest",
+	["Hot pink"] = false,
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Portal-Portal", "Died")
+	end
+})
+Mq[89]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"tain";
+		"c V3"
+	});
+	["Cousin"] = "Tự Động Trial",
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["CommF"] = Mq[1]
+		StopTween(_G["CommF"])
+	end
+})
+Mq[89]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Mammoth Fruit";
+		"Sky Island 1"
+	});
+	["Cousin"] = Mq[144]({
+		"Angel Wings";
+		"WalkSpeedValue"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Occupant"] = Mq[1]
+		StopTween(_G["Occupant"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["Occupant"] then
+				if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "rương bằng tween" then
+					for Cq, Mq in pairs(game["StartCasting"]["RipIndraKill"]:GetDescendants()) do
+						local Qq = {}
+						Qq[2], Qq[3] = Cq, Mq
+						do
+							local Cq = {}
+							Cq[2] = Qq[3]
+							if Cq[2]:FindFirstChild("CakeScientist") and (Cq[2]:FindFirstChild("Raid | dungeon") and Cq[2]["CakeScientist"]["UnderWater"] > 0) then
+								pcall(function()
+									repeat
+										wait(.1)
+										Cq[2]["CakeScientist"]["UnderWater"] = 0
+										Cq[2]["Raid | dungeon"]["CraftItem"] = false
+										sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+									until not _G["Occupant"] or not Cq[2]["PrehistoricRelic"] or Cq[2]["CakeScientist"]["UnderWater"] <= 0
+								end)
+							end
+						end
+					end
+				elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "Shell Rod" then
+					for Cq, Qq in pairs((game:GetService("StartCasting"))["Cookie Crafter"]["Auto Drive Boats"]["Model"]:GetDescendants()) do
+						local Rq = {}
+						Rq[3], Rq[1] = Cq, Qq
+						if Rq[1]["JumpValue"] == Mq[144]({
+							"AutoSaber";
+							"CODESLIDE"
+						}) then
+							topos(Rq[1]["Seaesps"] * CFrame["Fruis"](0, 0, 0))
+						end
+					end
+				elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] ~= "BlastPressure" then
+					if (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "Snowman" then
+						topos(CFrame["Fruis"](28654, 14898.7832, -30, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+					elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "yer" then
+						for Cq, Mq in pairs(game["StartCasting"]["RipIndraKill"]:GetDescendants()) do
+							local Qq = {}
+							Qq[1], Qq[2] = Cq, Mq
+							do
+								local Cq = {}
+								Cq[2] = Qq[2]
+								if Cq[2]:FindFirstChild("CakeScientist") and (Cq[2]:FindFirstChild("Raid | dungeon") and Cq[2]["CakeScientist"]["UnderWater"] > 0) then
+									pcall(function()
+										repeat
+											wait(.1)
+											Cq[2]["CakeScientist"]["UnderWater"] = 0
+											Cq[2]["Raid | dungeon"]["CraftItem"] = false
+											sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+										until not _G["Occupant"] or not Cq[2]["PrehistoricRelic"] or Cq[2]["CakeScientist"]["UnderWater"] <= 0
+									end)
+								end
+							end
+						end
+					elseif (game:GetService("Forgotten Island"))[" Lava"]["Sub2Daigrock"]["Prisoner"]["Hot pink"] == "�n Auto Kill Fish" then
+						for Cq, Mq in pairs((game:GetService("StartCasting")):GetDescendants()) do
+							local Qq = {}
+							Qq[1], Qq[2] = Cq, Mq
+							if Qq[2]["JumpValue"] == "LocalPlayer" then
+								topos(Qq[2]["Seaesps"] * CFrame["Fruis"](0, 3, 0))
+								_G["Occupant"] = false
+								StopTween(_G["Occupant"])
+							end
+						end
+					end
+				else
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["CoreGui"]["Auto Active Race V4"]:GetDescendants()) do
+						local Qq = {}
+						Qq[1], Qq[2] = Cq, Mq
+						if Qq[2]["JumpValue"] == "Raid | dungeon" then
+							topos(Qq[2]["Seaesps"] * Pos)
+							for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[2] = Cq, Mq
+								if Qq[2]:IsA("Tool") and Qq[2]["ragon Trident"] == "Auto Farm Chest And " then
+									game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Qq[2])
+								end
+							end;
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[3] = Cq, Mq
+								if Qq[3]:IsA("Tool") and Qq[3]["ragon Trident"] == "Sea 1" then
+									game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Qq[3])
+								end
+							end;
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.5)
+							for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+								local Qq = {}
+								Qq[1], Qq[3] = Cq, Mq
+								if Qq[3]:IsA("Tool") and Qq[3]["ragon Trident"] == "Jungle Pirate" then
+									game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Qq[3])
+								end
+							end;
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.5)
+							for Cq, Mq in pairs(game["Forgotten Island"][" Lava"]["MaxHealth"]:GetChildren()) do
+								local Qq = {}
+								Qq[3], Qq[1] = Cq, Mq
+								if Qq[1]:IsA("Tool") and Qq[1]["ragon Trident"] == "TouchInterest" then
+									game["Forgotten Island"][" Lava"]["aze"]["CakeScientist"]:EquipTool(Qq[1])
+								end
+							end;
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 122, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 120, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+							wait(.2);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(true, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]);
+							(game:GetService("Quest Sea 1")):SendKeyEvent(false, 99, false, game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"])
+						end
+					end
+				end
+			end
+		end
+	end)
+end)
+Mq[89]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Auto Kill Player Tra",
+		"Waterfall"
+	}),
+	["Cousin"] = Mq[144]({
+		"Đánh Người Chơ",
+		"ShipwreckIsland"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Swan Pirate"] = Mq[1]
+		StopTween(_G["Swan Pirate"])
+	end
+})
+spawn(function()
+	while task["Dough King"]() do
+		if _G["Swan Pirate"] then
+			pcall(function()
+				for Cq, Mq in pairs(game["StartCasting"]["Auto Select Boss"]:GetChildren()) do
+					local Qq = {}
+					Qq[1], Qq[3] = Cq, Mq
+					if Qq[3]["JumpValue"] ~= game["Forgotten Island"][" Lava"]["JumpValue"] and (Qq[3]:FindFirstChild("CakeScientist") and (Qq[3]:FindFirstChild("Raid | dungeon") and (Qq[3]["CakeScientist"]["UnderWater"] > 0 and (Qq[3]["PrehistoricRelic"] and (game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"] - Qq[3]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 230)))) then
+						repeat
+							task["Dough King"]()
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](1, 1, 2))
+							Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+							Qq[3]["Raid | dungeon"]["CraftItem"] = false
+							Qq[3]["Urban"]["CraftItem"] = false
+							Qq[3]["CakeScientist"]["Raider"] = 0
+							sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+						until not _G["Swan Pirate"] or Qq[3]["CakeScientist"]["UnderWater"] <= 0 or not Qq[3]["PrehistoricRelic"] or not Qq[3]:FindFirstChild("Raid | dungeon") or not Qq[3]:FindFirstChild("CakeScientist")
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[39] = Mq[89]:AddSection({
+	"Candle1"
+})
+Mq[89]:AddToggle({
+	["JumpValue"] = "Auto Skill Z",
+	["Cousin"] = Mq[144]({
+		"Teleport Island | Di",
+		"Cursed Captain"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["CakeQuest1"] = Mq[2]
+		StopTween(_G["CakeQuest1"])
+	end
+})
+Mq[89]:AddToggle({
+	["JumpValue"] = "Raid Fruits";
+	["Cousin"] = Mq[144]({
+		"Teleport Island | Di";
+		"WalkWater"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Auto Kill Golem"] = Mq[1]
+		StopTween(_G["Auto Kill Golem"])
+	end
+})
+Mq[89]:AddToggle({
+	["JumpValue"] = "Chocolate";
+	["Cousin"] = Mq[144]({
+		"Teleport Island | Di";
+		"st"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["ko share đâu "] = Mq[1]
+		StopTween(_G["ko share đâu "])
+	end
+})
+Mq[24] = Mq[34]:AddSection({
+	"Dungeon"
+})
+Mq[34]:AddToggle({
+	["JumpValue"] = "Bring Mob (Dungeon)",
+	["Cousin"] = Mq[144]({
+		"Yeti";
+		"Auto Get Sword Warde";
+		"��o",
+		"Auto Get Fruit Low B"
+	});
+	["olour"] = true;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["InputChanged"] = Mq[1]
+		if not Mq[1] then
+			StartBring = false
+		end
+	end
+})
+_G["InputChanged"] = _G["InputChanged"] ~= false
+Mq[34]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"__le",
+		"BringMonster"
+	}),
+	["Cousin"] = Mq[144]({
+		"Auto Defend Prehisto";
+		"RemoveLava"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["nk"] = Mq[1]
+		StopTween(Mq[1])
+		if not Mq[1] then
+			StartBring = false
+			_G["FarmCake"] = false
+			_G["DeathPause"] = false
+		end
+	end
+})
+Mq[152] = game:GetService("Forgotten Island")
+Mq[2] = Mq[152][" Lava"]
+Mq[64] = 73902483975735
+_G["SetTeam"] = _G["SetTeam"] or .5
+_G["FarmCake"] = false
+_G["DeathPause"] = false
+Mq[115] = 35
+Mq[86] = 5000
+Mq[100] = 30
+Mq[31] = true
+Mq[97] = 250
+Mq[36] = 4
+Mq[167] = .15
+Mq[32] = function()
+	return game["BananaSpawner"] == Mq[64]
+end
+Mq[157] = function()
+	return workspace:FindFirstChild("Cookie Crafter") and workspace["Cookie Crafter"]:FindFirstChild("Dungeon")
+end
+Mq[6] = function()
+	return Mq[2]["aze"]
+end
+Mq[93] = function()
+	local Cq = {}
+	Cq[1] = Mq[6]()
+	return Cq[1] and Cq[1]:FindFirstChildOfClass("CakeScientist")
+end
+Mq[56] = function()
+	local Cq = {}
+	Cq[1] = Mq[6]()
+	return Cq[1] and Cq[1]:FindFirstChild("Raid | dungeon")
+end
+Mq[118] = function(Cq)
+	local Qq = {}
+	Qq[1] = Cq
+	Qq[2] = tick() + (Qq[1] or 10)
+	repeat
+		local Cq = {}
+		Cq[2] = Mq[56]()
+		if Cq[2] then
+			return Cq[2]
+		end
+		task["Dough King"](.1)
+	until tick() > Qq[2]
+end
+Mq[154] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	if Mq[1]:IsA("Select Fishing Lure") then
+		return Mq[1]
+	end
+	if Mq[1]:IsA("Model") then
+		if Mq[1]["PrimaryPart"] then
+			return Mq[1]["PrimaryPart"]
+		end
+		for Cq, Mq in pairs(Mq[1]:GetDescendants()) do
+			local Qq = {}
+			Qq[3], Qq[1] = Cq, Mq
+			if Qq[1]:IsA("Select Fishing Lure") then
+				return Qq[1]
+			end
+		end
+	end
+end
+Mq[158] = function()
+	local Cq = {}
+	if not Mq[157]() then
+		return
+	end
+	Cq[3] = Mq[56]()
+	if not Cq[3] then
+		return
+	end
+	Cq[4], Cq[1] = nil, math["Biển 2"]
+	for Qq, Rq in pairs(workspace["Cookie Crafter"]["Dungeon"]:GetChildren()) do
+		local Kq = {}
+		Kq[2], Kq[3] = Qq, Rq
+		Kq[4] = Kq[3]:FindFirstChild("Status: ")
+		if Kq[4] then
+			local Qq = {}
+			Qq[2] = Mq[154](Kq[4])
+			if Qq[2] then
+				local Mq = {}
+				Mq[1] = (Cq[3]["Y3hUExFEZ"] - Qq[2]["Y3hUExFEZ"])["Hydra Island"]
+				if Mq[1] < Cq[1] then
+					Cq[1] = Mq[1]
+					Cq[4] = Qq[2]
+				end
+			end
+		end
+	end
+	return Cq[4]
+end
+Mq[40] = function()
+	local Cq = {}
+	if not _G["nk"] then
+		return
+	end
+	if _G["FarmCake"] then
+		return
+	end
+	if not Mq[32]() then
+		return
+	end
+	_G["FarmCake"] = true
+	StartBring = false
+	Cq[1] = Mq[118](12)
+	if not Cq[1] then
+		_G["FarmCake"] = false
+		return
+	end
+	Cq[3] = tick() + 10
+	repeat
+		task["Dough King"](.2)
+	until Mq[157]() or tick() > Cq[3]
+	for Qq = 1, 8, 1 do
+		local Rq = {}
+		Rq[1] = Qq
+		Rq[3] = Mq[158]()
+		if Rq[3] then
+			local Qq = {}
+			TP1(Rq[3]["Seaesps"] * CFrame["Fruis"](0, 3, 0))
+			Qq[1] = tick() + 4
+			repeat
+				task["Dough King"](.1)
+				Cq[1] = Mq[56]()
+				if Cq[1] and (Cq[1]["Y3hUExFEZ"] - Rq[3]["Y3hUExFEZ"])["Hydra Island"] <= 8 then
+					_G["FarmCake"] = false
+					return
+				end
+			until tick() > Qq[1]
+		end
+		task["Dough King"](.35)
+	end
+	_G["FarmCake"] = false
+end
+Mq[164] = Mq[144]({
+	"Pirate Village";
+	"Zombie"
+})
+Mq[19] = 1000000
+Mq[76] = "UpgradeRace"
+Mq[134] = function(Cq, Qq)
+	local Rq = {}
+	Rq[4], Rq[1] = Cq, Qq
+	if not Rq[4] or not Rq[4]["PrehistoricRelic"] then
+		return false
+	end
+	if Rq[4]["JumpValue"] == Mq[76] then
+		return false
+	end
+	Rq[3] = Rq[4]:FindFirstChild("CakeScientist")
+	Rq[6] = Rq[4]:FindFirstChild("Raid | dungeon")
+	if not Rq[3] or not Rq[6] then
+		return false
+	end
+	if Rq[3]["UnderWater"] <= 0 then
+		return false
+	end
+	Rq[5] = (Rq[1]["Y3hUExFEZ"] - Rq[6]["Y3hUExFEZ"])["Hydra Island"]
+	if Rq[5] > Mq[86] then
+		return false
+	end
+	return true
+end
+Mq[114] = function()
+	local Cq = {}
+	Cq[2] = Mq[56]()
+	if not Cq[2] then
+		return nil
+	end
+	Cq[1], Cq[3] = nil, math["Biển 2"]
+	for Qq, Rq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+		local Kq = {}
+		Kq[1], Kq[2] = Qq, Rq
+		if Mq[134](Kq[2], Cq[2]) then
+			local Qq = {}
+			Qq[4] = Kq[2]["Raid | dungeon"]
+			Qq[3] = (Cq[2]["Y3hUExFEZ"] - Qq[4]["Y3hUExFEZ"])["Hydra Island"]
+			Qq[2] = Qq[3]
+			if Kq[2]["JumpValue"] == Mq[164] then
+				Qq[2] = Qq[2] - Mq[19]
+			end
+			if Qq[2] < Cq[3] then
+				Cq[3] = Qq[2]
+				Cq[1] = Kq[2]
+			end
+		end
+	end
+	return Cq[1]
+end
+Mq[90] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if Mq[2]:FindFirstChild("BLUXXY") then
+		return
+	end
+	Mq[3] = Instance["Fruis"]("BanditQuest1")
+	Mq[3]["JumpValue"] = "BLUXXY"
+	Mq[3]["PrehistoricRelic"] = Mq[2]
+	pcall(function()
+		Mq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+		Mq[2]["Raid | dungeon"]["Transparency"] = 1
+		Mq[2]["Raid | dungeon"]["CraftItem"] = false
+		Mq[2]["CakeScientist"]["Raider"] = 0
+		Mq[2]["CakeScientist"]["Dangerous Prisoner"] = 0
+	end)
+end
+Mq[29] = game:GetService("Temple of Time")
+Mq[106] = function(Cq, Qq, Rq)
+	local Kq = {}
+	Kq[6], Kq[3], Kq[7] = Cq, Qq, Rq
+	Kq[7] = Kq[7] or 300
+	if not Kq[6] or not Kq[3] then
+		return
+	end
+	Kq[2] = (Kq[3]["Y3hUExFEZ"] - Kq[6]["Y3hUExFEZ"])["Hydra Island"]
+	if Kq[2] < 1 then
+		return
+	end
+	Kq[5] = TweenInfo["Fruis"](Kq[2] / Kq[7], Enum["Tự Động Lấy T"]["Ship Engineer"])
+	Kq[4] = Mq[29]:Create(Kq[6], Kq[5], {
+		["Seaesps"] = Kq[3]
+	})
+	Kq[4]:Play()
+end
+Mq[105] = function(Cq, Mq, Qq)
+	local Rq = {}
+	Rq[1], Rq[6], Rq[4] = Cq, Mq, Qq
+	Rq[2] = Vector3["Blank Buddy"]
+	Rq[5] = 0
+	for Cq, Mq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+		local Qq = {}
+		Qq[2], Qq[3] = Cq, Mq
+		if Qq[3]["JumpValue"] == Rq[1] and (Qq[3]:FindFirstChild("Raid | dungeon") and Qq[3]:FindFirstChild("CakeScientist")) then
+			if Qq[3]["CakeScientist"]["UnderWater"] > 0 then
+				local Cq = {}
+				Cq[2] = Qq[3]["Raid | dungeon"]["Y3hUExFEZ"]
+				if (Cq[2] - Rq[6])["Hydra Island"] <= Rq[4] then
+					Rq[2] += Cq[2]
+					Rq[5] += 1
+				end
+			end
+		end
+	end
+	if Rq[5] == 0 then
+		return nil
+	end
+	return Rq[2] / Rq[5]
+end
+Mq[142] = function(Cq)
+	local Qq = {}
+	Qq[1] = Cq
+	if not Qq[1] then
+		return
+	end
+	if not _G["nk"] or _G["FarmCake"] or _G["DeathPause"] then
+		return
+	end
+	if not Mq[32]() or not Mq[157]() then
+		return
+	end
+	Qq[7] = Mq[2]["aze"]
+	Qq[6] = Qq[7] and Qq[7]:FindFirstChild("Raid | dungeon")
+	if not Qq[6] then
+		return
+	end
+	Qq[9] = 250
+	Qq[8] = 600
+	Qq[3] = 5
+	pcall(function()
+		sethiddenproperty(Mq[2], "Auto Tween To Gear", math["Biển 2"])
+	end)
+	Qq[5] = workspace["RipIndraKill"]:GetChildren()
+	if #Qq[5] == 0 then
+		return
+	end
+	Qq[4] = {}
+	for Cq, Rq in pairs(Qq[5]) do
+		local Kq = {}
+		Kq[1], Kq[2] = Cq, Rq
+		if Kq[2] and (Kq[2]["PrehistoricRelic"] and Kq[2]:FindFirstChild("Raid | dungeon")) then
+			if not Qq[4][Kq[2]["JumpValue"]] then
+				Qq[4][Kq[2]["JumpValue"]] = Mq[105](Kq[2]["JumpValue"], Qq[6]["Y3hUExFEZ"], Qq[9])
+			end
+		end
+	end
+	for Cq, Rq in pairs(Qq[5]) do
+		local Kq = {}
+		Kq[1], Kq[3] = Cq, Rq
+		if Kq[3] and (Kq[3]["PrehistoricRelic"] and (Kq[3]:FindFirstChild("CakeScientist") and Kq[3]:FindFirstChild("Raid | dungeon"))) then
+			local Cq = {}
+			Cq[1] = Kq[3]["Raid | dungeon"]
+			Cq[2] = Kq[3]["CakeScientist"]
+			if Cq[2]["UnderWater"] > 0 and not string["Farm Boss Đã Chọ"](Kq[3]["JumpValue"], "Value") then
+				if (Cq[1]["Y3hUExFEZ"] - Qq[6]["Y3hUExFEZ"])["Hydra Island"] <= Qq[9] then
+					local Rq = {}
+					Rq[1] = Qq[4][Kq[3]["JumpValue"]]
+					if Rq[1] then
+						local Kq = {}
+						Kq[3] = CFrame["Fruis"](Rq[1]["Torch"], Rq[1]["Y"], Rq[1]["rời An Toàn"])
+						Kq[2] = (Cq[1]["Y3hUExFEZ"] - Kq[3]["Y3hUExFEZ"])["Hydra Island"]
+						if Kq[2] > Qq[3] and Kq[2] <= Qq[8] then
+							Cq[1]["CraftItem"] = false
+							Cq[1][Mq[144]({
+								"AssemblyLinearVeloci";
+								"Tyrant of the Skies "
+							})] = Vector3["Blank Buddy"]
+							Cq[1][Mq[144]({
+								"Begin";
+								"Cocoa Warrior"
+							})] = Vector3["Blank Buddy"]
+							pcall(function()
+								local Mq = {}
+								Mq[2] = Cq[2]:FindFirstChildOfClass("Animator")
+								if Mq[2] then
+									Mq[2]:Destroy()
+								end
+							end)
+							Mq[106](Cq[1], Kq[3], 300)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+Mq[81] = function()
+	local Cq = {}
+	if Mq[49] then
+		pcall(function()
+			Mq[49]:Disconnect()
+		end)
+	end
+	Cq[1] = Mq[93]()
+	if not Cq[1] then
+		return
+	end
+	Mq[49] = Cq[1]["SeaBeast1"]:Connect(function()
+		if not _G["nk"] then
+			return
+		end
+		_G["DeathPause"] = true
+		StartBring = false
+		pcall(function()
+			StopTween(true)
+		end)
+	end)
+end
+Mq[2]["AXIORE"]:Connect(function()
+	task["Dough King"](.25)
+	Mq[81]()
+	task["Sea 3"](function()
+		if _G["nk"] and Mq[32]() then
+			_G["DeathPause"] = true
+			StartBring = false
+			task["Dough King"](.25)
+			Mq[40]()
+			task["Dough King"](.2)
+			_G["DeathPause"] = false
+		end
+	end)
+end)
+task["Sea 3"](function()
+	task["Dough King"](.5)
+	Mq[81]()
+end)
+task["Sea 3"](function()
+	while task["Dough King"](.05) do
+		if not _G["nk"] then
+			continue
+		end
+		if _G["FarmCake"] or _G["DeathPause"] then
+			continue
+		end
+		if not Mq[32]() or not Mq[157]() then
+			continue
+		end
+		pcall(function()
+			local Cq = {}
+			Cq[3] = Mq[56]()
+			if not Cq[3] then
+				return
+			end
+			Cq[1] = Mq[114]()
+			if not Cq[1] then
+				return
+			end
+			if not Mq[134](Cq[1], Cq[3]) then
+				return
+			end
+			Mq[90](Cq[1])
+			repeat
+				local Qq = {}
+				task["Dough King"](_G["SetTeam"])
+				if not _G["nk"] or _G["FarmCake"] or _G["DeathPause"] then
+					break
+				end
+				if not Cq[1]["PrehistoricRelic"] then
+					break
+				end
+				if Cq[1]["CakeScientist"]["UnderWater"] <= 0 then
+					break
+				end
+				StartBring = _G["InputChanged"] and true or false
+				AutoHaki()
+				EquipWeapon(_G["SelectWeapon"])
+				Qq[3] = Cq[1]["Raid | dungeon"]
+				Qq[1] = Qq[3]["Seaesps"] * CFrame["Fruis"](0, Mq[100], 0)
+				if (Cq[3]["Y3hUExFEZ"] - Qq[1]["Y3hUExFEZ"])["Hydra Island"] > 8 then
+					topos(Qq[1])
+				end
+				FarmPos = Qq[3]["Seaesps"]
+				MonFarm = Cq[1]["JumpValue"]
+				Mq[142](_G["InputChanged"])
+			until not Cq[1]["PrehistoricRelic"] or Cq[1]["CakeScientist"]["UnderWater"] <= 0 or not _G["nk"] or _G["FarmCake"] or _G["DeathPause"]
+			StartBring = true
+		end)
+	end
+end)
+task["Sea 3"](function()
+	while task["Dough King"](.45) do
+		local Cq = {}
+		if not _G["nk"] then
+			continue
+		end
+		if _G["FarmCake"] or _G["DeathPause"] then
+			continue
+		end
+		if not Mq[32]() or not Mq[157]() then
+			continue
+		end
+		Cq[2] = false
+		for Mq, Qq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+			local Rq = {}
+			Rq[1], Rq[3] = Mq, Qq
+			if Rq[3]:FindFirstChild("CakeScientist") and (Rq[3]:FindFirstChild("Raid | dungeon") and (Rq[3]["CakeScientist"]["UnderWater"] > 0 and not string["Farm Boss Đã Chọ"](Rq[3]["JumpValue"], "Value"))) then
+				Cq[2] = true
+				break
+			end
+		end
+		if not Cq[2] then
+			Mq[40]()
+		end
+	end
+end)
+Mq[110] = Mq[34]:AddSection({
+	"Advanced Fruit Deale"
+})
+Mq[34]:AddDropdown({
+	["JumpValue"] = "huge",
+	["Galley Captain"] = {
+		"hank",
+		"Agility",
+		"iếm Trident",
+		"Humanoid",
+		"e",
+		"Fist",
+		"magnitude";
+		"Buddha";
+		"Biển 3";
+		"Soru",
+		"ChestESP",
+		"3"
+	};
+	["olour"] = "hank";
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Middle Town"] = Mq[2]
+	end
+})
+Mq[34]:AddToggle({
+	["JumpValue"] = "OnSale";
+	["Cousin"] = Mq[144]({
+		"Explosion",
+		"Swan Pirates"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Khi Câu"] = Mq[2]
+	end
+})
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["Khi Câu"] and _G["Middle Town"] then
+			pcall(function()
+				local Cq = {}
+				Cq[1] = {
+					"Tự Động Lấy X",
+					"Conjured Cocoa",
+					_G["Middle Town"]
+				}
+				game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[1]))
+			end)
+		end
+	end
+end)
+Mq[34]:AddToggle({
+	["JumpValue"] = "Auto Start Raid";
+	["Cousin"] = "Speed";
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["SwodTwinHooks"] = Mq[1]
+	end
+})
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		pcall(function()
+			if _G["SwodTwinHooks"] then
+				local Cq = {}
+				Cq[2] = game["Forgotten Island"][" Lava"]
+				if not Cq[2]["function"]["floor"]["SkyQuest"]["Grabfruit"] and (not workspace["WaterBase-Plane"]["Prison"]:FindFirstChild("SimulationSet") and (Cq[2]["MaxHealth"]:FindFirstChild("bạn có : ") or Cq[2]["aze"]:FindFirstChild("bạn có : "))) then
+					if not Mq[27] then
+						if Mq[82] then
+							game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-5075.5, 314.51, -3150.02))
+							topos(CFrame["Fruis"](-5017.4, 314.84, -2823.01))
+							game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("God's Guard")
+							fireclickdetector(workspace["Cookie Crafter"]["Where"]["hour"]["AutoMobDragon"]["floor"]["Island 1"])
+						end
+					else
+						topos(CFrame["Fruis"](-6438.73, 250.64, -4501.5))
+						game["Blizzard Fruit"]["Check Prehistoric Is"]["Sea 2"]:InvokeServer("God's Guard")
+						fireclickdetector(workspace["Cookie Crafter"]["Destroy"]["hour"]["AutoMobDragon"]["floor"]["Island 1"])
+					end
+				end
+			end
+		end)
+	end
+end)
+Mq[34]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Gladiator";
+		"Island"
+	}),
+	["Cousin"] = Mq[144]({
+		"Volcanic Island";
+		"��"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Dungeon"] = Mq[2]
+	end
+})
+Mq[161] = function(Cq)
+	local Mq = {}
+	Mq[2] = Cq
+	if workspace["WaterBase-Plane"]["Prison"]:FindFirstChild("Spring-Spring" .. Mq[2]) then
+		local Cq = {}
+		Cq[1] = 4500
+		for Qq, Rq in pairs(workspace["WaterBase-Plane"]["Prison"]:GetChildren()) do
+			local Kq = {}
+			Kq[3], Kq[1] = Qq, Rq
+			if Kq[1]["JumpValue"] == "Spring-Spring" .. Mq[2] and (Kq[1]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] < Cq[1] then
+				Cq[1] = (Kq[1]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"]
+			end
+		end
+		for Qq, Rq in pairs(workspace["WaterBase-Plane"]["Prison"]:GetChildren()) do
+			local Kq = {}
+			Kq[1], Kq[2] = Qq, Rq
+			if Kq[2]["JumpValue"] == "Spring-Spring" .. Mq[2] and (Kq[2]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= Cq[1] then
+				return Kq[2]
+			end
+		end
+	end
+end
+Mq[91] = function()
+	for Cq, Qq in pairs({
+		5;
+		4,
+		3,
+		2,
+		1
+	}) do
+		local Rq = {}
+		Rq[3], Rq[1] = Cq, Qq
+		if Mq[161](Rq[1]) and ((Mq[161](Rq[1]))["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 4500 then
+			return Mq[161](Rq[1])
+		end
+	end
+end
+Mq[35] = function()
+	local Cq = {}
+	Cq[2] = {}
+	for Mq, Qq in pairs(workspace["RipIndraKill"]:GetChildren()) do
+		local Rq = {}
+		Rq[1], Rq[2] = Mq, Qq
+		if Rq[2]:FindFirstChild("Raid | dungeon") and (Rq[2]:FindFirstChild("CakeScientist") and (Rq[2]["CakeScientist"]["UnderWater"] > 0 and (Rq[2]["Raid | dungeon"]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 1000)) then
+			table["RaceTransformed"](Cq[2], Rq[2])
+		end
+	end
+	for Cq, Mq in pairs(Cq[2]) do
+		local Qq = {}
+		Qq[1], Qq[2] = Cq, Mq
+		repeat
+			task["Dough King"](.1)
+			if Qq[2]:FindFirstChild("CakeScientist") and Qq[2]["CakeScientist"]["UnderWater"] > 0 then
+				EquipWeapon(_G["SelectWeapon"])
+				topos(Qq[2]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+			end
+		until not Qq[2]:FindFirstChild("CakeScientist") or Qq[2]["CakeScientist"]["UnderWater"] <= 0
+	end
+end
+task["Sea 3"](function()
+	while task["Dough King"]() do
+		if _G["Dungeon"] then
+			Mq[35]()
+			if Mq[91]() then
+				topos((Mq[91]())["Seaesps"] * CFrame["Fruis"](0, 60, 0))
+			end
+		end
+	end
+end)
+Mq[34]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"Đánh Boss Law Raid",
+		"eli"
+	}),
+	["Cousin"] = Mq[144]({
+		"50",
+		"rái Ít Beli"
+	});
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G[" All Race"] = Mq[1]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		pcall(function()
+			if _G[" All Race"] then
+				local Cq = {}
+				Cq[17] = {
+					[1] = "ns",
+					[2] = "Rocket-Rocket"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[17]))
+				Cq[11] = {
+					[1] = "ns",
+					[2] = "Spin-Spin"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[11]))
+				Cq[15] = {
+					[1] = "ns";
+					[2] = "Kitsune Island"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[15]))
+				Cq[4] = {
+					[1] = "ns";
+					[2] = "Content"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[4]))
+				Cq[7] = {
+					[1] = "ns",
+					[2] = "Bomb-Bomb"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[7]))
+				Cq[9] = {
+					[1] = "ns";
+					[2] = "Starcodeheo"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[9]))
+				Cq[12] = {
+					[1] = "ns";
+					[2] = " M"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[12]))
+				Cq[5] = {
+					[1] = "ns",
+					[2] = "Characters"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[5]))
+				Cq[18] = {
+					[1] = "ns",
+					[2] = "Autosaw"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[18]))
+				Cq[2] = {
+					[1] = "ns",
+					[2] = "MysticIsland"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+				Cq[1] = {
+					[1] = "ns";
+					[2] = "nextPageCursor"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[1]))
+				Cq[13] = {
+					[1] = "ns";
+					[2] = "Main Farm"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[13]))
+				Cq[3] = {
+					[1] = "ns";
+					[2] = "SEATROLLING"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[3]))
+				Cq[8] = {
+					[1] = "ns",
+					[2] = "�iểm Melee"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[8]))
+				Cq[14] = {
+					[1] = "ns",
+					[2] = "SealedKatana"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[14]))
+				Cq[16] = {
+					[1] = "ns",
+					[2] = "date"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[16]))
+				Cq[10] = {
+					[1] = "ns",
+					[2] = "Auto Buy Chip Law"
+				};
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[10]))
+			end
+		end)
+	end
+end)
+Mq[125] = Mq[34]:AddSection({
+	"cked."
+})
+Mq[34]:AddButton({
+	["MochiSwirl"] = "Tự động Lấy D";
+	["Cousin"] = Mq[144]({
+		"Explosion",
+		" Động Câu Cá"
+	});
+	["Hot pink"] = false;
+	["Highlight"] = function()
+		local Cq = {}
+		Cq[1] = {
+			[1] = "Light-Light";
+			[2] = "zero";
+			[3] = "Auto Find Prehistori"
+		};
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[1]))
+	end
+})
+Mq[34]:AddButton({
+	["MochiSwirl"] = "Prince King Spawned ";
+	["Hot pink"] = false,
+	["Highlight"] = function()
+		fireclickdetector((game:GetService("StartCasting"))["Cookie Crafter"]["Destroy"]["Health"]["AutoMobDragon"]["floor"]["Island 1"])
+	end
+})
+Mq[34]:AddToggle({
+	["JumpValue"] = "Check Stock Fruits",
+	["Cousin"] = "ne";
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Island Boy"] = Mq[1]
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["Island Boy"] then
+			pcall(function()
+				if (game:GetService("StartCasting"))["RipIndraKill"]:FindFirstChild("Sea") then
+					for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+						local Qq = {}
+						Qq[3], Qq[1] = Cq, Mq
+						if Qq[1]["JumpValue"] == "Sea" and (Qq[1]:FindFirstChild("CakeScientist") and (Qq[1]:FindFirstChild("Raid | dungeon") and Qq[1]["CakeScientist"]["UnderWater"] > 0)) then
+							repeat
+								task["Dough King"]()
+								AutoHaki()
+								EquipWeapon(_G["SelectWeapon"])
+								Qq[1]["Raid | dungeon"]["CraftItem"] = false
+								Qq[1]["CakeScientist"]["Raider"] = 0
+								topos(Qq[1]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 30, 0))
+								sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+							until not _G["Island Boy"] or not Qq[1]["PrehistoricRelic"] or Qq[1]["CakeScientist"]["UnderWater"] <= 0
+						end
+					end
+				else
+					NeedAttacking = true
+					if (game:GetService("Blizzard Fruit")):FindFirstChild("Sea") then
+						topos(((game:GetService("Blizzard Fruit")):FindFirstChild("Sea"))["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](5, 10, 2))
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[162] = Mq[34]:AddSection({
+	"0.4"
+})
+Mq[102]:AddToggle({
+	["JumpValue"] = "Snow White",
+	["Cousin"] = "Định Vị Đảo ";
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Desert Bandit"] = Mq[2]
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["Desert Bandit"] then
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Auto Safe Mode", "Died")
+			end
+		end
+	end)
+end)
+Mq[41]:AddToggle({
+	["MochiSwirl"] = "FarmDaiBan",
+	["Cousin"] = Mq[144]({
+		"ScreenGui",
+		"Fram Sương";
+		"Select Fishing Rod"
+	});
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq;
+		(getgenv())["E"] = Mq[1]
+	end
+})
+spawn(function()
+	while task["Dough King"](.5) do
+		if (getgenv())["E"] then
+			pcall(function()
+				local Cq = {}
+				Cq[4] = (game:GetService("Forgotten Island"))[" Lava"]
+				Cq[3] = Cq[4]["aze"] or Cq[4]["AXIORE"]:Wait()
+				Cq[2] = Cq[4]:WaitForChild("MaxHealth")
+				for Mq, Qq in ipairs({
+					{
+						"Đánh Hải Tặc T",
+						"Rocket-Rocket"
+					},
+					{
+						"Sky3Exit",
+						"Spin-Spin"
+					},
+					{
+						"Level01";
+						"Fram Quái Và Đán"
+					},
+					{
+						"Xương";
+						"Content"
+					},
+					{
+						"ToolTip",
+						"Bomb-Bomb"
+					},
+					{
+						"Dimensional Shift",
+						"Starcodeheo"
+					};
+					{
+						"Defense";
+						" M"
+					};
+					{
+						"T",
+						"Characters"
+					},
+					{
+						"Auto Get Sword Rengo",
+						"er"
+					};
+					{
+						"SpreadAngle",
+						"MysticIsland"
+					};
+					{
+						"Sweet Thief";
+						"nextPageCursor"
+					},
+					{
+						"ImageButton";
+						"Main Farm"
+					},
+					{
+						"The Gorilla King",
+						"�iểm Melee"
+					};
+					{
+						"PvP,Player";
+						"SealedKatana"
+					},
+					{
+						"Main",
+						"date"
+					},
+					{
+						"MarineQuest3";
+						"Auto Buy Chip Law"
+					};
+					{
+						"Teleport To The Cloc";
+						"SEATROLLING"
+					};
+					{
+						"Snow Lurker",
+						"Teleport"
+					},
+					{
+						"UseMelee",
+						"terial đã chọn"
+					},
+					{
+						"Buddha Fruit";
+						"Auto Start Raid Law"
+					},
+					{
+						"Love Fruit",
+						"Love-Love"
+					},
+					{
+						"h Hoàng Tử Bột ",
+						"Auto Get Saber"
+					},
+					{
+						"GuitarPuzzleProgress";
+						"MagmaQuest"
+					};
+					{
+						"Phoenix Fruit",
+						"Member"
+					};
+					{
+						"Portal Fruit",
+						"BartiloQuestProgress"
+					};
+					{
+						"Sever Hop",
+						"Auto Get Longsword"
+					},
+					{
+						"Nhà Máy";
+						"Water Body"
+					},
+					{
+						"!*t",
+						"Blizzard-Blizzard"
+					},
+					{
+						"Bomb Fruit";
+						"NEWTROLL"
+					};
+					{
+						"Auto Collect Bone,Eg";
+						"EARN_FRUITS"
+					},
+					{
+						"Defeat",
+						"awn ❌"
+					};
+					{
+						"Dough Fruit",
+						"vector"
+					},
+					{
+						"Diamond Fruit",
+						"kill C Để Đánh"
+					};
+					{
+						"V1",
+						"SelectChip"
+					};
+					{
+						"Gas Fruit";
+						"Gas-Gas"
+					};
+					{
+						"CircleIsland",
+						"Magma Ore"
+					},
+					{
+						":(%d*):";
+						"ActivateAbility"
+					},
+					{
+						"Settings",
+						"Rocket Fruit"
+					},
+					{
+						"io";
+						"Pistol Billionaire"
+					},
+					{
+						"Segment1";
+						"Auto Skill"
+					};
+					{
+						"Tự động Auto Qu";
+						"Tự Động Mua Chi"
+					}
+				}) do
+					local Rq = {}
+					Rq[1], Rq[5] = Mq, Qq
+					Rq[4] = Rq[5][1]
+					Rq[2] = Rq[5][2]
+					Rq[3] = Cq[2]:FindFirstChild(Rq[4]) or Cq[3]:FindFirstChild(Rq[4])
+					if Rq[3] then
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("StoreFruit", Rq[2], Rq[3])
+						break
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[41]:AddToggle({
+	["JumpValue"] = Mq[144]({
+		"ty";
+		"AutoGetCDK"
+	});
+	["Cousin"] = Mq[144]({
+		"Piranha",
+		"lem",
+		"TweenFruit",
+		"IceCreamIslandQuest"
+	}),
+	["olour"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Map"] = Mq[2]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["�iểm Kiếm"] then
+			for Cq, Mq in pairs(game["StartCasting"]:GetChildren()) do
+				local Qq = {}
+				Qq[1], Qq[3] = Cq, Mq
+				if string["Farm Boss Đã Chọ"](Qq[3]["JumpValue"], "Fruit") then
+					TP1(Qq[3]["Gunpowder"]["Seaesps"])
+				end
+			end
+		end
+	end
+end)
+Mq[41]:AddToggle({
+	["JumpValue"] = "Offset";
+	["Cousin"] = Mq[144]({
+		"Enemies";
+		"Teleport To Top Grea",
+		"Module"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Đánh Quái Gần"] = Mq[1]
+	end
+})
+spawn(function()
+	while wait(.1) do
+		if _G["Đánh Quái Gần"] then
+			for Cq, Mq in pairs(game["StartCasting"]:GetChildren()) do
+				local Qq = {}
+				Qq[3], Qq[1] = Cq, Mq
+				if string["Farm Boss Đã Chọ"](Qq[1]["JumpValue"], "Fruit") then
+					game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = Qq[1]["Gunpowder"]["Seaesps"]
+				end
+			end
+		end
+	end
+end)
+Mq[113] = Mq[41]:AddSection({
+	"Order=Asc&limit=100"
+})
+Mq[85] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	Mq[2] = tostring(Mq[1])
+	repeat
+		local Cq = {}
+		Cq[1] = nil
+		Cq[3], Cq[4] = Mq[2]["Button"](Mq[2], "YouTube Của Bố �", "Rendering")
+		Cq[1] = Cq[4]
+		Mq[2] = Cq[3]
+	until Cq[1] == 0
+	return Mq[2]
+end
+Mq[48] = (game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]
+Mq[60] = function()
+	local Cq = {}
+	Cq[5] = "Auto farm dungeon + "
+	Cq[4], Cq[2] = pcall(function()
+		return Mq[48]:InvokeServer("Factory Staff", true)
+	end)
+	if not Cq[4] or not Cq[2] then
+		Cq[5] = Cq[5] .. Mq[144]({
+			"Deandre",
+			"Venomous Assailant"
+		})
+	else
+		local Qq = {}
+		Qq[2] = false
+		for Rq, Kq in pairs(Cq[2]) do
+			local Sq = {}
+			Sq[1], Sq[2] = Rq, Kq
+			if Sq[2]["DeepForestIsland"] then
+				local Rq = {}
+				Qq[2] = true
+				Rq[2] = Mq[85](Sq[2]["Ring"])
+				Cq[5] = Cq[5] .. (Sq[2]["JumpValue"] .. ("Ectoplasm" .. (Rq[2] .. "Neon")))
+			end
+		end
+		if not Qq[2] then
+			Cq[5] = Cq[5] .. Mq[144]({
+				"Auto Get Tushita",
+				"Chọn Công Cụ"
+			})
+		end
+	end
+	Cq[5] = Cq[5] .. "Logo"
+	Cq[3], Cq[6] = pcall(function()
+		return Mq[48]:InvokeServer("Factory Staff")
+	end)
+	if Cq[3] and Cq[6] then
+		local Qq = {}
+		Qq[1] = false
+		for Rq, Kq in pairs(Cq[6]) do
+			local Sq = {}
+			Sq[1], Sq[2] = Rq, Kq
+			if Sq[2]["DeepForestIsland"] then
+				local Rq = {}
+				Qq[1] = true
+				Rq[1] = Mq[85](Sq[2]["Ring"])
+				Cq[5] = Cq[5] .. (Sq[2]["JumpValue"] .. ("Ectoplasm" .. (Rq[1] .. "Neon")))
+			end
+		end
+		if not Qq[1] then
+			Cq[5] = Cq[5] .. Mq[144]({
+				"Auto Get Tushita",
+				"Chọn Công Cụ"
+			})
+		end
+	else
+		Cq[5] = Cq[5] .. Mq[144]({
+			"Deandre";
+			"Venomous Assailant"
+		})
+	end
+	return Cq[5]
+end
+Mq[169] = Mq[41]:AddParagraph({
+	["MochiSwirl"] = "Tự Động Haki Co",
+	["SandIsland"] = Mq[144]({
+		"Đang tải dữ li�";
+		"Character"
+	})
+})
+task["Sea 3"](function()
+	while task["Dough King"](60) do
+		pcall(function()
+			Mq[169]:Set(Mq[60]())
+		end)
+	end
+end)
+pcall(function()
+	Mq[169]:Set(Mq[60]())
+end)
+Mq[72] = Mq[102]:AddSection({
+	Mq[144]({
+		"Select Material";
+		"��a )";
+		"Island "
+	})
+})
+Mq[61] = function(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	pcall(function()
+		if type(topos) == "ColosseumQuest" then
+			topos(Mq[1])
+		else
+			local Cq = {}
+			Cq[1] = (game:GetService("Forgotten Island"))[" Lava"]
+			if Cq[1] and (Cq[1]["aze"] and Cq[1]["aze"]:FindFirstChild("Raid | dungeon")) then
+				Cq[1]["aze"]["Raid | dungeon"]["Seaesps"] = Mq[1]
+			end
+		end
+	end)
+end
+Mq[21] = nil
+if not Mq[16] then
+	if Mq[27] then
+		Mq[21] = {
+			"Stepped";
+			"VirtualInputManager";
+			"Soul Reaper";
+			"pawning ✅",
+			"__namecall";
+			"State";
+			"BossDoor",
+			"��i",
+			"Tự động Lấy K";
+			"Two Snow Mountain";
+			"Human";
+			"Auto Kill Fish Crew ";
+			"Chandler";
+			"Kill",
+			"gsub";
+			"Awakening"
+		}
+	elseif Mq[82] then
+		Mq[21] = {
+			"Mansion";
+			"Spike Fruit",
+			"ộc V3";
+			"Castle On The Sea",
+			"Peanut Island",
+			"Auto Use Sword";
+			"Eagle Fruit";
+			"SECRET_ADMIN",
+			"Rotation",
+			"Tự Động Câu C�",
+			"Cake Island";
+			"STARCODEHEO",
+			"AutoFarm",
+			"Trident";
+			"Tự Động Telepor"
+		}
+	else
+		Mq[21] = {
+			"kissed Warrior"
+		}
+	end
+else
+	Mq[21] = {
+		" Eye(s)",
+		"Tween Dragon Dojo",
+		"BackgroundColor3",
+		"nil",
+		"Texture";
+		"TinyIsland",
+		"Lightning-Lightning",
+		"Tăng Fps";
+		"MarineFord";
+		"un,Fruit";
+		"rip_indra True Form",
+		"Leather",
+		"Wenlocktoad";
+		"THEGREATACE",
+		" ������";
+		"Summon Sea Beast";
+		"Duration";
+		"Auto Race Door"
+	}
+end
+Mq[102]:AddDropdown({
+	["JumpValue"] = "GetCup",
+	["Cousin"] = Mq[144]({
+		"Min";
+		"Người Chơi"
+	}),
+	["Galley Captain"] = Mq[21];
+	["olour"] = Mq[21][1],
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Auto Kill Piranha"] = Mq[2]
+	end
+})
+Mq[102]:AddToggle({
+	["JumpValue"] = "�i",
+	["Cousin"] = Mq[144]({
+		"sub";
+		"Idled";
+		" Bones"
+	}),
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["BerryESP"] = Mq[1]
+		StopTween(_G["BerryESP"])
+	end
+})
+Mq[128] = function()
+	if _G["Auto Kill Piranha"] then
+		if _G["Auto Kill Piranha"] ~= " Eye(s)" then
+			if _G["Auto Kill Piranha"] ~= "Tween Dragon Dojo" then
+				if _G["Auto Kill Piranha"] ~= "BackgroundColor3" then
+					if _G["Auto Kill Piranha"] ~= "nil" then
+						if _G["Auto Kill Piranha"] == "Texture" then
+							Mq[61](CFrame["Fruis"](-1181.309, 4.751, 3803.546))
+						elseif _G["Auto Kill Piranha"] ~= "TinyIsland" then
+							if _G["Auto Kill Piranha"] == "Lightning-Lightning" then
+								Mq[61](CFrame["Fruis"](1347.807, 104.668, -1319.737))
+							elseif _G["Auto Kill Piranha"] == "Tăng Fps" then
+								Mq[61](CFrame["Fruis"](-4914.821, 50.964, 4281.028))
+							elseif _G["Auto Kill Piranha"] ~= "MarineFord" then
+								if _G["Auto Kill Piranha"] ~= "un,Fruit" then
+									if _G["Auto Kill Piranha"] ~= "rip_indra True Form" then
+										if _G["Auto Kill Piranha"] ~= "Leather" then
+											if _G["Auto Kill Piranha"] ~= "Wenlocktoad" then
+												if _G["Auto Kill Piranha"] == "THEGREATACE" then
+													Mq[61](CFrame["Fruis"](-5247.716, 12.884, 8504.969))
+												elseif _G["Auto Kill Piranha"] ~= " ������" then
+													if _G["Auto Kill Piranha"] == "Summon Sea Beast" then
+														Mq[61](CFrame["Fruis"](5127.128, 59.501, 4105.446))
+													elseif _G["Auto Kill Piranha"] ~= "Duration" then
+														if _G["Auto Kill Piranha"] ~= "Auto Race Door" then
+															if _G["Auto Kill Piranha"] == "Stepped" then
+																Mq[61](CFrame["Fruis"](-380.479, 77.22, 255.826))
+															elseif _G["Auto Kill Piranha"] ~= "VirtualInputManager" then
+																if _G["Auto Kill Piranha"] == "Soul Reaper" then
+																	Mq[61](CFrame["Fruis"](3780.03, 22.652, -3498.586))
+																elseif _G["Auto Kill Piranha"] ~= "pawning ✅" then
+																	if _G["Auto Kill Piranha"] ~= "__namecall" then
+																		if _G["Auto Kill Piranha"] ~= "State" then
+																			if _G["Auto Kill Piranha"] == "BossDoor" then
+																				Mq[61](CFrame["Fruis"](424.127, 211.162, -427.54))
+																			elseif _G["Auto Kill Piranha"] == "��i" then
+																				Mq[61](CFrame["Fruis"](-1503.622, 219.796, 1369.31))
+																			elseif _G["Auto Kill Piranha"] ~= "Tự động Lấy K" then
+																				if _G["Auto Kill Piranha"] == "Two Snow Mountain" then
+																					Mq[61](CFrame["Fruis"](753.143, 408.236, -5274.615))
+																				elseif _G["Auto Kill Piranha"] == "Human" then
+																					Mq[61](CFrame["Fruis"](-6127.654, 15.952, -5040.286))
+																				elseif _G["Auto Kill Piranha"] ~= "Auto Kill Fish Crew " then
+																					if _G["Auto Kill Piranha"] ~= "Chandler" then
+																						if _G["Auto Kill Piranha"] ~= "Kill" then
+																							if _G["Auto Kill Piranha"] == "gsub" then
+																								Mq[61](CFrame["Fruis"](4816.862, 8.46, 2863.82))
+																							elseif _G["Auto Kill Piranha"] == "Awakening" or _G["Auto Kill Piranha"] == "Peanut Island" then
+																								Mq[61](CFrame["Fruis"](-288.741, 49326.316, -35248.594))
+																							elseif _G["Auto Kill Piranha"] ~= "ộc V3" then
+																								if _G["Auto Kill Piranha"] ~= "Castle On The Sea" then
+																									if _G["Auto Kill Piranha"] ~= "Spike Fruit" then
+																										if _G["Auto Kill Piranha"] ~= "Auto Use Sword" then
+																											if _G["Auto Kill Piranha"] == "Eagle Fruit" then
+																												Mq[61](CFrame["Fruis"](-13274.528, 531.821, -7579.223))
+																											elseif _G["Auto Kill Piranha"] ~= "Mansion" then
+																												if _G["Auto Kill Piranha"] ~= "SECRET_ADMIN" then
+																													if _G["Auto Kill Piranha"] == "Rotation" then
+																														Mq[61](CFrame["Fruis"](-902.568, 79.932, -10988.848))
+																													elseif _G["Auto Kill Piranha"] == "Tự Động Câu C�" then
+																														Mq[61](CFrame["Fruis"](-2062.748, 50.474, -10232.568))
+																													elseif _G["Auto Kill Piranha"] ~= "Cake Island" then
+																														if _G["Auto Kill Piranha"] ~= "STARCODEHEO" then
+																															if _G["Auto Kill Piranha"] == "AutoFarm" then
+																																Mq[61](CFrame["Fruis"](-1014.424, 149.111, -14555.963))
+																															elseif _G["Auto Kill Piranha"] ~= "Trident" then
+																																if _G["Auto Kill Piranha"] == "Tự Động Telepor" then
+																																	Mq[61](CFrame["Fruis"](5743.319, 1206.91, 936.011))
+																																end
+																															else
+																																Mq[61](CFrame["Fruis"](-16218.683, 9.086, 445.618))
+																															end
+																														else
+																															Mq[61](CFrame["Fruis"](87.943, 73.555, -12319.465))
+																														end
+																													else
+																														Mq[61](CFrame["Fruis"](-1884.775, 19.328, -11666.897))
+																													end
+																												else
+																													Mq[61](CFrame["Fruis"](-9515.372, 164.006, 5786.061))
+																												end
+																											else
+																												(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-12471.17, 374.94, -7551.678))
+																											end
+																										else
+																											Mq[61](CFrame["Fruis"](5291.249, 1005.443, 393.762))
+																										end
+																									else
+																										Mq[61](CFrame["Fruis"](-226.751, 20.603, 5538.34))
+																									end
+																								else
+																									(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-5083.26, 314.606, -3175.673))
+																								end
+																							else
+																								Mq[61](CFrame["Fruis"](2681.274, 1682.809, -7190.985))
+																							end
+																						else
+																							Mq[61](CFrame["Fruis"](-3032.764, 317.897, -10075.373))
+																						end
+																					else
+																						Mq[61](CFrame["Fruis"](6148.412, 294.387, -6741.117))
+																					end
+																				else
+																					Mq[61](CFrame["Fruis"](923.402, 125.057, 32885.875))
+																				end
+																			else
+																				Mq[61](CFrame["Fruis"](-5622.033, 492.196, -781.786))
+																			end
+																		else
+																			Mq[61](CFrame["Fruis"](-2448.53, 73.016, -3210.631))
+																		end
+																	else
+																		Mq[61](CFrame["Fruis"](2284.414, 15.152, 875.725))
+																	end
+																else
+																	Mq[61](CFrame["Fruis"](-483.734, 332.038, 595.327))
+																end
+															else
+																Mq[61](CFrame["Fruis"](-11.311, 29.277, 2771.522))
+															end
+														else
+															Mq[61](CFrame["Fruis"](-2850.201, 7.392, 5354.993))
+														end
+													else
+														Mq[61](CFrame["Fruis"](-1442.166, 29.879, -28.355))
+													end
+												else
+													(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](61163.852, 11.68, 1819.784))
+												end
+											else
+												Mq[61](CFrame["Fruis"](4875.33, 5.652, 734.85))
+											end
+										else
+											(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-7894.618, 5547.142, -380.291))
+										end
+									else
+										(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Special Microchip", Vector3["Fruis"](-4607.823, 872.543, -1667.557))
+									end
+								else
+									Mq[61](CFrame["Fruis"](-4869.103, 733.461, -2667.018))
+								end
+							else
+								Mq[61](CFrame["Fruis"](-1427.62, 7.288, -2792.772))
+							end
+						else
+							Mq[61](CFrame["Fruis"](944.158, 20.92, 4373.3))
+						end
+					else
+						Mq[61](CFrame["Fruis"](-1612.796, 36.852, 149.128))
+					end
+				else
+					Mq[61](CFrame["Fruis"](-690.331, 15.094, 1582.238))
+				end
+			else
+				Mq[61](CFrame["Fruis"](-2566.43, 6.856, 2045.256))
+			end
+		else
+			Mq[61](CFrame["Fruis"](979.799, 16.516, 1429.047))
+		end
+		return
+	else
+		return
+	end
+end
+task["Sea 3"](function()
+	while task["Dough King"](.5) do
+		if _G["BerryESP"] then
+			Mq[128]()
+		end
+	end
+end)
+Mq[44] = Mq[102]:AddSection({
+	Mq[144]({
+		"Tự động Lấy R",
+		"Ice Cream Commander"
+	})
+})
+Mq[102]:AddButton({
+	["JumpValue"] = "EnablePvp";
+	["Cousin"] = "LookVector";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Dragon Dojo")
+	end
+})
+Mq[102]:AddButton({
+	["JumpValue"] = "Dragon Crew Warrior",
+	["Cousin"] = "SwodCanvander";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("FrozenDimension")
+	end
+})
+Mq[102]:AddButton({
+	["JumpValue"] = "Scale",
+	["Cousin"] = "Snow Island";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("TikiQuest2")
+	end
+})
+Mq[42] = Mq[147]:AddSection({
+	Mq[144]({
+		"p Raid";
+		" Chuyển Đến Pla",
+		"Sea Chanter"
+	})
+})
+Mq[70] = {}
+for Cq, Qq in pairs(game["Forgotten Island"]:GetPlayers()) do
+	local Rq = {}
+	Rq[1], Rq[3] = Cq, Qq
+	table["RaceTransformed"](Mq[70], Rq[3]["JumpValue"])
+end
+Mq[107] = nil
+Mq[147]:AddButton({
+	["MochiSwirl"] = Mq[144]({
+		"Fire";
+		"Auto Tween To Island"
+	}),
+	["Cousin"] = Mq[144]({
+		"Flag";
+		"QuestPlates"
+	});
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Kelp Bait")
+	end
+})
+Mq[147]:AddToggle({
+	["MochiSwirl"] = Mq[144]({
+		"Auto Kill Player Que",
+		"c V3"
+	});
+	["Cousin"] = Mq[144]({
+		"CastLineAtLocation",
+		"TeleportService",
+		"Auto Random Fruits"
+	});
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["Cập Nhật Boss"] = Mq[2]
+		StopTween(_G["Cập Nhật Boss"])
+	end
+})
+spawn(function()
+	(game:GetService("PlayerGui"))["MarineTreeIsland"]:connect(function()
+		pcall(function()
+			if _G["Cập Nhật Boss"] and (game:GetService("Forgotten Island"))[" Lava"]["aze"]:FindFirstChild("CakeScientist") then
+				(game:GetService("Forgotten Island"))[" Lava"]["aze"]["CakeScientist"]:ChangeState(11)
+			end
+		end)
+	end)
+end)
+spawn(function()
+	pcall(function()
+		while wait(.1) do
+			if _G["Cập Nhật Boss"] and (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["table"]["Grabfruit"] == true then
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("teleport")
+			end
+		end
+	end)
+end)
+spawn(function()
+	while wait() do
+		if _G["Cập Nhật Boss"] then
+			if (game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["Grabfruit"] == false then
+				wait(.5);
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Kelp Bait")
+			else
+				for Cq, Mq in pairs((game:GetService("StartCasting"))["Auto Select Boss"]:GetChildren()) do
+					local Qq = {}
+					Qq[2], Qq[3] = Cq, Mq
+					if string["Farm Boss Đã Chọ"]((game:GetService("Forgotten Island"))[" Lava"]["function"]["floor"]["Tự Động Thành "]["p"]["Auto Farm Law Raid"]["MochiSwirl"]["Decal"], Qq[3]["JumpValue"]) then
+						repeat
+							wait()
+							AutoHaki()
+							EquipWeapon(_G["SelectWeapon"])
+							Useskill = true
+							topos(Qq[3]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](1, 7, 3))
+							Qq[3]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60);
+							(game:GetService("25541747")):CaptureController();
+							(game:GetService("25541747")):Button1Down(Vector2["Fruis"](1280, 672))
+						until _G["Cập Nhật Boss"] == false or Qq[3]["CakeScientist"]["UnderWater"] <= 0
+						Useskill = false;
+						(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("HttpService")
+					end
+				end
+			end
+		end
+	end
+end)
+Mq[147]:AddToggle({
+	["JumpValue"] = "new";
+	["Cousin"] = Mq[144]({
+		"Tự Động Tìm Đ";
+		"__newindex";
+		"Velocity"
+	});
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["__index"] = Mq[1]
+		StopTween(_G["__index"])
+	end
+})
+spawn(function()
+	pcall(function()
+		while wait() do
+			if _G["__index"] then
+				(game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] = (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Seaesps"] * CFrame["Fruis"](0, 200, 0)
+			end
+		end
+	end)
+end)
+Mq[99] = Mq[147]:AddSection({
+	"Gravity Fruit"
+})
+Mq[37] = (game:GetService("Forgotten Island"))[" Lava"];
+(getgenv())["Backpack"] = 30;
+(getgenv())["Punk Hazard"] = 50
+Mq[139] = function(Cq)
+	local Mq = {}
+	Mq[3] = Cq
+	Mq[2] = Mq[3]:WaitForChild("CakeScientist", 5)
+	if Mq[2] then
+		Mq[2]["Raider"] = (getgenv())["Backpack"]
+		Mq[2]["Dangerous Prisoner"] = (getgenv())["Punk Hazard"];
+		(Mq[2]:GetPropertyChangedSignal("Raider")):Connect(function()
+			Mq[2]["Raider"] = (getgenv())["Backpack"]
+		end)
+	end
+end
+Mq[37]["AXIORE"]:Connect(function(Cq)
+	local Hq = {}
+	Hq[1] = Cq
+	Mq[139](Hq[1])
+end)
+if Mq[37]["aze"] then
+	Mq[139](Mq[37]["aze"])
+end
+Mq[147]:AddSlider({
+	["MochiSwirl"] = "Pirate Millionaire";
+	["Rate"] = 26;
+	["Farming"] = 300,
+	["olour"] = (getgenv())["Backpack"],
+	["Highlight"] = function(Cq)
+		local Qq = {}
+		Qq[1] = Cq;
+		(getgenv())["Backpack"] = Qq[1]
+		Qq[3] = Mq[37]["aze"] and Mq[37]["aze"]:FindFirstChild("CakeScientist")
+		if Qq[3] then
+			Qq[3]["Raider"] = Qq[1]
+		end
+	end
+})
+Mq[147]:AddSlider({
+	["MochiSwirl"] = "Area1Quest";
+	["Rate"] = 50,
+	["Farming"] = 500,
+	["olour"] = (getgenv())["Punk Hazard"],
+	["Highlight"] = function(Cq)
+		local Qq = {}
+		Qq[3] = Cq;
+		(getgenv())["Punk Hazard"] = Qq[3]
+		Qq[2] = Mq[37]["aze"] and Mq[37]["aze"]:FindFirstChild("CakeScientist")
+		if Qq[2] then
+			Qq[2]["Dangerous Prisoner"] = Qq[3]
+		end
+	end
+})
+Mq[147]:AddToggle({
+	["JumpValue"] = "_G";
+	["Cousin"] = "Xóa lava",
+	["olour"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["Geppo"] = Mq[1]
+	end
+})
+spawn(function()
+	while task["Dough King"](1) do
+		if _G["Geppo"] then
+			for Cq, Mq in pairs(workspace:GetDescendants()) do
+				local Qq = {}
+				Qq[2], Qq[1] = Cq, Mq
+				do
+					local Cq = {}
+					Cq[1] = Qq[1]
+					if Cq[1]:IsA("Select Fishing Lure") and (string["QuestTitle"](Cq[1]["JumpValue"])):find("AutoBuyChip") then
+						pcall(function()
+							Cq[1]:Destroy()
+						end)
+					end
+				end
+			end
+		end
+	end
+end)
+Mq[79] = Mq[147]:AddSection({
+	Mq[144]({
+		"Esp Players";
+		"Teleport To Fruit Sp"
+	})
+})
+Mq[147]:AddToggle({
+	["MochiSwirl"] = "Spider Fruit",
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		ESPPlayer = Mq[1]
+		if ESPPlayer then
+			task["Sea 3"](function()
+				while ESPPlayer do
+					UpdatePlayerChams()
+					task["Dough King"](1)
+				end
+			end)
+		else
+			UpdatePlayerChams()
+		end
+	end
+})
+Mq[147]:AddToggle({
+	["MochiSwirl"] = "hi farm dungeon (t�";
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["CakeQuest2"] = Mq[1]
+		if not _G["CakeQuest2"] then
+			UpdateChestESP()
+		else
+			task["Sea 3"](function()
+				while _G["CakeQuest2"] do
+					UpdateChestESP()
+					task["Dough King"](1)
+				end
+			end)
+		end
+	end
+})
+Mq[147]:AddToggle({
+	["MochiSwirl"] = "Ghoul",
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		DevilFruitESP = Mq[2]
+		if DevilFruitESP then
+			task["Sea 3"](function()
+				while DevilFruitESP do
+					UpdateDevilChams()
+					task["Dough King"](1)
+				end
+			end)
+		else
+			UpdateDevilChams()
+		end
+	end
+})
+Mq[147]:AddToggle({
+	["MochiSwirl"] = "�nh Để Triệu H�";
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		Berry = Mq[1]
+		if not Berry then
+			for Cq, Mq in pairs((game:GetService("HumanoidRootPart")):GetTagged("engoku")) do
+				local Qq = {}
+				Qq[2], Qq[3] = Cq, Mq
+				if Qq[3]["PrehistoricRelic"]:FindFirstChild("Sub2Fer999") then
+					Qq[3]["PrehistoricRelic"]["Sub2Fer999"]:Destroy()
+				end
+			end
+		else
+			UpdateBerriesESP()
+		end
+	end
+})
+Mq[13] = Mq[77]:AddSection({
+	"�àn GuiTar"
+})
+Mq[77]:AddParagraph({
+	["MochiSwirl"] = Mq[144]({
+		"Select Melee,Sword,G",
+		"WindMill"
+	});
+	["SandIsland"] = "Pain-Pain"
+});
+(loadstring(game:HttpGet(Mq[144]({
+	"Fram Bone",
+	"ercontent.com/AnhDan",
+	"InputBegan";
+	"Tự động Mua Hak"
+}))))()
+Mq[77]:AddToggle({
+	["JumpValue"] = "Union",
+	["Cousin"] = Mq[144]({
+		"Tự Động Gom Qu�";
+		"Auto Farm Level 1-26"
+	});
+	["olour"] = true,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["kissed"] = Mq[2]
+		StopTween(_G["kissed"])
+	end
+})
+spawn(function()
+	while task["Dough King"]() do
+		pcall(function()
+			CheckQuest()
+			for Cq, Mq in pairs((game:GetService("StartCasting"))["RipIndraKill"]:GetChildren()) do
+				local Qq = {}
+				Qq[1], Qq[2] = Cq, Mq
+				if _G["kissed"] and (StartBring and Qq[2]["JumpValue"] == MonFarm or Qq[2]["JumpValue"] == Mon and (Qq[2]:FindFirstChild("CakeScientist") and (Qq[2]:FindFirstChild("Raid | dungeon") and (Qq[2]["CakeScientist"]["UnderWater"] > 0 and (Qq[2]["Raid | dungeon"]["Y3hUExFEZ"] - (game:GetService("Forgotten Island"))[" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] <= 320)))) then
+					if Qq[2]["JumpValue"] == "Don Swan" then
+						if (Qq[2]["Raid | dungeon"]["Y3hUExFEZ"] - PosMon["Y3hUExFEZ"])["Hydra Island"] <= 250 then
+							Qq[2]["Urban"]["CraftItem"] = false
+							Qq[2]["Raid | dungeon"]["CraftItem"] = false
+							Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+							Qq[2]["Raid | dungeon"]["Seaesps"] = PosMon
+							if Qq[2]["CakeScientist"]:FindFirstChild("Animator") then
+								Qq[2]["CakeScientist"]["Animator"]:Destroy()
+							end
+							sethiddenproperty((game:GetService("Forgotten Island"))[" Lava"], "Auto Tween To Gear", math["Biển 2"])
+						end
+					elseif (Qq[2]["JumpValue"] == MonFarm or Qq[2]["JumpValue"] == Mon) and (Qq[2]["Raid | dungeon"]["Y3hUExFEZ"] - PosMon["Y3hUExFEZ"])["Hydra Island"] <= 320 then
+						Qq[2]["Raid | dungeon"]["Size"] = Vector3["Fruis"](60, 60, 60)
+						Qq[2]["Raid | dungeon"]["Seaesps"] = PosMon
+						Qq[2]["Raid | dungeon"]["CraftItem"] = false
+						Qq[2]["Urban"]["CraftItem"] = false
+						if Qq[2]["CakeScientist"]:FindFirstChild("Animator") then
+							Qq[2]["CakeScientist"]["Animator"]:Destroy()
+						end
+						sethiddenproperty(game["Forgotten Island"][" Lava"], "Auto Tween To Gear", math["Biển 2"])
+					end
+				end
+			end
+		end)
+	end
+end)
+function InMyNetWork(Cq)
+	local Mq = {}
+	Mq[1] = Cq
+	if not isnetworkowner then
+		if (Mq[1]["Y3hUExFEZ"] - game["Forgotten Island"][" Lava"]["aze"]["Raid | dungeon"]["Y3hUExFEZ"])["Hydra Island"] > 320 then
+			return false
+		else
+			return true
+		end
+	else
+		return isnetworkowner(Mq[1])
+	end
+end
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Fish Crew Member";
+	["Cousin"] = Mq[144]({
+		"Quest Sea 3";
+		" Chuyển Đảo"
+	}),
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[1] = Cq
+		_G["NpcEspes"] = Mq[1]
+	end
+})
+spawn(function()
+	while wait() do
+		if _G["NpcEspes"] then
+			game:GetService("God's Guard")
+		end
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Tự Động Bật T",
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["protectFunction"] = Mq[2]
+	end
+})
+spawn(function()
+	while task["Dough King"](.1) do
+		if _G["protectFunction"] then
+			pcall(AutoHaki)
+		end
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Auto Active Race V3";
+	["Cousin"] = Mq[144]({
+		"Spawn",
+		" Chuyển Đến Đ�"
+	}),
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["gsword"] = Mq[2]
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["gsword"] then
+				(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Dangerous Prisone"]:FireServer("TANTAIGAMING")
+			end
+		end)
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Sea 1,2,3",
+	["Cousin"] = Mq[144]({
+		"Spawn",
+		"AddPoint"
+	});
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["LightInfluence"] = Mq[2]
+	end
+})
+spawn(function()
+	while wait() do
+		pcall(function()
+			if _G["LightInfluence"] then
+				(game:GetService("Quest Sea 1")):SendKeyEvent(true, "Y", false, game)
+				wait();
+				(game:GetService("Quest Sea 1")):SendKeyEvent(false, "Y", false, game)
+			end
+		end)
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Tự Động Bật T",
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[1] = Cq
+		InfiniteSoru = Hq[1]
+	end
+})
+spawn(function()
+	while task["Dough King"](1) do
+		if InfiniteSoru and (game:GetService("Forgotten Island"))[" Lava"]["aze"]:FindFirstChild("Raid | dungeon") ~= "Raid | dungeon" then
+			pcall(function()
+				for Cq, Mq in next, getgc() do
+					local Qq = {}
+					Qq[1], Qq[2] = Cq, Mq
+					if (getfenv(Qq[2]))["Dark stone grey"] == game["Forgotten Island"][" Lava"]["aze"]:WaitForChild("This incident will b") then
+						for Cq, Mq in pairs(debug["rên Pháo Đài Bi�"](Qq[2])) do
+							local Rq = {}
+							Rq[3], Rq[1] = Cq, Mq
+							if type(Rq[1]) == "insert" and Rq[1]["ita"] then
+								repeat
+									task["Dough King"](.1)
+									setupvalue(Qq[2], Rq[3], {
+										["Chief Petty Officer"] = 0,
+										["ita"] = 0
+									})
+								until not InfiniteSoru or (game:GetService("Forgotten Island"))[" Lava"]["aze"]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+PosY = 30
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "EliteHunter";
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[1] = Cq
+		DodgewithoutCool = Hq[1]
+	end
+})
+function NoCooldown()
+	for Cq, Mq in next, getgc() do
+		local Qq = {}
+		Qq[3], Qq[2] = Cq, Mq
+		if typeof(Qq[2]) == "ColosseumQuest" and (getfenv(Qq[2]))["Dark stone grey"] == game["Forgotten Island"][" Lava"]["aze"]:WaitForChild("BasePart") then
+			for Cq, Mq in next, getupvalues(Qq[2]) do
+				local Rq = {}
+				Rq[1], Rq[2] = Cq, Mq
+				if tostring(Rq[2]) == "Eye2" then
+					setupvalue(Qq[2], Rq[1], 0)
+				end
+			end
+		end
+	end
+end
+spawn(function()
+	while wait() do
+		if DodgewithoutCool then
+			pcall(function()
+				NoCooldown()
+			end)
+		end
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "BANEXPLOIT",
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[1] = Cq
+		InfiniteGeppo = Hq[1]
+	end
+})
+spawn(function()
+	while task["Dough King"](1) do
+		if InfiniteGeppo then
+			pcall(function()
+				for Cq, Mq in next, getgc() do
+					local Qq = {}
+					Qq[1], Qq[2] = Cq, Mq
+					if (getfenv(Qq[2]))["Dark stone grey"] == game["Forgotten Island"][" Lava"]["aze"]:WaitForChild("Open Title Name") then
+						for Cq, Mq in next, getupvalues(Qq[2]) do
+							local Rq = {}
+							Rq[1], Rq[3] = Cq, Mq
+							if tostring(Rq[3]) == "FireSideQuest" then
+								repeat
+									wait(.1)
+									setupvalue(Qq[2], Rq[1], 0)
+								until not InfiniteGeppo or (game:GetService("Forgotten Island"))[" Lava"]["aze"]["CakeScientist"]["UnderWater"] <= 0
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Kill Greybeard";
+	["Hot pink"] = true;
+	["Highlight"] = function(Cq)
+		local Mq = {}
+		Mq[2] = Cq
+		_G["RaidSummon"] = Mq[2]
+	end
+})
+spawn(function()
+	while task["Dough King"]() do
+		pcall(function()
+			if not _G["RaidSummon"] then
+				(game:GetService("StartCasting"))["Cookie Crafter"]["SwodsFlail"]["Size"] = Vector3["Fruis"](1000, 80, 1000)
+			else
+				(game:GetService("StartCasting"))["Cookie Crafter"]["SwodsFlail"]["Size"] = Vector3["Fruis"](1000, 112, 1000)
+			end
+		end)
+	end
+end)
+Mq[140] = Mq[77]:AddSection({
+	Mq[144]({
+		"iếm Yama",
+		"FarmBone"
+	})
+})
+Mq[160] = game:GetService("Forgotten Island")
+Mq[166] = game:GetService("Blizzard Fruit")
+Mq[33] = Mq[160][" Lava"]
+Mq[111] = false
+Mq[28] = false
+Mq[153] = false
+Mq[94] = false
+Mq[168] = false
+Mq[10] = 1
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Auto Farm Chest And ",
+	["Cousin"] = Mq[144]({
+		"Fishman Warrior",
+		"Longma"
+	});
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[2] = Cq
+		Mq[111] = Hq[2]
+	end
+})
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Diamond-Diamond",
+	["Cousin"] = Mq[144]({
+		"Fishman Warrior";
+		"   
+";
+		"^(-?%d+)(%d%d%d)"
+	});
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[1] = Cq
+		Mq[28] = Hq[1]
+	end
+})
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "Jungle Pirate",
+	["Cousin"] = Mq[144]({
+		"Fishman Warrior";
+		"RenderStepped"
+	}),
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[2] = Cq
+		Mq[153] = Hq[2]
+	end
+})
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "TouchInterest",
+	["Cousin"] = Mq[144]({
+		"Fishman Warrior";
+		"Part1"
+	}),
+	["Hot pink"] = false;
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[1] = Cq
+		Mq[94] = Hq[1]
+	end
+})
+Mq[77]:AddToggle({
+	["MochiSwirl"] = "�i Đảo Bí Ẩn";
+	["Cousin"] = Mq[144]({
+		"Fishman Warrior",
+		"Magnitude"
+	}),
+	["Hot pink"] = false,
+	["Highlight"] = function(Cq)
+		local Hq = {}
+		Hq[2] = Cq
+		Mq[168] = Hq[2]
+	end
+})
+spawn(function()
+	while wait() do
+		if Mq[33]["Sub2Daigrock"]["FarmBone"]["Hot pink"] >= Mq[10] then
+			local Cq = {}
+			Cq[1] = function(Cq)
+				local Qq = {}
+				Qq[1] = Cq
+				Qq[2] = {
+					[1] = "Nocliprock";
+					[2] = Qq[1],
+					[3] = Mq[10]
+				}
+				Mq[166]["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Qq[2]))
+			end
+			if Mq[111] then
+				Cq[1]("Auto Farm Chest And ")
+			end
+			if Mq[28] then
+				Cq[1]("Diamond-Diamond")
+			end
+			if Mq[153] then
+				Cq[1]("Jungle Pirate")
+			end
+			if Mq[94] then
+				Cq[1]("TouchInterest")
+			end
+			if Mq[168] then
+				Cq[1]("ADMINDARES")
+			end
+		end
+	end
+end)
+Mq[73] = Mq[77]:AddSection({
+	"GravityBlade"
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "SubmergedQuest2",
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Dragon Dojo")
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "FrostQuest";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("FrozenDimension")
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "cần farm";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("TikiQuest2")
+	end
+})
+Mq[52] = Mq[77]:AddSection({
+	"Dark Area"
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "https://games.roblox";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Check Bone", "AttachedAzureEmber")
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "Join Marines Team";
+	["Highlight"] = function()
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer("Check Bone", "Marines")
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "1";
+	["Highlight"] = function()
+		local Cq = {}
+		Cq[2] = {
+			[1] = "Auto Collect Berry"
+		};
+		(game:GetService("Blizzard Fruit"))["Check Prehistoric Is"]["Sea 2"]:InvokeServer(unpack(Cq[2]))
+		game["Forgotten Island"]["localPlayer"]["function"]["floor"]["Peanut President"]["Grabfruit"] = true
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "Auto Collect Egg";
+	["Cousin"] = "Sea Soldier",
+	["Highlight"] = function()
+		local Cq = {}
+		Cq[3] = true
+		Cq[5] = game
+		Cq[4] = Cq[5]["StartCasting"]
+		Cq[1] = Cq[5]["I don't have anythin"]
+		Cq[6] = Cq[4]["g Sever"];
+		(settings())["Râu Đen"]["ENYU_IS_PRO"] = "https://www.tiktok.c"
+		for Mq, Qq in pairs(Cq[5]:GetDescendants()) do
+			local Rq = {}
+			Rq[1], Rq[3] = Mq, Qq
+			if not Rq[3]:IsA("o to complete more t") and (not Rq[3]:IsA("Magma-Magma") and (not Rq[3]:IsA("[Lv. 2600] [Raid Bos") and not Rq[3]:IsA("Lightning Fruit"))) then
+				if Rq[3]:IsA(" Skies") or Rq[3]:IsA("24NOADMIN") and Cq[3] then
+					Rq[3]["Transparency"] = 1
+				elseif Rq[3]:IsA("Diamond") or Rq[3]:IsA("Trail") then
+					Rq[3]["Skypiea"] = NumberRange["Fruis"](0)
+				elseif not Rq[3]:IsA("JCWK") then
+					if Rq[3]:IsA("Snow Bandit") or Rq[3]:IsA("Hydra Enforcer") or Rq[3]:IsA("Auto Haki Colors") then
+						Rq[3]["SUB2DAIGROCK"] = false
+					end
+				else
+					Rq[3]["TextWrapped"] = 1
+					Rq[3]["BlastRadius"] = 1
+				end
+			else
+				Rq[3]["Raid Law Sea 2"] = "ảo Thời Tiền S"
+				Rq[3]["Tweenfruit"] = 0
+			end
+		end
+	end
+})
+Mq[47] = Mq[77]:AddSection({
+	"Auto Codes"
+})
+Mq[68] = {
+	"Farm Quái Và Đán",
+	"Musketeer Pirate";
+	"Check Cake Prince";
+	"Infinite Soru",
+	"VenomCrewQuest",
+	"êu diệt Soul Reap";
+	"fromRGB",
+	"Tự Động Kill Au",
+	"CollectBerry";
+	"P";
+	"Tampering detected. ";
+	"Auto Buy Haki Colors";
+	"n Di Chuyển Lên T",
+	"fruitconcepts",
+	"RunService",
+	"Pain Fruit",
+	"
+Normal Fruit Stock
+",
+	"SUB2GAMERROBOT_RESET";
+	"��i Boss",
+	"Alive",
+	" thưởng",
+	"SkyArea2",
+	"id",
+	"Fruits";
+	"Enyu_is_Pro",
+	"Magicbus",
+	"SelectBait";
+	"getinfo";
+	"Chest
+",
+	"Rod",
+	" 
+";
+	"Use! - Yama or Tushi",
+	"Sub2UncleKizaru",
+	"Auto Kill Terror Sha",
+	"PineappleTown";
+	"Auto Use Gun",
+	"ClickDetector",
+	"Sub2OfficialNoobie";
+	"PirateBrigade";
+	"7cc2F",
+	"Holy Torch",
+	"God's Chalice",
+	Mq[144]({
+		"msg",
+		"__pairs"
+	});
+	"SUB2OFFICIALNOOBIE";
+	"__gc",
+	"Set Home Point";
+	"Peanut Scout",
+	"__metatable";
+	"Royal Soldier";
+	"Part";
+	"Xoá Lava",
+	"CakePrinceSpawner",
+	"RandomAuto",
+	"Scrap Metal",
+	"Auto Kill Cursed Cap",
+	"fU2ZWx",
+	"g for you right now.";
+	"T-Rex Fruit",
+	"Fishman Commando",
+	"JumpPower",
+	"F";
+	"��u..."
+}
+Mq[77]:AddButton({
+	["MochiSwirl"] = "Auto Farm Raid Next ";
+	["Cousin"] = Mq[144]({
+		"Auto Collect Bone",
+		"�iểm Súng"
+	});
+	["Highlight"] = function()
+		for Cq, Mq in ipairs(Mq[68]) do
+			local Qq = {}
+			Qq[2], Qq[3] = Cq, Mq
+			Qq[1] = {
+				Qq[3]
+			}
+			do
+				local Cq = {}
+				Cq[2] = Qq[1]
+				pcall(function()
+					(((game:GetService("Blizzard Fruit")):WaitForChild("Check Prehistoric Is")):WaitForChild("Select")):InvokeServer(unpack(Cq[2]))
+				end)
+				task["Dough King"](.1)
+			end
+		end
+	end
+})
+Mq[23] = Mq[77]:AddSection({
+	"Mồi Khi Câu Cá"
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "Circle",
+	["Highlight"] = function()
+		(game:GetService("LegendarySwordDealer")):Teleport(game["BananaSpawner"], (game:GetService("Forgotten Island"))[" Lava"])
+	end
+})
+Mq[77]:AddButton({
+	["MochiSwirl"] = "Server Hop",
+	["Highlight"] = function()
+		Hop()
+	end
+})

@@ -1,0 +1,460 @@
+import discord
+from discord.ext import commands
+from discord.ui import Button, View, Modal, TextInput
+from datetime import datetime
+from discord import app_commands
+import sqlite3
+import hashlib
+import random
+import string
+
+# Initialize SQLite database
+def init_db():
+    conn = sqlite3.connect('keys.db')
+    c = conn.cursor()
+    
+    # Create keys table
+    c.execute('''CREATE TABLE IF NOT EXISTS keys 
+                 (key TEXT PRIMARY KEY, 
+                  hwid TEXT, 
+                  discord_id TEXT, 
+                  roblox_username TEXT, 
+                  redeemed BOOLEAN, 
+                  redeem_date TEXT)''')
+    
+    # Create whitelist table
+    c.execute('''CREATE TABLE IF NOT EXISTS whitelist 
+                 (discord_id TEXT PRIMARY KEY, 
+                  hwid TEXT, 
+                  roblox_username TEXT)''')
+    
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Intents
+intents = discord.Intents.default()
+intents.message_content = True
+
+# Bot setup
+client = commands.Bot(command_prefix="!", intents=intents)
+
+# Global variables
+project_name = "Sigma"
+script_content = "-- Your default script code here\nprint('Hello from Sigma script!')"
+system_status = "UP"
+BUYER_ROLE_NAME = "Buyer"
+BUY_FROM_ROLE_NAME = "Buy from"
+OWNER_ROLE_NAME = "Owner"
+
+@client.event
+async def on_ready():
+    print(f"We have logged in as {client.user}")
+    await client.tree.sync()
+
+# Helper function to generate HWID hash
+def generate_hwid(discord_id: str, roblox_username: str) -> str:
+    data = f"{discord_id}{roblox_username}".encode('utf-8')
+    return hashlib.sha256(data).hexdigest()
+
+# Modal for "Redeem Key"
+class RedeemKeyModal(Modal, title="🔑 Redeem Key"):
+    key_input = TextInput(
+        label="Enter Key",
+        placeholder="Enter your key here...",
+        required=True,
+        style=discord.TextStyle.short,
+    )
+    
+    roblox_username = TextInput(
+        label="Roblox Username",
+        placeholder="Enter your Roblox username...",
+        required=True,
+        style=discord.TextStyle.short,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        entered_key = self.key_input.value
+        roblox_user = self.roblox_username.value
+        
+        conn = sqlite3.connect('keys.db')
+        c = conn.cursor()
+        
+        c.execute("SELECT * FROM keys WHERE key = ? AND redeemed = 0", (entered_key,))
+        key_data = c.fetchone()
+        
+        if not key_data:
+            await interaction.response.send_message(
+                "❌ Invalid or already redeemed key!", ephemeral=True
+            )
+            conn.close()
+            return
+        
+        hwid = generate_hwid(str(interaction.user.id), roblox_user)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        c.execute("UPDATE keys SET redeemed = 1, hwid = ?, discord_id = ?, roblox_username = ?, redeem_date = ? WHERE key = ?",
+                  (hwid, str(interaction.user.id), roblox_user, current_time, entered_key))
+        
+        c.execute("INSERT OR REPLACE INTO whitelist (discord_id, hwid, roblox_username) VALUES (?, ?, ?)",
+                  (str(interaction.user.id), hwid, roblox_user))
+        
+        conn.commit()
+        conn.close()
+        
+        await interaction.response.send_message(
+            f"✅ Key `{entered_key}` has been successfully redeemed!\n"
+            f"🔒 HWID Locked to your Roblox account: `{roblox_user}`\n"
+            f"📅 Redeemed on: {current_time}\n\n"
+            f"Now click the 'Get Role' button to receive your {BUYER_ROLE_NAME} role!",
+            ephemeral=True
+        )
+
+# Modal for "Reset HWID"
+class ResetHWIDModal(Modal, title="⚙️ Reset HWID"):
+    roblox_username = TextInput(
+        label="New Roblox Username",
+        placeholder="Enter your new Roblox username...",
+        required=True,
+        style=discord.TextStyle.short,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        new_roblox_username = self.roblox_username.value
+        discord_id = str(interaction.user.id)
+        
+        conn = sqlite3.connect('keys.db')
+        c = conn.cursor()
+        
+        c.execute("SELECT hwid, roblox_username FROM whitelist WHERE discord_id = ?", (discord_id,))
+        user_data = c.fetchone()
+        
+        if not user_data:
+            await interaction.response.send_message(
+                "❌ You need to redeem a key first to reset your HWID!", ephemeral=True
+            )
+            conn.close()
+            return
+        
+        new_hwid = generate_hwid(discord_id, new_roblox_username)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        c.execute("UPDATE whitelist SET hwid = ?, roblox_username = ? WHERE discord_id = ?",
+                  (new_hwid, new_roblox_username, discord_id))
+        
+        c.execute("UPDATE keys SET hwid = ?, roblox_username = ? WHERE discord_id = ? AND redeemed = 1",
+                  (new_hwid, new_roblox_username, discord_id))
+        
+        conn.commit()
+        conn.close()
+        
+        await interaction.response.send_message(
+            f"✅ HWID successfully reset!\n"
+            f"🔒 New HWID locked to Roblox account: `{new_roblox_username}`\n"
+            f"📅 Reset on: {current_time}",
+            ephemeral=True
+        )
+
+# /panel command
+@client.tree.command(name="panel", description="Display the control panel.")
+async def panel(interaction: discord.Interaction):
+    global project_name, system_status
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    panel_creator = interaction.user.name
+
+    description = f"""
+    **{project_name} Control Panel**
+
+    This control panel is for the project: **{project_name}**
+    **System Status:** {system_status}
+
+    If you're a buyer, click on the buttons below to redeem your key, get the script, reset your HWID, or check your status.
+
+    *Sent by:* _{panel_creator}_  
+    **Date & Time:** {current_time}
+    """
+    embed = discord.Embed(
+        title="Control Panel", description=description, color=discord.Color.blue()
+    )
+
+    redeem_button = Button(label="🔑 Redeem Key", style=discord.ButtonStyle.green)
+    script_button = Button(label="📝 Get Script", style=discord.ButtonStyle.primary)
+    reset_hwid_button = Button(label="⚙️ Reset HWID", style=discord.ButtonStyle.grey)
+    get_role_button = Button(label="🥷 Get Role", style=discord.ButtonStyle.blurple)
+    stats_button = Button(label="📊 Get Stats", style=discord.ButtonStyle.red)
+
+    async def redeem_callback(interaction: discord.Interaction):
+        await interaction.response.send_modal(RedeemKeyModal())
+
+    async def script_callback(interaction: discord.Interaction):
+        buyer_role = discord.utils.get(interaction.guild.roles, name=BUYER_ROLE_NAME)
+        if not buyer_role or buyer_role not in interaction.user.roles:
+            await interaction.response.send_message(
+                f"❌ You need the {BUYER_ROLE_NAME} role to get the script!", 
+                ephemeral=True
+            )
+            return
+            
+        conn = sqlite3.connect('keys.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM whitelist WHERE discord_id = ?", (str(interaction.user.id),))
+        user_data = c.fetchone()
+        conn.close()
+        
+        if user_data:
+            await interaction.response.send_message(
+                f"📜 Here's your script:\n```lua\n{script_content}\n```\n"
+                f"🔒 HWID Locked to: `{user_data[2]}`",
+                ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                "❌ You need to redeem a key first!", ephemeral=True
+            )
+
+    async def reset_hwid_callback(interaction: discord.Interaction):
+        await interaction.response.send_modal(ResetHWIDModal())
+
+    async def get_role_callback(interaction: discord.Interaction):
+        conn = sqlite3.connect('keys.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM whitelist WHERE discord_id = ?", (str(interaction.user.id),))
+        user_data = c.fetchone()
+        conn.close()
+        
+        if not user_data:
+            await interaction.response.send_message(
+                "❌ You need to redeem a key first before getting the role!", 
+                ephemeral=True
+            )
+            return
+            
+        buyer_role = discord.utils.get(interaction.guild.roles, name=BUYER_ROLE_NAME)
+        if not buyer_role:
+            try:
+                buyer_role = await interaction.guild.create_role(
+                    name=BUYER_ROLE_NAME,
+                    color=discord.Color.green(),
+                    reason="Auto-created Buyer role for script access"
+                )
+            except discord.Forbidden:
+                await interaction.response.send_message(
+                    "❌ I don't have permission to create the Buyer role!",
+                    ephemeral=True
+                )
+                return
+        
+        try:
+            await interaction.user.add_roles(buyer_role)
+            await interaction.response.send_message(
+                f"✅ You have been given the {BUYER_ROLE_NAME} role!",
+                ephemeral=True
+            )
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "❌ I don't have permission to add roles!",
+                ephemeral=True
+            )
+
+    async def stats_callback(interaction: discord.Interaction):
+        discord_id = str(interaction.user.id)
+        conn = sqlite3.connect('keys.db')
+        c = conn.cursor()
+        
+        c.execute("SELECT hwid, roblox_username FROM whitelist WHERE discord_id = ?", (discord_id,))
+        whitelist_data = c.fetchone()
+        
+        if not whitelist_data:
+            await interaction.response.send_message(
+                "❌ You need to redeem a key first to view your stats!", ephemeral=True
+            )
+            conn.close()
+            return
+        
+        c.execute("SELECT key, redeem_date FROM keys WHERE discord_id = ? AND redeemed = 1", (discord_id,))
+        key_data = c.fetchone()
+        
+        stats_message = (
+            f"📊 **Your Stats**\n\n"
+            f"**Discord ID:** `{discord_id}`\n"
+            f"**Roblox Username:** `{whitelist_data[1]}`\n"
+            f"**HWID:** `{whitelist_data[0]}`\n"
+        )
+        
+        if key_data:
+            stats_message += (
+                f"**Redeemed Key:** `{key_data[0]}`\n"
+                f"**Redeem Date:** {key_data[1]}\n"
+            )
+        else:
+            stats_message += "**Redeemed Key:** None\n"
+        
+        conn.close()
+        await interaction.response.send_message(stats_message, ephemeral=True)
+
+    redeem_button.callback = redeem_callback
+    script_button.callback = script_callback
+    reset_hwid_button.callback = reset_hwid_callback
+    get_role_button.callback = get_role_callback
+    stats_button.callback = stats_callback
+
+    view = View()
+    view.add_item(redeem_button)
+    view.add_item(script_button)
+    view.add_item(reset_hwid_button)
+    view.add_item(get_role_button)
+    view.add_item(stats_button)
+
+    await interaction.response.send_message(embed=embed, view=view)
+
+# /renamepanel command
+@client.tree.command(name="renamepanel", description="Rename the project name for the control panel.")
+async def renamepanel(interaction: discord.Interaction, new_name: str):
+    global project_name
+    project_name = new_name
+    await interaction.response.send_message(
+        f"Project name successfully updated to: **{project_name}**", ephemeral=True
+    )
+
+# /changescript command (Owner only)
+@client.tree.command(name="changescript", description="Change the script content (Owner only).")
+async def changescript(interaction: discord.Interaction, new_script: str):
+    owner_role = discord.utils.get(interaction.guild.roles, name=OWNER_ROLE_NAME)
+    if not owner_role or owner_role not in interaction.user.roles:
+        await interaction.response.send_message(
+            f"❌ You need the {OWNER_ROLE_NAME} role to change the script!", 
+            ephemeral=True
+        )
+        return
+    
+    global script_content
+    script_content = new_script
+    await interaction.response.send_message(
+        "✅ Script content updated successfully!", ephemeral=True
+    )
+
+# /setstatus command (Owner only)
+@client.tree.command(name="setstatus", description="Set the system status to UP or DOWN (Owner only).")
+@app_commands.choices(status=[
+    app_commands.Choice(name="UP", value="UP"),
+    app_commands.Choice(name="DOWN", value="DOWN")
+])
+async def setstatus(interaction: discord.Interaction, status: str):
+    owner_role = discord.utils.get(interaction.guild.roles, name=OWNER_ROLE_NAME)
+    if not owner_role or owner_role not in interaction.user.roles:
+        await interaction.response.send_message(
+            f"❌ You need the {OWNER_ROLE_NAME} role to set the system status!", 
+            ephemeral=True
+        )
+        return
+    
+    global system_status
+    system_status = status
+    await interaction.response.send_message(
+        f"✅ System status updated to: **{status}**", ephemeral=True
+    )
+
+# Whitelist command group
+whitelist_group = app_commands.Group(name="whitelist", description="Whitelist management commands.")
+
+@whitelist_group.command(name="add", description="Add a user to the whitelist.")
+async def whitelist_add(interaction: discord.Interaction, user: discord.User, roblox_username: str):
+    hwid = generate_hwid(str(user.id), roblox_username)
+    
+    conn = sqlite3.connect('keys.db')
+    c = conn.cursor()
+    
+    c.execute("INSERT OR REPLACE INTO whitelist (discord_id, hwid, roblox_username) VALUES (?, ?, ?)",
+              (str(user.id), hwid, roblox_username))
+    
+    conn.commit()
+    conn.close()
+    
+    await interaction.response.send_message(
+        f"✅ User {user.name} ({roblox_username}) has been whitelisted with HWID: `{hwid}`",
+        ephemeral=True
+    )
+
+# Unwhitelist command group
+unwhitelist_group = app_commands.Group(name="unwhitelist", description="Unwhitelist management commands.")
+
+@unwhitelist_group.command(name="remove", description="Remove a user from the whitelist.")
+async def unwhitelist_remove(interaction: discord.Interaction, user: discord.User):
+    conn = sqlite3.connect('keys.db')
+    c = conn.cursor()
+    
+    # Check if user is in whitelist
+    c.execute("SELECT * FROM whitelist WHERE discord_id = ?", (str(user.id),))
+    if not c.fetchone():
+        await interaction.response.send_message(
+            f"❌ User {user.name} is not in the whitelist!", ephemeral=True
+        )
+        conn.close()
+        return
+    
+    # Remove from whitelist
+    c.execute("DELETE FROM whitelist WHERE discord_id = ?", (str(user.id),))
+    conn.commit()
+    conn.close()
+    
+    # Remove Buyer role if they have it
+    buyer_role = discord.utils.get(interaction.guild.roles, name=BUYER_ROLE_NAME)
+    if buyer_role and buyer_role in user.roles:
+        try:
+            await user.remove_roles(buyer_role)
+            await interaction.response.send_message(
+                f"✅ User {user.name} has been removed from the whitelist and their {BUYER_ROLE_NAME} role has been revoked.",
+                ephemeral=True
+            )
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                f"✅ User {user.name} has been removed from the whitelist, but I don't have permission to remove their {BUYER_ROLE_NAME} role!",
+                ephemeral=True
+            )
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                f"✅ User {user.name} has been removed from the whitelist, but an error occurred while trying to remove their {BUYER_ROLE_NAME} role.",
+                ephemeral=True
+            )
+    else:
+        await interaction.response.send_message(
+            f"✅ User {user.name} has been removed from the whitelist. They did not have the {BUYER_ROLE_NAME} role.",
+            ephemeral=True
+        )
+
+# Key management command group
+key_group = app_commands.Group(name="key", description="Key management commands.")
+
+@key_group.command(name="generate", description="Generate a new key (Buy from role only).")
+async def generate_key(interaction: discord.Interaction):
+    buy_from_role = discord.utils.get(interaction.guild.roles, name=BUY_FROM_ROLE_NAME)
+    if not buy_from_role or buy_from_role not in interaction.user.roles:
+        await interaction.response.send_message(
+            f"❌ You need the {BUY_FROM_ROLE_NAME} role to generate keys!", 
+            ephemeral=True
+        )
+        return
+    
+    new_key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+    
+    conn = sqlite3.connect('keys.db')
+    c = conn.cursor()
+    
+    c.execute("INSERT INTO keys (key, redeemed) VALUES (?, 0)", (new_key,))
+    
+    conn.commit()
+    conn.close()
+    
+    await interaction.response.send_message(
+        f"🔑 New key generated: `{new_key}`\n"
+        "This key can be redeemed once and will be locked to the user's HWID.",
+        ephemeral=True
+    )
+
+# Add command groups to the bot
+client.tree.add_command(whitelist_group)
+client.tree.add_command(unwhitelist_group)
+client.tree.add_command(key_group)
+
+# Run the bot
+client.run("ZUDO SOO HOTT")  # Replace with your actual bot token

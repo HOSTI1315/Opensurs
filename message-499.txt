@@ -1,0 +1,223 @@
+local Players = game:GetService('Players')
+local RunService = game:GetService('RunService')
+local UserInputService = game:GetService('UserInputService')
+local lp = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+local mouse = lp:GetMouse()
+
+local g = getgenv()
+g.kt = g.kt or {}
+
+-- Clean up existing connections and resources
+if g.kt.hb then
+    g.kt.hb:Disconnect()
+end
+if g.kt.conns then
+    for _, c in ipairs(g.kt.conns) do
+        pcall(function()
+            c:Disconnect()
+        end)
+    end
+end
+g.kt.conns = {}
+g.kt.state = true
+g.kt.target = nil
+
+-- Clean up existing drawing line
+if g.kt.line then
+    g.kt.line:Remove()
+end
+g.kt.line = Drawing.new('Line')
+g.kt.line.Thickness = 2
+g.kt.line.Color = Color3.fromRGB(180, 0, 255)
+g.kt.line.Transparency = 1
+g.kt.line.Visible = false
+
+-- Function to apply THROW_STATE to a tool
+local function apply(tool)
+    if tool and tool:IsA('Tool') and tool.Name == '[Knife]' then
+        local ts = tool:FindFirstChild('THROW_STATE')
+        if not ts then
+            ts = Instance.new('BoolValue')
+            ts.Name = 'THROW_STATE'
+            ts.Parent = tool
+        end
+        ts.Value = true
+    end
+end
+
+-- Function to simulate throwing the knife
+local function throwKnife(tool, target)
+    if
+        not (
+            tool
+            and tool:IsA('Tool')
+            and tool.Name == '[Knife]'
+            and target
+            and target.Character
+        )
+    then
+        return
+    end
+    -- Equip the tool if not already equipped
+    if lp.Character and tool.Parent ~= lp.Character then
+        lp.Character.Humanoid:EquipTool(tool)
+    end
+    -- Simulate throw by firing the tool's activation
+    local success, err = pcall(function()
+        tool:Activate()
+    end)
+    if not success then
+        warn('Failed to activate tool:', err)
+    end
+    -- Attempt to force hit by manipulating knife position (client-side prediction)
+    if
+        target.Character and target.Character:FindFirstChild('HumanoidRootPart')
+    then
+        local knifeHandle = tool:FindFirstChild('Handle')
+        if knifeHandle then
+            knifeHandle.Position = target.Character.HumanoidRootPart.Position
+        end
+    end
+end
+
+-- Function to track tools
+local function track(tool)
+    if not (tool and tool:IsA('Tool') and tool.Name == '[Knife]') then
+        return
+    end
+    apply(tool)
+    table.insert(
+        g.kt.conns,
+        tool.ChildAdded:Connect(function(ch)
+            if ch.Name == 'THROW_STATE' and ch:IsA('BoolValue') then
+                apply(tool)
+            end
+        end)
+    )
+end
+
+-- Track existing tools in backpack and character
+for _, t in ipairs(lp.Backpack:GetChildren()) do
+    track(t)
+end
+if lp.Character then
+    for _, t in ipairs(lp.Character:GetChildren()) do
+        track(t)
+    end
+end
+
+-- Monitor new tools in backpack and character
+table.insert(g.kt.conns, lp.Backpack.ChildAdded:Connect(track))
+table.insert(
+    g.kt.conns,
+    lp.CharacterAdded:Connect(function(char)
+        table.insert(g.kt.conns, char.ChildAdded:Connect(track))
+        for _, t in ipairs(char:GetChildren()) do
+            track(t)
+        end
+    end)
+)
+
+-- Function to get the closest player to the mouse
+local function getClosestToMouse()
+    local closest, dist = nil, math.huge
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if
+            plr ~= lp
+            and plr.Character
+            and plr.Character:FindFirstChild('HumanoidRootPart')
+            and plr.Character:FindFirstChild('Humanoid')
+            and plr.Character.Humanoid.Health > 0
+        then
+            local pos, onscreen = cam:WorldToViewportPoint(
+                plr.Character.HumanoidRootPart.Position
+            )
+            if onscreen then
+                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(
+                    mouse.X,
+                    mouse.Y
+                )).Magnitude
+                if mag < dist then
+                    dist = mag
+                    closest = plr
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- Heartbeat loop for aiming, auto-throwing, and applying THROW_STATE
+g.kt.hb = RunService.Heartbeat:Connect(function()
+    -- Apply THROW_STATE to knife in backpack or character
+    local knife = lp.Backpack:FindFirstChild('[Knife]')
+    if lp.Character then
+        knife = lp.Character:FindFirstChild('[Knife]') or knife
+    end
+    if knife then
+        apply(knife)
+    end
+
+    -- Aim at target
+    if
+        g.kt.target
+        and g.kt.target.Character
+        and g.kt.target.Character:FindFirstChild('HumanoidRootPart')
+    then
+        local targetPos = g.kt.target.Character.HumanoidRootPart.Position
+            + Vector3.new(0, 2, 0)
+        cam.CFrame = CFrame.new(cam.CFrame.Position, targetPos)
+        -- Auto-throw at target
+        if knife then
+            throwKnife(knife, g.kt.target)
+        end
+    end
+
+    -- Update the aiming line
+    if
+        g.kt.target
+        and g.kt.target.Character
+        and g.kt.target.Character:FindFirstChild('HumanoidRootPart')
+        and lp.Character
+        and lp.Character:FindFirstChild('HumanoidRootPart')
+    then
+        local mePos, on1 =
+            cam:WorldToViewportPoint(lp.Character.HumanoidRootPart.Position)
+        local tarPos, on2 = cam:WorldToViewportPoint(
+            g.kt.target.Character.HumanoidRootPart.Position
+        )
+        if on1 and on2 then
+            g.kt.line.From = Vector2.new(mePos.X, mePos.Y)
+            g.kt.line.To = Vector2.new(tarPos.X, tarPos.Y)
+            g.kt.line.Visible = true
+        else
+            g.kt.line.Visible = false
+        end
+    else
+        g.kt.line.Visible = false
+    end
+end)
+
+-- Toggle target with 'C' key
+table.insert(
+    g.kt.conns,
+    UserInputService.InputBegan:Connect(function(input, gp)
+        if gp then
+            return
+        end
+        if input.KeyCode == Enum.KeyCode.C then
+            if g.kt.target then
+                g.kt.target = nil
+                g.kt.line.Visible = false
+                print('Target cleared')
+            else
+                local closest = getClosestToMouse()
+                if closest then
+                    g.kt.target = closest
+                    print('Target set to:', closest.Name)
+                end
+            end
+        end
+    end)
+)

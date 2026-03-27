@@ -1,0 +1,136 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+Name = "Wicik",
+LoadingTitle = "Wicik",
+LoadingSubtitle = "by Beat up Gubby",
+ConfigurationSaving = {
+Enabled = true,
+FolderName = "Wicik_Gubby",
+FileName = "Configuration"
+},
+Discord = {
+Enabled = true,
+Invite = "SKGYUrmkpH",
+RememberJoins = true
+},
+KeySystem = false,
+})
+
+local AutoFarm = false
+local InfiniteAmmo = false
+local l_Inventory_0 = game:GetService("ReplicatedStorage"):WaitForChild("PlayerData"):WaitForChild("skwiwik9").Inventory
+
+local function AutoFarmLoop()
+while AutoFarm do
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.VoidDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.AirstrikeDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4), 3.7508)
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.SmiteDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.FoodDamage:FireServer("CherryBomb", Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.FoodDamage:FireServer("SuspiciousStew", Vector3.new(-8.143, 3.093, -4.2E-4))
+
+task.wait(0.1)
+end
+end
+
+local function InfiniteAmmoLoop()
+while InfiniteAmmo do
+-- Set all ammo and food values to 999
+for _, container in ipairs({ l_Inventory_0.Ammo, l_Inventory_0.Ammo.Food }) do
+for _, descendant in ipairs(container:GetDescendants()) do
+if descendant:IsA("ValueBase") then
+descendant.Value = 999
+end
+end
+end
+
+task.wait(0.5)
+end
+end
+
+local MainTab = Window:CreateTab("Main", "house")
+local MainSection = MainTab:CreateSection("Main Features")
+
+local AutoFarmToggle = MainTab:CreateToggle({
+Name = "Auto Farm Money",
+CurrentValue = false,
+Flag = "AutoFarmToggle",
+Callback = function(Value)
+AutoFarm = Value
+if AutoFarm then
+Rayfield:Notify({
+Title = "Auto Farm",
+Content = "Auto Farm Money has been enabled!",
+Duration = 2,
+Image = 4483362458,
+})
+task.spawn(AutoFarmLoop)
+else
+Rayfield:Notify({
+Title = "Auto Farm",
+Content = "Auto Farm Money has been disabled!",
+Duration = 2,
+Image = 4483362458,
+})
+end
+end,
+})
+
+local InfiniteAmmoToggle = MainTab:CreateToggle({
+Name = "Infinite Ammo/Food",
+CurrentValue = false,
+Flag = "InfiniteAmmoToggle",
+Callback = function(Value)
+InfiniteAmmo = Value
+if InfiniteAmmo then
+Rayfield:Notify({
+Title = "Infinite Ammo",
+Content = "Infinite Ammo/Food has been enabled!",
+Duration = 2,
+Image = 4483362458,
+})
+task.spawn(InfiniteAmmoLoop)
+else
+Rayfield:Notify({
+Title = "Infinite Ammo",
+Content = "Infinite Ammo/Food has been disabled!",
+Duration = 2,
+Image = 4483362458,
+})
+end
+end,
+})
+
+local AdditionalSection = MainTab:CreateSection("Additional Features")
+
+MainTab:CreateButton({
+Name = "Quick Farm (One Time)",
+Callback = function()
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.VoidDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.AirstrikeDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4), 3.7508)
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.SmiteDamage:FireServer(Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.FoodDamage:FireServer("CherryBomb", Vector3.new(-8.143, 3.093, -4.2E-4))
+game:GetService("ReplicatedStorage").Networking.Server.RemoteEvents.DamageEvents.FoodDamage:FireServer("SuspiciousStew", Vector3.new(-8.143, 3.093, -4.2E-4))
+
+
+MainTab:CreateButton({
+Name = "Refill Ammo (One Time)",
+Callback = function()
+for _, container in ipairs({ l_Inventory_0.Ammo, l_Inventory_0.Ammo.Food }) do
+for _, descendant in ipairs(container:GetDescendants()) do
+if descendant:IsA("ValueBase") then
+descendant.Value = 999
+end
+end
+end
+
+Rayfield:Notify({
+Title = "Refill Ammo",
+Content = "Ammo and Food refilled to 999!",
+Duration = 3,
+Image = 4483362458,
+})
+end,
+})
+
+Rayfield:LoadConfiguration()

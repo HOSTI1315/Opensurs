@@ -1,0 +1,163 @@
+-- L1GHT DESYNC V2 - Fully Cleaned & Working
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LDSV2"
+ScreenGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MF"
+MainFrame.Size = UDim2.new(0, 250, 0, 120)
+MainFrame.Position = UDim2.new(0, 10, 0, 10)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TB"
+TitleBar.Size = UDim2.new(1, 0, 0, 25)
+TitleBar.Position = UDim2.new(0, 0, 0, 0)
+TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TL"
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "L1GHT DESYNC V2"
+TitleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+TitleLabel.Parent = TitleBar
+
+local Divider = Instance.new("Frame")
+Divider.Name = "DV"
+Divider.Size = UDim2.new(1, 0, 0, 1)
+Divider.Position = UDim2.new(0, 0, 0, 25)
+Divider.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Divider.BorderSizePixel = 0
+Divider.Parent = MainFrame
+
+local DesyncButton = Instance.new("TextButton")
+DesyncButton.Name = "BTN"
+DesyncButton.Size = UDim2.new(0.9, 0, 0, 35)
+DesyncButton.Position = UDim2.new(0.05, 0, 0, 35)
+DesyncButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+DesyncButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+DesyncButton.Text = "DESYNC"
+DesyncButton.Font = Enum.Font.GothamBold
+DesyncButton.TextSize = 12
+DesyncButton.AutoButtonColor = false
+DesyncButton.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 6)
+BtnCorner.Parent = DesyncButton
+
+local BtnStroke = Instance.new("UIStroke")
+BtnStroke.Color = Color3.fromRGB(50, 50, 50)
+BtnStroke.Thickness = 1
+BtnStroke.Parent = DesyncButton
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "SL"
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0.05, 0, 0, 75)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Status: OFF"
+StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 11
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainFrame
+
+-- Desync Function
+DesyncButton.MouseButton1Click:Connect(function()
+    -- UI Feedback
+    StatusLabel.Text = "Status: ON"
+    StatusLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+    
+    TweenService:Create(StatusLabel, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
+    TweenService:Create(DesyncButton, TweenInfo.new(0.3), {
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    }):Play()
+
+    -- Core Desync Logic
+    pcall(function()
+        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local Humanoid = Character:WaitForChild("Humanoid")
+        local HRP = Character:WaitForChild("HumanoidRootPart")
+
+        -- Tool activation sequence
+        Humanoid:UnequipTools()
+        local Tool = Backpack:FindFirstChild("Quantum Cloner")
+        if Tool then
+            Humanoid:EquipTool(Tool)
+            Tool:Activate()
+            task.wait(0.5)
+            ReplicatedStorage.Packages.Net["RE/QuantumCloner/OnTeleport"]:FireServer()
+        end
+
+        -- WorldStep flag
+        setfflag("WorldStepMax", "-99999999999999")
+
+        -- First CFrame spam block
+        task.spawn(function()
+            pcall(function()
+                setfflag("WorldStepsOffsetAdjustRate", "-1")
+                task.wait(1)
+                setfflag("WorldStepsOffsetAdjustRate", "60")
+                
+                local baseCFrame1 = HRP.CFrame * CFrame.new(-5, 0, 15)
+                for i = 1, 98 do
+                    HRP.CFrame = baseCFrame1
+                end
+            end)
+            
+            task.wait(1)
+            setfflag("WorldStepsOffsetAdjustRate", "-9999999999")
+            task.wait(1)
+            setfflag("WorldStepsOffsetAdjustRate", "-9999999999")
+
+            -- Second CFrame spam block
+            pcall(function()
+                local baseCFrame2 = HRP.CFrame * CFrame.new(2, 0, 6)
+                for i = 1, 98 do
+                    HRP.CFrame = baseCFrame2
+                end
+            end)
+            
+            task.wait(2)
+            setfflag("WorldStepsOffsetAdjustRate", "-1")
+        end)
+    end)
+    
+    wait(1)
+end)
+
+-- Character respawn handling
+LocalPlayer.CharacterAdded:Connect(function()
+    wait(1)
+    pcall(function()
+        local Character = LocalPlayer.Character
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+    end)
+end)
+
+LocalPlayer.CharacterRemoving:Connect(function() end)

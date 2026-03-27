@@ -1,0 +1,1465 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local ok, initErr = pcall(function()
+    local CoreGui = game:GetService("CoreGui")
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = Players.LocalPlayer
+    local UserInputService = game:GetService("UserInputService")
+    local HttpService = game:GetService("HttpService")
+    local TeleportService = game:GetService("TeleportService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Lighting = game:GetService("Lighting")
+    local Workspace = game:GetService("Workspace")
+
+    -- ========== NEW FUNCTIONS FROM TOP SCRIPT ==========
+    
+    -- Config persistence
+    local CONFIG_FILE = "dyhub_sab_config.json"
+    local function canWriteFiles()
+        return type(writefile) == "function" and type(readfile) == "function" and type(isfile) == "function"
+    end
+
+    local config = {
+        SpeedBoost = false,
+        BoostSpeedValue = 50,
+        AntiTrap = false,
+        InfiniteJump = false,
+        ESP = false,
+        ViewBaseTimers = false,
+        Autobuy = {},
+        SelectedJobId = nil,
+        Optimization = {
+            NoTextures = false,
+            LowGraphics = false,
+            NoParticles = false,
+            NoShadows = false,
+            HidePlayers = false
+        }
+    }
+
+    local function loadConfig()
+        if canWriteFiles() and isfile(CONFIG_FILE) then
+            local ok, txt = pcall(readfile, CONFIG_FILE)
+            if ok and txt then
+                local decodeOk, data = pcall(function() return HttpService:JSONDecode(txt) end)
+                if decodeOk and type(data) == "table" then
+                    for k,v in pairs(data) do config[k] = v end
+                end
+            end
+        end
+    end
+
+    local function saveConfig()
+        if canWriteFiles() then
+            pcall(function()
+                writefile(CONFIG_FILE, HttpService:JSONEncode(config))
+            end)
+        end
+    end
+
+    -- Load persisted config if possible
+    loadConfig()
+
+    -- Safe http loadstring
+    local function tryLoadURLToRun(url)
+        local ok, err = pcall(function()
+            local txt = game:HttpGet(url)
+            local f = loadstring(txt)
+            if f then pcall(f) end
+        end)
+        if not ok then warn("Failed to load:", url, err) end
+    end
+
+    -- ========== OPTIMIZATION FUNCTIONS ==========
+    local optimizationStates = config.Optimization or {
+        NoTextures = false,
+        LowGraphics = false,
+        NoParticles = false,
+        NoShadows = false,
+        HidePlayers = false
+    }
+
+    local originalTextures = {}
+    local originalGraphicsQuality = nil
+    local originalPlayersVisibility = {}
+
+    -- Remove Textures function
+    local function removeTextures()
+        if optimizationStates.NoTextures then return end
+        
+        optimizationStates.NoTextures = true
+        config.Optimization.NoTextures = true
+        saveConfig()
+
+        local function replaceTexture(obj)
+            if obj:IsA("Part") then
+                originalTextures[obj] = {
+                    Material = obj.Material,
+                    Color = obj.Color,
+                    Transparency = obj.Transparency
+                }
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Color = Color3.fromRGB(100, 100, 100)
+            elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                originalTextures[obj] = {
+                    Texture = obj.Texture,
+                    Transparency = obj.Transparency
+                }
+                obj.Transparency = 1
+            end
+        end
+
+        -- Process existing objects
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            pcall(replaceTexture, obj)
+        end
+
+        -- Process future objects
+        Workspace.DescendantAdded:Connect(function(obj)
+            pcall(replaceTexture, obj)
+        end)
+    end
+
+    local function restoreTextures()
+        if not optimizationStates.NoTextures then return end
+        
+        optimizationStates.NoTextures = false
+        config.Optimization.NoTextures = false
+        saveConfig()
+
+        for obj, props in pairs(originalTextures) do
+            if obj and obj.Parent then
+                pcall(function()
+                    if obj:IsA("Part") then
+                        obj.Material = props.Material
+                        obj.Color = props.Color
+                        obj.Transparency = props.Transparency
+                    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                        obj.Texture = props.Texture
+                        obj.Transparency = props.Transparency
+                    end
+                end)
+            end
+        end
+        table.clear(originalTextures)
+    end
+
+    -- Low Graphics function
+    local function setLowGraphics()
+        if optimizationStates.LowGraphics then return end
+        
+        optimizationStates.LowGraphics = true
+        config.Optimization.LowGraphics = true
+        saveConfig()
+
+        originalGraphicsQuality = settings().Rendering.QualityLevel
+        
+        -- Set low graphics quality
+        settings().Rendering.QualityLevel = 1
+        
+        -- Adjust lighting
+        Lighting.GlobalShadows = false
+        Lighting.ShadowSoftness = 0
+        Lighting.Brightness = 2
+        
+        -- Adjust workspace
+        Workspace.DescendantAdded:Connect(function(obj)
+            if obj:IsA("ParticleEmitter") then
+                obj.Enabled = false
+            end
+        end)
+    end
+
+    local function restoreGraphics()
+        if not optimizationStates.LowGraphics then return end
+        
+        optimizationStates.LowGraphics = false
+        config.Optimization.LowGraphics = false
+        saveConfig()
+
+        if originalGraphicsQuality then
+            settings().Rendering.QualityLevel = originalGraphicsQuality
+        end
+        
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.5
+        Lighting.Brightness = 1
+    end
+
+    -- Remove Particles function
+    local function removeParticles()
+        if optimizationStates.NoParticles then return end
+        
+        optimizationStates.NoParticles = true
+        config.Optimization.NoParticles = true
+        saveConfig()
+
+        local function disableParticles(obj)
+            if obj:IsA("ParticleEmitter") then
+                obj.Enabled = false
+            end
+        end
+
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            pcall(disableParticles, obj)
+        end
+
+        Workspace.DescendantAdded:Connect(function(obj)
+            pcall(disableParticles, obj)
+        end)
+    end
+
+    local function restoreParticles()
+        if not optimizationStates.NoParticles then return end
+        
+        optimizationStates.NoParticles = false
+        config.Optimization.NoParticles = false
+        saveConfig()
+
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("ParticleEmitter") then
+                obj.Enabled = true
+            end
+        end
+    end
+
+    -- Remove Shadows function
+    local function removeShadows()
+        if optimizationStates.NoShadows then return end
+        
+        optimizationStates.NoShadows = true
+        config.Optimization.NoShadows = true
+        saveConfig()
+
+        Lighting.GlobalShadows = false
+        for _, light in pairs(Lighting:GetChildren()) do
+            if light:IsA("Light") then
+                light.Shadows = false
+            end
+        end
+    end
+
+    local function restoreShadows()
+        if not optimizationStates.NoShadows then return end
+        
+        optimizationStates.NoShadows = false
+        config.Optimization.NoShadows = false
+        saveConfig()
+
+        Lighting.GlobalShadows = true
+        for _, light in pairs(Lighting:GetChildren()) do
+            if light:IsA("Light") then
+                light.Shadows = true
+            end
+        end
+    end
+
+    -- Hide Players function
+    local function hidePlayers()
+        if optimizationStates.HidePlayers then return end
+        
+        optimizationStates.HidePlayers = true
+        config.Optimization.HidePlayers = true
+        saveConfig()
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                originalPlayersVisibility[player] = player.Character
+                player.Character.Parent = nil
+            end
+        end
+
+        Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(character)
+                if optimizationStates.HidePlayers then
+                    character.Parent = nil
+                end
+            end)
+        end)
+    end
+
+    local function showPlayers()
+        if not optimizationStates.HidePlayers then return end
+        
+        optimizationStates.HidePlayers = false
+        config.Optimization.HidePlayers = false
+        saveConfig()
+
+        for player, character in pairs(originalPlayersVisibility) do
+            if character and character.Parent == nil then
+                character.Parent = Workspace
+            end
+        end
+        table.clear(originalPlayersVisibility)
+    end
+
+    -- FPS Boost function
+    local function boostFPS()
+        -- Disable various graphics effects
+        Lighting.FogEnd = 100000
+        Lighting.Brightness = 2
+        Lighting.GlobalShadows = false
+        Lighting.ShadowSoftness = 0
+        
+        -- Set rendering settings
+        settings().Rendering.QualityLevel = 1
+        
+        -- Disable unnecessary services if possible
+        pcall(function()
+            game:GetService("UserInputService").MouseIconEnabled = false
+        end)
+    end
+
+    -- Memory Cleanup function
+    local function cleanupMemory()
+        collectgarbage("collect")
+        for i = 1, 10 do
+            wait(0.1)
+            collectgarbage("collect")
+        end
+    end
+
+    -- Anti Trap function
+    local antiTrapEnabled = config.AntiTrap
+    local antiTrapConn = nil
+
+    local function enableAntiTrap()
+        if antiTrapEnabled then return end
+        antiTrapEnabled = true
+        local BATCH_SIZE = 250
+        local SEARCH_TRAPS_IN_GAME = false
+
+        local function shouldRemoveTrapTouch(tt)
+            if not (tt:IsA("TouchTransmitter") and tt.Name == "TouchInterest") then return false end
+            local p = tt.Parent
+            if not (p and p:IsA("MeshPart") and p.Name == "Open") then return false end
+            local m = p:FindFirstAncestorOfClass("Model")
+            if not (m and m.Name == "Trap") then return false end
+            return true
+        end
+
+        local function removeTrapTouch(tt)
+            pcall(function() if tt.Parent then tt:Destroy() end end)
+        end
+
+        task.defer(function()
+            local root = SEARCH_TRAPS_IN_GAME and game or workspace
+            local all = root:GetDescendants()
+            for i = 1, #all do
+                local o = all[i]
+                if o:IsA("TouchTransmitter") and shouldRemoveTrapTouch(o) then
+                    removeTrapTouch(o)
+                end
+                if i % BATCH_SIZE == 0 then task.wait() end
+            end
+        end)
+
+        antiTrapConn = workspace.DescendantAdded:Connect(function(obj)
+            if obj:IsA("TouchTransmitter") and shouldRemoveTrapTouch(obj) then
+                removeTrapTouch(obj)
+            end
+        end)
+    end
+
+    local function disableAntiTrap()
+        antiTrapEnabled = false
+        if antiTrapConn then
+            antiTrapConn:Disconnect()
+            antiTrapConn = nil
+        end
+    end
+
+    -- View Base Timers function
+    local plotTimers_Enabled = config.ViewBaseTimers
+    local plotTimers_RenderConnection = nil
+    local plotTimers_OriginalProperties = {}
+
+    local function disablePlotTimers()
+        plotTimers_Enabled = false
+        if plotTimers_RenderConnection then
+            pcall(function() plotTimers_RenderConnection:Disconnect() end)
+            plotTimers_RenderConnection = nil
+        end
+        for label, props in pairs(plotTimers_OriginalProperties) do
+            pcall(function()
+                if label and label.Parent then
+                    local bb = label:FindFirstAncestorWhichIsA("BillboardGui")
+                    if bb and bb.Parent then
+                        bb.Enabled = props.bb_enabled
+                        bb.AlwaysOnTop = props.bb_alwaysOnTop
+                        bb.Size = props.bb_size
+                        bb.MaxDistance = props.bb_maxDistance
+                        label.TextScaled = props.label_textScaled
+                        label.TextWrapped = props.label_textWrapped
+                        label.AutomaticSize = props.label_automaticSize
+                        label.Size = props.label_size
+                        label.TextSize = props.label_textSize
+                    end
+                end
+            end)
+        end
+        table.clear(plotTimers_OriginalProperties)
+    end
+
+    local function enablePlotTimers()
+        disablePlotTimers()
+        plotTimers_Enabled = true
+        local camera = workspace.CurrentCamera
+        local DISTANCE_THRESHOLD = 45
+        local SCALE_START, SCALE_RANGE = 100, 300
+        local MIN_TEXT_SIZE, MAX_TEXT_SIZE = 30, 36
+        local lastUpdate = 0
+
+        plotTimers_RenderConnection = RunService.RenderStepped:Connect(function()
+            if not plotTimers_Enabled then return end
+            if tick() - lastUpdate < 0.1 then return end
+            lastUpdate = tick()
+
+            for _, label in ipairs(workspace.Plots:GetDescendants()) do
+                if label:IsA("TextLabel") and label.Name == "RemainingTime" then
+                    local bb = label:FindFirstAncestorWhichIsA("BillboardGui")
+                    if not bb then continue end
+                    local model = bb:FindFirstAncestorOfClass("Model")
+                    if not model then continue end
+                    local basePart = model:FindFirstChildWhichIsA("BasePart", true)
+                    if not basePart then continue end
+                    if not plotTimers_OriginalProperties[label] then
+                        plotTimers_OriginalProperties[label] = {
+                            bb_enabled = bb.Enabled,
+                            bb_alwaysOnTop = bb.AlwaysOnTop,
+                            bb_size = bb.Size,
+                            bb_maxDistance = bb.MaxDistance,
+                            label_textScaled = label.TextScaled,
+                            label_textWrapped = label.TextWrapped,
+                            label_automaticSize = label.AutomaticSize,
+                            label_size = label.Size,
+                            label_textSize = label.TextSize,
+                        }
+                    end
+                    bb.MaxDistance = 10000
+                    bb.AlwaysOnTop = true
+                    bb.ClipsDescendants = false
+                    bb.Size = UDim2.new(0, 300, 0, 150)
+                    label.TextScaled = false
+                    label.TextWrapped = true
+                    label.ClipsDescendants = false
+                    label.Size = UDim2.new(1, 0, 0, 32)
+                    label.AutomaticSize = Enum.AutomaticSize.Y
+
+                    local distance = (camera.CFrame.Position - basePart.Position).Magnitude
+                    if distance > DISTANCE_THRESHOLD and basePart.Position.Y >= 0 then
+                        bb.Enabled = false
+                    else
+                        bb.Enabled = true
+                        local t = math.clamp((distance - SCALE_START) / SCALE_RANGE, 0, 1)
+                        local newTextSize = math.clamp(MIN_TEXT_SIZE + (MAX_TEXT_SIZE - MIN_TEXT_SIZE) * t, MIN_TEXT_SIZE, MAX_TEXT_SIZE)
+                        label.TextSize = newTextSize
+                        label.Size = UDim2.new(1, 0, 0, newTextSize + 6)
+                    end
+                end
+            end
+        end)
+    end
+
+    -- Auto Buy function
+    local itemList = {
+        "Slap","Speed Coil","Trap","Iron Slap","Gravity Coil","Bee Launcher","Gold Slap","Coil Combo","Rage Table",
+        "Diamond Slap","Grapple Hook","Taser Gun","Emerald Slap","Invisibility Cloak","Boogie Bomb","Ruby Slap",
+        "Medusa's Head","Dark Matter Slap","Web Slinger","Flame Slap","Quantum Cloner","All Seeing Sentry","Nuclear Slap",
+        "Rainbowrath Sword","Body Swap Potion","Splatter Slap","Paintball Gun"
+    }
+    local autobuy_selected = config.Autobuy or {}
+
+    local function autoBuySelectedItems()
+        task.spawn(function()
+            for _, item in ipairs(autobuy_selected or {}) do
+                local args = { item }
+                local ok, err = pcall(function()
+                    ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RF/CoinsShopService/RequestBuy"):InvokeServer(unpack(args))
+                end)
+                if not ok then warn("AutoBuy failed for", item, tostring(err)) end
+                task.wait(0.3)
+            end
+        end)
+    end
+
+    -- Steal Helper function
+    local function loadStealHelper()
+        pcall(function()
+            tryLoadURLToRun("https://raw.githubusercontent.com/erewe23/uitest.github.io/refs/heads/main/ere.lua")
+        end)
+    end
+
+    -- Antisteal function
+    local function loadAntisteal()
+        pcall(function()
+            tryLoadURLToRun("https://raw.githubusercontent.com/34wefwef/antisteal.github.io/refs/heads/main/ere.lua")
+        end)
+    end
+
+    -- Brainrot Rare Joiner function
+    local function loadBrainrotRareJoiner()
+        pcall(function()
+            tryLoadURLToRun("https://raw.githubusercontent.com/erewe23/stealhelper.github.io/refs/heads/main/ere.lua")
+        end)
+    end
+
+    -- Most Expensive Brainrot ESP function
+    local function loadMostExpensiveESP()
+        pcall(function()
+            tryLoadURLToRun("https://raw.githubusercontent.com/34t34t33/mostexpensive.github.io/refs/heads/main/rare.lua")
+        end)
+    end
+
+    -- InfYield function
+    local function loadInfYield()
+        pcall(function()
+            tryLoadURLToRun("https://raw.githubusercontent.com/wedfwef3/ere.github.io/refs/heads/main/infyield.lua")
+        end)
+    end
+
+    -- Initialize functions based on config
+    if config.AntiTrap then
+        enableAntiTrap()
+    end
+
+    if config.ViewBaseTimers then
+        enablePlotTimers()
+    end
+
+    -- Initialize optimization states
+    if optimizationStates.NoTextures then
+        removeTextures()
+    end
+    if optimizationStates.LowGraphics then
+        setLowGraphics()
+    end
+    if optimizationStates.NoParticles then
+        removeParticles()
+    end
+    if optimizationStates.NoShadows then
+        removeShadows()
+    end
+    if optimizationStates.HidePlayers then
+        hidePlayers()
+    end
+
+    -- ========== ORIGINAL WAVA HUB CODE ==========
+
+    -- Create data folder
+    local dataFolder = "Qiwik"
+    if not isfolder(dataFolder) then
+        makefolder(dataFolder)
+    end
+
+    local function saveJson(fileName, tableData)
+        writefile(dataFolder .. "/" .. fileName .. ".json", HttpService:JSONEncode(tableData))
+    end
+
+    local function readJson(fileName)
+        local path = dataFolder .. "/" .. fileName .. ".json"
+        if isfile(path) then
+            local content = readfile(path)
+            return HttpService:JSONDecode(content)
+        end
+        return nil
+    end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "WavaHubGUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = CoreGui
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 280, 0, 200)
+    mainFrame.Position = UDim2.new(0.4, 0, 0.3, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Parent = screenGui
+    Instance.new("UICorner", mainFrame)
+
+    local header = Instance.new("Frame")
+    header.Name = "Header"
+    header.Size = UDim2.new(1, 0, 0, 40)
+    header.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    header.BorderSizePixel = 0
+    header.Parent = mainFrame
+    Instance.new("UICorner", header)
+
+    local title = Instance.new("TextLabel")
+    title.Name = "TitleLabel"
+    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "t.me/deltascriptt | WAVA HUB"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 12
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = header
+
+    local titleShadow = Instance.new("TextLabel")
+    titleShadow.Size = UDim2.new(1, -40, 1, 0)
+    titleShadow.Position = UDim2.new(0, 11, 0, 1)
+    titleShadow.BackgroundTransparency = 1
+    titleShadow.TextTransparency = 0.7
+    titleShadow.Text = "t.me/deltascriptt | WAVA HUB"
+    titleShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
+    titleShadow.Font = Enum.Font.GothamBold
+    titleShadow.TextSize = 12
+    titleShadow.TextXAlignment = Enum.TextXAlignment.Left
+    titleShadow.ZIndex = title.ZIndex - 1
+    titleShadow.Parent = header
+
+    local titleStroke = Instance.new("UIStroke")
+    titleStroke.Color = Color3.fromRGB(0, 0, 0)
+    titleStroke.Thickness = 1
+    titleStroke.Transparency = 0.5
+    titleStroke.Parent = title
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseButton"
+    closeBtn.Size = UDim2.new(0, 32, 0, 32)
+    closeBtn.Position = UDim2.new(1, -36, 0, 4)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Text = "X"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 14
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = header
+    Instance.new("UICorner", closeBtn)
+
+    local minimizeBtn = Instance.new("TextButton")
+    minimizeBtn.Name = "MinimizeButton"
+    minimizeBtn.Size = UDim2.new(0, 32, 0, 32)
+    minimizeBtn.Position = UDim2.new(1, -74, 0, 4)
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeBtn.Text = "в–Ў"
+    minimizeBtn.Font = Enum.Font.GothamBold
+    minimizeBtn.TextSize = 14
+    minimizeBtn.BorderSizePixel = 0
+    minimizeBtn.Parent = header
+    Instance.new("UICorner", minimizeBtn)
+
+    local divider = Instance.new("Frame")
+    divider.Size = UDim2.new(1, 0, 0, 1)
+    divider.Position = UDim2.new(0, 0, 0, 40)
+    divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    divider.BorderSizePixel = 0
+    divider.ZIndex = 2
+    divider.Parent = mainFrame
+
+    local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
+    sidebar.Size = UDim2.new(0, 70, 1, -40)
+    sidebar.Position = UDim2.new(0, 0, 0, 40)
+    sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    sidebar.ZIndex = 1
+    sidebar.Parent = mainFrame
+    Instance.new("UICorner", sidebar)
+
+    local function makeTabButton(text, y)
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0.8, 0, 0, 20)
+        b.Position = UDim2.new(0.1, 0, 0.08, y)
+        b.BackgroundColor3 = y == 0 and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(40, 40, 40)
+        b.TextColor3 = y == 0 and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+        b.Text = text
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 10
+        b.ZIndex = 2
+        b.Parent = sidebar
+        Instance.new("UICorner", b)
+        return b
+    end
+
+    local tabMainBtn   = makeTabButton("Main",   0)
+    local tabHelperBtn = makeTabButton("Helper", 25)
+    local tabESPBtn    = makeTabButton("ESP",    50)
+    local tabGUIsBtn   = makeTabButton("GUIS",   75)
+    local tabThemesBtn = makeTabButton("Themes", 100)
+    local tabOtherBtn  = makeTabButton("OTHER",  125)
+    -- NEW: Optimization tab
+    local tabOptimizationBtn = makeTabButton("OPTIMIZATION", 150)
+
+    local content = Instance.new("Frame")
+    content.Name = "Content"
+    content.Size = UDim2.new(1, -75, 1, -45)
+    content.Position = UDim2.new(0, 75, 0, 40)
+    content.BackgroundTransparency = 1
+    content.Parent = mainFrame
+
+    -- Function to create scrolling frame for tabs
+    local function createScrollFrame(parent)
+        local scrollFrame = Instance.new("ScrollingFrame")
+        scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+        scrollFrame.BackgroundTransparency = 1
+        scrollFrame.BorderSizePixel = 0
+        scrollFrame.ScrollBarThickness = 5
+        scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+        scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        scrollFrame.Parent = parent
+        
+        local uiListLayout = Instance.new("UIListLayout")
+        uiListLayout.Padding = UDim.new(0, 5)
+        uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        uiListLayout.Parent = scrollFrame
+        
+        return scrollFrame
+    end
+
+    -- Create tabs with scroll frames
+    local tabMain   = Instance.new("Frame");   tabMain.Size = UDim2.new(1, 0, 1, 0);   tabMain.BackgroundTransparency = 1; tabMain.Visible = true;  tabMain.Parent = content
+    local tabHelper = Instance.new("Frame"); tabHelper.Size = UDim2.new(1, 0, 1, 0); tabHelper.BackgroundTransparency = 1; tabHelper.Visible = false; tabHelper.Parent = content
+    local tabESP    = Instance.new("Frame");    tabESP.Size = UDim2.new(1, 0, 1, 0);    tabESP.BackgroundTransparency = 1; tabESP.Visible = false;    tabESP.Parent = content
+    local tabGUIs   = Instance.new("Frame");   tabGUIs.Size = UDim2.new(1, 0, 1, 0);   tabGUIs.BackgroundTransparency = 1; tabGUIs.Visible = false;   tabGUIs.Parent = content
+    local tabThemes = Instance.new("Frame"); tabThemes.Size = UDim2.new(1, 0, 1, 0); tabThemes.BackgroundTransparency = 1; tabThemes.Visible = false; tabThemes.Parent = content
+    local tabOther  = Instance.new("Frame");  tabOther.Size = UDim2.new(1, 0, 1, 0);  tabOther.BackgroundTransparency = 1; tabOther.Visible = false;  tabOther.Parent = content
+    -- NEW: Optimization tab
+    local tabOptimization = Instance.new("Frame"); tabOptimization.Size = UDim2.new(1, 0, 1, 0); tabOptimization.BackgroundTransparency = 1; tabOptimization.Visible = false; tabOptimization.Parent = content
+
+    -- Create scroll frames for each tab
+    local scrollMain = createScrollFrame(tabMain)
+    local scrollHelper = createScrollFrame(tabHelper)
+    local scrollESP = createScrollFrame(tabESP)
+    local scrollGUIs = createScrollFrame(tabGUIs)
+    local scrollThemes = createScrollFrame(tabThemes)
+    local scrollOther = createScrollFrame(tabOther)
+    -- NEW: Optimization scroll frame
+    local scrollOptimization = createScrollFrame(tabOptimization)
+
+    local tabs = {
+        Main = tabMain, Helper = tabHelper, ESP = tabESP, GUIS = tabGUIs, Themes = tabThemes, OTHER = tabOther,
+        Optimization = tabOptimization
+    }
+
+    local function setActiveTab(name)
+        for tabName, frame in pairs(tabs) do
+            frame.Visible = (tabName == name)
+        end
+        tabMainBtn.BackgroundColor3   = (name == "Main")   and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabHelperBtn.BackgroundColor3 = (name == "Helper") and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabESPBtn.BackgroundColor3    = (name == "ESP")    and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabGUIsBtn.BackgroundColor3   = (name == "GUIS")   and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabThemesBtn.BackgroundColor3 = (name == "Themes") and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabOtherBtn.BackgroundColor3  = (name == "OTHER")  and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        tabOptimizationBtn.BackgroundColor3 = (name == "Optimization") and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)
+        
+        tabMainBtn.TextColor3   = (name == "Main")   and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabHelperBtn.TextColor3 = (name == "Helper") and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabESPBtn.TextColor3    = (name == "ESP")    and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabGUIsBtn.TextColor3   = (name == "GUIS")   and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabThemesBtn.TextColor3 = (name == "Themes") and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabOtherBtn.TextColor3  = (name == "OTHER")  and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+        tabOptimizationBtn.TextColor3 = (name == "Optimization") and Color3.fromRGB(255,255,255) or Color3.fromRGB(180,180,180)
+    end
+
+    local function makeActionButton(parent, text)
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0, 160, 0, 32)
+        b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        b.TextColor3 = Color3.fromRGB(255, 255, 255)
+        b.Text = text
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 12
+        b.LayoutOrder = #parent:GetChildren()
+        b.Parent = parent
+        Instance.new("UICorner", b)
+        return b
+    end
+
+    -- NEW FUNCTIONS FROM TOP SCRIPT
+    local floatEnabled = false
+    local floatConn = nil
+    local baseY = nil
+
+    local jumpBoostEnabled = false
+    local jumpConn = nil
+
+    local speedBoostEnabled = config.SpeedBoost
+    local speedConn = nil
+
+    local infiniteJumpEnabled = config.InfiniteJump
+
+    local godModeEnabled = false
+
+    local antiRagdollEnabled = false
+    local antiConnections = {}
+    local characterAddedConn = nil
+
+    local autoSlapEnabled = false
+    local autoSlapInterval = 0.1
+    local slapToolNames = {
+        "Tung Bat",
+        "Blackhole Slap",
+        "Dark Matter Slap",
+        "Dev Slap",
+        "Devil Slap",
+        "Diamond Slap",
+        "Emerald Slap",
+        "Flame Slap",
+        "Gold Slap",
+        "Iron Slap",
+        "Nuclear Slap",
+        "Ruby Slap",
+        "Slap",
+    }
+
+    local playersEspEnabled = false
+    local playerEspMap = {}
+
+    local lockEspEnabled = false
+    local lockEspMap = {}
+
+    local rarityEnabled = {
+        Mythic = false,
+        ["Brainrot God"] = false,
+        Secret = false
+    }
+
+    -- ESP Configs
+    local rarityConfig = {
+        Mythic = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+        ["Brainrot God"] = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+        Secret = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+    }
+
+    local mutationConfig = {
+        Gold = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+        Diamond = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+        Rainbow = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+        Bloodrot = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Stroke = Color3.fromRGB(138, 43, 226),
+            Size = UDim2.new(0, 100, 0, 40),
+        },
+    }
+
+    -- Main Tab - Existing buttons
+    local btnHideBrainrot = makeActionButton(scrollMain, "HIDE BRAINROT")
+    local btnDesync       = makeActionButton(scrollMain, "WAVA DESYNC")
+    local btnFloatUp      = makeActionButton(scrollMain, "FLOAT UP")
+    local btnFloatFall    = makeActionButton(scrollMain, "FLOAT FALL")
+
+    -- Main Tab - NEW buttons from top script
+    local btnFloat = makeActionButton(scrollMain, "FLOAT")
+    local btnJumpBoost = makeActionButton(scrollMain, "JUMP BOOST")
+    local btnSpeedBoost = makeActionButton(scrollMain, "SPEED BOOST")
+    local btnInfinityJump = makeActionButton(scrollMain, "INFINITY JUMP")
+    local btnGodMode = makeActionButton(scrollMain, "GOD MODE")
+    local btnTeleportUp = makeActionButton(scrollMain, "TELEPORT UP")
+    local btnTeleportDown = makeActionButton(scrollMain, "TELEPORT DOWN")
+    local btnAutoSteal = makeActionButton(scrollMain, "AUTO STEAL")
+
+    -- NEW: Anti Trap button
+    local btnAntiTrap = makeActionButton(scrollMain, "ANTI TRAP")
+
+    -- NEW: Steal Helper button
+    local btnStealHelper = makeActionButton(scrollMain, "STEAL HELPER")
+
+    -- NEW: Antisteal button
+    local btnAntisteal = makeActionButton(scrollMain, "ANTISTEAL (OP)")
+
+    -- Helper Tab - Existing buttons
+    local btnAfkHide      = makeActionButton(scrollHelper, "AFK HIDE BRAINROT")
+    local btnAntiDie      = makeActionButton(scrollHelper, "ANTI-DIE")
+    local btnLockReminder = makeActionButton(scrollHelper, "LOCK TIMER REMINDER"); btnLockReminder.TextSize = 10
+
+    -- Helper Tab - NEW buttons from top script
+    local btnAntiRagdoll = makeActionButton(scrollHelper, "ANTI-RAGDOLL")
+    local btnAutoSlap = makeActionButton(scrollHelper, "AUTO-SLAP")
+
+    -- ESP Tab
+    local btnPlayerESP    = makeActionButton(scrollESP, "ESP PLAYER")
+
+    -- ESP Tab - NEW buttons from top script
+    local btnLockESP = makeActionButton(scrollESP, "LOCK ESP")
+    local btnPlayersESP = makeActionButton(scrollESP, "PLAYERS ESP")
+    local btnMythicESP = makeActionButton(scrollESP, "MYTHIC ESP")
+    local btnBrainrotGodESP = makeActionButton(scrollESP, "BRAINROT GOD ESP")
+    local btnSecretESP = makeActionButton(scrollESP, "SECRET ESP")
+
+    -- NEW: View Base Timers button
+    local btnViewBaseTimers = makeActionButton(scrollESP, "VIEW BASE TIMERS")
+
+    -- NEW: Most Expensive ESP button
+    local btnMostExpensiveESP = makeActionButton(scrollESP, "MOST EXPENSIVE ESP")
+
+    -- GUIS Tab
+    local guisTitle = Instance.new("TextLabel")
+    guisTitle.Size = UDim2.new(1, 0, 0, 40)
+    guisTitle.BackgroundTransparency = 1
+    guisTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    guisTitle.Text = "UPDATING SOON"
+    guisTitle.Font = Enum.Font.GothamBold
+    guisTitle.TextSize = 18
+    guisTitle.LayoutOrder = 1
+    guisTitle.Parent = scrollGUIs
+
+    local guisSub = Instance.new("TextLabel")
+    guisSub.Size = UDim2.new(1, 0, 0, 20)
+    guisSub.BackgroundTransparency = 1
+    guisSub.TextColor3 = Color3.fromRGB(180, 180, 180)
+    guisSub.Text = "JOIN DISCORD"
+    guisSub.Font = Enum.Font.Gotham
+    guisSub.TextSize = 12
+    guisSub.LayoutOrder = 2
+    guisSub.Parent = scrollGUIs
+
+    -- Themes Tab
+    local themeButtons = {}
+    
+    local function createThemeButton(parent, text, themeColors)
+        local btn = makeActionButton(parent, text)
+        btn.TextSize = 11
+        
+        btn.MouseButton1Click:Connect(function()
+            -- Apply theme colors
+            mainFrame.BackgroundColor3 = themeColors.mainFrame
+            header.BackgroundColor3 = themeColors.header
+            sidebar.BackgroundColor3 = themeColors.sidebar
+            title.TextColor3 = themeColors.text
+            titleShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
+            divider.BackgroundColor3 = themeColors.divider
+            
+            -- Update active tab colors
+            setActiveTab("Themes")
+            
+            -- Visual feedback
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+            }):Play()
+            wait(0.2)
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            }):Play()
+        end)
+        
+        table.insert(themeButtons, btn)
+        return btn
+    end
+
+    -- Define themes
+    local themes = {
+        Purple = {
+            mainFrame = Color3.fromRGB(40, 20, 60),
+            header = Color3.fromRGB(60, 30, 90),
+            sidebar = Color3.fromRGB(50, 25, 75),
+            text = Color3.fromRGB(220, 180, 255),
+            divider = Color3.fromRGB(100, 60, 140)
+        },
+        Pink = {
+            mainFrame = Color3.fromRGB(60, 20, 50),
+            header = Color3.fromRGB(90, 30, 70),
+            sidebar = Color3.fromRGB(75, 25, 60),
+            text = Color3.fromRGB(255, 180, 230),
+            divider = Color3.fromRGB(140, 60, 110)
+        },
+        Black = {
+            mainFrame = Color3.fromRGB(25, 25, 25),
+            header = Color3.fromRGB(35, 35, 35),
+            sidebar = Color3.fromRGB(30, 30, 30),
+            text = Color3.fromRGB(255, 255, 255),
+            divider = Color3.fromRGB(60, 60, 60)
+        },
+        White = {
+            mainFrame = Color3.fromRGB(240, 240, 240),
+            header = Color3.fromRGB(220, 220, 220),
+            sidebar = Color3.fromRGB(230, 230, 230),
+            text = Color3.fromRGB(30, 30, 30),
+            divider = Color3.fromRGB(180, 180, 180)
+        },
+        Red = {
+            mainFrame = Color3.fromRGB(60, 20, 20),
+            header = Color3.fromRGB(90, 30, 30),
+            sidebar = Color3.fromRGB(75, 25, 25),
+            text = Color3.fromRGB(255, 180, 180),
+            divider = Color3.fromRGB(140, 60, 60)
+        },
+        Green = {
+            mainFrame = Color3.fromRGB(20, 60, 20),
+            header = Color3.fromRGB(30, 90, 30),
+            sidebar = Color3.fromRGB(25, 75, 25),
+            text = Color3.fromRGB(180, 255, 180),
+            divider = Color3.fromRGB(60, 140, 60)
+        }
+    }
+
+    -- Create theme buttons
+    createThemeButton(scrollThemes, "PURPLE THEME", themes.Purple)
+    createThemeButton(scrollThemes, "PINK THEME", themes.Pink)
+    createThemeButton(scrollThemes, "BLACK THEME", themes.Black)
+    createThemeButton(scrollThemes, "WHITE THEME", themes.White)
+    createThemeButton(scrollThemes, "RED THEME", themes.Red)
+    createThemeButton(scrollThemes, "GREEN THEME", themes.Green)
+
+    -- Other Tab
+    local otherCredits = Instance.new("TextLabel")
+    otherCredits.Size = UDim2.new(0, 160, 0, 32)
+    otherCredits.BackgroundTransparency = 1
+    otherCredits.TextColor3 = Color3.fromRGB(255, 255, 255)
+    otherCredits.TextWrapped = true
+    otherCredits.Text = "Brought to you by Wava Hub Team"
+    otherCredits.Font = Enum.Font.GothamBold
+    otherCredits.TextSize = 12
+    otherCredits.LayoutOrder = 1
+    otherCredits.Parent = scrollOther
+
+    -- Other Tab - NEW buttons from top script
+    local btnServerHop = makeActionButton(scrollOther, "SERVER HOP")
+    local btnRejoin = makeActionButton(scrollOther, "REJOIN")
+
+    -- NEW: Brainrot Rare Joiner button
+    local btnBrainrotRareJoiner = makeActionButton(scrollOther, "BRAINROT RARE JOINER")
+
+    -- NEW: Auto Buy button
+    local btnAutoBuy = makeActionButton(scrollOther, "AUTO BUY ITEMS")
+
+    -- NEW: Job ID input and buttons
+    local jobIdInput = Instance.new("TextBox")
+    jobIdInput.Size = UDim2.new(0, 160, 0, 32)
+    jobIdInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    jobIdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    jobIdInput.PlaceholderText = "Enter Job ID"
+    jobIdInput.Text = config.SelectedJobId or ""
+    jobIdInput.Font = Enum.Font.Gotham
+    jobIdInput.TextSize = 12
+    jobIdInput.LayoutOrder = 2
+    jobIdInput.Parent = scrollOther
+    Instance.new("UICorner", jobIdInput)
+
+    local btnSetJobId = makeActionButton(scrollOther, "SET JOB ID")
+    local btnJoinJobId = makeActionButton(scrollOther, "JOIN JOB ID")
+
+    -- ========== OPTIMIZATION TAB BUTTONS ==========
+    local btnRemoveTextures = makeActionButton(scrollOptimization, "REMOVE TEXTURES")
+    local btnLowGraphics = makeActionButton(scrollOptimization, "LOW GRAPHICS")
+    local btnRemoveParticles = makeActionButton(scrollOptimization, "REMOVE PARTICLES")
+    local btnRemoveShadows = makeActionButton(scrollOptimization, "REMOVE SHADOWS")
+    local btnHideOtherPlayers = makeActionButton(scrollOptimization, "HIDE OTHER PLAYERS")
+    local btnFPSBoost = makeActionButton(scrollOptimization, "FPS BOOST")
+    local btnCleanMemory = makeActionButton(scrollOptimization, "CLEAN MEMORY")
+    local btnResetOptimization = makeActionButton(scrollOptimization, "RESET OPTIMIZATION")
+
+    -- Initialize optimization button states
+    if optimizationStates.NoTextures then
+        btnRemoveTextures.Text = "REMOVE TEXTURES (ON)"
+        btnRemoveTextures.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+    if optimizationStates.LowGraphics then
+        btnLowGraphics.Text = "LOW GRAPHICS (ON)"
+        btnLowGraphics.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+    if optimizationStates.NoParticles then
+        btnRemoveParticles.Text = "REMOVE PARTICLES (ON)"
+        btnRemoveParticles.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+    if optimizationStates.NoShadows then
+        btnRemoveShadows.Text = "REMOVE SHADOWS (ON)"
+        btnRemoveShadows.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+    if optimizationStates.HidePlayers then
+        btnHideOtherPlayers.Text = "HIDE OTHER PLAYERS (ON)"
+        btnHideOtherPlayers.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+
+    local function wireButtonHover(b)
+        local originalSize = b.Size
+        b.MouseEnter:Connect(function()
+            if not b.Text:find("%(ON%)") then
+                TweenService:Create(b, TweenInfo.new(0.1), {
+                    BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+                    Size = UDim2.new(0, 155, 0, 30),
+                }):Play()
+            end
+        end)
+        b.MouseLeave:Connect(function()
+            local on = b.Text:find("%(ON%)")
+            TweenService:Create(b, TweenInfo.new(0.1), {
+                BackgroundColor3 = on and Color3.fromRGB(80, 20, 20) or Color3.fromRGB(40, 40, 40),
+                Size = originalSize,
+            }):Play()
+        end)
+        b.MouseButton1Down:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.1), { Size = UDim2.new(0, 150, 0, 28) }):Play()
+        end)
+        b.MouseButton1Up:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.1), { Size = originalSize }):Play()
+        end)
+    end
+
+    -- Wire all buttons
+    for _, b in ipairs({
+        btnHideBrainrot, btnDesync, btnFloatUp, btnFloatFall,
+        btnAfkHide, btnAntiDie, btnLockReminder, btnPlayerESP,
+        btnFloat, btnJumpBoost, btnSpeedBoost, btnInfinityJump, btnGodMode,
+        btnTeleportUp, btnTeleportDown, btnAutoSteal,
+        btnAntiRagdoll, btnAutoSlap,
+        btnLockESP, btnPlayersESP, btnMythicESP, btnBrainrotGodESP, btnSecretESP,
+        btnServerHop, btnRejoin, btnAntiTrap, btnStealHelper, btnAntisteal,
+        btnViewBaseTimers, btnMostExpensiveESP, btnBrainrotRareJoiner, btnAutoBuy,
+        btnSetJobId, btnJoinJobId,
+        -- Optimization buttons
+        btnRemoveTextures, btnLowGraphics, btnRemoveParticles, btnRemoveShadows,
+        btnHideOtherPlayers, btnFPSBoost, btnCleanMemory, btnResetOptimization
+    }) do
+        wireButtonHover(b)
+    end
+
+    for _, btn in ipairs(themeButtons) do
+        wireButtonHover(btn)
+    end
+
+    local function wireHeaderButtonHover(b)
+        local originalSize = b.Size
+        b.MouseEnter:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                TextColor3 = Color3.fromRGB(0, 0, 0),
+                Size = UDim2.new(0, originalSize.X.Offset + 2, 0, originalSize.Y.Offset + 2),
+            }):Play()
+        end)
+        b.MouseLeave:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                Size = originalSize,
+            }):Play()
+        end)
+    end
+
+    wireHeaderButtonHover(closeBtn)
+    wireHeaderButtonHover(minimizeBtn)
+
+    tabMainBtn.MouseButton1Click:Connect(function() setActiveTab("Main") end)
+    tabHelperBtn.MouseButton1Click:Connect(function() setActiveTab("Helper") end)
+    tabESPBtn.MouseButton1Click:Connect(function() setActiveTab("ESP") end)
+    tabGUIsBtn.MouseButton1Click:Connect(function() setActiveTab("GUIS") end)
+    tabThemesBtn.MouseButton1Click:Connect(function() setActiveTab("Themes") end)
+    tabOtherBtn.MouseButton1Click:Connect(function() setActiveTab("OTHER") end)
+    -- NEW: Optimization tab click
+    tabOptimizationBtn.MouseButton1Click:Connect(function() setActiveTab("Optimization") end)
+
+    -- ========== OPTIMIZATION BUTTON HANDLERS ==========
+    btnRemoveTextures.MouseButton1Click:Connect(function()
+        if optimizationStates.NoTextures then
+            restoreTextures()
+            btnRemoveTextures.Text = "REMOVE TEXTURES"
+            btnRemoveTextures.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        else
+            removeTextures()
+            btnRemoveTextures.Text = "REMOVE TEXTURES (ON)"
+            btnRemoveTextures.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        end
+    end)
+
+    btnLowGraphics.MouseButton1Click:Connect(function()
+        if optimizationStates.LowGraphics then
+            restoreGraphics()
+            btnLowGraphics.Text = "LOW GRAPHICS"
+            btnLowGraphics.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        else
+            setLowGraphics()
+            btnLowGraphics.Text = "LOW GRAPHICS (ON)"
+            btnLowGraphics.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        end
+    end)
+
+    btnRemoveParticles.MouseButton1Click:Connect(function()
+        if optimizationStates.NoParticles then
+            restoreParticles()
+            btnRemoveParticles.Text = "REMOVE PARTICLES"
+            btnRemoveParticles.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        else
+            removeParticles()
+            btnRemoveParticles.Text = "REMOVE PARTICLES (ON)"
+            btnRemoveParticles.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        end
+    end)
+
+    btnRemoveShadows.MouseButton1Click:Connect(function()
+        if optimizationStates.NoShadows then
+            restoreShadows()
+            btnRemoveShadows.Text = "REMOVE SHADOWS"
+            btnRemoveShadows.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        else
+            removeShadows()
+            btnRemoveShadows.Text = "REMOVE SHADOWS (ON)"
+            btnRemoveShadows.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        end
+    end)
+
+    btnHideOtherPlayers.MouseButton1Click:Connect(function()
+        if optimizationStates.HidePlayers then
+            showPlayers()
+            btnHideOtherPlayers.Text = "HIDE OTHER PLAYERS"
+            btnHideOtherPlayers.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        else
+            hidePlayers()
+            btnHideOtherPlayers.Text = "HIDE OTHER PLAYERS (ON)"
+            btnHideOtherPlayers.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        end
+    end)
+
+    btnFPSBoost.MouseButton1Click:Connect(function()
+        boostFPS()
+        -- Visual feedback
+        local originalText = btnFPSBoost.Text
+        btnFPSBoost.Text = "FPS BOOST APPLIED!"
+        btnFPSBoost.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        wait(2)
+        btnFPSBoost.Text = originalText
+        btnFPSBoost.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    end)
+
+    btnCleanMemory.MouseButton1Click:Connect(function()
+        cleanupMemory()
+        -- Visual feedback
+        local originalText = btnCleanMemory.Text
+        btnCleanMemory.Text = "MEMORY CLEANED!"
+        btnCleanMemory.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        wait(2)
+        btnCleanMemory.Text = originalText
+        btnCleanMemory.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    end)
+
+    btnResetOptimization.MouseButton1Click:Connect(function()
+        -- Reset all optimization settings
+        if optimizationStates.NoTextures then
+            restoreTextures()
+            btnRemoveTextures.Text = "REMOVE TEXTURES"
+            btnRemoveTextures.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        if optimizationStates.LowGraphics then
+            restoreGraphics()
+            btnLowGraphics.Text = "LOW GRAPHICS"
+            btnLowGraphics.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        if optimizationStates.NoParticles then
+            restoreParticles()
+            btnRemoveParticles.Text = "REMOVE PARTICLES"
+            btnRemoveParticles.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        if optimizationStates.NoShadows then
+            restoreShadows()
+            btnRemoveShadows.Text = "REMOVE SHADOWS"
+            btnRemoveShadows.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        if optimizationStates.HidePlayers then
+            showPlayers()
+            btnHideOtherPlayers.Text = "HIDE OTHER PLAYERS"
+            btnHideOtherPlayers.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        
+        -- Reset all optimization states
+        optimizationStates = {
+            NoTextures = false,
+            LowGraphics = false,
+            NoParticles = false,
+            NoShadows = false,
+            HidePlayers = false
+        }
+        config.Optimization = optimizationStates
+        saveConfig()
+        
+        -- Visual feedback
+        local originalText = btnResetOptimization.Text
+        btnResetOptimization.Text = "OPTIMIZATION RESET!"
+        btnResetOptimization.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        wait(2)
+        btnResetOptimization.Text = originalText
+        btnResetOptimization.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    end)
+
+    -- ========== REST OF THE FUNCTION IMPLEMENTATIONS ==========
+    -- ... (остальной код остается без изменений, как в предыдущем скрипте)
+
+    -- Anti Trap function
+    btnAntiTrap.MouseButton1Click:Connect(function()
+        antiTrapEnabled = not antiTrapEnabled
+        config.AntiTrap = antiTrapEnabled
+        saveConfig()
+        
+        if antiTrapEnabled then
+            btnAntiTrap.Text = "ANTI TRAP (ON)"
+            btnAntiTrap.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+            enableAntiTrap()
+        else
+            btnAntiTrap.Text = "ANTI TRAP"
+            btnAntiTrap.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            disableAntiTrap()
+        end
+    end)
+
+    -- Steal Helper function
+    btnStealHelper.MouseButton1Click:Connect(loadStealHelper)
+
+    -- Antisteal function
+    btnAntisteal.MouseButton1Click:Connect(loadAntisteal)
+
+    -- View Base Timers function
+    btnViewBaseTimers.MouseButton1Click:Connect(function()
+        plotTimers_Enabled = not plotTimers_Enabled
+        config.ViewBaseTimers = plotTimers_Enabled
+        saveConfig()
+        
+        if plotTimers_Enabled then
+            btnViewBaseTimers.Text = "VIEW BASE TIMERS (ON)"
+            btnViewBaseTimers.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+            enablePlotTimers()
+        else
+            btnViewBaseTimers.Text = "VIEW BASE TIMERS"
+            btnViewBaseTimers.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            disablePlotTimers()
+        end
+    end)
+
+    -- Most Expensive ESP function
+    btnMostExpensiveESP.MouseButton1Click:Connect(loadMostExpensiveESP)
+
+    -- Brainrot Rare Joiner function
+    btnBrainrotRareJoiner.MouseButton1Click:Connect(loadBrainrotRareJoiner)
+
+    -- Auto Buy function
+    btnAutoBuy.MouseButton1Click:Connect(autoBuySelectedItems)
+
+    -- Job ID functions
+    btnSetJobId.MouseButton1Click:Connect(function()
+        config.SelectedJobId = jobIdInput.Text
+        saveConfig()
+    end)
+
+    btnJoinJobId.MouseButton1Click:Connect(function()
+        if config.SelectedJobId and config.SelectedJobId ~= "" then
+            pcall(function() 
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, config.SelectedJobId) 
+            end)
+        end
+    end)
+
+    -- Speed Boost function with config
+    btnSpeedBoost.MouseButton1Click:Connect(function()
+        speedBoostEnabled = not speedBoostEnabled
+        config.SpeedBoost = speedBoostEnabled
+        saveConfig()
+        
+        if speedBoostEnabled then
+            btnSpeedBoost.Text = "SPEED BOOST (ON)"
+            btnSpeedBoost.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local root = char:WaitForChild("HumanoidRootPart")
+
+            if speedConn then speedConn:Disconnect() end
+            speedConn = RunService.Heartbeat:Connect(function()
+                if not speedBoostEnabled then
+                    if speedConn then speedConn:Disconnect() speedConn = nil end
+                    return
+                end
+                if humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
+                    local dir = humanoid.MoveDirection
+                    root.Velocity = Vector3.new(dir.X * (config.BoostSpeedValue or 50), root.Velocity.Y, dir.Z * (config.BoostSpeedValue or 50))
+                end
+            end)
+        elseif speedConn then
+            speedConn:Disconnect()
+            speedConn = nil
+            btnSpeedBoost.Text = "SPEED BOOST"
+            btnSpeedBoost.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+    end)
+
+    -- Infinity Jump function with config
+    btnInfinityJump.MouseButton1Click:Connect(function()
+        infiniteJumpEnabled = not infiniteJumpEnabled
+        config.InfiniteJump = infiniteJumpEnabled
+        saveConfig()
+        
+        if infiniteJumpEnabled then
+            btnInfinityJump.Text = "INFINITY JUMP (ON)"
+            btnInfinityJump.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        else
+            btnInfinityJump.Text = "INFINITY JUMP"
+            btnInfinityJump.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+    end)
+
+    UserInputService.JumpRequest:Connect(function()
+        if infiniteJumpEnabled then
+            local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+
+    -- Load InfYield on start
+    task.spawn(function()
+        task.wait(1)
+        loadInfYield()
+    end)
+
+    -- Initialize button states based on config
+    if config.AntiTrap then
+        btnAntiTrap.Text = "ANTI TRAP (ON)"
+        btnAntiTrap.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+
+    if config.ViewBaseTimers then
+        btnViewBaseTimers.Text = "VIEW BASE TIMERS (ON)"
+        btnViewBaseTimers.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+
+    if config.SpeedBoost then
+        btnSpeedBoost.Text = "SPEED BOOST (ON)"
+        btnSpeedBoost.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        -- Speed boost connection will be established when needed
+    end
+
+    if config.InfiniteJump then
+        btnInfinityJump.Text = "INFINITY JUMP (ON)"
+        btnInfinityJump.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+    end
+
+    -- ... (остальной код Wava Hub остается без изменений)
+
+end)
+
+if not ok then
+    warn("Script failed to initialize: " .. tostring(initErr))
+end

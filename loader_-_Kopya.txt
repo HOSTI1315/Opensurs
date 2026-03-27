@@ -1,0 +1,251 @@
+-- HackManHub DeOb v1.3
+
+-- Services
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HorizonHubLoader"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Helper: Make Frames Draggable
+local function makeDraggable(dragHandle, moveFrame)
+	local dragging = false
+	local dragStart, startPos
+
+	dragHandle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = moveFrame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			moveFrame.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+-- Main Frame (bigger)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 260) -- 🔥 bigger UI
+mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner", mainFrame)
+corner.CornerRadius = UDim.new(0, 10)
+
+local uistroke = Instance.new("UIStroke")
+uistroke.Thickness = 5 -- number (px thickness of the stroke)
+uistroke.Color = Color3.fromRGB(0,0,0) -- white outline (change as needed)
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- only around edges
+
+-- Shadow
+local shadow = Instance.new("ImageLabel")
+shadow.Name = "Shadow"
+shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+shadow.Size = UDim2.new(1, 50, 1, 50)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://5028857084"
+shadow.ImageColor3 = Color3.new(0, 0, 0)
+shadow.ImageTransparency = 0.4
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(24, 24, 276, 276)
+shadow.ZIndex = -1
+shadow.Parent = mainFrame
+
+-- Title Bar as TextLabel
+local titleBar = Instance.new("TextLabel")
+titleBar.Size = UDim2.new(1, 0, 0, 35) -- slightly taller bar
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.BackgroundTransparency = 0.1
+titleBar.BorderSizePixel = 0
+titleBar.Text = "Horizon Hub Loader" -- with padding
+titleBar.TextColor3 = Color3.new(1, 1, 1)
+titleBar.TextXAlignment = Enum.TextXAlignment.Center
+titleBar.Font = Enum.Font.MontserratMedium
+titleBar.TextSize = 20
+titleBar.Parent = mainFrame
+
+makeDraggable(titleBar, mainFrame)
+
+-- Close Button (X)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 35, 1, 0)
+closeBtn.Position = UDim2.new(1, -35, 0, 0)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Font = Enum.Font.MontserratBold
+closeBtn.TextSize = 18
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Parent = titleBar
+
+-- Minimize Button (-)
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 35, 1, 0)
+minimizeBtn.Position = UDim2.new(1, -70, 0, 0)
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+minimizeBtn.Font = Enum.Font.MontserratBold
+minimizeBtn.TextSize = 18
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+minimizeBtn.Parent = titleBar
+
+local function loadMainUI()
+ premium folder https://hackmanhub.pages.dev/discord only premium open source
+- Plants Vs Brainrots
+    end
+end
+
+-- Create Load Button
+local function createButton(name, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 160, 0, 45)
+    Btn.Position = UDim2.new(0.5, -80, 0, 80)
+    Btn.Text = name
+    Btn.TextColor3 = Color3.new(1, 1, 1)
+    Btn.Font = Enum.Font.MontserratBold
+    Btn.TextSize = 20
+    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Btn.Parent = mainFrame
+
+    local btnCorner = Instance.new("UICorner", Btn)
+    btnCorner.CornerRadius = UDim.new(0, 8)
+
+    local uistroke = Instance.new("UIStroke", Btn)
+    uistroke.Thickness = 3 -- number (px thickness of the stroke)
+    uistroke.Color = Color3.fromRGB(0,0,0) -- white outline (change as needed)
+    uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- only around edges
+
+
+    -- Mouse Click
+    Btn.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        else
+            print(name .. " button clicked!")
+        end
+    end)
+    return Btn
+end
+
+-- Example usage: create Load button
+local loadBtn = createButton("Load", function()
+    print("Load button pressed")
+    loadMainUI()
+    task.wait(5)
+    local player = game.Players.LocalPlayer
+    local gui = player:WaitForChild("PlayerGui")
+
+    local oldLoader = gui:FindFirstChild("HorizonHubLoader")
+    if oldLoader then
+    oldLoader:Destroy()
+end
+end)
+
+
+-- Confirmation Frame
+local confirmFrame = Instance.new("Frame")
+confirmFrame.Size = UDim2.new(0, 280, 0, 160) -- also bigger
+confirmFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
+confirmFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+confirmFrame.BackgroundTransparency = 0.1
+confirmFrame.Visible = false
+confirmFrame.Parent = screenGui
+Instance.new("UICorner", confirmFrame).CornerRadius = UDim.new(0, 10)
+
+local confirmLabel = Instance.new("TextLabel")
+confirmLabel.Size = UDim2.new(1, -20, 0.5, 0)
+confirmLabel.Position = UDim2.new(0, 10, 0, 10)
+confirmLabel.Text = "Are you sure you want to close?"
+confirmLabel.TextWrapped = true
+confirmLabel.TextColor3 = Color3.new(1, 1, 1)
+confirmLabel.Font = Enum.Font.MontserratMedium
+confirmLabel.TextSize = 20
+confirmLabel.BackgroundTransparency = 1
+confirmLabel.Parent = confirmFrame
+
+-- Yes Button
+local yesBtn = Instance.new("TextButton")
+yesBtn.Size = UDim2.new(0.4, 0, 0.25, 0)
+yesBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+yesBtn.Text = "Yes"
+yesBtn.TextColor3 = Color3.new(1, 1, 1)
+yesBtn.BackgroundColor3 = Color3.fromRGB(0, 160, 0)
+yesBtn.Font = Enum.Font.MontserratMedium
+yesBtn.TextSize = 18
+yesBtn.Parent = confirmFrame
+Instance.new("UICorner", yesBtn).CornerRadius = UDim.new(0, 6)
+
+-- No Button
+local noBtn = Instance.new("TextButton")
+noBtn.Size = UDim2.new(0.4, 0, 0.25, 0)
+noBtn.Position = UDim2.new(0.5, 0, 0.65, 0)
+noBtn.Text = "No"
+noBtn.TextColor3 = Color3.new(1, 1, 1)
+noBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+noBtn.Font = Enum.Font.MontserratMedium
+noBtn.TextSize = 18
+noBtn.Parent = confirmFrame
+Instance.new("UICorner", noBtn).CornerRadius = UDim.new(0, 6)
+
+-- Logic
+closeBtn.MouseButton1Click:Connect(function()
+	confirmFrame.BackgroundTransparency = 1
+	confirmFrame.Visible = true
+	TweenService:Create(confirmFrame, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
+end)
+
+yesBtn.MouseButton1Click:Connect(function()
+	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3), {
+		Size = UDim2.new(0, 0, 0, 0),
+		BackgroundTransparency = 1
+	})
+	tween:Play()
+	tween.Completed:Connect(function()
+		screenGui:Destroy()
+	end)
+end)
+
+noBtn.MouseButton1Click:Connect(function()
+	confirmFrame.Visible = false
+end)
+
+-- Minimize Toggle
+local minimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	if not minimized then
+		TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 400, 0, 35)}):Play()
+		minimized = true
+	else
+		TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 400, 0, 260)}):Play()
+		minimized = false
+	end
+end)
+
+-- Draggables
+makeDraggable(titleBar, mainFrame)
+makeDraggable(confirmFrame, confirmFrame)
+corner.Parent = mainframe, confirmFrame, noBtn, closeBtn, minimizeBtn, yesBtn
+uistroke.Parent = mainFrame, confirmFrame, ExampleButton

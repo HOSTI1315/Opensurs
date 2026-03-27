@@ -1,0 +1,111 @@
+--// Melon Decompiler [Private] v1.1
+--// Resolved: 17 identifiers | 4 functions | 2 strings
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local HitboxEnabled = false
+local HitboxSize = 10
+local IsMinimized = false
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local MainFrameCorner = Instance.new("UICorner")
+local SizeInput = Instance.new("TextBox")
+local SizeInputCorner = Instance.new("UICorner")
+local EnableButton = Instance.new("TextButton")
+local EnableButtonCorner = Instance.new("UICorner")
+local MinimizeButton = Instance.new("TextButton")
+local MinimizeButtonCorner = Instance.new("UICorner")
+
+ScreenGui.Parent = game.CoreGui
+
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 160, 0, 110)
+MainFrame.Position = UDim2.new(0.5, -80, 0.5, -55)
+MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.BackgroundTransparency = 0.2
+
+MainFrameCorner.Parent = MainFrame
+MainFrameCorner.CornerRadius = UDim.new(0, 10)
+
+MinimizeButton.Parent = MainFrame
+MinimizeButton.Size = UDim2.new(0, 160, 0, 20)
+MinimizeButton.Position = UDim2.new(0, 0, 0, 0)
+MinimizeButton.Text = "▼"
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+MinimizeButtonCorner.Parent = MinimizeButton
+MinimizeButtonCorner.CornerRadius = UDim.new(0, 10)
+
+SizeInput.Parent = MainFrame
+SizeInput.Size = UDim2.new(0, 140, 0, 25)
+SizeInput.Position = UDim2.new(0, 10, 0, 25)
+SizeInput.Text = "10"
+SizeInput.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+SizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+SizeInputCorner.Parent = SizeInput
+SizeInputCorner.CornerRadius = UDim.new(0, 10)
+
+EnableButton.Parent = MainFrame
+EnableButton.Size = UDim2.new(0, 140, 0, 25)
+EnableButton.Position = UDim2.new(0, 10, 0, 55)
+EnableButton.Text = "Enable Hitbox"
+EnableButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+EnableButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+EnableButtonCorner.Parent = EnableButton
+EnableButtonCorner.CornerRadius = UDim.new(0, 10)
+
+SizeInput.FocusLost:Connect(function()
+    local InputValue = tonumber(SizeInput.Text)
+    if InputValue and InputValue > 0 then
+        HitboxSize = InputValue
+    else
+        SizeInput.Text = tostring(HitboxSize)
+    end
+end)
+
+EnableButton.MouseButton1Click:Connect(function()
+    HitboxEnabled = not HitboxEnabled
+    EnableButton.Text = HitboxEnabled and "Disable Hitbox" or "Enable Hitbox"
+    EnableButton.BackgroundColor3 = HitboxEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(90, 90, 90)
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    IsMinimized = not IsMinimized
+    
+    local TargetSize = IsMinimized and UDim2.new(0, 160, 0, 20) or UDim2.new(0, 160, 0, 110)
+    local CollapseTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = TargetSize
+    })
+    
+    CollapseTween:Play()
+    MinimizeButton.Text = IsMinimized and "▲" or "▼"
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not HitboxEnabled then return end
+    
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character then
+            local RootPart = Player.Character:FindFirstChild("HumanoidRootPart")
+            if RootPart then
+                RootPart.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+                RootPart.Transparency = 0.8
+                RootPart.BrickColor = BrickColor.new("Really red")
+                RootPart.Material = Enum.Material.Neon
+                RootPart.CanCollide = false
+            end
+        end
+    end
+end)

@@ -1,0 +1,55 @@
+local runService = game:GetService("RunService")
+local players = game:GetService("Players")
+
+local findFirstChild = game.FindFirstChild
+local bindToRenderStep = runService.BindToRenderStep
+local localPlayer = players.LocalPlayer
+local newCFrame = CFrame.new
+local newVector3 = Vector3.new
+
+-- function to check if the local player is alive 
+-- (ensures the player has a character, a humanoid, sufficient health, and a humanoid root part)
+local function localPlayerIsAlive()
+    local character = localPlayer.Character
+    return character
+        and findFirstChild(character, "Humanoid")
+        and character.Humanoid.Health > 0
+        and findFirstChild(character, "HumanoidRootPart")
+end
+
+-- function to get the local player's current position (CFrame)
+local function getLocalCFrame()
+    return localPlayerIsAlive and localPlayer.Character.HumanoidRootPart.CFrame
+end
+
+-- table to store position data
+local cframes = {}
+
+-- heartbeat event: runs just before the engine sends property updates to the server
+runService.Heartbeat:Connect(function()
+    cframes.client = getLocalCFrame() -- store the local player's actual position
+
+    local realCFrame = cframes.client
+    if realCFrame then
+        local desyncCFrame = realCFrame
+
+        -- apply any modifications to the CFrame (e.g., move the character up by 5 studs)
+        desyncCFrame = desyncCFrame + newVector3(0, 50, 0)
+
+        -- set the humanoid root part to the modified (desynchronized) position
+        localPlayer.Character.HumanoidRootPart.CFrame = desyncCFrame
+        cframes.desync = desyncCFrame
+    else
+        -- if something goes wrong, reset the stored positions
+        cframes.desync = nil
+        cframes.client = nil
+    end
+end)
+
+-- render step event: runs before the frame updates on our screen
+-- we need to restore the original position before rendering to prevent visual issues
+bindToRenderStep(runService, "New Frame Start", Enum.RenderPriority.First.Value, function()
+    if cframes.client then
+        localPlayer.Character.HumanoidRootPart.CFrame = cframes.client
+    end
+end)

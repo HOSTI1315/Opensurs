@@ -1,0 +1,212 @@
+--// leaked by mistafeast (@jan.dll) if you paid for this you got scammed.
+-- // discord.gg/autojoining > All!
+
+
+
+-- // services
+get_service = function(service)
+	return cloneref(game:GetService(service));
+end;
+
+local players = get_service("Players");
+local replicated_storage = get_service("ReplicatedStorage");
+local http_service = get_service("HttpService");
+local run_service = get_service("RunService");
+local user_input_service = get_service("UserInputService");
+
+-- // references
+local local_player = players.LocalPlayer;
+local remote = replicated_storage.Packages.Net["RE/LaserGun_Fire"];
+local settings = require(replicated_storage.Shared.LaserGunsShared).Settings;
+
+-- // gun mods
+settings.Radius.Value = 256;
+settings.MaxBounces.Value = 9999;
+settings.MaxAge.Value = 1e6;
+settings.StunDuration.Value = 60;
+settings.ImpulseForce.Value = 1e6;
+settings.Cooldown.Value = 0;
+
+-- // states
+local lagger_enabled = false;
+local last_equipped = false;
+
+-- // ui
+local screen_gui = Instance.new("ScreenGui");
+screen_gui.Name = "discord.gg/autojoining | leaked ts";
+screen_gui.Parent = local_player:WaitForChild("PlayerGui");
+
+local frame = Instance.new("Frame");
+frame.Size = UDim2.new(0, 180, 0, 70);
+frame.Position = UDim2.new(0, 40, 0, 60);
+frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+frame.BackgroundTransparency = 1;
+frame.Active = true;
+frame.Parent = screen_gui;
+
+local gradient = Instance.new("UIGradient");
+gradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 183, 197)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(174, 226, 255))
+});
+gradient.Rotation = 45;
+gradient.Parent = frame;
+
+local corner = Instance.new("UICorner");
+corner.CornerRadius = UDim.new(0, 12);
+corner.Parent = frame;
+
+local button = Instance.new("TextButton");
+button.Size = UDim2.new(1, -20, 0, 40);
+button.Position = UDim2.new(0, 10, 0.5, -20);
+button.Text = "Lagger: OFF";
+button.TextColor3 = Color3.fromRGB(255, 255, 255);
+button.Font = Enum.Font.FredokaOne;
+button.TextSize = 20;
+button.BackgroundColor3 = Color3.fromRGB(255, 182, 193);
+button.AutoButtonColor = false;
+button.Parent = frame;
+
+local button_corner = Instance.new("UICorner");
+button_corner.CornerRadius = UDim.new(0, 10);
+button_corner.Parent = button;
+
+local button_gradient = Instance.new("UIGradient");
+button_gradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 200)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 220, 255))
+});
+button_gradient.Rotation = 90;
+button_gradient.Parent = button;
+
+-- // toggle
+local supp = false;
+
+button.MouseButton1Click:Connect(function()
+	if supp then
+		supp = false;
+		return;
+	end;
+	lagger_enabled = not lagger_enabled;
+	button.Text = lagger_enabled and "Lagger: ON" or "Lagger: OFF";
+	if lagger_enabled then
+		button_gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 160, 160)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 200))
+		});
+	else
+		button_gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 200)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 220, 255))
+		});
+	end;
+end);
+
+-- // draggable
+local dragging = false;
+local drag_input, drag_start, start_pos;
+local drag_threshold = 6;
+
+update_ = function(input)
+	local delta = input.Position - drag_start;
+	frame.Position = UDim2.new(
+		start_pos.X.Scale, start_pos.X.Offset + delta.X,
+		start_pos.Y.Scale, start_pos.Y.Offset + delta.Y
+	);
+end;
+
+attach_ = function(handle)
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true;
+			drag_start = input.Position;
+			start_pos = frame.Position;
+			drag_input = nil;
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false;
+				end;
+			end);
+		end;
+	end);
+
+	handle.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			drag_input = input;
+		end;
+	end);
+end;
+
+attach_(frame);
+attach_(button);
+
+user_input_service.InputChanged:Connect(function(input)
+	if dragging and input == drag_input then
+		if (input.Position - drag_start).Magnitude > drag_threshold then
+			supp = true;
+		end;
+		update_(input);
+	end;
+end);
+
+-- // get nearest
+get_nearest = function()
+	local nearest_player;
+	local shortest_distance = math.huge;
+
+	local local_character = local_player.Character;
+	if not local_character or not local_character.PrimaryPart then
+		return nil;
+	end;
+
+	local local_position = local_character.PrimaryPart.Position;
+
+	for _, player in players:GetPlayers() do
+		local character = player.Character;
+		if player ~= local_player and character and character.PrimaryPart then
+			local distance = (local_position - character.PrimaryPart.Position).Magnitude;
+			if distance < shortest_distance then
+				shortest_distance = distance;
+				nearest_player = player;
+			end;
+		end;
+	end;
+
+	return nearest_player;
+end;
+
+-- // main
+run_service.RenderStepped:Connect(function()
+	local character = local_player.Character;
+	if not character then
+		return;
+	end;
+
+	local tool = character:FindFirstChildOfClass("Tool");
+	local tool_equipped = tool and tool.Name == "Laser Gun";
+
+	if tool_equipped ~= last_equipped then
+		last_equipped = tool_equipped;
+	end;
+
+	if not (lagger_enabled and tool_equipped) then
+		return;
+	end;
+
+	local target_player = get_nearest();
+	if not target_player then
+		return;
+	end;
+
+	local target_char = target_player.Character;
+	if not (target_char and target_char.PrimaryPart and character.PrimaryPart) then
+		return;
+	end;
+
+	local pos1, pos2 = character.PrimaryPart.Position, target_char.PrimaryPart.Position;
+	local direction = (pos2 - pos1).Unit;
+	local id = http_service:GenerateGUID(false):lower():gsub("%-", "");
+
+	remote:FireServer(id, pos1, direction, workspace:GetServerTimeNow());
+end);

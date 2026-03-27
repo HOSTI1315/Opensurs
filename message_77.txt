@@ -1,0 +1,227 @@
+loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+AddTheme("Dark",{
+Accent="#18181b",Dialog="#FFFFFF",Outline="#FFFFFF",Text="#999999",Placeholder="#999999",Background="#0e0e10",Button="#52525b",Icon="#a1a1aa"
+})
+AddTheme("Light",{
+Accent="#f4f4f5",Dialog="#000000",Outline="#666666",Text="#ffffff",Placeholder="#e4e4e7",Background="#ffffff",Button="#d1d5db",Icon="#9ca3af"
+})
+
+local Window=CreateWindow({
+Name="zap | VexonHub",
+Author="Murder Mystery 2",
+Folder="vexonhub",
+Size=UDim2.fromOffset(600,400),
+Theme="Dark",
+Resizable=true,
+SideBarWidth=200,
+BackgroundImageTransparency=0.9,
+HideSearchBar=false,
+ScrollBarEnabled=true,
+Enabled=true,
+Anonymous=false,
+EditOpenButton=true,
+Draggable=true,
+ToggleKey=Enum.KeyCode.R
+})
+
+game:GetService("StarterGui"):SetCore("SendNotification",{
+Title="VexonHub",
+Text="Toggle Keybind: ( R )",
+Duration=5,
+Icon="rbxassetid://84519376661277"
+})
+
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local Workspace=game:GetService("Workspace")
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local StarterGui=game:GetService("StarterGui")
+local LocalPlayer=Players.LocalPlayer
+local Camera=Workspace.CurrentCamera
+local ESPHighlights={}
+
+getgenv().TransparencyEnabled=true
+getgenv().JumpPowerBypass=true
+getgenv().WalkspeedBypass=true
+local speedValue=100
+local jumpValue=100
+local selectedPlayer=nil
+local speedToggle=false
+
+local MainTab=Window:Tab("Main","eye")
+local ESPTab=Window:Tab("ESP","sparkles")
+local FarmTab=Window:Tab("Farm","wrench")
+local AnimTab=Window:Tab("Animations","package")
+local TeleportTab=Window:Tab("Teleport","map")
+local PlayerTab=Window:Tab("Player","user")
+local InfoTab=Window:Tab("Info","badge-info")
+
+local function createEsp(plr)
+if not plr.Character or ESPHighlights[plr] then return end
+local highlight=Instance.new("Highlight")
+highlight.Name="ESP"
+highlight.Adornee=plr.Character
+highlight.FillTransparency=0.5
+highlight.OutlineTransparency=0
+highlight.FillColor=Color3.fromRGB(255,0,0)
+highlight.OutlineColor=Color3.fromRGB(255,255,255)
+highlight.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+highlight.Parent=plr.Character
+ESPHighlights[plr]=highlight
+end
+
+local function updateEsp(plr)
+if not plr.Character then return end
+local role="Innocent"
+if plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife")) then role="Murderer"
+elseif plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun")) then role="Sheriff" end
+local color=role=="Murderer" and Color3.fromRGB(255,0,0) or role=="Sheriff" and Color3.fromRGB(0,100,255) or Color3.fromRGB(0,255,0)
+if ESPHighlights[plr] then
+ESPHighlights[plr].FillColor=color
+else
+createEsp(plr)
+end
+end
+
+local function removeEsp(plr)
+if ESPHighlights[plr] then
+ESPHighlights[plr]:Destroy()
+ESPHighlights[plr]=nil
+end
+end
+
+local function espLoop()
+for _,plr in pairs(Players:GetPlayers()) do
+if plr~=LocalPlayer then
+updateEsp(plr)
+end
+end
+end
+
+RunService.Heartbeat:Connect(espLoop)
+
+for _,plr in pairs(Players:GetPlayers()) do
+if plr~=LocalPlayer then
+plr.CharacterAdded:Connect(function() updateEsp(plr) end)
+end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+plr.CharacterAdded:Connect(function() updateEsp(plr) end)
+end)
+Players.PlayerRemoving:Connect(removeEsp)
+
+MainTab:Section("Murder"):Toggle("Kill All",false,function(state)
+if state then
+spawn(function()
+while task.wait(0.1) and getgenv().KillAll do
+for _,plr in pairs(Players:GetPlayers()) do
+if plr~=LocalPlayer and plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health>0 then
+local knife=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
+if knife then
+LocalPlayer.Character.Humanoid:EquipTool(knife)
+game:GetService("ReplicatedStorage").Remotes.Gameplay.MurdererStab:FireServer(plr.Character.Humanoid)
+end
+end
+end
+end
+end)
+end
+end)
+
+MainTab:Section("Sheriff"):Toggle("Auto Shoot Murderer",false,function(state)
+getgenv().AutoShoot=state
+if state then
+spawn(function()
+while task.wait() and getgenv().AutoShoot do
+for _,plr in pairs(Players:GetPlayers()) do
+if plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife")) then
+local gun=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun") or LocalPlayer.Backpack:FindFirstChild("Gun")
+if gun then
+LocalPlayer.Character.Humanoid:EquipTool(gun)
+game:GetService("ReplicatedStorage").Remotes.Gameplay.SheriffShoot:FireServer(plr.Character.HumanoidRootPart.Position)
+end
+end
+end
+end
+end)
+end
+end)
+
+FarmTab:Section("Auto Farm"):Toggle("Coin Farm",false,function(state)
+getgenv().CoinFarm=state
+if state then
+spawn(function()
+while task.wait(0.5) and getgenv().CoinFarm do
+for _,coin in pairs(Workspace:GetDescendants()) do
+if coin.Name=="CoinServer" then
+firetouchinterest(LocalPlayer.Character.HumanoidRootPart,coin,0)
+task.wait()
+firetouchinterest(LocalPlayer.Character.HumanoidRootPart,coin,1)
+end
+end
+end
+end)
+end
+end)
+
+PlayerTab:Section("Player"):Textbox("Player Name","",function(name)
+for _,plr in pairs(Players:GetPlayers()) do
+if string.lower(plr.Name):find(string.lower(name)) or string.lower(plr.DisplayName):find(string.lower(name)) then
+selectedPlayer=plr
+Notify({Title="VexonHub",Content="Selected: "..plr.DisplayName,Duration=3})
+return
+end
+end
+Notify({Title="VexonHub",Content="Player not found",Duration=3})
+end)
+
+PlayerTab:Section("Actions"):Button("Teleport to Player",function()
+if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+LocalPlayer.Character.HumanoidRootPart.CFrame=selectedPlayer.Character.HumanoidRootPart.CFrame
+end
+end)
+
+PlayerTab:Section("Actions"):Button("View Player",function()
+if selectedPlayer and selectedPlayer.Character then
+Camera.CameraSubject=selectedPlayer.Character.Humanoid
+end
+end)
+
+PlayerTab:Section("Speed & Jump"):Slider("WalkSpeed",16,500,100,false,function(v)
+speedValue=v
+LocalPlayer.Character.Humanoid.WalkSpeed=v
+end)
+
+PlayerTab:Section("Speed & Jump"):Slider("JumpPower",50,500,100,false,function(v)
+jumpValue=v
+LocalPlayer.Character.Humanoid.JumpPower=v
+end)
+
+PlayerTab:Section("Speed & Jump"):Toggle("Speed Toggle",false,function(state)
+speedToggle=state
+if state then
+spawn(function()
+while task.wait() and speedToggle do
+LocalPlayer.Character.HumanoidRootPart.CFrame=LocalPlayer.Character.HumanoidRootPart.CFrame+LocalPlayer.Character.Humanoid.MoveDirection*2
+end
+end)
+end
+end)
+
+AnimTab:Section("Packs"):Dropdown("Select Pack",{"Vampire","Hero","Ninja","Zombie","Astronaut","Cartoon","Oldschool","Werewolf","Mage","Toy","Superhero","Robot","Ghost","Stylish","Levitation","Bubbly","Ninja Run","Elder","Cartoony","Pirate","Knight","Cowboy","Popstar","Wolf","Glitch","Time","Lovestruck"},function(v)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Empreus/Animations/main/"..v..".lua"))()
+end)
+
+MainTab:Section("Universal"):Button("Infinite Yield",function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+InfoTab:Section("Links"):Button("Copy Discord",function()
+setclipboard("https://discord.gg/mdJKdwbKjE")
+Notify({Title="Copied",Content="Discord link copied!",Duration=3})
+end)
+
+Notify({Title="VexonHub",Content="Fully loaded! Discord: discord.gg/mdJKdwbKjE",Duration=8})
+print("VexonHub MM2 - Full Version Loaded")

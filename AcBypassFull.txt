@@ -1,0 +1,1304 @@
+
+--[[
+    ---made by ktro put credits plazz thanks 
+    
+    
+    - gcinfo/collectgarbage memory spoofing
+    - InstanceCount spoofing (hide exploit instances)
+    - DescendantAdded/Removing bypass (hide CoreGui additions)
+    - GetFocusedTextBox bypass
+    - newproxy detection bypass
+    - LogService/Error/Warn connection disabling
+    - CoreGui detection bypass
+    - BTools detection bypass
+    - Anti-kick protection (Player.Kick hook)
+    - Punishment function neutralization
+    - Remote argument spoofing
+    - Anti-fling bypass
+    - Teleport bypass
+    - Noclip collision bypass
+]]
+
+-- ============================================================
+-- CONFIGURATION
+-- ============================================================
+local Config = {
+    LogLevel = 1,
+    
+    Bypasses = {
+        Adonis = true,
+        Metamethods = true,
+        Remotes = true,
+        Connections = true,
+        Humanoid = true,
+        Byfron = true,
+        Memory = true,
+        InstanceCount = true,
+        DescendantEvents = true,
+        TextBox = true,
+        NewProxy = true,
+        Logging = true,
+        CoreGui = true,
+        BTools = true,
+        AntiKick = true,
+        Punishment = true,
+        AntiFling = false,
+        Teleport = false,
+        Noclip = true
+    },
+    
+    MaxRetries = 3,
+    RetryDelay = 0.5,
+    MaxGCScanDepth = 10000,
+    ScanTimeout = 5,
+    InfiniteWait = 9e9,
+    RemoteHookDelay = 0.1,
+    CharacterWaitTimeout = 5,
+    MemoryRandomRange = 150
+}
+
+-- ============================================================
+-- SERVICES
+-- ============================================================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Stats = game:GetService("Stats")
+local UserInputService = game:GetService("UserInputService")
+local LogService = game:GetService("LogService")
+local ScriptContext = game:GetService("ScriptContext")
+local ServerScriptService = game:FindFirstChild("ServerScriptService")
+
+-- ============================================================
+-- EXPLOIT FUNCTION FALLBACKS
+-- ============================================================
+local getgc = getgc or function() return {} end
+local getinfo = getinfo or debug.getinfo or function() return {} end
+local hookfunction = hookfunction or function(old, new) return old end
+local hookmetamethod = hookmetamethod or function() end
+local getrawmetatable = getrawmetatable or function() return {} end
+local setreadonly = setreadonly or function() end
+local newcclosure = newcclosure or function(f) return f end
+local getnamecallmethod = getnamecallmethod or function() return "" end
+local setthreadidentity = setthreadidentity or set_thread_identity or setidentity or function() end
+local getconnections = getconnections or function() return {} end
+local getrenv = getrenv or function() return getfenv(0) end
+local checkcaller = checkcaller or function() return false end
+local islclosure = islclosure or function() return false end
+local iscclosure = iscclosure or function() return false end
+local getscriptclosure = getscriptclosure or function() return nil end
+local getsenv = getsenv or function() return {} end
+local getupvalue = getupvalue or debug.getupvalue or function() return nil end
+local setupvalue = setupvalue or debug.setupvalue or function() end
+local getconstant = getconstant or function() return nil end
+local setconstant = setconstant or function() end
+local getproto = getproto or function() return nil end
+local getprotos = getprotos or function() return {} end
+local isreadonly = isreadonly or function() return false end
+local firesignal = firesignal or function() end
+local fireclickdetector = fireclickdetector or function() end
+local fireproximityprompt = fireproximityprompt or function() end
+
+-- ============================================================
+-- SHARED CONSTANTS
+-- ============================================================
+local SUSPICIOUS_KEYWORDS = {
+    "kick", "ban", "detect", "cheat", "exploit", "flag", 
+    "anticheat", "ac", "kill", "punish", "violation", "security",
+    "integrity", "validation", "verify", "sanity"
+}
+
+local SUSPICIOUS_KEYWORDS_LOWER = {}
+for i, keyword in ipairs(SUSPICIOUS_KEYWORDS) do
+    SUSPICIOUS_KEYWORDS_LOWER[i] = keyword:lower()
+end
+
+local ROBLOX_COREGUI_INSTANCES = {
+    "DevConsoleMaster", "BubbleChat", "ThemeProvider", "HeadsetDisconnectedDialog",
+    "PurchasePrompt", "RobloxNetworkPauseNotification", "PlayerList", "RobloxLoadingGui",
+    "RobloxPromptGui", "TeleportGui", "CoreScriptLocalization", "RobloxGui",
+    "NotificationFrame", "Chat", "PlayerGui"
+}
+
+-- ============================================================
+-- LOGGING SYSTEM
+-- ============================================================
+local Logger = {
+    Level = { SILENT = 0, NORMAL = 1, DEBUG = 2 }
+}
+
+function Logger.log(level, prefix, message, ...)
+    if Config.LogLevel >= level then
+        local args = {...}
+        local formattedArgs = ""
+        for i, arg in ipairs(args) do
+            formattedArgs = formattedArgs .. " " .. tostring(arg)
+        end
+        print(prefix .. " " .. message .. formattedArgs)
+    end
+end
+
+function Logger.info(message, ...) Logger.log(Logger.Level.NORMAL, "✅", message, ...) end
+function Logger.warn(message, ...) Logger.log(Logger.Level.NORMAL, "⚠️", message, ...) end
+function Logger.error(message, ...) Logger.log(Logger.Level.NORMAL, "❌", message, ...) end
+function Logger.debug(message, ...) Logger.log(Logger.Level.DEBUG, "🔍", message, ...) end
+function Logger.block(message, ...) Logger.log(Logger.Level.NORMAL, "🚫", message, ...) end
+
+function Logger.section(title)
+    if Config.LogLevel >= Logger.Level.NORMAL then
+        print("=" .. string.rep("=", 50))
+        print(title)
+        print("=" .. string.rep("=", 50))
+    end
+end
+
+-- ============================================================
+-- UTILITY FUNCTIONS
+-- ============================================================
+local Utils = {}
+
+function Utils.safeCall(func, ...)
+    local success, result = pcall(func, ...)
+    return success, result
+end
+
+function Utils.retry(func, maxRetries, delay)
+    maxRetries = maxRetries or Config.MaxRetries
+    delay = delay or Config.RetryDelay
+    
+    local lastError
+    for attempt = 1, maxRetries do
+        local success, result = pcall(func)
+        if success then return true, result end
+        lastError = result
+        Logger.debug("Retry attempt " .. attempt .. " failed:", tostring(lastError))
+        if attempt < maxRetries then task.wait(delay) end
+    end
+    return false, lastError
+end
+
+function Utils.containsSuspiciousKeyword(str)
+    if not str then return false end
+    local lowerStr = str:lower()
+    for _, keyword in ipairs(SUSPICIOUS_KEYWORDS_LOWER) do
+        if lowerStr:find(keyword, 1, true) then
+            return true, keyword
+        end
+    end
+    return false
+end
+
+function Utils.safeGetInfo(func)
+    if not func then return nil end
+    local success, info = pcall(getinfo, func)
+    if success and info then return info end
+    return nil
+end
+
+function Utils.isAntiCheatSource(info)
+    if not info or not info.source then return false end
+    local source = info.source:lower()
+    return source:find("anticheat") or source:find("detect") or 
+           source:find("ac_") or source:find("security") or source:find("protection")
+end
+
+function Utils.isRobloxCoreGuiInstance(name)
+    for _, robloxName in ipairs(ROBLOX_COREGUI_INSTANCES) do
+        if name == robloxName then return true end
+    end
+    return false
+end
+
+function Utils.getExploitInstanceCount()
+    local count = 0
+    pcall(function()
+        for _, child in pairs(CoreGui:GetChildren()) do
+            if not Utils.isRobloxCoreGuiInstance(child.Name) then
+                count = count + #child:GetDescendants() + 1
+            end
+        end
+    end)
+    return count
+end
+
+-- ============================================================
+-- DETECTION RESULTS & STATE
+-- ============================================================
+local detectedAntiCheats = {}
+local hookedFunctions = {}
+local originalFunctions = {}
+local bypassStatus = {
+    adonis = false,
+    metamethod = false,
+    remotes = false,
+    velocity = false,
+    humanoid = false,
+    byfron = false,
+    memory = false,
+    instanceCount = false,
+    descendantEvents = false,
+    textBox = false,
+    newProxy = false,
+    logging = false,
+    coreGui = false,
+    btools = false,
+    antiKick = false,
+    punishment = false,
+    antiFling = false,
+    teleport = false,
+    noclip = false
+}
+
+local memoryState = {
+    originalGcInfo = 0,
+    randomValue = 0
+}
+
+local proxyTable = {}
+
+local spoofedEvents = {
+    descendantAdded = nil,
+    descendantRemoving = nil
+}
+
+-- ============================================================
+-- EXTENDED ANTI-CHEAT IDENTIFIERS
+-- ============================================================
+local knownAntiCheats = {
+    ["Adonis"] = {"Detected", "Kill", "Ban", "CORE_CLIENT", "Variables", "Process", "Logs"},
+    ["Sentinel"] = {"_sentinel", "checkExploit", "validateClient", "anticheat", "Sentinel"},
+    ["HDAdmin"] = {"Remote", "Notification", "Command", "Moderator", "HD"},
+    ["BasicAdmin"] = {"Command", "checkOwner", "Banned", "Prefix", "BA"},
+    ["Byfron"] = {"Hyperion", "byfron", "Integrity", "ClientIntegrity", "SecurityCheck"},
+    ["Vape"] = {"VapeAC", "VapeCheck", "VapeSecure"},
+    ["SimpleAdmin"] = {"SimpleAdmin", "SA_", "Admin"},
+    ["Legion"] = {"Legion", "LegionAC", "LegionAntiCheat"},
+    ["Infinite Yield"] = {"IY_", "InfiniteYield"},
+    ["Custom"] = {"anticheat", "ac_", "check", "detect", "exploit", "flag", "kick", "security", "punish"},
+    ["VelocityCheck"] = {"AssemblyLinearVelocity", "Velocity", "CFrame", "Speed"},
+    ["HumanoidCheck"] = {"WalkSpeed", "JumpPower", "Health", "JumpHeight"},
+    ["MemoryCheck"] = {"memory", "gc", "collectgarbage", "getgc", "gcinfo"},
+    ["ServerSide"] = {"ServerScript", "RemoteValidation", "Sanity", "Verify"},
+    ["BToolsCheck"] = {"BTools", "BuildTools", "Delete", "Hammer"},
+    ["FlingCheck"] = {"Fling", "BodyVelocity", "BodyForce", "VectorForce"}
+}
+
+local knownAntiCheatsLower = {}
+for acName, keywords in pairs(knownAntiCheats) do
+    knownAntiCheatsLower[acName] = {}
+    for i, keyword in ipairs(keywords) do
+        knownAntiCheatsLower[acName][i] = keyword:lower()
+    end
+end
+
+-- ============================================================
+-- HOOK DETECTION PROTECTION
+-- ============================================================
+local HookProtection = {}
+
+function HookProtection.wrapHook(originalFunc, hookFunc, funcName)
+    local wrapped = newcclosure(function(...)
+        if checkcaller and checkcaller() then
+            return originalFunc(...)
+        end
+        return hookFunc(...)
+    end)
+    
+    originalFunctions[funcName] = originalFunc
+    table.insert(hookedFunctions, {
+        name = funcName,
+        original = originalFunc,
+        hooked = wrapped
+    })
+    
+    return wrapped
+end
+
+function HookProtection.safeHook(targetFunc, hookFunc, funcName)
+    if not targetFunc or typeof(targetFunc) ~= "function" then return nil end
+    
+    local success, hooked = pcall(function()
+        local wrapped = HookProtection.wrapHook(targetFunc, hookFunc, funcName)
+        return hookfunction(targetFunc, wrapped)
+    end)
+    
+    if success then
+        Logger.debug("Successfully hooked:", funcName)
+        return hooked
+    else
+        Logger.debug("Failed to hook:", funcName, tostring(hooked))
+        return nil
+    end
+end
+
+-- ============================================================
+-- MEMORY BYPASS (gcinfo/collectgarbage)
+-- ============================================================
+local function bypassMemoryDetection()
+    if not Config.Bypasses.Memory then return end
+    
+    Logger.debug("Bypassing memory detection...")
+    
+    local success = pcall(function()
+        memoryState.originalGcInfo = gcinfo()
+        
+        RunService.Stepped:Connect(function()
+            memoryState.randomValue = math.random(-Config.MemoryRandomRange, Config.MemoryRandomRange)
+        end)
+        
+        local env = getrenv()
+        
+        if env.gcinfo then
+            local oldGcinfo = env.gcinfo
+            HookProtection.safeHook(oldGcinfo, function(...)
+                if not checkcaller() then
+                    return memoryState.originalGcInfo + memoryState.randomValue
+                end
+                return oldGcinfo(...)
+            end, "gcinfo")
+            Logger.info("Hooked gcinfo")
+        end
+        
+        if env.collectgarbage then
+            local oldCollectgarbage = env.collectgarbage
+            HookProtection.safeHook(oldCollectgarbage, function(...)
+                local args = {...}
+                if not checkcaller() and args[1] == "count" then
+                    return memoryState.originalGcInfo + memoryState.randomValue
+                end
+                return oldCollectgarbage(...)
+            end, "collectgarbage")
+            Logger.info("Hooked collectgarbage")
+        end
+    end)
+    
+    bypassStatus.memory = success
+    if success then
+        Logger.info("Memory detection bypass applied")
+    else
+        Logger.error("Memory detection bypass failed")
+    end
+end
+
+-- ============================================================
+-- INSTANCE COUNT BYPASS
+-- ============================================================
+local function bypassInstanceCount()
+    if not Config.Bypasses.InstanceCount then return end
+    
+    Logger.debug("Bypassing InstanceCount detection...")
+    
+    local success = pcall(function()
+        local mt = getrawmetatable(game)
+        local oldIndex = mt.__index
+        
+        setreadonly(mt, false)
+        
+        local newIndex = newcclosure(function(self, index, ...)
+            if not checkcaller() and self == Stats and index == "InstanceCount" then
+                local realCount = oldIndex(self, index, ...)
+                local exploitCount = Utils.getExploitInstanceCount()
+                return realCount - exploitCount
+            end
+            return oldIndex(self, index, ...)
+        end)
+        
+        mt.__index = newIndex
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.instanceCount = success
+    if success then
+        Logger.info("InstanceCount bypass applied")
+    else
+        Logger.error("InstanceCount bypass failed")
+    end
+end
+
+-- ============================================================
+-- DESCENDANT EVENTS BYPASS
+-- ============================================================
+local function bypassDescendantEvents()
+    if not Config.Bypasses.DescendantEvents then return end
+    
+    Logger.debug("Bypassing DescendantAdded/Removing detection...")
+    
+    local success = pcall(function()
+        spoofedEvents.descendantAdded = Instance.new("BindableEvent")
+        spoofedEvents.descendantRemoving = Instance.new("BindableEvent")
+        
+        local realDescendantAdded = game.DescendantAdded
+        local realDescendantRemoving = game.DescendantRemoving
+        
+        game.DescendantAdded:Connect(function(obj)
+            if not obj:IsDescendantOf(CoreGui) then
+                spoofedEvents.descendantAdded:Fire(obj)
+            end
+        end)
+        
+        game.DescendantRemoving:Connect(function(obj)
+            if not obj:IsDescendantOf(CoreGui) then
+                spoofedEvents.descendantRemoving:Fire(obj)
+            end
+        end)
+        
+        local mt = getrawmetatable(game)
+        local oldIndex = mt.__index
+        
+        setreadonly(mt, false)
+        
+        mt.__index = newcclosure(function(self, index, ...)
+            if not checkcaller() and self == game then
+                if index == "DescendantAdded" then
+                    return spoofedEvents.descendantAdded.Event
+                elseif index == "DescendantRemoving" then
+                    return spoofedEvents.descendantRemoving.Event
+                end
+            end
+            return oldIndex(self, index, ...)
+        end)
+        
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.descendantEvents = success
+    if success then
+        Logger.info("DescendantEvents bypass applied")
+    else
+        Logger.error("DescendantEvents bypass failed")
+    end
+end
+
+-- ============================================================
+-- TEXTBOX FOCUS BYPASS
+-- ============================================================
+local function bypassTextBoxFocus()
+    if not Config.Bypasses.TextBox then return end
+    
+    Logger.debug("Bypassing GetFocusedTextBox detection...")
+    
+    local success = pcall(function()
+        local mt = getrawmetatable(game)
+        local oldNamecall = mt.__namecall
+        
+        setreadonly(mt, false)
+        
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            
+            if self == UserInputService and method == "GetFocusedTextBox" then
+                local textBox = oldNamecall(self, ...)
+                if textBox and typeof(textBox) == "Instance" then
+                    if textBox:IsDescendantOf(CoreGui) then
+                        return nil
+                    end
+                end
+            end
+            
+            return oldNamecall(self, ...)
+        end)
+        
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.textBox = success
+    if success then
+        Logger.info("TextBox focus bypass applied")
+    else
+        Logger.error("TextBox focus bypass failed")
+    end
+end
+
+-- ============================================================
+-- NEWPROXY BYPASS
+-- ============================================================
+local function bypassNewProxy()
+    if not Config.Bypasses.NewProxy then return end
+    
+    Logger.debug("Bypassing newproxy detection...")
+    
+    local success = pcall(function()
+        local env = getrenv()
+        
+        if env.newproxy then
+            local oldNewproxy = env.newproxy
+            HookProtection.safeHook(oldNewproxy, function(...)
+                local proxy = oldNewproxy(...)
+                table.insert(proxyTable, proxy)
+                return proxy
+            end, "newproxy")
+        end
+    end)
+    
+    bypassStatus.newProxy = success
+    if success then
+        Logger.info("newproxy bypass applied")
+    else
+        Logger.error("newproxy bypass failed")
+    end
+end
+
+-- ============================================================
+-- LOGGING BYPASS (Disable Error/Warn connections)
+-- ============================================================
+local function bypassLogging()
+    if not Config.Bypasses.Logging then return end
+    
+    Logger.debug("Bypassing logging detection...")
+    
+    local success = pcall(function()
+        for _, conn in pairs(getconnections(ScriptContext.Error)) do
+            pcall(function() conn:Disable() end)
+        end
+        Logger.debug("Disabled ScriptContext.Error connections")
+        
+        for _, conn in pairs(getconnections(LogService.MessageOut)) do
+            pcall(function() conn:Disable() end)
+        end
+        Logger.debug("Disabled LogService.MessageOut connections")
+        
+        local env = getrenv()
+        
+        if env.warn then
+            local oldWarn = env.warn
+            hookfunction(oldWarn, newcclosure(function(...)
+                if not checkcaller() then
+                    local args = {...}
+                    for _, arg in ipairs(args) do
+                        local argStr = tostring(arg):lower()
+                        if Utils.containsSuspiciousKeyword(argStr) then
+                            return
+                        end
+                    end
+                end
+                return oldWarn(...)
+            end))
+        end
+        
+        if env.error then
+            local oldError = env.error
+            hookfunction(oldError, newcclosure(function(...)
+                if not checkcaller() then
+                    local args = {...}
+                    for _, arg in ipairs(args) do
+                        local argStr = tostring(arg):lower()
+                        if Utils.containsSuspiciousKeyword(argStr) then
+                            return
+                        end
+                    end
+                end
+                return oldError(...)
+            end))
+        end
+    end)
+    
+    bypassStatus.logging = success
+    if success then
+        Logger.info("Logging bypass applied")
+    else
+        Logger.error("Logging bypass failed")
+    end
+end
+
+-- ============================================================
+-- ANTI-KICK BYPASS
+-- ============================================================
+local function bypassAntiKick()
+    if not Config.Bypasses.AntiKick then return end
+    
+    Logger.debug("Bypassing kick detection...")
+    
+    local success = pcall(function()
+        local player = Players.LocalPlayer
+        
+        local mt = getrawmetatable(game)
+        local oldNamecall = mt.__namecall
+        
+        setreadonly(mt, false)
+        
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            
+            if method == "Kick" and self == player then
+                Logger.block("Blocked Player:Kick() attempt")
+                return task.wait(Config.InfiniteWait)
+            end
+            
+            return oldNamecall(self, ...)
+        end)
+        
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.antiKick = success
+    if success then
+        Logger.info("Anti-kick bypass applied")
+    else
+        Logger.error("Anti-kick bypass failed")
+    end
+end
+
+-- ============================================================
+-- PUNISHMENT FUNCTION BYPASS
+-- ============================================================
+local function bypassPunishment()
+    if not Config.Bypasses.Punishment then return end
+    
+    Logger.debug("Bypassing punishment functions...")
+    
+    local success = pcall(function()
+        for _, v in pairs(getgc(true)) do
+            if typeof(v) == "table" then
+                local punishFunc = rawget(v, "punish")
+                local kickFunc = rawget(v, "kick")
+                local banFunc = rawget(v, "ban")
+                local flagFunc = rawget(v, "flag")
+                local detectFunc = rawget(v, "detect")
+                
+                if typeof(punishFunc) == "function" then
+                    hookfunction(punishFunc, newcclosure(function()
+                        Logger.block("Blocked punish() call")
+                        return
+                    end))
+                end
+                
+                if typeof(kickFunc) == "function" then
+                    hookfunction(kickFunc, newcclosure(function()
+                        Logger.block("Blocked kick() call")
+                        return task.wait(Config.InfiniteWait)
+                    end))
+                end
+                
+                if typeof(banFunc) == "function" then
+                    hookfunction(banFunc, newcclosure(function()
+                        Logger.block("Blocked ban() call")
+                        return
+                    end))
+                end
+                
+                if typeof(flagFunc) == "function" then
+                    hookfunction(flagFunc, newcclosure(function()
+                        Logger.block("Blocked flag() call")
+                        return false
+                    end))
+                end
+                
+                if typeof(detectFunc) == "function" then
+                    hookfunction(detectFunc, newcclosure(function()
+                        Logger.block("Blocked detect() call")
+                        return false
+                    end))
+                end
+            end
+        end
+    end)
+    
+    bypassStatus.punishment = success
+    if success then
+        Logger.info("Punishment bypass applied")
+    else
+        Logger.error("Punishment bypass failed")
+    end
+end
+
+-- ============================================================
+-- ANTI-FLING BYPASS (Safe version - no physics modification)
+-- ============================================================
+local function bypassAntiFling()
+    if not Config.Bypasses.AntiFling then return end
+    
+    Logger.debug("Bypassing anti-fling detection...")
+    
+    local success = pcall(function()
+        local player = Players.LocalPlayer
+        local maxVelocity = 500
+        
+        RunService.Heartbeat:Connect(function()
+            local character = player.Character
+            if not character then return end
+            
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            local velocity = hrp.AssemblyLinearVelocity
+            if velocity.Magnitude > maxVelocity then
+                pcall(function()
+                    hrp.AssemblyLinearVelocity = velocity.Unit * maxVelocity
+                end)
+                Logger.debug("Capped excessive velocity")
+            end
+        end)
+        
+        for _, child in pairs(player.Character and player.Character:GetDescendants() or {}) do
+            if child:IsA("BodyVelocity") or child:IsA("BodyForce") or child:IsA("VectorForce") then
+                pcall(function()
+                    if child.Parent and child.Parent:IsDescendantOf(player.Character) then
+                        child:Destroy()
+                        Logger.debug("Removed suspicious force object:", child.ClassName)
+                    end
+                end)
+            end
+        end
+    end)
+    
+    bypassStatus.antiFling = success
+    if success then
+        Logger.info("Anti-fling bypass applied")
+    else
+        Logger.error("Anti-fling bypass failed")
+    end
+end
+
+-- ============================================================
+-- TELEPORT BYPASS
+-- ============================================================
+local function bypassTeleport()
+    if not Config.Bypasses.Teleport then return end
+    
+    Logger.debug("Bypassing teleport detection...")
+    
+    local success = pcall(function()
+        local player = Players.LocalPlayer
+        local lastPosition = nil
+        local teleportThreshold = 100
+        
+        RunService.Heartbeat:Connect(function()
+            local character = player.Character
+            if not character then return end
+            
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            if lastPosition then
+                local distance = (hrp.Position - lastPosition).Magnitude
+                if distance > teleportThreshold then
+                    Logger.debug("Large position change detected (legitimate teleport)")
+                end
+            end
+            
+            lastPosition = hrp.Position
+        end)
+    end)
+    
+    bypassStatus.teleport = success
+    if success then
+        Logger.info("Teleport bypass applied")
+    else
+        Logger.error("Teleport bypass failed")
+    end
+end
+
+-- ============================================================
+-- NOCLIP BYPASS
+-- ============================================================
+local function bypassNoclip()
+    if not Config.Bypasses.Noclip then return end
+    
+    Logger.debug("Bypassing noclip detection...")
+    
+    local success = pcall(function()
+        local player = Players.LocalPlayer
+        
+        local mt = getrawmetatable(game)
+        local oldNewindex = mt.__newindex
+        
+        setreadonly(mt, false)
+        
+        mt.__newindex = newcclosure(function(self, key, value)
+            if key == "CanCollide" and self:IsA("BasePart") then
+                local character = player.Character
+                if character and self:IsDescendantOf(character) then
+                    local info = Utils.safeGetInfo(debug.getinfo(2))
+                    if info and Utils.isAntiCheatSource(info) then
+                        Logger.block("Blocked CanCollide reset on", self.Name)
+                        return
+                    end
+                end
+            end
+            return oldNewindex(self, key, value)
+        end)
+        
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.noclip = success
+    if success then
+        Logger.info("Noclip bypass applied")
+    else
+        Logger.error("Noclip bypass failed")
+    end
+end
+
+-- ============================================================
+-- SCANNING FUNCTIONS
+-- ============================================================
+local function scanGarbageCollector()
+    Logger.debug("Scanning garbage collector...")
+    
+    local scanned = 0
+    local gcItems = getgc(true)
+    
+    for i, v in pairs(gcItems) do
+        if scanned >= Config.MaxGCScanDepth then
+            Logger.debug("Reached max scan depth:", scanned)
+            break
+        end
+        scanned = scanned + 1
+        
+        if typeof(v) == "table" then
+            for acName, keywords in pairs(knownAntiCheatsLower) do
+                for _, keyword in ipairs(keywords) do
+                    local success, hasKey = pcall(function()
+                        return rawget(v, keyword) ~= nil
+                    end)
+                    
+                    if success and hasKey then
+                        if not detectedAntiCheats[acName] then
+                            detectedAntiCheats[acName] = {}
+                        end
+                        table.insert(detectedAntiCheats[acName], {
+                            type = "table",
+                            keyword = keyword,
+                            value = v
+                        })
+                        Logger.info("Found " .. acName .. " anti-cheat:", keyword)
+                    end
+                end
+            end
+        elseif typeof(v) == "function" then
+            local info = Utils.safeGetInfo(v)
+            if info and info.name then
+                local funcNameLower = info.name:lower()
+                for acName, keywords in pairs(knownAntiCheatsLower) do
+                    for _, keyword in ipairs(keywords) do
+                        if funcNameLower:find(keyword, 1, true) then
+                            if not detectedAntiCheats[acName] then
+                                detectedAntiCheats[acName] = {}
+                            end
+                            table.insert(detectedAntiCheats[acName], {
+                                type = "function",
+                                keyword = keyword,
+                                name = info.name,
+                                func = v
+                            })
+                            Logger.info("Found " .. acName .. " function:", info.name)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    Logger.debug("GC scan complete. Scanned:", scanned, "items")
+end
+
+local function scanReplicatedStorage()
+    Logger.debug("Scanning ReplicatedStorage...")
+    
+    pcall(function()
+        for _, child in pairs(ReplicatedStorage:GetDescendants()) do
+            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+                local nameLower = child.Name:lower()
+                for acName, keywords in pairs(knownAntiCheatsLower) do
+                    for _, keyword in ipairs(keywords) do
+                        if nameLower:find(keyword, 1, true) then
+                            if not detectedAntiCheats[acName] then
+                                detectedAntiCheats[acName] = {}
+                            end
+                            table.insert(detectedAntiCheats[acName], {
+                                type = "remote",
+                                keyword = keyword,
+                                path = child:GetFullName(),
+                                object = child
+                            })
+                            Logger.info("Found " .. acName .. " remote:", child:GetFullName())
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function scanForAntiCheat()
+    Logger.section("🔍 Scanning for anti-cheat systems...")
+    
+    Utils.safeCall(scanGarbageCollector)
+    Utils.safeCall(scanReplicatedStorage)
+end
+
+-- ============================================================
+-- LEGACY BYPASS FUNCTIONS (from v3.0)
+-- ============================================================
+local function bypassAdonis()
+    if not Config.Bypasses.Adonis then return end
+    if not detectedAntiCheats["Adonis"] then return end
+    
+    Logger.debug("Bypassing Adonis anti-cheat...")
+    
+    local success = Utils.retry(function()
+        pcall(function() setthreadidentity(2) end)
+        
+        for _, detection in ipairs(detectedAntiCheats["Adonis"]) do
+            if detection.type == "table" then
+                local DetectFunc = rawget(detection.value, "Detected")
+                local KillFunc = rawget(detection.value, "Kill")
+                
+                if typeof(DetectFunc) == "function" then
+                    HookProtection.safeHook(DetectFunc, function(Action, Info, NoCrash)
+                        if Action ~= "_" then
+                            Logger.block("Blocked Adonis detection:", Action)
+                            return
+                        end
+                        return originalFunctions["Adonis_Detected"](Action, Info, NoCrash)
+                    end, "Adonis_Detected")
+                end
+                
+                if typeof(KillFunc) == "function" then
+                    HookProtection.safeHook(KillFunc, function(Info)
+                        Logger.block("Blocked Adonis kill attempt")
+                        return task.wait(Config.InfiniteWait)
+                    end, "Adonis_Kill")
+                end
+            end
+        end
+        
+        pcall(function() setthreadidentity(7) end)
+    end)
+    
+    bypassStatus.adonis = success
+    if success then Logger.info("Adonis bypass complete") end
+end
+
+local function hookMetamethods()
+    if not Config.Bypasses.Metamethods then return end
+    
+    Logger.debug("Hooking metamethods...")
+    
+    local success = Utils.retry(function()
+        local mt = getrawmetatable(game)
+        if not mt then error("Failed to get metatable") end
+        
+        local oldNamecall = mt.__namecall
+        local oldNewindex = mt.__newindex
+        
+        setreadonly(mt, false)
+        
+        mt.__namecall = newcclosure(function(self, ...)
+            local args = {...}
+            local method = getnamecallmethod()
+            
+            if checkcaller and checkcaller() then
+                return oldNamecall(self, ...)
+            end
+            
+            if (method == "FireServer" or method == "InvokeServer") then
+                if self:IsA("RemoteEvent") or self:IsA("RemoteFunction") then
+                    local isSuspicious, keyword = Utils.containsSuspiciousKeyword(self.Name)
+                    
+                    if isSuspicious then
+                        Logger.block("Blocked metamethod call:", self.Name, method)
+                        return task.wait(Config.InfiniteWait)
+                    end
+                    
+                    if args[1] then
+                        local argSuspicious = Utils.containsSuspiciousKeyword(tostring(args[1]))
+                        if argSuspicious then
+                            Logger.block("Blocked suspicious argument:", self.Name)
+                            return task.wait(Config.InfiniteWait)
+                        end
+                    end
+                end
+            end
+            
+            return oldNamecall(self, ...)
+        end)
+        
+        mt.__newindex = newcclosure(function(self, key, value)
+            if checkcaller and checkcaller() then
+                return oldNewindex(self, key, value)
+            end
+            
+            local player = Players.LocalPlayer
+            local character = player and player.Character
+            
+            if self:IsA("BasePart") and character then
+                if self == character.PrimaryPart or self.Parent == character then
+                    if key == "AssemblyLinearVelocity" or key == "Velocity" then
+                        local info = Utils.safeGetInfo(debug.getinfo(2))
+                        if info and Utils.isAntiCheatSource(info) then
+                            Logger.block("Blocked velocity reset attempt")
+                            return
+                        end
+                    end
+                end
+            end
+            
+            if self:IsA("Humanoid") then
+                if key == "WalkSpeed" or key == "JumpPower" or key == "JumpHeight" then
+                    local info = Utils.safeGetInfo(debug.getinfo(2))
+                    if info and Utils.isAntiCheatSource(info) then
+                        Logger.block("Blocked Humanoid property reset:", key)
+                        return
+                    end
+                end
+            end
+            
+            return oldNewindex(self, key, value)
+        end)
+        
+        setreadonly(mt, true)
+    end)
+    
+    bypassStatus.metamethod = success
+    if success then Logger.info("Metamethods hooked successfully") end
+end
+
+local function hookRemotes()
+    if not Config.Bypasses.Remotes then return end
+    
+    Logger.debug("Hooking remote events...")
+    
+    local function hookRemote(remote)
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            local isSuspicious = Utils.containsSuspiciousKeyword(remote.Name)
+            
+            if isSuspicious then
+                pcall(function()
+                    if remote:IsA("RemoteEvent") then
+                        local oldFire = remote.FireServer
+                        remote.FireServer = newcclosure(function(self, ...)
+                            if checkcaller and checkcaller() then
+                                return oldFire(self, ...)
+                            end
+                            Logger.block("Blocked suspicious remote:", remote.Name)
+                            return task.wait(Config.InfiniteWait)
+                        end)
+                    else
+                        local oldInvoke = remote.InvokeServer
+                        remote.InvokeServer = newcclosure(function(self, ...)
+                            if checkcaller and checkcaller() then
+                                return oldInvoke(self, ...)
+                            end
+                            Logger.block("Blocked suspicious function:", remote.Name)
+                            return nil
+                        end)
+                    end
+                end)
+            end
+        end
+    end
+    
+    local success = Utils.retry(function()
+        for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+            pcall(hookRemote, remote)
+        end
+        
+        ReplicatedStorage.DescendantAdded:Connect(function(remote)
+            task.wait(Config.RemoteHookDelay)
+            pcall(hookRemote, remote)
+        end)
+    end)
+    
+    bypassStatus.remotes = success
+    if success then Logger.info("Remote hooks applied") end
+end
+
+local function bypassConnectionChecks(character)
+    if not Config.Bypasses.Connections then return end
+    
+    local success = Utils.retry(function()
+        if not character then
+            character = Players.LocalPlayer and Players.LocalPlayer.Character
+        end
+        if not character then return end
+        
+        local hrp = character:WaitForChild("HumanoidRootPart", Config.CharacterWaitTimeout)
+        if not hrp then return end
+        
+        local function disconnectSuspicious(signal)
+            for _, conn in pairs(getconnections(signal)) do
+                pcall(function()
+                    local info = Utils.safeGetInfo(conn.Function)
+                    if info and Utils.isAntiCheatSource(info) then
+                        conn:Disable()
+                    end
+                end)
+            end
+        end
+        
+        for _, prop in ipairs({"Position", "CFrame", "AssemblyLinearVelocity"}) do
+            pcall(function() disconnectSuspicious(hrp:GetPropertyChangedSignal(prop)) end)
+        end
+        pcall(function() disconnectSuspicious(hrp.Changed) end)
+    end)
+    
+    bypassStatus.velocity = success
+end
+
+local function bypassHumanoidChecks(character)
+    if not Config.Bypasses.Humanoid then return end
+    
+    local success = Utils.retry(function()
+        if not character then
+            character = Players.LocalPlayer and Players.LocalPlayer.Character
+        end
+        if not character then return end
+        
+        local humanoid = character:WaitForChild("Humanoid", Config.CharacterWaitTimeout)
+        if not humanoid then return end
+        
+        for _, conn in pairs(getconnections(humanoid.Changed)) do
+            pcall(function()
+                local info = Utils.safeGetInfo(conn.Function)
+                if info and Utils.isAntiCheatSource(info) then
+                    conn:Disable()
+                end
+            end)
+        end
+    end)
+    
+    bypassStatus.humanoid = success
+end
+
+-- ============================================================
+-- CHARACTER RESPAWN HANDLING
+-- ============================================================
+local function setupCharacterHandler()
+    local player = Players.LocalPlayer
+    if not player then return end
+    
+    local function onCharacterAdded(character)
+        Logger.debug("Character added, reapplying bypasses...")
+        task.wait(0.5)
+        
+        bypassConnectionChecks(character)
+        bypassHumanoidChecks(character)
+    end
+    
+    player.CharacterAdded:Connect(onCharacterAdded)
+    
+    if player.Character then
+        onCharacterAdded(player.Character)
+    end
+    
+    Logger.info("Character respawn handler active")
+end
+
+-- ============================================================
+-- MAIN INITIALIZATION
+-- ============================================================
+local function displayResults()
+    Logger.section("📊 Detection Results")
+    
+    local totalDetections = 0
+    for acName, detections in pairs(detectedAntiCheats) do
+        Logger.info(acName .. " Anti-Cheat: " .. #detections .. " components detected")
+        totalDetections = totalDetections + #detections
+    end
+    
+    if totalDetections == 0 then
+        Logger.info("No known anti-cheat detected")
+    end
+end
+
+local function displayStatus()
+    Logger.section("📊 Bypass Status")
+    
+    for name, status in pairs(bypassStatus) do
+        local icon = status and "✅" or "❌"
+        local statusText = status and "Active" or "Failed/Disabled"
+        if Config.LogLevel >= Logger.Level.NORMAL then
+            print(icon, name .. ":", statusText)
+        end
+    end
+end
+
+local function initialize()
+    Logger.section("🔍 Advanced Anti-Cheat Detector & Bypass v4.0")
+    Logger.info("Enhanced with ScriptBlox & Community techniques")
+    
+    scanForAntiCheat()
+    task.wait(0.5)
+    displayResults()
+    
+    Logger.section("🛡️ Applying Bypasses...")
+    
+    bypassMemoryDetection()
+    bypassInstanceCount()
+    bypassDescendantEvents()
+    bypassTextBoxFocus()
+    bypassNewProxy()
+    bypassLogging()
+    bypassAntiKick()
+    bypassPunishment()
+    bypassAntiFling()
+    bypassTeleport()
+    bypassNoclip()
+    
+    bypassAdonis()
+    hookMetamethods()
+    hookRemotes()
+    bypassConnectionChecks()
+    bypassHumanoidChecks()
+    
+    setupCharacterHandler()
+    
+    displayStatus()
+    
+    Logger.section("✅ Anti-cheat bypass initialization complete!")
+end
+
+local success, err = pcall(initialize)
+if not success then
+    Logger.error("Error during initialization:", err)
+    Logger.warn("Applying basic bypass...")
+    pcall(hookMetamethods)
+    pcall(hookRemotes)
+end
+
+-- ============================================================
+-- PUBLIC API
+-- ============================================================
+return {
+    Config = Config,
+    Logger = Logger,
+    Utils = Utils,
+    
+    detected = detectedAntiCheats,
+    status = bypassStatus,
+    hooked = hookedFunctions,
+    originals = originalFunctions,
+    
+    scan = scanForAntiCheat,
+    
+    bypass = {
+        adonis = bypassAdonis,
+        metamethods = hookMetamethods,
+        remotes = hookRemotes,
+        connections = bypassConnectionChecks,
+        humanoid = bypassHumanoidChecks,
+        memory = bypassMemoryDetection,
+        instanceCount = bypassInstanceCount,
+        descendantEvents = bypassDescendantEvents,
+        textBox = bypassTextBoxFocus,
+        newProxy = bypassNewProxy,
+        logging = bypassLogging,
+        antiKick = bypassAntiKick,
+        punishment = bypassPunishment,
+        antiFling = bypassAntiFling,
+        teleport = bypassTeleport,
+        noclip = bypassNoclip
+    },
+    
+    reapplyForCharacter = function(character)
+        bypassConnectionChecks(character)
+        bypassHumanoidChecks(character)
+    end,
+    
+    setLogLevel = function(level) Config.LogLevel = level end,
+    enableBypass = function(name, enabled)
+        if Config.Bypasses[name] ~= nil then Config.Bypasses[name] = enabled end
+    end
+}

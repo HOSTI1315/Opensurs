@@ -1,0 +1,798 @@
+--[[
+  Titan Hub - Floating Menu (English) + Dynamic Key + Tabs (Script / More)
+  - Dynamic Key source: https://pastebin.com/raw/k347NeRy
+  - Get key copies: https://cuty.io/7Tlx294jn (redirects to https://pastebin.com/k347NeRy)
+  - Scripts (alphabetical):
+      • Boxed Evolution
+      • Don't Wake the Brainrots!
+      • Knockout Simulator
+      • Plantum Academy
+      • Slayer Training
+      • Speed 99 Nights Forest
+      • [UPD] Be a Ninja
+  - More tab: YouTube button copies your channel link
+  - Saves last used key locally and auto-fills it next time
+  - Script status dot (green = running, red = not running). All set to green initially.
+]]
+
+-- URLs
+local KEY_URL       = "https://pastebin.com/raw/k347NeRy"
+local GET_KEY_LINK  = "https://cuty.io/7Tlx294jn"
+local YT_LINK       = "https://youtube.com/@relax-j7l?si=L0JyUA-x3OUVuCbz"
+
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Colors
+local colors = {
+	bg = Color3.fromRGB(18, 20, 26),
+	panel = Color3.fromRGB(30, 33, 45),
+	panel2 = Color3.fromRGB(38, 41, 56),
+	accent = Color3.fromRGB(0, 170, 255),
+	accent2 = Color3.fromRGB(130, 90, 255),
+	text = Color3.fromRGB(235, 235, 245),
+	muted = Color3.fromRGB(165, 170, 180),
+	success = Color3.fromRGB(60, 200, 120),
+	danger = Color3.fromRGB(235, 85, 85),
+	youtube = Color3.fromRGB(230, 33, 23),
+}
+
+-- Utils
+local function tween(obj, dur, props, style, dir)
+	local t = TweenService:Create(obj, TweenInfo.new(dur or 0.25, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+	t:Play()
+	return t
+end
+local function corner(px, parent)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, px)
+	c.Parent = parent
+	return c
+end
+local function stroke(thick, color, parent, transp)
+	local s = Instance.new("UIStroke")
+	s.Thickness = thick
+	s.Color = color
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	s.Transparency = transp or 0
+	s.Parent = parent
+	return s
+end
+local function trim(s) return (s or ""):match("^%s*(.-)%s*$") end
+local function gradient(parent, clr1, clr2, rot)
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, clr1),
+		ColorSequenceKeypoint.new(1, clr2),
+	})
+	g.Rotation = rot or 0
+	g.Parent = parent
+	return g
+end
+local function copyToClipboard(text)
+	local ok = false
+	if typeof(setclipboard) == "function" then ok = pcall(setclipboard, text) end
+	if not ok and typeof(toclipboard) == "function" then ok = pcall(toclipboard, text) end
+	if not ok then
+		local s = pcall(function() if syn and syn.write_clipboard then syn.write_clipboard(text) end end)
+		ok = ok or s
+	end
+	return ok
+end
+
+-- Local key save/load (file-based if supported by executor)
+local STORE_DIR  = "TitanHub"
+local STORE_FILE = STORE_DIR .. "/key.txt"
+local function saveKeyLocally(key)
+	if not key or key == "" then return end
+	if typeof(writefile) == "function" then
+		pcall(function()
+			if typeof(isfolder) == "function" and typeof(makefolder) == "function" then
+				if not isfolder(STORE_DIR) then makefolder(STORE_DIR) end
+			end
+			writefile(STORE_FILE, key)
+		end)
+	end
+end
+local function loadSavedKey()
+	if typeof(isfile) == "function" and typeof(readfile) == "function" then
+		local ok, data = pcall(function()
+			if isfile(STORE_FILE) then return readfile(STORE_FILE) end
+			if isfile("TitanHubKey.txt") then return readfile("TitanHubKey.txt") end -- legacy
+		end)
+		if ok and type(data) == "string" then
+			return trim(data)
+		end
+	end
+	return nil
+end
+
+-- Dynamic key fetch
+local cachedKey, lastFetch = nil, 0
+local function parseKey(raw)
+	local ok, json = pcall(function() return HttpService:JSONDecode(raw) end)
+	if ok and typeof(json) == "table" then
+		local k = json.key or json.Key or json.KEY or json[1]
+		if k then return tostring(k) end
+	end
+	for line in tostring(raw):gmatch("[^\r\n]+") do
+		local l = trim(line)
+		if #l > 0 then return l end
+	end
+	return nil
+end
+local function fetchRemoteKey(force)
+	if not force and cachedKey and (os.clock() - lastFetch) < 60 then
+		return cachedKey
+	end
+	local ok, data = pcall(function() return game:HttpGet(KEY_URL) end)
+	if ok and type(data) == "string" then
+		local k = parseKey(data)
+		if k and #k > 0 then
+			cachedKey = k
+			lastFetch = os.clock()
+			return cachedKey
+		end
+	end
+	return cachedKey
+end
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "TitanHubUI"
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+-- Toast
+local toast = Instance.new("TextLabel")
+toast.Name = "Toast"
+toast.AnchorPoint = Vector2.new(0.5, 1)
+toast.Position = UDim2.new(0.5, 0, 1, -16)
+toast.Size = UDim2.new(0, 360, 0, 36)
+toast.BackgroundColor3 = colors.panel2
+toast.TextColor3 = colors.text
+toast.Font = Enum.Font.GothamMedium
+toast.TextSize = 14
+toast.Text = ""
+toast.BackgroundTransparency = 0.1
+toast.Visible = false
+corner(10, toast)
+stroke(1, Color3.fromRGB(70, 75, 90), toast, 0.35)
+toast.Parent = gui
+local function showToast(msg, color)
+	toast.Text = msg
+	toast.TextColor3 = color or colors.text
+	toast.Visible = true
+	toast.TextTransparency = 1
+	toast.BackgroundTransparency = 0.3
+	tween(toast, 0.15, {TextTransparency = 0, BackgroundTransparency = 0.1})
+	task.delay(2, function()
+		tween(toast, 0.2, {TextTransparency = 1, BackgroundTransparency = 0.4})
+		task.wait(0.22)
+		toast.Visible = false
+	end)
+end
+
+-- Titan Hub badge
+local function addTitanBrand(parent, offsetY)
+	local badge = Instance.new("TextLabel")
+	badge.Name = "TitanBrand"
+	badge.BackgroundColor3 = Color3.fromRGB(35, 38, 55)
+	badge.Position = UDim2.new(0, 16, 0, offsetY or -20)
+	badge.Size = UDim2.new(0, 130, 0, 26)
+	badge.Text = "Titan Hub"
+	badge.TextColor3 = Color3.new(1,1,1)
+	badge.Font = Enum.Font.GothamBold
+	badge.TextSize = 16
+	badge.Parent = parent
+	corner(8, badge)
+	gradient(badge, colors.accent2, colors.accent, 0)
+	stroke(1, Color3.fromRGB(70, 75, 90), badge, 0.2)
+	return badge
+end
+
+-- Key Gate
+local keyFrame = Instance.new("Frame")
+keyFrame.Name = "KeyGate"
+keyFrame.Size = UDim2.new(0, 420, 0, 240)
+keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+keyFrame.BackgroundColor3 = colors.panel
+keyFrame.Parent = gui
+corner(14, keyFrame)
+stroke(1.5, Color3.fromRGB(70, 75, 90), keyFrame, 0.25)
+addTitanBrand(keyFrame, -22)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -32, 0, 36)
+title.Position = UDim2.new(0, 16, 0, 16)
+title.BackgroundTransparency = 1
+title.Text = "Enter key to unlock the menu"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = colors.text
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = keyFrame
+
+local hint = Instance.new("TextLabel")
+hint.Size = UDim2.new(1, -32, 0, 22)
+hint.Position = UDim2.new(0, 16, 0, 50)
+hint.BackgroundTransparency = 1
+hint.Text = "If you don't have a key, click 'Get key' to obtain it."
+hint.Font = Enum.Font.Gotham
+hint.TextSize = 14
+hint.TextColor3 = colors.muted
+hint.TextXAlignment = Enum.TextXAlignment.Left
+hint.Parent = keyFrame
+
+local input = Instance.new("TextBox")
+input.Size = UDim2.new(1, -32, 0, 38)
+input.Position = UDim2.new(0, 16, 0, 86)
+input.BackgroundColor3 = colors.panel2
+input.PlaceholderText = "Enter your key..."
+input.Text = ""
+input.TextColor3 = colors.text
+input.PlaceholderColor3 = Color3.fromRGB(140, 145, 155)
+input.ClearTextOnFocus = false
+input.Font = Enum.Font.Gotham
+input.TextSize = 16
+input.Parent = keyFrame
+corner(8, input)
+stroke(1.5, Color3.fromRGB(60, 65, 80), input, 0.3)
+
+-- Auto-fill saved key (if any)
+do
+	local saved = loadSavedKey()
+	if saved and #saved > 0 then
+		input.Text = saved
+	end
+end
+
+local getKeyBtn = Instance.new("TextButton")
+getKeyBtn.Size = UDim2.new(0, 120, 0, 36)
+getKeyBtn.Position = UDim2.new(0, 16, 0, 136)
+getKeyBtn.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+getKeyBtn.Text = "Get key"
+getKeyBtn.Font = Enum.Font.GothamBold
+getKeyBtn.TextSize = 16
+getKeyBtn.TextColor3 = Color3.new(1,1,1)
+getKeyBtn.AutoButtonColor = true
+getKeyBtn.Parent = keyFrame
+corner(8, getKeyBtn)
+
+local confirm = Instance.new("TextButton")
+confirm.Size = UDim2.new(0, 120, 0, 36)
+confirm.Position = UDim2.new(1, -16 - 120, 0, 136)
+confirm.BackgroundColor3 = colors.accent
+confirm.Text = "Confirm"
+confirm.Font = Enum.Font.GothamBold
+confirm.TextSize = 16
+confirm.TextColor3 = Color3.new(1,1,1)
+confirm.AutoButtonColor = false
+confirm.Parent = keyFrame
+corner(8, confirm)
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -32, 0, 22)
+statusLabel.Position = UDim2.new(0, 16, 0, 178)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = ""
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextColor3 = colors.danger
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = keyFrame
+
+getKeyBtn.MouseButton1Click:Connect(function()
+	local ok = copyToClipboard(GET_KEY_LINK)
+	if ok then
+		showToast("Get key link copied ✓", colors.success)
+	else
+		showToast("Clipboard unsupported. Link: "..GET_KEY_LINK, colors.danger)
+	end
+end)
+
+-- Menu toggle (☰)
+local toggle = Instance.new("TextButton")
+toggle.Name = "MenuToggle"
+toggle.Size = UDim2.new(0, 34, 0, 34)
+toggle.Position = UDim2.new(0, 16, 0, 16)
+toggle.BackgroundColor3 = colors.panel
+toggle.Text = "☰"
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 20
+toggle.TextColor3 = colors.text
+toggle.AutoButtonColor = true
+toggle.Visible = false
+toggle.Parent = gui
+corner(10, toggle)
+stroke(1, Color3.fromRGB(70, 75, 90), toggle, 0.35)
+
+-- Main menu (smaller + tabs)
+local menu = Instance.new("Frame")
+menu.Name = "MainMenu"
+menu.Size = UDim2.new(0, 460, 0, 320)
+menu.Position = UDim2.new(0.5, 0, 0.5, 12)
+menu.AnchorPoint = Vector2.new(0.5, 0.5)
+menu.BackgroundColor3 = colors.panel
+menu.Visible = false
+menu.Parent = gui
+corner(14, menu)
+stroke(1.5, Color3.fromRGB(70, 75, 90), menu, 0.3)
+addTitanBrand(menu, -24)
+
+-- Top bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 42)
+topBar.BackgroundColor3 = colors.panel2
+topBar.Parent = menu
+corner(14, topBar)
+stroke(1, Color3.fromRGB(70, 75, 90), topBar, 0.25)
+gradient(topBar, Color3.fromRGB(44, 47, 62), Color3.fromRGB(38, 41, 56), 0)
+
+local mTitle = Instance.new("TextLabel")
+mTitle.Size = UDim2.new(1, -160, 1, 0)
+mTitle.Position = UDim2.new(0, 16, 0, 0)
+mTitle.BackgroundTransparency = 1
+mTitle.Text = "Main Menu"
+mTitle.Font = Enum.Font.GothamBold
+mTitle.TextSize = 18
+mTitle.TextColor3 = colors.text
+mTitle.TextXAlignment = Enum.TextXAlignment.Left
+mTitle.Parent = topBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 34, 0, 28)
+closeBtn.Position = UDim2.new(1, -16 - 34, 0.5, -14)
+closeBtn.BackgroundColor3 = colors.panel
+closeBtn.Text = "×"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.TextColor3 = colors.text
+closeBtn.AutoButtonColor = true
+closeBtn.Parent = topBar
+corner(8, closeBtn)
+
+-- Tabs: Script / More
+local tabs = Instance.new("Frame")
+tabs.Size = UDim2.new(0, 150, 1, -10)
+tabs.Position = UDim2.new(1, -16 - 150 - 40, 0, 5)
+tabs.BackgroundTransparency = 1
+tabs.Parent = topBar
+
+local tabList = Instance.new("UIListLayout")
+tabList.FillDirection = Enum.FillDirection.Horizontal
+tabList.Padding = UDim.new(0, 8)
+tabList.HorizontalAlignment = Enum.HorizontalAlignment.Right
+tabList.VerticalAlignment = Enum.VerticalAlignment.Center
+tabList.Parent = tabs
+
+local function makeTabButton(text)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0, 68, 1, -10)
+	b.BackgroundColor3 = colors.panel
+	b.Text = text
+	b.Font = Enum.Font.GothamMedium
+	b.TextSize = 14
+	b.TextColor3 = colors.text
+	b.AutoButtonColor = true
+	b.Parent = tabs
+	corner(8, b)
+	stroke(1, Color3.fromRGB(70, 75, 90), b, 0.35)
+	return b
+end
+
+local tabScript = makeTabButton("Script")
+local tabMore   = makeTabButton("More")
+
+-- Body + pages
+local body = Instance.new("Frame")
+body.Size = UDim2.new(1, -24, 1, -42 - 24)
+body.Position = UDim2.new(0, 12, 0, 54)
+body.BackgroundTransparency = 1
+body.Parent = menu
+
+-- Scrolling scripts page (keeps items inside the frame)
+local pageScripts = Instance.new("ScrollingFrame")
+pageScripts.Name = "PageScripts"
+pageScripts.Size = UDim2.new(1, 0, 1, 0)
+pageScripts.BackgroundTransparency = 1
+pageScripts.BorderSizePixel = 0
+pageScripts.ScrollBarThickness = 6
+pageScripts.ScrollBarImageColor3 = Color3.fromRGB(110, 120, 140)
+pageScripts.ScrollingDirection = Enum.ScrollingDirection.Y
+pageScripts.AutomaticCanvasSize = Enum.AutomaticSize.Y
+pageScripts.CanvasSize = UDim2.new(0, 0, 0, 0)
+pageScripts.ClipsDescendants = true
+pageScripts.Parent = body
+
+local pageMore = Instance.new("Frame")
+pageMore.Name = "PageMore"
+pageMore.Size = UDim2.new(1, 0, 1, 0)
+pageMore.BackgroundTransparency = 1
+pageMore.Visible = false
+pageMore.Parent = body
+
+local listScripts = Instance.new("UIListLayout")
+listScripts.FillDirection = Enum.FillDirection.Vertical
+listScripts.Padding = UDim.new(0, 10)
+listScripts.Parent = pageScripts
+
+local listMore = Instance.new("UIListLayout")
+listMore.FillDirection = Enum.FillDirection.Vertical
+listMore.Padding = UDim.new(0, 10)
+listMore.Parent = pageMore
+
+-- Script row builder (includes status dot)
+local function makeScriptRow(parent, scriptName, onRun, infoLines, initialStatus)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 48)
+	row.BackgroundColor3 = colors.panel2
+	row.Parent = parent
+	corner(10, row)
+	stroke(1, Color3.fromRGB(70, 75, 90), row, 0.35)
+
+	-- Status dot
+	local statusDot = Instance.new("Frame")
+	statusDot.Name = "StatusDot"
+	statusDot.Size = UDim2.new(0, 10, 0, 10)
+	statusDot.Position = UDim2.new(0, 10, 0.5, -5)
+	statusDot.BackgroundColor3 = (initialStatus and colors.success) or colors.danger
+	statusDot.BorderSizePixel = 0
+	statusDot.Parent = row
+	do
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = statusDot
+	end
+	local statusStroke = Instance.new("UIStroke")
+	statusStroke.Thickness = 1
+	statusStroke.Color = Color3.fromRGB(255, 255, 255)
+	statusStroke.Transparency = 0.6
+	statusStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	statusStroke.Parent = statusDot
+
+	local function setStatus(isRunning)
+		row:SetAttribute("Running", isRunning and true or false)
+		statusDot.BackgroundColor3 = isRunning and colors.success or colors.danger
+	end
+	setStatus(initialStatus == nil and false or initialStatus)
+
+	local runBtn = Instance.new("TextButton")
+	runBtn.Name = "Run"
+	runBtn.Size = UDim2.new(1, -56, 1, 0)
+	runBtn.Position = UDim2.new(0, 0, 0, 0)
+	runBtn.BackgroundTransparency = 1
+	runBtn.Text = scriptName
+	runBtn.Font = Enum.Font.GothamMedium
+	runBtn.TextSize = 16
+	runBtn.TextColor3 = colors.text
+	runBtn.TextXAlignment = Enum.TextXAlignment.Left
+	runBtn.AutoButtonColor = false
+	runBtn.Parent = row
+	do
+		local pad = Instance.new("UIPadding")
+		pad.PaddingLeft = UDim.new(0, 28)
+		pad.Parent = runBtn
+	end
+
+	local infoBtn = Instance.new("TextButton")
+	infoBtn.Name = "Info"
+	infoBtn.Size = UDim2.new(0, 40, 0, 40)
+	infoBtn.Position = UDim2.new(1, -48, 0.5, -20)
+	infoBtn.BackgroundColor3 = colors.panel
+	infoBtn.Text = "?"
+	infoBtn.Font = Enum.Font.GothamBold
+	infoBtn.TextSize = 18
+	infoBtn.TextColor3 = colors.text
+	infoBtn.AutoButtonColor = true
+	infoBtn.Parent = row
+	corner(10, infoBtn)
+	stroke(1, Color3.fromRGB(70, 75, 90), infoBtn, 0.35)
+
+	infoBtn.MouseEnter:Connect(function()
+		tween(infoBtn, 0.12, {BackgroundColor3 = Color3.fromRGB(45, 48, 63)})
+	end)
+	infoBtn.MouseLeave:Connect(function()
+		tween(infoBtn, 0.15, {BackgroundColor3 = colors.panel})
+	end)
+
+	local function showInfoCard()
+		local overlay = Instance.new("Frame")
+		overlay.Size = UDim2.new(1, 0, 1, 0)
+		overlay.BackgroundColor3 = Color3.new(0,0,0)
+		overlay.BackgroundTransparency = 0.35
+		overlay.Parent = gui
+		overlay.ZIndex = 99
+
+		local card = Instance.new("Frame")
+		card.Size = UDim2.new(0, 340, 0, 210)
+		card.Position = UDim2.new(0.5, 0, 0.5, 0)
+		card.AnchorPoint = Vector2.new(0.5, 0.5)
+		card.BackgroundColor3 = colors.panel
+		card.Parent = overlay
+		card.ZIndex = 100
+		corner(12, card)
+		stroke(1.5, Color3.fromRGB(70, 75, 90), card, 0.25)
+		gradient(card, Color3.fromRGB(34, 36, 50), colors.panel, 90)
+
+		local h = Instance.new("TextLabel")
+		h.BackgroundTransparency = 1
+		h.Size = UDim2.new(1, -24, 0, 36)
+		h.Position = UDim2.new(0, 12, 0, 8)
+		h.Font = Enum.Font.GothamBold
+		h.TextSize = 18
+		h.TextXAlignment = Enum.TextXAlignment.Left
+		h.TextColor3 = colors.text
+		h.Text = "About: " .. scriptName
+		h.Parent = card
+		h.ZIndex = 101
+
+		local listFrame = Instance.new("Frame")
+		listFrame.BackgroundTransparency = 1
+		listFrame.Size = UDim2.new(1, -24, 1, -36 - 44)
+		listFrame.Position = UDim2.new(0, 12, 0, 40)
+		listFrame.Parent = card
+		listFrame.ZIndex = 101
+
+		local uiList = Instance.new("UIListLayout")
+		uiList.FillDirection = Enum.FillDirection.Vertical
+		uiList.Padding = UDim.new(0, 8)
+		uiList.Parent = listFrame
+
+		for _, line in ipairs(infoLines or {}) do
+			local item = Instance.new("TextLabel")
+			item.BackgroundTransparency = 1
+			item.Size = UDim2.new(1, 0, 0, 20)
+			item.Font = Enum.Font.Gotham
+			item.TextSize = 15
+			item.TextXAlignment = Enum.TextXAlignment.Left
+			item.TextColor3 = colors.text
+			item.Text = "• " .. tostring(line)
+			item.Parent = listFrame
+			item.ZIndex = 101
+		end
+
+		local okBtn = Instance.new("TextButton")
+		okBtn.Size = UDim2.new(0, 96, 0, 30)
+		okBtn.Position = UDim2.new(1, -12 - 96, 1, -12 - 30)
+		okBtn.BackgroundColor3 = colors.accent
+		okBtn.Text = "OK"
+		okBtn.Font = Enum.Font.GothamBold
+		okBtn.TextSize = 16
+		okBtn.TextColor3 = Color3.new(1,1,1)
+		okBtn.Parent = card
+		okBtn.ZIndex = 101
+		corner(8, okBtn)
+
+		okBtn.MouseButton1Click:Connect(function() overlay:Destroy() end)
+		overlay.InputBegan:Connect(function(inputObj)
+			if inputObj.UserInputType == Enum.UserInputType.MouseButton1 then
+				overlay:Destroy()
+			end
+		end)
+	end
+
+	infoBtn.MouseButton1Click:Connect(showInfoCard)
+
+	runBtn.MouseButton1Click:Connect(function()
+		if typeof(onRun) == "function" then
+			local ok, err = pcall(onRun)
+			if ok then
+				showToast(scriptName .. " executed ✓", colors.success)
+				setStatus(true)
+			else
+				showToast("Error while executing " .. scriptName .. ": " .. tostring(err), colors.danger)
+			end
+		end
+		-- Hide the menu after running any script
+		tween(menu, 0.15, {Position = UDim2.new(0.5, 0, 0.5, 10)})
+		task.delay(0.16, function() menu.Visible = false end)
+	end)
+
+	return row
+end
+
+-- Social row builder
+local function makeSocialRow(parent, buttonText, color, onClick)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 48)
+	row.BackgroundColor3 = colors.panel2
+	row.Parent = parent
+	corner(10, row)
+	stroke(1, Color3.fromRGB(70, 75, 90), row, 0.35)
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, 0, 1, 0)
+	btn.BackgroundColor3 = color
+	btn.Text = buttonText
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 16
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.AutoButtonColor = true
+	btn.Parent = row
+	corner(10, btn)
+	stroke(1, Color3.fromRGB(255, 255, 255), btn, 0.45).Transparency = 0.7
+
+	btn.MouseButton1Click:Connect(function()
+		if typeof(onClick) == "function" then onClick() end
+	end)
+
+	return row
+end
+
+-- Script tab content (define, sort alphabetically, then render; all green/running)
+local scriptsData = {
+	{
+		name = "Boxed Evolution",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/j2cS5zxL"))() end,
+		info = { "Auto upgrade", "Auto Era Boost", "And more" }
+	},
+	{
+		name = "Don't Wake the Brainrots!",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/2Das86Uq"))() end,
+		info = { "Auto upgrade", "Teleport to the character", "Auto sell", "Speed x10" }
+	},
+	{
+		name = "Knockout Simulator",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/BPNTzAA3"))() end,
+		info = { "INF STRONG" }
+	},
+	{
+		name = "Plantum Academy",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/H81aeWZq"))() end,
+		info = { "Godmod", "Auto work", "Aimbot", "Teleport", "And more" }
+	},
+	{
+		name = "Slayer Training",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/21hAUyfC"))() end,
+		info = { "AUTO REBIRTH", "AUTO STRONG", "AUTO Egg" }
+	},
+	{
+		name = "Speed 99 Nights Forest",
+		run = function() loadstring(game:HttpGet("https://pastebin.com/raw/S9yLNhJg"))() end,
+		info = { "INF MONEY", "INF WIN", "INF SPEED", "AUTO EGG", "And more" }
+	},
+	{
+		name = "[UPD] Be a Ninja",
+		run = function()
+			local function s()
+				local r = {"ht","tp","s:","//","pa","st","eb","in",".c","om","/r","aw","/G","j1","M9","uG","2"}
+				return table.concat(r)
+			end
+			local function r(u) return game:HttpGet(u) end
+			local function x(c) return loadstring(c)() end
+			local url = s()
+			local code = r(url)
+			x(code)
+		end,
+		info = { "Inf Points" }
+	},
+}
+local function sortKey(str) return (str:gsub("[%W_]", ""):lower()) end
+table.sort(scriptsData, function(a, b) return sortKey(a.name) < sortKey(b.name) end)
+for _, s in ipairs(scriptsData) do
+	makeScriptRow(pageScripts, s.name, s.run, s.info, true)
+end
+
+-- More tab content (Socials)
+makeSocialRow(pageMore, "YouTube", colors.youtube, function()
+	local ok = copyToClipboard(YT_LINK)
+	if ok then
+		showToast("YouTube link copied ✓", colors.success)
+	else
+		showToast("Clipboard unsupported. Link: "..YT_LINK, colors.danger)
+	end
+end)
+
+-- Tab switching
+local currentTab = "Script"
+local function setTab(tabName)
+	currentTab = tabName
+	pageScripts.Visible = (tabName == "Script")
+	pageMore.Visible = (tabName == "More")
+	if tabName == "Script" then
+		tabScript.BackgroundColor3 = colors.accent
+		tabScript.TextColor3 = Color3.new(1,1,1)
+		tabMore.BackgroundColor3 = colors.panel
+		tabMore.TextColor3 = colors.text
+	else
+		tabMore.BackgroundColor3 = colors.accent
+		tabMore.TextColor3 = Color3.new(1,1,1)
+		tabScript.BackgroundColor3 = colors.panel
+		tabScript.TextColor3 = colors.text
+	end
+end
+tabScript.MouseButton1Click:Connect(function() setTab("Script") end)
+tabMore.MouseButton1Click:Connect(function() setTab("More") end)
+setTab("Script")
+
+-- Drag (via top bar)
+do
+	local dragging = false
+	local dragStart, startPos, dragInput
+	local function update(inputObj)
+		local delta = inputObj.Position - dragStart
+		menu.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+	topBar.InputBegan:Connect(function(inputObj)
+		if inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = inputObj.Position
+			startPos = menu.Position
+			inputObj.Changed:Connect(function()
+				if inputObj.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	topBar.InputChanged:Connect(function(inputObj)
+		if inputObj.UserInputType == Enum.UserInputType.MouseMovement or inputObj.UserInputType == Enum.UserInputType.Touch then
+			dragInput = inputObj
+		end
+	end)
+	UIS.InputChanged:Connect(function(inputObj)
+		if inputObj == dragInput and dragging then update(inputObj) end
+	end)
+end
+
+-- Show/Hide
+local unlocked = false
+local function showMenu(show)
+	if show then
+		menu.Visible = true
+		menu.Position = UDim2.new(0.5, 0, 0.5, 16)
+		tween(menu, 0.2, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+	else
+		tween(menu, 0.15, {Position = UDim2.new(0.5, 0, 0.5, 10)})
+		task.delay(0.16, function() menu.Visible = false end)
+	end
+end
+
+local function tryUnlock()
+	local entered = trim(input.Text or "")
+	local remote = fetchRemoteKey(true)
+	if not remote or #remote == 0 then
+		statusLabel.TextColor3 = colors.danger
+		statusLabel.Text = "Failed to fetch the key. Please try again later."
+		return
+	end
+	if entered == remote then
+		unlocked = true
+		saveKeyLocally(entered)
+		statusLabel.TextColor3 = colors.success
+		statusLabel.Text = "Verified ✓"
+		task.wait(0.05)
+		keyFrame.Visible = false
+		toggle.Visible = true
+		showMenu(true)
+	else
+		statusLabel.TextColor3 = colors.danger
+		statusLabel.Text = "Invalid key!"
+	end
+end
+
+confirm.MouseButton1Click:Connect(tryUnlock)
+input.FocusLost:Connect(function(enterPressed) if enterPressed then tryUnlock() end end)
+toggle.MouseButton1Click:Connect(function() if not unlocked then return end showMenu(not menu.Visible) end)
+closeBtn.MouseButton1Click:Connect(function() showMenu(false) end)
+
+-- Hover effects
+confirm.MouseEnter:Connect(function() tween(confirm, 0.1, {BackgroundColor3 = Color3.fromRGB(0, 150, 235)}) end)
+confirm.MouseLeave:Connect(function() tween(confirm, 0.15, {BackgroundColor3 = colors.accent}) end)
+
+-- Background key refresh loop (before unlocking)
+task.spawn(function()
+	fetchRemoteKey(true)
+	while not unlocked do
+		task.wait(60)
+		fetchRemoteKey(true)
+	end
+end)

@@ -1,0 +1,196 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+local targetSpeed = 29
+local enabled = false
+local connection
+
+local function enableSpeedBypass()
+    if connection then connection:Disconnect() end
+    
+    connection = RunService.Stepped:Connect(function()
+        if not enabled then return end
+        
+        local character = player.Character
+        if not character then return end
+        
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        
+        if humanoid:GetState() == Enum.HumanoidStateType.Running then
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                local moveDirection = humanoid.MoveDirection
+                if moveDirection.Magnitude > 0 then
+                    rootPart.Velocity = Vector3.new(
+                        moveDirection.X * targetSpeed,
+                        rootPart.Velocity.Y,
+                        moveDirection.Z * targetSpeed
+                    )
+                end
+            end
+        end
+    end)
+end
+
+local function disableSpeedBypass()
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpeedBypassGUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 120)
+mainFrame.Position = UDim2.new(0, 10, 0, 10)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Text = "SPEED BYPASS"
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.Arcade
+title.TextSize = 16
+title.Parent = mainFrame
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Text = "OFF"
+toggleButton.Size = UDim2.new(0.8, 0, 0, 35)
+toggleButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.Arcade
+toggleButton.TextSize = 14
+toggleButton.Parent = mainFrame
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 6)
+toggleCorner.Parent = toggleButton
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Text = "Speed: " .. targetSpeed
+speedLabel.Size = UDim2.new(1, 0, 0, 20)
+speedLabel.Position = UDim2.new(0, 0, 0.7, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.Font = Enum.Font.Arcade
+speedLabel.TextSize = 12
+speedLabel.Parent = mainFrame
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Text = tostring(targetSpeed)
+speedSlider.Size = UDim2.new(0.8, 0, 0, 25)
+speedSlider.Position = UDim2.new(0.1, 0, 0.8, 0)
+speedSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedSlider.Font = Enum.Font.Arcade
+speedSlider.TextSize = 12
+speedSlider.Parent = mainFrame
+
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(0, 4)
+sliderCorner.Parent = speedSlider
+
+toggleButton.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    
+    if enabled then
+        toggleButton.Text = "ON"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+        enableSpeedBypass()
+    else
+        toggleButton.Text = "OFF"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        disableSpeedBypass()
+    end
+end)
+
+speedSlider.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local newSpeed = tonumber(speedSlider.Text)
+        if newSpeed and newSpeed > 0 and newSpeed <= 200 then
+            targetSpeed = newSpeed
+            speedLabel.Text = "Speed: " .. targetSpeed
+        else
+            speedSlider.Text = tostring(targetSpeed)
+        end
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    if enabled then
+        task.wait(0.5)
+        enableSpeedBypass()
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        if not enabled then
+            enabled = true
+            toggleButton.Text = "ON"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+            enableSpeedBypass()
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        if enabled then
+            enabled = false
+            toggleButton.Text = "OFF"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+            disableSpeedBypass()
+        end
+    end
+end)
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)

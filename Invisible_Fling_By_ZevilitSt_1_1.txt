@@ -1,0 +1,175 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local uis = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InvisFlingGui"
+screenGui.Parent = game.CoreGui
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.4, -75)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+mainFrame.BorderSizePixel = 0
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 0
+blurEffect.Parent = game.Lighting
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text = "┆・ Made By ＺｅｖｉｌｉｔＳｔ ・┆"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.Parent = mainFrame
+
+local enableButton = Instance.new("TextButton")
+enableButton.Size = UDim2.new(0.45, 0, 0, 40)
+enableButton.Position = UDim2.new(0.05,0,0.3,0)
+enableButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+enableButton.Text = "Enable Invis Fling"
+enableButton.TextColor3 = Color3.fromRGB(255,255,255)
+enableButton.Font = Enum.Font.GothamBold
+enableButton.TextSize = 14
+enableButton.Parent = mainFrame
+
+local disableButton = Instance.new("TextButton")
+disableButton.Size = UDim2.new(0.45, 0, 0, 40)
+disableButton.Position = UDim2.new(0.5,0,0.3,0)
+disableButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+disableButton.Text = "Disable Invis Fling"
+disableButton.TextColor3 = Color3.fromRGB(255,255,255)
+disableButton.Font = Enum.Font.GothamBold
+disableButton.TextSize = 14
+disableButton.Parent = mainFrame
+
+local powerSlider = Instance.new("TextButton")
+powerSlider.Size = UDim2.new(0.9, 0, 0, 40)
+powerSlider.Position = UDim2.new(0.05,0,0.65,0)
+powerSlider.BackgroundColor3 = Color3.fromRGB(70,70,70)
+powerSlider.Text = "Fling Power: 5000"
+powerSlider.TextColor3 = Color3.fromRGB(255,255,255)
+powerSlider.Font = Enum.Font.GothamBold
+powerSlider.TextSize = 14
+powerSlider.Parent = mainFrame
+
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://9118828560" 
+clickSound.Volume = 2
+clickSound.Parent = mainFrame
+
+local flingEnabled = false
+local flingPower = 5000
+
+local function makeInvisible(char)
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Transparency = 1
+			part.CanCollide = false
+		elseif part:IsA("Decal") then
+			part.Transparency = 1
+		end
+	end
+end
+
+local function makeVisible(char)
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Transparency = 0
+			part.CanCollide = true
+		elseif part:IsA("Decal") then
+			part.Transparency = 0
+		end
+	end
+end
+
+local function startFlying()
+	local bv = Instance.new("BodyVelocity")
+	bv.Velocity = Vector3.new(0,0,0)
+	bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+	bv.Name = "FlyForce"
+	bv.Parent = hrp
+
+	RunService.Heartbeat:Connect(function()
+		if flingEnabled and hrp then
+			local moveVec = Vector3.new()
+			if uis:IsKeyDown(Enum.KeyCode.W) then
+				moveVec = moveVec + workspace.CurrentCamera.CFrame.LookVector
+			end
+			if uis:IsKeyDown(Enum.KeyCode.S) then
+				moveVec = moveVec - workspace.CurrentCamera.CFrame.LookVector
+			end
+			if uis:IsKeyDown(Enum.KeyCode.A) then
+				moveVec = moveVec - workspace.CurrentCamera.CFrame.RightVector
+			end
+			if uis:IsKeyDown(Enum.KeyCode.D) then
+				moveVec = moveVec + workspace.CurrentCamera.CFrame.RightVector
+			end
+			hrp.FlyForce.Velocity = moveVec * 100
+		end
+	end)
+end
+
+local function stopFlying()
+	if hrp:FindFirstChild("FlyForce") then
+		hrp.FlyForce:Destroy()
+	end
+end
+
+enableButton.MouseButton1Click:Connect(function()
+	clickSound:Play()
+	if not flingEnabled then
+		flingEnabled = true
+		makeInvisible(character)
+		startFlying()
+
+		RunService.Heartbeat:Connect(function()
+			if flingEnabled and hrp then
+				hrp.AssemblyAngularVelocity = Vector3.new(0, flingPower, 0)
+				hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			end
+		end)
+	end
+end)
+
+disableButton.MouseButton1Click:Connect(function()
+	clickSound:Play()
+	if flingEnabled then
+		flingEnabled = false
+		stopFlying()
+		makeVisible(character)
+		hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+		hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+	end
+end)
+
+powerSlider.MouseButton1Click:Connect(function()
+	clickSound:Play()
+	if flingPower == 5000 then
+		flingPower = 10000
+	elseif flingPower == 10000 then
+		flingPower = 20000
+	elseif flingPower == 20000 then
+		flingPower = 5000
+	end
+	powerSlider.Text = "Fling Power: " .. tostring(flingPower)
+end)
+
+mainFrame.MouseEnter:Connect(function()
+	blurEffect.Size = 10
+end)
+
+mainFrame.MouseLeave:Connect(function()
+	blurEffect.Size = 0
+end)

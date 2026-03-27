@@ -1,0 +1,212 @@
+-- Auto-Kick Script: Kicks player when "unlock" is detected in chat
+-- Supports TextChatService, DefaultChatSystemChatEvents, and Player.Chatted fallback
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    LocalPlayer = Players.LocalPlayer
+end
+
+-- State management
+local kicked = false
+local connections = {}
+local initialized = false
+
+-- Kick function with multiple methods for reliability
+local function KickNow()
+    if kicked then return end
+    kicked = true
+    
+    -- Clean up connections
+    for _, conn in pairs(connections) do
+        if conn and typeof(conn) == "RBXScriptConnection" then
+            conn:Disconnect()
+        end
+    end
+    connections = {}
+    
+    -- Try multiple kick methods for maximum reliability
+    pcall(function()
+        LocalPlayer:Kick("Someone said unlock.")
+    end)
+    
+    -- Fallback: Force disconnect
+    task.wait(0.1)
+    if LocalPlayer.Parent then
+        pcall(function()
+            game:Shutdown()
+        end)
+    end
+end
+
+-- Improved word detection with better pattern matching
+local function containsUnlockWholeWord(text)
+    if not text or type(text) ~= "string" then
+        return false
+    end
+    
+    local lowerText = text:lower()
+    
+    -- Multiple detection patterns for better reliability
+    local patterns = {
+        "%f[%a]unlock%f[%A]",  -- Word boundary pattern
+        "^unlock%s",            -- Start of string
+        "%sunlock%s",           -- Surrounded by spaces
+        "%sunlock$",            -- End of string
+        "^unlock$",             -- Exact match
+    }
+    
+    for _, pattern in ipairs(patterns) do
+        if lowerText:match(pattern) then
+            return true
+        end
+    end
+    
+    return false
+end
+
+-- TextChatService handler (new chat system)
+local function setupTextChatService()
+    pcall(function()
+        if not TextChatService then return end
+        
+        local chatService = TextChatService:FindFirstChild("ChatInputBarConfiguration")
+        if chatService then
+            local messageEvent = TextChatService:FindFirstChild("MessagePosted")
+            if messageEvent then
+                local conn = messageEvent:Connect(function(message)
+                    pcall(function()
+                        local text = message.Text or message.Message or ""
+                        if containsUnlockWholeWord(text) then
+                            KickNow()
+                        end
+                    end)
+                end)
+                table.insert(connections, conn)
+            end
+        end
+        
+        -- Alternative: OnIncomingMessage
+        if TextChatService.OnIncomingMessage then
+            local conn = TextChatService.OnIncomingMessage:Connect(function(message)
+                pcall(function()
+                    local text = message.Text or message.Message or message.Content or ""
+                    if containsUnlockWholeWord(text) then
+                        KickNow()
+                    end
+                end)
+            end)
+            table.insert(connections, conn)
+        end
+    end)
+end
+
+-- DefaultChatSystemChatEvents handler (filtered chat)
+local function setupDefaultChatEvents()
+    pcall(function()
+        local chatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 5)
+        if not chatEvents then return end
+        
+        local doneFilter = chatEvents:FindFirstChild("OnMessageDoneFiltering")
+        if doneFilter and doneFilter:IsA("RemoteEvent") then
+            local conn = doneFilter.OnClientEvent:Connect(function(data)
+                pcall(function()
+                    local msg = data.Message or data.message or data.Text or ""
+                    if containsUnlockWholeWord(msg) then
+                        KickNow()
+                    end
+                end)
+            end)
+            table.insert(connections, conn)
+        end
+        
+        -- Also check SayMessageRequest for outgoing messages
+        local sayMessage = chatEvents:FindFirstChild("SayMessageRequest")
+        if sayMessage and sayMessage:IsA("RemoteFunction") then
+            local originalInvoke = sayMessage.InvokeServer
+            sayMessage.InvokeServer = function(self, ...)
+                local args = {...}
+                if args[1] and containsUnlockWholeWord(tostring(args[1])) then
+                    KickNow()
+                    return
+                end
+                return originalInvoke(self, ...)
+            end
+        end
+    end)
+end
+
+-- Player.Chatted fallback (legacy and custom systems)
+local function attachChatted(player)
+    if not player or kicked then return end
+    
+    pcall(function()
+        local conn = player.Chatted:Connect(function(message)
+            if containsUnlockWholeWord(message) then
+                KickNow()
+            end
+        end)
+        table.insert(connections, conn)
+    end)
+end
+
+-- Initialize all chat detection methods
+local function initialize()
+    if initialized or kicked then return end
+    initialized = true
+    
+    -- Setup all chat systems
+    setupTextChatService()
+    setupDefaultChatEvents()
+    
+    -- Attach to existing players
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            attachChatted(player)
+        end
+    end
+    
+    -- Attach to new players
+    local playerAddedConn = Players.PlayerAdded:Connect(function(player)
+        if not kicked then
+            attachChatted(player)
+        end
+    end)
+    table.insert(connections, playerAddedConn)
+    
+    -- Monitor for character respawn (re-initialize if needed)
+    if LocalPlayer.Character then
+        LocalPlayer.CharacterAdded:Connect(function()
+            if not kicked then
+                task.wait(1)
+                -- Re-attach connections if they were lost
+                if not initialized then
+                    initialize()
+                end
+            end
+        end)
+    end
+end
+
+-- Wait for game to fully load
+task.spawn(function()
+    repeat
+        task.wait(0.1)
+    until game:IsLoaded() and LocalPlayer
+    
+    task.wait(0.5) -- Additional buffer for chat systems to initialize
+    initialize()
+end)
+
+-- Fallback initialization after delay
+task.delay(2, function()
+    if not initialized and not kicked then
+        initialize()
+    end
+end)
+

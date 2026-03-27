@@ -1,0 +1,38 @@
+-- Made by catnap for yall to skid niggers
+
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local LP = Players.LocalPlayer
+local BiteEvent = RS:WaitForChild("ServerEvents"):WaitForChild("Bite")
+
+local maxRange = 120 -- good at 120
+
+while task.wait(0.1) do
+	local char = LP.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then continue end
+
+	local nearest, dist = nil, math.huge
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LP and p.Team ~= LP.Team and p.Character then
+			local h = p.Character:FindFirstChild("Humanoid")
+			local r = p.Character:FindFirstChild("HumanoidRootPart")
+			local b = p.Character:FindFirstChild("BiteHitbox")
+			if h and r and b and h.Health > 0 then
+				local d = (r.Position - hrp.Position).Magnitude
+				if d < dist and d <= maxRange then
+					dist = d
+					nearest = p
+				end
+			end
+		end
+	end
+
+	if nearest then
+		BiteEvent:FireServer(
+			"Bite",
+			nearest.Character.Humanoid,
+			nearest.Character.BiteHitbox
+		)
+	end
+end

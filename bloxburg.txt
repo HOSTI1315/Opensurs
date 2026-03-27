@@ -1,0 +1,578 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local PathfindingService = game:GetService("PathfindingService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+local Rayfield = Rayfield or getgenv().Rayfield
+local AutoBuildSection = Rayfield:CreateSection("Auto Build")
+local MiscSection = Rayfield:CreateSection("Miscellaneous")
+
+local copyHouseDropdown = AutoBuildSection:AddDropdown({
+    Name = "Copy House",
+    Options = {"Loading..."},
+    CurrentOption = "",
+    Flag = "copyHouse",
+    Callback = function(Value)
+        local targetPlayer = Players:FindFirstChild(Value)
+        if targetPlayer then
+            copyPlayerHousePrompt(targetPlayer)
+        end
+    end
+})
+
+local loadHouseDropdown = AutoBuildSection:AddDropdown({
+    Name = "Load House",
+    Options = {"Loading..."},
+    CurrentOption = "",
+    Flag = "loadHouse",
+    Callback = function(Value)
+        loadPlayerHousePrompt(Value)
+    end
+})
+
+local teleportToPlotDropdown = MiscSection:AddDropdown({
+    Name = "Teleport To Player Plot",
+    Options = {"Loading..."},
+    CurrentOption = "",
+    Flag = "teleportToPlot",
+    Callback = function(Value)
+        local targetPlayer = Players:FindFirstChild(Value)
+        if targetPlayer then
+            teleportToPlayerPlot(targetPlayer)
+        end
+    end
+})
+
+do -- Initialize Framework and Functions
+    local framework = require(ReplicatedStorage:WaitForChild('Framework'))
+    local modules, network, jobManager, guiHandler
+    local frameworkEnv = nil
+
+    -- Log framework details for debugging
+    warn("Framework type:", typeof(framework))
+    if typeof(framework) == "RBXScriptSignal" then
+        warn("Framework is a signal, attempting to connect...")
+        local connection
+        connection = framework:Connect(function(...)
+            local args = {...}
+            for _, arg in ipairs(args) do
+                if type(arg) == "table" and arg.Modules then
+                    frameworkEnv = arg
+                    warn("Found module environment in signal data")
+                    connection:Disconnect()
+                    break
+                end
+            end
+        end)
+        task.wait(5) -- Wait for potential signal fire
+        if connection then connection:Disconnect() end
+    end
+
+    -- Fallback to direct framework if no environment found
+    if not frameworkEnv then
+        frameworkEnv = framework
+        warn("Using framework directly as fallback")
+    end
+    framework = frameworkEnv
+
+    repeat
+        task.wait(0.1)
+        if type(framework) ~= "table" then
+            warn("Framework is not a table, type is:", typeof(framework))
+            continue
+        end
+        modules = framework.Modules or (framework:FindFirstChild("Modules") and require(framework:FindFirstChild("Modules")))
+        if not modules or type(modules) ~= "table" then
+            warn("Modules not found or invalid, type is:", typeof(modules))
+            continue
+        end
+        network = modules.net or framework.net or (modules:FindFirstChild("net") and require(modules:FindFirstChild("net")))
+        if not network or type(network) ~= "table" then
+            warn("Network not found or invalid, type is:", typeof(network))
+            continue
+        end
+        jobManager = modules.JobHandler or (modules:FindFirstChild("JobHandler") and require(modules:FindFirstChild("JobHandler")))
+        if not jobManager or type(jobManager) ~= "table" then
+            warn("JobHandler not found or invalid, type is:", typeof(jobManager))
+            continue
+        end
+        guiHandler = modules.GUIHandler or (modules:FindFirstChild("GUIHandler") and require(modules:FindFirstChild("GUIHandler")))
+        if not guiHandler or type(guiHandler) ~= "table" then
+            warn("GUIHandler not found or invalid, type is:", typeof(guiHandler))
+            continue
+        end
+    until modules and network and jobManager and guiHandler
+
+    if not isfolder('Aztup Hub V3/Bloxburg Houses') then
+        makefolder('Aztup Hub V3/Bloxburg Houses')
+    end
+
+    hookfunction(getfenv(network.FireServer).i, function()
+        print('Ban attempt detected')
+    end)
+
+    guiHandler:AlertBox(
+        'Report any auto farm bugs in the discord #bug-reports channel.\nTo avoid bans, buy a car after your shift and avoid overnight farming.\nWe are not liable for any bans!',
+        'Warning',
+        0.5
+    )
+
+    local function getRotation(object, plot)
+        return tostring(plot.PrimaryPart.CFrame:ToObjectSpace(object))
+    end
+
+    local function getFloor(position, plot)
+        local currentFloor, minDistance = nil, math.huge
+        for _, floor in ipairs(plot.House.Floor:GetChildren()) do
+            local distance = (floor.Part.Position - position).Magnitude
+            if distance < minDistance then
+                currentFloor, minDistance = floor, distance
+            end
+        end
+        return currentFloor
+    end
+
+    local function getPolePosition(pole)
+        local p = pole.Value
+        return p.Parent:IsA('BasePart') and p.Parent.Position or p.Parent.Value
+    end
+
+    local function saveHouse(player)
+        local plot = workspace.Plots[string.format("Plot_%s", player.Name)]
+        local ground = plot.Ground
+        local saveData = {
+            Walls = {}, Paths = {}, Floors = {}, Roofs = {}, Pools = {}, Fences = {},
+            Ground = {Counters = {}, Objects = {}}, Basements = {}
+        }
+        local objects, counters = {}, {}
+
+        for _, object in ipairs(plot.House.Objects:GetChildren()) do
+            local floor = getFloor(object.Position, plot) or plot
+            local data = {Name = object.Name, AppearanceData = framework.Shared.ObjectService:GetAppearanceData(object),
+                          Rot = getRotation(object.CFrame, plot), Position = tostring(ground.CFrame:PointToObjectSpace(object.Position))}
+            if not objects[floor] then objects[floor] = {} end
+            if object:FindFirstChild('ItemHolder') then
+                data.Fences, data.Items = {}, {}
+                for _, item in ipairs(object.ItemHolder:GetChildren()) do
+                    if item:FindFirstChild('RailingSegment') then
+                        local _, from = framework.Shared.FenceService:GetEdgePositions(item)
+                        table.insert(data.Fences, {Name = item.Name, From = tostring(ground.CFrame:PointToObjectSpace(from)),
+                                                  AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item),
+                                                  Segment = item.RailingSegment.Value.Name})
+                    else
+                        table.insert(data.Items, {Name = item.Name, AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item),
+                                                 Rot = getRotation(item.CFrame, plot), Position = tostring(ground.CFrame:PointToObjectSpace(item.Position))})
+                    end
+                end
+            end
+            table.insert(objects[floor], data)
+        end
+
+        for _, counter in ipairs(plot.House.Counters:GetChildren()) do
+            local floor = getFloor(counter.Position, plot) or plot
+            local data = {Name = counter.Name, AppearanceData = framework.Shared.ObjectService:GetAppearanceData(counter),
+                          Rot = getRotation(counter.CFrame, plot), Position = tostring(ground.CFrame:PointToObjectSpace(counter.Position))}
+            if not counters[floor] then counters[floor] = {} end
+            if counter:FindFirstChild('ItemHolder') then
+                data.Items = {}
+                for _, item in ipairs(counter.ItemHolder:GetChildren()) do
+                    table.insert(data.Items, {Name = item.Name, AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item),
+                                             Rot = getRotation(item.CFrame, plot), Position = tostring(ground.CFrame:PointToObjectSpace(item.Position))})
+                end
+            end
+            table.insert(counters[floor], data)
+        end
+
+        for _, wall in ipairs(plot.House.Walls:GetChildren()) do
+            if wall.Name ~= 'Poles' then
+                local from, to = getPolePosition(wall.BPole), getPolePosition(wall.FPole)
+                local data = {From = tostring(ground.CFrame:PointToObjectSpace(from)), To = tostring(ground.CFrame:PointToObjectSpace(to)),
+                              AppearanceData = framework.Shared.ObjectService:GetAppearanceData(wall), Items = {}}
+                if wall:FindFirstChild('ItemHolder') then
+                    for _, item in ipairs(wall.ItemHolder:GetChildren()) do
+                        local itemData = {Name = item.Name, Position = tostring(ground.CFrame:PointToObjectSpace(item.Position)),
+                                          Side = item:FindFirstChild("SideValue") and item.SideValue.Value == -1, AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item)}
+                        if framework.Items:GetItem(item.Name).Type ~= 'Windows' and framework.Items:GetItem(item.Name).Type ~= 'Doors' then
+                            itemData.Rot = getRotation(item.CFrame, plot)
+                        end
+                        if item:FindFirstChild('ItemHolder') then
+                            itemData.Items = {}
+                            for _, subItem in ipairs(item.ItemHolder:GetChildren()) do
+                                table.insert(itemData.Items, {Name = subItem.Name, Rot = getRotation(subItem.CFrame, plot),
+                                                              Position = tostring(ground.CFrame:PointToObjectSpace(subItem.Position)),
+                                                              AppearanceData = framework.Shared.ObjectService:GetAppearanceData(subItem)})
+                            end
+                        end
+                        table.insert(data.Items, itemData)
+                    end
+                end
+                table.insert(saveData.Walls, data)
+            end
+        end
+
+        for _, floor in ipairs(plot.House.Floor:GetChildren()) do
+            local data = {AppearanceData = framework.Shared.ObjectService:GetAppearanceData(floor), Points = {},
+                          Objects = objects[floor] or {}, Counters = counters[floor] or {}}
+            for _, point in ipairs(floor.PointData:GetChildren()) do
+                table.insert(data.Points, tostring(point.Value))
+            end
+            table.insert(saveData.Floors, data)
+        end
+
+        for _, roof in ipairs(plot.House.Roof:GetChildren()) do
+            local data = {AppearanceData = framework.Shared.ObjectService:GetAppearanceData(roof), Name = roof.Name, Points = {}, Items = {}}
+            for _, point in ipairs(roof.PointData:GetChildren()) do
+                table.insert(data.Points, tostring(point.Value))
+            end
+            if roof:FindFirstChild('ItemHolder') then
+                for _, item in ipairs(roof.ItemHolder:GetChildren()) do
+                    table.insert(data.Items, {Name = item.Name, Position = tostring(ground.CFrame:PointToObjectSpace(item.Position)),
+                                             Rot = getRotation(item.CFrame, plot), AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item)})
+                end
+            end
+            table.insert(saveData.Roofs, data)
+        end
+
+        for _, path in ipairs(plot.House.Paths:GetChildren()) do
+            if path.Name ~= 'Poles' then
+                local from, to = getPolePosition(path.BPole), getPolePosition(path.FPole)
+                table.insert(saveData.Paths, {AppearanceData = framework.Shared.ObjectService:GetAppearanceData(path),
+                                              From = tostring(ground.CFrame:PointToObjectSpace(from)), To = tostring(ground.CFrame:PointToObjectSpace(to))})
+            end
+        end
+
+        for _, pool in ipairs(plot.House.Pools:GetChildren()) do
+            table.insert(saveData.Pools, {Position = tostring(ground.CFrame:ToObjectSpace(pool.HitBox.CFrame)),
+                                          Size = tostring(Vector2.new(pool.HitBox.Size.X, pool.HitBox.Size.Z)), Type = pool.Name})
+        end
+
+        for _, basement in ipairs(plot.House.Basements:GetChildren()) do
+            table.insert(saveData.Basements, {Position = tostring(ground.CFrame:ToObjectSpace(basement.HitBox.CFrame)),
+                                              Size = tostring(Vector2.new(basement.HitBox.Size.X, basement.HitBox.Size.Z)), Type = basement.Name})
+        end
+
+        for _, fence in ipairs(plot.House.Fences:GetChildren()) do
+            if fence.Name ~= 'Poles' then
+                local to, from = framework.Shared.FenceService:GetEdgePositions(fence)
+                local data = {To = tostring(ground.CFrame:PointToObjectSpace(to)), From = tostring(ground.CFrame:PointToObjectSpace(from)),
+                              AppearanceData = framework.Shared.ObjectService:GetAppearanceData(fence), Name = fence.Name, Items = {}}
+                if fence:FindFirstChild('ItemHolder') then
+                    for _, item in ipairs(fence.ItemHolder:GetChildren()) do
+                        table.insert(data.Items, {AppearanceData = framework.Shared.ObjectService:GetAppearanceData(item), Name = item.Name,
+                                                 Rot = getRotation(item.CFrame, plot), Position = tostring(ground.CFrame:PointToObjectSpace(item.Position))})
+                    end
+                end
+                table.insert(saveData.Fences, data)
+            end
+        end
+
+        if objects[plot] then saveData.Ground.Objects = objects[plot] end
+        if counters[plot] then saveData.Ground.Counters = counters[plot] end
+
+        local houses = ReplicatedStorage.Stats[player.Name].Houses
+        local playerHouse = next(houses:GetChildren(), function(v) return v.Value == houses.Value end)
+        saveData.totalValue = playerHouse and playerHouse.TotalValue.Value or 'Unknown'
+        saveData.bsValue = playerHouse and playerHouse.BSValue.Value or 'Unknown'
+        writefile(string.format('Aztup Hub V3/Bloxburg Houses/%s.json', player.Name), HttpService:JSONEncode(saveData))
+    end
+
+    local function convertToVector3(str, ground)
+        return ground.CFrame:PointToWorldSpace(Vector3.new(unpack(str:split(','))))
+    end
+
+    local function convertPoints(points, ground)
+        local newPoints = {}
+        for _, v in ipairs(points) do
+            table.insert(newPoints, convertToVector3(v, ground))
+        end
+        return newPoints
+    end
+
+    local function convertRot(cf, ground)
+        if not cf then return end
+        local newCf = ground.CFrame:ToWorldSpace(CFrame.new(unpack(cf:split(','))))
+        local rot = -math.atan2(newCf.lookVector.z, newCf.lookVector.x) - math.pi * 0.5
+        return rot < 0 and 2 * math.pi + rot or rot
+    end
+
+    local function loadHouse(houseData)
+        local plot = workspace.Plots['Plot_' .. LocalPlayer.Name]
+        local ground = plot.Ground
+        local placements = 0
+        local oldNet = framework.net
+
+        local framework = {net = setmetatable({InvokeServer = function(_, data)
+            placements = placements + 1
+            if placements >= 4 then placements = 0; task.wait(3) end
+            local result = {oldNet:InvokeServer(data)}
+            if table.find({'PlaceObject', 'PlaceWall', 'PlaceFloor', 'PlacePath', 'PlaceRoof'}, data.Type) then
+                result[1] = typeof(result[1]) == 'Instance' and result[1].Value
+            end
+            return unpack(result)
+        end}, {__index = oldNet})}
+
+        local position = framework.net:InvokeServer({Type = 'ToPlot', Player = LocalPlayer})
+        LocalPlayer.Character:SetPrimaryPartCFrame(position)
+        framework.net:InvokeServer({Type = 'EnterBuild', Plot = plot})
+
+        local count = 0
+        for _, category in pairs(houseData) do
+            if type(category) == 'table' then count = count + #category end
+        end
+
+        for _, wall in ipairs(houseData.Walls or {}) do
+            local from, to = convertToVector3(wall.From, ground), convertToVector3(wall.To, ground)
+            local wallObj = framework.net:InvokeServer({Type = 'PlaceWall', From = from, To = to})
+            for _, item in ipairs(wall.Items or {}) do
+                local itemObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = item.Name, TargetModel = wallObj,
+                                                           Rot = convertRot(item.Rot, ground), Pos = convertToVector3(item.Position, ground)})
+                if item.Items then
+                    for _, subItem in ipairs(item.Items) do
+                        local subObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = subItem.Name, TargetModel = itemObj,
+                                                                  Rot = convertRot(subItem.Rot, ground), Pos = convertToVector3(subItem.Position, ground)})
+                        framework.net:InvokeServer({Type = 'ColorObject', Object = subObj, UseMaterials = true, Data = subItem.AppearanceData})
+                    end
+                end
+                framework.net:InvokeServer({Type = 'ColorObject', Object = itemObj, UseMaterials = true, Data = item.AppearanceData})
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = wallObj, UseMaterials = true, Data = {wall.AppearanceData[1], {}, {}, {}}, Side = 'R'})
+            framework.net:InvokeServer({Type = 'ColorObject', Object = wallObj, UseMaterials = true, Data = {wall.AppearanceData[2], {}, {}, {}}, Side = 'L'})
+        end
+
+        for _, floor in ipairs(houseData.Floors or {}) do
+            local floorObj = framework.net:InvokeServer({Type = 'PlaceFloor', Points = convertPoints(floor.Points, ground)})
+            for _, obj in ipairs(floor.Objects or {}) do
+                local item = framework.net:InvokeServer({Type = 'PlaceObject', Name = obj.Name, TargetModel = floorObj,
+                                                        Rot = convertRot(obj.Rot, ground), Pos = convertToVector3(obj.Position, ground)})
+                framework.net:InvokeServer({Type = 'ColorObject', Object = item, UseMaterials = true, Data = obj.AppearanceData})
+                if obj.Fences and item then
+                    for _, fence in ipairs(obj.Fences) do
+                        local fenceObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = fence.Name, Pos = convertToVector3(fence.From, ground),
+                                                                    RailingSegment = item.ObjectModel.Railings[fence.Segment]})
+                        framework.net:InvokeServer({Type = 'ColorObject', Object = fenceObj, UseMaterials = true, Data = fence.AppearanceData})
+                    end
+                end
+                if obj.Items then
+                    for _, subItem in ipairs(obj.Items) do
+                        local subObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = subItem.Name, TargetModel = item,
+                                                                  Rot = convertRot(subItem.Rot, ground), Pos = convertToVector3(subItem.Position, ground)})
+                        framework.net:InvokeServer({Type = 'ColorObject', Object = subObj, UseMaterials = true, Data = subItem.AppearanceData})
+                    end
+                end
+            end
+            for _, counter in ipairs(floor.Counters or {}) do
+                local item = framework.net:InvokeServer({Type = 'PlaceObject', Name = counter.Name, TargetModel = floorObj,
+                                                        Rot = convertRot(counter.Rot, ground), Pos = convertToVector3(counter.Position, ground)})
+                if counter.Items then
+                    for _, subItem in ipairs(counter.Items) do
+                        local subObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = subItem.Name, TargetModel = item,
+                                                                  Rot = convertRot(subItem.Rot, ground), Pos = convertToVector3(subItem.Position, ground)})
+                        framework.net:InvokeServer({Type = 'ColorObject', Object = subObj, UseMaterials = true, Data = subItem.AppearanceData})
+                    end
+                end
+                framework.net:InvokeServer({Type = 'ColorObject', Object = item, UseMaterials = true, Data = counter.AppearanceData})
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = floorObj, UseMaterials = true, Data = floor.AppearanceData})
+        end
+
+        for _, path in ipairs(houseData.Paths or {}) do
+            local pathObj = framework.net:InvokeServer({Type = 'PlacePath', To = convertToVector3(path.To, ground), From = convertToVector3(path.From, ground)})
+            framework.net:InvokeServer({Type = 'ColorObject', Object = pathObj, UseMaterials = true, Data = path.AppearanceData})
+        end
+
+        for _, roof in ipairs(houseData.Roofs or {}) do
+            local roofObj = framework.net:InvokeServer({Type = 'PlaceRoof', Points = convertPoints(roof.Points, ground),
+                                                       Start = convertToVector3(roof.Points[1], ground), Settings = {IsPreview = true, Type = roof.Name, RotateNum = 0}})
+            for _, item in ipairs(roof.Items or {}) do
+                local itemObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = item.Name, TargetModel = roofObj,
+                                                           Rot = convertRot(item.Rot, ground), Pos = convertToVector3(item.Position, ground)})
+                framework.net:InvokeServer({Type = 'ColorObject', Object = itemObj, UseMaterials = true, Data = item.AppearanceData})
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = roofObj, UseMaterials = true, Data = roof.AppearanceData})
+        end
+
+        for _, pool in ipairs(houseData.Pools or {}) do
+            framework.net:InvokeServer({Type = 'PlacePool', Size = Vector2.new(unpack(pool.Size:split(','))),
+                                       Center = CFrame.new(unpack(pool.Position:split(','))), ItemType = pool.Type})
+            count = count + 1
+        end
+
+        for _, basement in ipairs(houseData.Basements or {}) do
+            framework.net:InvokeServer({Type = 'PlaceBasement', ItemType = 'Basements',
+                                       Size = Vector2.new(unpack(basement.Size:split(','))),
+                                       Center = CFrame.new(unpack(basement.Position:split(','))) - Vector3.new(0, -12.49, 0)})
+        end
+
+        for _, fence in ipairs(houseData.Fences or {}) do
+            local fenceObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = fence.Name, StartPos = convertToVector3(fence.From, ground),
+                                                        Pos = convertToVector3(fence.To, ground), ItemType = fence.Name})
+            for _, item in ipairs(fence.Items or {}) do
+                local itemObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = item.Name, TargetModel = fenceObj,
+                                                           Rot = convertRot(item.Rot, ground), Pos = convertToVector3(item.Position, ground)})
+                framework.net:InvokeServer({Type = 'ColorObject', Object = itemObj, UseMaterials = true, Data = item.AppearanceData})
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = fenceObj, UseMaterials = true, Data = fence.AppearanceData})
+        end
+
+        for _, obj in ipairs(houseData.Ground.Objects or {}) do
+            local item = framework.net:InvokeServer({Type = 'PlaceObject', Name = obj.Name, TargetModel = plot.GroundParts.Ground,
+                                                    Rot = convertRot(obj.Rot, ground), Pos = convertToVector3(obj.Position, ground)})
+            if obj.Fences and item then
+                for _, fence in ipairs(obj.Fences) do
+                    local fenceObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = fence.Name, Pos = convertToVector3(fence.From, ground),
+                                                                RailingSegment = item.ObjectModel.Railings[fence.Segment]})
+                    framework.net:InvokeServer({Type = 'ColorObject', Object = fenceObj, UseMaterials = true, Data = fence.AppearanceData})
+                end
+            end
+            if obj.Items then
+                for _, subItem in ipairs(obj.Items) do
+                    local subObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = subItem.Name, TargetModel = item,
+                                                              Rot = convertRot(subItem.Rot, ground), Pos = convertToVector3(subItem.Position, ground)})
+                    framework.net:InvokeServer({Type = 'ColorObject', Object = subObj, UseMaterials = true, Data = subItem.AppearanceData})
+                end
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = item, UseMaterials = true, Data = obj.AppearanceData})
+        end
+
+        for _, counter in ipairs(houseData.Ground.Counters or {}) do
+            local item = framework.net:InvokeServer({Type = 'PlaceObject', Name = counter.Name, Pos = convertToVector3(counter.Position, ground),
+                                                    Rot = convertRot(counter.Rot, ground), TargetModel = plot.GroundParts.Ground})
+            if counter.Items then
+                for _, subItem in ipairs(counter.Items) do
+                    local subObj = framework.net:InvokeServer({Type = 'PlaceObject', Name = subItem.Name, TargetModel = item,
+                                                              Rot = convertRot(subItem.Rot, ground), Pos = convertToVector3(subItem.Position, ground)})
+                    framework.net:InvokeServer({Type = 'ColorObject', Object = subObj, UseMaterials = true, Data = subItem.AppearanceData})
+                end
+            end
+            framework.net:InvokeServer({Type = 'ColorObject', Object = item, UseMaterials = true, Data = counter.AppearanceData})
+        end
+
+        framework.net:FireServer({Type = 'ExitBuild'})
+    end
+
+    local function findWorkstation(workStations, justFind)
+        local minDist, workstation = math.huge, nil
+        local root = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
+        if not root then return end
+        for _, v in ipairs(workStations:GetChildren()) do
+            local dist = (root.Position - v.PrimaryPart.Position).Magnitude
+            if dist < minDist and (not v.InUse.Value or v.InUse.Value == LocalPlayer) then
+                minDist, workstation = dist, v
+            end
+        end
+        return workstation
+    end
+
+    local function findBensWorkstation(workStations)
+        for _, v in ipairs(workStations:GetChildren()) do
+            local customer = v.Occupied.Value
+            if customer and customer.Order.Value == '' then return v end
+        end
+    end
+
+    local function tweenTeleport(pos)
+        local root = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
+        if not root then warn('No root part for teleport'); return end
+        local path = PathfindingService:CreatePath()
+        path:ComputeAsync(root.Position, pos)
+        local waypoints = path:GetWaypoints()
+        local cfValue = Instance.new('CFrameValue')
+        local conn = cfValue.Changed:Connect(function() LocalPlayer.Character:SetPrimaryPartCFrame(cfValue.Value) end)
+        cfValue.Value = root.CFrame
+        for _, waypoint in ipairs(waypoints) do
+            local tweenInfo = TweenInfo.new((root.Position - waypoint.Position).Magnitude / 20, Enum.EasingStyle.Linear)
+            local tween = TweenService:Create(cfValue, tweenInfo, {Value = CFrame.new(waypoint.Position + Vector3.new(0, 4, 0))})
+            tween:Play()
+            tween.Completed:Wait()
+        end
+        conn:Disconnect()
+        cfValue:Destroy()
+        path.Blocked:Connect(function() warn('Path blocked!') end)
+    end
+
+    local function getOrder()
+        local box = workspace.Environment.Locations.PizzaPlanet.Conveyor.MovingBoxes:WaitForChild('Box_1')
+        local root = LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
+        if not root then print('No root part'); return end
+        if (box.Position - root.Position).Magnitude <= 8 then
+            local order = framework.net:InvokeServer({Type = "TakePizzaBox", Box = box})
+            return order or getOrder()
+        else
+            tweenTeleport(Vector3.new(1171.3407, 13.6576843, 273.778717))
+            return getOrder()
+        end
+    end
+
+    local function copyPlayerHousePrompt(player)
+        task.wait()
+        if not guiHandler:ConfirmBox(string.format('\nCopy %s\'s house to Bloxburg_House.json?\nEnsure visibility or teleport to plot.\n', player.Name), 'House Copier') then return end
+        saveHouse(player)
+        guiHandler:MessageBox(string.format('Copied %s\'s house', player.Name), 'Success')
+    end
+
+    local function loadPlayerHousePrompt(house)
+        task.wait()
+        local success, data = pcall(readfile, string.format('Aztup Hub V3/Bloxburg Houses/%s', house))
+        if not success then return guiHandler:AlertBox('Error loading house', 'Error') end
+        data = HttpService:JSONDecode(data)
+        local bsValue, totalValue = data.bsValue, data.totalValue - (data.bsValue * 20)
+        if not guiHandler:ConfirmBox(string.format('\nLoad house?\nMoney: %s\nBloxBux: %s\n', totalValue, bsValue), 'House Loader', 5) then return end
+        loadHouse(data)
+    end
+
+    local function teleportToPlayerPlot(player)
+        local pos = framework.net:InvokeServer({Type = 'ToPlot', Player = player})
+        LocalPlayer.Character:SetPrimaryPartCFrame(pos)
+    end
+
+    do -- Remote Spy
+        local oldFire = hookfunction(network.FireServer, function(self, data, ...)
+            if data.Type == 'EndShift' and Rayfield.flags.pizzaDelivery then return end
+            if not table.find({'LookDir', 'GetServerTime', 'CheckOwnsAsset', 'VehicleUpdate'}, data.Type) then
+                print(prettyPrint({data = data, traceback = debug.traceback()}))
+            end
+            return pcall(oldFire, self, data, ...)
+        end)
+
+        local oldInvoke = hookfunction(network.InvokeServer, function(self, data, ...)
+            local type, result = data.Type, {select(2, pcall(oldInvoke, self, data, ...))}
+            if not table.find({'LookDir', 'GetServerTime', 'CheckOwnsAsset', 'VehicleUpdate'}, type) then
+                print(prettyPrint({returnData = result, data = data, type = type, traceback = debug.traceback()}))
+            end
+            return unpack(result)
+        end)
+    end
+
+    local oldNamecall = hookmetamethod(game, '__namecall', function(...)
+        if not checkcaller() or getnamecallmethod() ~= 'FireServer' then return oldNamecall(...) end
+        local args = {...}
+        if args[2].Order and args[2].Workstation then
+            if args[2].Workstation.Parent.Name == 'HairdresserWorkstations' and Rayfield.flags.stylezHairDresser then
+                args[2].Order = {args[2].Workstation.Occupied.Value.Order.Style.Value, args[2].Workstation.Occupied.Value.Order.Color.Value}
+            elseif args[2].Workstation.Parent.Name == 'BakerWorkstations' and Rayfield.flags.pizzaBaker then
+                args[2].Order = {true, true, true, args[2].Workstation.Order.Value}
+            end
+        end
+        return oldNamecall(unpack(args))
+    end)
+end
+
+local function updateDropdowns()
+    local players = {}
+    for _, player in ipairs(Players:GetPlayers()) do table.insert(players, player.Name) end
+    copyHouseDropdown:SetOptions(players)
+    teleportToPlotDropdown:SetOptions(players)
+    local houses = {}
+    if isfolder('Aztup Hub V3/Bloxburg Houses') then
+        for _, file in ipairs(listfiles('Aztup Hub V3/Bloxburg Houses')) do
+            table.insert(houses, file:match("([^/\\]+)%.json$"))
+        end
+    end
+    loadHouseDropdown:SetOptions(houses)
+end
+
+Players.PlayerAdded:Connect(updateDropdowns)
+Players.PlayerRemoving:Connect(updateDropdowns)
+updateDropdowns()

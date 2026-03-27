@@ -1,0 +1,3985 @@
+-- 🗑️ Destroy existing GUI if it exists
+if game.CoreGui:FindFirstChild("ChordRush") then
+    game.CoreGui:FindFirstChild("ChordRush"):Destroy()
+end
+
+-- 🎨 Updated Color Theme
+local colors = {
+    background = Color3.fromRGB(15, 15, 20),
+    secondary = Color3.fromRGB(25, 30, 40),
+    accent = Color3.fromRGB(45, 55, 70),
+    primary = Color3.fromRGB(88, 166, 255),
+    success = Color3.fromRGB(46, 204, 113),
+    warning = Color3.fromRGB(241, 196, 15),
+    danger = Color3.fromRGB(231, 76, 60),
+    text = Color3.fromRGB(240, 240, 250),
+    textSecondary = Color3.fromRGB(160, 170, 190)
+}
+
+-- 🖼️ Create GUI (Resized to be more compact)
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "ChordRush"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 250, 0, 390)
+frame.Position = UDim2.new(0, 20, 0, 20)
+frame.BackgroundColor3 = colors.background
+frame.Active = true
+frame.Visible = true
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+
+-- Global Variables
+local globals = {
+    MidiSongOutput = {},
+    CachedGitHubSongs = {},
+    allsongspreloaded = false,
+    refreshingPresets = false,
+    categoryFrames = {},
+    categoryData = {},
+    currentCategoryFrame = nil,
+    isDragging = false,
+    isFloatDragging = false,
+    lastSeekTime = 0,
+    seekCooldown = 0.1,
+    seekRequested = false,
+    searchResults = {},
+    isSearchActive = false,
+    currentSongDuration = 0,
+    currentSongTime = 0,
+    filteredSongs = filteredSongs or {},
+    isDragging2 = false,
+    dragStart = nil,
+    startPos = nil,
+    isFloatDragging2 = false,
+    floatDragStart = nil,
+    floatStartPos = nil,
+    lastPosition = frame.Position,
+    connection = nil,
+    UserInputService = game:GetService("UserInputService"),
+    rightPanelVisible = false,
+    categoriesLoaded = 0
+}
+
+-- GitHub Configuration
+local githubConfig = {
+    GITHUB_PRESET_URL = "https://github.com/wownskdo/TestForApi/raw/refs/heads/main/Main/Presets/",
+    GITHUB_RETURN_URL = "https://github.com/wownskdo/TestForApi/raw/refs/heads/main/Main/returntables/",
+    PRESET_CATEGORIES = {
+        {name = "All Songs", returnFile = nil},
+        {name = "Classical", returnFile = "classicalreturn.lua"},
+        {name = "Modern", returnFile = "modernreturn.lua"},
+        {name = "Anime", returnFile = "animereturn.lua"},
+        {name = "Movie", returnFile = "moviereturn.lua"},
+        {name = "Emotional", returnFile = "emotionalreturn.lua"},
+        {name = "Game OST", returnFile = "gameostreturn.lua"},
+        {name = "Others", returnFile = "othersreturn.lua"}
+    }
+}
+
+-- Invisible drag handle for main frame
+local dragHandle = Instance.new("Frame", frame)
+dragHandle.Size = UDim2.new(1, 0, 0, 30)
+dragHandle.Position = UDim2.new(0, 0, 0, 0)
+dragHandle.BackgroundTransparency = 1
+dragHandle.Active = true
+
+local function updateDrag(input)
+    if globals.isDragging2 then
+        local delta = input.Position - globals.dragStart
+        frame.Position = UDim2.new(globals.startPos.X.Scale, globals.startPos.X.Offset + delta.X, globals.startPos.Y.Scale, globals.startPos.Y.Offset + delta.Y)
+    end
+end
+
+dragHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        globals.isDragging2 = true
+        globals.dragStart = input.Position
+        globals.startPos = frame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                globals.isDragging2 = false
+            end
+        end)
+    end
+end)
+
+dragHandle.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        updateDrag(input)
+    end
+end)
+
+globals.UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        updateDrag(input)
+    end
+end)
+
+globals.UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        globals.isDragging2 = false
+    end
+end)
+
+-- Add subtle shadow
+local shadow = Instance.new("Frame", frame)
+shadow.Size = UDim2.new(1, 8, 1, 8)
+shadow.Position = UDim2.new(0, -4, 0, -4)
+shadow.BackgroundColor3 = Color3.new(0, 0, 0)
+shadow.BackgroundTransparency = 0.8
+shadow.ZIndex = -1
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 12)
+
+-- Enhanced border glow
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = colors.primary
+stroke.Thickness = 1
+stroke.Transparency = 0.7
+
+local rightPanel = Instance.new("Frame", frame)
+rightPanel.Size = UDim2.new(0, 320, 0, 390)
+rightPanel.Position = UDim2.new(0, 260, 0, 0) -- Default position (right side)
+rightPanel.BackgroundColor3 = colors.background
+rightPanel.BorderSizePixel = 0
+rightPanel.Visible = false
+
+-- Add modern glass effect
+local blur = Instance.new("BlurEffect", rightPanel)
+blur.Size = 10
+rightPanel.BackgroundTransparency = 0.05
+
+local rightCorner = Instance.new("UICorner", rightPanel)
+rightCorner.CornerRadius = UDim.new(0, 12)
+
+-- Enhanced border glow
+local rightStroke = Instance.new("UIStroke", rightPanel)
+rightStroke.Color = colors.primary
+rightStroke.Thickness = 1.5
+rightStroke.Transparency = 0.7
+
+-- Function to update right panel position based on frame position
+local function updateRightPanelPosition()
+    local screenSize, frameAbsPos, frameAbsSize, frameCenterX, screenCenterX, panelWidth, padding = 
+        workspace.CurrentCamera.ViewportSize, frame.AbsolutePosition, frame.AbsoluteSize, 
+        frame.AbsolutePosition.X + (frame.AbsoluteSize.X / 2), workspace.CurrentCamera.ViewportSize.X / 2, 320, 10
+    
+    if frameCenterX < screenCenterX then
+        rightPanel.Position = UDim2.new(0, frameAbsSize.X + padding, 0, 0)
+    else
+        rightPanel.Position = UDim2.new(0, -(panelWidth + padding), 0, 0)
+    end
+end
+
+-- Function to show right panel with proper positioning
+local function showRightPanel()
+    rightPanel.Visible = true
+    updateRightPanelPosition()
+end
+
+-- Function to hide right panel
+local function hideRightPanel()
+    rightPanel.Visible = false
+    updateRightPanelPosition()
+end
+
+globals.connection = game:GetService("RunService").Heartbeat:Connect(function()
+    if frame.Position ~= globals.lastPosition then
+        globals.lastPosition = frame.Position
+        updateRightPanelPosition()
+    end
+end)
+
+-- Also update when screen size changes
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateRightPanelPosition)
+
+-- Clean up connection when GUI is destroyed
+gui.AncestryChanged:Connect(function()
+    if not gui.Parent then
+        if globals.connection then
+            globals.connection:Disconnect()
+        end
+    end
+end)
+
+-- Right panel header
+local rightHeader = Instance.new("TextLabel", rightPanel)
+rightHeader.Size = UDim2.new(1, -30, 0, 30)
+rightHeader.Position = UDim2.new(0, 15, 0, 15)
+rightHeader.BackgroundTransparency = 1
+rightHeader.TextColor3 = colors.primary
+rightHeader.TextSize = 15
+rightHeader.Font = Enum.Font.GothamBold
+rightHeader.Text = "♪ Song Browser"
+rightHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+-- CATEGORY DROPDOWN (for right panel)
+local categoryDropdownFrame = Instance.new("Frame", rightPanel)
+categoryDropdownFrame.Size = UDim2.new(0, 140, 0, 32)
+categoryDropdownFrame.Position = UDim2.new(1, -155, 0, 15)
+categoryDropdownFrame.BackgroundColor3 = colors.secondary
+categoryDropdownFrame.BorderSizePixel = 0
+
+local dropdownCorner = Instance.new("UICorner", categoryDropdownFrame)
+dropdownCorner.CornerRadius = UDim.new(0, 8)
+
+-- Add hover effect
+local dropdownStroke = Instance.new("UIStroke", categoryDropdownFrame)
+dropdownStroke.Color = colors.primary
+dropdownStroke.Thickness = 1
+dropdownStroke.Transparency = 0.7
+
+local categoryDropdownBtn = Instance.new("TextButton", categoryDropdownFrame)
+categoryDropdownBtn.Size = UDim2.new(1, -35, 1, 0)
+categoryDropdownBtn.Position = UDim2.new(0, 10, 0, 0)
+categoryDropdownBtn.BackgroundTransparency = 1
+categoryDropdownBtn.TextColor3 = colors.text
+categoryDropdownBtn.TextSize = 16
+categoryDropdownBtn.Font = Enum.Font.Gotham
+categoryDropdownBtn.Text = "Custom"
+categoryDropdownBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+local categoryArrow = Instance.new("TextLabel", categoryDropdownFrame)
+categoryArrow.Size = UDim2.new(0, 20, 1, 0)
+categoryArrow.Position = UDim2.new(1, -25, 0, 0)
+categoryArrow.BackgroundTransparency = 1
+categoryArrow.TextColor3 = colors.primary
+categoryArrow.TextSize = 16
+categoryArrow.Font = Enum.Font.GothamBold
+categoryArrow.Text = "▼"
+
+-- Category dropdown menu
+local categoryDropdownMenu = Instance.new("ScrollingFrame", categoryDropdownFrame)
+categoryDropdownMenu.Size = UDim2.new(1, 0, 0, 100)
+categoryDropdownMenu.Position = UDim2.new(0, 0, 1, 3)
+categoryDropdownMenu.BackgroundColor3 = colors.accent
+categoryDropdownMenu.BorderSizePixel = 0
+categoryDropdownMenu.ScrollBarThickness = 3
+categoryDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, 0)
+categoryDropdownMenu.Visible = false
+categoryDropdownMenu.ZIndex = 10
+Instance.new("UICorner", categoryDropdownMenu).CornerRadius = UDim.new(0, 8)
+
+local categoryMenuLayout = Instance.new("UIListLayout", categoryDropdownMenu)
+categoryMenuLayout.Padding = UDim.new(0, 2)
+categoryMenuLayout.SortOrder = Enum.SortOrder.LayoutOrder
+categoryMenuLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    categoryDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, categoryMenuLayout.AbsoluteContentSize.Y + 5)
+end)
+
+-- Create preset category mini dropdown
+local presetDropdownFrame = Instance.new("Frame", categoryDropdownFrame)
+presetDropdownFrame.Size = UDim2.new(0, 100, 0, 32)
+presetDropdownFrame.Position = UDim2.new(0, -110, 0, 0)
+presetDropdownFrame.BackgroundColor3 = colors.secondary
+presetDropdownFrame.BorderSizePixel = 0
+presetDropdownFrame.Visible = false
+Instance.new("UICorner", presetDropdownFrame).CornerRadius = UDim.new(0, 8)
+
+local presetDropdownBtn = Instance.new("TextButton", presetDropdownFrame)
+presetDropdownBtn.Size = UDim2.new(1, -35, 1, 0)
+presetDropdownBtn.Position = UDim2.new(0, 10, 0, 0)
+presetDropdownBtn.BackgroundTransparency = 1
+presetDropdownBtn.TextColor3 = colors.text
+presetDropdownBtn.TextSize = 16
+presetDropdownBtn.Font = Enum.Font.Gotham
+presetDropdownBtn.Text = "All"
+presetDropdownBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+local presetArrow = Instance.new("TextLabel", presetDropdownFrame)
+presetArrow.Size = UDim2.new(0, 20, 1, 0)
+presetArrow.Position = UDim2.new(1, -25, 0, 0)
+presetArrow.BackgroundTransparency = 1
+presetArrow.TextColor3 = colors.primary
+presetArrow.TextSize = 16
+presetArrow.Font = Enum.Font.GothamBold
+presetArrow.Text = "▼"
+
+-- Create preset dropdown menu
+local presetDropdownMenu = Instance.new("ScrollingFrame", presetDropdownFrame)
+presetDropdownMenu.Size = UDim2.new(1, 0, 0, 150)
+presetDropdownMenu.Position = UDim2.new(0, 0, 1, 3)
+presetDropdownMenu.BackgroundColor3 = colors.accent
+presetDropdownMenu.BorderSizePixel = 0
+presetDropdownMenu.ScrollBarThickness = 3
+presetDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, 0)
+presetDropdownMenu.Visible = false
+presetDropdownMenu.ZIndex = 11
+Instance.new("UICorner", presetDropdownMenu).CornerRadius = UDim.new(0, 8)
+
+-- SEARCH BAR
+local searchFrame = Instance.new("Frame", rightPanel)
+searchFrame.Size = UDim2.new(1, -30, 0, 36)
+searchFrame.Position = UDim2.new(0, 15, 0, 55)
+searchFrame.BackgroundColor3 = colors.secondary
+searchFrame.BorderSizePixel = 0
+
+local searchCorner = Instance.new("UICorner", searchFrame)
+searchCorner.CornerRadius = UDim.new(0, 10)
+
+-- Add highlight effect on focus
+local searchStroke = Instance.new("UIStroke", searchFrame)
+searchStroke.Color = colors.primary
+searchStroke.Thickness = 1
+searchStroke.Transparency = 0.8
+
+local searchIcon = Instance.new("TextLabel", searchFrame)
+searchIcon.Size = UDim2.new(0, 30, 1, 0)
+searchIcon.Position = UDim2.new(0, 8, 0, 0)
+searchIcon.BackgroundTransparency = 1
+searchIcon.TextColor3 = colors.textSecondary
+searchIcon.TextSize = 18
+searchIcon.Font = Enum.Font.GothamBold
+searchIcon.Text = "🔍"
+
+local searchInput = Instance.new("TextBox", searchFrame)
+searchInput.Size = UDim2.new(1, -45, 1, -6)
+searchInput.Position = UDim2.new(0, 38, 0, 3)
+searchInput.BackgroundTransparency = 1
+searchInput.TextColor3 = colors.text
+searchInput.TextSize = 16
+searchInput.Font = Enum.Font.Gotham
+searchInput.PlaceholderText = "Search songs..."
+searchInput.PlaceholderColor3 = colors.textSecondary
+searchInput.Text = ""
+searchInput.TextXAlignment = Enum.TextXAlignment.Left
+searchInput.ClearTextOnFocus = false
+
+-- Add focus effects
+searchInput.Focused:Connect(function()
+    game:GetService("TweenService"):Create(searchStroke, TweenInfo.new(0.2), {
+        Transparency = 0.2
+    }):Play()
+end)
+
+searchInput.FocusLost:Connect(function()
+    game:GetService("TweenService"):Create(searchStroke, TweenInfo.new(0.2), {
+        Transparency = 0.8
+    }):Play()
+end)
+
+-- SONG COUNTER AND INFO LABEL
+local songInfoLabel = Instance.new("TextLabel", rightPanel)
+songInfoLabel.Size = UDim2.new(1, -30, 0, 24)
+songInfoLabel.Position = UDim2.new(0, 15, 0, 100)
+songInfoLabel.BackgroundTransparency = 1
+songInfoLabel.TextColor3 = colors.textSecondary
+songInfoLabel.TextScaled = true
+songInfoLabel.Font = Enum.Font.Gotham
+songInfoLabel.Text = "Now in: Custom • Total Songs: 0"
+songInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Add smooth scrolling behavior
+local function smoothScroll(frame)
+    local uis = game:GetService("UserInputService")
+    local function onScroll(_, delta)
+        frame.CanvasPosition = Vector2.new(
+            frame.CanvasPosition.X,
+            math.clamp(frame.CanvasPosition.Y - (delta * 80),
+                0,
+                frame.AbsoluteCanvasSize.Y - frame.AbsoluteSize.Y
+            )
+        )
+    end
+    frame.MouseWheelForward:Connect(function() onScroll(nil, 1) end)
+    frame.MouseWheelBackward:Connect(function() onScroll(nil, -1) end)
+end
+
+local function createCategoryFrame(categoryName)
+    local frame = Instance.new("ScrollingFrame", rightPanel)
+    frame.Name = "Category_" .. categoryName
+    frame.Size = UDim2.new(1, -30, 0, 240)
+    frame.Position = UDim2.new(0, 15, 0, 135)
+    frame.BackgroundColor3 = colors.secondary
+    frame.BorderSizePixel = 0
+    frame.ScrollBarThickness = 6
+    frame.ScrollBarImageColor3 = colors.primary
+    frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    frame.Visible = false
+    frame.Active = true
+    frame.ZIndex = 0
+
+    local frameCorner = Instance.new("UICorner", frame)
+    frameCorner.CornerRadius = UDim.new(0, 10)
+
+    -- Add smooth scrolling
+    smoothScroll(frame)
+
+    local layout = Instance.new("UIListLayout", frame)
+    layout.Padding = UDim.new(0, 3)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        frame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+    end)
+
+    return frame, layout
+end
+
+local rightSongList = Instance.new("ScrollingFrame", rightPanel)
+rightSongList.Name = "rightSongList"
+rightSongList.Size = UDim2.new(1, -30, 1, -165) 
+rightSongList.Position = UDim2.new(0, 15, 0, 135)
+rightSongList.BackgroundColor3 = colors.secondary
+rightSongList.BorderSizePixel = 0
+rightSongList.ScrollBarThickness = 6
+rightSongList.ScrollBarImageColor3 = colors.primary
+rightSongList.CanvasSize = UDim2.new(0, 0, 0, 0)
+rightSongList.ZIndex = 5
+Instance.new("UICorner", rightSongList).CornerRadius = UDim.new(0, 10)
+
+local rightSongLayout = Instance.new("UIListLayout", rightSongList)
+rightSongLayout.Padding = UDim.new(0, 3)
+rightSongLayout.SortOrder = Enum.SortOrder.LayoutOrder
+rightSongLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    rightSongList.CanvasSize = UDim2.new(0, 0, 0, rightSongLayout.AbsoluteContentSize.Y + 10)
+end)
+
+-- TOGGLE BUTTON for right panel (add to main frame)
+-- 🎈 Enhanced Float Toggle Button
+local togglePanelBtn = Instance.new("TextButton", frame)
+togglePanelBtn.Size = UDim2.new(0, 75, 0, 20)
+togglePanelBtn.Position = UDim2.new(1, -95, 0, 15)
+togglePanelBtn.BackgroundColor3 = colors.danger
+togglePanelBtn.TextColor3 = colors.text
+togglePanelBtn.TextSize = 10
+togglePanelBtn.Text = "🎈 Float"
+togglePanelBtn.BorderSizePixel = 0
+togglePanelBtn.ClipsDescendants = true
+
+-- Modern styling
+Instance.new("UICorner", togglePanelBtn).CornerRadius = UDim.new(0, 8)
+
+-- Add subtle shadow
+local toggleShadow = Instance.new("Frame", togglePanelBtn)
+toggleShadow.Size = UDim2.new(1, 4, 1, 4)
+toggleShadow.Position = UDim2.new(0, -2, 0, -2)
+toggleShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+toggleShadow.BackgroundTransparency = 0.8
+toggleShadow.ZIndex = togglePanelBtn.ZIndex - 1
+Instance.new("UICorner", toggleShadow).CornerRadius = UDim.new(0, 8)
+
+-- Add subtle stroke
+local toggleStroke = Instance.new("UIStroke", togglePanelBtn)
+toggleStroke.Color = Color3.new(1, 1, 1)
+toggleStroke.Thickness = 1
+toggleStroke.Transparency = 0.9
+
+local titleArea = Instance.new("Frame", frame)
+titleArea.Size = UDim2.new(1, -20, 0, 50)
+titleArea.Position = UDim2.new(0, 10, 0, 10)
+titleArea.BackgroundTransparency = 1
+
+local titlemain = Instance.new("TextLabel", titleArea)
+titlemain.Size = UDim2.new(1, -90, 0, 25)
+titlemain.Position = UDim2.new(0, 0, 0, 0)
+titlemain.BackgroundTransparency = 1
+titlemain.TextColor3 = colors.primary
+titlemain.TextSize = 20
+titlemain.Font = Enum.Font.GothamBold
+titlemain.Text = "♪ ChordRush"
+titlemain.TextXAlignment = Enum.TextXAlignment.Left
+
+local bttl = Instance.new("TextLabel", titleArea)
+bttl.Size = UDim2.new(1, -90, 0, 15)
+bttl.Position = UDim2.new(0, 15, 0, 20)
+bttl.BackgroundTransparency = 1
+bttl.TextColor3 = colors.textSecondary
+bttl.TextSize = 10
+bttl.Font = Enum.Font.Gotham
+bttl.Text = "By: Panda Exploit"
+bttl.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 🎵 Song Title
+local songTitleArea = Instance.new("Frame", frame)
+songTitleArea.Size = UDim2.new(1, -20, 0, 20)
+songTitleArea.Position = UDim2.new(0, 10, 0, 215)
+songTitleArea.BackgroundColor3 = colors.secondary
+songTitleArea.BorderSizePixel = 0
+Instance.new("UICorner", songTitleArea).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel", songTitleArea)
+title.Size = UDim2.new(1, 0, 1, -8)
+title.Position = UDim2.new(0, 0, 0, 3.5)
+title.BackgroundTransparency = 1
+title.TextColor3 = colors.text
+title.Font = Enum.Font.Gotham
+title.Text = "🎵 No song selected"
+title.TextWrapped = true
+title.TextScaled = true
+
+-- 🔄 Toggle Button and BPM State Variables
+local usetempo = false
+local manualBpm = 120
+local currentBpm = 120
+local lastManualBpm = 120
+
+-- 🎵 Tempo Tracking System
+local tempoMarkers = {}
+local songTimeElapsed = 0
+
+-- BPM Input (Repositioned)
+local bpmContainer = Instance.new("Frame", frame)
+bpmContainer.Size = UDim2.new(1, -20, 0, 35)
+bpmContainer.Position = UDim2.new(0, 10, 0, 255)
+bpmContainer.BackgroundColor3 = colors.secondary
+bpmContainer.BorderSizePixel = 0
+Instance.new("UICorner", bpmContainer).CornerRadius = UDim.new(0, 8)
+
+local bpmLabel = Instance.new("TextLabel", bpmContainer)
+bpmLabel.Size = UDim2.new(0, 40, 1, 0)
+bpmLabel.Position = UDim2.new(0, 10, 0, 0)
+bpmLabel.BackgroundTransparency = 1
+bpmLabel.TextColor3 = colors.textSecondary
+bpmLabel.TextSize = 14
+bpmLabel.Font = Enum.Font.GothamBold
+bpmLabel.Text = "BPM:"
+
+local bpmInput = Instance.new("TextBox", bpmContainer)
+bpmInput.Size = UDim2.new(0, 50, 0, 25)
+bpmInput.Position = UDim2.new(0, 47, 0, 5)
+bpmInput.Text = "120"
+bpmInput.PlaceholderText = "120"
+bpmInput.TextSize = 14
+bpmInput.Font = Enum.Font.Gotham
+bpmInput.BackgroundColor3 = colors.accent
+bpmInput.TextColor3 = colors.text
+bpmInput.BorderSizePixel = 0
+Instance.new("UICorner", bpmInput).CornerRadius = UDim.new(0, 6)
+
+-- Add subtle hover effect
+bpmInput.MouseEnter:Connect(function()
+  bpmInput.BackgroundColor3 = Color3.fromRGB(
+    math.min(colors.accent.R + 0.1, 1),
+    math.min(colors.accent.G + 0.1, 1), 
+    math.min(colors.accent.B + 0.1, 1)
+  )
+end)
+
+bpmInput.MouseLeave:Connect(function()
+  bpmInput.BackgroundColor3 = colors.accent
+end)
+
+-- 🔄 Use Tempo Toggle Button
+local useTempoButton = Instance.new("TextButton", bpmContainer)
+useTempoButton.Size = UDim2.new(0, 50, 0, 25)
+useTempoButton.Position = UDim2.new(1, -55, 0, 5)
+useTempoButton.Text = "Auto BPM:\nOFF"
+useTempoButton.TextSize = 10
+useTempoButton.Font = Enum.Font.Gotham
+useTempoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+useTempoButton.TextColor3 = colors.text
+useTempoButton.BorderSizePixel = 0
+Instance.new("UICorner", useTempoButton).CornerRadius = UDim.new(0, 6)
+
+local DontUseBPMInput = Instance.new("TextButton", bpmContainer)
+DontUseBPMInput.Size = UDim2.new(0, 60, 0, 25)
+DontUseBPMInput.Position = UDim2.new(0, 55, 0, 5)
+DontUseBPMInput.Text = ""
+DontUseBPMInput.TextScaled = true
+DontUseBPMInput.Font = Enum.Font.Gotham
+DontUseBPMInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+DontUseBPMInput.BackgroundTransparency = 1
+DontUseBPMInput.BorderSizePixel = 0
+DontUseBPMInput.Visible = false
+Instance.new("UICorner", DontUseBPMInput).CornerRadius = UDim.new(0, 6)
+
+local Buttonforbpm = Instance.new("TextButton", bpmContainer)
+Buttonforbpm.Size = UDim2.new(0, 50, 0, 25)
+Buttonforbpm.Position = UDim2.new(0, 110, 0, 5)
+Buttonforbpm.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+Buttonforbpm.Text = "Toggle Tempo"
+Buttonforbpm.TextColor3 = Color3.fromRGB(255, 255, 255)
+Buttonforbpm.TextScaled = true
+Buttonforbpm.BorderSizePixel = 0
+
+Instance.new("UICorner", Buttonforbpm).CornerRadius = UDim.new(0, 4)
+
+-- 🎛️ Side Control Panel
+local sidePanel = Instance.new("Frame", frame)
+sidePanel.Size = UDim2.new(1, -20, 0, 140)
+sidePanel.Position = UDim2.new(0, 10, 0, 70)
+sidePanel.BackgroundColor3 = colors.secondary
+sidePanel.BorderSizePixel = 0
+Instance.new("UICorner", sidePanel).CornerRadius = UDim.new(0, 10)
+
+-- Add subtle shadow
+local sidePanelShadow = Instance.new("Frame", frame)
+sidePanelShadow.Size = UDim2.new(1, -16, 0, 144)
+sidePanelShadow.Position = UDim2.new(0, 8, 0, 72)
+sidePanelShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+sidePanelShadow.BackgroundTransparency = 0.8
+sidePanelShadow.ZIndex = sidePanel.ZIndex - 1
+Instance.new("UICorner", sidePanelShadow).CornerRadius = UDim.new(0, 10)
+
+-- Add subtle stroke
+local sidePanelStroke = Instance.new("UIStroke", sidePanel)
+sidePanelStroke.Color = colors.primary
+sidePanelStroke.Thickness = 1
+sidePanelStroke.Transparency = 0.9
+
+-- Enhanced Layout
+local sidePanelLayout = Instance.new("UIListLayout", sidePanel)
+sidePanelLayout.Padding = UDim.new(0, 6)
+sidePanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sidePanelLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+sidePanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Add padding to the side panel
+local sidePanelPadding = Instance.new("UIPadding", sidePanel)
+sidePanelPadding.PaddingTop = UDim.new(0, 6)
+sidePanelPadding.PaddingBottom = UDim.new(0, 6)
+sidePanelPadding.PaddingLeft = UDim.new(0, 6)
+sidePanelPadding.PaddingRight = UDim.new(0, 6)
+
+local tempoControlFrame = Instance.new("Frame", frame)
+tempoControlFrame.Size = UDim2.new(1, -20, 0, 140)
+tempoControlFrame.Position = UDim2.new(0, 10, 0, 70)
+tempoControlFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+tempoControlFrame.BorderSizePixel = 0
+tempoControlFrame.Visible = false
+tempoControlFrame.Active = true
+
+Instance.new("UICorner", tempoControlFrame).CornerRadius = UDim.new(0, 8)
+
+Buttonforbpm.MouseButton1Click:Connect(function()
+    if not DontUseBPMInput.Visible then
+        tempoControlFrame.Visible = not tempoControlFrame.Visible
+    else
+        tempoControlFrame.Visible = false
+    end
+end)
+
+-- Title
+local titleLabel = Instance.new("TextLabel", tempoControlFrame)
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.Position = UDim2.new(0, 0, 0, 5)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Tempo Control"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.SourceSansBold
+
+-- BPM Section
+local bpmFrame = Instance.new("Frame", tempoControlFrame)
+bpmFrame.Size = UDim2.new(1, -10, 0, 30)
+bpmFrame.Position = UDim2.new(0, 5, 0, 35)
+bpmFrame.BackgroundTransparency = 1
+
+-- BPM Left Button
+local bpmLeftBtn = Instance.new("TextButton", bpmFrame)
+bpmLeftBtn.Size = UDim2.new(0, 25, 1, 0)
+bpmLeftBtn.Position = UDim2.new(0, 0, 0, 0)
+bpmLeftBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+bpmLeftBtn.Text = "<"
+bpmLeftBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+bpmLeftBtn.TextScaled = true
+bpmLeftBtn.BorderSizePixel = 0
+Instance.new("UICorner", bpmLeftBtn).CornerRadius = UDim.new(0, 4)
+
+-- BPM TextBox
+local BPMAdjust = Instance.new("TextBox", bpmFrame)
+BPMAdjust.Size = UDim2.new(1, -55, 1, 0)
+BPMAdjust.Position = UDim2.new(0, 30, 0, 0)
+BPMAdjust.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+BPMAdjust.Text = "120"
+BPMAdjust.PlaceholderText = "Current BPM"
+BPMAdjust.TextColor3 = Color3.fromRGB(255, 255, 255)
+BPMAdjust.TextScaled = true
+BPMAdjust.Font = Enum.Font.SourceSans
+BPMAdjust.BorderSizePixel = 0
+Instance.new("UICorner", BPMAdjust).CornerRadius = UDim.new(0, 4)
+
+-- BPM Right Button
+local bpmRightBtn = Instance.new("TextButton", bpmFrame)
+bpmRightBtn.Size = UDim2.new(0, 25, 1, 0)
+bpmRightBtn.Position = UDim2.new(1, -25, 0, 0)
+bpmRightBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+bpmRightBtn.Text = ">"
+bpmRightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+bpmRightBtn.TextScaled = true
+bpmRightBtn.BorderSizePixel = 0
+Instance.new("UICorner", bpmRightBtn).CornerRadius = UDim.new(0, 4)
+
+-- Increment Section
+local incFrame = Instance.new("Frame", tempoControlFrame)
+incFrame.Size = UDim2.new(1, -10, 0, 30)
+incFrame.Position = UDim2.new(0, 5, 0, 70)
+incFrame.BackgroundTransparency = 1
+
+-- Increment Left Button
+local incLeftBtn = Instance.new("TextButton", incFrame)
+incLeftBtn.Size = UDim2.new(0, 25, 1, 0)
+incLeftBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+incLeftBtn.Text = "<"
+incLeftBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+incLeftBtn.TextScaled = true
+incLeftBtn.BorderSizePixel = 0
+Instance.new("UICorner", incLeftBtn).CornerRadius = UDim.new(0, 4)
+
+-- Increment TextBox
+local BPMIncrementAdjust = Instance.new("TextBox", incFrame)
+BPMIncrementAdjust.Size = UDim2.new(1, -55, 1, 0)
+BPMIncrementAdjust.Position = UDim2.new(0, 30, 0, 0)
+BPMIncrementAdjust.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+BPMIncrementAdjust.Text = "10"
+BPMIncrementAdjust.PlaceholderText = "Increment (Default: 10)"
+BPMIncrementAdjust.TextColor3 = Color3.fromRGB(255, 255, 255)
+BPMIncrementAdjust.TextScaled = true
+BPMIncrementAdjust.Font = Enum.Font.SourceSans
+BPMIncrementAdjust.BorderSizePixel = 0
+Instance.new("UICorner", BPMIncrementAdjust).CornerRadius = UDim.new(0, 4)
+
+-- Increment Right Button
+local incRightBtn = Instance.new("TextButton", incFrame)
+incRightBtn.Size = UDim2.new(0, 25, 1, 0)
+incRightBtn.Position = UDim2.new(1, -25, 0, 0)
+incRightBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+incRightBtn.Text = ">"
+incRightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+incRightBtn.TextScaled = true
+incRightBtn.BorderSizePixel = 0
+Instance.new("UICorner", incRightBtn).CornerRadius = UDim.new(0, 4)
+
+-- Progress Bar Container
+-- Interactive Progress Slider Container
+local progressContainer = Instance.new("Frame", frame)
+progressContainer.Size = UDim2.new(1, -20, 0, 25)
+progressContainer.Position = UDim2.new(0, 10, 0, 300)
+progressContainer.BackgroundColor3 = colors.accent
+progressContainer.BorderSizePixel = 0
+Instance.new("UICorner", progressContainer).CornerRadius = UDim.new(0, 15)
+
+-- Progress Slider Track
+local progressTrack = Instance.new("Frame", progressContainer)
+progressTrack.Size = UDim2.new(1, -10, 0, 6)
+progressTrack.Position = UDim2.new(0, 5, 0.5, -3)
+progressTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+progressTrack.BorderSizePixel = 0
+Instance.new("UICorner", progressTrack).CornerRadius = UDim.new(0, 3)
+
+-- Progress Slider Fill
+local progressBar = Instance.new("Frame", progressTrack)
+progressBar.Size = UDim2.new(0, 0, 1, 0)
+progressBar.BackgroundColor3 = colors.primary
+progressBar.BorderSizePixel = 0
+Instance.new("UICorner", progressBar).CornerRadius = UDim.new(0, 3)
+
+-- Progress Slider Handle
+local progressHandle = Instance.new("Frame", progressContainer)
+progressHandle.Size = UDim2.new(0, 18, 0, 18)
+progressHandle.Position = UDim2.new(0, -9, 0.5, -9)
+progressHandle.BackgroundColor3 = colors.primary
+progressHandle.BorderSizePixel = 0
+progressHandle.ZIndex = 3
+Instance.new("UICorner", progressHandle).CornerRadius = UDim.new(0, 9)
+
+-- Handle highlight effect
+local handleHighlight = Instance.new("Frame", progressHandle)
+handleHighlight.Size = UDim2.new(0, 24, 0, 24)
+handleHighlight.Position = UDim2.new(0, -3, 0, -3)
+handleHighlight.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+handleHighlight.BackgroundTransparency = 0.9
+handleHighlight.BorderSizePixel = 0
+handleHighlight.ZIndex = 2
+handleHighlight.Visible = false
+Instance.new("UICorner", handleHighlight).CornerRadius = UDim.new(0, 12)
+
+-- Time Label
+local timeLabel = Instance.new("TextLabel", progressContainer)
+timeLabel.Size = UDim2.new(1, -10, 0, 15)
+timeLabel.Position = UDim2.new(0, 5, 1, -20)
+timeLabel.BackgroundTransparency = 1
+timeLabel.TextColor3 = colors.text
+timeLabel.TextSize = 15
+timeLabel.Font = Enum.Font.Gotham
+timeLabel.Text = "0:00 / 0:00"
+timeLabel.TextStrokeTransparency = 0
+timeLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+timeLabel.ZIndex = 5
+
+-- 🎈 Enhanced Float Mode GUI
+local floatMode = false
+
+-- Create modern float frame with better styling
+-- Recording Mode Variables
+local recordingMode = false
+local clickData = {count = 0, lastTime = 0, timer = nil}
+
+-- Float Frame
+local floatFrame = Instance.new("Frame")
+floatFrame.Size = UDim2.new(0, 180, 0, 120)
+floatFrame.Position = UDim2.new(1, -200, 0, 20)
+floatFrame.BackgroundColor3 = colors.background
+floatFrame.Active = true
+floatFrame.Visible = false
+floatFrame.BorderSizePixel = 0
+floatFrame.Parent = gui
+
+-- Invisible drag handle for float frame
+local floatDragHandle = Instance.new("Frame", floatFrame)
+floatDragHandle.Size = UDim2.new(1, 0, 0, 30)
+floatDragHandle.Position = UDim2.new(0, 0, 0, 0)
+floatDragHandle.BackgroundTransparency = 1
+floatDragHandle.Active = true
+
+local function updateFloatDrag(input)
+    if globals.isFloatDragging2 then
+        local delta = input.Position - globals.floatDragStart
+        floatFrame.Position = UDim2.new(globals.floatStartPos.X.Scale, globals.floatStartPos.X.Offset + delta.X, globals.floatStartPos.Y.Scale, globals.floatStartPos.Y.Offset + delta.Y)
+    end
+end
+
+floatDragHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        globals.isFloatDragging2 = true
+        globals.floatDragStart = input.Position
+        globals.floatStartPos = floatFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                globals.isFloatDragging2 = false
+            end
+        end)
+    end
+end)
+
+floatDragHandle.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        updateFloatDrag(input)
+    end
+end)
+
+globals.UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        updateFloatDrag(input)
+    end
+end)
+
+globals.UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        globals.isFloatDragging2 = false
+    end
+end)
+
+-- Add modern styling
+local floatCorner = Instance.new("UICorner", floatFrame)
+floatCorner.CornerRadius = UDim.new(0, 12)
+
+local floatStroke = Instance.new("UIStroke", floatFrame)
+floatStroke.Color = colors.primary
+floatStroke.Thickness = 1
+floatStroke.Transparency = 0.6
+
+-- Add subtle shadow effect
+local floatShadow = Instance.new("Frame", floatFrame)
+floatShadow.Size = UDim2.new(1, 4, 1, 4)
+floatShadow.Position = UDim2.new(0, -2, 0, -2)
+floatShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+floatShadow.BackgroundTransparency = 0.8
+floatShadow.ZIndex = -1
+Instance.new("UICorner", floatShadow).CornerRadius = UDim.new(0, 12)
+
+-- 🎵 Title Bar
+local floatTitle = Instance.new("TextLabel", floatFrame)
+floatTitle.Size = UDim2.new(1, -40, 0, 20)
+floatTitle.Position = UDim2.new(0, 5, 0, 5)
+floatTitle.BackgroundTransparency = 1
+floatTitle.TextColor3 = colors.primary
+floatTitle.Font = Enum.Font.GothamBold
+floatTitle.TextScaled = true
+floatTitle.Text = "♪ ChordRush"
+floatTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Recording Mode Toggle Button
+local recordingToggle = Instance.new("TextButton", floatFrame)
+recordingToggle.Size = UDim2.new(0, 20, 0, 20)
+recordingToggle.Position = UDim2.new(1, -38, 0, 5)
+recordingToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+recordingToggle.BorderSizePixel = 1
+recordingToggle.Text = "🔴"
+recordingToggle.TextSize = 15
+recordingToggle.TextColor3 = Color3.fromRGB(255, 100, 100)
+recordingToggle.Font = Enum.Font.Gotham
+recordingToggle.TextScaled = false
+
+-- Adding a UICorner to make the button round
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.5, 0)  -- This will make the button fully round
+corner.Parent = recordingToggle
+
+
+-- Toggle Recording Mode
+recordingToggle.MouseButton1Click:Connect(function()
+    recordingMode = not recordingMode
+    recordingToggle.Text = recordingMode and "🟢" or "🔴"
+    recordingToggle.TextColor3 = recordingMode and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    recordingToggle.BackgroundColor3 = recordingMode and Color3.fromRGB(50, 80, 50) or Color3.fromRGB(70, 70, 70)
+    
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = recordingMode and "Recording Mode Enabled" or "Recording Mode Disabled";
+        Text = recordingMode and "Float mode will hide and play after 3 seconds. Tap 3 times to unhide" or "Float panel will remain visible when playing songs.";
+        Duration = recordingMode and 8 or 5;
+    })
+end)
+
+-- 📊 Enhanced Status Display
+local statusContainer = Instance.new("Frame", floatFrame)
+statusContainer.Size = UDim2.new(1, -10, 0, 25)
+statusContainer.Position = UDim2.new(0, 5, 0, 90) -- Moved down
+statusContainer.BackgroundColor3 = colors.secondary
+statusContainer.BorderSizePixel = 0
+Instance.new("UICorner", statusContainer).CornerRadius = UDim.new(0, 6)
+
+local statusLabel = Instance.new("TextLabel", statusContainer)
+statusLabel.Size = UDim2.new(0.6, 0, 1, 0)
+statusLabel.Position = UDim2.new(0, 5, 0, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = colors.text
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextScaled = true
+statusLabel.Text = "Ready"
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Floating Progress Slider Container
+local floatProgressContainer = Instance.new("Frame", floatFrame)
+floatProgressContainer.Size = UDim2.new(1, -10, 0, 20)
+floatProgressContainer.Position = UDim2.new(0, 5, 0, 28)
+floatProgressContainer.BackgroundColor3 = colors.accent
+floatProgressContainer.BorderSizePixel = 0
+Instance.new("UICorner", floatProgressContainer).CornerRadius = UDim.new(0, 10)
+
+-- Floating Progress Slider Track
+local floatProgressTrack = Instance.new("Frame", floatProgressContainer)
+floatProgressTrack.Size = UDim2.new(1, -8, 0, 4)
+floatProgressTrack.Position = UDim2.new(0, 4, 0.5, -2)
+floatProgressTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+floatProgressTrack.BorderSizePixel = 0
+Instance.new("UICorner", floatProgressTrack).CornerRadius = UDim.new(0, 2)
+
+-- Floating Progress Slider Fill
+local floatProgressBar = Instance.new("Frame", floatProgressTrack)
+floatProgressBar.Size = UDim2.new(0, 0, 1, 0)
+floatProgressBar.Position = UDim2.new(0, 0, 0, 0)
+floatProgressBar.BackgroundColor3 = colors.primary
+floatProgressBar.BorderSizePixel = 0
+Instance.new("UICorner", floatProgressBar).CornerRadius = UDim.new(0, 2)
+
+-- Floating Progress Slider Handle
+local floatProgressHandle = Instance.new("Frame", floatProgressContainer)
+floatProgressHandle.Size = UDim2.new(0, 14, 0, 14)
+floatProgressHandle.Position = UDim2.new(0, -7, 0.5, -7)
+floatProgressHandle.BackgroundColor3 = colors.primary
+floatProgressHandle.BorderSizePixel = 0
+floatProgressHandle.ZIndex = 3
+Instance.new("UICorner", floatProgressHandle).CornerRadius = UDim.new(0, 7)
+
+-- Floating handle highlight
+local floatHandleHighlight = Instance.new("Frame", floatProgressHandle)
+floatHandleHighlight.Size = UDim2.new(0, 20, 0, 20)
+floatHandleHighlight.Position = UDim2.new(0, -3, 0, -3)
+floatHandleHighlight.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+floatHandleHighlight.BackgroundTransparency = 0.9
+floatHandleHighlight.BorderSizePixel = 0
+floatHandleHighlight.ZIndex = 2
+floatHandleHighlight.Visible = false
+Instance.new("UICorner", floatHandleHighlight).CornerRadius = UDim.new(0, 10)
+
+-- Floating Time Label
+local floatTimeLabel = Instance.new("TextLabel", floatProgressContainer)
+floatTimeLabel.Size = UDim2.new(1, -4, 0, 12)
+floatTimeLabel.Position = UDim2.new(0, 2, 0, 5)
+floatTimeLabel.BackgroundTransparency = 1
+floatTimeLabel.TextColor3 = colors.text
+floatTimeLabel.TextSize = 12
+floatTimeLabel.Font = Enum.Font.Gotham
+floatTimeLabel.Text = "0:00 / 0:00"
+floatTimeLabel.TextStrokeTransparency = 0
+floatTimeLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+floatTimeLabel.ZIndex = 99
+
+local floatBpmLabel = Instance.new("TextLabel", statusContainer)
+floatBpmLabel.Size = UDim2.new(0.4, -5, 1, 0)
+floatBpmLabel.Position = UDim2.new(0.6, 0, 0, 0)
+floatBpmLabel.BackgroundTransparency = 1
+floatBpmLabel.TextColor3 = colors.textSecondary
+floatBpmLabel.Font = Enum.Font.Gotham
+floatBpmLabel.TextScaled = true
+floatBpmLabel.Text = "BPM: 120"
+floatBpmLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+-- ⌨️ Keycode Definitions
+local AsciiKeys = {
+    ['a'] = Enum.KeyCode.A, ['b'] = Enum.KeyCode.B, ['c'] = Enum.KeyCode.C,
+    ['d'] = Enum.KeyCode.D, ['e'] = Enum.KeyCode.E, ['f'] = Enum.KeyCode.F,
+    ['g'] = Enum.KeyCode.G, ['h'] = Enum.KeyCode.H, ['i'] = Enum.KeyCode.I,
+    ['j'] = Enum.KeyCode.J, ['k'] = Enum.KeyCode.K, ['l'] = Enum.KeyCode.L,
+    ['m'] = Enum.KeyCode.M, ['n'] = Enum.KeyCode.N, ['o'] = Enum.KeyCode.O,
+    ['p'] = Enum.KeyCode.P, ['q'] = Enum.KeyCode.Q, ['r'] = Enum.KeyCode.R,
+    ['s'] = Enum.KeyCode.S, ['t'] = Enum.KeyCode.T, ['u'] = Enum.KeyCode.U,
+    ['v'] = Enum.KeyCode.V, ['w'] = Enum.KeyCode.W, ['x'] = Enum.KeyCode.X,
+    ['y'] = Enum.KeyCode.Y, ['z'] = Enum.KeyCode.Z,
+
+    ['0'] = Enum.KeyCode.Zero, ['1'] = Enum.KeyCode.One, ['2'] = Enum.KeyCode.Two,
+    ['3'] = Enum.KeyCode.Three, ['4'] = Enum.KeyCode.Four, ['5'] = Enum.KeyCode.Five,
+    ['6'] = Enum.KeyCode.Six, ['7'] = Enum.KeyCode.Seven, ['8'] = Enum.KeyCode.Eight,
+    ['9'] = Enum.KeyCode.Nine,
+}
+
+local SymbolKeyCodes = {
+    ["!"] = Enum.KeyCode.One, ["@"] = Enum.KeyCode.Two, ["#"] = Enum.KeyCode.Three,
+    ["$"] = Enum.KeyCode.Four, ["%"] = Enum.KeyCode.Five, ["^"] = Enum.KeyCode.Six,
+    ["&"] = Enum.KeyCode.Seven, ["*"] = Enum.KeyCode.Eight, ["("] = Enum.KeyCode.Nine,
+    [")"] = Enum.KeyCode.Zero,
+}
+
+local shiftKey = Enum.KeyCode.LeftShift
+
+local MidiProcessor = {}
+MidiProcessor.__index = MidiProcessor
+
+function MidiProcessor.new()
+    local self = setmetatable({}, MidiProcessor)
+    
+    self.startSequence = {
+        {0x4D, 0x54, 0x68, 0x64},
+        {0x4D, 0x54, 0x72, 0x6B},
+        {0xFF}
+    }
+    
+    self.typeDict = {
+        [0x00] = "Sequence Number",
+        [0x01] = "Text Event",
+        [0x02] = "Copyright Notice",
+        [0x03] = "Sequence/Track Name",
+        [0x04] = "Instrument Name",
+        [0x05] = "Lyric",
+        [0x06] = "Marker",
+        [0x07] = "Cue Point",
+        [0x20] = "MIDI Channel Prefix",
+        [0x2F] = "End of Track",
+        [0x51] = "Set Tempo",
+        [0x54] = "SMTPE Offset",
+        [0x58] = "Time Signature",
+        [0x59] = "Key Signature",
+        [0x7F] = "Sequencer-Specific Meta-event",
+        [0x21] = "Prefix Port",
+        [0x09] = "Other text format [0x09]",
+        [0x08] = "Other text format [0x08]",
+        [0x0A] = "Other text format [0x0A]",
+        [0x0C] = "Other text format [0x0C]"
+    }
+    
+    self.virtualPianoScale = {"1", "!", "2", "@", "3", "4", "$", "5", "%", "6", "^", "7", "8", "*", "9", "(", "0", "q", "Q", "w", "W", "e", "E", "r", "t", "T", "y", "Y", "u", "i", "I", "o", "O", "p", "P", "a", "s", "S", "d", "D", "f", "g", "G", "h", "H", "j", "J", "k", "l", "L", "z", "Z", "x", "c", "C", "v", "V", "b", "B", "n", "m"}
+    
+    return self
+end
+
+function MidiProcessor:processMidiBytes(bytes)
+    self.bytes = bytes
+    self.itr = 1
+    self.runningStatus = -1
+    self.tempo = 0
+    self.deltaTime = 0
+    self.keyPressCount = 0
+    self.startCounter = {0, 0, 0}
+    self.runningStatusSet = false
+    self.events = {}
+    self.notes = {}
+    self.division = 480
+    
+    self:readEvents()
+    self:cleanNotes()
+    
+    return {
+        notes = self.notes,
+        keyPressCount = self.keyPressCount
+    }
+end
+
+-- Process MIDI with optional chord detection (removed humanization)
+function MidiProcessor:processMidiBytesWithChords(bytes, chordWindow, detectChords)
+    detectChords = detectChords or false
+    chordWindow = chordWindow or 0.05  -- 50ms default
+    
+    self.bytes = bytes
+    self.itr = 1
+    self.runningStatus = -1
+    self.tempo = 0
+    self.deltaTime = 0
+    self.keyPressCount = 0
+    self.startCounter = {0, 0, 0}
+    self.runningStatusSet = false
+    self.events = {}
+    self.notes = {}
+    self.division = 480
+    
+    self:readEvents()
+    self:cleanNotes()
+    
+    if detectChords then
+        self:detectChords(chordWindow)
+    end
+    
+    return {
+        notes = self.notes,
+        keyPressCount = self.keyPressCount
+    }
+end
+
+-- Fix sustain issues by ensuring proper note-off timing
+function MidiProcessor:fixSustain()
+    -- Don't modify the notes, just ensure they're properly sorted
+    -- The MIDI parser should already have correct note-on/note-off timing
+    table.sort(self.notes, function(a, b) return a[1] < b[1] end)
+    
+    -- Validate note pairs but don't modify timing
+    local activeNotes = {}  -- Track active notes: key -> {time, count}
+    local validatedNotes = {}
+    
+    for _, note in ipairs(self.notes) do
+        local time = note[1]
+        local noteData = note[2]
+        
+        if string.find(noteData, "tempo") then
+            -- Keep tempo events as-is
+            table.insert(validatedNotes, note)
+        elseif string.find(noteData, "~") then
+            -- Note-off event
+            local noteKey = string.sub(noteData, 2) -- Remove ~ prefix
+            
+            if activeNotes[noteKey] and activeNotes[noteKey].count > 0 then
+                -- Valid note-off, decrease count
+                activeNotes[noteKey].count = activeNotes[noteKey].count - 1
+                if activeNotes[noteKey].count == 0 then
+                    activeNotes[noteKey] = nil
+                end
+                table.insert(validatedNotes, note)
+            else
+                -- Orphaned note-off - skip it to prevent invalid sustain
+                -- This helps fix notes being held longer than expected
+            end
+        else
+            -- Note-on event(s)
+            if #noteData == 1 then
+                -- Single note
+                if not activeNotes[noteData] then
+                    activeNotes[noteData] = {time = time, count = 1}
+                else
+                    activeNotes[noteData].count = activeNotes[noteData].count + 1
+                end
+                table.insert(validatedNotes, note)
+            else
+                -- Chord - handle each note individually
+                for i = 1, #noteData do
+                    local noteKey = string.sub(noteData, i, i)
+                    if not activeNotes[noteKey] then
+                        activeNotes[noteKey] = {time = time, count = 1}
+                    else
+                        activeNotes[noteKey].count = activeNotes[noteKey].count + 1
+                    end
+                end
+                table.insert(validatedNotes, note)
+            end
+        end
+    end
+    
+    self.notes = validatedNotes
+end
+
+function MidiProcessor:checkStartSequence()
+    for i = 1, #self.startSequence do
+        if #self.startSequence[i] == self.startCounter[i] then
+            return true
+        end
+    end
+    return false
+end
+
+function MidiProcessor:readLength()
+    local length = 0
+    local contFlag = true
+    
+    while contFlag and self.itr <= #self.bytes do
+        local byte = self.bytes[self.itr]
+        if bit32.rshift(bit32.band(byte, 0x80), 7) == 1 then
+            length = bit32.lshift(length, 7) + bit32.band(byte, 0x7F)
+        else
+            contFlag = false
+            length = bit32.lshift(length, 7) + bit32.band(byte, 0x7F)
+        end
+        self.itr = self.itr + 1
+    end
+    return length
+end
+
+function MidiProcessor:getInt(i)
+    local k = 0
+    for n = 0, i - 1 do
+        if self.itr + n <= #self.bytes then
+            k = bit32.lshift(k, 8) + self.bytes[self.itr + n]
+        end
+    end
+    self.itr = self.itr + i
+    return k
+end
+
+function MidiProcessor:readMThd()
+    self.headerLength = self:getInt(4)
+    self.format = self:getInt(2)
+    self.tracks = self:getInt(2)
+    local div = self:getInt(2)
+    self.divisionType = bit32.rshift(bit32.band(div, 0x8000), 15)
+    self.division = bit32.band(div, 0x7FFF)
+end
+
+function MidiProcessor:readMTrk()
+    local length = self:getInt(4)
+    self:readMidiTrackEvent(length)
+end
+
+function MidiProcessor:readText(length)
+    local s = ""
+    local start = self.itr
+    while self.itr < length + start and self.itr <= #self.bytes do
+        s = s .. string.char(self.bytes[self.itr])
+        self.itr = self.itr + 1
+    end
+    return s
+end
+
+function MidiProcessor:readMidiMetaEvent(deltaT)
+    if self.itr > #self.bytes then return false end
+    
+    local eventType = self.bytes[self.itr]
+    self.itr = self.itr + 1
+    local length = self:readLength()
+    
+    if eventType == 0x2F then
+        self.itr = self.itr + 2
+        return false
+    elseif eventType == 0x01 or eventType == 0x02 or eventType == 0x03 or eventType == 0x04 or 
+           eventType == 0x05 or eventType == 0x06 or eventType == 0x07 or eventType == 0x08 or 
+           eventType == 0x09 or eventType == 0x0A or eventType == 0x0C then
+        self:readText(length)
+    elseif eventType == 0x51 then
+        local tempo = math.floor(60000000 / self:getInt(3) + 0.5)
+        self.tempo = tempo
+        table.insert(self.notes, {self.deltaTime / self.division, "tempo=" .. tempo})
+    else
+        self.itr = self.itr + length
+    end
+    return true
+end
+
+function MidiProcessor:readMidiTrackEvent(length)
+    self.deltaTime = 0
+    local start = self.itr
+    local continueFlag = true
+    
+    while length > self.itr - start and continueFlag and self.itr <= #self.bytes do
+        local deltaT = self:readLength()
+        self.deltaTime = self.deltaTime + deltaT
+        
+        if self.itr <= #self.bytes then
+            if self.bytes[self.itr] == 0xFF then
+                self.itr = self.itr + 1
+                continueFlag = self:readMidiMetaEvent(deltaT)
+            elseif self.bytes[self.itr] >= 0xF0 and self.bytes[self.itr] <= 0xF7 then
+                self.runningStatusSet = false
+                self.runningStatus = -1
+            else
+                self:readVoiceEvent(deltaT)
+            end
+        end
+    end
+    self.itr = start + length
+end
+
+function MidiProcessor:readVoiceEvent(deltaT)
+    if self.itr > #self.bytes then return end
+    
+    local eventType
+    if self.bytes[self.itr] < 0x80 and self.runningStatusSet then
+        eventType = self.runningStatus
+    else
+        eventType = self.bytes[self.itr]
+        if eventType >= 0x80 and eventType <= 0xF7 then
+            self.runningStatus = eventType
+            self.runningStatusSet = true
+        end
+        self.itr = self.itr + 1
+    end
+    
+    if self.itr + 1 > #self.bytes then return end
+    
+    if bit32.rshift(eventType, 4) == 0x9 then
+        local key = self.bytes[self.itr]
+        self.itr = self.itr + 1
+        local velocity = self.bytes[self.itr]
+        self.itr = self.itr + 1
+        
+        local map = key - 36
+        while map >= #self.virtualPianoScale do
+            map = map - 12
+        end
+        while map < 0 do
+            map = map + 12
+        end
+        map = map + 1
+        
+        if velocity == 0 then
+            table.insert(self.notes, {self.deltaTime / self.division, "~" .. self.virtualPianoScale[map]})
+        else
+            table.insert(self.notes, {self.deltaTime / self.division, self.virtualPianoScale[map]})
+            self.keyPressCount = self.keyPressCount + 1
+        end
+        
+    elseif bit32.rshift(eventType, 4) == 0x8 then
+        local key = self.bytes[self.itr]
+        self.itr = self.itr + 1
+        local velocity = self.bytes[self.itr]
+        self.itr = self.itr + 1
+        
+        local map = key - 36
+        while map >= #self.virtualPianoScale do
+            map = map - 12
+        end
+        while map < 0 do
+            map = map + 12
+        end
+        map = map + 1
+        
+        table.insert(self.notes, {self.deltaTime / self.division, "~" .. self.virtualPianoScale[map]})
+        
+    elseif not (bit32.rshift(eventType, 4) == 0x8 or bit32.rshift(eventType, 4) == 0x9 or 
+                bit32.rshift(eventType, 4) == 0xA or bit32.rshift(eventType, 4) == 0xB or 
+                bit32.rshift(eventType, 4) == 0xD or bit32.rshift(eventType, 4) == 0xE) then
+        self.itr = self.itr + 1
+    else
+        self.itr = self.itr + 2
+    end
+end
+
+function MidiProcessor:readEvents()
+    while self.itr + 1 <= #self.bytes do
+        for i = 1, #self.startCounter do
+            self.startCounter[i] = 0
+        end
+        
+        while self.itr + 1 <= #self.bytes and not self:checkStartSequence() do
+            for i = 1, #self.startSequence do
+                if self.itr <= #self.bytes and self.bytes[self.itr] == self.startSequence[i][self.startCounter[i] + 1] then
+                    self.startCounter[i] = self.startCounter[i] + 1
+                else
+                    self.startCounter[i] = 0
+                end
+            end
+            
+            self.itr = self.itr + 1
+            
+            if self.startCounter[1] == 4 then
+                self:readMThd()
+            elseif self.startCounter[2] == 4 then
+                self:readMTrk()
+            end
+        end
+    end
+end
+
+function MidiProcessor:cleanNotes()
+    -- Sort notes by time
+    table.sort(self.notes, function(a, b) return a[1] < b[1] end)
+    
+    -- Remove exact duplicates only
+    local i = 1
+    while i < #self.notes do
+        local aTime = self.notes[i][1]
+        local bTime = self.notes[i + 1][1]
+        local aNotes = self.notes[i][2]
+        local bNotes = self.notes[i + 1][2]
+        
+        -- Only remove exact duplicates (same time and same note)
+        if aTime == bTime and aNotes == bNotes then
+            table.remove(self.notes, i + 1)
+        else
+            i = i + 1
+        end
+    end
+end
+
+-- Detect and group chords based on timing windows
+function MidiProcessor:detectChords(chordWindow)
+    chordWindow = chordWindow or 0.05  -- Default 50ms window for chord detection
+    
+    local groupedNotes = {}
+    local currentGroup = {}
+    local groupStartTime = nil
+    
+    for _, note in ipairs(self.notes) do
+        local time = note[1]
+        local noteData = note[2]
+        
+        -- Skip tempo and release events for chord detection
+        if not string.find(noteData, "tempo") and not string.find(noteData, "~") then
+            if #currentGroup == 0 then
+                -- Start new group
+                groupStartTime = time
+                table.insert(currentGroup, note)
+            elseif time - groupStartTime <= chordWindow then
+                -- Add to current group
+                table.insert(currentGroup, note)
+            else
+                -- Process current group and start new one
+                if #currentGroup == 1 then
+                    -- Single note
+                    table.insert(groupedNotes, currentGroup[1])
+                else
+                    -- Chord - combine notes but keep original timing
+                    local chordKeys = ""
+                    for _, chordNote in ipairs(currentGroup) do
+                        chordKeys = chordKeys .. chordNote[2]
+                    end
+                    -- Remove duplicates in chord
+                    local uniqueKeys = self:removeDuplicateChars(chordKeys)
+                    table.insert(groupedNotes, {groupStartTime, uniqueKeys})
+                end
+                
+                -- Start new group
+                currentGroup = {note}
+                groupStartTime = time
+            end
+        else
+            -- Add tempo and release events as-is
+            table.insert(groupedNotes, note)
+        end
+    end
+    
+    -- Process final group
+    if #currentGroup > 0 then
+        if #currentGroup == 1 then
+            table.insert(groupedNotes, currentGroup[1])
+        else
+            local chordKeys = ""
+            for _, chordNote in ipairs(currentGroup) do
+                chordKeys = chordKeys .. chordNote[2]
+            end
+            local uniqueKeys = self:removeDuplicateChars(chordKeys)
+            table.insert(groupedNotes, {groupStartTime, uniqueKeys})
+        end
+    end
+    
+    self.notes = groupedNotes
+end
+
+-- Helper function to remove duplicate characters in a string
+function MidiProcessor:removeDuplicateChars(str)
+    local seen = {}
+    local result = ""
+    
+    for i = 1, #str do
+        local char = string.sub(str, i, i)
+        if not seen[char] then
+            seen[char] = true
+            result = result .. char
+        end
+    end
+    
+    return result
+end
+
+function MidiProcessor:formatOutput()
+    local output = ""
+    for _, note in ipairs(self.notes) do
+        local time = note[1]
+        local keys = note[2]
+        output = output .. string.format('{ time = %.6f, keys = "%s" },\n', time, keys)
+    end
+    return output
+end
+
+-- File handling functions
+local function readMidiFile(filePath)
+    local success, result = pcall(function()
+        return readfile(filePath)
+    end)
+    
+    if success then
+        local bytes = {}
+        for i = 1, #result do
+            table.insert(bytes, string.byte(result, i))
+        end
+        return bytes
+    else
+        warn("Failed to read file: " .. filePath)
+        return nil
+    end
+end
+
+local function getFolderCategories()
+    local categories = {}
+    local success, entries = pcall(function()
+        return listfiles("ChordRushMidi")
+    end)
+    if success then
+        for _, path in ipairs(entries) do
+            path = path:gsub("\\", "/")
+            local name = path:match("ChordRushMidi/([^/\\]+)[/\\]?$")
+            if name and not name:find("%.") then
+                local isFolder = pcall(function()
+                    local inside = listfiles("ChordRushMidi/" .. name)
+                    return typeof(inside) == "table"
+                end)
+                table.insert(categories, name)
+            end
+        end
+    end
+    return categories
+end
+
+local function getMidiFilesFromCategory(category)
+    local midiFiles = {}
+    local folderPath = "ChordRushMidi/" .. category
+    
+    local success, files = pcall(function()
+        return listfiles(folderPath)
+    end)
+    
+    if success then
+        for _, file in ipairs(files) do
+            if string.lower(string.sub(file, -4)) == ".mid" or string.lower(string.sub(file, -4)) == ".smf" then
+                table.insert(midiFiles, file)
+            end
+        end
+    end
+    
+    return midiFiles
+end
+
+-- New function to get MIDI files directly from ChordRushMidi root
+local function getRootMidiFiles()
+    local rootMidiFiles = {}
+    local success, files = pcall(function()
+        return listfiles("ChordRushMidi")
+    end)
+    
+    if success then
+        for _, file in ipairs(files) do
+            if not isfolder(file) and (string.lower(string.sub(file, -4)) == ".mid" or string.lower(string.sub(file, -4)) == ".smf") then
+                table.insert(rootMidiFiles, file)
+            end
+        end
+    end
+    
+    return rootMidiFiles
+end
+
+-- Universal HTTP request fallback
+local function getHttp()
+    return syn and syn.request
+        or http and http.request
+        or http_request
+        or request
+        or (fluxus and fluxus.request)
+        or (isexecutorclosure and isexecutorclosure().request)
+        or nil
+end
+
+-- Encode unsafe characters for GitHub URLs
+local function urlEncode(str)
+	return str:gsub("([^%w%-%_%.%~])", function(c)
+		return string.format("%%%02X", string.byte(c))
+	end)
+end
+
+-- Modified loader for each category
+function loadCategoryByCode(code)
+	local cat = githubConfig.PRESET_CATEGORIES[code + 1]
+	if not cat or not cat.returnFile then return end
+
+	-- Lua file is safe to load with HttpGet
+	local success, result = pcall(function()
+		return game:HttpGet(githubConfig.GITHUB_RETURN_URL .. cat.returnFile)
+	end)
+
+	if success then
+		local songList = loadstring(result)()
+		globals.CachedGitHubSongs[cat.name] = {}
+
+		for _, songName in ipairs(songList) do
+			local songUrl = githubConfig.GITHUB_PRESET_URL .. urlEncode(cat.name) .. "/" .. urlEncode(songName)
+
+			local httpRequest = getHttp()
+			if not httpRequest then
+				warn("❌ HTTP not supported on this executor.")
+				return
+			end
+
+			local ok, response = pcall(function()
+				return httpRequest({
+					Url = songUrl,
+					Method = "GET"
+				})
+			end)
+
+			if ok and response and response.StatusCode == 200 and response.Body then
+				local fileData = response.Body
+				local bytes = {}
+				for i = 1, #fileData do
+					bytes[i] = string.byte(fileData, i)
+				end
+
+				local processor = MidiProcessor.new()
+				local processed = processor:processMidiBytes(bytes)
+
+				local formattedNotes = {}
+				for _, note in ipairs(processed.notes) do
+					table.insert(formattedNotes, { time = note[1], keys = note[2] })
+				end
+
+				globals.CachedGitHubSongs[cat.name][songName] = {
+					notes = formattedNotes,
+					bpm = processor.tempo or 120
+				}
+
+				-- UI update
+				if songInfoLabel and currentCategory == cat.name then
+					songInfoLabel.Text = "Loading " .. cat.name .. " Preset Songs..."
+					refreshRightSongList()
+				end
+			else
+				warn("❌ Failed to load")
+			end
+		end
+
+		globals.categoriesLoaded += 1
+		if globals.categoriesLoaded == 7 then
+			globals.allsongspreloaded = true
+			print("✅ All preset songs are fully preloaded.")
+		end
+	end
+end
+
+function preloadAllPresetSongs()
+	for code = 1, 7 do
+		task.spawn(function()
+			loadCategoryByCode(code)
+		end)
+	end
+end
+
+local function getTotalCachedSongs()
+    local total = 0
+    for _, categorySongs in pairs(globals.CachedGitHubSongs) do
+        for _ in pairs(categorySongs) do
+            total += 1
+        end
+    end
+    return total
+end
+
+-- Updated function to get all MIDI files from all categories + root
+local function getAllMidiFiles()
+    local allMidiFiles = {}
+    local categories = getFolderCategories()
+    
+    -- Add files from category folders
+    for _, category in ipairs(categories) do
+        local categoryFiles = getMidiFilesFromCategory(category)
+        for _, file in ipairs(categoryFiles) do
+            table.insert(allMidiFiles, {
+                filePath = file,
+                category = category
+            })
+        end
+    end
+    
+    -- Add files from root ChordRushMidi folder
+    local rootFiles = getRootMidiFiles()
+    for _, file in ipairs(rootFiles) do
+        table.insert(allMidiFiles, {
+            filePath = file,
+            category = "Root"
+        })
+    end
+    
+    return allMidiFiles
+end
+
+local function fetchPresetList(category)
+    if category == "All Songs" then
+        -- Combine all category return files
+        local allSongs = {}
+        for _, cat in ipairs(githubConfig.PRESET_CATEGORIES) do
+            if cat.returnFile then
+                local success, result = pcall(function()
+                    return game:HttpGet(githubConfig.GITHUB_RETURN_URL .. cat.returnFile)
+                end)
+                if success then
+                    local songs = loadstring(result)()
+                    for _, song in ipairs(songs) do
+                        table.insert(allSongs, {name = song, category = cat.name})
+                    end
+                end
+            end
+        end
+        return allSongs
+    else
+        -- Fetch specific category return file
+        local returnFile = nil
+        for _, cat in ipairs(githubConfig.PRESET_CATEGORIES) do
+            if cat.name == category then
+                returnFile = cat.returnFile
+                break
+            end
+        end
+        
+        if returnFile then
+            local success, result = pcall(function()
+                return game:HttpGet(githubConfig.GITHUB_RETURN_URL .. returnFile)
+            end)
+            if success then
+                local songs = loadstring(result)()
+                local songList = {}
+                for _, song in ipairs(songs) do
+                    table.insert(songList, {name = song, category = category})
+                end
+                return songList
+            end
+        end
+    end
+    return {}
+end
+
+local function loadPresetSong(songName, category)
+    if globals.CachedGitHubSongs[category] and globals.CachedGitHubSongs[category][songName] then
+        local songData = globals.CachedGitHubSongs[category][songName]
+        return songData.notes, songData.bpm
+    end
+
+    -- fallback: if not in cache (shouldn’t happen if preload worked)
+    local binPath = githubConfig.GITHUB_PRESET_URL .. category .. "/" .. songName
+    local success, result = pcall(function()
+        return game:HttpGet(binPath)
+    end)
+
+    if success then
+        local bytes = {}
+        for i = 1, #result do
+            table.insert(bytes, string.byte(result, i))
+        end
+
+        local processor = MidiProcessor.new()
+        local processed = processor:processMidiBytes(bytes)
+
+        local formattedNotes = {}
+        for _, note in ipairs(processed.notes) do
+            table.insert(formattedNotes, { time = note[1], keys = note[2] })
+        end
+
+        return formattedNotes, processor.tempo or 120
+    end
+
+    return nil, nil
+end
+
+--- 🎵 Song State
+local notes, songName = {}, ""
+local playing, paused, stopRequested = false, false, false
+local loopMode = false
+
+-- Progress update variables
+local progressUpdateConnection = nil
+
+-- 🎵 Tempo Management Functions
+local function extractTempoMarkers(notesArray)
+    local markers = {}
+    for _, note in ipairs(notesArray) do
+        if note.keys:match("^tempo=(%d+)$") then
+            local bpm = tonumber(note.keys:match("tempo=(%d+)"))
+            if bpm then
+                table.insert(markers, {time = note.time, bpm = bpm})
+            end
+        end
+    end
+    table.sort(markers, function(a, b) return a.time < b.time end)
+    return markers
+end
+
+local function getCurrentTempoBPM(songTime)
+    if not usetempo or #tempoMarkers == 0 then
+        return manualBpm
+    end
+    
+    -- Find the most recent tempo marker that's <= current song time
+    local activeBpm = manualBpm -- Default fallback
+    for _, marker in ipairs(tempoMarkers) do
+        if songTime >= marker.time then
+            activeBpm = marker.bpm
+        else
+            break -- Since markers are sorted by time
+        end
+    end
+    
+    return activeBpm
+end
+
+-- 🧠 Utility Function
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local heldKeys = {} -- Keep track of held keys
+
+local function safeKeyPress(keyCode)
+    if keyCode and Enum.KeyCode then
+        local success, result = pcall(function()
+            VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+        end)
+        if not success then warn("❌ Failed to press key:", keyCode, result) end
+    end
+end
+
+local function safeKeyRelease(keyCode)
+    if keyCode and Enum.KeyCode then
+        local success, result = pcall(function()
+            VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+        end)
+        if not success then warn("❌ Failed to release key:", keyCode, result) end
+    end
+end
+
+local function pressKey(char)
+    local keyCode = AsciiKeys[char:lower()]
+    local symbolCode = SymbolKeyCodes[char]
+    if symbolCode then
+        safeKeyPress(shiftKey)
+        safeKeyPress(symbolCode)
+        safeKeyRelease(shiftKey)
+        heldKeys[char] = symbolCode
+    elseif keyCode then
+        if char ~= char:lower() then
+            safeKeyPress(shiftKey)
+            safeKeyPress(keyCode)
+            safeKeyRelease(shiftKey)
+        else
+            safeKeyPress(keyCode)
+        end
+        heldKeys[char] = keyCode
+    end
+end
+
+local function releaseKey(char)
+    if heldKeys[char] then
+        safeKeyRelease(heldKeys[char])
+        heldKeys[char] = nil
+    end
+end
+
+local function releaseAllKeys()
+    for char, keyCode in pairs(heldKeys) do
+        safeKeyRelease(keyCode)
+    end
+    heldKeys = {}
+    safeKeyRelease(shiftKey)
+end
+
+local function parseNotes(txt)
+    local t = {}
+    for line in txt:gmatch("[^\r\n]+") do
+        local time, keys = line:match('{%s*time%s*=%s*([%d%.]+)%s*,%s*keys%s*=%s*"([^"]-)"%s*}')
+        if time and keys then
+            table.insert(t, { time = tonumber(time), keys = keys })
+        end
+    end
+    table.sort(t, function(a, b) return a.time < b.time end)
+    if #t > 0 then
+        local offset = t[1].time
+        local adjusted = {}
+        for _, v in ipairs(t) do
+            table.insert(adjusted, { time = v.time - offset, keys = v.keys })
+        end
+        return adjusted
+    end
+    return t
+end
+
+-- 📊 Enhanced Duration Calculation with BPM Changes
+local function calculateSongDuration(notesArray, initialBpm, useTempoMarkers)
+    if #notesArray == 0 then return 0 end
+    
+    local totalRealTime = 0
+    local currentBpm = initialBpm
+    local lastBeatTime = 0
+    
+    -- Get all tempo markers first
+    local tempoMarkersForCalc = {}
+    if useTempoMarkers then
+        for _, note in ipairs(notesArray) do
+            if note.keys:match("^tempo=(%d+)$") then
+                local bpm = tonumber(note.keys:match("tempo=(%d+)"))
+                if bpm then
+                    table.insert(tempoMarkersForCalc, {time = note.time, bpm = bpm})
+                end
+            end
+        end
+        table.sort(tempoMarkersForCalc, function(a, b) return a.time < b.time end)
+    end
+    
+    -- Find the last note with actual content (not just tempo markers)
+    local lastNoteTime = 0
+    for _, note in ipairs(notesArray) do
+        if not note.keys:match("^tempo=(%d+)$") then
+            lastNoteTime = math.max(lastNoteTime, note.time)
+        end
+    end
+    
+    if lastNoteTime == 0 then return 0 end
+    
+    -- Calculate duration by processing each tempo segment
+    local segmentStart = 0
+    local segmentBpm = initialBpm
+    
+    if useTempoMarkers and #tempoMarkersForCalc > 0 then
+        for _, marker in ipairs(tempoMarkersForCalc) do
+            if marker.time <= lastNoteTime then
+                -- Calculate time for this segment
+                local segmentBeats = marker.time - segmentStart
+                if segmentBeats > 0 then
+                    local beatDuration = 60 / segmentBpm
+                    totalRealTime = totalRealTime + (segmentBeats * beatDuration)
+                end
+                
+                -- Move to next segment
+                segmentStart = marker.time
+                segmentBpm = marker.bpm
+            end
+        end
+    end
+    
+    -- Calculate remaining time from last tempo change to end
+    local remainingBeats = lastNoteTime - segmentStart
+    if remainingBeats > 0 then
+        local beatDuration = 60 / segmentBpm
+        totalRealTime = totalRealTime + (remainingBeats * beatDuration)
+    end
+    
+    return totalRealTime
+end
+
+local function formatTime(seconds)
+    local minutes = math.floor(seconds / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%d:%02d", minutes, secs)
+end
+
+-- 🔄 BPM Update Function (FIXED)
+local function updateBPM(newBpm, recalculateDuration)
+    currentBpm = newBpm
+    bpmInput.Text = tostring(currentBpm)
+    if recalculateDuration then
+        globals.currentSongDuration = calculateSongDuration(notes, currentBpm, usetempo)
+        print("🎵 BPM updated to " .. currentBpm .. ", new duration: " .. formatTime(globals.currentSongDuration))
+    end
+end
+
+local function updateProgressDisplay()
+   if globals.currentSongDuration > 0 then
+       local progress = math.min(globals.currentSongTime / globals.currentSongDuration, 1)
+       
+       -- Update main progress slider
+       if not globals.isDragging then
+           progressBar.Size = UDim2.new(progress, 0, 1, 0)
+           progressHandle.Position = UDim2.new(progress, -progressHandle.Size.X.Offset / 2, 0.5, -progressHandle.Size.Y.Offset / 2)
+       end
+       
+       -- Update floating progress slider
+       if not globals.isFloatDragging then
+           floatProgressBar.Size = UDim2.new(progress, 0, 1, 0)
+           floatProgressHandle.Position = UDim2.new(progress, -floatProgressHandle.Size.X.Offset / 2, 0.5, -floatProgressHandle.Size.Y.Offset / 2)
+       end
+       
+       -- Update time labels
+       local timeText = formatTime(globals.currentSongTime) .. " / " .. formatTime(globals.currentSongDuration)
+       timeLabel.Text = timeText
+       floatTimeLabel.Text = timeText
+   else
+       -- Handle case when no song is loaded
+       local timeText = "0:00 / 0:00"
+       timeLabel.Text = timeText
+       floatTimeLabel.Text = timeText
+   end
+end
+
+local function calculateRealTimeFromBeatPosition(beatPosition, tempoMarkers, initialBpm, useTempoMarkers)
+    if not useTempoMarkers or #tempoMarkers == 0 then
+        return beatPosition * (60 / initialBpm)
+    end
+
+    local totalRealTime = 0
+    local currentBpm = initialBpm
+    local lastBeatTime = 0
+
+for _, marker in ipairs(tempoMarkers) do
+    if marker.time <= beatPosition then
+        -- Calculate time for this segment
+        local segmentBeats = marker.time - lastBeatTime
+        if segmentBeats > 0 then
+            local beatDuration = 60 / currentBpm
+            totalRealTime = totalRealTime + (segmentBeats * beatDuration)
+        end
+
+        -- Move to next segment
+        lastBeatTime = marker.time
+        currentBpm = marker.bpm
+    else
+        break
+    end
+end
+
+
+    -- Calculate remaining time from last tempo change to target position
+    local remainingBeats = beatPosition - lastBeatTime
+    if remainingBeats > 0 then
+        local beatDuration = 60 / currentBpm
+        totalRealTime = totalRealTime + (remainingBeats * beatDuration)
+    end
+
+    return totalRealTime
+end
+
+local function calculateBeatPositionFromRealTime(realTime, tempoMarkers, initialBpm, useTempoMarkers)
+    if not useTempoMarkers or #tempoMarkers == 0 then
+        return realTime / (60 / initialBpm)
+    end
+
+    local totalBeats = 0
+    local currentBpm = initialBpm
+    local lastBeatTime = 0
+    local remainingRealTime = realTime
+
+    for _, marker in ipairs(tempoMarkers) do
+        -- Calculate time for this segment
+        local segmentBeats = marker.time - lastBeatTime
+        if segmentBeats > 0 then
+            local beatDuration = 60 / currentBpm
+            local segmentRealTime = segmentBeats * beatDuration
+            
+            if remainingRealTime <= segmentRealTime then
+                -- Target time is within this segment
+                return totalBeats + (remainingRealTime / beatDuration)
+            end
+            
+            remainingRealTime = remainingRealTime - segmentRealTime
+            totalBeats = totalBeats + segmentBeats
+        end
+
+        -- Move to next segment
+        lastBeatTime = marker.time
+        currentBpm = marker.bpm
+    end
+
+    -- Calculate remaining beats from last tempo change
+    if remainingRealTime > 0 then
+        local beatDuration = 60 / currentBpm
+        totalBeats = totalBeats + (remainingRealTime / beatDuration)
+    end
+
+    return totalBeats
+end
+
+-- Update seekToTime function
+local function seekToTime(targetTime)
+    if globals.currentSongDuration == 0 then return end
+    local now = tick()
+    if now - globals.lastSeekTime < globals.seekCooldown then return end
+    globals.lastSeekTime = now
+    targetTime = math.max(0, math.min(targetTime, globals.currentSongDuration))
+    globals.currentSongTime = targetTime
+    songBeatPosition = calculateBeatPositionFromRealTime(targetTime, tempoMarkers, 
+        usetempo and (#tempoMarkers > 0 and tempoMarkers[1].bpm or currentBpm) or currentBpm, usetempo)
+    if usetempo then
+        local expectedBpm = getCurrentTempoBPM(songBeatPosition)
+        if expectedBpm ~= currentBpm then
+            currentBpm = expectedBpm
+            updateBPM(expectedBpm, false)
+        end
+    end
+    releaseAllKeys()
+    currentNoteIndex = 1
+    for i = 1, #notes do
+        if notes[i].time < songBeatPosition then
+            currentNoteIndex = i + 1
+        else
+            break
+        end
+    end
+    if currentNoteIndex > #notes then
+        currentNoteIndex = #notes + 1
+    end
+    globals.seekRequested = true
+    updateProgressDisplay()
+end
+
+-- Function to handle slider interaction
+local function handleSliderInteraction(container, handle, highlight, progress, isFloat)
+    local function updateSliderPosition(inputPosition)
+        local containerPosition = container.AbsolutePosition
+        local containerSize = container.AbsoluteSize
+        local relativeX = inputPosition.X - containerPosition.X
+        local percentage = math.max(0, math.min(1, relativeX / containerSize.X))
+        
+        -- Update handle position
+        handle.Position = UDim2.new(percentage, -handle.Size.X.Offset / 2, 0.5, -handle.Size.Y.Offset / 2)
+        
+        -- Update progress bar
+        progress.Size = UDim2.new(percentage, 0, 1, 0)
+        
+        -- Calculate target time and seek
+        local targetTime = percentage * globals.currentSongDuration
+        seekToTime(targetTime)
+    end
+    
+    local function onInputBegan(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if isFloat then
+                globals.isFloatDragging = true
+            else
+                globals.isDragging = true
+            end
+            highlight.Visible = true
+            updateSliderPosition(input.Position)
+        end
+    end
+    
+    local function onInputChanged(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if (isFloat and globals.isFloatDragging) or (not isFloat and globals.isDragging) then
+                updateSliderPosition(input.Position)
+            end
+        end
+    end
+    
+    local function onInputEnded(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if isFloat then
+                globals.isFloatDragging = false
+            else
+                globals.isDragging = false
+            end
+            highlight.Visible = false
+        end
+    end
+    
+    -- Connect events to container for better mobile compatibility
+    container.InputBegan:Connect(onInputBegan)
+    container.InputChanged:Connect(onInputChanged)
+    container.InputEnded:Connect(onInputEnded)
+    
+    -- Connect events to handle as well
+    handle.InputBegan:Connect(onInputBegan)
+    handle.InputChanged:Connect(onInputChanged)
+    handle.InputEnded:Connect(onInputEnded)
+    
+    -- Handle mouse hover effects
+    handle.MouseEnter:Connect(function()
+        if not globals.isDragging and not globals.isFloatDragging then
+            highlight.Visible = true
+        end
+    end)
+    
+    handle.MouseLeave:Connect(function()
+        if not globals.isDragging and not globals.isFloatDragging then
+            highlight.Visible = false
+        end
+    end)
+end
+
+-- Initialize slider interactions
+handleSliderInteraction(progressContainer, progressHandle, handleHighlight, progressBar, false)
+handleSliderInteraction(floatProgressContainer, floatProgressHandle, floatHandleHighlight, floatProgressBar, true)
+
+-- 🔄 Toggle Button Event Handler
+useTempoButton.MouseButton1Click:Connect(function()
+    usetempo = not usetempo
+    
+    if usetempo then
+        useTempoButton.Text = "Auto BPM:\nON"
+        DontUseBPMInput.Visible = true
+        useTempoButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        lastManualBpm = currentBpm
+        
+        local appropriateBpm = manualBpm
+        if playing and #tempoMarkers > 0 then
+            appropriateBpm = getCurrentTempoBPM(songTimeElapsed)
+        elseif #tempoMarkers > 0 then
+            appropriateBpm = tempoMarkers[1].bpm
+        end
+        
+        updateBPM(appropriateBpm, true)
+        BPMAdjust.TextEditable = false
+        BPMAdjust.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        tempoControlFrame.Visible = false
+    else
+        useTempoButton.Text = "Auto BPM:\nOFF"
+        DontUseBPMInput.Visible = false
+        useTempoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        updateBPM(lastManualBpm, true)
+        BPMAdjust.TextEditable = true
+        BPMAdjust.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+    end
+end)
+
+-- 📝 BPM Input Event Handler
+bpmInput.FocusLost:Connect(function(enterPressed)
+    if not usetempo then
+        local newBpm = tonumber(bpmInput.Text)
+        if newBpm and newBpm > 0 and newBpm <= 1000 then
+            manualBpm = newBpm
+            lastManualBpm = newBpm
+            updateBPM(newBpm, true)
+            BPMAdjust.Text = newBpm
+        else
+            bpmInput.Text = tostring(currentBpm) -- Reset to current BPM if invalid
+            warn("❌ Invalid BPM value. Please enter a number between 1 and 1000.")
+        end
+    else
+        local expectedBpm = getCurrentTempoBPM(songTimeElapsed)
+        if expectedBpm ~= currentBpm then
+            
+            -- Recalculate remaining duration with new BPM
+            local remainingNotes = {}
+            for i = index, #notes do
+                table.insert(remainingNotes, {time = notes[i].time - songTimeElapsed, keys = notes[i].keys})
+            end
+            local remainingDuration = calculateSongDuration(remainingNotes, expectedBpm, usetempo)
+            globals.currentSongDuration = globals.currentSongTime + remainingDuration
+            
+            updateBPM(expectedBpm, false)
+        end
+    end
+end)
+
+BPMAdjust.FocusLost:Connect(function(enterPressed)
+    if not usetempo then
+        local newBpm = tonumber(BPMAdjust.Text)
+        if newBpm and newBpm > 0 and newBpm <= 1000 then
+            bpmInput.Text = newBpm
+        else
+            BPMAdjust.Text = tostring(currentBpm)
+            warn("❌ Invalid BPM value. Please enter a number between 1 and 1000.")
+        end
+    end
+end)
+
+-- BPM Button Functions
+bpmLeftBtn.MouseButton1Click:Connect(function()
+    if not usetempo then
+        local increment = tonumber(BPMIncrementAdjust.Text) or 10
+        local newBpm = math.max(1, tonumber(BPMAdjust.Text) - increment)
+        BPMAdjust.Text = tostring(newBpm)
+        manualBpm = newBpm
+        lastManualBpm = newBpm
+        updateBPM(newBpm, true)
+    end
+end)
+
+bpmRightBtn.MouseButton1Click:Connect(function()
+    if not usetempo then
+        local increment = tonumber(BPMIncrementAdjust.Text) or 10
+        local newBpm = math.min(1000, tonumber(BPMAdjust.Text) + increment)
+        BPMAdjust.Text = tostring(newBpm)
+        manualBpm = newBpm
+        lastManualBpm = newBpm
+        updateBPM(newBpm, true)
+    end
+end)
+
+incLeftBtn.MouseButton1Click:Connect(function()
+    local current = tonumber(BPMIncrementAdjust.Text) or 10
+    BPMIncrementAdjust.Text = tostring(math.max(1, current - 1))
+end)
+
+incRightBtn.MouseButton1Click:Connect(function()
+    local current = tonumber(BPMIncrementAdjust.Text) or 10
+    BPMIncrementAdjust.Text = tostring(current + 1)
+end)
+
+-- 📊 Continuous Progress Bar Update Function
+local function startProgressUpdater()
+    if progressUpdateConnection then
+        progressUpdateConnection:Disconnect()
+    end
+
+    progressUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if playing and not paused and globals.currentSongDuration > 0 then
+            updateProgressDisplay()
+        end
+    end)
+end
+
+local function stopProgressUpdater()
+    if progressUpdateConnection then
+        progressUpdateConnection:Disconnect()
+    end
+end
+
+-- Global input handler for mobile compatibility
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        globals.isDragging = false
+        globals.isFloatDragging = false
+        handleHighlight.Visible = false
+        floatHandleHighlight.Visible = false
+    end
+end)
+
+-- ▶️ Enhanced Playback Function with Real-time BPM Support
+local function playNotes(initialBpm)
+    local lastUpdateTime = tick()
+    local wasPaused = false
+    local pausedTime = 0
+
+    -- Extract tempo markers
+    tempoMarkers = extractTempoMarkers(notes)
+
+    -- Set initial BPM with nil safety check
+    if usetempo then
+        currentBpm = getCurrentTempoBPM(songBeatPosition or 0)
+    else
+        currentBpm = manualBpm
+    end
+
+    playing = true
+    -- Only reset these if we're starting fresh (not seeking)
+    if (globals.currentSongTime == 0 or globals.currentSongTime == nil) and (songBeatPosition == 0 or songBeatPosition == nil) then
+        globals.currentSongTime = 0
+        songBeatPosition = 0
+        currentNoteIndex = 1
+    end
+    
+    globals.currentSongDuration = calculateSongDuration(notes, currentBpm, usetempo)
+
+    startProgressUpdater() -- Start progress updates
+    updateBPM(currentBpm, false) -- Update BPM display
+    updateProgressDisplay() -- Initial progress display
+
+    while playing and currentNoteIndex <= #notes do
+        if stopRequested then break end
+
+        if paused then
+            if not wasPaused then
+                releaseAllKeys()
+                wasPaused = true
+                pausedTime = tick()
+            end
+            task.wait(0.05)
+        else
+            if wasPaused then
+                local pauseDuration = tick() - pausedTime
+                lastUpdateTime = tick()
+                wasPaused = false
+            end
+
+            -- Check if seeking was requested and reset timing
+            if globals.seekRequested then
+                lastUpdateTime = tick()
+                globals.seekRequested = false
+            end
+
+            local now = tick()
+            local deltaTime = now - lastUpdateTime
+            lastUpdateTime = now
+
+            -- Update currentSongTime directly instead of converting from beat position
+            globals.currentSongTime = globals.currentSongTime + deltaTime
+            
+            -- Calculate beat position from the current song time
+            songBeatPosition = calculateBeatPositionFromRealTime(globals.currentSongTime, tempoMarkers, 
+                usetempo and (#tempoMarkers > 0 and tempoMarkers[1].bpm or currentBpm) or currentBpm, usetempo)
+
+            -- Update BPM if in tempo mode
+            if usetempo then
+                local expectedBpm = getCurrentTempoBPM(songBeatPosition or 0)
+                if expectedBpm ~= currentBpm then
+                    currentBpm = expectedBpm
+                    updateBPM(expectedBpm, false)
+                end
+            else
+                if currentBpm ~= manualBpm then
+                    currentBpm = manualBpm
+                    globals.currentSongDuration = calculateSongDuration(notes, currentBpm, usetempo)
+                    updateBPM(currentBpm, false)
+                end
+            end
+
+            -- Process notes at current beat position
+            while currentNoteIndex <= #notes and songBeatPosition >= notes[currentNoteIndex].time do
+                local keyString = notes[currentNoteIndex].keys
+                if usetempo and keyString:match("^tempo=(%d+)$") then
+                    local newBpm = tonumber(keyString:match("tempo=(%d+)"))
+                    if newBpm and newBpm ~= currentBpm then
+                        currentBpm = newBpm
+                        updateBPM(newBpm, false)
+                    end
+                elseif keyString:sub(1, 1) == "~" then
+                    -- Release keys
+                    for i = 2, #keyString do
+                        releaseKey(keyString:sub(i, i))
+                    end
+                else
+                    -- Press keys
+                    pressKey(keyString)
+                end
+                currentNoteIndex = currentNoteIndex + 1
+            end
+
+            task.wait(0.001)
+        end
+
+        if currentNoteIndex > #notes then
+            if loopMode then
+                stopRequested = false
+                currentNoteIndex = 1
+                songBeatPosition = 0
+                lastUpdateTime = tick()
+                if usetempo then
+                    currentBpm = getCurrentTempoBPM(0)
+                else
+                    currentBpm = manualBpm
+                end
+                wasPaused = false
+                globals.currentSongTime = 0
+                releaseAllKeys()
+                globals.currentSongDuration = calculateSongDuration(notes, currentBpm, usetempo)
+                updateBPM(currentBpm, false)
+                updateProgressDisplay()
+                print("🔄 Looping song...")
+                task.wait(1)
+                lastUpdateTime = tick()
+            else
+                break
+            end
+        end
+    end
+
+    print("🎵 Song finished, releasing all keys")
+    releaseAllKeys()
+    playing, stopRequested, paused = false, false, false
+    stopProgressUpdater()
+
+    -- Reset progress display
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressHandle.Position = UDim2.new(0, -progressHandle.Size.X.Offset / 2, 0.5, -progressHandle.Size.Y.Offset / 2)
+    timeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+    floatProgressBar.Size = UDim2.new(0, 0, 1, 0)
+    floatProgressHandle.Position = UDim2.new(0, -floatProgressHandle.Size.X.Offset / 2, 0.5, -floatProgressHandle.Size.Y.Offset / 2)
+    floatTimeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+    tempoMarkers = {}  -- Clear tempo markers
+    globals.currentSongTime = 0
+    currentNoteIndex = 1
+end
+
+-- 🌐 Load Songs Function (Enhanced)
+local songsTbl = {}
+local currentCategory = ""
+
+local function createSongButton(parent, songName, songData, index)
+    local btn = Instance.new("TextButton", parent)
+    btn.Name = "SongBtn_" .. songName
+    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.Position = UDim2.new(0, 6, 0, (index-1) * 44)
+    btn.Text = songName
+    btn.TextSize = 14
+    btn.Font = Enum.Font.Gotham
+    btn.BackgroundColor3 = colors.accent
+    btn.TextColor3 = colors.text
+    btn.BorderSizePixel = 0
+    btn.ClipsDescendants = true
+    btn.LayoutOrder = index
+    
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    
+    -- Ripple effect frame
+    local ripple = Instance.new("Frame", btn)
+    ripple.BackgroundColor3 = Color3.new(1, 1, 1)
+    ripple.BackgroundTransparency = 0.8
+    ripple.BorderSizePixel = 0
+    
+    -- Hover effects
+    btn.MouseEnter:Connect(function()
+        game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(
+                math.min(colors.accent.R * 255 + 25, 255)/255,
+                math.min(colors.accent.G * 255 + 25, 255)/255,
+                math.min(colors.accent.B * 255 + 25, 255)/255
+            )
+        }):Play()
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = colors.accent
+        }):Play()
+    end)
+    
+    -- Ripple effect
+    btn.MouseButton1Down:Connect(function(x, y)
+        ripple.Position = UDim2.new(0, x - btn.AbsolutePosition.X, 0, y - btn.AbsolutePosition.Y)
+        ripple.Size = UDim2.new(0, 0, 0, 0)
+        
+        local tween = game:GetService("TweenService"):Create(ripple, TweenInfo.new(0.5), {
+            Size = UDim2.new(2, 0, 2, 0),
+            Position = UDim2.new(-0.5, x - btn.AbsolutePosition.X, -0.5, y - btn.AbsolutePosition.Y)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            ripple.Size = UDim2.new(0, 0, 0, 0)
+        end)
+    end)
+
+    -- Song selection logic
+    btn.MouseButton1Click:Connect(function()
+        stopRequested, playing, paused = false, false, false
+        releaseAllKeys()
+        
+        songName = songName
+        title.Text = "🎵 " .. songName
+        
+        if songData then
+            if songData.url == "preset" then
+                -- Load preset song from GitHub
+                local notes, tempo = loadPresetSong(songData.originalName, songData.category)
+                if notes then
+                    songData.notes = notes
+                    songData.bpm = tempo
+                    print("✅ Loaded preset song: " .. songName .. " (" .. #notes .. " notes)")
+                else
+                    warn("❌ Failed to load preset song")
+                    return
+                end
+            end
+            
+            if songData.notes then
+                notes = songData.notes
+                bpmInput.Text = tostring(songData.bpm or 120)
+                
+                -- Update tempo markers
+                tempoMarkers = extractTempoMarkers(notes)
+                if #tempoMarkers > 0 then
+                    print("🎵 Found " .. #tempoMarkers .. " tempo markers in song")
+                end
+                
+                -- Update song info display
+                local categoryInfo = currentCategory
+                if currentCategory:find("Preset:") then
+                    categoryInfo = currentCategory
+                elseif currentCategory == "All Songs" and songData.category then
+                    categoryInfo = "All Songs (from " .. songData.category .. ")"
+                end
+                
+                -- Reset progress display
+                globals.currentSongDuration = calculateSongDuration(notes, tonumber(bpmInput.Text) or 120, usetempo)
+                progressBar.Size = UDim2.new(0, 0, 1, 0)
+                timeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+                floatProgressBar.Size = UDim2.new(0, 0, 1, 0)
+                floatTimeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+                
+                print("✅ Loaded song: " .. songName .. " (" .. #notes .. " notes)")
+            else
+                warn("⚠️ Song data missing for " .. songName)
+            end
+        end
+    end)
+
+    -- Add category indicator for preset songs
+    if songData and songData.url == "preset" then
+        local categoryIndicator = Instance.new("TextLabel", btn)
+        categoryIndicator.Size = UDim2.new(1, -10, 0, 16)
+        categoryIndicator.Position = UDim2.new(0, 4, 1, -15)
+        categoryIndicator.BackgroundTransparency = 1
+        categoryIndicator.TextColor3 = colors.textSecondary
+        categoryIndicator.TextSize = 10
+        categoryIndicator.Font = Enum.Font.Gotham
+        categoryIndicator.Text = "🌟 " .. songData.category
+        categoryIndicator.TextXAlignment = Enum.TextXAlignment.Left
+    end
+
+    return btn
+end
+
+local function populateCategoryFrame(categoryName, songs)
+    if not globals.categoryFrames[categoryName] then
+        globals.categoryFrames[categoryName] = {}
+        globals.categoryFrames[categoryName].frame, globals.categoryFrames[categoryName].layout = createCategoryFrame(categoryName)
+    end
+
+    local frame = globals.categoryFrames[categoryName].frame
+    
+    -- Clear existing buttons
+    for _, child in ipairs(frame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    -- Sort songs alphabetically
+    local sortedNames = {}
+    for name in pairs(songs) do
+        table.insert(sortedNames, name)
+    end
+    table.sort(sortedNames, function(a, b)
+        return a:lower() < b:lower()
+    end)
+
+    -- Create song buttons
+    for i, songName in ipairs(sortedNames) do
+        createSongButton(frame, songName, songs[songName], i)
+    end
+
+    -- Store song data for this category
+    globals.categoryData[categoryName] = songs
+    
+    return #sortedNames
+end
+
+local function switchToCategory(categoryName)
+    -- Hide search results
+    if globals.isSearchActive then
+        searchFrame.Visible = false
+        globals.isSearchActive = false
+    end
+
+    -- Hide current category frame
+    if globals.currentCategoryFrame then
+        globals.currentCategoryFrame.Visible = false
+    end
+
+    -- Show target category frame
+    if globals.categoryFrames[categoryName] and globals.categoryFrames[categoryName].frame then
+        globals.currentCategoryFrame = globals.categoryFrames[categoryName].frame
+        globals.currentCategoryFrame.Visible = true
+        
+        -- Update song count
+        local songCount = 0
+        for _ in pairs(globals.categoryData[categoryName] or {}) do
+            songCount = songCount + 1
+        end
+        
+        local categoryInfo = categoryName
+        if categoryName == "All Songs" then
+            local totalCategories = #getFolderCategories()
+            categoryInfo = "All Songs (" .. totalCategories .. " categories)"
+        elseif categoryName:find("Preset:") then
+            categoryInfo = categoryName
+        end
+        
+        songInfoLabel.Text = "Now in: " .. categoryInfo .. " • Total Songs: " .. songCount
+        currentCategory = categoryName
+    else
+        warn("⚠️ Category frame not found: " .. categoryName)
+    end
+end
+
+
+local function loadPresetCategory(categoryName)
+    if categoryName == "All Songs" then
+        local allSongs = {}
+        for _, cat in ipairs(githubConfig.PRESET_CATEGORIES) do
+            if cat.returnFile then
+                local success, result = pcall(function()
+                    return game:HttpGet(githubConfig.GITHUB_RETURN_URL .. cat.returnFile)
+                end)
+                if success then
+                    local songs = loadstring(result)()
+                    for _, song in ipairs(songs) do
+                        allSongs[song] = {
+                            url = "preset",
+                            category = cat.name,
+                            originalName = song
+                        }
+                    end
+                end
+            end
+        end
+        
+        local songCount = populateCategoryFrame("Preset: " .. categoryName, allSongs)
+        switchToCategory("Preset: " .. categoryName)
+        return songCount > 0
+    else
+        local returnFile = nil
+        for _, cat in ipairs(githubConfig.PRESET_CATEGORIES) do
+            if cat.name == categoryName then
+                returnFile = cat.returnFile
+                break
+            end
+        end
+        
+        if returnFile then
+            local success, result = pcall(function()
+                return game:HttpGet(githubConfig.GITHUB_RETURN_URL .. returnFile)
+            end)
+            if success then
+                local songList = loadstring(result)()
+                local songs = {}
+                for _, song in ipairs(songList) do
+                    songs[song] = {
+                        url = "preset",
+                        category = categoryName,
+                        originalName = song
+                    }
+                end
+                
+                local songCount = populateCategoryFrame("Preset: " .. categoryName, songs)
+                switchToCategory("Preset: " .. categoryName)
+                return songCount > 0
+            end
+        end
+    end
+    return false
+end
+
+local function createSearchResultsFrame()
+    local searchFrame = Instance.new("ScrollingFrame", rightPanel)
+    searchFrame.Name = "SearchResults"
+    searchFrame.Size = UDim2.new(1, -30, 0, 240)
+    searchFrame.Position = UDim2.new(0, 15, 0, 135)
+    searchFrame.BackgroundColor3 = colors.secondary
+    searchFrame.BorderSizePixel = 0
+    searchFrame.ScrollBarThickness = 6
+    searchFrame.ScrollBarImageColor3 = colors.primary
+    searchFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    searchFrame.Visible = false
+    searchFrame.ZIndex = 1
+
+    local frameCorner = Instance.new("UICorner", searchFrame)
+    frameCorner.CornerRadius = UDim.new(0, 10)
+
+    smoothScroll(searchFrame)
+
+    local layout = Instance.new("UIListLayout", searchFrame)
+    layout.Padding = UDim.new(0, 3)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        searchFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+    end)
+
+    return searchFrame, layout
+end
+
+-- Enhanced loadSongs function to handle dynamic categories
+local function loadSongsFromCategory(category)
+    -- Check if category is already loaded
+    if globals.categoryData[category] then
+        print("✅ Using cached data for category: " .. category)
+        switchToCategory(category)
+        return true
+    end
+
+    local songs, midiFiles, totalFiles = {}, {}, 0
+    
+    if category == "All Songs" then
+        local allFiles = getAllMidiFiles()
+        for _, fileData in ipairs(allFiles) do
+            table.insert(midiFiles, fileData.filePath)
+        end
+        totalFiles = #allFiles
+        print("🌐 Loading all songs from " .. #getFolderCategories() .. " categories...")
+    else
+        midiFiles = getMidiFilesFromCategory(category)
+        totalFiles = #midiFiles
+    end
+
+    songInfoLabel.Text = "Loading " .. category .. "... (0/" .. totalFiles .. ")"
+    
+    for i, filePath in ipairs(midiFiles) do
+        local fileName = string.match(filePath, "([^/\\]+)%.mid%.smf$")
+          or string.match(filePath, "([^/\\]+)%.smf$")
+          or string.match(filePath, "([^/\\]+)%.mid$")
+          or string.match(filePath, "([^/\\]+)%.midi$")
+
+        if fileName then
+            local displayName = fileName
+            if category == "All Songs" then
+                local fileCategory = string.match(filePath, "ChordRushMidi[/\\]([^/\\]+)[/\\]")
+                if fileCategory then
+                    displayName = fileName
+                end
+            end
+            
+            local bytes = readMidiFile(filePath)
+            if bytes then
+                local processor = MidiProcessor.new()
+                local result = processor:processMidiBytes(bytes)
+                
+                local formattedNotes = {}
+                for _, note in ipairs(result.notes) do
+                    table.insert(formattedNotes, { time = note[1], keys = note[2] })
+                end
+                
+                globals.MidiSongOutput[displayName] = formattedNotes
+                
+                songs[displayName] = {
+                    url = "local",
+                    bpm = processor.tempo or 120,
+                    notes = formattedNotes,
+                    originalName = fileName,
+                    category = category == "All Songs" and string.match(filePath, "ChordRushMidi[/\\]([^/\\]+)[/\\]") or category
+                }
+                
+                if i % 5 == 0 or i == totalFiles then
+                    songInfoLabel.Text = "Loading " .. category .. "... (" .. i .. "/" .. totalFiles .. ")"
+                    task.wait()
+                end
+            end
+        end
+    end
+    
+    local songCount = populateCategoryFrame(category, songs)
+    switchToCategory(category)
+    
+    print("✅ Loaded " .. totalFiles .. " MIDI files from " .. category .. (category == "All Songs" and " (all categories)" or " category"))
+    return true
+end
+
+local function loadSongs(category)
+    return loadSongsFromCategory(category)
+end
+
+-- 🎛️ Control Buttons Container
+local controlsContainer = Instance.new("Frame", floatFrame)
+controlsContainer.Size = UDim2.new(1, -10, 0, 35)
+controlsContainer.Position = UDim2.new(0, 5, 0, 50)
+controlsContainer.BackgroundTransparency = 1
+
+local controlsLayout = Instance.new("UIListLayout", controlsContainer)
+controlsLayout.FillDirection = Enum.FillDirection.Horizontal
+controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+controlsLayout.Padding = UDim.new(0, 5)
+
+-- Enhanced button creation function
+local function createFloatButton(text, color, size)
+    local btn = Instance.new("TextButton", controlsContainer)
+    btn.Size = UDim2.new(0, size or 35, 1, 0)
+    btn.Text = text
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = colors.text
+    btn.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 8)
+    
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.new(
+            math.min(color.R + 0.15, 1),
+            math.min(color.G + 0.15, 1),
+            math.min(color.B + 0.15, 1)
+        )
+        btn.Size = UDim2.new(0, (size or 35) + 2, 1, 2)
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = color
+        btn.Size = UDim2.new(0, size or 35, 1, 0)
+    end)
+    
+    return btn
+end
+
+-- ⏯️ Enhanced Play/Pause Toggle Button
+local playPauseBtn = createFloatButton("▶", colors.success, 35)
+playPauseBtn.MouseButton1Click:Connect(function()
+    if not playing and #notes > 0 then
+        if recordingMode then
+            floatFrame.Visible = false
+            wait(3)
+        end
+        local bpm = tonumber(bpmInput.Text) or 120
+        bpm = math.clamp(bpm, 30, 300)
+        bpmInput.Text = tostring(bpm)
+        stopRequested, paused = false, false
+        task.spawn(playNotes, bpm)
+        playPauseBtn.Text = "⏸"
+        playPauseBtn.BackgroundColor3 = colors.warning
+    elseif playing and not paused then
+        -- Pause
+        paused = true
+        playPauseBtn.Text = "▶"
+        playPauseBtn.BackgroundColor3 = colors.success
+        updateProgressDisplay()
+    elseif playing and paused then
+        -- Resume
+        paused = false
+        updateProgressDisplay()
+        playPauseBtn.Text = "⏸"
+        playPauseBtn.BackgroundColor3 = colors.warning
+    elseif #notes == 0 then
+        statusLabel.Text = "No song!"
+        task.wait(1)
+    end
+end)
+
+-- ⏹️ Enhanced Stop Button
+local stopBtn = createFloatButton("⏹", colors.danger, 35)
+stopBtn.MouseButton1Click:Connect(function()
+    if playing then
+        stopRequested, playing, paused = true, false, false
+        -- Reset to beginning when stopping
+        globals.currentSongTime = 0
+        songBeatPosition = 0
+        currentNoteIndex = 1
+        releaseAllKeys()
+        updateProgressDisplay()
+    end
+end)
+
+-- 🏠 Enhanced Home Button
+local homeBtn = createFloatButton("🏠", colors.primary, 40)
+homeBtn.MouseButton1Click:Connect(function()
+    if globals.rightPanelVisible then
+        rightPanel.Visible = true
+    end
+    frame.Visible = true
+    floatFrame.Visible = false
+    floatMode = false
+end)
+
+-- 🔄 Enhanced Status Update Loop
+task.spawn(function()
+    while floatFrame and floatFrame.Parent do
+        if playing then
+            if paused then
+                statusLabel.Text = "⏸ Paused"
+                statusLabel.TextColor3 = colors.warning
+                playPauseBtn.Text = "▶"
+                playPauseBtn.BackgroundColor3 = colors.success
+            else
+                statusLabel.Text = "▶ Playing"
+                statusLabel.TextColor3 = colors.success
+                playPauseBtn.Text = "⏸"
+                playPauseBtn.BackgroundColor3 = colors.warning
+            end
+        else
+            statusLabel.Text = "Ready"
+            statusLabel.TextColor3 = colors.textSecondary
+            playPauseBtn.Text = "▶"
+            playPauseBtn.BackgroundColor3 = colors.success
+        end
+        
+        if bpmInput then
+            floatBpmLabel.Text = "BPM: " .. bpmInput.Text
+        end
+
+        task.wait(0.1)
+    end
+end)
+
+-- 🎈 Float Mode Toggle Function
+local function toggleFloatMode()
+    floatMode = not floatMode
+    
+    if floatMode then
+        floatFrame.Visible = true
+        frame.Visible = false
+        rightPanel.Visible = false
+    else
+        floatFrame.Visible = false
+        frame.Visible = true
+    end
+    
+    return floatMode
+end
+
+-- 🆘 Help Panel
+local helpPanel = Instance.new("Frame", gui)
+helpPanel.Size = UDim2.new(0, 280, 0, 300)
+helpPanel.Position = UDim2.new(0.5, -140, 0.5, -150)
+helpPanel.BackgroundColor3 = colors.background
+helpPanel.Visible = false
+helpPanel.ZIndex = 20
+Instance.new("UICorner", helpPanel).CornerRadius = UDim.new(0, 12)
+
+-- Help panel border
+local helpStroke = Instance.new("UIStroke", helpPanel)
+helpStroke.Color = colors.primary
+helpStroke.Thickness = 2
+helpStroke.Transparency = 0.5
+
+-- Help Title
+local helpTitle = Instance.new("TextLabel", helpPanel)
+helpTitle.Size = UDim2.new(1, -40, 0, 35)
+helpTitle.Position = UDim2.new(0, 10, 0, 5)
+helpTitle.BackgroundTransparency = 1
+helpTitle.TextColor3 = colors.primary
+helpTitle.TextScaled = true
+helpTitle.Font = Enum.Font.GothamBold
+helpTitle.Text = "❓ ChordRush Help"
+helpTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Close button (top right)
+local helpCloseBtn = Instance.new("TextButton", helpPanel)
+helpCloseBtn.Size = UDim2.new(0, 30, 0, 30)
+helpCloseBtn.Position = UDim2.new(1, -35, 0, 5)
+helpCloseBtn.BackgroundColor3 = colors.danger
+helpCloseBtn.TextColor3 = colors.text
+helpCloseBtn.TextScaled = true
+helpCloseBtn.Font = Enum.Font.GothamBold
+helpCloseBtn.Text = "×"
+helpCloseBtn.ZIndex = 21
+Instance.new("UICorner", helpCloseBtn).CornerRadius = UDim.new(0, 8)
+
+-- Scrollable content area
+local helpScroll = Instance.new("ScrollingFrame", helpPanel)
+helpScroll.Size = UDim2.new(1, -20, 1, -50)
+helpScroll.Position = UDim2.new(0, 10, 0, 40)
+helpScroll.BackgroundColor3 = colors.secondary
+helpScroll.ScrollBarThickness = 6
+helpScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+helpScroll.BorderSizePixel = 0
+helpScroll.ZIndex = 20
+Instance.new("UICorner", helpScroll).CornerRadius = UDim.new(0, 8)
+
+local helpScrollLayout = Instance.new("UIListLayout", helpScroll)
+helpScrollLayout.Padding = UDim.new(0, 8)
+helpScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+helpScrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+helpScrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    helpScroll.CanvasSize = UDim2.new(0, 0, 0, helpScrollLayout.AbsoluteContentSize.Y + 15)
+end)
+
+local helpSections = {
+    {
+        title = "🎵 Getting Started",
+        content = [[
+1. Choose a category from the dropdown (like Preset or Custom)
+2. Scroll through the song list or use the search bar
+3. Tap a song to load it into the player
+4. Set the speed (BPM), or turn on Auto BPM to do it for you
+5. Press ▶ to start playing the song!
+        ]]
+    },
+    {
+        title = "📁 Preset Songs",
+        content = [[
+• These are songs already included in the script
+• Categories include Anime, Modern, Classical, and more
+• No need to set them up — just click and play!
+• The songs load faster after the first time
+        ]]
+    },
+    {
+        title = "🎼 Custom Songs (Your MIDI Files)",
+        content = [[
+• You can use your own .mid or .smf files!
+• Put them into:
+  workspace/ChordRushMidi/YourFolderName
+• Each folder becomes a new category
+• The songs will show up and can be searched
+• If Auto BPM is on, the speed will be set automatically
+        ]]
+    },
+    {
+        title = "🗂️ All Songs Button",
+        content = [[
+• You’ll see an "All Songs" button below Preset and Custom
+• In Preset: it shows every GitHub song in one list  
+• In Custom: it shows all MIDI songs from every folder  
+• Use it if you want to browse everything at once!
+        ]]
+    },
+    {
+        title = "🔍 Search & Filter",
+        content = [[
+• Type in the search bar to find a song by name
+• The list updates as you type
+• Clear the text to show all songs again
+• Works for both Preset and Custom categories
+        ]]
+    },
+    {
+        title = "🎮 Controls",
+        content = [[
+▶ Play — Start or continue the song  
+⏸ Pause — Stop the song for a moment  
+⏹ Stop — Go back to the beginning  
+🔄 Loop — Play the song over and over  
+🎈 Float — Smaller screen that you can move around  
+⚡ Anti-Lag — Makes the game faster if it lags
+        ]]
+    },
+    {
+        title = "⚙️ Progress Bar",
+        content = [[
+• Shows how much of the song has played  
+• Moves in real time as the song plays  
+• You can see it in both the main and float screen  
+• Helps you get ready for upcoming notes
+        ]]
+    },
+    {
+        title = "💡 Tips & Tricks",
+        content = [[
+• Use Float mode to save screen space  
+• Turn on Auto BPM so you don’t have to set speed  
+• Loop songs to practice parts over and over  
+• Keep your MIDI songs in folders for easy access  
+• If a category says “Loading...”, just wait a bit  
+• Preset songs are saved after loading for faster use next time
+        ]]
+    }
+}
+
+for i, section in ipairs(helpSections) do
+    -- Title label
+    local sectionTitle = Instance.new("TextLabel")
+    sectionTitle.Size = UDim2.new(1, -10, 0, 25)
+    sectionTitle.BackgroundTransparency = 1
+    sectionTitle.TextColor3 = colors.primary
+    sectionTitle.TextScaled = true
+    sectionTitle.Font = Enum.Font.GothamBold
+    sectionTitle.Text = section.title
+    sectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    sectionTitle.LayoutOrder = i * 2 - 1
+    sectionTitle.ZIndex = 21
+    sectionTitle.Parent = helpScroll
+
+    -- Content label
+    local sectionContent = Instance.new("TextLabel")
+    sectionContent.Size = UDim2.new(1, -15, 0, 0)
+    sectionContent.BackgroundTransparency = 1
+    sectionContent.TextColor3 = colors.text
+    sectionContent.Font = Enum.Font.Gotham
+    sectionContent.Text = section.content
+    sectionContent.TextSize = 10
+    sectionContent.TextXAlignment = Enum.TextXAlignment.Left
+    sectionContent.TextYAlignment = Enum.TextYAlignment.Top
+    sectionContent.TextWrapped = true
+    sectionContent.LayoutOrder = i * 2
+    sectionContent.ZIndex = 21
+    sectionContent.Parent = helpScroll
+
+    -- Auto-size based on newlines
+    local numLines = select(2, section.content:gsub("\n", "")) + 1
+    local fontSize = sectionContent.TextSize
+    local paddingPerLine = math.floor(fontSize * 0.3)
+    local totalHeight = numLines * (fontSize + paddingPerLine)
+
+    sectionContent.Size = UDim2.new(1, -15, 0, math.max(totalHeight, 20))
+end
+
+-- Close button functionality
+helpCloseBtn.MouseButton1Click:Connect(function()
+    helpPanel.Visible = false
+end)
+
+-- Side Panel Buttons
+-- Updated Side Panel Buttons with current time context
+local sideButtons = {
+    {text = "📖 Browse", color = colors.primary, action = "browse"},
+    {text = "🔄 Loop", color = colors.primary, action = "loop"},
+    {text = "⚡ Anti-Lag", color = colors.success, action = "antilag"},
+    {text = "❓ Help", color = colors.warning, action = "help"}
+}
+
+for i, btnData in ipairs(sideButtons) do
+    local btnContainer = Instance.new("Frame", sidePanel)
+    btnContainer.Size = UDim2.new(1, -12, 0, 30)
+    btnContainer.BackgroundTransparency = 1
+    btnContainer.LayoutOrder = i
+    
+    local sideBtn = Instance.new("TextButton", btnContainer)
+    sideBtn.Size = UDim2.new(1, 0, 1, 0)
+    sideBtn.Position = UDim2.new(0, 0, 0, 0)
+    sideBtn.BackgroundColor3 = btnData.color
+    sideBtn.TextColor3 = colors.text
+    sideBtn.BorderSizePixel = 0
+    sideBtn.ClipsDescendants = true -- For ripple effect
+    sideBtn.Text = "" -- Clear default text since we're using custom labels
+    
+    -- Modern font sizing
+    sideBtn.TextSize = 20
+    sideBtn.Font = Enum.Font.GothamBold
+    
+    -- Create text layout
+    local textLabel = Instance.new("TextLabel", sideBtn)
+    textLabel.Size = UDim2.new(1, -20, 1, 0)
+    textLabel.Position = UDim2.new(0, 10, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = colors.text
+    textLabel.TextSize = 20
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.Text = btnData.text
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.TextYAlignment = Enum.TextYAlignment.Center
+    
+    Instance.new("UICorner", sideBtn).CornerRadius = UDim.new(0, 8)
+    
+    -- Add button animations
+    local function updateButtonState()
+        if btnData.action == "loop" and loopMode then
+            return colors.success
+        elseif btnData.action == "browse" and globals.rightPanelVisible then
+            return colors.danger
+        else
+            return btnData.color
+        end
+    end
+
+    -- Button click functionality
+    local clickConnection = sideBtn.MouseButton1Click:Connect(function()
+        if btnData.action == "browse" then
+            globals.rightPanelVisible = not globals.rightPanelVisible
+            if rightPanel then
+                rightPanel.Visible = globals.rightPanelVisible
+            end
+            textLabel.Text = globals.rightPanelVisible and "❌ Close" or "📖 Browse"
+        elseif btnData.action == "loop" then
+            loopMode = not loopMode
+            textLabel.Text = loopMode and "🔄 Loop ON" or "🔄 Loop"
+            local tweenService = game:GetService("TweenService")
+            tweenService:Create(sideBtn, TweenInfo.new(0.3), {
+                BackgroundColor3 = loopMode and colors.success or btnData.color
+            }):Play()
+        elseif btnData.action == "antilag" then
+            -- Show loading state
+            local originalText = textLabel.Text
+            textLabel.Text = "Optimizing..."
+            
+            -- Use pcall for error handling
+            local success, result = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/wownskdo/TestForApi/refs/heads/main/AntiLag.lua"))()
+            end)
+            
+            if not success then
+                textLabel.Text = "Error!"
+                warn("Anti-lag script failed:", result)
+                wait(2)
+            else
+                wait(1)
+            end
+            
+            textLabel.Text = "⚡ Anti-Lag"
+        elseif btnData.action == "help" then
+            if helpPanel then
+                helpPanel.Visible = true
+            end
+        end
+    end)
+end
+
+togglePanelBtn.MouseButton1Click:Connect(function()
+    toggleFloatMode()
+end)
+
+-- 📊 Real-time Status Indicator (Repositioned)
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(0, 90, 0, 20)
+status.Position = UDim2.new(0, 80, 0, 235)
+status.BackgroundTransparency = 1
+status.TextColor3 = colors.textSecondary
+status.TextSize = 14
+status.Font = Enum.Font.Gotham
+status.Text = "Ready"
+
+-- ▶️⏸⏹ Controls Frame (Repositioned and resized)
+local controlsFrame = Instance.new("Frame", frame)
+controlsFrame.Size = UDim2.new(1, -20, 0, 50) -- Taller for better touch targets
+controlsFrame.Position = UDim2.new(0, 10, 0, 335)
+controlsFrame.BackgroundTransparency = 1
+
+local controlLayout = Instance.new("UIListLayout", controlsFrame)
+controlLayout.FillDirection = Enum.FillDirection.Horizontal
+controlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+controlLayout.Padding = UDim.new(0, 12)
+
+-- ⏯️ Control buttons (Updated colors)
+local buttons = {
+    {text = "▶", color = colors.success, action = "play"},
+    {text = "⏸", color = colors.warning, action = "pause"},
+    {text = "⏹", color = colors.danger, action = "stop"}
+}
+
+for _, btnData in ipairs(buttons) do
+    local btn = Instance.new("TextButton", controlsFrame)
+    btn.Text = btnData.text
+    btn.TextSize = 24 -- Larger text
+    btn.Font = Enum.Font.GothamBold
+    btn.Size = UDim2.new(0, 60, 1, 0) -- Wider buttons
+    btn.BackgroundColor3 = btnData.color
+    btn.TextColor3 = colors.text
+    btn.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 12)
+    
+    -- Add subtle shadow
+    local shadow = Instance.new("Frame", btn)
+    shadow.Size = UDim2.new(1, 4, 1, 4)
+    shadow.Position = UDim2.new(0, -2, 0, -2)
+    shadow.BackgroundColor3 = Color3.new(0, 0, 0)
+    shadow.BackgroundTransparency = 0.8
+    shadow.ZIndex = btn.ZIndex - 1
+    Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 12)
+    
+    -- Hover effects
+    btn.MouseEnter:Connect(function()
+        btn.Size = UDim2.new(0, 65, 1, 2) -- Slight grow
+        btn.BackgroundColor3 = Color3.new(
+            math.min(btnData.color.R + 0.1, 1),
+            math.min(btnData.color.G + 0.1, 1),
+            math.min(btnData.color.B + 0.1, 1)
+        )
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        btn.Size = UDim2.new(0, 60, 1, 0)
+        btn.BackgroundColor3 = btnData.color
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        if btnData.action == "play" then
+            if not playing and #notes > 0 then
+                local bpm = tonumber(bpmInput.Text) or 120
+                bpm = math.clamp(bpm, 30, 300)
+                bpmInput.Text = tostring(bpm)
+                stopRequested, paused = false, false
+                task.spawn(playNotes, bpm)
+            else
+                print("⚠ No song loaded or already playing")
+            end
+        elseif btnData.action == "pause" then
+            if playing then
+                paused = not paused
+                updateProgressDisplay() -- Update display when pausing/resuming
+            end
+        elseif btnData.action == "stop" then
+            if playing then
+                stopRequested, playing, paused = true, false, false
+                -- Reset to beginning when stopping
+                globals.currentSongTime = 0
+                songBeatPosition = 0
+                currentNoteIndex = 1
+                releaseAllKeys()
+                updateProgressDisplay() -- Update display when stopping
+            end
+        end
+    end)
+end
+
+-- 🔁 Refresh songs in the list
+function refreshRightSongList()
+    -- Clear existing buttons
+    for _, child in ipairs(rightSongList:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    -- Ensure songsTbl and filteredSongs are defined
+    globals.filteredSongs = filteredSongs or {}
+    songsTbl = songsTbl or {}
+
+    -- Choose the song list to show
+    local songsToShow = (next(globals.filteredSongs) ~= nil and filteredSongs) or songsTbl
+
+    local sortedNames = {}
+    for name in pairs(songsToShow) do
+        table.insert(sortedNames, name)
+    end
+    table.sort(sortedNames, function(a, b)
+        return a:lower() < b:lower()
+    end)
+    
+    local count = 0
+    for _, name in ipairs(sortedNames) do
+        local data = songsToShow[name]
+
+        count += 1
+
+        local btn = Instance.new("TextButton", rightSongList)
+        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.Position = UDim2.new(0, 6, 0, (count-1) * 44)
+        btn.Text = name
+        btn.TextSize = 14
+        btn.Font = Enum.Font.Gotham
+        btn.BackgroundColor3 = colors.accent
+        btn.TextColor3 = colors.text
+        btn.BorderSizePixel = 0
+        btn.ClipsDescendants = true
+        
+        local btnCorner = Instance.new("UICorner", btn)
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        
+        -- Add ripple effect
+        local ripple = Instance.new("Frame", btn)
+        ripple.BackgroundColor3 = Color3.new(1, 1, 1)
+        ripple.BackgroundTransparency = 0.8
+        ripple.BorderSizePixel = 0
+        
+        -- Double-click variables
+        local lastClickTime = 0
+        local doubleClickThreshold = 0.5 -- 500ms for double-click detection
+        
+        -- Add hover effect
+        btn.MouseEnter:Connect(function()
+            game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(
+                    math.min(colors.accent.R + 0.1, 1),
+                    math.min(colors.accent.G + 0.1, 1),
+                    math.min(colors.accent.B + 0.1, 1)
+                )
+            }):Play()
+        end)
+        
+        btn.MouseLeave:Connect(function()
+            game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = colors.accent
+            }):Play()
+        end)
+        
+        btn.MouseButton1Down:Connect(function(x, y)
+            -- Create ripple effect
+            ripple.Position = UDim2.new(0, x - btn.AbsolutePosition.X, 0, y - btn.AbsolutePosition.Y)
+            ripple.Size = UDim2.new(0, 0, 0, 0)
+            
+            local goal = {}
+            goal.Size = UDim2.new(2, 0, 2, 0)
+            goal.Position = UDim2.new(-0.5, x - btn.AbsolutePosition.X, -0.5, y - btn.AbsolutePosition.Y)
+            
+            local tween = game:GetService("TweenService"):Create(ripple, TweenInfo.new(0.5), goal)
+            tween:Play()
+            tween.Completed:Connect(function()
+                ripple.Size = UDim2.new(0, 0, 0, 0)
+            end)
+        end)
+
+        -- Double-click to select song
+        btn.MouseButton1Click:Connect(function()
+            local currentTime = tick()
+            local timeSinceLastClick = currentTime - lastClickTime
+            
+            if timeSinceLastClick <= doubleClickThreshold and timeSinceLastClick > 0.05 then
+                -- Double-click detected - select the song
+                stopRequested, playing, paused = false, false, false
+                releaseAllKeys()
+                globals.currentSongTime = 0
+                songBeatPosition = 0
+                currentNoteIndex = 1
+                releaseAllKeys()
+                updateProgressDisplay() -- Update display when stopping
+                songName = name
+                title.Text = "🎵 " .. name
+                
+                local songData = data
+                if songData then
+                    if songData.url == "preset" then
+                        -- Load preset song from GitHub
+                        local notes, tempo = loadPresetSong(songData.originalName, songData.category)
+                        if notes then
+                            songData.notes = notes
+                            songData.bpm = tempo
+                            print("✅ Loaded preset song: " .. name .. " (" .. #notes .. " notes)")
+                        else
+                            warn("❌ Failed to load preset song")
+                            return
+                        end
+                    end
+                    
+                    if songData.notes then
+                        notes = songData.notes
+                        bpmInput.Text = tostring(songData.bpm or 120)
+                        
+                        -- Enhanced info display for All Songs category and presets
+                        local categoryInfo = currentCategory
+                        if currentCategory:find("Preset:") then
+                            categoryInfo = currentCategory
+                        elseif currentCategory == "All Songs" and songData.category then
+                            categoryInfo = "All Songs (from " .. songData.category .. ")"
+                        end
+                        
+                        -- Update tempo markers for the new song
+                        tempoMarkers = extractTempoMarkers(notes)
+                        if #tempoMarkers > 0 then
+                            print("🎵 Found " .. #tempoMarkers .. " tempo markers in song")
+                        end
+                        
+                        -- Update song info display
+                        songInfoLabel.Text = "Now in: " .. categoryInfo .. " • Total Songs: " .. count
+                        
+                        -- Reset progress display
+                        globals.currentSongDuration = calculateSongDuration(notes, tonumber(bpmInput.Text) or 120, usetempo)
+                        progressBar.Size = UDim2.new(0, 0, 1, 0)
+                        timeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+                        
+                        floatProgressBar.Size = UDim2.new(0, 0, 1, 0)
+                        floatTimeLabel.Text = "0:00 / " .. formatTime(globals.currentSongDuration)
+                        
+                        print("✅ Loaded song: " .. name .. " (" .. #notes .. " notes)")
+                    else
+                        warn("⚠️ Song data missing for " .. name)
+                    end
+                end
+                
+                -- Reset click timer after successful double-click
+                lastClickTime = 0
+            else
+                -- First click or too much time passed - just update the timer
+                lastClickTime = currentTime
+                -- Optional: Provide visual feedback for first click
+                print("Single click detected on: " .. name .. " (double-click to select)")
+            end
+        end)
+
+        -- Add category indicator for preset songs
+        if data.url == "preset" then
+            local categoryIndicator = Instance.new("TextLabel", btn)
+            categoryIndicator.Size = UDim2.new(1, -10, 0, 16)
+            categoryIndicator.Position = UDim2.new(0, 4, 1, -15)
+            categoryIndicator.BackgroundTransparency = 1
+            categoryIndicator.TextColor3 = colors.textSecondary
+            categoryIndicator.TextSize = 10
+            categoryIndicator.Font = Enum.Font.Gotham
+            categoryIndicator.Text = "🌟 " .. data.category
+            categoryIndicator.TextXAlignment = Enum.TextXAlignment.Left
+        end
+    end
+
+    -- Update song info label
+    local categoryInfo = currentCategory
+    if currentCategory == "All Songs" then
+        local totalCategories = #getFolderCategories()
+        categoryInfo = "All Songs (" .. totalCategories .. " categories)"
+    elseif currentCategory:find("Preset:") then
+        categoryInfo = currentCategory
+    end
+    
+    songInfoLabel.Text = "Now in: " .. categoryInfo .. " • Total Songs: " .. count
+
+    -- Update canvas size
+    if rightSongLayout then
+        rightSongList.CanvasSize = UDim2.new(0, 0, 0, count * 44 + 10)
+    end
+end
+
+local dpl = 0
+
+local function labelpreloading()
+    local baseMessage
+    if dpl >= 7 then
+        baseMessage = "(This will take a while) Loading Presets"
+    else
+        baseMessage = "Loading Presets"
+    end
+
+    songInfoLabel.Text = baseMessage
+    wait(0.5)
+    songInfoLabel.Text = baseMessage .. "."
+    wait(0.5)
+    songInfoLabel.Text = baseMessage .. ".."
+    wait(0.5)
+    songInfoLabel.Text = baseMessage .. "..."
+    wait(0.5)
+
+    dpl += 1
+end
+
+local function labelpreloading2()
+    spawn(function()
+        while not globals.CachedGitHubSongs do
+            songInfoLabel.Text = "Please wait."
+            wait(0.5)
+            songInfoLabel.Text = "Please wait.."
+            wait(0.5)
+            songInfoLabel.Text = "Please wait..."
+        end
+    end)
+end
+
+local function populateCategoryDropdown()
+    -- Clear existing options
+    for _, child in ipairs(categoryDropdownMenu:GetChildren()) do
+        if child:IsA("TextButton") or child:IsA("UIListLayout") then
+            child:Destroy()
+        end
+    end
+
+    local listLayout = Instance.new("UIListLayout", categoryDropdownMenu)
+    listLayout.Padding = UDim.new(0, 4)
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local categories = getFolderCategories()
+
+    local function createDropdownOption(text, isSpecial)
+        local option = Instance.new("TextButton")
+        option.Name = text
+        option.Size = UDim2.new(1, -10, 0, 32)
+        option.Text = text
+        option.TextSize = 14
+        option.Font = isSpecial and Enum.Font.GothamBold or Enum.Font.Gotham
+        option.BackgroundColor3 = isSpecial and Color3.fromRGB(60, 120, 200) or colors.secondary
+        option.TextColor3 = colors.text
+        option.BorderSizePixel = 0
+        option.ZIndex = 12
+        option.AutoButtonColor = false
+        option.Parent = categoryDropdownMenu
+
+        Instance.new("UICorner", option).CornerRadius = UDim.new(0, 6)
+
+        local stroke = Instance.new("UIStroke", option)
+        stroke.Color = isSpecial and Color3.fromRGB(120, 180, 255) or Color3.fromRGB(88, 166, 255)
+        stroke.Thickness = isSpecial and 1 or 0.5
+
+        return option
+    end
+
+    -- All Songs option
+    local allSongsOption = createDropdownOption("🌐 All Songs", true)
+    allSongsOption.LayoutOrder = 1
+    allSongsOption.MouseButton1Click:Connect(function()
+        categoryDropdownBtn.Text = "🌐 All Songs"
+        categoryDropdownMenu.Visible = false
+        presetDropdownFrame.Visible = false
+        rightHeader.Text = "♪ Song Browser"
+        categoryArrow.Text = "▼"
+        searchInput.Text = ""
+
+        -- Check if already loaded, if not load it
+        if globals.categoryData["All Songs"] then
+            switchToCategory("All Songs")
+        else
+            loadSongsFromCategory("All Songs")
+        end
+    end)
+
+    local presetBtn = createDropdownOption("🌟 Preset Songs", true)
+    presetBtn.LayoutOrder = 0
+    presetBtn.BackgroundColor3 = Color3.fromRGB(255, 210, 80)
+    -- 🔶 Set stroke to yellow
+    for _, child in ipairs(presetBtn:GetChildren()) do
+        if child:IsA("UIStroke") then
+            child.Color = Color3.fromRGB(200, 170, 60) -- bright yellow
+            child.Thickness = 1.5
+        end
+    end
+
+    presetBtn.MouseButton1Click:Connect(function()
+        categoryDropdownBtn.Text = "🌟 Preset Songs"
+        presetDropdownFrame.Visible = not presetDropdownFrame.Visible
+        songInfoLabel.Text = "Please Wait..."
+        categoryDropdownMenu.Visible = false
+        
+        if presetDropdownFrame.Visible then
+            rightHeader.Text = "🌟🌐"
+        else
+            rightHeader.Text = "♪ Song Browser"
+        end
+        
+        categoryArrow.Text = "▼"
+        presetDropdownBtn.Text = "All Songs"
+        presetArrow.Text = "▼"
+        searchInput.Text = ""
+        
+        -- Load preset All Songs if not cached
+        if not globals.categoryData["Preset: All Songs"] then
+            loadPresetCategory("All Songs")
+        else
+            switchToCategory("Preset: All Songs")
+        end
+        
+        -- Start background refreshing for presets
+        if not globals.refreshingPresets then
+            globals.refreshingPresets = true
+            task.spawn(function()
+                while not globals.allsongspreloaded do
+                    if currentCategory and currentCategory:find("Preset:") then
+                        -- Update current preset category with new loaded songs
+                        local categoryName = currentCategory:gsub("Preset: ", "")
+                        if globals.categoryData[currentCategory] then
+                            for songName, songData in pairs(globals.categoryData[currentCategory]) do
+                                if songData.url == "preset" and globals.CachedGitHubSongs[songData.category] and globals.CachedGitHubSongs[songData.category][songData.originalName] then
+                                    local cachedData = globals.CachedGitHubSongs[songData.category][songData.originalName]
+                                    songData.notes = cachedData.notes
+                                    songData.bpm = cachedData.bpm
+                                end
+                            end
+                        end
+                    end
+                    labelpreloading()
+                    task.wait(0.5)
+                end
+                songInfoLabel.Text = "Presets Loaded • Total Songs: " .. getTotalCachedSongs() .. " • Please Refresh By Pressing All Songs"
+            end)
+        end
+    end)
+
+    -- Add regular categories
+    for i, category in ipairs(categories) do
+        local option = createDropdownOption(category, false)
+        option.LayoutOrder = i + 2
+        option.MouseButton1Click:Connect(function()
+            categoryDropdownBtn.Text = category
+            categoryDropdownMenu.Visible = false
+            presetDropdownFrame.Visible = false
+            rightHeader.Text = "♪ Song Browser"
+            categoryArrow.Text = "▼"
+            searchInput.Text = ""
+
+            -- Check if already loaded
+            if globals.categoryData[category] then
+                switchToCategory(category)
+            else
+                loadSongsFromCategory(category)
+            end
+        end)
+    end
+
+    categoryDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        categoryDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+    end)
+end
+
+categoryDropdownBtn.MouseButton1Click:Connect(function()
+    if not categoryDropdownMenu.Visible then
+        populateCategoryDropdown()
+    end
+    categoryDropdownMenu.Visible = not categoryDropdownMenu.Visible
+    categoryArrow.Text = categoryDropdownMenu.Visible and "▲" or "▼"
+end)
+
+local function populatePresetDropdown()
+    for _, child in ipairs(presetDropdownMenu:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+    
+    for i, category in ipairs(githubConfig.PRESET_CATEGORIES) do
+        local option = Instance.new("TextButton", presetDropdownMenu)
+        option.Size = UDim2.new(1, -10, 0, 32)
+        option.Position = UDim2.new(0, 5, 0, (i-1) * 36)
+        option.Text = category.name
+        option.TextSize = 14
+        option.Font = Enum.Font.Gotham
+        option.BackgroundColor3 = colors.secondary
+        option.TextColor3 = colors.text
+        option.BorderSizePixel = 0
+        option.ZIndex = 12
+        Instance.new("UICorner", option).CornerRadius = UDim.new(0, 6)
+        
+        option.MouseButton1Click:Connect(function()
+            presetDropdownBtn.Text = category.name
+            presetDropdownMenu.Visible = false
+            presetArrow.Text = "▼"
+            searchInput.Text = ""
+            
+            -- Check if category is already loaded
+            local presetCategoryName = "Preset: " .. category.name
+            if globals.categoryData[presetCategoryName] then
+                switchToCategory(presetCategoryName)
+            else
+                loadPresetCategory(category.name)
+            end
+        end)
+    end
+    
+    presetDropdownMenu.CanvasSize = UDim2.new(0, 0, 0, #githubConfig.PRESET_CATEGORIES * 36)
+end
+
+presetDropdownBtn.MouseButton1Click:Connect(function()
+    if not presetDropdownMenu.Visible then
+        populatePresetDropdown()
+    end
+    presetDropdownMenu.Visible = not presetDropdownMenu.Visible
+    presetArrow.Text = presetDropdownMenu.Visible and "▲" or "▼"
+end)
+
+-- Status update loop with BPM monitoring
+task.spawn(function()
+    while gui.Parent do
+        if playing then
+            status.Text = paused and "⏸ Paused" or "▶ Playing"
+            status.TextColor3 = paused and colors.warning or colors.success
+        else
+            status.Text = "Ready"
+            status.TextColor3 = colors.textSecondary
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- SEARCH FUNCTIONALITY
+-- 🔍 Search function
+local searchFrame, searchLayout = createSearchResultsFrame()
+
+local function performSearch(query)
+    globals.searchResults = {}
+    query = (query or ""):lower()
+
+    -- If search box is cleared
+    if query == "" then
+        globals.isSearchActive = false
+        searchFrame.Visible = false
+
+        if globals.currentCategoryFrame then
+            globals.currentCategoryFrame.Visible = true
+        end
+
+        -- Restore song info label
+        local categoryInfo = currentCategory or "Custom"
+
+        if categoryInfo == "All Songs" then
+            local totalCategories = #getFolderCategories()
+            categoryInfo = "All Songs (" .. totalCategories .. " categories)"
+        end
+
+        local songsInCategory = globals.categoryData[currentCategory] or {}
+        local count = 0
+        for _ in pairs(songsInCategory) do
+            count += 1
+        end
+
+        songInfoLabel.Text = "Now in: " .. categoryInfo .. " • Total Songs: " .. count
+        return
+    end
+
+    -- Search across all loaded categories
+    for categoryName, songs in pairs(globals.categoryData) do
+        for songName, songData in pairs(songs) do
+            if songName:lower():find(query, 1, true) then
+                globals.searchResults[songName] = songData
+            end
+        end
+    end
+
+    -- Clear previous search results
+    for _, child in ipairs(searchFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    -- Sort and display new results
+    local sortedResults = {}
+    for name in pairs(globals.searchResults) do
+        table.insert(sortedResults, name)
+    end
+    table.sort(sortedResults, function(a, b)
+        return a:lower() < b:lower()
+    end)
+
+    for i, songName in ipairs(sortedResults) do
+        createSongButton(searchFrame, songName, globals.searchResults[songName], i)
+    end
+
+    -- Update UI for search
+    globals.isSearchActive = true
+    if globals.currentCategoryFrame then
+        globals.currentCategoryFrame.Visible = false
+    end
+    searchFrame.Visible = true
+    songInfoLabel.Text = "Search Results: " .. #sortedResults .. " songs found for \"" .. query .. "\""
+end
+
+-- Bind search to input box
+searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+    performSearch(searchInput.Text)
+end)
+
+-- 🎯 Initialize Default Values
+manualBpm = tonumber(bpmInput.Text) or 120
+currentBpm = manualBpm
+lastManualBpm = manualBpm
+
+rightSongList.Visible = false
+
+-- Initialize with first category (cached for instant future access)
+task.spawn(function()
+    local categories = getFolderCategories()
+    if #categories > 0 then
+        loadSongsFromCategory(categories[1])
+    else
+        pcall(function()
+            makefolder("ChordRushMidi/Default")
+        end)
+        globals.categoryData["Default"] = {}
+        populateCategoryFrame("Default", {})
+        switchToCategory("Default")
+        songInfoLabel.Text = "Now in: Default • Total Songs: 0"
+    end
+    
+    print("✅ ChordRush optimized initialization complete!")
+end)
+
+-- ✅ Done!
+print("✅ ChordRush Piano Player Loaded Successfully!")
+print("📂 Current Category: " .. currentCategory)
+print("🎹 Select a song and press ▶ to begin!")
+preloadAllPresetSongs()
+
+local c, t, p = 0, 0, Vector2.new()
+
+local function h(s)
+    if typeof(s) == "Vector3" then
+        s = Vector2.new(s.X, s.Y)
+    end
+
+    local k = tick()
+    if k - t <= 0.5 and (s - p).Magnitude <= 50 then 
+        c = c + 1 
+    else 
+        c = 1 
+    end
+    
+    t, p = k, s
+    
+    if c >= 3 and recordingMode and not frame.Visible then 
+        floatFrame.Visible = true
+        c = 0 
+    end 
+end
+
+local u, l = game:GetService("UserInputService"), game:GetService("Players").LocalPlayer
+
+pcall(function()
+    u.InputBegan:Connect(function(i)
+        local s
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then 
+            s = u:GetMouseLocation()
+        elseif i.UserInputType == Enum.UserInputType.Touch then 
+            s = i.Position 
+        end
+        
+        if s then 
+            h(s) 
+        end 
+    end)
+end)
+
+if l then 
+    local m = l:GetMouse()
+    if m then 
+        pcall(function()
+            m.Button1Down:Connect(function()
+                h(Vector2.new(m.X, m.Y))
+            end)
+        end)
+    end 
+end
+
+-- Create GUI with proper error handling
+pcall(function()
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(1, 0, 1, 0)
+    f.BackgroundTransparency = 1
+    f.Parent = g
+    f.InputBegan:Connect(function(i)
+        if recordingMode and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1) then 
+            h(i.Position) 
+        end 
+    end)
+end)

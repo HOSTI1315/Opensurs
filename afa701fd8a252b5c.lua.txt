@@ -1,0 +1,2067 @@
+-- ts file was generated at discord.gg/25ms
+
+
+local v1 = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+v1:SetNotificationLower(true)
+v1:GetTransparency(true)
+v1:AddTheme({
+    Name = "Green-Black Gradient",
+    Accent = v1:Gradient({
+        ["0"] = {
+            Color = Color3.fromHex("#00FF7F"),
+            Transparency = 0
+        },
+        ["100"] = {
+            Color = Color3.fromHex("#000000"),
+            Transparency = 0
+        }
+    }, {
+        Rotation = 0
+    }),
+    Dialog = Color3.fromHex("#161616"),
+    Outline = Color3.fromHex("#00C060"),
+    Text = Color3.fromHex("#00FF7F"),
+    Placeholder = Color3.fromHex("#018141"),
+    Background = Color3.fromHex("#101010"),
+    Button = Color3.fromHex("#00C060"),
+    Icon = Color3.fromHex("#00FF7F")
+})
+v1:SetTheme("Green-Black Gradient")
+local v2 = v1:CreateWindow({
+    Title = "Glaco\'s script",
+    Icon = "rbxassetid://104476591826282",
+    Author = "99 Nights In The Forest",
+    Folder = "Glaco",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Green-Black Gradient",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = false,
+    ScrollBarEnabled = true
+})
+v2:SetToggleKey(Enum.KeyCode.K)
+v2:EditOpenButton({
+    Title = "Glaco\'s script",
+    Icon = "rbxassetid://104476591826282",
+    CornerRadius = UDim.new(0, 16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(Color3.fromHex("00FF7F"), Color3.fromHex("00C060")),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true
+})
+v2:Section({
+    Title = "Main"
+})
+local v3 = v2:Tab({
+    Title = "Combat",
+    Icon = "sword",
+    Locked = false
+})
+local v4 = v2:Tab({
+    Title = "Auto",
+    Icon = "wrench",
+    Locked = false
+})
+local v5 = v2:Tab({
+    Title = "Bring",
+    Icon = "package",
+    Locked = false
+})
+local v6 = v2:Tab({
+    Title = "ESP",
+    Icon = "eye",
+    Locked = false
+})
+v2:Section({
+    Title = "Extra"
+})
+local v7 = v2:Tab({
+    Title = "Teleport",
+    Icon = "map-pin",
+    Locked = false
+})
+local v8 = v2:Tab({
+    Title = "Player",
+    Icon = "user",
+    Locked = false
+})
+local vu9 = game:GetService("Players")
+local vu10 = game:GetService("ReplicatedStorage")
+local vu11 = game:GetService("Workspace")
+local vu12 = vu9.LocalPlayer
+local vu13 = game:GetService("UserInputService")
+local vu14 = game:GetService("Debris")
+local vu15 = Vector3.new(0, 19, 0)
+local vu16 = {}
+local vu17 = Vector3.new(21, 20, - 5)
+local vu18 = {}
+local vu19 = {
+    "Morsel",
+    "Steak",
+    "Ribs",
+    "Salmon",
+    "Mackerel"
+}
+local vu20 = {}
+local vu21 = false
+local vu22 = false
+local vu23 = false
+local function vu27(pu24, pu25)
+    if pu24 and (pu24:IsDescendantOf(workspace) and (pu24:IsA("BasePart") or pu24:IsA("Model"))) then
+        local vu26 = pu24:IsA("Model") and pu24.PrimaryPart or pu24:FindFirstChildWhichIsA("BasePart") or (pu24:FindFirstChild("Handle") or pu24)
+        if vu26 and vu26:IsA("BasePart") then
+            if pu24:IsA("Model") and not pu24.PrimaryPart then
+                pcall(function()
+                    pu24.PrimaryPart = vu26
+                end)
+            end
+            pcall(function()
+                vu10.RemoteEvents.RequestStartDraggingItem:FireServer(pu24)
+                if pu24:IsA("Model") then
+                    pu24:SetPrimaryPartCFrame(CFrame.new(pu25))
+                else
+                    vu26.CFrame = CFrame.new(pu25)
+                end
+                vu10.RemoteEvents.StopDraggingItem:FireServer(pu24)
+            end)
+        end
+    else
+        return
+    end
+end
+v4:Section({
+    Title = "Auto Upgrade Campfire",
+    Icon = "flame"
+})
+v4:Dropdown({
+    Title = "Select Fuel",
+    Desc = "Choose fuel items for campfire",
+    Values = {
+        "Log",
+        "Coal",
+        "Chair",
+        "Fuel Canister",
+        "Oil Barrel",
+        "Biofuel"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p28)
+        vu16 = p28
+    end
+})
+v4:Toggle({
+    Title = "Auto Upgrade Campfire",
+    Value = false,
+    Callback = function(p29)
+        vu22 = p29
+        if p29 then
+            task.spawn(function()
+                while vu22 do
+                    local v30, v31, v32 = ipairs(vu16)
+                    while true do
+                        local v33
+                        v32, v33 = v30(v31, v32)
+                        if v32 == nil then
+                            break
+                        end
+                        local v34, v35, v36 = ipairs(workspace:WaitForChild("Items"):GetChildren())
+                        local v37 = {}
+                        while true do
+                            local v38
+                            v36, v38 = v34(v35, v36)
+                            if v36 == nil then
+                                break
+                            end
+                            if v38.Name == v33 then
+                                table.insert(v37, v38)
+                            end
+                        end
+                        for v39 = 1, math.min(10, # v37) do
+                            vu27(v37[v39], vu15)
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+v4:Section({
+    Title = "Auto Scrap Items",
+    Icon = "cog"
+})
+v4:Dropdown({
+    Title = "Select Scrap Items",
+    Desc = "Choose items to scrap",
+    Values = {
+        "Log",
+        "Chair",
+        "Tyre",
+        "Bolt",
+        "Broken Fan",
+        "Broken Microwave",
+        "Sheet Metal",
+        "Old Radio",
+        "Washing Machine",
+        "Old Car Engine",
+        "Cultist Gem",
+        "Gem of the Forest Fragment"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p40)
+        vu18 = p40
+    end
+})
+v4:Toggle({
+    Title = "Auto Scrap Items",
+    Value = false,
+    Callback = function(p41)
+        vu23 = p41
+        if p41 then
+            task.spawn(function()
+                while vu23 do
+                    local v42, v43, v44 = ipairs(vu18)
+                    while true do
+                        local v45
+                        v44, v45 = v42(v43, v44)
+                        if v44 == nil then
+                            break
+                        end
+                        local v46, v47, v48 = ipairs(workspace:WaitForChild("Items"):GetChildren())
+                        local v49 = {}
+                        while true do
+                            local v50
+                            v48, v50 = v46(v47, v48)
+                            if v48 == nil then
+                                break
+                            end
+                            if v50.Name == v45 then
+                                table.insert(v49, v50)
+                            end
+                        end
+                        for v51 = 1, math.min(10, # v49) do
+                            vu27(v49[v51], vu17)
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+v4:Section({
+    Title = "Auto Cook Food",
+    Icon = "flame"
+})
+v4:Dropdown({
+    Title = "Select Food to Cook",
+    Desc = "Choose food items to auto cook",
+    Values = vu19,
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p52)
+        local v53, v54, v55 = ipairs(vu19)
+        while true do
+            local v56
+            v55, v56 = v53(v54, v55)
+            if v55 == nil then
+                break
+            end
+            vu20[v56] = table.find(p52, v56) ~= nil
+        end
+    end
+})
+v4:Toggle({
+    Title = "Auto Cook Food",
+    Value = false,
+    Callback = function(p57)
+        vu21 = p57
+    end
+})
+coroutine.wrap(function()
+    while true do
+        if vu21 then
+            local v58, v59, v60 = pairs(vu20)
+            while true do
+                local v61
+                v60, v61 = v58(v59, v60)
+                if v60 == nil then
+                    break
+                end
+                if v61 then
+                    local v62, v63, v64 = ipairs(vu11:WaitForChild("Items"):GetChildren())
+                    local v65 = v60
+                    while true do
+                        local v66
+                        v64, v66 = v62(v63, v64)
+                        if v64 == nil then
+                            break
+                        end
+                        if v66.Name == v65 then
+                            vu27(v66, vu15)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)()
+local vu67 = "sapling"
+local vu68 = 75
+local vu69 = 44
+local vu70 = true
+local vu71 = 0.06
+local vu72 = 6
+local vu73 = CFrame.new(- 1.29994965, 1.99994278, - 1.50001144, - 0.249999881, 0.432982802, 0.866040468, 0.865997314, 0.500048637, - 0.000015437603, - 0.43306911, 0.74998486, - 0.499974132)
+local vu74 = "Circle"
+local vu75 = (function()
+    return vu10:FindFirstChild("RemoteEvents") and vu10.RemoteEvents:FindFirstChild("RequestPlantItem") or nil
+end)()
+local function vu94()
+    local v76 = workspace:FindFirstChild("Items")
+    if v76 then
+        local v77, v78, v79 = ipairs(v76:GetChildren())
+        while true do
+            local v80
+            v79, v80 = v77(v78, v79)
+            if v79 == nil then
+                break
+            end
+            if v80.Name:lower():find(vu67:lower()) then
+                return v80
+            end
+        end
+    end
+    local v81 = vu10
+    local v82, v83, v84 = ipairs(v81:GetDescendants())
+    while true do
+        local v85
+        v84, v85 = v82(v83, v84)
+        if v84 == nil then
+            break
+        end
+        if (v85:IsA("Model") or v85:IsA("Tool")) and v85.Name:lower():find(vu67:lower()) then
+            return v85
+        end
+    end
+    local v86, v87, v88 = ipairs({
+        vu9.LocalPlayer:FindFirstChild("Backpack"),
+        vu9.LocalPlayer:FindFirstChild("Inventory")
+    })
+    while true do
+        local v89
+        v88, v89 = v86(v87, v88)
+        if v88 == nil then
+            break
+        end
+        if v89 then
+            local v90, v91, v92 = ipairs(v89:GetChildren())
+            while true do
+                local v93
+                v92, v93 = v90(v91, v92)
+                if v92 == nil then
+                    break
+                end
+                if v93.Name:lower():find(vu67:lower()) then
+                    return v93
+                end
+            end
+        end
+    end
+    return nil
+end
+local function vu101(p95, p96)
+    local v97 = Vector3.new(p95.X, (p96 or p95.Y) + 50, p95.Z)
+    local v98 = Vector3.new(0, - 200, 0)
+    local v99 = RaycastParams.new()
+    v99.FilterDescendantsInstances = {
+        vu9.LocalPlayer.Character or vu9.LocalPlayer
+    }
+    v99.FilterType = Enum.RaycastFilterType.Blacklist
+    local v100 = workspace:Raycast(v97, v98, v99)
+    return v100 and v100.Position and v100.Position.Y or (p96 or p95.Y)
+end
+local function vu104(p102)
+    if vu70 then
+        local v103 = Instance.new("Part")
+        v103.Size = Vector3.new(1, 1, 1)
+        v103.Anchored = true
+        v103.CanCollide = false
+        v103.Transparency = 0.45
+        v103.Color = Color3.fromRGB(45, 200, 45)
+        v103.Name = "SaplingMarker"
+        v103.CFrame = CFrame.new(p102 + Vector3.new(0, 0.5, 0))
+        v103.Parent = workspace
+        vu14:AddItem(v103, vu72)
+    end
+end
+local function vu108(pu105, pu106)
+    if not pu105 then
+        return false
+    end
+    local v107 = false
+    if pu105.ClassName == "RemoteFunction" or pu105.InvokeServer then
+        v107 = pcall(function()
+            pu105:InvokeServer(table.unpack(pu106 or {}))
+        end)
+    elseif pu105.ClassName == "RemoteEvent" or pu105.FireServer then
+        v107 = pcall(function()
+            pu105:FireServer(table.unpack(pu106 or {}))
+        end)
+    end
+    return v107
+end
+local function vu117(p109, p110, p111)
+    if not p109 then
+        return false
+    end
+    local v112 = {
+        {
+            p110,
+            p111
+        },
+        {
+            p111,
+            p110
+        },
+        {
+            tostring(p110),
+            p111
+        },
+        {
+            p111,
+            tostring(p110)
+        }
+    }
+    local v113, v114, v115 = ipairs(v112)
+    while true do
+        local v116
+        v115, v116 = v113(v114, v115)
+        if v115 == nil then
+            break
+        end
+        if vu108(p109, v116) then
+            return true
+        end
+        task.wait(0.03)
+    end
+    return false
+end
+local function vu128(p118, p119, p120)
+    local v121 = vu94() or vu67
+    for v122 = 1, math.max(1, p119) do
+        local v123 = 2 * math.pi / p119 * (v122 - 1)
+        local v124 = p118.X + math.cos(v123) * p120
+        local v125 = p118.Z + math.sin(v123) * p120
+        local v126 = vu101(Vector3.new(v124, p118.Y, v125), p118.Y)
+        local v127 = Vector3.new(v124, v126, v125)
+        vu104(v127)
+        vu117(vu75, v121, v127)
+        task.wait(vu71)
+    end
+end
+local function vu142(p129, p130, p131)
+    local v132 = math.max(1, math.floor(math.sqrt(p130)))
+    local v133 = (v132 - 1) / 2
+    local v134 = vu94() or vu67
+    local v135 = 0
+    for v136 = 0, v132 - 1 do
+        local _ = v136
+        for v137 = 0, v132 - 1 do
+            if p130 <= v135 then
+                break
+            end
+            local v138 = p129.X + (v136 - v133) * p131
+            local v139 = p129.Z + (v137 - v133) * p131
+            local v140 = vu101(Vector3.new(v138, p129.Y, v139), p129.Y)
+            local v141 = Vector3.new(v138, v140, v139)
+            vu104(v141)
+            vu117(vu75, v134, v141)
+            v135 = v135 + 1
+            task.wait(vu71)
+        end
+    end
+end
+local function vu155(p143, p144, p145)
+    local v146 = vu94() or vu67
+    local v147 = math.pi / 4
+    local v148 = p145 / (2 * math.pi)
+    local v149 = 0
+    local v150 = 0
+    for _ = 1, math.max(1, p144) do
+        local v151 = p143.X + v150 * math.cos(v149)
+        local v152 = p143.Z + v150 * math.sin(v149)
+        local v153 = vu101(Vector3.new(v151, p143.Y, v152), p143.Y)
+        local v154 = Vector3.new(v151, v153, v152)
+        vu104(v154)
+        vu117(vu75, v146, v154)
+        v149 = v149 + v147
+        v150 = v150 + v148
+        task.wait(vu71)
+    end
+end
+local function vu165(p156, p157, p158)
+    local v159 = vu94() or vu67
+    for v160 = 0, p157 - 1 do
+        local v161 = p156.X + v160 * p158
+        local v162 = p156.Z
+        local v163 = vu101(Vector3.new(v161, p156.Y, v162), p156.Y)
+        local v164 = Vector3.new(v161, v163, v162)
+        vu104(v164)
+        vu117(vu75, v159, v164)
+        task.wait(vu71)
+    end
+end
+local function vu179(p166, p167, p168)
+    local v169 = vu94() or vu67
+    local v170 = 5
+    local v171 = math.pi / v170
+    local v172 = 0
+    for v173 = 0, 2 * v170 - 1 do
+        if p167 <= v172 then
+            break
+        end
+        local v174
+        if v173 % 2 ~= 0 or not p168 then
+            v174 = p168 / 2
+        else
+            v174 = p168
+        end
+        local v175 = p166.X + v174 * math.cos(v173 * v171)
+        local v176 = p166.Z + v174 * math.sin(v173 * v171)
+        local v177 = vu101(Vector3.new(v175, p166.Y, v176), p166.Y)
+        local v178 = Vector3.new(v175, v177, v176)
+        vu104(v178)
+        vu117(vu75, v169, v178)
+        v172 = v172 + 1
+        task.wait(vu71)
+    end
+end
+local function vu182(p180)
+    local v181 = vu73.Position
+    if p180 == "Circle" then
+        vu128(v181, vu68, vu69)
+    elseif p180 == "Square" then
+        vu142(v181, vu68, vu69)
+    elseif p180 == "Spiral" then
+        vu155(v181, vu68, vu69)
+    elseif p180 == "Line" then
+        vu165(v181, vu68, vu69)
+    elseif p180 == "Star" then
+        vu179(v181, vu68, vu69)
+    end
+end
+local vu183 = false
+local function vu184()
+    while vu183 do
+        vu182(vu74)
+        task.wait(0.5)
+    end
+end
+v4:Section({
+    Title = "Auto Plant",
+    Icon = "tree-deciduous"
+})
+v4:Dropdown({
+    Title = "Plant Pattern",
+    Desc = "Choose planting pattern",
+    Values = {
+        "Circle",
+        "Square",
+        "Spiral",
+        "Line",
+        "Star"
+    },
+    Multi = false,
+    Value = vu74,
+    Callback = function(p185)
+        vu74 = p185
+    end
+})
+v4:Toggle({
+    Title = "Auto Plant",
+    Value = vu183,
+    Callback = function(p186)
+        vu183 = p186
+        if p186 then
+            task.spawn(vu184)
+        end
+    end
+})
+local v187 = {
+    "Bandage",
+    "Bolt",
+    "Broken Fan",
+    "Broken Microwave",
+    "Cake",
+    "Carrot",
+    "Chair",
+    "Coal",
+    "Coin Stack",
+    "Cooked Morsel",
+    "Cooked Steak",
+    "Fuel Canister",
+    "Iron Body",
+    "Leather Armor",
+    "Log",
+    "MadKit",
+    "Metal Chair",
+    "MedKit",
+    "Old Car Engine",
+    "Old Flashlight",
+    "Old Radio",
+    "Revolver",
+    "Revolver Ammo",
+    "Rifle",
+    "Rifle Ammo",
+    "Morsel",
+    "Sheet Metal",
+    "Steak",
+    "Tyre",
+    "Washing Machine",
+    "Cultist Gem",
+    "Gem of the Forest Fragment"
+}
+local v188, v189, v190 = pairs(v187)
+local vu191 = vu9
+local vu192 = vu10
+local vu193 = vu11
+local vu194 = {}
+local v195 = {
+    "Bunny",
+    "Wolf",
+    "Alpha Wolf",
+    "Bear",
+    "Crossbow Cultist",
+    "Alien",
+    "Alien Elite",
+    "Polar Bear",
+    "Arctic Fox",
+    "Mammoth",
+    "Cultist",
+    "Cultist Melee",
+    "Cultist Crossbow",
+    "Cultist Juggernaut"
+}
+local vu196 = {}
+while true do
+    local v197
+    v190, v197 = v188(v189, v190)
+    if v190 == nil then
+        break
+    end
+    vu194[v197] = false
+end
+local v198, v199, v200 = pairs(v195)
+while true do
+    local v201
+    v200, v201 = v198(v199, v200)
+    if v200 == nil then
+        break
+    end
+    vu196[v201] = false
+end
+local function vu207(p202, p203, p204)
+    if not (p202 and p202:IsA("BasePart")) then
+        return nil
+    end
+    local v205 = Instance.new("BillboardGui")
+    v205.Name = "ProjectYoda_ESP"
+    v205.Adornee = p202
+    v205.Size = UDim2.new(0, 100, 0, 50)
+    v205.AlwaysOnTop = true
+    v205.StudsOffset = Vector3.new(0, 2.5, 0)
+    v205.MaxDistance = 300
+    local v206 = Instance.new("TextLabel", v205)
+    v206.BackgroundTransparency = 1
+    v206.Size = UDim2.new(1, 0, 1, 0)
+    v206.TextColor3 = p204 or Color3.new(1, 1, 1)
+    v206.TextStrokeColor3 = Color3.new(0, 0, 0)
+    v206.TextStrokeTransparency = 0.5
+    v206.Text = p203
+    v206.TextScaled = true
+    v206.Font = Enum.Font.SourceSansBold
+    v205.Parent = p202
+    return v205
+end
+local function vu217(p208, p209)
+    local v210 = vu193:FindFirstChild("Items")
+    if v210 then
+        local v211, v212, v213 = pairs(v210:GetChildren())
+        while true do
+            local v214
+            v213, v214 = v211(v212, v213)
+            if v213 == nil then
+                break
+            end
+            if v214.Name == p209 then
+                local v215 = nil
+                if v214:IsA("Model") then
+                    v214 = v214.PrimaryPart or v214:FindFirstChildWhichIsA("BasePart")
+                elseif not v214:IsA("BasePart") then
+                    v214 = v215
+                end
+                if v214 then
+                    local v216 = v214:FindFirstChild("ProjectYoda_ESP")
+                    if p208 and not v216 then
+                        vu207(v214, p209, Color3.fromRGB(0, 255, 0))
+                    elseif not p208 and v216 then
+                        v216:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
+local function vu227(p218, p219)
+    local v220 = vu193:FindFirstChild("Characters")
+    if v220 then
+        local v221, v222, v223 = pairs(v220:GetChildren())
+        while true do
+            local v224
+            v223, v224 = v221(v222, v223)
+            if v223 == nil then
+                break
+            end
+            if v224:IsA("Model") and v224.Name == p219 then
+                local v225 = v224:FindFirstChild("HumanoidRootPart") or (v224.PrimaryPart or v224:FindFirstChildWhichIsA("BasePart"))
+                if v225 then
+                    local v226 = v225:FindFirstChild("ProjectYoda_ESP")
+                    if p218 and not v226 then
+                        vu207(v225, p219, Color3.fromRGB(255, 255, 0))
+                    elseif not p218 and v226 then
+                        v226:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
+v6:Section({
+    Title = "Item ESP",
+    Icon = "box"
+})
+local v228, v229, v230 = pairs(v187)
+while true do
+    local vu231
+    v230, vu231 = v228(v229, v230)
+    if v230 == nil then
+        break
+    end
+    v6:Toggle({
+        Title = vu231,
+        Value = false,
+        Callback = function(p232)
+            vu194[vu231] = p232
+            vu217(p232, vu231)
+        end
+    })
+end
+v6:Section({
+    Title = "Entity ESP",
+    Icon = "users"
+})
+local v233, v234, v235 = pairs(v195)
+while true do
+    local vu236
+    v235, vu236 = v233(v234, v235)
+    if v235 == nil then
+        break
+    end
+    v6:Toggle({
+        Title = vu236,
+        Value = false,
+        Callback = function(p237)
+            vu196[vu236] = p237
+            vu227(p237, vu236)
+        end
+    })
+end
+local v238 = vu193:FindFirstChild("Items")
+if v238 then
+    v238.ChildAdded:Connect(function(p239)
+        task.wait(0.1)
+        local v240, v241, v242 = pairs(vu194)
+        while true do
+            local v243
+            v242, v243 = v240(v241, v242)
+            if v242 == nil then
+                break
+            end
+            if v243 and p239.Name == v242 then
+                vu217(true, v242)
+            end
+        end
+    end)
+end
+local v244 = vu193:FindFirstChild("Characters")
+if v244 then
+    v244.ChildAdded:Connect(function(p245)
+        task.wait(0.1)
+        local v246, v247, v248 = pairs(vu196)
+        while true do
+            local v249
+            v248, v249 = v246(v247, v248)
+            if v248 == nil then
+                break
+            end
+            if v249 and p245.Name == v248 then
+                vu227(true, v248)
+            end
+        end
+    end)
+end
+local vu250 = {}
+local vu251 = {}
+local vu252 = {}
+local vu253 = {}
+local vu254 = {}
+local function vu258(pu255, pu256)
+    if pu255 and pu255:IsDescendantOf(workspace) then
+        local vu257 = nil
+        if pu255:IsA("Model") then
+            vu257 = pu255.PrimaryPart or (pu255:FindFirstChildWhichIsA("BasePart") or pu255:FindFirstChild("Handle"))
+        elseif pu255:IsA("BasePart") then
+            vu257 = pu255
+        end
+        if vu257 and vu257:IsA("BasePart") then
+            if pu255:IsA("Model") and not pu255.PrimaryPart then
+                pcall(function()
+                    pu255.PrimaryPart = vu257
+                end)
+            end
+            pcall(function()
+                vu192.RemoteEvents.RequestStartDraggingItem:FireServer(pu255)
+                if pu255:IsA("Model") then
+                    pu255:SetPrimaryPartCFrame(CFrame.new(pu256))
+                else
+                    vu257.CFrame = CFrame.new(pu256)
+                end
+                vu192.RemoteEvents.StopDraggingItem:FireServer(pu255)
+            end)
+        end
+    else
+        return
+    end
+end
+local function vu269(p259)
+    if vu12.Character and vu12.Character:FindFirstChild("HumanoidRootPart") then
+        local v260 = vu12.Character.HumanoidRootPart.Position + Vector3.new(2, 0, 0)
+        local v261, v262, v263 = ipairs(p259)
+        while true do
+            local v264
+            v263, v264 = v261(v262, v263)
+            if v263 == nil then
+                break
+            end
+            local v265, v266, v267 = ipairs(workspace:GetDescendants())
+            while true do
+                local v268
+                v267, v268 = v265(v266, v267)
+                if v267 == nil then
+                    break
+                end
+                if v268.Name == v264 and (v268:IsA("BasePart") or v268:IsA("Model")) then
+                    vu258(v268, v260)
+                end
+            end
+        end
+    end
+end
+v5:Section({
+    Title = "Junk Items",
+    Icon = "box"
+})
+v5:Dropdown({
+    Title = "Select Junk Items",
+    Desc = "Choose items to bring",
+    Values = {
+        "Tyre",
+        "Bolt",
+        "Broken Fan",
+        "Broken Microwave",
+        "Sheet Metal",
+        "Old Radio",
+        "Washing Machine",
+        "Old Car Engine"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p270)
+        vu250 = p270
+    end
+})
+v5:Button({
+    Title = "Bring Junk Items",
+    Callback = function()
+        vu269(vu250)
+    end
+})
+v5:Section({
+    Title = "Fuel Items",
+    Icon = "flame"
+})
+v5:Dropdown({
+    Title = "Select Fuel Items",
+    Desc = "Choose items to bring",
+    Values = {
+        "Log",
+        "Chair",
+        "Coal",
+        "Fuel Canister",
+        "Oil Barrel"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p271)
+        vu251 = p271
+    end
+})
+v5:Button({
+    Title = "Bring Fuel Items",
+    Callback = function()
+        vu269(vu251)
+    end
+})
+v5:Section({
+    Title = "Food Items",
+    Icon = "utensils"
+})
+v5:Dropdown({
+    Title = "Select Food Items",
+    Desc = "Choose items to bring",
+    Values = {
+        "Cake",
+        "Cooked Steak",
+        "Cooked Morsel",
+        "Steak",
+        "Morsel",
+        "Berry",
+        "Carrot"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p272)
+        vu252 = p272
+    end
+})
+v5:Button({
+    Title = "Bring Food Items",
+    Callback = function()
+        vu269(vu252)
+    end
+})
+v5:Section({
+    Title = "Medical Items",
+    Icon = "bandage"
+})
+v5:Dropdown({
+    Title = "Select Medical Items",
+    Desc = "Choose items to bring",
+    Values = {
+        "Bandage",
+        "MedKit"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p273)
+        vu253 = p273
+    end
+})
+v5:Button({
+    Title = "Bring Medical Items",
+    Callback = function()
+        vu269(vu253)
+    end
+})
+v5:Section({
+    Title = "Equipment Items",
+    Icon = "sword"
+})
+v5:Dropdown({
+    Title = "Select Equipment Items",
+    Desc = "Choose items to bring",
+    Values = {
+        "Revolver",
+        "Rifle",
+        "Leather Body",
+        "Iron Body",
+        "Revolver Ammo",
+        "Rifle Ammo",
+        "Giant Sack",
+        "Good Sack",
+        "Strong Axe",
+        "Good Axe"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p274)
+        vu254 = p274
+    end
+})
+v5:Button({
+    Title = "Bring Equipment Items",
+    Callback = function()
+        vu269(vu254)
+    end
+})
+local vu275 = {}
+local vu276 = {}
+local function vu288(p277)
+    if vu12.Character and vu12.Character:FindFirstChild("HumanoidRootPart") then
+        local vu278 = vu12.Character.HumanoidRootPart.Position + Vector3.new(2, 0, 0)
+        local v279, v280, v281 = ipairs(p277)
+        while true do
+            local v282
+            v281, v282 = v279(v280, v281)
+            if v281 == nil then
+                break
+            end
+            local v283, v284, v285 = ipairs(workspace:GetDescendants())
+            while true do
+                local vu286
+                v285, vu286 = v283(v284, v285)
+                if v285 == nil then
+                    break
+                end
+                if vu286.Name == v282 and (vu286:IsA("BasePart") or vu286:IsA("Model")) then
+                    local vu287 = nil
+                    if vu286:IsA("Model") then
+                        vu287 = vu286.PrimaryPart or (vu286:FindFirstChildWhichIsA("BasePart") or vu286:FindFirstChild("Handle"))
+                    elseif vu286:IsA("BasePart") then
+                        vu287 = vu286
+                    end
+                    if vu287 then
+                        if vu286:IsA("Model") and not vu286.PrimaryPart then
+                            pcall(function()
+                                vu286.PrimaryPart = vu287
+                            end)
+                        end
+                        pcall(function()
+                            vu192.RemoteEvents.RequestStartDraggingItem:FireServer(vu286)
+                            if vu286:IsA("Model") then
+                                vu286:SetPrimaryPartCFrame(CFrame.new(vu278))
+                            else
+                                vu287.CFrame = CFrame.new(vu278)
+                            end
+                            vu192.RemoteEvents.StopDraggingItem:FireServer(vu286)
+                        end)
+                    end
+                end
+            end
+        end
+    end
+end
+local function vu300(p289)
+    if vu12.Character and vu12.Character:FindFirstChild("HumanoidRootPart") then
+        local vu290 = vu12.Character.HumanoidRootPart.Position + Vector3.new(2, 0, 0)
+        local v291, v292, v293 = ipairs(p289)
+        while true do
+            local v294
+            v293, v294 = v291(v292, v293)
+            if v293 == nil then
+                break
+            end
+            local v295, v296, v297 = ipairs(workspace:GetDescendants())
+            while true do
+                local vu298
+                v297, vu298 = v295(v296, v297)
+                if v297 == nil then
+                    break
+                end
+                if vu298.Name == v294 and (vu298:IsA("BasePart") or vu298:IsA("Model")) then
+                    local vu299 = nil
+                    if vu298:IsA("Model") then
+                        vu299 = vu298.PrimaryPart or (vu298:FindFirstChildWhichIsA("BasePart") or vu298:FindFirstChild("Handle"))
+                    elseif vu298:IsA("BasePart") then
+                        vu299 = vu298
+                    end
+                    if vu299 then
+                        if vu298:IsA("Model") and not vu298.PrimaryPart then
+                            pcall(function()
+                                vu298.PrimaryPart = vu299
+                            end)
+                        end
+                        pcall(function()
+                            vu192.RemoteEvents.RequestStartDraggingItem:FireServer(vu298)
+                            if vu298:IsA("Model") then
+                                vu298:SetPrimaryPartCFrame(CFrame.new(vu290))
+                            else
+                                vu299.CFrame = CFrame.new(vu290)
+                            end
+                            vu192.RemoteEvents.StopDraggingItem:FireServer(vu298)
+                        end)
+                    end
+                end
+            end
+        end
+    end
+end
+v5:Section({
+    Title = "Pelts",
+    Icon = "paw"
+})
+v5:Dropdown({
+    Title = "Select Pelts to Bring",
+    Desc = "Choose pelts to bring",
+    Values = {
+        "Bunny Foot",
+        "Wolf Pelt",
+        "Alpha Wolf Pelt",
+        "Bear Pelt",
+        "Arctic Fox Pelt",
+        "Polar Bear Pelt"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p301)
+        vu275 = p301
+    end
+})
+v5:Button({
+    Title = "Bring Pelts",
+    Callback = function()
+        vu288(vu275)
+    end
+})
+v5:Section({
+    Title = "Blueprints",
+    Icon = "clipboard"
+})
+v5:Dropdown({
+    Title = "Select Blueprints to Bring",
+    Desc = "Choose blueprints to bring",
+    Values = {
+        "Crafting Blueprint",
+        "Defense Blueprint",
+        "Furniture Blueprint"
+    },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(p302)
+        vu276 = p302
+    end
+})
+v5:Button({
+    Title = "Bring Blueprints",
+    Callback = function()
+        vu300(vu276)
+    end
+})
+local vu303 = false
+v7:Toggle({
+    Title = "Scan Map (Essential)",
+    Default = false,
+    Callback = function(p304)
+        vu303 = p304
+        local v305 = vu191.LocalPlayer
+        local vu306 = (v305.Character or v305.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart", 3)
+        if vu306 then
+            local v307 = workspace:FindFirstChild("Map")
+            if v307 then
+                local vu308 = v307:FindFirstChild("Foliage") or v307:FindFirstChild("Landmarks")
+                if vu308 then
+                    if p304 then
+                        task.spawn(function()
+                            while vu303 do
+                                local v309 = vu308
+                                local v310, v311, v312 = ipairs(v309:GetChildren())
+                                local v313 = {}
+                                while true do
+                                    local v314
+                                    v312, v314 = v310(v311, v312)
+                                    if v312 == nil then
+                                        break
+                                    end
+                                    if v314.Name == "Small Tree" and v314:IsA("Model") then
+                                        local v315 = v314:FindFirstChild("Trunk") or v314.PrimaryPart
+                                        if v315 then
+                                            table.insert(v313, v315)
+                                        end
+                                    end
+                                end
+                                local v316, v317, v318 = ipairs(v313)
+                                while true do
+                                    local v319
+                                    v318, v319 = v316(v317, v318)
+                                    if v318 == nil or not vu303 then
+                                        break
+                                    end
+                                    if v319 and v319.Parent then
+                                        local v320 = v319.CFrame
+                                        local v321 = v320.RightVector
+                                        local v322 = v320.Position + v321 * 69
+                                        vu306.CFrame = CFrame.new(v322)
+                                        task.wait(0.01)
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end
+            else
+                return
+            end
+        else
+            return
+        end
+    end
+})
+v7:Section({
+    Title = "Teleport",
+    Icon = "map"
+})
+v7:Button({
+    Title = "Teleport to Campfire",
+    Callback = function()
+        (vu191.LocalPlayer.Character or vu191.LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart").CFrame = CFrame.new(0.43, 15.77, - 1.88, - 0.27, 0.1, 0.95, 0.63, 0.76, 0.09, - 0.71, 0.63, - 0.27)
+    end
+})
+v7:Button({
+    Title = "Teleport to Stronghold",
+    Callback = function()
+        local v323 = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Landmarks") and (workspace.Map.Landmarks:FindFirstChild("Stronghold") and workspace.Map.Landmarks.Stronghold:FindFirstChild("Functional") and (workspace.Map.Landmarks.Stronghold.Functional:FindFirstChild("EntryDoors") and workspace.Map.Landmarks.Stronghold.Functional.EntryDoors:FindFirstChild("DoorRight")))
+        if v323 then
+            v323 = workspace.Map.Landmarks.Stronghold.Functional.EntryDoors.DoorRight:FindFirstChild("Model")
+        end
+        if v323 then
+            (vu191.LocalPlayer.Character or vu191.LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart").CFrame = v323.CFrame + Vector3.new(0, 5, 0)
+        end
+    end
+})
+v7:Button({
+    Title = "Teleport to Safe Zone",
+    Callback = function()
+        if not workspace:FindFirstChild("SafeZonePart") then
+            local v324 = Instance.new("Part")
+            v324.Name = "SafeZonePart"
+            v324.Size = Vector3.new(50, 50, 50)
+            v324.Position = Vector3.new(0, 105, 0)
+            v324.Anchored = true
+            v324.CanCollide = false
+            v324.Transparency = 0.8
+            v324.Color = Color3.fromRGB(255, 255, 255)
+            v324.Parent = workspace
+        end;
+        (vu191.LocalPlayer.Character or vu191.LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart").CFrame = CFrame.new(0, 110, 0)
+    end
+})
+v7:Button({
+    Title = "Teleport to Trader (Bunny Foot)",
+    Callback = function()
+        local v325 = Vector3.new(- 37.08, 3.98, - 16.33);
+        (vu191.LocalPlayer.Character or vu191.LocalPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart").CFrame = CFrame.new(v325)
+    end
+})
+v7:Section({
+    Title = "Tree",
+    Icon = "tree-deciduous"
+})
+v7:Button({
+    Title = "Teleport to Random Tree",
+    Callback = function()
+        local v326 = vu191.LocalPlayer
+        local v327 = (v326.Character or v326.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart", 3)
+        if v327 then
+            local v328 = workspace:FindFirstChild("Map")
+            if v328 then
+                local v329 = v328:FindFirstChild("Foliage") or v328:FindFirstChild("Landmarks")
+                if v329 then
+                    local v330, v331, v332 = ipairs(v329:GetChildren())
+                    local v333 = {}
+                    while true do
+                        local v334
+                        v332, v334 = v330(v331, v332)
+                        if v332 == nil then
+                            break
+                        end
+                        if v334.Name == "Small Tree" and v334:IsA("Model") then
+                            local v335 = v334:FindFirstChild("Trunk") or v334.PrimaryPart
+                            if v335 then
+                                table.insert(v333, v335)
+                            end
+                        end
+                    end
+                    if # v333 > 0 then
+                        local v336 = v333[math.random(1, # v333)].CFrame
+                        local v337 = v336.RightVector
+                        local v338 = v336.Position + v337 * 3
+                        v327.CFrame = CFrame.new(v338)
+                    end
+                end
+            else
+                return
+            end
+        else
+            return
+        end
+    end
+})
+v7:Section({
+    Title = "Children",
+    Icon = "eye"
+})
+local vu339 = {}
+local vu340 = {}
+local vu341 = nil
+local function vu347()
+    vu340 = {}
+    vu339 = {}
+    local v342 = workspace:FindFirstChild("Characters")
+    if v342 then
+        local v343, v344, v345 = pairs(v342:GetChildren())
+        while true do
+            local v346
+            v345, v346 = v343(v344, v345)
+            if v345 == nil then
+                break
+            end
+            if v346.Name:match("^Lost Child") and v346:GetAttribute("Lost") == true then
+                table.insert(vu339, v346)
+                table.insert(vu340, v346.Name)
+            end
+        end
+    end
+end
+vu347()
+local vu349 = v7:Dropdown({
+    Title = "Select Child",
+    Values = vu340,
+    Multi = false,
+    AllowNone = true,
+    Callback = function(p348)
+        vu341 = p348
+    end
+})
+v7:Button({
+    Title = "Refresh List",
+    Callback = function()
+        vu347()
+        if # vu340 <= 0 then
+            vu341 = nil
+            vu349:Refresh({
+                "No child found"
+            })
+        else
+            vu341 = vu340[1]
+            vu349:Refresh(vu340)
+        end
+    end
+})
+v7:Button({
+    Title = "Teleport to Child",
+    Callback = function()
+        if vu341 and vu339 then
+            local v350, v351, v352 = ipairs(vu340)
+            while true do
+                local v353
+                v352, v353 = v350(v351, v352)
+                if v352 == nil then
+                    break
+                end
+                if v353 == vu341 then
+                    local v354 = vu339[v352]
+                    if v354 then
+                        local v355 = v354.PrimaryPart or v354:FindFirstChildWhichIsA("BasePart")
+                        local v356 = v355 and vu191.LocalPlayer.Character and vu191.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if v356 then
+                            v356.CFrame = v355.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                    break
+                end
+            end
+        end
+    end
+})
+v7:Section({
+    Title = "Chest",
+    Icon = "box"
+})
+local vu357 = {}
+local vu358 = {}
+local vu359 = nil
+local function vu365()
+    vu358 = {}
+    vu357 = {}
+    local v360 = workspace:FindFirstChild("Items")
+    if v360 then
+        local v361, v362, v363 = pairs(v360:GetChildren())
+        while true do
+            local v364
+            v363, v364 = v361(v362, v363)
+            if v363 == nil then
+                break
+            end
+            if v364.Name:match("^Item Chest") and not v364:GetAttribute("8721081708Opened") then
+                table.insert(vu357, v364)
+                table.insert(vu358, "Chest " .. # vu358 + 1)
+            end
+        end
+    end
+end
+vu365()
+local vu367 = v7:Dropdown({
+    Title = "Select Chest",
+    Values = vu358,
+    Multi = false,
+    AllowNone = true,
+    Callback = function(p366)
+        vu359 = p366
+    end
+})
+v7:Button({
+    Title = "Refresh List",
+    Callback = function()
+        vu365()
+        if # vu358 <= 0 then
+            vu359 = nil
+            vu367:Refresh({
+                "No chests found"
+            })
+        else
+            vu359 = vu358[1]
+            vu367:Refresh(vu358)
+        end
+    end
+})
+v7:Button({
+    Title = "Teleport to Chest",
+    Callback = function()
+        if vu359 and vu357 then
+            local v368, v369, v370 = ipairs(vu358)
+            while true do
+                local v371
+                v370, v371 = v368(v369, v370)
+                if v370 == nil then
+                    break
+                end
+                if v371 == vu359 then
+                    local v372 = vu357[v370]
+                    if v372 then
+                        local v373 = v372.PrimaryPart or v372:FindFirstChildWhichIsA("BasePart")
+                        local v374 = v373 and vu191.LocalPlayer.Character and vu191.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if v374 then
+                            v374.CFrame = v373.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end
+                    break
+                end
+            end
+        end
+    end
+})
+local vu375 = false
+local vu376 = 1
+local vu377 = false
+local vu378 = nil
+local vu379 = nil
+local vu380 = nil
+local vu381 = nil
+local vu382 = game:GetService("UserInputService")
+local function vu394()
+    repeat
+        task.wait()
+    until vu191.LocalPlayer and vu191.LocalPlayer.Character and (vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart") and vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
+    repeat
+        task.wait()
+    until vu382
+    if vu378 or vu379 then
+        vu378:Disconnect()
+        vu379:Disconnect()
+    end
+    local vu383 = vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local vu384 = {
+        F = 0,
+        B = 0,
+        L = 0,
+        R = 0,
+        Q = 0,
+        E = 0
+    }
+    local vu385 = {
+        F = 0,
+        B = 0,
+        L = 0,
+        R = 0,
+        Q = 0,
+        E = 0
+    }
+    local vu386 = vu376
+    local function v389()
+        vu377 = true
+        local vu387 = Instance.new("BodyGyro")
+        local vu388 = Instance.new("BodyVelocity")
+        vu387.P = 90000
+        vu387.Parent = vu383
+        vu388.Parent = vu383
+        vu387.MaxTorque = Vector3.new(9000000000, 9000000000, 9000000000)
+        vu387.CFrame = vu383.CFrame
+        vu388.Velocity = Vector3.new(0, 0, 0)
+        vu388.MaxForce = Vector3.new(9000000000, 9000000000, 9000000000)
+        task.spawn(function()
+            while vu377 do
+                task.wait()
+                if not vu375 and vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = true
+                end
+                if vu384.L + vu384.R ~= 0 or (vu384.F + vu384.B ~= 0 or vu384.Q + vu384.E ~= 0) then
+                    vu386 = vu376
+                elseif vu384.L + vu384.R == 0 and (vu384.F + vu384.B == 0 and (vu384.Q + vu384.E == 0 and vu386 ~= 0)) then
+                    vu386 = 0
+                end
+                if vu384.L + vu384.R ~= 0 or (vu384.F + vu384.B ~= 0 or vu384.Q + vu384.E ~= 0) then
+                    vu388.Velocity = (workspace.CurrentCamera.CoordinateFrame.lookVector * (vu384.F + vu384.B) + (workspace.CurrentCamera.CoordinateFrame * CFrame.new(vu384.L + vu384.R, (vu384.F + vu384.B + vu384.Q + vu384.E) * 0.2, 0).p - workspace.CurrentCamera.CoordinateFrame.p)) * vu386
+                    vu385 = {
+                        F = vu384.F,
+                        B = vu384.B,
+                        L = vu384.L,
+                        R = vu384.R
+                    }
+                elseif vu384.L + vu384.R ~= 0 or (vu384.F + vu384.B ~= 0 or (vu384.Q + vu384.E ~= 0 or vu386 == 0)) then
+                    vu388.Velocity = Vector3.new(0, 0, 0)
+                else
+                    vu388.Velocity = (workspace.CurrentCamera.CoordinateFrame.lookVector * (vu385.F + vu385.B) + (workspace.CurrentCamera.CoordinateFrame * CFrame.new(vu385.L + vu385.R, (vu385.F + vu385.B + vu384.Q + vu384.E) * 0.2, 0).p - workspace.CurrentCamera.CoordinateFrame.p)) * vu386
+                end
+                vu387.CFrame = workspace.CurrentCamera.CoordinateFrame
+            end
+            vu384 = {
+                F = 0,
+                B = 0,
+                L = 0,
+                R = 0,
+                Q = 0,
+                E = 0
+            }
+            vu385 = {
+                F = 0,
+                B = 0,
+                L = 0,
+                R = 0,
+                Q = 0,
+                E = 0
+            }
+            vu386 = 0
+            vu387:Destroy()
+            vu388:Destroy()
+            if vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+            end
+        end)
+    end
+    vu378 = vu382.InputBegan:Connect(function(p390)
+        if p390.UserInputType == Enum.UserInputType.Keyboard then
+            local v391 = p390.KeyCode.Name
+            if v391 == "W" then
+                vu384.F = vu376
+            elseif v391 == "S" then
+                vu384.B = - vu376
+            elseif v391 == "A" then
+                vu384.L = - vu376
+            elseif v391 == "D" then
+                vu384.R = vu376
+            elseif v391 == "E" then
+                vu384.Q = vu376 * 2
+            elseif v391 == "Q" then
+                vu384.E = - vu376 * 2
+            end
+            pcall(function()
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Track
+            end)
+        end
+    end)
+    vu379 = vu382.InputEnded:Connect(function(p392)
+        if p392.UserInputType == Enum.UserInputType.Keyboard then
+            local v393 = p392.KeyCode.Name
+            if v393 == "W" then
+                vu384.F = 0
+            elseif v393 == "S" then
+                vu384.B = 0
+            elseif v393 == "A" then
+                vu384.L = 0
+            elseif v393 == "D" then
+                vu384.R = 0
+            elseif v393 == "E" then
+                vu384.Q = 0
+            elseif v393 == "Q" then
+                vu384.E = 0
+            end
+        end
+    end)
+    v389()
+end
+local function vu395()
+    vu377 = false
+    if vu378 then
+        vu378:Disconnect()
+    end
+    if vu379 then
+        vu379:Disconnect()
+    end
+    if vu380 then
+        vu380:Disconnect()
+    end
+    if vu381 then
+        vu381:Disconnect()
+    end
+    if vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+    pcall(function()
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+    end)
+end
+local function vu397()
+    pcall(function()
+        vu377 = false
+        local v396 = vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        if v396:FindFirstChild("BodyVelocity") then
+            v396:FindFirstChild("BodyVelocity"):Destroy()
+        end
+        if v396:FindFirstChild("BodyGyro") then
+            v396:FindFirstChild("BodyGyro"):Destroy()
+        end
+        if vu191.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") then
+            vu191.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").PlatformStand = false
+        end
+        if vu380 then
+            vu380:Disconnect()
+        end
+        if vu381 then
+            vu381:Disconnect()
+        end
+    end)
+end
+local function vu413()
+    vu397()
+    vu377 = true
+    local vu398 = vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local vu399 = workspace.CurrentCamera
+    local vu400 = Vector3.new()
+    local vu401 = Vector3.new(0, 0, 0)
+    local vu402 = Vector3.new(9000000000, 9000000000, 9000000000)
+    local vu403 = require(vu191.LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+    local v404 = Instance.new("BodyVelocity")
+    v404.Name = "BodyVelocity"
+    v404.Parent = vu398
+    v404.MaxForce = vu401
+    v404.Velocity = vu401
+    local v405 = Instance.new("BodyGyro")
+    v405.Name = "BodyGyro"
+    v405.Parent = vu398
+    v405.MaxTorque = vu402
+    v405.P = 1000
+    v405.D = 50
+    vu380 = vu191.LocalPlayer.CharacterAdded:Connect(function()
+        local v406 = vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        local v407 = Instance.new("BodyVelocity")
+        v407.Name = "BodyVelocity"
+        v407.Parent = v406
+        v407.MaxForce = vu401
+        v407.Velocity = vu401
+        local v408 = Instance.new("BodyGyro")
+        v408.Name = "BodyGyro"
+        v408.Parent = v406
+        v408.MaxTorque = vu402
+        v408.P = 1000
+        v408.D = 50
+    end)
+    vu381 = game:GetService("RunService").RenderStepped:Connect(function()
+        vu398 = vu191.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        vu399 = workspace.CurrentCamera
+        if vu191.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") and vu398 and (vu398:FindFirstChild("BodyVelocity") and vu398:FindFirstChild("BodyGyro")) then
+            local v409 = vu191.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            local v410 = vu398:FindFirstChild("BodyVelocity")
+            local v411 = vu398:FindFirstChild("BodyGyro")
+            v410.MaxForce = vu402
+            v411.MaxTorque = vu402
+            v409.PlatformStand = true
+            v411.CFrame = vu399.CoordinateFrame
+            v410.Velocity = vu400
+            local v412 = vu403:GetMoveVector()
+            if v412.X > 0 then
+                v410.Velocity = v410.Velocity + vu399.CFrame.RightVector * (v412.X * (vu376 * 50))
+            end
+            if v412.X < 0 then
+                v410.Velocity = v410.Velocity + vu399.CFrame.RightVector * (v412.X * (vu376 * 50))
+            end
+            if v412.Z > 0 then
+                v410.Velocity = v410.Velocity - vu399.CFrame.LookVector * (v412.Z * (vu376 * 50))
+            end
+            if v412.Z < 0 then
+                v410.Velocity = v410.Velocity - vu399.CFrame.LookVector * (v412.Z * (vu376 * 50))
+            end
+        end
+    end)
+end
+v8:Section({
+    Title = "Main",
+    Icon = "eye"
+})
+v8:Slider({
+    Title = "Fly Speed",
+    Value = {
+        Min = 1,
+        Max = 20,
+        Default = 1
+    },
+    Callback = function(p414)
+        vu376 = p414
+        if vu377 then
+            task.spawn(function()
+                while vu377 do
+                    task.wait(0.1)
+                    if game:GetService("UserInputService").TouchEnabled then
+                        local v415 = vu191.LocalPlayer.Character
+                        if v415 then
+                            v415 = vu191.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        end
+                        if v415 and v415:FindFirstChild("BodyVelocity") then
+                            local v416 = v415:FindFirstChild("BodyVelocity")
+                            v416.Velocity = v416.Velocity.Unit * (vu376 * 50)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+v8:Toggle({
+    Title = "Enable Fly",
+    Value = false,
+    Callback = function(p417)
+        vu375 = p417
+        if vu375 then
+            if game:GetService("UserInputService").TouchEnabled then
+                vu413()
+            else
+                vu394()
+            end
+        else
+            vu395()
+            vu397()
+        end
+    end
+})
+local vu418 = 16
+local vu419 = 50
+local function vu422(p420)
+    local v421 = vu191.LocalPlayer.Character
+    if v421 then
+        v421 = vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    end
+    if v421 then
+        v421.WalkSpeed = p420
+    end
+end
+local function vu425(p423)
+    local v424 = vu191.LocalPlayer.Character
+    if v424 then
+        v424 = vu191.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    end
+    if v424 then
+        v424.JumpPower = p423
+    end
+end
+v8:Slider({
+    Title = "Speed",
+    Value = {
+        Min = 16,
+        Max = 300,
+        Default = 16
+    },
+    Callback = function(p426)
+        vu418 = p426
+    end
+})
+v8:Toggle({
+    Title = "Enable Speed",
+    Value = false,
+    Callback = function(p427)
+        vu422(p427 and vu418 or 16)
+    end
+})
+v8:Slider({
+    Title = "Jump",
+    Value = {
+        Min = 10,
+        Max = 300,
+        Default = 50
+    },
+    Callback = function(p428)
+        vu419 = p428
+    end
+})
+v8:Toggle({
+    Title = "Enable Jump",
+    Value = false,
+    Callback = function(p429)
+        vu425(p429 and vu419 or 50)
+    end
+})
+local vu430 = nil
+v8:Toggle({
+    Title = "No Clip",
+    Value = false,
+    Callback = function(p431)
+        if p431 then
+            vu430 = game:GetService("RunService").Stepped:Connect(function()
+                local v432 = vu191.LocalPlayer.Character
+                if v432 then
+                    local v433, v434, v435 = ipairs(v432:GetDescendants())
+                    while true do
+                        local v436
+                        v435, v436 = v433(v434, v435)
+                        if v435 == nil then
+                            break
+                        end
+                        if v436:IsA("BasePart") then
+                            v436.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        elseif vu430 then
+            vu430:Disconnect()
+            vu430 = nil
+        end
+    end
+})
+local vu437 = nil
+v8:Toggle({
+    Title = "Infinite Jump",
+    Value = false,
+    Callback = function(p438)
+        if p438 then
+            vu437 = vu13.JumpRequest:Connect(function()
+                local v439 = vu191.LocalPlayer.Character
+                if v439 then
+                    v439 = v439:FindFirstChildOfClass("Humanoid")
+                end
+                if v439 then
+                    v439:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        elseif vu437 then
+            vu437:Disconnect()
+            vu437 = nil
+        end
+    end
+})
+local vu440 = false
+local vu441 = false
+local vu442 = 50
+local vu443 = 0
+local vu444 = false
+local vu445 = {
+    ["Old Axe"] = "3_7367831688",
+    ["Good Axe"] = "112_7367831688",
+    ["Strong Axe"] = "116_7367831688",
+    Chainsaw = "647_8992824875",
+    Spear = "196_8999010016"
+}
+local function vu452(p446)
+    local v447, v448, v449 = pairs(vu445)
+    while true do
+        local v450
+        v449, v450 = v447(v448, v449)
+        if v449 == nil then
+            break
+        end
+        if not p446 or (v449 == "Old Axe" or (v449 == "Good Axe" or (v449 == "Strong Axe" or v449 == "Chainsaw"))) then
+            local v451 = vu12:FindFirstChild("Inventory")
+            if v451 then
+                v451 = vu12.Inventory:FindFirstChild(v449)
+            end
+            if v451 then
+                return v451, v450
+            end
+        end
+    end
+    return nil, nil
+end
+local function vu454(p453)
+    if p453 then
+        vu192:WaitForChild("RemoteEvents").EquipItemHandle:FireServer("FireAllClients", p453)
+    end
+end
+local function vu456(p455)
+    if p455 then
+        vu192:WaitForChild("RemoteEvents").UnequipItemHandle:FireServer("FireAllClients", p455)
+    end
+end
+local function vu465()
+    while vu440 do
+        local v457 = (vu12.Character or vu12.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+        if v457 then
+            local vu458, vu459 = vu452(false)
+            if vu458 and vu459 then
+                vu454(vu458)
+                local v460, v461, v462 = ipairs(vu193.Characters:GetChildren())
+                while true do
+                    local vu463
+                    v462, vu463 = v460(v461, v462)
+                    if v462 == nil then
+                        break
+                    end
+                    if vu463:IsA("Model") then
+                        local vu464 = vu463:FindFirstChildWhichIsA("BasePart")
+                        if vu464 and (vu464.Position - v457.Position).Magnitude <= vu442 then
+                            pcall(function()
+                                vu192:WaitForChild("RemoteEvents").ToolDamageObject:InvokeServer(vu463, vu458, vu459, CFrame.new(vu464.Position))
+                            end)
+                        end
+                    end
+                end
+                task.wait(0.1)
+            else
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+local function vu485()
+    while vu441 do
+        local v466 = (vu12.Character or vu12.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+        if v466 then
+            local vu467, v468 = vu452(true)
+            if vu467 and v468 then
+                vu454(vu467)
+                vu443 = vu443 + 1
+                local v469 = {}
+                local v470 = vu193:FindFirstChild("Map")
+                if v470 then
+                    if v470:FindFirstChild("Foliage") then
+                        local v471, v472, v473 = ipairs(v470.Foliage:GetChildren())
+                        while true do
+                            local v474
+                            v473, v474 = v471(v472, v473)
+                            if v473 == nil then
+                                break
+                            end
+                            if v474:IsA("Model") and v474.Name == "Small Tree" then
+                                table.insert(v469, v474)
+                            end
+                        end
+                    end
+                    if v470:FindFirstChild("Landmarks") then
+                        local v475, v476, v477 = ipairs(v470.Landmarks:GetChildren())
+                        while true do
+                            local v478
+                            v477, v478 = v475(v476, v477)
+                            if v477 == nil then
+                                break
+                            end
+                            if v478:IsA("Model") and v478.Name == "Small Tree" then
+                                table.insert(v469, v478)
+                            end
+                        end
+                    end
+                end
+                local v479, v480, v481 = ipairs(v469)
+                while true do
+                    local vu482
+                    v481, vu482 = v479(v480, v481)
+                    if v481 == nil then
+                        break
+                    end
+                    local v483 = vu482:FindFirstChild("Trunk")
+                    if v483 and (v483:IsA("BasePart") and (v483.Position - v466.Position).Magnitude <= vu442) then
+                        local vu484 = false
+                        task.spawn(function()
+                            while vu441 and (vu482 and (vu482.Parent and not vu484)) do
+                                vu484 = true
+                                vu443 = vu443 + 1
+                                pcall(function()
+                                    vu192:WaitForChild("RemoteEvents").ToolDamageObject:InvokeServer(vu482, vu467, tostring(vu443) .. "_7367831688", CFrame.new(- 2.962610244751, 4.5547881126404, - 75.950843811035, 0.89621275663376, - 1.3894891459643e-8, 0.44362446665764, - 7.994568895775e-10, 1, 3.293635941759e-8, - 0.44362446665764, - 2.9872644802253e-8, 0.89621275663376))
+                                end)
+                                task.wait(0.5)
+                            end
+                        end)
+                    end
+                end
+                task.wait(0.1)
+            else
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+v3:Section({
+    Title = "Aura",
+    Icon = "star"
+})
+v3:Toggle({
+    Title = "Kill Aura",
+    Value = false,
+    Callback = function(p486)
+        vu440 = p486
+        if p486 then
+            task.spawn(vu465)
+        else
+            local v487, _ = vu452(false)
+            vu456(v487)
+        end
+    end
+})
+v3:Toggle({
+    Title = "Chop Aura",
+    Value = false,
+    Callback = function(p488)
+        vu441 = p488
+        if p488 then
+            task.spawn(vu485)
+        else
+            local v489, _ = vu452(true)
+            vu456(v489)
+        end
+    end
+})
+v3:Section({
+    Title = "Settings",
+    Icon = "settings"
+})
+v3:Slider({
+    Title = "Aura Radius",
+    Value = {
+        Min = 50,
+        Max = 500,
+        Default = 50
+    },
+    Callback = function(p490)
+        vu442 = math.clamp(p490, 10, 500)
+    end
+})
+v3:Section({
+    Title = "Godmode",
+    Icon = "shield"
+})
+v3:Toggle({
+    Title = "Godmode",
+    Value = false,
+    Callback = function(p491)
+        vu444 = p491
+        if p491 then
+            task.spawn(function()
+                while vu444 do
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("DamagePlayer"):FireServer(- (1 / 0))
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+    end
+})

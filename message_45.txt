@@ -1,0 +1,837 @@
+
+--- HACKMANHUB DEOBFUSCATOR
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local PathfindingService = game:GetService("PathfindingService")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+
+getgenv().AutoFarmConfig = {
+    Webhook = "https://discord.com/api/webhooks/1341133404963475487/5wX-uJoqDiigOUYeKYWp1ia9Qsa0N7N9TVn-7xFCM7xiIznGU3CXORCwC7SQGEv1VkC1",
+    BaseLockInterval = 60,
+    StealCooldown = 5,
+    ServerHopDelay = 10,
+    TargetPetNames = {
+        "Graipuss Medussi",
+        "La Grande Combinasion", "Garama and Madundung", "Tralaledon",
+        "Pot Hotspot",
+        "Nuclearo Dinossauro",  
+        "Chicleteira Bicicleteira", "Los Combinasionas", "Dragon Cannelloni",
+        "Los Bros", "Esok Sekolah", "Ketupat Kepat", "Las Sis", "Los Hotspotsitos",
+        "La Supreme Combinasion", "Ketchuru and Musturo", "Spaghetti Tualetti",
+        "La Sahur Combinasion", "Los Bicicleteira", "Strawberry Elephant",
+    },
+    RichServerThreshold = 5
+}
+
+local function muteSounds()
+    local function muteSound(sound)
+        if sound:IsA("Sound") then
+            sound.Volume = 0
+            sound:Stop()
+        end
+    end
+
+    local function muteDescendants(instance)
+        for _, obj in ipairs(instance:GetDescendants()) do
+            muteSound(obj)
+        end
+    end
+
+    local folders = {Workspace, Players, ReplicatedStorage, game:GetService("Lighting"), 
+                    game:GetService("StarterGui"), game:GetService("StarterPack")}
+
+    for _, folder in ipairs(folders) do
+        muteDescendants(folder)
+        folder.DescendantAdded:Connect(function(obj)
+            muteSound(obj)
+        end)
+    end
+end
+
+local function sendWebhook(message, foundPets, serverInfo)
+    if not getgenv().AutoFarmConfig.Webhook or getgenv().AutoFarmConfig.Webhook == "" then
+        return
+    end
+
+    local petCounts = {}
+    if foundPets then
+        for _, pet in ipairs(foundPets) do
+            petCounts[pet] = (petCounts[pet] or 0) + 1
+        end
+    end
+
+    local formattedPets = {}
+    for petName, count in pairs(petCounts) do
+        table.insert(formattedPets, petName .. (count > 1 and " x" .. count or ""))
+    end
+
+    local embedData = {
+        username = "Brainrot Farmer",
+        content = message and "@everyone" or nil,
+        embeds = {{
+            title = message or "Farm Update",
+            color = message and 16711680 or 65280,
+            fields = {
+                {
+                    name = "User ğŸ‘¤",
+                    value = Players.LocalPlayer.Name,
+                    inline = true
+                },
+                {
+                    name = "Players ğŸ‘¥",
+                    value = string.format("%d/%d", #Players:GetPlayers(), Players.MaxPlayers),
+                    inline = true
+                },
+                {
+                    name = "Status ğŸ“Š",
+                    value = serverInfo or "Active",
+                    inline = true
+                },
+                {
+                    name = "Brainrots ğŸ¾",
+                    value = #formattedPets > 0 and table.concat(formattedPets, "
+") or "No pets found",
+                    inline = false
+                }
+            },
+            footer = {text = "Made By porxiai & mruptime"},
+            timestamp = DateTime.now():ToIsoDate()
+        }}
+    }
+
+    local jsonData = HttpService:JSONEncode(embedData)
+    local requestFunc = syn and syn.request or request or http_request
+    
+    if requestFunc then
+        pcall(function()
+            requestFunc({
+                Url = getgenv().AutoFarmConfig.Webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+    end
+end
+
+local function findBrainrots()
+    local found = {}
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") then
+            local name = obj.Name
+            for _, target in ipairs(getgenv().AutoFarmConfig.TargetPetNames) do
+                if string.find(string.lower(name), string.lower(target)) then
+                    table.insert(found, name)
+                    break
+                end
+            end
+        end
+    end
+    return found
+end
+
+local function analyzeServer()
+    local brainrotCount = #findBrainrots()
+    local playerCount = #Players:GetPlayers()
+    local richPlayers = 0
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player:FindFirstChild("leaderstats") then
+            local stats = player.leaderstats
+            if stats:FindFirstChild("Rebirths") or stats:FindFirstChild("Steals") or stats:FindFirstChild("Money") then
+                local rebirths = stats:FindFirstChild("Rebirths") and stats.Rebirths.Value or 0
+                local steals = stats:FindFirstChild("Steals") and stats.Steals.Value or 0
+                local money = stats:FindFirstChild("Money") and stats.Money.Value or 0
+                
+                if rebirths > 100 or steals > 50 or money > 100000 then
+                    richPlayers = richPlayers + 1
+                end
+            end
+        end
+    end
+    
+    return {
+        brainrots = brainrotCount,
+        players = playerCount,
+        richPlayers = richPlayers,
+        isRich = brainrotCount >= getgenv().AutoFarmConfig.RichServerThreshold or richPlayers >= 3
+    }
+end
+
+local function createPathfinder()
+    local character = Players.LocalPlayer.Character
+    if not character then return nil end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoidRootPart or not humanoid then return nil end
+
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        WaypointSpacing = 4,
+        Costs = {
+            Water = 10,
+            Lava = 100
+        }
+    })
+
+    local function moveToPosition(targetPosition)
+        local startPosition = humanoidRootPart.Position
+        
+        path:ComputeAsync(startPosition, targetPosition)
+        
+        if path.Status == Enum.PathStatus.Success then
+            local waypoints = path:GetWaypoints()
+            
+            for _, waypoint in ipairs(waypoints) do
+                if waypoint.Action == Enum.PathWaypointAction.Jump then
+                    humanoid.Jump = true
+                end
+                
+                humanoid:MoveTo(waypoint.Position)
+                
+                local reached = false
+                local connection
+                connection = humanoid.MoveToFinished:Connect(function(success)
+                    reached = success
+                    connection:Disconnect()
+                end)
+                
+                local timeout = 0
+                while not reached and timeout < 5 do
+                    timeout += RunService.Heartbeat:Wait()
+                    if (humanoidRootPart.Position - waypoint.Position).Magnitude < 4 then
+                        reached = true
+                    end
+                end
+            end
+            return true
+        else
+            humanoid:MoveTo(targetPosition)
+            local timeout = 0
+            while (humanoidRootPart.Position - targetPosition).Magnitude > 6 and timeout < 3 do
+                timeout += RunService.Heartbeat:Wait()
+            end
+            return false
+        end
+    end
+
+    return moveToPosition
+end
+
+local function tweenToPosition(position)
+    local character = Players.LocalPlayer.Character
+    if not character then return nil end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return nil end
+    
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(position)})
+    
+    tween:Play()
+    return tween
+end
+
+local function attemptSteal(brainrotModel)
+    local success, result = pcall(function()
+        local args = {
+            1758220492.190085,
+            "5c0bd012-dfb2-4bac-8f1a-e41f136e4744"
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/b096e1ca-9c3a-453b-8b60-268b235083b9"):FireServer(unpack(args))
+        
+        wait(1)
+        
+        local args2 = {
+            1758220599.603691,
+            "c262398d-68e3-4499-8bea-99766bf11686",
+            "ca4da353-d3fc-4e24-82b9-fff58fba6138",
+            2
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/5aa39ea1-0c65-4fcf-aff9-b18a7ef277c3"):FireServer(unpack(args2))
+    end)
+    
+    return success
+end
+
+local function lockBase()
+    local moveToPosition = createPathfinder()
+    if not moveToPosition then return false end
+
+    local basePosition = nil
+    local plots = Workspace:FindFirstChild("Plots")
+    if plots then
+        for _, plot in ipairs(plots:GetChildren()) do
+            local sign = plot:FindFirstChild("PlotSign")
+            local base = plot:FindFirstChild("DeliveryHitbox")
+            if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled and base then
+                basePosition = base.Position
+                break
+            end
+        end
+    end
+
+    if basePosition then
+        if moveToPosition(basePosition) then
+            local success = pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/LockBase"):FireServer()
+            end)
+            return success
+        end
+    end
+    return false
+end
+
+local function hopToRichServer()
+    local serverIds = {game.PlaceId}
+    
+    sendWebhook("Server hopping to rich server!", nil, "Server Hop")
+    
+    local success, result = pcall(function()
+        TeleportService:Teleport(serverIds[1], Players.LocalPlayer)
+    end)
+    
+    if not success then
+        sendWebhook("Server hop failed: " .. tostring(result), nil, "Hop Failed")
+    end
+    
+    return success
+end
+
+local function setCharacterVisibility(visible)
+    local character = Players.LocalPlayer.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = visible and 0 or 1
+            end
+        end
+    end
+end
+
+local function startAutoFarm()
+    muteSounds()
+    
+    local lastBaseLock = 0
+    local isFarming = true
+    
+    sendWebhook("Auto Farm Started!", nil, "System Online")
+    
+    coroutine.wrap(function()
+        while isFarming do
+            local serverInfo = analyzeServer()
+            
+            if not serverInfo.isRich then
+                sendWebhook("Server not rich enough, hopping...", nil, "Poor Server")
+                if hopToRichServer() then
+                    wait(getgenv().AutoFarmConfig.ServerHopDelay)
+                    continue
+                end
+            end
+            
+            local brainrots = findBrainrots()
+            
+            if #brainrots > 0 then
+                sendWebhook(nil, brainrots, "Brainrots Found: " .. #brainrots)
+                
+                for _, brainrotName in ipairs(brainrots) do
+                    if not isFarming then break end
+                    
+                    local brainrotModel = Workspace:FindFirstChild(brainrotName)
+                    if brainrotModel and brainrotModel:FindFirstChild("HumanoidRootPart") then
+                        local moveToPosition = createPathfinder()
+                        if moveToPosition then
+                            moveToPosition(brainrotModel.HumanoidRootPart.Position)
+                            
+                            if attemptSteal(brainrotModel) then
+                                sendWebhook("Successfully stole: " .. brainrotName, nil, "Steal Success")
+                            else
+                                sendWebhook("Failed to steal: " .. brainrotName, nil, "Steal Failed")
+                            end
+                            
+                            wait(getgenv().AutoFarmConfig.StealCooldown)
+                        end
+                    end
+                end
+            else
+                sendWebhook("No brainrots found, hopping server...", nil, "No Targets")
+                hopToRichServer()
+                wait(getgenv().AutoFarmConfig.ServerHopDelay)
+            end
+            
+            local currentTime = tick()
+            if currentTime - lastBaseLock >= getgenv().AutoFarmConfig.BaseLockInterval then
+                if lockBase() then
+                    lastBaseLock = currentTime
+                    sendWebhook("Base locked successfully!", nil, "Base Secured")
+                end
+            end
+            
+            wait(1)
+        end
+    end)()
+    
+    return {
+        stop = function()
+            isFarming = false
+            sendWebhook("Auto Farm Stopped!", nil, "System Offline")
+        end,
+        
+        forceLockBase = function()
+            lockBase()
+        end,
+        
+        forceServerHop = function()
+            hopToRichServer()
+        end,
+        
+        setInvisible = function(state)
+            setCharacterVisibility(not state)
+        end,
+        
+        getStatus = function()
+            return {
+                farming = isFarming,
+                lastBaseLock = lastBaseLock,
+                serverInfo = analyzeServer(),
+                brainrotsFound = findBrainrots()
+            }
+        end
+    }
+end
+
+local function createFarmGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AutoFarmGUI"
+    screenGui.Parent = CoreGui
+    screenGui.ResetOnSpawn = false
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 400, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.Parent = screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(100, 65, 165)
+    stroke.Thickness = 2
+    stroke.Parent = mainFrame
+
+    local title = Instance.new("TextLabel")
+    title.Text = "BRAINROT AUTO FARM"
+    title.Size = UDim2.new(1, 0, 0, 60)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(200, 160, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 24
+    title.TextStrokeTransparency = 0.8
+    title.Parent = mainFrame
+
+    local statusFrame = Instance.new("Frame")
+    statusFrame.Size = UDim2.new(0.9, 0, 0, 150)
+    statusFrame.Position = UDim2.new(0.05, 0, 0.15, 0)
+    statusFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    statusFrame.BorderSizePixel = 0
+    statusFrame.Parent = mainFrame
+
+    local statusCorner = Instance.new("UICorner")
+    statusCorner.CornerRadius = UDim.new(0, 8)
+    statusCorner.Parent = statusFrame
+
+    local statusTitle = Instance.new("TextLabel")
+    statusTitle.Text = "CURRENT STATUS"
+    statusTitle.Size = UDim2.new(1, 0, 0, 30)
+    statusTitle.Position = UDim2.new(0, 0, 0, 0)
+    statusTitle.BackgroundTransparency = 1
+    statusTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusTitle.Font = Enum.Font.GothamBold
+    statusTitle.TextSize = 16
+    statusTitle.Parent = statusFrame
+
+    local statusText = Instance.new("TextLabel")
+    statusText.Name = "StatusText"
+    statusText.Text = "Ready to start..."
+    statusText.Size = UDim2.new(1, 0, 0, 120)
+    statusText.Position = UDim2.new(0, 0, 0, 30)
+    statusText.BackgroundTransparency = 1
+    statusText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    statusText.Font = Enum.Font.Gotham
+    statusText.TextSize = 14
+    statusText.TextWrapped = true
+    statusText.TextXAlignment = Enum.TextXAlignment.Left
+    statusText.TextYAlignment = Enum.TextYAlignment.Top
+    statusText.Parent = statusFrame
+
+    local startButton = Instance.new("TextButton")
+    startButton.Name = "StartButton"
+    startButton.Text = "START FARMING"
+    startButton.Size = UDim2.new(0.8, 0, 0, 50)
+    startButton.Position = UDim2.new(0.1, 0, 0.55, 0)
+    startButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    startButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    startButton.Font = Enum.Font.GothamBold
+    startButton.TextSize = 18
+    startButton.Parent = mainFrame
+
+    local startCorner = Instance.new("UICorner")
+    startCorner.CornerRadius = UDim.new(0, 8)
+    startCorner.Parent = startButton
+
+    local stopButton = Instance.new("TextButton")
+    stopButton.Name = "StopButton"
+    stopButton.Text = "STOP FARMING"
+    stopButton.Size = UDim2.new(0.8, 0, 0, 50)
+    stopButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+    stopButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    stopButton.Font = Enum.Font.GothamBold
+    stopButton.TextSize = 18
+    stopButton.Visible = false
+    stopButton.Parent = mainFrame
+
+    local stopCorner = Instance.new("UICorner")
+    stopCorner.CornerRadius = UDim.new(0, 8)
+    stopCorner.Parent = stopButton
+
+    local lockButton = Instance.new("TextButton")
+    lockButton.Text = "Lock Base"
+    lockButton.Size = UDim2.new(0.8, 0, 0, 40)
+    lockButton.Position = UDim2.new(0.1, 0, 0.85, 0)
+    lockButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+    lockButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    lockButton.Font = Enum.Font.GothamBold
+    lockButton.TextSize = 16
+    lockButton.Parent = mainFrame
+
+    local lockCorner = Instance.new("UICorner")
+    lockCorner.CornerRadius = UDim.new(0, 8)
+    lockCorner.Parent = lockButton
+
+    local invisibleButton = Instance.new("TextButton")
+    invisibleButton.Text = "INVISIBLE: OFF"
+    invisibleButton.Size = UDim2.new(0.35, 0, 0, 30)
+    invisibleButton.Position = UDim2.new(0.1, 0, 0.45, 0)
+    invisibleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    invisibleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    invisibleButton.Font = Enum.Font.Gotham
+    invisibleButton.TextSize = 12
+    invisibleButton.Parent = mainFrame
+
+    local invisibleCorner = Instance.new("UICorner")
+    invisibleCorner.CornerRadius = UDim.new(0, 6)
+    invisibleCorner.Parent = invisibleButton
+
+    local loadScriptButton = Instance.new("TextButton")
+    loadScriptButton.Text = "LOAD SCRIPT"
+    loadScriptButton.Size = UDim2.new(0.35, 0, 0, 30)
+    loadScriptButton.Position = UDim2.new(0.55, 0, 0.45, 0)
+    loadScriptButton.BackgroundColor3 = Color3.fromRGB(65, 65, 165)
+   )
+ loadScriptButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loadScriptButton.TextColor3 = Color3.fromRGB(255, 255, 255    loadScriptButton.Font = Enum.Font.G)
+    loadScriptButton.Font = Enum.Font.Gotham
+    loadotham
+    loadScriptButton.TextSize = 12
+    loadScriptButton.Parent = mainFrame
+
+   ScriptButton.TextSize = 12
+    loadScriptButton.Parent = mainFrame
+
+    local loadCorner = Instance.new("UICorner")
+    loadCorner local loadCorner = Instance.new("UICorner")
+    loadCorner.CornerRadius.CornerRadius = UDim.new(0 = UDim.new(0, 6)
+    load, 6)
+    loadCorner.PCorner.Parent = loadScriptarent = loadScriptButton
+
+   Button
+
+    local closeButton = local closeButton = Instance.new("Text Instance.new("TextButton")
+Button")
+    closeButton    closeButton.Text = ".Text = "X"
+X"
+    closeButton    closeButton.Size = UDim2.new(.Size = UDim2.new(0, 300, 30, , 0, 300, 30)
+   )
+    closeButton.Position closeButton.Position = = UDim2.new(0.9, 0 UDim2.new(0., 0.029, 0, 0.02, 0)
+    closeButton, 0)
+    closeButton.Background.BackgroundColor3Color3 = Color3 = Color3.fromRGB(170,.fromRGB(170, 0, 0,  0)
+0)
+    closeButton.TextColor3    closeButton.TextColor3 = = Color3.fromRGB Color3.fromRGB((255, 255255, 255, 255)
+    close, 255)
+    closeButton.Font = Enum.FontButton.Font = Enum.Font.G.GothamBoldothamBold
+    closeButton.TextSize =
+    closeButton.Text 16
+    closeButton.Parent = mainFrameSize = 16
+    closeButton.Parent = mainFrame
+
+    local closeCorner = Instance.new("
+
+    local closeCorner = Instance.new("UICUICorner")
+    closeorner")
+    closeCornerCorner.C.CorornernerRadiusRadius = UDim.new(0, 15)
+    = UDim.new(0, 15)
+    closeCor closeCorner.Parent =ner.Parent = closeButton
+
+    local farmController closeButton
+
+    local = nil
+    local invisibleEnabled = false farmController = nil
+
+
+    local    local invisibleEnabled = false
+
+    local function updateStatus(message)
+        statusText function updateStatus(message)
+        statusText.Text = message
+.Text = message
+    end
+
+    startButton.MouseButton1Click    end
+
+    startButton.MouseButton1Click::Connect(function()
+        updateStatus("Starting autoConnect(function()
+        updateStatus("Starting auto farm farm...
+â€¢ Muting...
+â€¢ Muting sounds
+â€¢ Analyzing server
+â€¢ sounds
+â€¢ Analyzing Starting farm loop")
+        
+        farmController = startAuto server
+â€¢ Starting farm loop")
+        
+        farmController = startAutoFarm()
+        
+Farm()
+        
+        startButton.        startButton.Visible = false
+        stopButtonVisible = false
+        stopButton.Visible = true.Visible = true
+        
+        update
+        
+        updateStatus("Auto farm running!
+â€¢ Searching forStatus("Auto farm running!
+â€¢ Searching for brainrots
+â€¢ Auto brainrots
+â€¢ Auto server server hopping
+â€¢ hopping
+â€¢ Base locking Base locking every " .. 
+                    every " .. 
+                    get getgenv().AutoFarmConfiggenv().AutoFarmConfig.Base.BaseLockInterval .. "s
+LockInterval .. "s
+â€¢ Webhook notifications active")
+    endâ€¢ Webhook notifications active")
+    end)
+
+    stopButton.Mouse)
+
+    stopButton.MouseButton1Click:Button1Click:Connect(function()
+        if farmController then
+Connect            farmController.stop()
+            farm(function()
+        if farmController then
+            farmController.stop()
+            farmController = nil
+       Controller = nil
+        end
+        
+        startButton end
+        
+        startButton..Visible = true
+        stopVisible = true
+        stopButtonButton.Visible = false.Visible = false
+        
+
+        
+        updateStatus("Auto        updateStatus("Auto farm stopped.
+ farm stopped.
+ReadyReady to start again.")
+ to start again.")
+       end)
+
+    lockButton end)
+
+    lockButton.M.MouseButton1ouseButton1ClickClick:Connect(function()
+       :Connect(function()
+        update updateStatus("ManuallyStatus("Manually locking base locking base......")
+        if farmController then
+            farmController.force")
+        if farmController then
+            farmController.forceLockBase()
+        else
+           LockBase()
+        else
+            lockBase()
+        end
+        updateStatus("Base lockBase()
+        end
+        updateStatus("Base lock command sent.")
+    end lock command sent.")
+    end)
+
+    invisibleButton)
+
+    invisibleButton.M.MouseButton1Click:Connect(function()
+        invisibleEnabled = not invisibleEnabled
+       ouseButton1Click:Connect(function()
+        invisibleEnabled = not invisibleEnabled
+        if farm if farmController then
+            farmController.setInvisible(invisibleEnabled)
+        elseController then
+            farm
+            setCharacterVisibility(not invisibleEnabled)
+        end
+Controller.setInvisible(invisibleEnabled)
+        else
+            setCharacterVisibility(not invisibleEnabled)
+        end
+        invisibleButton.Text = "INVIS        invisibleButton.Text = "INVISIBLE: " .. (invisibleEnabled and "ONIBLE: " .. (invisibleEnabled and "ON" or" or "OFF")
+        invisibleButton.BackgroundColor3 = invisibleEnabled and Color3.fromRGB( "OFF")
+        invisibleButton.BackgroundColor3 = invisibleEnabled and Color3.fromRGB(00, 170, 0) or Color3.fromRGB(170, 0, , 170, 0) or Color3.fromRGB(170, 0, 00)
+    end)
+
+    loadScriptButton.MouseButton1Click:Connect(function()
+        update)
+    end)
+
+    loadScriptButton.MouseButton1Click:Connect(function()
+        updateStatusStatus("Reloading script...")
+        wait(1)
+        screenGui:Destroy()
+        loadstring(game("Reloading script...")
+        wait(1)
+        screenGui:Destroy()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/:HttpGet("https://raw.githubusercontent.com/your-repo/auto-farm/main/script.lua"))()
+   your-repo/auto-farm/main/script.lua"))()
+    end)
+
+    closeButton.M end)
+
+    closeButton.MouseButton1Click:ouseButton1Click:Connect(function()
+        screenConnect(function()
+        screenGui:Destroy()
+    end)
+
+Gui:Destroy()
+    end)
+
+    local dragging = false
+    local dragInput, dragStart,    local dragging = false
+    local dragInput, dragStart, startPos
+
+    mainFrame.InputBegan startPos
+
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            input.Changed = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            input:Connect(function()
+                if input.Changed:Connect(function()
+                if input.User.UserInputState == EnumInputState == Enum.UserInputState.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    mainFrame.InputChanged:
+    end)
+
+    mainFrame.InputChanged:Connect(function(input)
+        if input.UserInputTypeConnect(function(input)
+        if input == Enum.UserInputType.Mouse.UserInputType == Enum.UserInputType.MouseMovement then
+Movement then
+            drag            dragInput = input
+Input = input
+        end
+        end
+    end)
+
+       end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position -.Position - dragStart
+            mainFrame dragStart
+            mainFrame.Position =.Position = UDim2.new(startPos.X.Scale UDim2.new(startPos.X.Scale, startPos, startPos.X.Offset + delta.X,.X.Offset + delta.X, 
+                                          start 
+                                          startPos.Y.Scale,Pos.Y.Scale, startPos.Y startPos.Y.Offset + delta.Y)
+       .Offset + delta.Y)
+        end
+    end end
+    end)
+
+    return screenGui
+end
+
+)
+
+    return screenGui
+end
+
+local function initializelocal function initializeAutoFarm()
+    local farmAutoFarm()
+    local farmGUI =GUI = createFarmGUI()
+    
+ createFarmGUI()
+    
+    send    sendWebhook("AutoWebhook("Auto Farm System Initial Farm System Initialized!", nil, "Ready toized!", nil, "Ready to Start")
+    
+    print("Brainrot Auto Farm System Loaded! Start")
+    
+    print("Brainrot Auto Farm System")
+    print("Made By porxiai & mruptime")
+    
+    return {
+        GUI = farmGUI,
+ Loaded!")
+    print("Made By porxiai & mruptime")
+    
+    return {
+        GUI        startFarm = startAutoFarm,
+        lockBase = lockBase = farmGUI,
+        startFarm = startAutoFarm,
+        lockBase =,
+        analyzeServer = analyzeServer,
+        findBrainrots = lockBase,
+        analyzeServer = analyzeServer,
+        findBrainrots = findBrainrots
+    findBrainrots
+    }
+ }
+end
+
+local AutoFarmSystem = initializeAutoFarm()
+return AutoFarmSystem
+```end
+
+local AutoFarmSystem = initializeAutoFarm()
+return AutoFarmSystem

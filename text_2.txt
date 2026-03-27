@@ -1,0 +1,153 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait();
+end;
+if game.PlaceId ~= 96151237893653 then
+    game:GetService("TeleportService"):Teleport(96151237893653, game.Players.LocalPlayer);
+end;
+local l_Window_0 = loadstring(game:HttpGet("https://sirius.menu/rayfield"))():CreateWindow({
+    Name = "Turt Hub", 
+    Icon = 5245791520, 
+    LoadingTitle = "Brainrot Royale \239\191\189\239\191\189\239\191\189\239\191\189\239\191\189\239\191\189  Script Loading...", 
+    LoadingSubtitle = "Made by Turt", 
+    ShowText = "", 
+    Theme = "Default", 
+    ToggleUIKeybind = "K", 
+    DisableRayfieldPrompts = true, 
+    DisableBuildWarnings = true, 
+    ConfigurationSaving = {
+        Enabled = true, 
+        FolderName = "Turt Hub", 
+        FileName = "Turt Hub"
+    }, 
+    Discord = {
+        Enabled = false, 
+        Invite = "MgzCjp3JsU", 
+        RememberJoins = true
+    }, 
+    KeySystem = false, 
+    KeySettings = {
+        Title = "Untitled", 
+        Subtitle = "Key System", 
+        Note = "No method of obtaining the key is provided", 
+        FileName = "Key", 
+        SaveKey = true, 
+        GrabKeyFromSite = false, 
+        Key = {
+            "Hello"
+        }
+    }
+});
+queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport;
+local l_ReplicatedStorage_0 = game:GetService("ReplicatedStorage");
+local l_HttpService_0 = game:GetService("HttpService");
+local l_MaterialCollectEvent_0 = l_ReplicatedStorage_0.Remotes.MaterialCollectEvent;
+local l_CashMagnetEvent_0 = l_ReplicatedStorage_0.Remotes.CashMagnetEvent;
+local _ = false;
+local v6 = false;
+local v7 = false;
+local l_l_Window_0_Tab_0 = l_Window_0:CreateTab("AutoFarm", 130521044774541);
+local _ = l_l_Window_0_Tab_0:CreateSection("AutoFarm");
+local v10 = syn and syn.request or http and http.request or request;
+if v10 then
+    v10({
+        Url = "http://127.0.0.1:6463/rpc?v=1", 
+        Method = "POST", 
+        Headers = {
+            ["Content-Type"] = "application/json", 
+            Origin = "https://discord.com"
+        }, 
+        Body = l_HttpService_0:JSONEncode({
+            cmd = "INVITE_BROWSER", 
+            args = {
+                code = "fF5bHJDcZt"
+            }, 
+            nonce = l_HttpService_0:GenerateGUID(false)
+        })
+    });
+end;
+local v11 = nil;
+for _, v13 in pairs(workspace.Bases:GetChildren()) do
+    for _, v15 in pairs(v13:GetChildren()) do
+        if v15:GetAttribute("Owner") == game.Players.LocalPlayer.Name then
+            v11 = v13;
+        end;
+    end;
+end;
+local _ = l_l_Window_0_Tab_0:CreateToggle({
+    Name = "Instant Kill Brainrots", 
+    CurrentValue = false, 
+    Flag = "Toggle1", 
+    Callback = function(v16) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_l_Window_0_Tab_0 (ref), v11 (ref)
+        l_l_Window_0_Tab_0 = v16;
+        if v16 then
+            task.spawn(function() --[[ Line: 0 ]] --[[ Name:  ]]
+                -- upvalues: l_l_Window_0_Tab_0 (ref), v11 (ref)
+                while l_l_Window_0_Tab_0 do
+                    for _, v18 in pairs(workspace.Bases[tostring(v11)].Enemies:GetChildren()) do
+                        local l_Humanoid_0 = v18:FindFirstChild("Humanoid");
+                        if l_Humanoid_0 and l_Humanoid_0.Health > 0 then
+                            l_Humanoid_0.Health = 0;
+                        end;
+                    end;
+                    task.wait();
+                end;
+            end);
+        end;
+    end
+});
+local v21 = nil;
+local _ = l_l_Window_0_Tab_0:CreateToggle({
+    Name = "Auto Collect Candy", 
+    CurrentValue = false, 
+    Flag = "Toggle2", 
+    Callback = function(v22) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v6 (ref), v21 (ref), l_ReplicatedStorage_0 (ref), l_MaterialCollectEvent_0 (ref)
+        v6 = v22;
+        if v22 then
+            v21 = l_ReplicatedStorage_0.Remotes.MaterialDropEvent.OnClientEvent:Connect(function(_, _, v25) --[[ Line: 0 ]] --[[ Name:  ]]
+                -- upvalues: l_MaterialCollectEvent_0 (ref)
+                l_MaterialCollectEvent_0:FireServer(v25);
+            end);
+            task.spawn(function() --[[ Line: 0 ]] --[[ Name:  ]]
+                -- upvalues: v6 (ref)
+                while v6 do
+                    for _, v27 in pairs(Workspace:GetChildren()) do
+                        if v27.Name == "MaterialTemp" then
+                            v27:Destroy();
+                        end;
+                    end;
+                    task.wait();
+                end;
+            end);
+        elseif v21 then
+            v21:Disconnect();
+            v21 = nil;
+        end;
+    end
+});
+local _ = l_l_Window_0_Tab_0:CreateToggle({
+    Name = "Auto Collect Coins", 
+    CurrentValue = false, 
+    Flag = "Toggle3", 
+    Callback = function(v29) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v7 (ref), l_CashMagnetEvent_0 (ref)
+        v7 = v29;
+        if v29 then
+            task.spawn(function() --[[ Line: 0 ]] --[[ Name:  ]]
+                -- upvalues: v7 (ref), l_CashMagnetEvent_0 (ref)
+                while v7 do
+                    for _, v31 in pairs(Workspace:GetChildren()) do
+                        local l_v31_Attribute_0 = v31:GetAttribute("EnemyType");
+                        if l_v31_Attribute_0 then
+                            l_CashMagnetEvent_0:FireServer(l_v31_Attribute_0);
+                            v31:Destroy();
+                        end;
+                    end;
+                    task.wait();
+                end;
+            end);
+        end;
+    end
+});
+queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/BlossomHub123/Brainrot-Royale/refs/heads/main/.lua'))()");

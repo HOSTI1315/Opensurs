@@ -1,0 +1,101 @@
+_G.InstaPickup = true
+
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local player = Players.LocalPlayer
+    
+    local function getCharacter()
+        return player.Character or player.CharacterAdded:Wait()
+    end
+    
+    local function getHRP()
+        local char = getCharacter()
+        return char:WaitForChild("HumanoidRootPart")
+    end
+    
+    local hrp = getHRP()
+    local humanoid = getCharacter():WaitForChild("Humanoid")
+    
+    player.CharacterAdded:Connect(function()
+        hrp = getHRP()
+        humanoid = getCharacter():WaitForChild("Humanoid")
+    end)
+    
+    local function getPromptPosition(prompt)
+        local parent = prompt.Parent
+        
+        if parent:IsA("BasePart") then
+            return parent.Position
+        end
+        
+        if parent:IsA("Model") then
+            local primary = parent.PrimaryPart or parent:FindFirstChildWhichIsA("BasePart")
+            if primary then
+                return primary.Position
+            end
+        end
+        
+        if parent:IsA("Attachment") then
+            return parent.WorldPosition
+        end
+        
+        return nil
+    end
+    
+    local function findNearestPrompt()
+        local nearest = nil
+        local minDist = math.huge
+        local plots = workspace:FindFirstChild("Plots")
+        
+        if not plots then return nil, math.huge end
+        
+        for _, obj in pairs(plots:GetDescendants()) do
+            if obj:IsA("ProximityPrompt") and obj.Enabled and obj.ActionText == "Steal" then
+                local pos = getPromptPosition(obj)
+                
+                if pos then
+                    local dist = (hrp.Position - pos).Magnitude
+                    
+                    if dist <= obj.MaxActivationDistance and dist < minDist then
+                        minDist = dist
+                        nearest = obj
+                    end
+                end
+            end
+        end
+        
+        return nearest, minDist
+    end
+    
+    local function activatePrompt(prompt)
+        fireproximityprompt(prompt, 20, math.huge)
+        prompt:InputHoldBegin()
+        prompt:InputHoldEnd()
+    end
+    
+    local currentPrompt = nil
+    local currentDistance = math.huge
+    local lastUpdate = 0
+    
+    RunService.Heartbeat:Connect(function()
+        local now = tick()
+        if now - lastUpdate >= 0.05 then
+            currentPrompt, currentDistance = findNearestPrompt()
+            lastUpdate = now
+        end
+    end)
+    
+    while true do
+        if _G.InstaPickup and humanoid.WalkSpeed > 25 then
+            if currentPrompt and currentDistance <= currentPrompt.MaxActivationDistance then
+                activatePrompt(currentPrompt)
+                task.wait(1.5)
+            else
+                task.wait(0.1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end)

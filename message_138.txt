@@ -1,0 +1,82 @@
+
+-- made by farxss 
+-- testing no ragdoll 
+
+local p = game:GetService("Players").LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local h = c:WaitForChild("Humanoid")
+local r = c:WaitForChild("HumanoidRootPart")
+local rs = game:GetService("RunService")
+
+r.Anchored = false
+r.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 100, 100)
+
+local lastPos = r.Position
+local lastCF = r.CFrame
+-- block start
+local function block()
+    p:SetAttribute("RagdollEndTime", nil)
+    c:SetAttribute("RagdollEndTime", nil)
+end
+p.AttributeChanged:Connect(function(a)
+    if a == "RagdollEndTime" then block() end
+end)
+c.AttributeChanged:Connect(function(a)
+    if a == "RagdollEndTime" then block() end
+end)
+h.StateChanged:Connect(function(o, n)
+    if n == Enum.HumanoidStateType.Physics or 
+       n == Enum.HumanoidStateType.Ragdoll or 
+       n == Enum.HumanoidStateType.FallingDown then
+        h:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+    end
+end)
+for _, m in pairs(c:GetDescendants()) do
+    if m:IsA("Motor6D") then
+        m:GetPropertyChangedSignal("Enabled"):Connect(function()
+            if not m.Enabled then m.Enabled = true end
+        end)
+    end
+    if m:IsA("BasePart") and m ~= r then
+        m.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0, 0, 100, 100)
+    end
+end
+c.DescendantAdded:Connect(function(d)
+    if d:IsA("BallSocketConstraint") or d:IsA("HingeConstraint") then
+        d:Destroy()
+    elseif d:IsA("BodyVelocity") or d:IsA("BodyForce") or d:IsA("BodyPosition") or d:IsA("BodyGyro") or d:IsA("BodyThrust") or d:IsA("BodyAngularVelocity") then
+        d:Destroy()
+    end
+end)
+local locked = false
+rs.Heartbeat:Connect(function()
+    for _, d in pairs(c:GetDescendants()) do
+        if d:IsA("BodyVelocity") or d:IsA("BodyForce") or d:IsA("BodyPosition") or d:IsA("BodyGyro") then
+            d:Destroy()
+        end
+    end
+    local moving = h.MoveVector.Magnitude > 0.1 or h.Jump
+    if moving then
+        lastPos = r.Position
+        lastCF = r.CFrame
+        locked = false
+    end
+    local vel = r.AssemblyLinearVelocity
+    if vel.Magnitude > 50 and not moving and not locked then
+        r.CFrame = lastCF
+        r.AssemblyLinearVelocity = Vector3.zero
+        r.AssemblyAngularVelocity = Vector3.zero
+        locked = true
+        task.wait(0.1)
+        locked = false
+    end
+end)
+r:GetPropertyChangedSignal("CFrame"):Connect(function()
+    if locked then
+        r.CFrame = lastCF
+    end
+end)
+h:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+h:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+h:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+block()

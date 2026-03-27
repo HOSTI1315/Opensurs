@@ -1,0 +1,547 @@
+-- 🌑 RETRO V137 - Noir Final Technical (Right F3-P4 Aim Fix)
+-- Logic Combo: 40%(Equip/Unequip) -> 60%(Q Logic) -> 91%(Click)
+-- Integrated: Dynamic UI + Exact Coords.
+-- UPDATED: Right Base Floor 3 Position #4 (Aim adjusted slightly higher).
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
+
+-- ==================== НАСТРОЙКИ И СОХРАНЕНИЯ ====================
+
+local FILE_NAME = "RetroV137_Dual_Config.json"
+local MIN_PET_VALUE = 1000000
+local Z_THRESHOLD = 60 -- Граница: Z < 60 (Левая), Z > 60 (Правая)
+
+local Config = {
+    AutoHuntBind = "T",
+    Windows = {
+        ["Retro Flash TP"] = {Visible = true, Pos = {0.5, -450, 0.5, -122}},
+        ["Auto Pos"] = {Visible = false, Pos = {0.5, -260, 0.5, -125}},
+        ["Settings"] = {Visible = false, Pos = {0.5, 260, 0.5, -90}},
+        ["Tp Priority"] = {Visible = true, Pos = {0.5, 260, 0.5, 100}}
+    }
+}
+
+local function SaveConfig()
+    pcall(function() writefile(FILE_NAME, HttpService:JSONEncode(Config)) end)
+end
+
+local function LoadConfig()
+    pcall(function()
+        if isfile(FILE_NAME) then
+            local decoded = HttpService:JSONDecode(readfile(FILE_NAME))
+            for k, v in pairs(decoded) do if Config[k] ~= nil then Config[k] = v end end
+        end
+    end)
+end
+LoadConfig()
+
+-- ==================== БАЗЫ ДАННЫХ КООРДИНАТ ====================
+
+local AimLocations = {
+    Right = {
+        FirstFloor = {
+            {id = "1", pos = Vector3.new(-330.7, -4.1, 94.5), aim = Vector3.new(-331.8, -5.0, 91.1)},
+            {id = "2", pos = Vector3.new(-322.7, -4.1, 95.0), aim = Vector3.new(-324.8, -5.7, 91.1)},
+            {id = "3", pos = Vector3.new(-316.5, -4.1, 93.9), aim = Vector3.new(-318.3, -4.9, 91.1)},
+            {id = "4", pos = Vector3.new(-308.1, -4.1, 96.1), aim = Vector3.new(-311.5, -7.1, 91.1)},
+            {id = "5", pos = Vector3.new(-301.5, -4.1, 94.6), aim = Vector3.new(-305.0, -6.0, 91.1)},
+        },
+        SecondFloor = {
+            {id = "1", pos = Vector3.new(-329.3, 13.8, 97.0), aim = Vector3.new(-329.9, 10.4, 95.3)},
+            {id = "2", pos = Vector3.new(-322.5, 13.8, 97.2), aim = Vector3.new(-323.0, 10.4, 95.3)},
+            {id = "3", pos = Vector3.new(-315.1, 13.8, 97.3), aim = Vector3.new(-315.6, 10.4, 95.7)},
+            {id = "4", pos = Vector3.new(-307.0, 13.8, 96.8), aim = Vector3.new(-307.7, 10.4, 95.2)},
+            {id = "5", pos = Vector3.new(-299.4, 13.8, 96.5), aim = Vector3.new(-300.3, 10.4, 94.8)},
+        },
+        ThirdFloor = {
+            {id = "1", pos = Vector3.new(-329.8, 30.8, 93.2), aim = Vector3.new(-329.8, 35.1, 91.1)},
+            {id = "2", pos = Vector3.new(-323.5, 30.8, 93.2), aim = Vector3.new(-323.5, 34.6, 91.1)},
+            {id = "3", pos = Vector3.new(-315.8, 30.9, 94.1), aim = Vector3.new(-315.8, 35.2, 91.1)},
+            -- ПОЗИЦИЯ 4: AIM ПРИПОДНЯТ (Y: 27.4 -> 28.0)
+            {id = "4", pos = Vector3.new(-304.9, 30.8, 95.8), aim = Vector3.new(-306.9, 28.0, 94.0)},
+            {id = "5", pos = Vector3.new(-299.5, 30.9, 93.9), aim = Vector3.new(-303.4, 26.9, 92.0)},
+        }
+    },
+    Left = {
+        FirstFloor = {
+            {id = "1", pos = Vector3.new(-329.5, -4.2, 24.2), aim = Vector3.new(-331.5, -6.9, 29.1)},
+            {id = "2", pos = Vector3.new(-324.2, -4.1, 23.6), aim = Vector3.new(-327.6, -7.8, 29.1)},
+            {id = "3", pos = Vector3.new(-308.4, -4.1, 24.4), aim = Vector3.new(-307.5, -0.0, 20.3)},
+            {id = "4", pos = Vector3.new(-308.1, -4.1, 25.4), aim = Vector3.new(-309.7, -5.0, 29.1)},
+            {id = "5", pos = Vector3.new(-301.4, -4.1, 25.8), aim = Vector3.new(-302.1, -5.2, 29.1)},
+        },
+        SecondFloor = {
+            {id = "1", pos = Vector3.new(-317.4, 13.9, 25.3), aim = Vector3.new(-315.1, 11.1, 29.1)}, 
+            {id = "2", pos = Vector3.new(-324.4, 13.9, 25.9), aim = Vector3.new(-324.4, 18.0, 29.1)}, 
+            {id = "3", pos = Vector3.new(-318.7, 13.7, 24.3), aim = Vector3.new(-317.4, 10.1, 27.1)},
+        },
+        ThirdFloor = {
+            {id = "1", pos = Vector3.new(-330.2, 30.9, 25.2), aim = Vector3.new(-330.1, 35.2, 29.1)},
+            {id = "2", pos = Vector3.new(-321.9, 30.9, 23.7), aim = Vector3.new(-321.0, 27.4, 25.2)},
+        }
+    }
+}
+
+-- ==================== МАРШРУТЫ КЛОНЕРА (ROUTES) ====================
+
+local Routes = {
+    Right = {
+        Floor1 = { path = {}, base = Vector3.new(-342.8, -5.9, 101.0) },
+        Floor2 = { 
+            path = { Vector3.new(-374.6, 3.1, 43.9), Vector3.new(-380.7, 10.4, 68.1) }, 
+            base = Vector3.new(-334.3, 13.4, 87.9) 
+        },
+        Floor3 = { 
+            path = { Vector3.new(-381.6, -6.5, 28.8), Vector3.new(-373.7, 3.1, 43.4), Vector3.new(-380.8, 10.4, 68.3), Vector3.new(-329.8, 13.4, 87.6), Vector3.new(-328.9, 21.1, 80.3), Vector3.new(-330.1, 24.5, 82.6), Vector3.new(-330.1, 30.4, 87.6) }, 
+            base = Vector3.new(-335.4, 30.4, 88.3) 
+        }
+    },
+    Left = {
+        Floor1 = { 
+            path = {}, 
+            base = Vector3.new(-342.8, -5.8, 8.1)
+        },
+        Floor2 = {
+            path = {
+                Vector3.new(-379.1, 1.3, 80.0),
+                Vector3.new(-378.7, 4.3, 78.5),
+                Vector3.new(-380.3, 10.3, 63.2)
+            },
+            base = Vector3.new(-336.2, 13.4, 32.1)
+        },
+        Floor3 = {
+            path = {
+                Vector3.new(-378.8, 1.3, 80.0),
+                Vector3.new(-378.7, 4.3, 78.5),
+                Vector3.new(-380.3, 10.3, 63.2),
+                Vector3.new(-336.2, 13.4, 32.1),
+                Vector3.new(-335.6, 21.2, 43.0),
+                Vector3.new(-334.6, 23.4, 40.0)
+            },
+            base = Vector3.new(-333.8, 30.4, 32.3)
+        }
+    }
+}
+
+-- ==================== ЛОГИКА КЛИКА ====================
+
+local function forceClick(btn)
+    if not btn then return end
+    pcall(function()
+        if getconnections then
+            for _, sig in pairs({"MouseButton1Click", "Activated", "MouseButton1Down"}) do
+                for _, conn in pairs(getconnections(btn[sig])) do
+                    if conn.Function then conn:Fire() end
+                end
+            end
+        end
+    end)
+    pcall(function() if firesignal then firesignal(btn.MouseButton1Click) end end)
+    pcall(function() btn.MouseButton1Click:Fire() end)
+end
+
+-- ==================== УТИЛИТЫ ====================
+
+local function FormatNumber(n)
+    if n >= 1e12 then return string.format("%.1fT", n/1e12)
+    elseif n >= 1e9 then return string.format("%.1fB", n/1e9)
+    elseif n >= 1e6 then return string.format("%.1fM", n/1e6)
+    elseif n >= 1e3 then return string.format("%.1fK", n/1e3)
+    end
+    return tostring(math.floor(n))
+end
+
+local function ParseValue(t)
+    local cleaned = tostring(t or ""):gsub("[%s%,%$]", ""):gsub("/s", "")
+    local n, s = cleaned:match("([%d%.]+)([KkMmBbTt]?)")
+    n = tonumber(n) or 0
+    local m = {K = 1e3, M = 1e6, B = 1e9, T = 1e12}
+    return n * (m[tostring(s):upper()] or 1)
+end
+
+local function FindTool(key)
+    local bp = Player:FindFirstChild("Backpack")
+    local ch = Player.Character
+    if ch then for _, t in pairs(ch:GetChildren()) do if t:IsA("Tool") and t.Name:lower():find(key:lower()) then return t end end end
+    if bp then for _, t in pairs(bp:GetChildren()) do if t:IsA("Tool") and t.Name:lower():find(key:lower()) then return t end end end
+    return nil
+end
+
+local function pressKey(key)
+    VirtualInputManager:SendKeyEvent(true, key, false, game); task.wait(0.01); VirtualInputManager:SendKeyEvent(false, key, false, game)
+end
+
+local function IsPetOnMyPlot(petPos)
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return false end
+    local myDisplay = string.lower(Player.DisplayName)
+    for _, plot in pairs(plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign", true)
+        if sign then
+            local label = sign:FindFirstChild("TextLabel", true)
+            if label and string.lower(label.Text):find(myDisplay) then
+                local dist = (petPos - sign.Position).Magnitude
+                if dist < 85 then return true end
+            end
+        end
+    end
+    return false
+end
+
+-- ==================== GUI BUILDER ====================
+
+if game.CoreGui:FindFirstChild("RetroV137") then game.CoreGui:FindFirstChild("RetroV137"):Destroy() end
+local SG = Instance.new("ScreenGui", game.CoreGui); SG.Name = "RetroV137"
+
+local function ApplyRetroText(lbl)
+    lbl.TextColor3 = Color3.new(1,1,1); lbl.TextStrokeColor3 = Color3.new(0,0,0); lbl.TextStrokeTransparency = 0; lbl.Font = Enum.Font.GothamBlack
+end
+
+local function AddStroke(obj, thick)
+    local s = Instance.new("UIStroke", obj); s.Color = Color3.new(1,1,1)
+    s.Thickness = thick or 1.2; s.ApplyStrokeMode = "Border"; return s
+end
+
+-- TOP BAR
+local TopBar = Instance.new("Frame", SG); TopBar.Size = UDim2.new(0, 320, 0, 32); TopBar.Position = UDim2.new(0.5, -160, 0, 15); TopBar.BackgroundColor3 = Color3.new(0,0,0); Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 8); AddStroke(TopBar, 1.5)
+local BrainrotLabel = Instance.new("TextLabel", TopBar); BrainrotLabel.Size = UDim2.new(1,0,1,0); BrainrotLabel.BackgroundTransparency = 1; BrainrotLabel.Text = "SCANNING..."; BrainrotLabel.TextSize = 11; ApplyRetroText(BrainrotLabel)
+
+-- BIND HINT
+local HintLabel = Instance.new("TextLabel", SG)
+HintLabel.Size = UDim2.new(0, 200, 0, 20); HintLabel.Position = UDim2.new(0.5, -100, 0, 50); HintLabel.BackgroundTransparency = 1
+HintLabel.Text = "TP TO BEST - " .. Config.AutoHuntBind; HintLabel.TextSize = 10; ApplyRetroText(HintLabel)
+
+local function CreateWindow(name, size, pos, isScrolling)
+    local savedData = Config.Windows[name] or {Visible = true, Pos = {pos.X.Scale, pos.X.Offset, pos.Y.Scale, pos.Y.Offset}}
+    local startPos = UDim2.new(unpack(savedData.Pos))
+    local w = Instance.new("Frame", SG); w.Name = name; w.Size = size; w.Position = startPos; w.BackgroundColor3 = Color3.new(0,0,0); w.Active = true; w.Draggable = true; w.Visible = savedData.Visible
+    Instance.new("UICorner", w).CornerRadius = UDim.new(0,8); AddStroke(w, 2)
+    w:GetPropertyChangedSignal("Position"):Connect(function()
+        Config.Windows[name].Pos = {w.Position.X.Scale, w.Position.X.Offset, w.Position.Y.Scale, w.Position.Y.Offset}; SaveConfig()
+    end)
+    local h = Instance.new("Frame", w); h.Size = UDim2.new(1,0,0,28); h.BackgroundColor3 = Color3.new(0,0,0); Instance.new("UICorner", h).CornerRadius = UDim.new(0,8)
+    local l = Instance.new("Frame", h); l.Size = UDim2.new(1,0,0,1.5); l.Position = UDim2.new(0,0,1,0); l.BackgroundColor3 = Color3.new(1,1,1); l.BorderSizePixel = 0
+    local t = Instance.new("TextLabel", h); t.Size = UDim2.new(1,-40,1,0); t.Position = UDim2.new(0,12,0,0); t.BackgroundTransparency = 1; t.Text = name:upper(); t.TextSize = 11; t.TextXAlignment = "Left"; ApplyRetroText(t)
+    local c = Instance.new("TextButton", h); c.Size = UDim2.new(0,25,0,25); c.Position = UDim2.new(1,-28,0,2); c.BackgroundTransparency = 1; c.Text = "X"; c.TextSize = 15; ApplyRetroText(c)
+    c.MouseButton1Click:Connect(function()
+        if name:find("Flash") then SG:Destroy() else w.Visible = false; Config.Windows[name].Visible = false; SaveConfig() end
+    end)
+    local container;
+    if isScrolling then
+        container = Instance.new("ScrollingFrame", w); container.CanvasSize = UDim2.new(0,0,0,0); container.ScrollBarThickness = 2; container.ScrollBarImageColor3 = Color3.new(1,1,1)
+        Instance.new("UIPadding", container).PaddingTop = UDim.new(0, 10)
+    else container = Instance.new("Frame", w) end
+    container.Name = "Content"; container.Size = UDim2.new(1,-16,1,-40); container.Position = UDim2.new(0,8,0,36); container.BackgroundTransparency = 1
+    local lay = Instance.new("UIListLayout", container); lay.SortOrder = "LayoutOrder"; lay.Padding = UDim.new(0,8); lay.HorizontalAlignment = "Center"
+    return w, container
+end
+
+local function MakeBtn(parent, txt, size)
+    local b = Instance.new("TextButton", parent); b.Size = size or UDim2.new(1,0,0,32); b.BackgroundColor3 = Color3.new(0,0,0); b.Text = txt:upper(); b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,4); AddStroke(b); ApplyRetroText(b)
+    b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30,30,30)}):Play() end)
+    b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = Color3.new(0,0,0)}):Play() end)
+    return b
+end
+
+local MainWin, MainCont = CreateWindow("Retro Flash TP", UDim2.new(0, 180, 0, 245), UDim2.new(0.5, -340, 0.5, -122))
+local PosWin, PosCont = CreateWindow("Auto Pos", UDim2.new(0, 280, 0, 250), UDim2.new(0.5, -260, 0.5, -125))
+local SetWin, SetCont = CreateWindow("Settings", UDim2.new(0, 240, 0, 160), UDim2.new(0.5, 260, 0.5, -90))
+local PrioWin, PrioCont = CreateWindow("Tp Priority", UDim2.new(0, 220, 0, 300), UDim2.new(0.5, 260, 0.5, 100), true)
+
+-- ==================== LOGIC FUNCTIONS ====================
+
+local function PerformPosTP(p, a)
+    local hrp = Player.Character:FindFirstChild("HumanoidRootPart"); local hum = Player.Character:FindFirstChild("Humanoid")
+    if hrp and hum then
+        local c = FindTool("flying"); if c then hum:EquipTool(c) task.wait(0.1) end
+        hrp.Velocity = Vector3.new(0,0,0); hrp.CFrame = CFrame.new(p)
+        task.wait(0.1); workspace.CurrentCamera.CFrame = CFrame.new(Player.Character.Head.Position, a)
+        task.delay(0.5, function() if hum then hum:UnequipTools() end end)
+    end
+end
+
+local function GetNearestPoint(petPos)
+    local isRightBase = (petPos.Z > Z_THRESHOLD)
+    local baseData = isRightBase and AimLocations.Right or AimLocations.Left
+    
+    local target, minDist = nil, math.huge
+    for _, floor in pairs({baseData.FirstFloor, baseData.SecondFloor, baseData.ThirdFloor}) do
+        for _, point in ipairs(floor) do
+            local dist = (petPos - point.pos).Magnitude
+            if dist < minDist then minDist = dist; target = point end
+        end
+    end
+    return target
+end
+
+local function SpamTeleportBtn()
+    local startTime = tick()
+    while tick() - startTime < 2.0 do
+        local gui = Player.PlayerGui:FindFirstChild("ToolsFrames")
+        local btn = gui and gui:FindFirstChild("QuantumCloner") and gui.QuantumCloner:FindFirstChild("TeleportToClone")
+        if btn then forceClick(btn) end
+        task.wait(0.05)
+    end
+end
+
+local function ExecuteCloner(floorKey, lockedPetPos)
+    local isRightBase = true
+    if lockedPetPos then isRightBase = (lockedPetPos.Z > Z_THRESHOLD) end
+    
+    local routeSet = isRightBase and Routes.Right or Routes.Left
+    local d = routeSet[floorKey]
+    
+    local ch = Player.Character; local hrp = ch:FindFirstChild("HumanoidRootPart"); local hum = ch:FindFirstChild("Humanoid")
+    if not hrp or not hum then return end
+    
+    hum:ChangeState(Enum.HumanoidStateType.Jumping); task.wait(0.2)
+    local c = FindTool("flying"); local q = FindTool("quantum")
+    if c then hum:EquipTool(c) task.wait(0.1) end
+    
+    -- ANGLE LOGIC: Left Base F2/F3 = 0, others based on floor
+    local angleY = 0
+    if isRightBase then
+        angleY = (floorKey == "Floor1") and 260 or 180
+    else
+        angleY = (floorKey == "Floor1") and 260 or 0
+    end
+    local inv = CFrame.Angles(0, math.rad(angleY), 0)
+    
+    local stepDelay = (floorKey == "Floor3") and 0.2 or 0.1
+
+    for _, p in ipairs(d.path) do 
+        hrp.Velocity = Vector3.new(0,0,0)
+        hrp.CFrame = CFrame.new(p) * inv
+        task.wait(stepDelay) 
+    end
+    
+    hrp.CFrame = CFrame.new(d.base) * inv; task.wait(0.4)
+
+    if q then 
+        hum:EquipTool(q); task.wait(0.3); 
+        local s = tick() 
+        while tick() - s < 0.6 do q:Activate() task.wait(0.04) end 
+        
+        task.spawn(SpamTeleportBtn)
+        
+        task.wait(1.0)
+        hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+        task.wait(0.5) 
+    end
+
+    hum:UnequipTools()
+    task.wait(0.1)
+
+    local targetData = nil
+    if lockedPetPos then targetData = GetNearestPoint(lockedPetPos) else local p = GetBestPetData(); if p then targetData = GetNearestPoint(p.pos) end end
+    if targetData then PerformPosTP(targetData.pos, targetData.aim) end
+end
+
+function GetBestPetData()
+    local deb = workspace:FindFirstChild("Debris")
+    if not deb then return nil end
+    local best = {val = -1, pos = nil, name = ""}
+    for _, t in pairs(deb:GetChildren()) do
+        if t.Name == "FastOverheadTemplate" then
+            local sg = t:FindFirstChildOfClass("SurfaceGui")
+            if sg and sg.Adornee then
+                local gen = sg:FindFirstChild("Generation", true)
+                if gen and gen:IsA("TextLabel") and gen.Text ~= "" then
+                    local v = ParseValue(gen.Text)
+                    if v >= MIN_PET_VALUE then
+                        local petPos = sg.Adornee.Position - Vector3.new(0, 6, 0)
+                        if not IsPetOnMyPlot(petPos) then if v > best.val then best = {val = v, pos = petPos, name = sg:FindFirstChild("DisplayName", true).Text or "Pet"} end end
+                    end
+                end
+            end
+        end
+    end
+    return best.val ~= -1 and best or nil
+end
+
+local function RefreshPriorityList()
+    for _, child in pairs(PrioCont:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    local petList = {}
+    local deb = workspace:FindFirstChild("Debris")
+    if not deb then return end
+    for _, t in pairs(deb:GetChildren()) do
+        if t.Name == "FastOverheadTemplate" then
+            local sg = t:FindFirstChildOfClass("SurfaceGui")
+            if sg and sg.Adornee then
+                local gen = sg:FindFirstChild("Generation", true)
+                if gen and gen.Text ~= "" then
+                    local v = ParseValue(gen.Text)
+                    local petPos = sg.Adornee.Position - Vector3.new(0,6,0)
+                    if v >= MIN_PET_VALUE and not IsPetOnMyPlot(petPos) then
+                        table.insert(petList, {val = v, pos = petPos, name = sg:FindFirstChild("DisplayName", true).Text or "Pet"})
+                    end
+                end
+            end
+        end
+    end
+    table.sort(petList, function(a, b) return a.val > b.val end)
+    for _, p in ipairs(petList) do
+        local side = (p.pos.Z > Z_THRESHOLD) and "R" or "L"
+        local b = MakeBtn(PrioCont, "["..side.."] " .. p.name .. " (" .. FormatNumber(p.val) .. "/s)", UDim2.new(1,-10,0,30))
+        b.MouseButton1Click:Connect(function()
+            local fl = "Floor1"; if p.pos.Y > 22 then fl = "Floor3" elseif p.pos.Y > 5 then fl = "Floor2" end
+            ExecuteCloner(fl, p.pos)
+        end)
+    end
+    PrioCont.CanvasSize = UDim2.new(0,0,0, PrioCont.UIListLayout.AbsoluteContentSize.Y + 20)
+end
+
+-- ==================== MAIN UI ELEMENTS ====================
+
+local FlashStatus = Instance.new("TextLabel", MainCont); FlashStatus.Size = UDim2.new(1,0,0,30); FlashStatus.BackgroundTransparency = 1; FlashStatus.Text = "WAITING STEAL"; FlashStatus.TextSize = 10; ApplyRetroText(FlashStatus)
+local BarBG = Instance.new("Frame", MainCont); BarBG.Size = UDim2.new(1,0,0,6); BarBG.BackgroundColor3 = Color3.new(0,0,0); AddStroke(BarBG)
+local Bar = Instance.new("Frame", BarBG); Bar.Size = UDim2.new(0,0,1,0); Bar.BackgroundColor3 = Color3.new(1,1,1); Bar.BorderSizePixel = 0
+
+local function trackPrompt(prm)
+    local hold = false; local s40, s60, s91 = false, false, false
+    prm.PromptButtonHoldBegan:Connect(function()
+        if prm.ActionText ~= "Steal" then return end
+        hold = true; s40, s60, s91 = false, false, false
+        FlashStatus.Text = "STEALING..."
+        task.spawn(function()
+            local start = tick()
+            while hold do
+                local p = (tick() - start) / prm.HoldDuration
+                Bar.Size = UDim2.new(math.clamp(p,0,1),0,1,0)
+                local tool = FindTool("flash")
+
+                -- 40-60%: Equip/Unequip (Old Logic)
+                if p >= 0.4 and p < 0.6 and not s40 then
+                    s40 = true; 
+                    if tool then 
+                        Player.Character.Humanoid:EquipTool(tool) 
+                        task.wait(0.15) 
+                        Player.Character.Humanoid:UnequipTools() 
+                    end
+                end
+
+                -- 60%: Combo
+                if p >= 0.6 and p < 0.91 and not s60 then
+                    s60 = true; 
+                    task.spawn(function()
+                        pressKey(Enum.KeyCode.Q); task.wait(0.6); pressKey(Enum.KeyCode.Q)
+                        task.wait(1); pressKey(Enum.KeyCode.Q); pressKey(Enum.KeyCode.G)
+                        task.wait(2.5); pressKey(Enum.KeyCode.Q); pressKey(Enum.KeyCode.G)
+                    end)
+                end
+                
+                -- 91%: Final Click
+                if p >= 0.91 and not s91 then
+                    s91 = true; 
+                    if tool then Player.Character.Humanoid:EquipTool(tool); task.wait(0.01); tool:Activate()
+                    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, true, game, 1); VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, false, game, 1) end
+                end
+                RunService.RenderStepped:Wait()
+            end
+        end)
+    end)
+    prm.PromptButtonHoldEnded:Connect(function() 
+        hold = false; Bar.Size = UDim2.new(0,0,1,0); FlashStatus.Text = "WAITING STEAL" 
+        if Player.Character and Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid:UnequipTools() end
+    end)
+end
+for _, o in pairs(workspace:GetDescendants()) do if o:IsA("ProximityPrompt") then trackPrompt(o) end end
+workspace.DescendantAdded:Connect(function(o) if o:IsA("ProximityPrompt") then trackPrompt(o) end end)
+
+MakeBtn(MainCont, "OPEN AUTO POS").MouseButton1Click:Connect(function() PosWin.Visible = true; Config.Windows["Auto Pos"].Visible = true; SaveConfig() end)
+MakeBtn(MainCont, "OPEN SETTINGS").MouseButton1Click:Connect(function() SetWin.Visible = true; Config.Windows["Settings"].Visible = true; SaveConfig() end)
+
+-- ХРАНИЛИЩЕ КНОПОК ДЛЯ ДИНАМИЧЕСКОГО ОБНОВЛЕНИЯ
+local FloorButtons = {FirstFloor = {}, SecondFloor = {}, ThirdFloor = {}}
+
+local function GetCurrentBasePoints(floorName)
+    local myZ = Player.Character and Player.Character.HumanoidRootPart.Position.Z or 100
+    if myZ > Z_THRESHOLD then return AimLocations.Right[floorName] else return AimLocations.Left[floorName] end
+end
+
+local function CreateFloorSet(parent, title, floorKey)
+    local l = Instance.new("TextLabel", parent); l.Size = UDim2.new(1,0,0,16); l.BackgroundTransparency = 1; l.Text = title; l.TextSize = 8; l.TextXAlignment = "Left"; ApplyRetroText(l)
+    local f = Instance.new("Frame", parent); f.Size = UDim2.new(1,0,0,32); f.BackgroundTransparency = 1
+    Instance.new("UIListLayout", f).FillDirection = "Horizontal"; f.UIListLayout.Padding = UDim.new(0,6)
+    
+    for i=1, 5 do
+        local id = tostring(i)
+        local btn = MakeBtn(f, id, UDim2.new(0,34,0,34))
+        FloorButtons[floorKey][i] = btn -- Сохраняем кнопку
+        btn.MouseButton1Click:Connect(function() 
+            local points = GetCurrentBasePoints(floorKey)
+            local pt = points[i]
+            if pt then PerformPosTP(pt.pos, pt.aim) end
+        end) 
+    end
+end
+CreateFloorSet(PosCont, "FLOOR 1 (AUTO SIDE)", "FirstFloor")
+CreateFloorSet(PosCont, "FLOOR 2 (AUTO SIDE)", "SecondFloor")
+CreateFloorSet(PosCont, "FLOOR 3 (AUTO SIDE)", "ThirdFloor")
+
+-- ФОНОВАЯ ЗАДАЧА ДЛЯ ОБНОВЛЕНИЯ ВИДИМОСТИ КНОПОК
+task.spawn(function()
+    while true do
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local myZ = Player.Character.HumanoidRootPart.Position.Z
+            local isRight = myZ > Z_THRESHOLD
+            local currentData = isRight and AimLocations.Right or AimLocations.Left
+            
+            for floorName, btns in pairs(FloorButtons) do
+                local dataPoints = currentData[floorName]
+                for i=1, 5 do
+                    if btns[i] then
+                        if dataPoints[i] then
+                            btns[i].Visible = true
+                        else
+                            btns[i].Visible = false
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.5) -- Обновляем каждые 0.5 сек, чтобы не грузить
+    end
+end)
+
+-- SETTINGS
+local BindBtn = MakeBtn(SetCont, "TP BIND: [" .. Config.AutoHuntBind .. "]")
+BindBtn.MouseButton1Click:Connect(function() Config.IsBinding = true; BindBtn.Text = "PRESS KEY..." end)
+local WhiteBar = Instance.new("Frame", SetCont); WhiteBar.Size = UDim2.new(0.8, 0, 0, 2); WhiteBar.BackgroundColor3 = Color3.new(1,1,1); WhiteBar.BorderSizePixel = 0
+local function InfoLbl(t, p) local l = Instance.new("TextLabel", p); l.Size = UDim2.new(1,0,0,18); l.BackgroundTransparency = 1; l.Text = t; l.TextSize = 9; ApplyRetroText(l) end
+InfoLbl("CLASSIC FLASH LOGIC", SetCont); InfoLbl("RIGHT F3-4 AIM UP", SetCont)
+
+-- INPUT
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if Config.IsBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        Config.AutoHuntBind = input.KeyCode.Name; BindBtn.Text = "TP BIND: [" .. Config.AutoHuntBind .. "]"; HintLabel.Text = "TP TO BEST - " .. Config.AutoHuntBind; Config.IsBinding = false; SaveConfig(); return
+    end
+    if input.KeyCode.Name == Config.AutoHuntBind then
+        local p = GetBestPetData()
+        if p then local fl = "Floor1"; if p.pos.Y > 22 then fl = "Floor3" elseif p.pos.Y > 5 then fl = "Floor2" end; ExecuteCloner(fl, p.pos)
+        else local oldT = BrainrotLabel.Text; BrainrotLabel.Text = "NO BRAINROT FOUND TO TELEPORT"; task.delay(3, function() BrainrotLabel.Text = "SCANNING..." end) end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        local p = GetBestPetData()
+        if p then BrainrotLabel.Text = string.format("BEST: %s (%s/s)", p.name:upper(), FormatNumber(p.val))
+        else BrainrotLabel.Text = "NO HIGH VALUE FOUND" end
+        RefreshPriorityList(); task.wait(2.0)
+    end
+end)
+
+print("🏁 RETRO V137 Classic Logic (Right F3-P4 Aim Fix) Loaded!")

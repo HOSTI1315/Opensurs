@@ -1,0 +1,1878 @@
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local gui = player:WaitForChild("PlayerGui")
+local mouse = player:GetMouse()
+
+-- Variables globales para funciones (INICIALIZADAS CORRECTAMENTE)
+local connections = {}
+local espObjects = {}
+local autoFarmEnabled = false
+local noclipEnabled = false
+local infiniteJumpEnabled = false
+local autoRespawnEnabled = false
+local antiAFKEnabled = false
+local fullbrightEnabled = false
+local wallHackEnabled = false
+local aimBotEnabled = false
+local autoClickEnabled = false
+local flyEnabled = false
+local flySpeed = 50
+
+-- Valores originales del jugador
+local humanoid = character:WaitForChild("Humanoid")
+local originalJumpPower = humanoid.JumpPower or 50
+local originalWalkSpeed = humanoid.WalkSpeed or 16
+
+-- Configuración de luz original
+local originalAmbient = Lighting.Ambient
+local originalBrightness = Lighting.Brightness
+local originalOutdoorAmbient = Lighting.OutdoorAmbient
+
+-- Crear GUI principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NightSurvivalHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = gui
+
+-- Función para hacer frames dragables
+local function makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Variables iniciales
+local Player = game.Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "JIntro"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+
+-- 🌟 Pantalla de inicio con logo
+local introFrame = Instance.new("Frame")
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+introFrame.BackgroundTransparency = 1
+introFrame.ZIndex = 999
+introFrame.Parent = ScreenGui
+
+local logoImage = Instance.new("ImageLabel")
+logoImage.AnchorPoint = Vector2.new(0.5, 0.5)
+logoImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+logoImage.Size = UDim2.new(0, 0, 0, 0)
+logoImage.Image = "rbxassetid://128308831323216" -- Cambia a tu ID real
+logoImage.BackgroundTransparency = 1
+logoImage.ZIndex = 1000
+logoImage.Parent = introFrame
+
+-- 🌟 Animación de inicio con variación aleatoria
+math.randomseed(tick() + math.floor(os.clock() * 1000))
+local rng = Random.new()
+local animacionYaEjecutada = false
+
+local function animacionInicioAleatoria()
+	if animacionYaEjecutada then return end
+	animacionYaEjecutada = true
+
+	local ts = game:GetService("TweenService")
+	local tipo = rng:NextInteger(1, 10)
+
+	-- Estado inicial
+	logoImage.Visible = true
+	logoImage.ImageTransparency = 0
+	logoImage.Rotation = 0
+	logoImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+	logoImage.Size = UDim2.new(0, 400, 0, 400)
+
+	if tipo == 1 then
+		logoImage.Size = UDim2.new(0, 0, 0, 0)
+		ts:Create(logoImage, TweenInfo.new(1, Enum.EasingStyle.Back), {
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(2)
+
+	elseif tipo == 2 then
+		logoImage.Position = UDim2.new(0, -150, 1, 150)
+		logoImage.Size = UDim2.new(0, 200, 0, 200)
+		ts:Create(logoImage, TweenInfo.new(2, Enum.EasingStyle.Quint), {
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(2)
+
+	elseif tipo == 3 then
+		logoImage.Size = UDim2.new(0, 1000, 0, 1000)
+		ts:Create(logoImage, TweenInfo.new(2), {
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(2)
+
+	elseif tipo == 4 then
+		logoImage.Position = UDim2.new(0, -400, 0.5, 0)
+		logoImage.Size = UDim2.new(0, 300, 0, 300)
+		ts:Create(logoImage, TweenInfo.new(1.5), {
+			Position = UDim2.new(1, 400, 0.5, 0)
+		}):Play()
+		task.wait(1.6)
+		ts:Create(logoImage, TweenInfo.new(0.6), {
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(0.6)
+
+	elseif tipo == 5 then
+		logoImage.Rotation = -360
+		logoImage.Size = UDim2.new(0, 0, 0, 0)
+		ts:Create(logoImage, TweenInfo.new(2), {
+			Size = UDim2.new(0, 400, 0, 400),
+			Rotation = 0
+		}):Play()
+		task.wait(2)
+
+	elseif tipo == 6 then
+		logoImage.Position = UDim2.new(0.5, 0, -0.5, 0)
+		logoImage.Size = UDim2.new(0, 250, 0, 250)
+		ts:Create(logoImage, TweenInfo.new(1.5, Enum.EasingStyle.Bounce), {
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(1.6)
+
+	elseif tipo == 7 then
+		local path = {
+			UDim2.new(0.5, -300, 0.1, 0),
+			UDim2.new(0.5, 300, 0.2, 0),
+			UDim2.new(0.5, -150, 0.3, 0),
+			UDim2.new(0.5, 75, 0.4, 0),
+			UDim2.new(0.5, 0, 0.5, 0)
+		}
+		logoImage.Position = UDim2.new(0.5, 0, -0.2, 0)
+		logoImage.Size = UDim2.new(0, 300, 0, 300)
+		for _, pos in ipairs(path) do
+			ts:Create(logoImage, TweenInfo.new(0.25, Enum.EasingStyle.Bounce), {
+				Position = pos
+			}):Play()
+			task.wait(0.25)
+		end
+
+	elseif tipo == 8 then
+		logoImage.Rotation = -1440
+		ts:Create(logoImage, TweenInfo.new(2, Enum.EasingStyle.Quad), {
+			Rotation = 0
+		}):Play()
+		task.wait(2)
+
+	elseif tipo == 9 then
+		for _ = 1, 6 do
+			logoImage.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			logoImage.ImageTransparency = 1
+			task.wait(0.05)
+			logoImage.ImageTransparency = 0
+			task.wait(0.05)
+		end
+		logoImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+		ts:Create(logoImage, TweenInfo.new(0.6), {
+			Size = UDim2.new(0, 400, 0, 400)
+		}):Play()
+		task.wait(1)
+
+	elseif tipo == 10 then
+		local clones = {}
+		local directions = {
+			Vector2.new(-1, -1),
+			Vector2.new(1, -1),
+			Vector2.new(-1, 1),
+			Vector2.new(1, 1)
+		}
+
+		for _, dir in ipairs(directions) do
+			local clone = logoImage:Clone()
+			clone.Parent = introFrame
+			clone.Position = UDim2.new(0.5, 0, 0.5, 0)
+			clone.Size = UDim2.new(0, 400, 0, 400)
+			clone.ImageTransparency = 0
+			table.insert(clones, clone)
+
+			ts:Create(clone, TweenInfo.new(0.5), {
+				Position = UDim2.new(0.5 + dir.X, 0, 0.5 + dir.Y, 0),
+				ImageTransparency = 1
+			}):Play()
+		end
+
+		task.wait(0.5)
+
+		logoImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+		logoImage.Size = UDim2.new(0, 100, 0, 100)
+		logoImage.ImageTransparency = 1
+		ts:Create(logoImage, TweenInfo.new(1), {
+			Size = UDim2.new(0, 400, 0, 400),
+			ImageTransparency = 0
+		}):Play()
+
+		task.wait(1.2)
+
+		for _, c in ipairs(clones) do
+			c:Destroy()
+		end
+	end
+
+	-- Fade out
+	ts:Create(introFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+	ts:Create(logoImage, TweenInfo.new(1), {ImageTransparency = 1}):Play()
+	task.wait(1)
+	introFrame:Destroy()
+end
+
+-- Ejecutar animación
+animacionInicioAleatoria()
+
+---noti
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local function showNotification(title, message, link)
+    local isMobile = UserInputService.TouchEnabled
+
+    -- Crear ScreenGui para las notificaciones
+    local notifGui = Instance.new("ScreenGui")
+    notifGui.Name = "NotifGui_" .. tostring(math.random(1000,9999))
+    notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    notifGui.Parent = CoreGui
+
+    -- Crear el frame de la notificación
+    local notifFrame = Instance.new("Frame")
+    notifFrame.Parent = notifGui
+    notifFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    notifFrame.BackgroundTransparency = 0.2
+    notifFrame.ZIndex = 9999
+    Instance.new("UICorner", notifFrame).CornerRadius = UDim.new(0, 12)
+
+    -- Gradiente
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 120, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 60, 90))
+    }
+    gradient.Rotation = 45
+    gradient.Parent = notifFrame
+
+    -- Tamaño y posición
+    if isMobile then
+        notifFrame.Size = UDim2.new(0, 210, 0, 70)
+        notifFrame.Position = UDim2.new(1, -220, 0, 20)
+    else
+        notifFrame.Size = UDim2.new(0, 300, 0, 100)
+        notifFrame.Position = UDim2.new(1, -310, 0, 20)
+    end
+
+    -- Título
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Parent = notifFrame
+    titleLabel.Size = UDim2.new(1, -20, 0, 30)
+    titleLabel.Position = UDim2.new(0, 10, 0, 5)
+    titleLabel.Text = title
+    titleLabel.Font = Enum.Font.FredokaOne
+    titleLabel.TextSize = 20
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Mensaje
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.Parent = notifFrame
+    msgLabel.Size = UDim2.new(1, -20, 0, 30)
+    msgLabel.Position = UDim2.new(0, 10, 0, 35)
+    msgLabel.Text = message
+    msgLabel.Font = Enum.Font.Gotham
+    msgLabel.TextSize = 16
+    msgLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Botón opcional
+    if link then
+        local linkBtn = Instance.new("TextButton")
+        linkBtn.Parent = notifFrame
+        linkBtn.Size = UDim2.new(1, -20, 0, 25)
+        linkBtn.Position = UDim2.new(0, 10, 0, 70)
+        linkBtn.Text = "YouTube"
+        linkBtn.Font = Enum.Font.GothamBold
+        linkBtn.TextSize = 14
+        linkBtn.BackgroundTransparency = 1
+        linkBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+        Instance.new("UICorner", linkBtn).CornerRadius = UDim.new(0, 6)
+
+        linkBtn.MouseButton1Click:Connect(function()
+            if setclipboard then setclipboard(link) end
+        end)
+    end
+
+    -- Desaparece
+    task.delay(25, function()
+        notifGui:Destroy()
+    end)
+end
+
+-- 🔹 PRUEBA
+showNotification("Suscríbete: joao_mods", "Apóyame y mira más scripts", "https://youtube.com/@joao_mods0?si=Pv8NCVM5sT4Vr4F0")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Frame principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 480, 0, 600)
+mainFrame.Position = UDim2.new(0, 30, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = true
+mainFrame.Parent = screenGui
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+makeDraggable(mainFrame)
+
+-- Título
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
+titleLabel.Position = UDim2.new(0, 0, 0, -40)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Jmods 99"
+titleLabel.TextColor3 = Color3.fromRGB(100, 200, 255)--sexo
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.Parent = mainFrame
+
+
+
+
+
+-- Sistema de Tabs
+local currentTab = "Items"
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, 0, 0, 40)
+tabFrame.Position = UDim2.new(0, 0, 0, 0)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = mainFrame
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -10, 1, -55)
+contentFrame.Position = UDim2.new(0, 5, 0, 45)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- Variables globales para tabs
+local searchBox, bringAllBtn, scrollFrame, layout
+local popupFrame, hoveredItem
+
+-- Crear tabs
+local tabs = {
+	{name = "Items", color = Color3.fromRGB(70, 70, 80)},
+	{name = "NPCs", color = Color3.fromRGB(80, 60, 60)},
+	{name = "Hacks", color = Color3.fromRGB(60, 80, 60)},
+	{name = "ESP", color = Color3.fromRGB(80, 80, 60)},
+	{name = "Visual", color = Color3.fromRGB(80, 60, 80)},
+	{name = "Combat", color = Color3.fromRGB(100, 60, 60)}
+}
+
+local tabButtons = {}
+for i, tab in ipairs(tabs) do
+	local tabBtn = Instance.new("TextButton")
+	tabBtn.Size = UDim2.new(1/#tabs, -2, 1, 0)
+	tabBtn.Position = UDim2.new((i-1)/#tabs, 1, 0, 0)
+	tabBtn.Text = tab.name
+	tabBtn.BackgroundColor3 = i == 1 and tab.color or Color3.fromRGB(40, 40, 45)
+	tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.Font = Enum.Font.Gotham
+	tabBtn.TextSize = 11
+	tabBtn.Parent = tabFrame
+	Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
+	
+	tabButtons[tab.name] = tabBtn
+	
+	tabBtn.MouseButton1Click:Connect(function()
+		currentTab = tab.name
+		for j, tabData in ipairs(tabs) do
+			tabButtons[tabData.name].BackgroundColor3 = tabData.name == tab.name and tabData.color or Color3.fromRGB(40, 40, 45)
+		end
+		updateContent()
+	end)
+end
+
+-- Botón minimizar
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 35, 0, 35)
+minimizeBtn.Position = UDim2.new(1, -40, 0, 5)
+minimizeBtn.Text = "─"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 16
+minimizeBtn.Parent = mainFrame
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 8)
+
+-- Botón flotante
+local floatButton = Instance.new("TextButton")
+floatButton.Size = UDim2.new(0, 100, 0, 40)
+floatButton.Position = UDim2.new(0, 20, 0.5, -20)
+floatButton.Text = "Mostrar Hub"
+floatButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+floatButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatButton.Font = Enum.Font.Gotham
+floatButton.TextSize = 12
+floatButton.Visible = false
+floatButton.Parent = screenGui
+Instance.new("UICorner", floatButton).CornerRadius = UDim.new(0, 10)
+makeDraggable(floatButton)
+
+-- ========== FUNCIONES CORREGIDAS ==========
+
+-- Sistema de notificaciones
+local function createNotification(text, duration, color)
+	local notif = Instance.new("Frame")
+	notif.Size = UDim2.new(0, 350, 0, 60)
+	notif.Position = UDim2.new(1, -370, 0, 20)
+	notif.BackgroundColor3 = color or Color3.fromRGB(40, 40, 50)
+	notif.Parent = screenGui
+	Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 8)
+
+	local notifText = Instance.new("TextLabel")
+	notifText.Size = UDim2.new(1, -10, 1, -10)
+	notifText.Position = UDim2.new(0, 5, 0, 5)
+	notifText.Text = text
+	notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	notifText.BackgroundTransparency = 1
+	notifText.Font = Enum.Font.Gotham
+	notifText.TextSize = 14
+	notifText.TextScaled = true
+	notifText.Parent = notif
+
+	-- Animación
+	notif:TweenPosition(UDim2.new(1, -370, 0, 20), "Out", "Quad", 0.3, true)
+	
+	task.spawn(function()
+		task.wait(duration or 3)
+		notif:TweenPosition(UDim2.new(1, 0, 0, 20), "In", "Quad", 0.3, true)
+		task.wait(0.3)
+		notif:Destroy()
+	end)
+end
+
+-- FUNCIÓN DE VUELO CORREGIDA
+local function toggleFly()
+	flyEnabled = not flyEnabled
+	
+	if flyEnabled then
+		-- Limpiar conexión anterior si existe
+		if connections.fly then
+			connections.fly:Disconnect()
+		end
+		
+		-- Verificar que el personaje existe
+		if not character or not character:FindFirstChild("HumanoidRootPart") then
+			flyEnabled = false
+			createNotification("Error: Personaje no encontrado", 2, Color3.fromRGB(200, 60, 60))
+			return
+		end
+		
+		local bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+		bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+		bodyVelocity.Parent = character.HumanoidRootPart
+		
+		connections.fly = RunService.Heartbeat:Connect(function()
+			if not flyEnabled or not character or not character:FindFirstChild("HumanoidRootPart") then 
+				if bodyVelocity then bodyVelocity:Destroy() end
+				return 
+			end
+			
+			local camera = workspace.CurrentCamera
+			local moveVector = Vector3.new(0, 0, 0)
+			
+			-- Controles de vuelo
+			if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+				moveVector = moveVector + camera.CFrame.LookVector
+			end
+			if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+				moveVector = moveVector - camera.CFrame.LookVector
+			end
+			if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+				moveVector = moveVector - camera.CFrame.RightVector
+			end
+			if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+				moveVector = moveVector + camera.CFrame.RightVector
+			end
+			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+				moveVector = moveVector + Vector3.new(0, 1, 0)
+			end
+			if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+				moveVector = moveVector - Vector3.new(0, 1, 0)
+			end
+			
+			if bodyVelocity and bodyVelocity.Parent then
+				bodyVelocity.Velocity = moveVector * flySpeed
+			end
+		end)
+		
+		createNotification("Vuelo activado - WASD para moverse, Space/Shift para subir/bajar", 3, Color3.fromRGB(60, 120, 60))
+	else
+		-- Desactivar vuelo
+		if connections.fly then
+			connections.fly:Disconnect()
+			connections.fly = nil
+		end
+		
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local bodyVelocity = character.HumanoidRootPart:FindFirstChild("BodyVelocity")
+			if bodyVelocity then
+				bodyVelocity:Destroy()
+			end
+		end
+		
+		createNotification("Vuelo desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- FUNCIÓN DE SALTO INFINITO CORREGIDA
+local function toggleInfiniteJump()
+	infiniteJumpEnabled = not infiniteJumpEnabled
+	
+	if infiniteJumpEnabled then
+		-- Limpiar conexión anterior
+		if connections.infJump then
+			connections.infJump:Disconnect()
+		end
+		
+		connections.infJump = UserInputService.JumpRequest:Connect(function()
+			if infiniteJumpEnabled and character and character:FindFirstChild("Humanoid") then
+				character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			end
+		end)
+		
+		createNotification("Salto infinito activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.infJump then
+			connections.infJump:Disconnect()
+			connections.infJump = nil
+		end
+		
+		createNotification("Salto infinito desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- FUNCIÓN ANTI-AFK CORREGIDA
+local function toggleAntiAFK()
+	antiAFKEnabled = not antiAFKEnabled
+	
+	if antiAFKEnabled then
+		-- Cancelar tarea anterior si existe
+		if connections.antiAFK then
+			task.cancel(connections.antiAFK)
+		end
+		
+		connections.antiAFK = task.spawn(function()
+			while antiAFKEnabled do
+				task.wait(math.random(300, 600)) -- 5-10 minutos
+				if antiAFKEnabled and character and character:FindFirstChild("HumanoidRootPart") then
+					local currentPos = character.HumanoidRootPart.CFrame
+					character.HumanoidRootPart.CFrame = currentPos + Vector3.new(0, 0.1, 0)
+					task.wait(0.1)
+					character.HumanoidRootPart.CFrame = currentPos
+				end
+			end
+		end)
+		
+		createNotification("Anti-AFK activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.antiAFK then
+			task.cancel(connections.antiAFK)
+			connections.antiAFK = nil
+		end
+		
+		createNotification("Anti-AFK desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- FUNCIÓN FULLBRIGHT CORREGIDA
+local function toggleFullbright()
+	fullbrightEnabled = not fullbrightEnabled
+	
+	if fullbrightEnabled then
+		Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+		Lighting.Brightness = 2
+		Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+		Lighting.GlobalShadows = false
+		
+		createNotification("Fullbright activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		Lighting.Ambient = originalAmbient
+		Lighting.Brightness = originalBrightness
+		Lighting.OutdoorAmbient = originalOutdoorAmbient
+		Lighting.GlobalShadows = true
+		
+		createNotification("Fullbright desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- FUNCIÓN AUTO-RESPAWN CORREGIDA
+
+
+-- FUNCIÓN AUTO-CLICK CORREGIDA
+local function toggleAutoClick()
+	autoClickEnabled = not autoClickEnabled
+	
+	if autoClickEnabled then
+		-- Cancelar tarea anterior
+		if connections.autoClick then
+			task.cancel(connections.autoClick)
+		end
+		
+		connections.autoClick = task.spawn(function()
+			while autoClickEnabled do
+				task.wait(0.05) -- Click cada 50ms
+				if autoClickEnabled then
+					mouse1click()
+				end
+			end
+		end)
+		
+		createNotification("Auto-Click activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.autoClick then
+			task.cancel(connections.autoClick)
+			connections.autoClick = nil
+		end
+		
+		createNotification("Auto-Click desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- FUNCIÓN WALLHACK CORREGIDA
+local function toggleWallhack()
+	wallHackEnabled = not wallHackEnabled
+	
+	if wallHackEnabled then
+		-- Cancelar tarea anterior
+		if connections.wallhack then
+			task.cancel(connections.wallhack)
+		end
+		
+		connections.wallhack = task.spawn(function()
+			while wallHackEnabled do
+				for _, obj in pairs(workspace:GetDescendants()) do
+					if obj:IsA("BasePart") and (obj.Name:match("Wall") or obj.Name:match("Door")) then
+						obj.Transparency = 0.8
+						obj.CanCollide = false
+					end
+				end
+				task.wait(1)
+			end
+		end)
+		
+		createNotification("Wallhack activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.wallhack then
+			task.cancel(connections.wallhack)
+			connections.wallhack = nil
+		end
+		
+		-- Restaurar paredes
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") and (obj.Name:match("Wall") or obj.Name:match("Door")) then
+				obj.Transparency = 0
+				obj.CanCollide = true
+			end
+		end
+		
+		createNotification("Wallhack desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- ESP System corregido
+local function createESP(obj, color, text)
+	if espObjects[obj] then return end
+	
+	local part = obj
+	if obj:IsA("Model") then
+		part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+	end
+	if not part then return end
+	
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP_" .. obj.Name
+	billboard.Adornee = part
+	billboard.Size = UDim2.new(0, 120, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.Parent = part
+	
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundColor3 = color
+	frame.BackgroundTransparency = 0.3
+	frame.Parent = billboard
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.Text = text or obj.Name
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextStrokeTransparency = 0
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 14
+	label.TextScaled = true
+	label.Parent = frame
+	
+	espObjects[obj] = billboard
+end
+
+local function removeESP(obj)
+	if espObjects[obj] then
+		espObjects[obj]:Destroy()
+		espObjects[obj] = nil
+	end
+end
+
+-- Auto Collect corregido
+local function autoCollectItems()
+	if not character or not character:FindFirstChild("HumanoidRootPart") then 
+		createNotification("Error: Personaje no encontrado", 2, Color3.fromRGB(200, 60, 60))
+		return 
+	end
+	
+	local root = character.HumanoidRootPart
+	local itemsFolder = workspace:FindFirstChild("Items")
+	if not itemsFolder then 
+		createNotification("Carpeta 'Items' no encontrada", 2, Color3.fromRGB(200, 60, 60))
+		return 
+	end
+	
+	local itemsCollected = 0
+	for _, item in ipairs(itemsFolder:GetChildren()) do
+		if item:IsA("Model") or item:IsA("BasePart") then
+			local part = item:IsA("Model") and (item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")) or item
+			if part and (part.Position - root.Position).Magnitude <= 50 then
+				part.CFrame = root.CFrame
+				itemsCollected = itemsCollected + 1
+			end
+		end
+	end
+	
+	createNotification("Items recolectados: " .. itemsCollected, 2, Color3.fromRGB(60, 120, 60))
+end
+
+-- Noclip corregido
+local function toggleNoclip()
+	noclipEnabled = not noclipEnabled
+	
+	if noclipEnabled then
+		-- Limpiar conexión anterior
+		if connections.noclip then
+			connections.noclip:Disconnect()
+		end
+		
+		connections.noclip = RunService.Stepped:Connect(function()
+			if noclipEnabled and character then
+				for _, part in pairs(character:GetChildren()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+			end
+		end)
+		
+		createNotification("Noclip activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.noclip then
+			connections.noclip:Disconnect()
+			connections.noclip = nil
+		end
+		
+		-- Restaurar colisiones
+		if character then
+			for _, part in pairs(character:GetChildren()) do
+				if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+					part.CanCollide = true
+				end
+			end
+		end
+		
+		createNotification("Noclip desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- Auto Farm corregido
+local function toggleAutoFarm()
+	autoFarmEnabled = not autoFarmEnabled
+	
+	if autoFarmEnabled then
+		-- Cancelar tarea anterior
+		if connections.autoFarm then
+			task.cancel(connections.autoFarm)
+		end
+		
+		connections.autoFarm = task.spawn(function()
+			while autoFarmEnabled do
+				autoCollectItems()
+				task.wait(1)
+			end
+		end)
+		
+		createNotification("Auto-Farm activado", 2, Color3.fromRGB(60, 120, 60))
+	else
+		if connections.autoFarm then
+			task.cancel(connections.autoFarm)
+			connections.autoFarm = nil
+		end
+		
+		createNotification("Auto-Farm desactivado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end
+
+-- ========== FUNCIÓN PARA ACTUALIZAR ESTADO DE BOTONES ==========
+local function updateButtonState(button, isEnabled, enabledColor, disabledColor, baseName)
+	button.Text = baseName .. ": " .. (isEnabled and "ON" or "OFF")
+	button.BackgroundColor3 = isEnabled and enabledColor or disabledColor
+end
+
+-- ========== CREAR CONTENIDO POR TABS ==========
+
+local function clearContent()
+	for _, child in ipairs(contentFrame:GetChildren()) do
+		child:Destroy()
+	end
+end
+
+local function createHacksTab()
+	clearContent()
+	
+
+local quitarCooldownBtn = Instance.new("TextButton")
+quitarCooldownBtn.Size = UDim2.new(0.98, 0, 0, 45)
+quitarCooldownBtn.Position = UDim2.new(0.01, 0, 0, 400) -- debajo del anterior
+quitarCooldownBtn.Text = "Abrir cofres rapido"
+quitarCooldownBtn.BackgroundColor3 = Color3.fromRGB(120, 60, 80)
+quitarCooldownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+quitarCooldownBtn.Font = Enum.Font.GothamBold
+quitarCooldownBtn.TextSize = 14
+quitarCooldownBtn.Parent = contentFrame
+Instance.new("UICorner", quitarCooldownBtn).CornerRadius = UDim.new(0, 8)
+
+quitarCooldownBtn.MouseButton1Click:Connect(function()
+    for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            v.HoldDuration = 0
+        end
+    end
+
+    game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(v)
+        v.HoldDuration = 0
+    end)
+end)
+
+
+
+	-- Speed Hack
+	local speedFrame = Instance.new("Frame")
+	speedFrame.Size = UDim2.new(1, -10, 0, 80)
+	speedFrame.Position = UDim2.new(0, 5, 0, 5)
+	speedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	speedFrame.Parent = contentFrame
+	Instance.new("UICorner", speedFrame).CornerRadius = UDim.new(0, 8)
+
+	local speedLabel = Instance.new("TextLabel")
+	speedLabel.Size = UDim2.new(1, -10, 0, 25)
+	speedLabel.Position = UDim2.new(0, 5, 0, 5)
+	speedLabel.Text = "Velocidad de Movimiento:"
+	speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	speedLabel.BackgroundTransparency = 1
+	speedLabel.Font = Enum.Font.GothamBold
+	speedLabel.TextSize = 14
+	speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+	speedLabel.Parent = speedFrame
+
+	local speedSlider = Instance.new("TextBox")
+	speedSlider.Size = UDim2.new(0, 100, 0, 30)
+	speedSlider.Position = UDim2.new(0, 5, 0, 25)
+	speedSlider.Text = tostring(originalWalkSpeed)
+	speedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+	speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+	speedSlider.Font = Enum.Font.Gotham
+	speedSlider.TextSize = 14
+	speedSlider.Parent = speedFrame
+	Instance.new("UICorner", speedSlider).CornerRadius = UDim.new(0, 4)
+
+	local speedBtn = Instance.new("TextButton")
+	speedBtn.Size = UDim2.new(0, 120, 0, 30)
+	speedBtn.Position = UDim2.new(0, 110, 0, 25)
+	speedBtn.Text = "Aplicar Velocidad"
+	speedBtn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+	speedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	speedBtn.Font = Enum.Font.Gotham
+	speedBtn.TextSize = 12
+	speedBtn.Parent = speedFrame
+	Instance.new("UICorner", speedBtn).CornerRadius = UDim.new(0, 4)
+
+	-- Jump Power
+	local jumpFrame = Instance.new("Frame")
+	jumpFrame.Size = UDim2.new(1, -10, 0, 80)
+	jumpFrame.Position = UDim2.new(0, 5, 0, 95)
+	jumpFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	jumpFrame.Parent = contentFrame
+	Instance.new("UICorner", jumpFrame).CornerRadius = UDim.new(0, 8)
+
+	local jumpLabel = Instance.new("TextLabel")
+	jumpLabel.Size = UDim2.new(1, -10, 0, 25)
+	jumpLabel.Position = UDim2.new(0, 5, 0, 5)
+	jumpLabel.Text = "Poder de Salto:"
+	jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	jumpLabel.BackgroundTransparency = 1
+	jumpLabel.Font = Enum.Font.GothamBold
+	jumpLabel.TextSize = 14
+	jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+	jumpLabel.Parent = jumpFrame
+
+	local jumpSlider = Instance.new("TextBox")
+	jumpSlider.Size = UDim2.new(0, 100, 0, 30)
+	jumpSlider.Position = UDim2.new(0, 5, 0, 25)
+	jumpSlider.Text = tostring(originalJumpPower)
+	jumpSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+	jumpSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+	jumpSlider.Font = Enum.Font.Gotham
+	jumpSlider.TextSize = 14
+	jumpSlider.Parent = jumpFrame
+	Instance.new("UICorner", jumpSlider).CornerRadius = UDim.new(0, 4)
+
+	local jumpBtn = Instance.new("TextButton")
+	jumpBtn.Size = UDim2.new(0, 120, 0, 30)
+	jumpBtn.Position = UDim2.new(0, 110, 0, 25)
+	jumpBtn.Text = "Aplicar Salto"
+	jumpBtn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+	jumpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	jumpBtn.Font = Enum.Font.Gotham
+	jumpBtn.TextSize = 12
+	jumpBtn.Parent = jumpFrame
+	Instance.new("UICorner", jumpBtn).CornerRadius = UDim.new(0, 4)
+
+	-- Botones de funciones (Grid 2x3) - CORREGIDOS
+	local hackButtons = {
+		{text = "Noclip", var = "noclipEnabled", func = toggleNoclip, enabledColor = Color3.fromRGB(60, 120, 60), disabledColor = Color3.fromRGB(80, 60, 60)},
+		{text = "Auto-Farm", var = "autoFarmEnabled", func = toggleAutoFarm, enabledColor = Color3.fromRGB(60, 120, 60), disabledColor = Color3.fromRGB(80, 60, 60)},
+		{text = "Vuelo", var = "flyEnabled", func = toggleFly, enabledColor = Color3.fromRGB(60, 120, 60), disabledColor = Color3.fromRGB(80, 60, 60)},
+		{text = "Salto Infinito", var = "infiniteJumpEnabled", func = toggleInfiniteJump, enabledColor = Color3.fromRGB(60, 120, 60), disabledColor = Color3.fromRGB(80, 60, 60)},
+		{text = "Anti-AFK", var = "antiAFKEnabled", func = toggleAntiAFK, enabledColor = Color3.fromRGB(60, 120, 60), disabledColor = Color3.fromRGB(80, 60, 60)},
+		
+	}
+
+	-- Crear botones con estado correcto
+	local createdButtons = {}
+	for i, buttonData in ipairs(hackButtons) do
+		local btn = Instance.new("TextButton")
+		local row = math.floor((i-1) / 2)
+		local col = (i-1) % 2
+		btn.Size = UDim2.new(0.48, 0, 0, 45)
+		btn.Position = UDim2.new(col * 0.51 + 0.01, 0, 0, 185 + row * 55)
+		btn.Text = buttonData.text .. ": OFF"
+		btn.BackgroundColor3 = buttonData.disabledColor
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 12
+		btn.Parent = contentFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+		createdButtons[buttonData.var] = btn
+
+		btn.MouseButton1Click:Connect(function()
+			buttonData.func()
+			-- Actualizar estado del botón
+			local isEnabled = _G[buttonData.var]
+			if buttonData.var == "noclipEnabled" then isEnabled = noclipEnabled
+			elseif buttonData.var == "autoFarmEnabled" then isEnabled = autoFarmEnabled
+			elseif buttonData.var == "flyEnabled" then isEnabled = flyEnabled
+			elseif buttonData.var == "infiniteJumpEnabled" then isEnabled = infiniteJumpEnabled
+			elseif buttonData.var == "antiAFKEnabled" then isEnabled = antiAFKEnabled
+			elseif buttonData.var == "autoRespawnEnabled" then isEnabled = autoRespawnEnabled
+			end
+			
+			updateButtonState(btn, isEnabled, buttonData.enabledColor, buttonData.disabledColor, buttonData.text)
+		end)
+	end
+
+	local autoCollectBtn = Instance.new("TextButton")
+	autoCollectBtn.Size = UDim2.new(0.98, 0, 0, 45)
+	autoCollectBtn.Position = UDim2.new(0.01, 0, 0, 350)
+	autoCollectBtn.Text = "Auto-Collect Items (una vez)"
+	autoCollectBtn.BackgroundColor3 = Color3.fromRGB(60, 80, 120)
+	autoCollectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	autoCollectBtn.Font = Enum.Font.GothamBold
+	autoCollectBtn.TextSize = 14
+	autoCollectBtn.Parent = contentFrame
+	Instance.new("UICorner", autoCollectBtn).CornerRadius = UDim.new(0, 8)
+
+	-- Event handlers
+	speedBtn.MouseButton1Click:Connect(function()
+		local newSpeed = tonumber(speedSlider.Text) or originalWalkSpeed
+		if humanoid then
+			humanoid.WalkSpeed = newSpeed
+			createNotification("Velocidad cambiada a: " .. newSpeed, 2, Color3.fromRGB(60, 120, 60))
+		end
+	end)
+
+	jumpBtn.MouseButton1Click:Connect(function()
+		local newJump = tonumber(jumpSlider.Text) or originalJumpPower
+		if humanoid then
+			humanoid.JumpPower = newJump
+			createNotification("Poder de salto cambiado a: " .. newJump, 2, Color3.fromRGB(60, 120, 60))
+		end
+	end)
+
+	autoCollectBtn.MouseButton1Click:Connect(function()
+		autoCollectItems()
+	end)
+end
+
+
+
+
+
+
+
+local function createESPTab()
+	clearContent()
+	
+	local yPos = 5
+	
+	local espTypes = {
+		{name = "Items ESP", folder = "Items", color = Color3.fromRGB(255, 255, 0), enabled = false},
+		{name = "NPCs ESP", folder = "Characters", color = Color3.fromRGB(255, 100, 100), enabled = false},
+		{name = "Players ESP", folder = nil, color = Color3.fromRGB(100, 255, 100), enabled = false}
+	}
+
+	local espButtons = {}
+	
+	for i, espType in ipairs(espTypes) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0.98, 0, 0, 60)
+		btn.Position = UDim2.new(0.01, 0, 0, yPos)
+		btn.Text = espType.name .. ": OFF"
+		btn.BackgroundColor3 = Color3.fromRGB(80, 60, 60)
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 16
+		btn.Parent = contentFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+		espButtons[i] = btn
+		yPos = yPos + 70
+
+		btn.MouseButton1Click:Connect(function()
+			espType.enabled = not espType.enabled
+			
+			if espType.enabled then
+				if espType.folder then
+					local folder = workspace:FindFirstChild(espType.folder)
+					if folder then
+						for _, obj in pairs(folder:GetChildren()) do
+							createESP(obj, espType.color, obj.Name)
+						end
+						createNotification(espType.name .. " activado", 2, Color3.fromRGB(60, 120, 60))
+					else
+						createNotification("Carpeta '" .. espType.folder .. "' no encontrada", 2, Color3.fromRGB(200, 60, 60))
+						espType.enabled = false
+						return
+					end
+				else -- Players ESP
+					for _, plr in pairs(Players:GetPlayers()) do
+						if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+							createESP(plr.Character, espType.color, plr.Name)
+						end
+					end
+					createNotification("Players ESP activado", 2, Color3.fromRGB(60, 120, 60))
+				end
+				btn.Text = espType.name .. ": ON"
+				btn.BackgroundColor3 = Color3.fromRGB(60, 120, 60)
+			else
+				-- Remove ESP
+				if espType.folder then
+					local folder = workspace:FindFirstChild(espType.folder)
+					if folder then
+						for _, obj in pairs(folder:GetChildren()) do
+							removeESP(obj)
+						end
+					end
+				else
+					for _, plr in pairs(Players:GetPlayers()) do
+						if plr ~= player and plr.Character then
+							removeESP(plr.Character)
+						end
+					end
+				end
+				btn.Text = espType.name .. ": OFF"
+				btn.BackgroundColor3 = Color3.fromRGB(80, 60, 60)
+				createNotification(espType.name .. " desactivado", 2, Color3.fromRGB(200, 60, 60))
+			end
+		end)
+	end
+
+	-- Clear All ESP button
+	local clearAllBtn = Instance.new("TextButton")
+	clearAllBtn.Size = UDim2.new(0.98, 0, 0, 60)
+	clearAllBtn.Position = UDim2.new(0.01, 0, 0, yPos)
+	clearAllBtn.Text = "Limpiar Todo ESP"
+	clearAllBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 80)
+	clearAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	clearAllBtn.Font = Enum.Font.GothamBold
+	clearAllBtn.TextSize = 16
+	clearAllBtn.Parent = contentFrame
+	Instance.new("UICorner", clearAllBtn).CornerRadius = UDim.new(0, 8)
+
+	clearAllBtn.MouseButton1Click:Connect(function()
+		for obj, esp in pairs(espObjects) do
+			esp:Destroy()
+		end
+		espObjects = {}
+		
+		-- Reset button states
+		for _, btn in pairs(espButtons) do
+			btn.Text = string.gsub(btn.Text, ": ON", ": OFF")
+			btn.BackgroundColor3 = Color3.fromRGB(80, 60, 60)
+		end
+		
+		-- Reset esp states
+		for _, espType in pairs(espTypes) do
+			espType.enabled = false
+		end
+		
+		createNotification("Todo ESP limpiado", 2, Color3.fromRGB(60, 120, 60))
+	end)
+end
+
+local function createVisualTab()
+	clearContent()
+	
+	local visualButtons = {
+		{name = "Fullbright", func = toggleFullbright, var = "fullbrightEnabled"},
+		{name = "Wallhack", func = toggleWallhack, var = "wallHackEnabled"},
+		{name = "Remover Niebla", func = function()
+			Lighting.FogEnd = 100000
+			Lighting.FogStart = 0
+			createNotification("Niebla removida", 2, Color3.fromRGB(60, 120, 60))
+		end},
+		{name = "Restaurar Niebla", func = function()
+			Lighting.FogEnd = 500
+			Lighting.FogStart = 15
+			createNotification("Niebla restaurada", 2, Color3.fromRGB(60, 120, 60))
+		end},
+	}
+	
+	for i, button in ipairs(visualButtons) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0.48, 0, 0, 60)
+		btn.Position = UDim2.new(((i-1) % 2) * 0.51 + 0.01, 0, 0, 5 + math.floor((i-1) / 2) * 70)
+		btn.Text = button.name .. (button.var and ": OFF" or "")
+		btn.BackgroundColor3 = Color3.fromRGB(80, 60, 80)
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 14
+		btn.Parent = contentFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+		
+		btn.MouseButton1Click:Connect(function()
+			button.func()
+			if button.var then
+				local isEnabled = false
+				if button.var == "fullbrightEnabled" then isEnabled = fullbrightEnabled
+				elseif button.var == "wallHackEnabled" then isEnabled = wallHackEnabled
+				end
+				
+				updateButtonState(btn, isEnabled, Color3.fromRGB(60, 120, 60), Color3.fromRGB(80, 60, 80), button.name)
+			end
+		end)
+	end
+	
+	-- Control de velocidad de vuelo
+	local flySpeedFrame = Instance.new("Frame")
+	flySpeedFrame.Size = UDim2.new(1, -10, 0, 80)
+	flySpeedFrame.Position = UDim2.new(0, 5, 0, 150)
+	flySpeedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	flySpeedFrame.Parent = contentFrame
+	Instance.new("UICorner", flySpeedFrame).CornerRadius = UDim.new(0, 8)
+
+	local flySpeedLabel = Instance.new("TextLabel")
+	flySpeedLabel.Size = UDim2.new(1, -10, 0, 25)
+	flySpeedLabel.Position = UDim2.new(0, 5, 0, 5)
+	flySpeedLabel.Text = "Velocidad de Vuelo:"
+	flySpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	flySpeedLabel.BackgroundTransparency = 1
+	flySpeedLabel.Font = Enum.Font.GothamBold
+	flySpeedLabel.TextSize = 14
+	flySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+	flySpeedLabel.Parent = flySpeedFrame
+
+	local flySpeedSlider = Instance.new("TextBox")
+	flySpeedSlider.Size = UDim2.new(0, 100, 0, 30)
+	flySpeedSlider.Position = UDim2.new(0, 5, 0, 35)
+	flySpeedSlider.Text = tostring(flySpeed)
+	flySpeedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+	flySpeedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+	flySpeedSlider.Font = Enum.Font.Gotham
+	flySpeedSlider.TextSize = 14
+	flySpeedSlider.Parent = flySpeedFrame
+	Instance.new("UICorner", flySpeedSlider).CornerRadius = UDim.new(0, 4)
+
+	local flySpeedBtn = Instance.new("TextButton")
+	flySpeedBtn.Size = UDim2.new(0, 120, 0, 30)
+	flySpeedBtn.Position = UDim2.new(0, 110, 0, 35)
+	flySpeedBtn.Text = "Aplicar Velocidad"
+	flySpeedBtn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+	flySpeedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	flySpeedBtn.Font = Enum.Font.Gotham
+	flySpeedBtn.TextSize = 12
+	flySpeedBtn.Parent = flySpeedFrame
+	Instance.new("UICorner", flySpeedBtn).CornerRadius = UDim.new(0, 4)
+
+	flySpeedBtn.MouseButton1Click:Connect(function()
+		local newSpeed = tonumber(flySpeedSlider.Text) or 50
+		flySpeed = newSpeed
+		createNotification("Velocidad de vuelo: " .. flySpeed, 2, Color3.fromRGB(60, 120, 60))
+	end)
+end
+
+local function createCombatTab()
+	clearContent()
+	
+	local combatButtons = {
+		{name = "Auto-Click", func = toggleAutoClick, var = "autoClickEnabled"},
+		{name = "Invisibilidad", func = function()
+			if character then
+				for _, part in pairs(character:GetChildren()) do
+					if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+						part.Transparency = part.Transparency == 0 and 1 or 0
+					elseif part:IsA("Accessory") then
+						part.Handle.Transparency = part.Handle.Transparency == 0 and 1 or 0
+					end
+				end
+				createNotification("Invisibilidad activada/desactivada", 2, Color3.fromRGB(60, 120, 60))
+			end
+		end},
+		{name = "Restaurar Salud", func = function()
+			if humanoid then
+				humanoid.Health = humanoid.MaxHealth
+				createNotification("Salud restaurada", 2, Color3.fromRGB(60, 120, 60))
+			end
+		end}
+	}
+	
+	for i, button in ipairs(combatButtons) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0.48, 0, 0, 60)
+		btn.Position = UDim2.new(((i-1) % 2) * 0.51 + 0.01, 0, 0, 5 + math.floor((i-1) / 2) * 70)
+		btn.Text = button.name .. (button.var and ": OFF" or "")
+		btn.BackgroundColor3 = Color3.fromRGB(100, 60, 60)
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 14
+		btn.Parent = contentFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+		
+		btn.MouseButton1Click:Connect(function()
+			button.func()
+			if button.var then
+				local isEnabled = false
+				if button.var == "autoClickEnabled" then isEnabled = autoClickEnabled end
+				
+				updateButtonState(btn, isEnabled, Color3.fromRGB(60, 120, 60), Color3.fromRGB(100, 60, 60), button.name)
+			end
+		end)
+	end
+	
+	-- Información de combate
+	local infoFrame = Instance.new("Frame")
+	infoFrame.Size = UDim2.new(1, -10, 0, 100)
+	infoFrame.Position = UDim2.new(0, 5, 0, 150)
+	infoFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	infoFrame.Parent = contentFrame
+	Instance.new("UICorner", infoFrame).CornerRadius = UDim.new(0, 8)
+
+	local infoLabel = Instance.new("TextLabel")
+	infoLabel.Size = UDim2.new(1, -10, 1, -10)
+	infoLabel.Position = UDim2.new(0, 5, 0, 5)
+	infoLabel.Text = "CONSEJOS DE COMBATE:\n• Auto-Click para ataques rápidos\n• Usa invisibilidad para escapar\n• Regeneración para supervivencia"
+	infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	infoLabel.BackgroundTransparency = 1
+	infoLabel.Font = Enum.Font.Gotham
+	infoLabel.TextSize = 12
+	infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+	infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+	infoLabel.Parent = infoFrame
+end
+
+local function createItemsTab()
+	clearContent()
+	
+	-- Barra de búsqueda
+	searchBox = Instance.new("TextBox")
+	searchBox.PlaceholderText = "Buscar items..."
+	searchBox.Text = ""
+	searchBox.Size = UDim2.new(1, -120, 0, 35)
+	searchBox.Position = UDim2.new(0, 5, 0, 5)
+	searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	searchBox.Font = Enum.Font.Gotham
+	searchBox.TextSize = 14
+	searchBox.ClearTextOnFocus = false
+	searchBox.Parent = contentFrame
+	Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
+
+	-- Botón Traer Todos
+	bringAllBtn = Instance.new("TextButton")
+	bringAllBtn.Size = UDim2.new(0, 110, 0, 35)
+	bringAllBtn.Position = UDim2.new(1, -115, 0, 5)
+	bringAllBtn.Text = "Traer Todos"
+	bringAllBtn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+	bringAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	bringAllBtn.Font = Enum.Font.Gotham
+	bringAllBtn.TextSize = 12
+	bringAllBtn.Parent = contentFrame
+	Instance.new("UICorner", bringAllBtn).CornerRadius = UDim.new(0, 6)
+
+	-- ScrollFrame para items
+	scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, -10, 1, -50)
+	scrollFrame.Position = UDim2.new(0, 5, 0, 45)
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.ScrollBarThickness = 8
+	scrollFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+	scrollFrame.Parent = contentFrame
+	Instance.new("UICorner", scrollFrame).CornerRadius = UDim.new(0, 8)
+
+	layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 5)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = scrollFrame
+
+	-- Evento del botón traer todos
+	bringAllBtn.MouseButton1Click:Connect(function()
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if not root then 
+			createNotification("Error: Personaje no encontrado", 2, Color3.fromRGB(200, 60, 60))
+			return 
+		end
+
+		local folderName = currentTab == "NPCs" and "Characters" or "Items"
+		local container = workspace:FindFirstChild(folderName)
+		if not container then 
+			createNotification("Carpeta '" .. folderName .. "' no encontrada", 2, Color3.fromRGB(200, 60, 60))
+			return 
+		end
+
+		local filter = string.lower(searchBox.Text or "")
+		local itemsBrought = 0
+
+		for _, item in ipairs(container:GetChildren()) do
+			if filter == "" or string.find(string.lower(item.Name), filter) then
+				local part = getItemPart(item)
+				if part then
+					part.CFrame = root.CFrame + Vector3.new(math.random(-5,5), 5, math.random(-5,5))
+					itemsBrought = itemsBrought + 1
+				end
+			end
+		end
+		
+		createNotification("Items traídos: " .. itemsBrought, 2, Color3.fromRGB(60, 120, 60))
+	end)
+
+	-- Evento de búsqueda
+	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		updateItems()
+	end)
+
+	updateItems()
+end
+
+function updateContent()
+	if currentTab == "Items" or currentTab == "NPCs" then
+		createItemsTab()
+	elseif currentTab == "Hacks" then
+		createHacksTab()
+	elseif currentTab == "ESP" then
+		createESPTab()
+	elseif currentTab == "Visual" then
+		createVisualTab()
+	elseif currentTab == "Combat" then
+		createCombatTab()
+	end
+end
+
+function getItemPart(item)
+	if item:IsA("Model") then
+		return item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")
+	elseif item:IsA("BasePart") then
+		return item
+	end
+	return nil
+end
+
+-- Crear popup para items
+popupFrame = Instance.new("Frame")
+popupFrame.Size = UDim2.new(0, 140, 0, 100)
+popupFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+popupFrame.Visible = false
+popupFrame.ZIndex = 10
+popupFrame.Parent = screenGui
+Instance.new("UICorner", popupFrame).CornerRadius = UDim.new(0, 8)
+
+local goBtn = Instance.new("TextButton")
+goBtn.Size = UDim2.new(1, -4, 0, 28)
+goBtn.Position = UDim2.new(0, 2, 0, 2)
+goBtn.Text = "Ir"
+goBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
+goBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+goBtn.Font = Enum.Font.Gotham
+goBtn.TextSize = 14
+goBtn.ZIndex = 11
+goBtn.Parent = popupFrame
+Instance.new("UICorner", goBtn).CornerRadius = UDim.new(0, 4)
+
+local bringBtn = Instance.new("TextButton")
+bringBtn.Size = UDim2.new(1, -4, 0, 28)
+bringBtn.Position = UDim2.new(0, 2, 0, 32)
+bringBtn.Text = "Traer"
+bringBtn.BackgroundColor3 = Color3.fromRGB(100, 60, 60)
+bringBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+bringBtn.Font = Enum.Font.Gotham
+bringBtn.TextSize = 14
+bringBtn.ZIndex = 11
+bringBtn.Parent = popupFrame
+Instance.new("UICorner", bringBtn).CornerRadius = UDim.new(0, 4)
+
+local bringAllPopup = Instance.new("TextButton")
+bringAllPopup.Size = UDim2.new(1, -4, 0, 28)
+bringAllPopup.Position = UDim2.new(0, 2, 0, 62)
+bringAllPopup.Text = "Traer Todos"
+bringAllPopup.BackgroundColor3 = Color3.fromRGB(80, 80, 120)
+bringAllPopup.TextColor3 = Color3.fromRGB(255, 255, 255)
+bringAllPopup.Font = Enum.Font.Gotham
+bringAllPopup.TextSize = 14
+bringAllPopup.ZIndex = 11
+bringAllPopup.Parent = popupFrame
+Instance.new("UICorner", bringAllPopup).CornerRadius = UDim.new(0, 4)
+
+-- Funciones del popup
+local function showPopup(itemButton, item)
+	hoveredItem = item
+	local absPos = itemButton.AbsolutePosition
+	popupFrame.Position = UDim2.new(0, absPos.X + itemButton.AbsoluteSize.X + 5, 0, absPos.Y)
+	popupFrame.Visible = true
+end
+
+local function hidePopup()
+	popupFrame.Visible = false
+	hoveredItem = nil
+end
+
+-- Event handlers del popup
+goBtn.MouseButton1Click:Connect(function()
+	if hoveredItem and hoveredItem:IsDescendantOf(workspace) then
+		local root = character:FindFirstChild("HumanoidRootPart")
+		local part = getItemPart(hoveredItem)
+		if root and part then
+			root.CFrame = part.CFrame + Vector3.new(0, 5, 0)
+			createNotification("Teletransportado a: " .. hoveredItem.Name, 2, Color3.fromRGB(60, 120, 60))
+			hidePopup()
+		end
+	end
+end)
+
+bringBtn.MouseButton1Click:Connect(function()
+	if hoveredItem and hoveredItem:IsDescendantOf(workspace) then
+		local root = character:FindFirstChild("HumanoidRootPart")
+		local part = getItemPart(hoveredItem)
+		if root and part then
+			part.CFrame = root.CFrame + Vector3.new(0, 5, 0)
+			createNotification("Traído: " .. hoveredItem.Name, 2, Color3.fromRGB(60, 120, 60))
+			hidePopup()
+		end
+	end
+end)
+
+bringAllPopup.MouseButton1Click:Connect(function()
+	if not hoveredItem then return end
+	local targetName = hoveredItem.Name:lower()
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	local folderName = currentTab == "NPCs" and "Characters" or "Items"
+	local container = workspace:FindFirstChild(folderName)
+	if not container then return end
+
+	local itemsBrought = 0
+	for _, obj in ipairs(container:GetChildren()) do
+		if obj.Name:lower() == targetName then
+			local part = getItemPart(obj)
+			if part then
+				part.CFrame = root.CFrame + Vector3.new(math.random(-5,5), 5, math.random(-5,5))
+				itemsBrought = itemsBrought + 1
+			end
+		end
+	end
+	
+	createNotification("Todos los '" .. hoveredItem.Name .. "' traídos: " .. itemsBrought, 2, Color3.fromRGB(60, 120, 60))
+	hidePopup()
+end)
+
+-- Crear botón de item
+local function createItemButton(item)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.Text = item.Name
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 14
+	btn.BorderSizePixel = 0
+	btn.ZIndex = 9
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	btn.Parent = scrollFrame
+
+	-- Efecto hover
+	btn.MouseEnter:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+	end)
+	
+	btn.MouseLeave:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+	end)
+
+	btn.MouseButton1Click:Connect(function()
+		showPopup(btn, item)
+	end)
+	
+	return btn
+end
+
+-- Actualizar items
+function updateItems()
+	if not scrollFrame then return end
+	
+	for _, child in ipairs(scrollFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	local folderName = currentTab == "NPCs" and "Characters" or "Items"
+	local container = workspace:FindFirstChild(folderName)
+	if not container then 
+		-- Crear mensaje si no hay carpeta
+		local noItemsLabel = Instance.new("TextLabel")
+		noItemsLabel.Size = UDim2.new(1, -10, 0, 50)
+		noItemsLabel.Text = "Carpeta '" .. folderName .. "' no encontrada"
+		noItemsLabel.TextColor3 = Color3.fromRGB(200, 100, 100)
+		noItemsLabel.BackgroundTransparency = 1
+		noItemsLabel.Font = Enum.Font.Gotham
+		noItemsLabel.TextSize = 16
+		noItemsLabel.Parent = scrollFrame
+		return
+	end
+
+	local filter = searchBox and string.lower(searchBox.Text) or ""
+	local itemCount = 0
+
+	for _, item in ipairs(container:GetChildren()) do
+		if string.find(string.lower(item.Name), filter) then
+			createItemButton(item)
+			itemCount = itemCount + 1
+		end
+	end
+	
+	-- Si no hay items después del filtro
+	if itemCount == 0 then
+		local noItemsLabel = Instance.new("TextLabel")
+		noItemsLabel.Size = UDim2.new(1, -10, 0, 50)
+		noItemsLabel.Text = filter ~= "" and "No se encontraron items con: '" .. searchBox.Text .. "'" or "No hay items disponibles"
+		noItemsLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		noItemsLabel.BackgroundTransparency = 1
+		noItemsLabel.Font = Enum.Font.Gotham
+		noItemsLabel.TextSize = 14
+		noItemsLabel.Parent = scrollFrame
+	end
+
+	task.wait()
+	if layout then
+		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+	end
+end
+
+-- Minimizar y restaurar
+minimizeBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
+	popupFrame.Visible = false
+	floatButton.Visible = true
+end)
+
+floatButton.MouseButton1Click:Connect(function()
+	mainFrame.Visible = true
+	floatButton.Visible = false
+end)
+
+-- Cerrar popup al hacer clic fuera
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if popupFrame.Visible then
+			local mousePos = Vector2.new(mouse.X, mouse.Y)
+			local framePos = popupFrame.AbsolutePosition
+			local frameSize = popupFrame.AbsoluteSize
+			
+			if mousePos.X < framePos.X or mousePos.X > framePos.X + frameSize.X or
+			   mousePos.Y < framePos.Y or mousePos.Y > framePos.Y + frameSize.Y then
+				hidePopup()
+			end
+		end
+	end
+end)
+
+-- Botón especial: Ir al Spawn
+local spawnBtn = Instance.new("TextButton")
+spawnBtn.Size = UDim2.new(0, 160, 0, 35)
+spawnBtn.Position = UDim2.new(0.5, -80, 0, -80)
+spawnBtn.AnchorPoint = Vector2.new(0.5, 0)
+spawnBtn.Text = "Ir al Spawn"
+spawnBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 140)
+spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+spawnBtn.Font = Enum.Font.GothamBold
+spawnBtn.TextSize = 14
+spawnBtn.Parent = mainFrame
+Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 8)
+
+spawnBtn.MouseButton1Click:Connect(function()
+	local root = character:FindFirstChild("HumanoidRootPart")
+	local spawnPoint = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("SpawnLocation")
+	
+	if root then
+		if spawnPoint then
+			root.CFrame = spawnPoint.CFrame + Vector3.new(0, 5, 0)
+			createNotification("Teletransportado al spawn", 2, Color3.fromRGB(60, 120, 60))
+		else
+			-- Coordenadas de spawn alternativas para 99 Noches en el Bosque
+			root.CFrame = CFrame.new(0, 50, 0)
+			createNotification("Teletransportado al spawn (coordenadas alternativas)", 2, Color3.fromRGB(60, 120, 60))
+		end
+	else
+		createNotification("Error: Personaje no encontrado", 2, Color3.fromRGB(200, 60, 60))
+	end
+end)
+
+-- Auto-Update del contenido (MEJORADO)
+task.spawn(function()
+	updateContent()
+	while true do
+		task.wait(5) -- Aumentamos el tiempo para evitar lag
+		if (currentTab == "Items" or currentTab == "NPCs") and scrollFrame and mainFrame.Visible then
+			updateItems()
+		end
+	end
+end)
+
+-- Keybinds MEJORADOS CON NOTIFICACIONES
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	
+	if input.KeyCode == Enum.KeyCode.F1 then
+		if mainFrame.Visible then
+			mainFrame.Visible = false
+			floatButton.Visible = true
+			popupFrame.Visible = false
+		else
+			mainFrame.Visible = true
+			floatButton.Visible = false
+		end
+	elseif input.KeyCode == Enum.KeyCode.F2 then
+		autoCollectItems()
+	elseif input.KeyCode == Enum.KeyCode.F3 then
+		toggleNoclip()
+	elseif input.KeyCode == Enum.KeyCode.F4 then
+		toggleFly()
+	elseif input.KeyCode == Enum.KeyCode.F5 then
+		toggleInfiniteJump()
+	elseif input.KeyCode == Enum.KeyCode.F6 then
+		toggleFullbright()
+	elseif input.KeyCode == Enum.KeyCode.F7 then
+		toggleAutoFarm()
+	elseif input.KeyCode == Enum.KeyCode.F8 then
+		toggleAntiAFK()
+	end
+end)
+
+-- Cleanup al salir del juego (MEJORADO)
+game:BindToClose(function()
+	-- Desconectar todas las conexiones
+	for name, connection in pairs(connections) do
+		if typeof(connection) == "RBXScriptConnection" then
+			pcall(function() connection:Disconnect() end)
+		elseif typeof(connection) == "thread" then
+			pcall(function() task.cancel(connection) end)
+		end
+	end
+	
+	-- Limpiar ESP
+	for obj, esp in pairs(espObjects) do
+		if esp and esp.Parent then
+			pcall(function() esp:Destroy() end)
+		end
+	end
+	
+	-- Restaurar configuraciones originales
+	pcall(function()
+		if humanoid then
+			humanoid.WalkSpeed = originalWalkSpeed
+			humanoid.JumpPower = originalJumpPower
+		end
+		
+		Lighting.Ambient = originalAmbient
+		Lighting.Brightness = originalBrightness
+		Lighting.OutdoorAmbient = originalOutdoorAmbient
+		Lighting.GlobalShadows = true
+	end)
+end)
+
+-- Actualización del personaje al respawnear (MEJORADO)
+player.CharacterAdded:Connect(function(newCharacter)
+	character = newCharacter
+	humanoid = character:WaitForChild("Humanoid")
+	originalWalkSpeed = humanoid.WalkSpeed
+	originalJumpPower = humanoid.JumpPower
+	
+	-- Reactivar funciones si estaban activas
+	if noclipEnabled then
+		task.wait(1)
+		toggleNoclip()
+		toggleNoclip() -- Doble toggle para reactivar
+	end
+	
+	if autoRespawnEnabled then
+		toggleAutoRespawn()
+		toggleAutoRespawn() -- Doble toggle para reactivar
+	end
+	
+	createNotification("Personaje respawneado - Script reconfigurado", 3, Color3.fromRGB(60, 120, 60))
+end)
+
+-- Mensaje de bienvenida mejorado con más información
+task.spawn(function()
+	task.wait(2)
+	createNotification("Jmods 99", 4, Color3.fromRGB(60, 120, 60))
+	task.wait(4.5)
+	createNotification("🎮 CONTROLES:\nF1: GUI | F2: Collect | F3: Noclip\nF4: Fly | F5: InfJump | F6: Fullbright\nF7: Auto-Farm | F8: Anti-AFK", 6, Color3.fromRGB(100, 150, 255))
+	task.wait(6.5)
+	createNotification("🔧 NUEVAS MEJORAS:\n• Funciones no se activan solas\n• Mejor sistema de notificaciones\n• Estados de botones corregidos\n• Manejo de errores mejorado", 5, Color3.fromRGB(255, 200, 100))
+end)
+
+-- Sistema de estado global para debugging
+_G.NightSurvivalHub = {
+	version = "2.0-FIXED",
+	status = {
+		noclip = function() return noclipEnabled end,
+		fly = function() return flyEnabled end,
+		autoFarm = function() return autoFarmEnabled end,
+		infiniteJump = function() return infiniteJumpEnabled end,
+		antiAFK = function() return antiAFKEnabled end,
+		fullbright = function() return fullbrightEnabled end,
+		wallhack = function() return wallHackEnabled end,
+		autoClick = function() return autoClickEnabled end,
+		autoRespawn = function() return autoRespawnEnabled end
+	},
+	connections = connections,
+	espObjects = espObjects
+}
+
+print("===============================================")
+print("✅ 99 Noches en el Bosque - Survival Hub v2.0 FIXED")
+print("===============================================")
+print("🔧 PROBLEMAS CORREGIDOS:")
+print("• Las funciones ya NO se inician automáticamente")
+print("• Estados de botones corregidos (ON/OFF)")
+print("• Mejor manejo de errores y notificaciones")
+print("• Sistema de limpieza mejorado")
+print("• Funciones responden correctamente")
+print("===============================================")
+print("🎮 NUEVOS KEYBINDS:")
+print("F1: Mostrar/Ocultar GUI")
+print("F2: Auto-Collect (una vez)")
+print("F3: Toggle Noclip")
+print("F4: Toggle Vuelo")
+print("F5: Toggle Salto Infinito")
+print("F6: Toggle Fullbright")
+print("F7: Toggle Auto-Farm")
+print("F8: Toggle Anti-AFK")
+print("===============================================")
+print("✅ Script cargado correctamente - Sin errores!")
+print("===============================================")

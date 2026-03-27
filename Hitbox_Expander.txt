@@ -1,0 +1,41 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local HitboxActive = false
+local HitboxConnection = nil
+
+local function ToggleHitbox(State)
+    HitboxActive = State
+    
+    if HitboxConnection then
+        HitboxConnection:Disconnect()
+        HitboxConnection = nil
+    end
+    
+    if not State then
+        for _, Player in pairs(Players:GetPlayers()) do
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                local RootPart = Player.Character.HumanoidRootPart
+                RootPart.Size = Vector3.new(2, 2, 1)
+                RootPart.Transparency = 1
+                RootPart.Material = Enum.Material.Plastic
+                RootPart.CanCollide = true
+            end
+        end
+    else
+        HitboxConnection = RunService.RenderStepped:Connect(function()
+            for _, Player in pairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                    local RootPart = Player.Character.HumanoidRootPart
+                    RootPart.Size = Vector3.new(12, 12, 12)
+                    RootPart.Transparency = 0.4
+                    RootPart.Color = Color3.fromRGB(255, 255, 255)
+                    RootPart.Material = Enum.Material.SmoothPlastic
+                    RootPart.CanCollide = false
+                end
+            end
+        end)
+    end
+end

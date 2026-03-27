@@ -1,0 +1,541 @@
+local rs = game:GetService("ReplicatedStorage")
+
+-- Đợi CommF_ có sẵn
+repeat task.wait() until rs:FindFirstChild("Remotes") and rs.Remotes:FindFirstChild("CommF_")
+
+-- Gửi lệnh đổi team sang Hải Quân
+rs.Remotes.CommF_:InvokeServer("SetTeam", "Marines")
+
+-- ⏳ Đợi 5 giây
+task.wait(20)
+
+-- 🌌✨ HNC Hub - Auto Kaitun Menu
+-- By Kaitun
+
+local ts = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
+
+-- Parent UI
+local function getParent()
+    local ok, ui = pcall(function() return gethui() end)
+    if ok and ui then return ui end
+    if game.CoreGui then return game.CoreGui end
+    return plr:WaitForChild("PlayerGui")
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "HNCHubMenu"
+gui.ResetOnSpawn = false
+gui.Parent = getParent()
+
+-- ❓ Icon button
+local iconBtn = Instance.new("TextButton")
+iconBtn.Size = UDim2.new(0, 40, 0, 40)
+iconBtn.Position = UDim2.new(1, -50, 0, 20)
+iconBtn.AnchorPoint = Vector2.new(0, 0)
+iconBtn.Text = "❓"
+iconBtn.TextScaled = true
+iconBtn.Font = Enum.Font.GothamBold
+iconBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+iconBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+iconBtn.Parent = gui
+
+local corner = Instance.new("UICorner", iconBtn)
+corner.CornerRadius = UDim.new(1, 0)
+
+-- Menu Frame (ẩn mặc định)
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 400, 0, 250)
+menuFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
+menuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+menuFrame.Visible = false
+menuFrame.ClipsDescendants = true
+menuFrame.Parent = gui
+
+local mcorner = Instance.new("UICorner", menuFrame)
+mcorner.CornerRadius = UDim.new(0, 20)
+
+local stroke = Instance.new("UIStroke", menuFrame)
+stroke.Thickness = 3
+stroke.Color = Color3.fromRGB(0, 200, 255)
+
+-- Gradient background
+local grad = Instance.new("UIGradient", menuFrame)
+grad.Rotation = 45
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(72,61,139)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,206,209)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(123,104,238))
+}
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "HNC Hub - Auto Kaitun"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Parent = menuFrame
+
+-- ScrollingFrame cho list
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, -20, 1, -60)
+scroll.Position = UDim2.new(0, 10, 0, 50)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarThickness = 4
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.BackgroundTransparency = 1
+scroll.Parent = menuFrame
+
+local UIList = Instance.new("UIListLayout", scroll)
+UIList.Padding = UDim.new(0, 10)
+
+-- Danh sách item
+local items = {
+    "Auto Superhuman",
+    "Auto Death Step",
+    "Auto Sharkman Karate",
+    "Auto Electric Claw",
+    "Auto Dragon Talon",
+    "Auto Saber",
+    "Auto Rengoku",
+    "Auto Canvander",
+    "Auto Buddy",
+    "Auto Tushita",
+    "Auto Yama",    
+    "Auto True Triple Katana",
+    "Auto Cursed Dual Katana",
+    "Auto Acidum Rifle",
+    "Auto Serpent Bow",
+    "Auto Kabucha",
+    "Auto Mastery Sword"
+}
+
+for _, text in ipairs(items) do
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -10, 0, 40)
+    lbl.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    lbl.Text = text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextScaled = true
+    lbl.TextColor3 = Color3.fromRGB(255,255,255)
+    lbl.Parent = scroll
+
+    local lcorner = Instance.new("UICorner", lbl)
+    lcorner.CornerRadius = UDim.new(0, 10)
+end
+
+-- Animation khi mở menu
+local function toggleMenu()
+    if menuFrame.Visible then
+        -- Đóng
+        ts:Create(menuFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 400, 0, 0)
+        }):Play()
+        task.wait(0.4)
+        menuFrame.Visible = false
+    else
+        -- Mở
+        menuFrame.Visible = true
+        menuFrame.Size = UDim2.new(0, 400, 0, 0)
+        ts:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 400, 0, 250)
+        }):Play()
+    end
+end
+
+iconBtn.MouseButton1Click:Connect(toggleMenu)
+
+-- 🌌❄️ HNC Hub Cosmic Snow Edition (Fixed)
+-- By Kaitun
+
+local ts = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
+
+-- Parent UI vào CoreGui
+local function getParent()
+    local ok, ui = pcall(function() return gethui() end)
+    if ok and ui then return ui end
+    if game.CoreGui then return game.CoreGui end
+    return plr:WaitForChild("PlayerGui")
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HNCHubUI"
+ScreenGui.Parent = getParent()
+ScreenGui.ResetOnSpawn = false
+
+-- Frame chính (cao hơn, mỏng, hiện đại)
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 480, 0, 90)
+Frame.Position = UDim2.new(0.5, -240, 0, 10) -- cao hơn
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+Frame.BorderSizePixel = 0
+Frame.AnchorPoint = Vector2.new(0,0)
+Frame.Parent = ScreenGui
+Frame.ClipsDescendants = true
+
+-- Bo góc
+local corner = Instance.new("UICorner", Frame)
+corner.CornerRadius = UDim.new(0, 25)
+
+-- Viền ngoài phát sáng
+local stroke = Instance.new("UIStroke", Frame)
+stroke.Thickness = 3
+stroke.Transparency = 0.1
+
+-- Gradient nền cosmic lung linh
+local gradient = Instance.new("UIGradient", Frame)
+gradient.Rotation = 45
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(72,61,139)),
+    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(0,206,209)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(123,104,238)),
+    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(30,144,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,105,180))
+}
+
+-- Hiệu ứng gradient đổi màu động
+task.spawn(function()
+    while task.wait(4) do
+        local newColors = {
+            Color3.fromRGB(math.random(80,255), math.random(80,255), math.random(80,255)),
+            Color3.fromRGB(math.random(80,255), math.random(80,255), math.random(80,255)),
+            Color3.fromRGB(math.random(80,255), math.random(80,255), math.random(80,255))
+        }
+        ts:Create(gradient, TweenInfo.new(4, Enum.EasingStyle.Linear), {
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, newColors[1]),
+                ColorSequenceKeypoint.new(0.5, newColors[2]),
+                ColorSequenceKeypoint.new(1, newColors[3])
+            }
+        }):Play()
+    end
+end)
+
+-- Viền rainbow
+local colors = {
+    Color3.fromRGB(138,43,226),
+    Color3.fromRGB(0,191,255),
+    Color3.fromRGB(75,0,130),
+    Color3.fromRGB(255,20,147),
+    Color3.fromRGB(0,255,255),
+}
+task.spawn(function()
+    while task.wait(1.5) do
+        for _, c in ipairs(colors) do
+            ts:Create(stroke, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {Color = c}):Play()
+            task.wait(1.2)
+        end
+    end
+end)
+
+-- Tiêu đề chính
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 0.6, 0)
+Title.Position = UDim2.new(0, 10, 0, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "HNC Hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextStrokeTransparency = 0.2
+Title.Parent = Frame
+
+-- Chữ phụ
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, -20, 0.3, 0)
+SubTitle.Position = UDim2.new(0, 10, 0.65, 0)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "Kaitun"
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.TextScaled = true
+SubTitle.TextColor3 = Color3.fromRGB(200, 230, 255)
+SubTitle.TextTransparency = 0.05
+SubTitle.Parent = Frame
+
+-- ❄️ Hiệu ứng tuyết trắng rơi quanh menu
+local SnowFolder = Instance.new("Folder", ScreenGui)
+SnowFolder.Name = "Snow"
+
+local function createSnow()
+    local snow = Instance.new("Frame")
+    snow.Size = UDim2.new(0, math.random(3,6), 0, math.random(3,6))
+    snow.Position = UDim2.new(math.random(), 0, -0.1, 0)
+    snow.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    snow.BorderSizePixel = 0
+    local corner = Instance.new("UICorner", snow)
+    corner.CornerRadius = UDim.new(1,0)
+    snow.Parent = SnowFolder
+
+    ts:Create(snow, TweenInfo.new(math.random(6,10), Enum.EasingStyle.Linear), {
+        Position = UDim2.new(math.random(), 0, 1.2, 0),
+        BackgroundTransparency = 1
+    }):Play()
+
+    game:GetService("Debris"):AddItem(snow, 10)
+end
+
+task.spawn(function()
+    while task.wait(0.2) do
+        createSnow()
+    end
+end)
+-- Đổi màu nhân vật
+-- 🟢 HNC Hub - Full Green Aura Body
+-- By Kaitun
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Hàm tạo aura xanh phủ toàn thân
+local function applyGreenAura(char)
+    if not char then return end
+    
+    -- Xóa aura cũ nếu có
+    if char:FindFirstChild("GreenAura") then
+        char.GreenAura:Destroy()
+    end
+
+    -- Highlight toàn cơ thể
+    local aura = Instance.new("Highlight")
+    aura.Name = "GreenAura"
+    aura.FillColor = Color3.fromRGB(0, 255, 0)   -- xanh lá
+    aura.OutlineColor = Color3.fromRGB(0, 255, 0)
+    aura.FillTransparency = 0.3                  -- trong mờ nhìn xuyên
+    aura.OutlineTransparency = 0                 -- viền sáng rõ
+    aura.Parent = char
+end
+
+-- Áp ngay lập tức khi đang sống
+if LocalPlayer.Character then
+    applyGreenAura(LocalPlayer.Character)
+end
+
+-- Tự áp lại khi respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("HumanoidRootPart")
+    task.wait(1)
+    applyGreenAura(char)
+end)
+_G.FastAttack = true
+
+if _G.FastAttack then
+    local _ENV = (getgenv or getrenv or getfenv)()
+
+    local function SafeWaitForChild(parent, childName)
+        local success, result = pcall(function()
+            return parent:WaitForChild(childName)
+        end)
+        if not success or not result then
+            warn("noooooo: " .. childName)
+        end
+        return result
+    end
+
+    local function WaitChilds(path, ...)
+        local last = path
+        for _, child in {...} do
+            last = last:FindFirstChild(child) or SafeWaitForChild(last, child)
+            if not last then break end
+        end
+        return last
+    end
+
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    local CollectionService = game:GetService("CollectionService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TeleportService = game:GetService("TeleportService")
+    local RunService = game:GetService("RunService")
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+
+    if not Player then
+        warn("Không tìm thấy người chơi cục bộ.")
+        return
+    end
+
+    local Remotes = SafeWaitForChild(ReplicatedStorage, "Remotes")
+    if not Remotes then return end
+
+    local Validator = SafeWaitForChild(Remotes, "Validator")
+    local CommF = SafeWaitForChild(Remotes, "CommF_")
+    local CommE = SafeWaitForChild(Remotes, "CommE")
+
+    local ChestModels = SafeWaitForChild(workspace, "ChestModels")
+    local WorldOrigin = SafeWaitForChild(workspace, "_WorldOrigin")
+    local Characters = SafeWaitForChild(workspace, "Characters")
+    local Enemies = SafeWaitForChild(workspace, "Enemies")
+    local Map = SafeWaitForChild(workspace, "Map")
+
+    local EnemySpawns = SafeWaitForChild(WorldOrigin, "EnemySpawns")
+    local Locations = SafeWaitForChild(WorldOrigin, "Locations")
+
+    local RenderStepped = RunService.RenderStepped
+    local Heartbeat = RunService.Heartbeat
+    local Stepped = RunService.Stepped
+
+    local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
+    local Net = SafeWaitForChild(Modules, "Net")
+
+    local sethiddenproperty = sethiddenproperty or function(...) return ... end
+    local setupvalue = setupvalue or (debug and debug.setupvalue)
+    local getupvalue = getupvalue or (debug and debug.getupvalue)
+
+    local Settings = {
+        AutoClick = true,
+        ClickDelay = 0.0000000000000000000001
+    }
+
+    local Module = {}
+
+    Module.FastAttack = (function()
+        if _ENV.rz_FastAttack then
+            return _ENV.rz_FastAttack
+        end
+
+        local FastAttack = {
+            Distance = 1000,
+            attackMobs = true,
+            attackPlayers = true,
+            Equipped = nil
+        }
+
+        local RegisterAttack = SafeWaitForChild(Net, "RE/RegisterAttack")
+        local RegisterHit = SafeWaitForChild(Net, "RE/RegisterHit")
+
+        local function IsAlive(character)
+        return character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0
+        end
+
+        local function ProcessEnemies(OthersEnemies, Folder)
+            local BasePart = nil
+            for _, Enemy in Folder:GetChildren() do
+                local Head = Enemy:FindFirstChild("Head")
+                if Head and IsAlive(Enemy) and Player:DistanceFromCharacter(Head.Position) < FastAttack.Distance then
+                    if Enemy ~= Player.Character then
+                        table.insert(OthersEnemies, { Enemy, Head })
+                        BasePart = Head
+                    end
+                end
+            end
+            return BasePart
+        end
+
+        function FastAttack:Attack(BasePart, OthersEnemies)
+            if not BasePart or #OthersEnemies == 0 then return end
+            RegisterAttack:FireServer(Settings.ClickDelay or 0)
+            RegisterHit:FireServer(BasePart, OthersEnemies)
+        end
+
+        function FastAttack:AttackNearest()
+            local OthersEnemies = {}
+            local Part1 = ProcessEnemies(OthersEnemies, Enemies)
+            local Part2 = ProcessEnemies(OthersEnemies, Characters)
+            if #OthersEnemies > 0 then
+                self:Attack(Part1 or Part2, OthersEnemies)
+            else
+                task.wait(0)
+            end
+        end
+
+        function FastAttack:BladeHits()
+            local Equipped = IsAlive(Player.Character) and Player.Character:FindFirstChildOfClass("Tool")
+            if Equipped and Equipped.ToolTip ~= "Gun" then
+                self:AttackNearest()
+            else
+                task.wait(0)
+            end
+        end
+
+        task.spawn(function()
+            while task.wait(Settings.ClickDelay) do
+                if Settings.AutoClick then
+                    FastAttack:BladeHits()
+                end
+            end
+        end)
+
+        _ENV.rz_FastAttack = FastAttack
+        return FastAttack
+    end)()
+end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- Tùy chỉnh
+local TEXT = "HNC Hub"
+local TEXT_SIZE = 18                 -- kích thước chữ (không quá to)
+local GUI_OFFSET = Vector3.new(0, 1.8, 0) -- khoảng cách so với đầu
+local RAINBOW_SPEED = 1.0           -- tốc độ đổi màu (1 = bình thường, tăng để nhanh hơn)
+
+local function createBillboardFor(character)
+    if not character then return end
+    local head = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
+    if not head then return end
+
+    -- Nếu đã có Billboard do script tạo thì hủy trước
+    local existing = head:FindFirstChild("HNC_FastAttack_Label")
+    if existing then existing:Destroy() end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "HNC_FastAttack_Label"
+    billboard.Adornee = head
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 40) -- kích thước GUI
+    billboard.StudsOffset = GUI_OFFSET
+    billboard.Parent = head
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Name = "Label"
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = TEXT
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextSize = TEXT_SIZE
+    textLabel.TextStrokeTransparency = 0.6
+    textLabel.TextTransparency = 0
+    textLabel.TextScaled = false
+    textLabel.Parent = billboard
+
+    -- rainbow loop
+    local hue = 0
+    local con
+    con = RunService.RenderStepped:Connect(function(dt)
+        hue = (hue + dt * RAINBOW_SPEED) % 1
+        local rgb = Color3.fromHSV(hue, 0.9, 1)
+        if textLabel and textLabel.Parent then
+            textLabel.TextColor3 = rgb
+        else
+            if con then con:Disconnect() end
+        end
+    end)
+end
+
+-- khi spawn/respawn character
+local function onCharacterAdded(character)
+    -- đợi head xuất hiện
+    if not character.Parent then
+        character.AncestryChanged:Wait()
+    end
+    -- tạo sau 0.1s để head chắc chắn có
+    wait(0.1)
+    createBillboardFor(character)
+end
+
+-- kết nối
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- optional: nếu muốn tắt khi rời game (cleanup)
+player.AncestryChanged:Connect(function(_, parent)
+    if not parent then
+        -- client đang bị remove, nothing to do
+    end
+end)

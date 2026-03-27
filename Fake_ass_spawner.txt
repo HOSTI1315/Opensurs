@@ -1,0 +1,357 @@
+-- Khngscript Hub (PlayerGui): 8s loading, Add Brainrot, Duplicate v2 (progress 10s), Lucky Block panel riêng
+local Players=game:GetService("Players")
+local UIS=game:GetService("UserInputService")
+local VIM=game:GetService("VirtualInputManager")
+local TweenService=game:GetService("TweenService")
+local LP=Players.LocalPlayer
+local PG=LP:WaitForChild("PlayerGui")
+
+local GUI_NAME="Khngscript_AllInOne_PG"
+local old=PG:FindFirstChild(GUI_NAME); if old then old:Destroy() end
+
+-- helpers
+local function pill(parent,text)
+    local b=Instance.new("TextButton")
+    b.Size=UDim2.new(0.48,0,0,46)
+    b.BackgroundColor3=Color3.fromRGB(114,106,240)
+    b.Text=text
+    b.TextColor3=Color3.fromRGB(255,255,255)
+    b.Font=Enum.Font.GothamSemibold
+    b.TextSize=18
+    b.AutoButtonColor=true
+    b.Active=true;b.Selectable=true
+    b.Parent=parent
+    Instance.new("UICorner",b).CornerRadius=UDim.new(0,12)
+    local s=Instance.new("UIStroke",b) s.Thickness=1.2 s.Color=Color3.fromRGB(255,255,255) s.Transparency=0.75
+    return b
+end
+local function pillColor(btn,r,g,b) btn.BackgroundColor3=Color3.fromRGB(r,g,b) end
+local function dragify(handle,target)
+    local dragging=false; local dragInput; local startPos; local startInputPos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+            dragging=true; startPos=target.Position; startInputPos=input.Position
+            input.Changed:Connect(function() if input.UserInputState==Enum.UserInputState.End then dragging=false end end)
+        end
+    end)
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then dragInput=input end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input==dragInput then
+            local d=input.Position-startInputPos
+            target.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+        end
+    end)
+end
+
+-- GUI root
+local gui=Instance.new("ScreenGui")
+gui.Name=GUI_NAME
+gui.IgnoreGuiInset=true
+gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
+gui.Parent=PG
+
+-- Loading box nhỏ + nền mờ 8s
+local bg=Instance.new("Frame",gui)
+bg.Size=UDim2.new(1,0,1,0)
+bg.BackgroundColor3=Color3.fromRGB(0,0,0)
+bg.BackgroundTransparency=0.35
+
+local box=Instance.new("Frame",gui)
+box.AnchorPoint=Vector2.new(0.5,0.5)
+box.Position=UDim2.new(0.5,0,0.5,0)
+box.Size=UDim2.new(0,420,0,140)
+box.BackgroundColor3=Color3.fromRGB(15,15,15)
+box.BorderSizePixel=0
+Instance.new("UICorner",box).CornerRadius=UDim.new(0,16)
+
+local avatar=Instance.new("ImageLabel",box)
+avatar.Size=UDim2.new(0,56,0,56)
+avatar.Position=UDim2.new(0,16,0,12)
+avatar.BackgroundTransparency=1
+avatar.Image="rbxassetid://115555110268657"
+Instance.new("UICorner",avatar).CornerRadius=UDim.new(1,0)
+
+local title=Instance.new("TextLabel",box)
+title.BackgroundTransparency=1
+title.Position=UDim2.new(0,84,0,16)
+title.Size=UDim2.new(1,-90,0,28)
+title.Font=Enum.Font.GothamBold
+title.TextSize=22
+title.TextColor3=Color3.fromRGB(255,255,255)
+title.TextXAlignment=Enum.TextXAlignment.Left
+title.Text="TikTok/Youtube: Khngscript"
+
+local barBg=Instance.new("Frame",box)
+barBg.AnchorPoint=Vector2.new(0.5,0)
+barBg.Position=UDim2.new(0.5,0,0,78)
+barBg.Size=UDim2.new(0.9,0,0,24)
+barBg.BackgroundColor3=Color3.fromRGB(45,45,45)
+barBg.BorderSizePixel=0
+Instance.new("UICorner",barBg).CornerRadius=UDim.new(0,12)
+
+local fill=Instance.new("Frame",barBg)
+fill.Size=UDim2.new(0,0,1,0)
+fill.BackgroundColor3=Color3.fromRGB(160,90,255)
+fill.BorderSizePixel=0
+Instance.new("UICorner",fill).CornerRadius=UDim.new(0,12)
+
+local sub=Instance.new("TextLabel",box)
+sub.AnchorPoint=Vector2.new(0.5,1)
+sub.Position=UDim2.new(0.5,0,1,-6)
+sub.Size=UDim2.new(1,-20,0,24)
+sub.BackgroundTransparency=1
+sub.Font=Enum.Font.GothamBold
+sub.TextSize=18
+sub.TextColor3=Color3.fromRGB(255,255,255)
+sub.Text="Subscribe to Khngscript"
+
+TweenService:Create(fill,TweenInfo.new(8,Enum.EasingStyle.Linear),{Size=UDim2.new(1,0,1,0)}):Play()
+
+-- Main Hub (ẩn tới khi xong loading)
+local frame=Instance.new("Frame",gui)
+frame.Visible=false
+frame.Size=UDim2.new(0,440,0,260)
+frame.Position=UDim2.new(0.5,-220,0.5,-130)
+frame.BackgroundColor3=Color3.fromRGB(20,22,26)
+frame.BorderSizePixel=0
+frame.Active=true
+Instance.new("UICorner",frame).CornerRadius=UDim.new(0,16)
+local fs=Instance.new("UIStroke",frame) fs.Color=Color3.fromRGB(85,85,95) fs.Thickness=1
+
+local titleBar=Instance.new("Frame",frame)
+titleBar.Size=UDim2.new(1,0,0,48)
+titleBar.BackgroundColor3=Color3.fromRGB(28,30,36)
+titleBar.BorderSizePixel=0
+titleBar.Active=true
+Instance.new("UICorner",titleBar).CornerRadius=UDim.new(0,16)
+local t=Instance.new("TextLabel",titleBar)
+t.BackgroundTransparency=1
+t.Size=UDim2.new(1,-120,1,0)
+t.Position=UDim2.new(0,16,0,0)
+t.Font=Enum.Font.GothamBlack
+t.TextSize=20
+t.TextXAlignment=Enum.TextXAlignment.Left
+t.TextColor3=Color3.fromRGB(235,235,245)
+t.Text="Khngscript Hub"
+dragify(titleBar,frame)
+
+local body=Instance.new("Frame",frame)
+body.BackgroundTransparency=1
+body.Size=UDim2.new(1,-24,1,-64)
+body.Position=UDim2.new(0,12,0,56)
+local layout=Instance.new("UIGridLayout",body)
+layout.CellPadding=UDim2.new(0,12,0,12)
+layout.CellSize=UDim2.new(0.5,-6,0,46)
+layout.FillDirectionMaxCells=2
+layout.HorizontalAlignment=Enum.HorizontalAlignment.Center
+layout.VerticalAlignment=Enum.VerticalAlignment.Top
+
+-- === Progress 10s cho Duplicate v2
+local function ShowProgress10s()
+    if gui:FindFirstChild("KS_ProgressModal") then gui.KS_ProgressModal:Destroy() end
+    local modal=Instance.new("Frame",gui)
+    modal.Name="KS_ProgressModal"
+    modal.Size=UDim2.new(0,420,0,140)
+    modal.AnchorPoint=Vector2.new(0.5,0.5)
+    modal.Position=UDim2.new(0.5,0,0.5,0)
+    modal.BackgroundColor3=Color3.fromRGB(15,15,15)
+    modal.BorderSizePixel=0
+    Instance.new("UICorner",modal).CornerRadius=UDim.new(0,16)
+
+    local mt=Instance.new("TextLabel",modal)
+    mt.BackgroundTransparency=1
+    mt.Position=UDim2.new(0,16,0,12)
+    mt.Size=UDim2.new(1,-32,0,26)
+    mt.Font=Enum.Font.GothamBold
+    mt.TextSize=20
+    mt.TextColor3=Color3.fromRGB(255,255,255)
+    mt.TextXAlignment=Enum.TextXAlignment.Left
+    mt.Text="Duplicate v2"
+
+    local percent=Instance.new("TextLabel",modal)
+    percent.BackgroundTransparency=1
+    percent.Position=UDim2.new(0,16,0,44)
+    percent.Size=UDim2.new(1,-32,0,22)
+    percent.Font=Enum.Font.Gotham
+    percent.TextSize=18
+    percent.TextColor3=Color3.fromRGB(210,210,215)
+    percent.TextXAlignment=Enum.TextXAlignment.Left
+    percent.Text="1%"
+
+    local pbg=Instance.new("Frame",modal)
+    pbg.AnchorPoint=Vector2.new(0.5,0)
+    pbg.Position=UDim2.new(0.5,0,0,76)
+    pbg.Size=UDim2.new(0.9,0,0,24)
+    pbg.BackgroundColor3=Color3.fromRGB(45,45,45)
+    pbg.BorderSizePixel=0
+    Instance.new("UICorner",pbg).CornerRadius=UDim.new(0,12)
+
+    local pf=Instance.new("Frame",pbg)
+    pf.Size=UDim2.new(0,0,1,0)
+    pf.BackgroundColor3=Color3.fromRGB(70,200,90)
+    pf.BorderSizePixel=0
+    Instance.new("UICorner",pf).CornerRadius=UDim.new(0,12)
+
+    task.spawn(function()
+        for i=1,100 do
+            percent.Text=tostring(i).."%"
+            pf.Size=UDim2.new(i/100,0,1,0)
+            task.wait(0.1)
+        end
+        mt.Text="Success"
+        percent.Text="100%"
+        task.wait(0.8)
+        modal:Destroy()
+    end)
+end
+
+-- ==== Nút chính trong Hub
+-- 🧠 Add Brainrot (P)
+local btnAdd=pill(body,"🧠 Add Brainrot"); pillColor(btnAdd,114,106,240)
+btnAdd.MouseButton1Click:Connect(function()
+    VIM:SendKeyEvent(true,Enum.KeyCode.P,false,game)
+    VIM:SendKeyEvent(false,Enum.KeyCode.P,false,game)
+end)
+
+-- 🧠 Duplicate v2 (progress 10s + loadstring)
+local btnDup2=pill(body,"🧠 Duplicate v2"); pillColor(btnDup2,114,106,240)
+btnDup2.MouseButton1Click:Connect(function()
+    btnDup2.Text="Duplicating..."
+    pillColor(btnDup2,70,200,90)
+    ShowProgress10s()
+    task.defer(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/tunadan212/Kkkk/refs/heads/main/K"))()
+    end)
+end)
+
+-- 🎉 Execute Event (Q)
+local btnExec=pill(body,"🎉 Execute Event"); pillColor(btnExec,114,106,240)
+btnExec.MouseButton1Click:Connect(function()
+    VIM:SendKeyEvent(true,Enum.KeyCode.Q,false,game)
+    VIM:SendKeyEvent(false,Enum.KeyCode.Q,false,game)
+end)
+
+-- 🤤 Spawn Brainrot (R)
+local btnSpawn=pill(body,"🤤 Spawn Brainrot"); pillColor(btnSpawn,70,180,110)
+local tb=Instance.new("TextBox",body)
+tb.Size=UDim2.new(0.5,-6,0,46)
+tb.BackgroundColor3=Color3.fromRGB(35,36,40)
+tb.Text="nhập tên brainrot"
+tb.TextColor3=Color3.fromRGB(220,220,230)
+tb.Font=Enum.Font.Gotham
+tb.TextSize=16
+tb.ClearTextOnFocus=false
+Instance.new("UICorner",tb).CornerRadius=UDim.new(0,12)
+local tbs=Instance.new("UIStroke",tb) tbs.Color=Color3.fromRGB(84,130,255) tbs.Thickness=1
+btnSpawn.MouseButton1Click:Connect(function()
+    VIM:SendKeyEvent(true,Enum.KeyCode.R,false,game)
+    VIM:SendKeyEvent(false,Enum.KeyCode.R,false,game)
+end)
+
+-- 🍀 Lucky Block (mở panel riêng)
+local btnLucky=pill(body,"🍀 Lucky Block"); pillColor(btnLucky,114,106,240)
+
+-- === Lucky Block Panel (riêng, kéo thả, có nút close)
+local function ShowLuckyPanel()
+    local existed=gui:FindFirstChild("KS_LuckyPanel")
+    if existed then existed.Visible=true return end
+
+    local p=Instance.new("Frame")
+    p.Name="KS_LuckyPanel"
+    p.Size=UDim2.new(0,460,0,170)
+    p.Position=UDim2.new(0.5,-230,0.5,-85)
+    p.BackgroundColor3=Color3.fromRGB(20,22,26)
+    p.BorderSizePixel=0
+    p.Parent=gui
+    Instance.new("UICorner",p).CornerRadius=UDim.new(0,14)
+    local ps=Instance.new("UIStroke",p) ps.Color=Color3.fromRGB(85,85,95) ps.Thickness=1
+
+    local bar=Instance.new("Frame",p)
+    bar.Size=UDim2.new(1,0,0,42)
+    bar.BackgroundColor3=Color3.fromRGB(28,30,36)
+    bar.BorderSizePixel=0
+    bar.Active=true
+    Instance.new("UICorner",bar).CornerRadius=UDim.new(0,14)
+
+    local ttl=Instance.new("TextLabel",bar)
+    ttl.BackgroundTransparency=1
+    ttl.Position=UDim2.new(0,14,0,0)
+    ttl.Size=UDim2.new(1,-60,1,0)
+    ttl.Font=Enum.Font.GothamBold
+    ttl.TextSize=18
+    ttl.TextColor3=Color3.fromRGB(235,235,245)
+    ttl.TextXAlignment=Enum.TextXAlignment.Left
+    ttl.Text="Lucky Block"
+    dragify(bar,p)
+
+    local close=Instance.new("TextButton",bar)
+    close.AnchorPoint=Vector2.new(1,0.5)
+    close.Position=UDim2.new(1,-8,0.5,0)
+    close.Size=UDim2.new(0,28,0,28)
+    close.BackgroundColor3=Color3.fromRGB(45,45,50)
+    close.Text="✕"
+    close.TextColor3=Color3.fromRGB(255,255,255)
+    close.Font=Enum.Font.GothamBold
+    close.TextSize=16
+    Instance.new("UICorner",close).CornerRadius=UDim.new(1,0)
+    close.MouseButton1Click:Connect(function() p.Visible=false end)
+
+    -- hàng nhập + nút set
+    local row=Instance.new("Frame",p)
+    row.BackgroundTransparency=1
+    row.Size=UDim2.new(1,-24,0,50)
+    row.Position=UDim2.new(0,12,0,62)
+
+    local luckyInput=Instance.new("TextBox",row)
+    luckyInput.Size=UDim2.new(0.62,0,1,0)
+    luckyInput.BackgroundColor3=Color3.fromRGB(35,36,40)
+    luckyInput.Text="nhập tên brainrot cần set"
+    luckyInput.TextColor3=Color3.fromRGB(220,220,230)
+    luckyInput.Font=Enum.Font.Gotham
+    luckyInput.TextSize=16
+    luckyInput.ClearTextOnFocus=false
+    Instance.new("UICorner",luckyInput).CornerRadius=UDim.new(0,12)
+    local ls=Instance.new("UIStroke",luckyInput) ls.Color=Color3.fromRGB(84,130,255) ls.Thickness=1
+
+    local luckyBtn=Instance.new("TextButton",row)
+    luckyBtn.Size=UDim2.new(0.34,0,1,0)
+    luckyBtn.Position=UDim2.new(0.66,0,0,0)
+    luckyBtn.BackgroundColor3=Color3.fromRGB(114,106,240)
+    luckyBtn.Text="Set Brainrot in Lucky Block"
+    luckyBtn.TextColor3=Color3.fromRGB(255,255,255)
+    luckyBtn.Font=Enum.Font.GothamSemibold
+    luckyBtn.TextSize=16
+    Instance.new("UICorner",luckyBtn).CornerRadius=UDim.new(0,12)
+    local lbs=Instance.new("UIStroke",luckyBtn) lbs.Thickness=1.2 lbs.Color=Color3.fromRGB(255,255,255) lbs.Transparency=0.75
+
+    luckyBtn.MouseButton1Click:Connect(function()
+        print("✅ Set Brainrot in Lucky Block:", luckyInput.Text)
+        -- TODO: Thay bằng logic thật (gửi sự kiện/HTTP/loadstring...) nếu bạn muốn
+    end)
+end
+
+btnLucky.MouseButton1Click:Connect(ShowLuckyPanel)
+
+-- Panel tròn ẩn/hiện Hub
+local panel=Instance.new("ImageButton",gui)
+panel.Visible=false
+panel.Size=UDim2.new(0,64,0,64)
+panel.AnchorPoint=Vector2.new(1,1)
+panel.Position=UDim2.new(1,-16,1,-16)
+panel.BackgroundColor3=Color3.fromRGB(28,30,36)
+panel.Image="rbxassetid://115555110268657"
+Instance.new("UICorner",panel).CornerRadius=UDim.new(1,0)
+local ps2=Instance.new("UIStroke",panel) ps2.Color=Color3.fromRGB(84,130,255) ps2.Thickness=1.2
+dragify(panel,panel)
+local visible=true
+panel.MouseButton1Click:Connect(function() visible=not visible; frame.Visible=visible end)
+
+-- hết 8s -> show hub
+task.delay(8,function()
+    if bg then bg:Destroy() end
+    if box then box:Destroy() end
+    frame.Visible=true
+    panel.Visible=true
+end)

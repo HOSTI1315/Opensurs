@@ -1,0 +1,2686 @@
+-- ts file was generated at discord.gg/25ms
+
+
+local v8 = game:GetService('Players')
+local v9 = v8.LocalPlayer;
+local v10 = game:GetService('HttpService')
+local function v11()
+    local v16 = 0;
+    local v17;
+    local v18;
+    while true do
+        if (v16 == (0)) then
+            local v24 = 0;
+            while true do
+                if ((0) == v24) then
+                    v17, v18 = pcall(function()
+                        return game:HttpGet('https://raw.githubusercontent.com/12345678kanhai/silence/refs/heads/main/LICENSE')
+                    end)
+                    return v17 and (v18 ~= nil)
+                end
+            end
+        end
+    end
+end;
+if not _G.VaultInitialized then
+    if not v11() then
+        error('Script initialization failed: Unable to verify GitHub source. Please run the main Vault script first.')
+    end
+end;
+if (not _G.VaultVersionToken or (_G.VaultVersionToken ~= 'VAULT_1_3_3_AUTH')) then
+    error('This script requires Vault v1.3.3 or higher. Please update your main script.')
+end;
+local function v12()
+    local v19 = 0;
+    local v20;
+    local v21;
+    local v22;
+    while true do
+        if (v19 == (0)) then
+            v20 = 0;
+            v21 = nil;
+            v19 = 1
+        end;
+        if (v19 == 1) then
+            v22 = nil;
+            while true do
+                if (v20 == (0)) then
+                    v21, v22 = pcall(function()
+                        return game:HttpGet('https://pastebin.com/raw/3h23tX2Y')
+                    end)
+                    if (v21 and v22) then
+                        local v25 = 0;
+                        local v26;
+                        while true do
+                            if (v25 == (0)) then
+                                v26 = 0;
+                                while true do
+                                    if (0 == v26) then
+                                        for v27 in v22:gmatch("[^\n]+") do
+                                            local v28 = tonumber(v27:match('^%s*(%d+)%s*$'))
+                                            if (v28 and (v28 == v9.UserId)) then
+                                                return true
+                                            end
+                                        end;
+                                        return false
+                                    end
+                                end;
+                                break
+                            end
+                        end
+                    else
+                        warn('Failed to fetch blacklist. Assuming not blacklisted for now.')
+                        return false
+                    end;
+                    break
+                end
+            end;
+            break
+        end
+    end
+end;
+if v12() then
+    error('You are blacklisted from using this script.')
+end;
+print('Prison Life script running!')
+local v0 = string.char;
+local v1 = string.byte;
+local v2 = string.sub;
+local v3 = bit32 or bit;
+local v4 = v3.bxor;
+local v5 = table.concat;
+local v6 = table.insert;
+local function v7(v55, v56)
+    local v57 = {}
+    for v312 = 1, # v55 do
+        v6(v57, v0(v4(v1(v2(v55, v312, v312 + 1)), v1(v2(v56, 1 + (v312 % # v56), 1 + (v312 % # v56) + 1))) % 256))
+    end;
+    return v5(v57)
+end;
+local v8 = game:GetService('Players')
+local v9 = game:GetService('RunService')
+local v10 = game:GetService('UserInputService')
+local v11 = game:GetService('CoreGui')
+local v12 = game:GetService('HttpService')
+local v13 = game:GetService('TweenService')
+local v14 = game:GetService('SoundService')
+local v15 = 1000;
+local v16 = v8.LocalPlayer;
+local v17 = 150;
+local v18 = UDim2.new(0, 10, 0, 10)
+local v19 = 30;
+local v20 = 50;
+local v21 = {
+    Enemy = Color3.fromRGB(255, 0, 0),
+    Friendly = Color3.fromRGB(0, 255, 0),
+    Chams = Color3.fromRGB(255, 0, 255),
+    Visible = Color3.fromRGB(255, 255, 0),
+    Invisible = Color3.fromRGB(255, 0, 0),
+    Armor = Color3.fromRGB(0, 150, 255),
+    Headshot = Color3.fromRGB(255, 100, 0),
+    Critical = Color3.fromRGB(255, 0, 127),
+    AI = Color3.fromRGB(255, 165, 0),
+    Alert = Color3.fromRGB(255, 0, 0),
+    Loot = Color3.fromRGB(0, 255, 255),
+    Vehicle = Color3.fromRGB(150, 75, 0),
+    VIP = Color3.fromRGB(255, 215, 0),
+    Admin = Color3.fromRGB(75, 0, 130)
+}
+local v22 = {
+    Enabled = true,
+    ShowName = true,
+    ShowHealth = true,
+    ShowDistance = true,
+    ShowTeam = true,
+    ShowBoxes = true,
+    ShowTracers = true,
+    RainbowMode = false,
+    RainbowSpeed = 2,
+    MaxDistance = v15,
+    TextSize = 14,
+    TextFont = Enum.Font.Code,
+    BoxesEnabled = true,
+    TracersEnabled = true,
+    HighlightEnabled = true,
+    ChamsEnabled = true,
+    ShowWeapons = true,
+    ShowAimlines = true,
+    BoxThickness = 2,
+    BoxType = '3D',
+    ESPThickness = 2,
+    ShowSkeletons = true,
+    HideTeammates = false,
+    HeadshotMode = false,
+    PingCheck = true,
+    ShowArmorStatus = true,
+    NamePosition = 'Top',
+    TransparencySmoothing = true,
+    RadarEnabled = true,
+    RadarSize = v17,
+    RadarPosition = v18,
+    RadarTransparency = 0.3,
+    RadarZoom = 1,
+    RadarDotSize = 4,
+    ShowInvisible = true,
+    AlertMode = false,
+    AlertDistance = v20,
+    CriticalHealthThreshold = v19,
+    TeamCheckEnabled = true,
+    VoiceIndicator = true,
+    AIDetection = true,
+    ColorByDistance = true,
+    ColorByRole = false,
+    PluginSystem = true,
+    Wallhack = false,
+    XRayMode = false,
+    PredictionLines = false,
+    ESPFade = false,
+    AutoAdjustDistance = false,
+    PerformanceMode = false,
+    CustomCrosshair = false,
+    CrosshairSize = 20,
+    CrosshairColor = Color3.new(1, 0, 0),
+    CrosshairThickness = 2,
+    LootESP = false,
+    VehicleESP = false,
+    SilentAimIndicator = false,
+    FOVCircle = false,
+    FOVRadius = 100,
+    Hitmarkers = false,
+    KillEffect = false,
+    SoundESP = false,
+    AntiAFK = false,
+    AutoSaveConfig = true,
+    Theme = 'Dark',
+    UpdateFrequency = 0.1,
+    AimbotEnabled = false,
+    AimbotFOV = 30,
+    AimbotSmoothing = 0.1,
+    FilterList = {},
+    HitmarkerHeadshotColor = Color3.fromRGB(255, 100, 0),
+    HitmarkerBodyColor = Color3.fromRGB(255, 0, 0)
+}
+local v23 = Instance.new('Folder')
+v23.Name = v12:GenerateGUID(false)
+v23.Parent = v11;
+local v26 = {
+    GetDistance = function(v58, v59)
+        return (v58 - v59).Magnitude
+    end,
+    FormatDistance = function(v60)
+        return string.format('%.1f', v60)
+    end,
+    GetHealthData = function(v61)
+        local v62 = 0;
+        local v63;
+        local v64;
+        local v65;
+        local v66;
+        while true do
+            if (v62 == (1)) then
+                v64 = v61.MaxHealth;
+                v65 = (v63 / v64) * (100)
+                v62 = 2
+            end;
+            if (v62 == 0) then
+                if (not v61 or not v61.Parent) then
+                    return {
+                        Percentage = 0,
+                        Color = Color3.new(1, 0, 0),
+                        Text = 'Dead'
+                    }
+                end;
+                v63 = v61.Health;
+                v62 = 1
+            end;
+            if (v62 == (2)) then
+                v66 = Color3.fromRGB((255) * ((1) - (v63 / v64)), 255 * (v63 / v64), 0)
+                return {
+                    Percentage = v65,
+                    Color = v66,
+                    Text = string.format('%.0f/%.0f HP', v63, v64)
+                }
+            end
+        end
+    end,
+    IsTeamMate = function(v67)
+        if not v22.TeamCheckEnabled then
+            return false
+        end;
+        return v67.Team and v16.Team and (v67.Team == v16.Team)
+    end,
+    RainbowColor = function()
+        local v68 = 0;
+        local v69;
+        while true do
+            if (v68 == (0)) then
+                v69 = tick() * v22.RainbowSpeed;
+                return Color3.fromHSV(v69 % (1), 1, 1)
+            end
+        end
+    end,
+    GetCharacter = function(v70)
+        return v70.Character or v70.CharacterAdded:Wait()
+    end,
+    IsVisible = function(v71, v72)
+        local v73 = 0;
+        local v74;
+        local v75;
+        while true do
+            if (v73 == (1)) then
+                v74.FilterType = Enum.RaycastFilterType.Blacklist;
+                v75 = workspace:Raycast(v71, (v72 - v71).Unit * (1000), v74)
+                v73 = 2
+            end;
+            if (v73 == 2) then
+                return not v75 or ((v75.Position - v72).Magnitude < (5))
+            end;
+            if (v73 == (0)) then
+                v74 = RaycastParams.new()
+                v74.FilterDescendantsInstances = {
+                    v16.Character
+                }
+                v73 = 1
+            end
+        end
+    end,
+    IsAI = function(v76)
+        local v77 = 0;
+        local v78;
+        while true do
+            local v313 = 0;
+            while true do
+                if ((0) == v313) then
+                    if ((1) == v77) then
+                        if not v78 then
+                            return false
+                        end;
+                        return v76:FindFirstChild('AI') or v76:FindFirstChild('Bot') or v76:FindFirstChild('NPC') or not v8:GetPlayerFromCharacter(v76)
+                    end;
+                    if (v77 == (0)) then
+                        if not v76 then
+                            return false
+                        end;
+                        v78 = v76:FindFirstChildOfClass('Humanoid')
+                        v77 = 1
+                    end;
+                    break
+                end
+            end
+        end
+    end,
+    IsCriticalHealth = function(v79)
+        local v80 = 0;
+        while true do
+            if (v80 == (0)) then
+                if not v79 then
+                    return false
+                end;
+                return ((v79.Health / v79.MaxHealth) * (100)) <= v22.CriticalHealthThreshold
+            end
+        end
+    end,
+    GetColorByDistance = function(v81)
+        local v82 = 0;
+        local v83;
+        while true do
+            if (v82 == (0)) then
+                v83 = v22.MaxDistance;
+                if (v81 <= (v83 * 0.3)) then
+                    return Color3.fromRGB(0, 255, 0)
+                elseif (v81 <= (v83 * (0.6))) then
+                    return Color3.fromRGB(255, 255, 0)
+                else
+                    return Color3.fromRGB(255, 0, 0)
+                end;
+                break
+            end
+        end
+    end,
+    IsSpeaking = function(v84)
+        local v85 = 0;
+        local v86;
+        while true do
+            if (v85 == (1)) then
+                return false
+            end;
+            if (v85 == (0)) then
+                v86 = game:GetService('VoiceChatService')
+                if v86 then
+                    local v649 = 0;
+                    local v650;
+                    while true do
+                        if (v649 == (0)) then
+                            v650 = v86:GetPlayerVoiceState(v84)
+                            return v650 and v650.isVoiceEnabled and v650.isSpeaking
+                        end
+                    end
+                end;
+                v85 = 1
+            end
+        end
+    end,
+    PredictPosition = function(v87)
+        local v88 = 0;
+        local v89;
+        while true do
+            if (v88 == (0)) then
+                v89 = v87.Velocity;
+                return v87.Position + (v89 * (0.1))
+            end
+        end
+    end,
+    GetTransparency = function(v90)
+        if not v22.ESPFade then
+            return (v22.XRayMode and (0.2999999999999545)) or (0.5)
+        end;
+        return math.clamp(v90 / v22.MaxDistance, 0, 0.900000000000091)
+    end,
+    AutoAdjustMaxDistance = function()
+        local v91 = math.huge;
+        for v314, v315 in ipairs(v8:GetPlayers()) do
+            if ((v315 ~= v16) and v315.Character and v315.Character:FindFirstChild('HumanoidRootPart')) then
+                local v441 = Utility.GetDistance(v16.Character.HumanoidRootPart.Position, v315.Character.HumanoidRootPart.Position)
+                v91 = math.min(v91, v441)
+            end
+        end;
+        return math.max(100, math.min(v15, v91 * (1.5)))
+    end,
+    IsLoot = function(v92)
+        return v92.Name:lower():match('loot') or v92.Name:lower():match('item') or v92:FindFirstChild('Pickup')
+    end,
+    IsVehicle = function(v93)
+        return v93:FindFirstChild('VehicleSeat') or v93.Name:lower():match('vehicle')
+    end
+}
+local v27 = {
+    Objects = {},
+    Connections = {},
+    CharacterConnections = {},
+    LootObjects = {},
+    VehicleObjects = {},
+    SoundSources = {},
+    Hitmarkers = {},
+    LastUpdates = {},
+    SilentAimIndicatorGui = nil
+}
+v27.SetupCharacterConnections = function(v94, v95)
+    local v96 = 0;
+    while true do
+        if (0 == v96) then
+            if v94.CharacterConnections[v95] then
+                v94.CharacterConnections[v95]:Disconnect()
+            end;
+            v94.CharacterConnections[v95] = v95.CharacterAdded:Connect(function(v584)
+                local v585 = 0;
+                while true do
+                    if (v585 == 0) then
+                        task.wait(9.999999999990905E-2)
+                        if (v95 ~= v16) then
+                            if v94.Objects[v95] then
+                                v94:UpdateESP(v95, v584)
+                            else
+                                v94:CreatePlayerESP(v95)
+                            end
+                        end;
+                        break
+                    end
+                end
+            end)
+            break
+        end
+    end
+end;
+v27.UpdateESP = function(v97, v98, v99)
+    local v100 = 0;
+    local v101;
+    local v102;
+    while true do
+        if (v100 == 3) then
+            if v101.Skeleton then
+                local v651 = 0;
+                local v652;
+                while true do
+                    if (v651 == (0)) then
+                        v652 = 0;
+                        while true do
+                            if (v652 == (0)) then
+                                v101.Skeleton.Folder:Destroy()
+                                v101.Skeleton = v97:CreateSkeletonESP(v99, v101.Container)
+                                break
+                            end
+                        end;
+                        break
+                    end
+                end
+            end;
+            if v101.PredictionLine then
+                v101.PredictionLine:Destroy()
+                v101.PredictionLine = v97:CreatePredictionLine(v99, v101.Container)
+            end;
+            break
+        end;
+        if (v100 == (0)) then
+            local v443 = 0;
+            while true do
+                if (v443 == (1)) then
+                    v100 = 1;
+                    break
+                end;
+                if (v443 == (0)) then
+                    v101 = v97.Objects[v98]
+                    if not v101 then
+                        return
+                    end;
+                    v443 = 1
+                end
+            end
+        end;
+        if (v100 == (2)) then
+            v102 = v99 and v99:WaitForChild('HumanoidRootPart', 3)
+            if v102 then
+                local v654 = 0;
+                while true do
+                    if (v654 == 0) then
+                        v101.BillboardGui.Adornee = v102;
+                        v101.BillboardGui.Enabled = v22.Enabled;
+                        break
+                    end
+                end
+            else
+                local v655 = 0;
+                while true do
+                    if (v655 == (0)) then
+                        v101.BillboardGui.Enabled = false;
+                        v101.Highlight.Enabled = false;
+                        break
+                    end
+                end
+            end;
+            v100 = 3
+        end;
+        if (v100 == (1)) then
+            v101.Highlight.Adornee = v99;
+            v101.Highlight.Enabled = v22.Enabled and v22.HighlightEnabled;
+            v100 = 2
+        end
+    end
+end;
+v27.CreateSkeletonESP = function(v103, v104, v105)
+    local v106 = 0;
+    local v107;
+    local v108;
+    local v109;
+    while true do
+        if ((0) == v106) then
+            if (not v22.ShowSkeletons or not v104) then
+                return nil
+            end;
+            v107 = Instance.new('Folder')
+            v106 = 1
+        end;
+        if ((2) == v106) then
+            local v446 = 0;
+            while true do
+                if (v446 == (1)) then
+                    v106 = 3;
+                    break
+                end;
+                if (v446 == (0)) then
+                    v108 = {
+                        {
+                            'Head',
+                            'UpperTorso'
+                        },
+                        {
+                            'UpperTorso',
+                            'LowerTorso'
+                        },
+                        {
+                            'UpperTorso',
+                            'LeftUpperArm'
+                        },
+                        {
+                            'LeftUpperArm',
+                            'LeftLowerArm'
+                        },
+                        {
+                            'LeftLowerArm',
+                            'LeftHand'
+                        },
+                        {
+                            'UpperTorso',
+                            'RightUpperArm'
+                        },
+                        {
+                            'RightUpperArm',
+                            'RightLowerArm'
+                        },
+                        {
+                            'RightLowerArm',
+                            'RightHand'
+                        },
+                        {
+                            'LowerTorso',
+                            'LeftUpperLeg'
+                        },
+                        {
+                            'LeftUpperLeg',
+                            'LeftLowerLeg'
+                        },
+                        {
+                            'LeftLowerLeg',
+                            'LeftFoot'
+                        },
+                        {
+                            'LowerTorso',
+                            'RightUpperLeg'
+                        },
+                        {
+                            'RightUpperLeg',
+                            'RightLowerLeg'
+                        },
+                        {
+                            'RightLowerLeg',
+                            'RightFoot'
+                        }
+                    }
+                    v109 = {}
+                    v446 = 1
+                end
+            end
+        end;
+        if (v106 == 1) then
+            v107.Name = 'Skeleton_' .. v12:GenerateGUID(false)
+            v107.Parent = v105;
+            v106 = 2
+        end;
+        if (v106 == 3) then
+            local v449 = 0;
+            while true do
+                if (v449 == (0)) then
+                    for v708, v709 in ipairs(v108) do
+                        local v710 = 0;
+                        local v711;
+                        while true do
+                            if (v710 == (3)) then
+                                v711.Visible = false;
+                                v711.Parent = v107;
+                                v710 = 4
+                            end;
+                            if (v710 == 1) then
+                                v711.Thickness = 1.5;
+                                v711.Color3 = Color3.new(1, 1, 1)
+                                v710 = 2
+                            end;
+                            if (v710 == 0) then
+                                v711 = Instance.new('LineHandleAdornment')
+                                v711.Name = v709[1] .. '_to_' .. v709[2]
+                                v710 = 1
+                            end;
+                            if (v710 == (2)) then
+                                v711.AlwaysOnTop = v22.Wallhack;
+                                v711.ZIndex = 5;
+                                v710 = 3
+                            end;
+                            if (v710 == 4) then
+                                v711.Adornee = v104;
+                                table.insert(v109, {
+                                    Line = v711,
+                                    From = v709[1],
+                                    To = v709[2]
+                                })
+                                break
+                            end
+                        end
+                    end;
+                    return {
+                        Folder = v107,
+                        Lines = v109
+                    }
+                end
+            end
+        end
+    end
+end;
+v27.CreatePredictionLine = function(v110, v111, v112)
+    local v113 = 0;
+    local v114;
+    while true do
+        local v316 = 0;
+        while true do
+            if (v316 == 0) then
+                if (v113 == (0)) then
+                    if (not v22.PredictionLines or not v111) then
+                        return nil
+                    end;
+                    v114 = Instance.new('LineHandleAdornment')
+                    v114.Name = 'Prediction_' .. v12:GenerateGUID(false)
+                    v114.Thickness = 2;
+                    v113 = 1
+                end;
+                if ((1) == v113) then
+                    v114.Color3 = Color3.fromRGB(0, 255, 255)
+                    v114.AlwaysOnTop = v22.Wallhack;
+                    v114.ZIndex = 4;
+                    v114.Parent = v112;
+                    v113 = 2
+                end;
+                v316 = 1
+            end;
+            if (1 == v316) then
+                if (v113 == (2)) then
+                    v114.Adornee = v111;
+                    v114.Visible = v22.PredictionLines;
+                    return v114
+                end;
+                break
+            end
+        end
+    end
+end;
+v27.MonitorSinglePlayer = function(v115, v116)
+    local v117 = 0;
+    local v118;
+    while true do
+        if (v117 == (0)) then
+            v118 = 0;
+            while true do
+                if (v118 == (1)) then
+                    if not v115.Objects[v116] then
+                        v115:CreatePlayerESP(v116)
+                    elseif (v115.Objects[v116].Highlight.Parent == nil) then
+                        local v822 = 0;
+                        local v823;
+                        while true do
+                            if (v822 == (0)) then
+                                v823 = 0;
+                                while true do
+                                    if (0 == v823) then
+                                        v115:RemovePlayerESP(v116)
+                                        v115:CreatePlayerESP(v116)
+                                        break
+                                    end
+                                end;
+                                break
+                            end
+                        end
+                    end;
+                    break
+                end;
+                if ((0) == v118) then
+                    if (v116 == v16) then
+                        return
+                    end;
+                    if v22.FilterList[v116.Name] then
+                        return
+                    end;
+                    v118 = 1
+                end
+            end;
+            break
+        end
+    end
+end;
+v27.ApplyESPToCurrentCharacter = function(v119, v120)
+    local v121 = 0;
+    local v122;
+    while true do
+        if (v121 == (0)) then
+            if (v120 == v16) then
+                return
+            end;
+            v122 = v120.Character;
+            v121 = 1
+        end;
+        if (v121 == (1)) then
+            if (v122 and not v119.Objects[v120]) then
+                v119:CreatePlayerESP(v120)
+            elseif (v122 and v119.Objects[v120]) then
+                v119:UpdateESP(v120, v122)
+            end;
+            break
+        end
+    end
+end;
+v27.ReapplyESPOnRespawn = function(v123, v124)
+    local v125 = 0;
+    while true do
+        if (v125 == 0) then
+            if (v124 == v16) then
+                return
+            end;
+            v123:SetupCharacterConnections(v124)
+            break
+        end
+    end
+end;
+v27.MonitorAllPlayers = function(v126)
+    for v317, v318 in ipairs(v8:GetPlayers()) do
+        if (v318 ~= v16) then
+            local v451 = 0;
+            local v452;
+            while true do
+                if ((0) == v451) then
+                    v452 = 0;
+                    while true do
+                        if (v452 == 0) then
+                            v126:MonitorSinglePlayer(v318)
+                            v126:ApplyESPToCurrentCharacter(v318)
+                            v452 = 1
+                        end;
+                        if ((1) == v452) then
+                            v126:ReapplyESPOnRespawn(v318)
+                            break
+                        end
+                    end;
+                    break
+                end
+            end
+        end
+    end
+end;
+v27.DetectNewPlayers = function(v127)
+    v8.PlayerAdded:Connect(function(v319)
+        if (v319 ~= v16) then
+            task.spawn(function()
+                task.wait(1)
+                v127:MonitorSinglePlayer(v319)
+                v127:ApplyESPToCurrentCharacter(v319)
+                v127:ReapplyESPOnRespawn(v319)
+                if v127.Radar then
+                    v127:UpdateRadarDots()
+                end
+            end)
+        end
+    end)
+end;
+v27.CreatePlayerESP = function(v128, v129)
+    if (v129 == v16) then
+        return
+    end;
+    if v22.FilterList[v129.Name] then
+        return
+    end;
+    if v128.Objects[v129] then
+        v128:RemovePlayerESP(v129)
+    end;
+    local v130 = Instance.new('Folder')
+    v130.Name = v129.Name .. "_" .. v12:GenerateGUID(false)
+    v130.Parent = v23;
+    local v133 = Instance.new('Highlight')
+    v133.Name = v129.Name .. '_ESP_' .. v12:GenerateGUID(false)
+    v133.FillColor = v21.Enemy;
+    v133.OutlineColor = Color3.new(1, 1, 1)
+    v133.FillTransparency = (v22.XRayMode and (0.3)) or (0.5)
+    v133.OutlineTransparency = 0;
+    v133.Enabled = v22.Enabled and v22.HighlightEnabled;
+    local v141 = Instance.new('BillboardGui')
+    v141.Name = v129.Name .. '_Info_' .. v12:GenerateGUID(false)
+    v141.AlwaysOnTop = v22.Wallhack;
+    v141.Size = UDim2.new(0, 200, 0, 150)
+    v141.StudsOffset = Vector3.new(0, 3, 0)
+    v141.Enabled = v22.Enabled;
+    v141.Parent = v130;
+    local v150 = {}
+    local v151 = 0;
+    local function v152(v320, v321)
+        local v322 = 0;
+        local v323;
+        while true do
+            if (v322 == 3) then
+                v323.Parent = v141;
+                v151 = v151 + (20)
+                return v323
+            end;
+            if (v322 == (0)) then
+                v323 = Instance.new('TextLabel')
+                v323.Name = v320;
+                v323.Size = UDim2.new(1, 0, 0, 20)
+                v322 = 1
+            end;
+            if (v322 == 1) then
+                v323.Position = UDim2.new(0, 0, 0, v151)
+                v323.BackgroundTransparency = 1;
+                v323.TextColor3 = v321 or Color3.new(1, 1, 1)
+                v322 = 2
+            end;
+            if (v322 == 2) then
+                local v592 = 0;
+                while true do
+                    if (v592 == (1)) then
+                        v323.Text = ""
+                        v322 = 3;
+                        break
+                    end;
+                    if (v592 == 0) then
+                        v323.TextSize = v22.TextSize;
+                        v323.Font = v22.TextFont;
+                        v592 = 1
+                    end
+                end
+            end
+        end
+    end;
+    v150.Name = v152('NameLabel')
+    v150.Health = v152('HealthLabel')
+    v150.Distance = v152('DistanceLabel')
+    v150.Weapon = v152('WeaponLabel')
+    v150.Armor = v152('ArmorLabel', v21.Armor)
+    local v158 = v129.Character;
+    if not v158 then
+        task.wait(1)
+        v158 = v129.Character or v129.CharacterAdded:Wait()
+    end;
+    v133.Adornee = v158;
+    v133.Parent = v130;
+    local v161 = v158 and v158:WaitForChild('HumanoidRootPart', 3)
+    if v161 then
+        v141.Adornee = v161
+    end;
+    local v162 = v128:CreateSkeletonESP(v158, v130)
+    local v163 = v128:CreatePredictionLine(v158, v130)
+    v128.Objects[v129] = {
+        Highlight = v133,
+        BillboardGui = v141,
+        Container = v130,
+        Skeleton = v162,
+        PredictionLine = v163,
+        Labels = v150
+    }
+    v128.LastUpdates[v129] = 0;
+    v128:SetupCharacterConnections(v129)
+    if (v158 and v22.Hitmarkers) then
+        local v426 = 0;
+        local v427;
+        while true do
+            if (v426 == (0)) then
+                v427 = v158:FindFirstChild('Humanoid')
+                if v427 then
+                    v427.HealthChanged:Connect(function(v746)
+                        if (v746 < v427.MaxHealth) then
+                            local v824 = 0;
+                            local v825;
+                            local v826;
+                            while true do
+                                if (v824 == 1) then
+                                    if v826 then
+                                        local v876 = 0;
+                                        local v877;
+                                        local v878;
+                                        local v879;
+                                        while true do
+                                            if (v876 == (1)) then
+                                                v879 = nil;
+                                                while true do
+                                                    if (v877 == 0) then
+                                                        v878 = workspace.CurrentCamera:WorldToViewportPoint(v826)
+                                                        v879 = (v826 == v825) and v825.Position;
+                                                        v877 = 1
+                                                    end;
+                                                    if (v877 == 1) then
+                                                        v128:CreateHitmarker(UDim2.new(0, v878.X, 0, v878.Y), v879)
+                                                        break
+                                                    end
+                                                end;
+                                                break
+                                            end;
+                                            if (v876 == 0) then
+                                                v877 = 0;
+                                                v878 = nil;
+                                                v876 = 1
+                                            end
+                                        end
+                                    end;
+                                    break
+                                end;
+                                if (v824 == (0)) then
+                                    v825 = v158:FindFirstChild('Head')
+                                    v826 = (v825 and v825.Position) or (v161 and v161.Position)
+                                    v824 = 1
+                                end
+                            end
+                        end
+                    end)
+                end;
+                break
+            end
+        end
+    end;
+    local v166 = v9.RenderStepped:Connect(function()
+        if (not v22.Enabled or not v128.Objects[v129]) then
+            return
+        end;
+        if v22.FilterList[v129.Name] then
+            return
+        end;
+        local v324 = v129.Character;
+        local v325 = v324 and v324:FindFirstChild('Humanoid')
+        local v326 = v324 and v324:FindFirstChild('HumanoidRootPart')
+        local v327 = v16.Character;
+        local v328 = v327 and v327:FindFirstChild('HumanoidRootPart')
+        local v329 = (v328 and v26.GetDistance(v328.Position, (v326 and v326.Position) or v328.Position)) or 0;
+        local v330 = v128.LastUpdates[v129] or (0)
+        if ((v329 > (500)) and ((tick() - v330) < v22.UpdateFrequency)) then
+            return
+        end;
+        v128.LastUpdates[v129] = tick()
+        if (not v324 or not v326) then
+            v141.Enabled = false;
+            v133.Enabled = false;
+            v150.Name.Text = v129.Name;
+            v150.Health.Text = 'Dead'
+            v150.Distance.Text = v26.FormatDistance(v329) .. ' studs'
+            v150.Weapon.Text = 'N/A'
+            v150.Armor.Text = 'N/A'
+            return
+        end;
+        if (v22.HideTeammates and v26.IsTeamMate(v129)) then
+            local v461 = 0;
+            while true do
+                local v593 = 0;
+                while true do
+                    if (v593 == (0)) then
+                        if (v461 == (0)) then
+                            v141.Enabled = false;
+                            v133.Enabled = false;
+                            v461 = 1
+                        end;
+                        if (v461 == 1) then
+                            return
+                        end;
+                        break
+                    end
+                end
+            end
+        end;
+        if not v133.Parent then
+            v133.Parent = v130
+        end;
+        v133.Adornee = v324;
+        v133.Enabled = v22.Enabled and v22.HighlightEnabled;
+        v133.FillTransparency = (v22.XRayMode and (0.3)) or v26.GetTransparency(v329)
+        v141.Adornee = v326;
+        v141.Enabled = v22.Enabled;
+        v141.AlwaysOnTop = v22.Wallhack;
+        if v22.AutoAdjustDistance then
+            v22.MaxDistance = v26.AutoAdjustMaxDistance()
+        end;
+        if (v329 > v22.MaxDistance) then
+            local v464 = 0;
+            while true do
+                local v594 = 0;
+                while true do
+                    if (0 == v594) then
+                        if (0 == v464) then
+                            v141.Enabled = false;
+                            v133.Enabled = false;
+                            v464 = 1
+                        end;
+                        if (v464 == 1) then
+                            return
+                        end;
+                        break
+                    end
+                end
+            end
+        end;
+        local v340 = v21.Enemy;
+        local v341 = v22.ShowInvisible and v328 and v26.IsVisible(v328.Position, v326.Position)
+        local v342 = v325 and v26.IsCriticalHealth(v325)
+        local v343 = v26.IsAI(v324)
+        if v22.RainbowMode then
+            v340 = v26.RainbowColor()
+        elseif v22.ColorByRole then
+            if (v129:GetRoleInGroup(game.PlaceId) == 'VIP') then
+                v340 = v21.VIP
+            elseif (v129:GetRankInGroup(game.PlaceId) >= (200)) then
+                v340 = v21.Admin
+            end
+        elseif (v22.HeadshotMode and (v329 < 20)) then
+            v340 = v21.Headshot
+        elseif (v343 and v22.AIDetection) then
+            v340 = v21.AI
+        elseif v342 then
+            v340 = v21.Critical
+        elseif (v22.AlertMode and (v329 <= v22.AlertDistance)) then
+            v340 = v21.Alert
+        elseif v22.ColorByDistance then
+            v340 = v26.GetColorByDistance(v329)
+        else
+            v340 = (v26.IsTeamMate(v129) and v21.Friendly) or v21.Enemy
+        end;
+        v133.FillColor = v340;
+        local v345 = v26.GetHealthData(v325)
+        v150.Name.Visible = v22.ShowName;
+        if v22.ShowName then
+            v150.Name.Text = v129.Name
+        end;
+        v150.Health.Visible = v22.ShowHealth;
+        if v22.ShowHealth then
+            local v467 = 0;
+            while true do
+                if (0 == v467) then
+                    v150.Health.Text = v345.Text;
+                    v150.Health.TextColor3 = v345.Color;
+                    break
+                end
+            end
+        end;
+        v150.Distance.Visible = v22.ShowDistance;
+        if v22.ShowDistance then
+            v150.Distance.Text = v26.FormatDistance(v329) .. ' studs'
+        end;
+        v150.Weapon.Visible = v22.ShowWeapons;
+        if v22.ShowWeapons then
+            local v469 = 0;
+            local v470;
+            while true do
+                if (v469 == (0)) then
+                    v470 = v324:FindFirstChildWhichIsA('Tool')
+                    v150.Weapon.Text = (v470 and ('Weapon: ' .. v470.Name)) or 'No Weapon'
+                    break
+                end
+            end
+        end;
+        v150.Armor.Visible = v22.ShowArmorStatus;
+        if v22.ShowArmorStatus then
+            local v471 = v324:FindFirstChild('Armor') or v324:FindFirstChild('Shield') or (v325 and v325:FindFirstChild('Armor'))
+            v150.Armor.Text = (v471 and 'Armored') or 'No Armor'
+        end;
+        if (v22.ShowSkeletons and v128.Objects[v129].Skeleton) then
+            for v595, v596 in ipairs(v128.Objects[v129].Skeleton.Lines) do
+                local v597 = 0;
+                local v598;
+                local v599;
+                local v600;
+                while true do
+                    if (v597 == (1)) then
+                        v600 = nil;
+                        while true do
+                            if (v598 == (0)) then
+                                v599 = v324:FindFirstChild(v596.From)
+                                v600 = v324:FindFirstChild(v596.To)
+                                v598 = 1
+                            end;
+                            if (v598 == (1)) then
+                                if (v599 and v600) then
+                                    local v846 = v596.Line;
+                                    v846.Visible = true;
+                                    v846.Color3 = v340;
+                                    v846.Length = (v599.Position - v600.Position).Magnitude;
+                                    v846.CFrame = CFrame.new(v599.Position, v600.Position) * CFrame.new(0, 0, - v846.Length / (2))
+                                    v846.AlwaysOnTop = v22.Wallhack
+                                else
+                                    v596.Line.Visible = false
+                                end;
+                                break
+                            end
+                        end;
+                        break
+                    end;
+                    if (v597 == (0)) then
+                        v598 = 0;
+                        v599 = nil;
+                        v597 = 1
+                    end
+                end
+            end
+        end;
+        if (v22.PredictionLines and v128.Objects[v129].PredictionLine) then
+            local v473 = 0;
+            local v474;
+            local v475;
+            local v476;
+            while true do
+                if ((1) == v473) then
+                    v476 = nil;
+                    while true do
+                        if (v474 == (2)) then
+                            v476.Visible = true;
+                            v476.AlwaysOnTop = v22.Wallhack;
+                            break
+                        end;
+                        if (v474 == (0)) then
+                            local v794 = 0;
+                            while true do
+                                if ((0) == v794) then
+                                    v475 = v26.PredictPosition(v326)
+                                    v476 = v128.Objects[v129].PredictionLine;
+                                    v794 = 1
+                                end;
+                                if (v794 == (1)) then
+                                    v474 = 1;
+                                    break
+                                end
+                            end
+                        end;
+                        if ((1) == v474) then
+                            v476.Length = (v326.Position - v475).Magnitude;
+                            v476.CFrame = CFrame.new(v326.Position, v475) * CFrame.new(0, 0, - v476.Length / (2))
+                            v474 = 2
+                        end
+                    end;
+                    break
+                end;
+                if (v473 == (0)) then
+                    v474 = 0;
+                    v475 = nil;
+                    v473 = 1
+                end
+            end
+        end
+    end)
+    v128.Connections[v129] = v166
+end;
+v27.CreateLootESP = function(v168, v169)
+    local v170 = 0;
+    local v171;
+    while true do
+        if (v170 == 2) then
+            v171.OutlineTransparency = 0;
+            v171.Enabled = v22.LootESP;
+            v171.Adornee = v169;
+            v170 = 3
+        end;
+        if (v170 == (3)) then
+            v171.Parent = v23;
+            v168.LootObjects[v169] = {
+                Highlight = v171
+            }
+            v169.AncestryChanged:Connect(function()
+                if not v169:IsDescendantOf(workspace) then
+                    local v686 = 0;
+                    local v687;
+                    while true do
+                        if (v686 == 0) then
+                            v687 = 0;
+                            while true do
+                                if (v687 == (0)) then
+                                    v171:Destroy()
+                                    v168.LootObjects[v169] = nil;
+                                    break
+                                end
+                            end;
+                            break
+                        end
+                    end
+                end
+            end)
+            break
+        end;
+        if (v170 == (1)) then
+            v171.FillColor = v21.Loot;
+            v171.OutlineColor = Color3.new(1, 1, 1)
+            v171.FillTransparency = (v22.XRayMode and (0.3)) or (0.5)
+            v170 = 2
+        end;
+        if (v170 == 0) then
+            if not v22.LootESP then
+                return
+            end;
+            v171 = Instance.new('Highlight')
+            v171.Name = v169.Name .. '_Loot_' .. v12:GenerateGUID(false)
+            v170 = 1
+        end
+    end
+end;
+v27.CreateVehicleESP = function(v172, v173)
+    if not v22.VehicleESP then
+        return
+    end;
+    local v174 = Instance.new('Highlight')
+    v174.Name = v173.Name .. '_Vehicle_' .. v12:GenerateGUID(false)
+    v174.FillColor = v21.Vehicle;
+    v174.OutlineColor = Color3.new(1, 1, 1)
+    v174.FillTransparency = (v22.XRayMode and (0.3)) or (0.5)
+    v174.OutlineTransparency = 0;
+    v174.Enabled = v22.VehicleESP;
+    v174.Adornee = v173;
+    v174.Parent = v23;
+    v172.VehicleObjects[v173] = {
+        Highlight = v174
+    }
+    v173.AncestryChanged:Connect(function()
+        if not v173:IsDescendantOf(workspace) then
+            local v488 = 0;
+            local v489;
+            while true do
+                if (v488 == (0)) then
+                    v489 = 0;
+                    while true do
+                        if (0 == v489) then
+                            v174:Destroy()
+                            v172.VehicleObjects[v173] = nil;
+                            break
+                        end
+                    end;
+                    break
+                end
+            end
+        end
+    end)
+end;
+v27.CreateRadar = function(v186)
+    local v187 = 0;
+    local v188;
+    local v189;
+    local v190;
+    local v191;
+    while true do
+        if (v187 == 5) then
+            v190.BorderSizePixel = 0;
+            v190.ZIndex = 11;
+            v190.Parent = v189;
+            v186.Radar = {
+                ScreenGui = v188,
+                Frame = v189,
+                Dots = {},
+                UpdateConnection = nil
+            }
+            v187 = 6
+        end;
+        if (v187 == (3)) then
+            v189.ZIndex = 10;
+            v189.Visible = v22.RadarEnabled;
+            v189.Parent = v188;
+            v190 = Instance.new('Frame')
+            v187 = 4
+        end;
+        if (v187 == (6)) then
+            v186:UpdateRadarDots()
+            v191 = v9.RenderStepped:Connect(function()
+                local v601 = 0;
+                while true do
+                    if (v601 == (1)) then
+                        v189.Size = UDim2.new(0, v22.RadarSize, 0, v22.RadarSize)
+                        v189.Position = v22.RadarPosition;
+                        v601 = 2
+                    end;
+                    if (v601 == 0) then
+                        if (not v22.RadarEnabled or not v186.Radar) then
+                            local v799 = 0;
+                            while true do
+                                if (v799 == 0) then
+                                    v189.Visible = false;
+                                    return
+                                end
+                            end
+                        end;
+                        v189.Visible = true;
+                        v601 = 1
+                    end;
+                    if (v601 == 2) then
+                        v189.BackgroundTransparency = v22.RadarTransparency;
+                        v186:UpdateRadarPositions()
+                        break
+                    end
+                end
+            end)
+            v186.Radar.UpdateConnection = v191;
+            return v186.Radar
+        end;
+        if (v187 == 2) then
+            v189.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(0, 0, 0)) or Color3.fromRGB(200, 200, 200)
+            v189.BackgroundTransparency = v22.RadarTransparency;
+            v189.BorderSizePixel = 2;
+            v189.BorderColor3 = Color3.fromRGB(100, 100, 100)
+            v187 = 3
+        end;
+        if (v187 == (0)) then
+            v188 = Instance.new('ScreenGui')
+            v188.Name = 'Radar_' .. v12:GenerateGUID(false)
+            v188.ResetOnSpawn = false;
+            v188.Parent = v11;
+            v187 = 1
+        end;
+        if (v187 == (4)) then
+            v190.Name = 'Center'
+            v190.Size = UDim2.new(0, v22.RadarDotSize, 0, v22.RadarDotSize)
+            v190.Position = UDim2.new(0.5, - v22.RadarDotSize / 2, 0.5, - v22.RadarDotSize / 2)
+            v190.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            v187 = 5
+        end;
+        if (v187 == (1)) then
+            v189 = Instance.new('Frame')
+            v189.Name = 'RadarFrame'
+            v189.Size = UDim2.new(0, v22.RadarSize, 0, v22.RadarSize)
+            v189.Position = v22.RadarPosition;
+            v187 = 2
+        end
+    end
+end;
+v27.UpdateRadarDots = function(v192)
+    local v193 = 0;
+    while true do
+        if (v193 == (1)) then
+            v192.Radar.Dots = {}
+            for v602, v603 in ipairs(v8:GetPlayers()) do
+                if (v603 ~= v16) then
+                    local v688 = 0;
+                    local v689;
+                    while true do
+                        if (v688 == (0)) then
+                            v689 = Instance.new('Frame')
+                            v689.Name = v603.Name .. '_Dot_' .. v12:GenerateGUID(false)
+                            v688 = 1
+                        end;
+                        if (v688 == 3) then
+                            v689.Parent = v192.Radar.Frame;
+                            v192.Radar.Dots[v603] = {
+                                Frame = v689,
+                                Player = v603
+                            }
+                            break
+                        end;
+                        if (v688 == (1)) then
+                            v689.Size = UDim2.new(0, v22.RadarDotSize, 0, v22.RadarDotSize)
+                            v689.BackgroundColor3 = (v26.IsTeamMate(v603) and v21.Friendly) or v21.Enemy;
+                            v688 = 2
+                        end;
+                        if (v688 == 2) then
+                            v689.BorderSizePixel = 0;
+                            v689.ZIndex = 11;
+                            v688 = 3
+                        end
+                    end
+                end
+            end;
+            break
+        end;
+        if (0 == v193) then
+            if not v192.Radar then
+                return
+            end;
+            for v604, v605 in pairs(v192.Radar.Dots) do
+                v605.Frame:Destroy()
+            end;
+            v193 = 1
+        end
+    end
+end;
+v27.UpdateRadarPositions = function(v194)
+    if (not v194.Radar or not v22.RadarEnabled) then
+        return
+    end;
+    local v195 = v16.Character;
+    local v196 = v195 and v195:FindFirstChild('HumanoidRootPart')
+    if not v196 then
+        return
+    end;
+    local v197 = Vector2.new(v194.Radar.Frame.AbsoluteSize.X / 2, v194.Radar.Frame.AbsoluteSize.Y / 2)
+    local v198 = v194.Radar.Frame.AbsoluteSize.X;
+    local v199 = 100 * v22.RadarZoom;
+    local v200 = v196.CFrame;
+    local v201 = Vector2.new(v200.LookVector.X, v200.LookVector.Z)
+    for v356, v357 in pairs(v194.Radar.Dots) do
+        if (v356 ~= v16) then
+            local v516 = 0;
+            local v517;
+            local v518;
+            while true do
+                if (v516 == 1) then
+                    if (v518 and v357.Frame) then
+                        local v747 = 0;
+                        local v748;
+                        local v749;
+                        local v750;
+                        local v751;
+                        local v752;
+                        local v753;
+                        local v754;
+                        local v755;
+                        local v756;
+                        local v757;
+                        while true do
+                            if (v747 == (0)) then
+                                local v840 = 0;
+                                while true do
+                                    if (v840 == (2)) then
+                                        v747 = 1;
+                                        break
+                                    end;
+                                    if (v840 == (0)) then
+                                        v748 = v518.Position - v196.Position;
+                                        v749 = Vector2.new(v748.X, v748.Z)
+                                        v840 = 1
+                                    end;
+                                    if (v840 == (1)) then
+                                        v750 = math.atan2(v201.Y, v201.X)
+                                        v751 = Vector2.new((v749.X * math.cos(- v750)) - (v749.Y * math.sin(- v750)), (v749.X * math.sin(- v750)) + (v749.Y * math.cos(- v750)))
+                                        v840 = 2
+                                    end
+                                end
+                            end;
+                            if (v747 == 2) then
+                                v755 = v517:FindFirstChildOfClass('Humanoid')
+                                v756 = (v518.Position - v196.Position).Magnitude;
+                                v757 = (v26.IsTeamMate(v356) and v21.Friendly) or v21.Enemy;
+                                if v22.ColorByRole then
+                                    if (v356:GetRoleInGroup(game.PlaceId) == 'VIP') then
+                                        v757 = v21.VIP
+                                    elseif (v356:GetRankInGroup(game.PlaceId) >= (200)) then
+                                        v757 = v21.Admin
+                                    end
+                                elseif v26.IsAI(v517) then
+                                    v757 = v21.AI
+                                elseif v22.ColorByDistance then
+                                    v757 = v26.GetColorByDistance(v756)
+                                elseif (v755 and v26.IsCriticalHealth(v755)) then
+                                    v757 = v21.Critical
+                                elseif (v22.AlertMode and (v756 <= v22.AlertDistance)) then
+                                    v757 = v21.Alert
+                                elseif (v22.VoiceIndicator and v26.IsSpeaking(v356)) then
+                                    v757 = Color3.fromRGB(255, 255, 255)
+                                end;
+                                v747 = 3
+                            end;
+                            if (v747 == 1) then
+                                v752 = v751 * (v198 / (v199 * (2)))
+                                v753 = math.clamp(v197.X + v752.X, v22.RadarDotSize / (2), v198 - (v22.RadarDotSize / (2)))
+                                v754 = math.clamp(v197.Y + v752.Y, v22.RadarDotSize / (2), v198 - (v22.RadarDotSize / 2))
+                                v357.Frame.Position = UDim2.new(0, v753, 0, v754)
+                                v747 = 2
+                            end;
+                            if (v747 == (3)) then
+                                v357.Frame.BackgroundColor3 = v757;
+                                v357.Frame.Size = (v22.AlertMode and (v756 <= v22.AlertDistance) and UDim2.new(0, v22.RadarDotSize + (4), 0, v22.RadarDotSize + (4))) or UDim2.new(0, v22.RadarDotSize, 0, v22.RadarDotSize)
+                                break
+                            end
+                        end
+                    else
+                        v357.Frame.Visible = false
+                    end;
+                    break
+                end;
+                if (0 == v516) then
+                    v517 = v356.Character;
+                    v518 = v517 and v517:FindFirstChild('HumanoidRootPart')
+                    v516 = 1
+                end
+            end
+        end
+    end
+end;
+v27.CreateCrosshair = function(v202)
+    local v203 = 0;
+    local v204;
+    local v205;
+    local v206;
+    while true do
+        if (v203 == 0) then
+            v204 = Instance.new('ScreenGui')
+            v204.Name = 'Crosshair_' .. v12:GenerateGUID(false)
+            v204.Parent = v11;
+            v205 = Instance.new('Frame')
+            v203 = 1
+        end;
+        if (v203 == (3)) then
+            v206.BackgroundColor3 = v22.CrosshairColor;
+            v206.BorderSizePixel = 0;
+            v206.Parent = v204;
+            v202.Crosshair = {
+                Gui = v204,
+                Horizontal = v205,
+                Vertical = v206
+            }
+            break
+        end;
+        if (v203 == (1)) then
+            v205.Size = UDim2.new(0, v22.CrosshairSize, 0, v22.CrosshairThickness)
+            v205.Position = UDim2.new(0.5, - v22.CrosshairSize / (2), 0.5, - v22.CrosshairThickness / (2))
+            v205.BackgroundColor3 = v22.CrosshairColor;
+            v205.BorderSizePixel = 0;
+            v203 = 2
+        end;
+        if (v203 == (2)) then
+            v205.Parent = v204;
+            v206 = Instance.new('Frame')
+            v206.Size = UDim2.new(0, v22.CrosshairThickness, 0, v22.CrosshairSize)
+            v206.Position = UDim2.new(0.5, - v22.CrosshairThickness / (2), 0.5, - v22.CrosshairSize / (2))
+            v203 = 3
+        end
+    end
+end;
+v27.CreateFOVCircle = function(v207)
+    local v208 = 0;
+    local v209;
+    local v210;
+    local v211;
+    while true do
+        if ((0) == v208) then
+            v209 = Instance.new('ScreenGui')
+            v209.Name = 'FOV_' .. v12:GenerateGUID(false)
+            v209.Parent = v11;
+            v210 = Instance.new('Frame')
+            v208 = 1
+        end;
+        if (v208 == 2) then
+            v210.BorderSizePixel = 0;
+            v210.ZIndex = 5;
+            v210.Parent = v209;
+            v211 = Instance.new('UICorner')
+            v208 = 3
+        end;
+        if (v208 == (1)) then
+            v210.Size = UDim2.new(0, v22.FOVRadius * (2), 0, v22.FOVRadius * (2))
+            v210.Position = UDim2.new(0.5, - v22.FOVRadius, 0.5, - v22.FOVRadius)
+            v210.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            v210.BackgroundTransparency = 0.9;
+            v208 = 2
+        end;
+        if (v208 == 3) then
+            v211.CornerRadius = UDim.new(1, 0)
+            v211.Parent = v210;
+            v207.FOVCircle = {
+                Gui = v209,
+                Circle = v210
+            }
+            break
+        end
+    end
+end;
+v27.CreateHitmarker = function(v212, v213, v214)
+    if not v22.Hitmarkers then
+        return
+    end;
+    local v215 = Instance.new('ScreenGui')
+    v215.Name = 'Hitmarker_' .. v12:GenerateGUID(false)
+    v215.Parent = v11;
+    local v218 = Instance.new('Frame')
+    v218.Size = UDim2.new(0, 20, 0, 20)
+    v218.Position = v213 or UDim2.new(0.5, - 10, 0.5, - 10)
+    v218.BackgroundColor3 = (v214 and v22.HitmarkerHeadshotColor) or v22.HitmarkerBodyColor;
+    v218.BorderSizePixel = 0;
+    v218.ZIndex = 10;
+    v218.Parent = v215;
+    local v225 = Instance.new('UICorner')
+    v225.CornerRadius = UDim.new(0.5, 0)
+    v225.Parent = v218;
+    local v228 = v13:Create(v218, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 30, 0, 30),
+        BackgroundTransparency = 1
+    })
+    v228:Play()
+    local v229 = Instance.new('Sound')
+    v229.SoundId = 'rbxassetid://9119561046'
+    v229.Volume = 0.5;
+    v229.Parent = v215;
+    v229:Play()
+    table.insert(v212.Hitmarkers, {
+        Gui = v215,
+        Marker = v218
+    })
+    task.delay(0.5, function()
+        local v358 = 0;
+        while true do
+            if (v358 == (0)) then
+                v215:Destroy()
+                for v656, v657 in ipairs(v212.Hitmarkers) do
+                    if (v657.Gui == v215) then
+                        table.remove(v212.Hitmarkers, v656)
+                        break
+                    end
+                end;
+                break
+            end
+        end
+    end)
+end;
+v27.CreateSilentAimIndicator = function(v233)
+    if v233.SilentAimIndicatorGui then
+        v233.SilentAimIndicatorGui:Destroy()
+    end;
+    local v234 = Instance.new('ScreenGui')
+    v234.Name = 'SilentAimIndicator_' .. v12:GenerateGUID(false)
+    v234.Parent = v11;
+    local v237 = Instance.new('Frame')
+    v237.Size = UDim2.new(0, 10, 0, 10)
+    v237.Position = UDim2.new(0.5, - 5, 0.5, - 5)
+    v237.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    v237.BorderSizePixel = 0;
+    v237.ZIndex = 15;
+    v237.Visible = v22.SilentAimIndicator and v22.AimbotEnabled;
+    v237.Parent = v234;
+    local v245 = Instance.new('UICorner')
+    v245.CornerRadius = UDim.new(0.5, 0)
+    v245.Parent = v237;
+    v233.SilentAimIndicatorGui = v234
+end;
+v27.UpdateAimbot = function(v249)
+    if not v22.AimbotEnabled then
+        if v249.SilentAimIndicatorGui then
+            v249.SilentAimIndicatorGui:Destroy()
+        end;
+        return
+    end;
+    if (v22.SilentAimIndicator and not v249.SilentAimIndicatorGui) then
+        v249:CreateSilentAimIndicator()
+    end;
+    local v251 , v250 = (v22.AimbotFOV);
+    for v359, v360 in pairs(v249.Objects) do
+        local v361 = 0;
+        local v362;
+        while true do
+            if (v361 == 0) then
+                if ((v359 == v16) or v22.FilterList[v359.Name] or v26.IsTeamMate(v359)) then
+                    continue
+                end;
+                v362 = v359.Character and v359.Character:FindFirstChild('HumanoidRootPart')
+                v361 = 1
+            end;
+            if (v361 == (1)) then
+                if v362 then
+                    local v691 = 0;
+                    local v692;
+                    local v693;
+                    local v694;
+                    while true do
+                        if ((0) == v691) then
+                            local v808 = 0;
+                            while true do
+                                if (v808 == (1)) then
+                                    v691 = 1;
+                                    break
+                                end;
+                                if (v808 == (0)) then
+                                    v692, v693 = workspace.CurrentCamera:WorldToViewportPoint(v362.Position)
+                                    v694 = (Vector2.new(v692.X, v692.Y) - Vector2.new(workspace.CurrentCamera.ViewportSize.X / (2), workspace.CurrentCamera.ViewportSize.Y / 2)).Magnitude;
+                                    v808 = 1
+                                end
+                            end
+                        end;
+                        if ((1) == v691) then
+                            if (v693 and (v694 < v251)) then
+                                v250, v251 = v362, v694
+                            end;
+                            break
+                        end
+                    end
+                end;
+                break
+            end
+        end
+    end;
+    if v250 then
+        local v428 = 0;
+        local v429;
+        while true do
+            if (v428 == (0)) then
+                v429 = 0;
+                while true do
+                    if (v429 == (0)) then
+                        workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame:Lerp(CFrame.new(workspace.CurrentCamera.CFrame.Position, v250.Position), v22.AimbotSmoothing)
+                        if v249.SilentAimIndicatorGui then
+                            v249.SilentAimIndicatorGui:FindFirstChild('Frame').Visible = true
+                        end;
+                        break
+                    end
+                end;
+                break
+            end
+        end
+    elseif v249.SilentAimIndicatorGui then
+        v249.SilentAimIndicatorGui:FindFirstChild('Frame').Visible = false
+    end
+end;
+v27.UpdateSoundESP = function(v252)
+    if not v22.SoundESP then
+        return
+    end;
+    for v363, v364 in ipairs(workspace:GetDescendants()) do
+        if (v364:IsA('Sound') and v364.IsPlaying and not v252.SoundSources[v364]) then
+            local v546 = v364.Parent and v364.Parent.Position;
+            if v546 then
+                local v658 = 0;
+                local v659;
+                local v660;
+                local v661;
+                while true do
+                    if (v658 == 4) then
+                        v364.Stopped:Connect(function()
+                            if v252.SoundSources[v364] then
+                                local v845 = 0;
+                                while true do
+                                    if (0 == v845) then
+                                        v252.SoundSources[v364].Gui:Destroy()
+                                        v252.SoundSources[v364] = nil;
+                                        break
+                                    end
+                                end
+                            end
+                        end)
+                        break
+                    end;
+                    if (v658 == (3)) then
+                        v661 = Instance.new('UICorner')
+                        v661.CornerRadius = UDim.new(0.5, 0)
+                        v661.Parent = v660;
+                        v252.SoundSources[v364] = {
+                            Gui = v659
+                        }
+                        v658 = 4
+                    end;
+                    if (2 == v658) then
+                        v660.Size = UDim2.new(1, 0, 1, 0)
+                        v660.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+                        v660.BackgroundTransparency = (v22.XRayMode and (0.30000000000001137)) or 0.7;
+                        v660.Parent = v659;
+                        v658 = 3
+                    end;
+                    if (v658 == (1)) then
+                        v659.AlwaysOnTop = v22.Wallhack;
+                        v659.Adornee = v364.Parent;
+                        v659.Parent = v23;
+                        v660 = Instance.new('Frame')
+                        v658 = 2
+                    end;
+                    if (v658 == (0)) then
+                        v659 = Instance.new('BillboardGui')
+                        v659.Name = 'Sound_' .. v12:GenerateGUID(false)
+                        v659.Size = UDim2.new(0, 50, 0, 50)
+                        v659.StudsOffset = Vector3.new(0, 2, 0)
+                        v658 = 1
+                    end
+                end
+            end
+        end
+    end
+end;
+v27.Initialize = function(v253)
+    task.wait(1)
+    v253:MonitorAllPlayers()
+    v253:DetectNewPlayers()
+    task.spawn(function()
+        while task.wait(1) do
+            local v430 = 0;
+            while true do
+                if (v430 == (0)) then
+                    v253:MonitorAllPlayers()
+                    if v253.Radar then
+                        v253:UpdateRadarDots()
+                    end;
+                    v430 = 1
+                end;
+                if ((1) == v430) then
+                    for v695, v696 in ipairs(v8:GetPlayers()) do
+                        if (v696 ~= v16) then
+                            local v775 = 0;
+                            while true do
+                                if (v775 == (0)) then
+                                    v253:MonitorSinglePlayer(v696)
+                                    v253:ApplyESPToCurrentCharacter(v696)
+                                    break
+                                end
+                            end
+                        end
+                    end;
+                    for v697, v698 in ipairs(workspace:GetDescendants()) do
+                        if (v22.LootESP and v26.IsLoot(v698) and not v253.LootObjects[v698]) then
+                            v253:CreateLootESP(v698)
+                        elseif (v22.VehicleESP and v26.IsVehicle(v698) and not v253.VehicleObjects[v698]) then
+                            v253:CreateVehicleESP(v698)
+                        end
+                    end;
+                    break
+                end
+            end
+        end
+    end)
+    local v254;
+    v254 = v10.InputBegan:Connect(function(v365)
+        if (v365.KeyCode == Enum.KeyCode.RightControl) then
+            local v547 = 0;
+            while true do
+                if (v547 == (0)) then
+                    v22.Enabled = not v22.Enabled;
+                    for v725, v726 in pairs(v253.Objects) do
+                        local v727 = 0;
+                        local v728;
+                        while true do
+                            if (v727 == 0) then
+                                v728 = 0;
+                                while true do
+                                    if (v728 == 0) then
+                                        v726.Highlight.Enabled = v22.Enabled and v22.HighlightEnabled;
+                                        v726.BillboardGui.Enabled = v22.Enabled;
+                                        break
+                                    end
+                                end;
+                                break
+                            end
+                        end
+                    end;
+                    v547 = 1
+                end;
+                if (v547 == 1) then
+                    game.StarterGui:SetCore('SendNotification', {
+                        Title = 'ESP ' .. ((v22.Enabled and 'Enabled') or 'Disabled'),
+                        Text = 'Right Control to toggle',
+                        Duration = 2
+                    })
+                    break
+                end
+            end
+        elseif (v365.KeyCode == Enum.KeyCode.RightAlt) then
+            local v662 = 0;
+            while true do
+                if (0 == v662) then
+                    v22.RainbowMode = not v22.RainbowMode;
+                    game.StarterGui:SetCore('SendNotification', {
+                        Title = 'Rainbow Mode ' .. ((v22.RainbowMode and 'Enabled') or 'Disabled'),
+                        Text = 'Right Alt to toggle',
+                        Duration = 2
+                    })
+                    break
+                end
+            end
+        elseif (v365.KeyCode == Enum.KeyCode.End) then
+            local v729 = 0;
+            while true do
+                if (v729 == (0)) then
+                    v22.HeadshotMode = not v22.HeadshotMode;
+                    game.StarterGui:SetCore('SendNotification', {
+                        Title = 'Headshot Mode ' .. ((v22.HeadshotMode and 'Enabled') or 'Disabled'),
+                        Text = 'End to toggle',
+                        Duration = 2
+                    })
+                    break
+                end
+            end
+        elseif (v365.KeyCode == Enum.KeyCode.Home) then
+            local v809 = 0;
+            while true do
+                if ((0) == v809) then
+                    v22.ChamsEnabled = not v22.ChamsEnabled;
+                    for v868, v869 in pairs(v253.Objects) do
+                        v869.Highlight.Enabled = v22.Enabled and v22.ChamsEnabled
+                    end;
+                    v809 = 1
+                end;
+                if (v809 == (1)) then
+                    game.StarterGui:SetCore('SendNotification', {
+                        Title = 'Chams ' .. ((v22.ChamsEnabled and 'Enabled') or 'Disabled'),
+                        Text = 'Home to toggle',
+                        Duration = 2
+                    })
+                    break
+                end
+            end
+        elseif (v365.KeyCode == Enum.KeyCode.F4) then
+            if v253.ConfigGui then
+                local v871 = 0;
+                local v872;
+                while true do
+                    if (v871 == (1)) then
+                        if v872.Visible then
+                            v13:Create(v872, TweenInfo.new(0.3), {
+                                Position = UDim2.new(0.5, - 150, 0.5, - 200)
+                            }):Play()
+                        else
+                            v13:Create(v872, TweenInfo.new(0.2999999999999545), {
+                                Position = UDim2.new(0.5, - 150, 1.5, 0)
+                            }):Play()
+                        end;
+                        break
+                    end;
+                    if (v871 == 0) then
+                        v872 = v253.ConfigGui.MainFrame;
+                        v872.Visible = not v872.Visible;
+                        v871 = 1
+                    end
+                end
+            end
+        elseif (v365.KeyCode == Enum.KeyCode.Insert) then
+            local v873 = 0;
+            while true do
+                if (v873 == (0)) then
+                    v22.AimbotEnabled = not v22.AimbotEnabled;
+                    game.StarterGui:SetCore('SendNotification', {
+                        Title = 'Aimbot ' .. ((v22.AimbotEnabled and 'Enabled') or 'Disabled'),
+                        Text = 'Insert to toggle',
+                        Duration = 2
+                    })
+                    v873 = 1
+                end;
+                if (v873 == (1)) then
+                    if v22.SilentAimIndicator then
+                        v253:CreateSilentAimIndicator()
+                    end;
+                    break
+                end
+            end
+        end
+    end)
+    v253.InputConnection = v254;
+    if v22.RadarEnabled then
+        v253:CreateRadar()
+    end;
+    if v22.CustomCrosshair then
+        v253:CreateCrosshair()
+    end;
+    if v22.FOVCircle then
+        v253:CreateFOVCircle()
+    end;
+    if (v22.SilentAimIndicator and v22.AimbotEnabled) then
+        v253:CreateSilentAimIndicator()
+    end;
+    v8.PlayerRemoving:Connect(function(v366)
+        v253:RemovePlayerESP(v366)
+    end)
+    workspace.DescendantAdded:Connect(function(v367)
+        if (v22.LootESP and v26.IsLoot(v367)) then
+            v253:CreateLootESP(v367)
+        elseif (v22.VehicleESP and v26.IsVehicle(v367)) then
+            v253:CreateVehicleESP(v367)
+        end
+    end)
+    if v22.AntiAFK then
+        task.spawn(function()
+            while v22.AntiAFK and task.wait(60) do
+                pcall(function()
+                    v10:SendMouseMovement(Vector2.new(1, 1))
+                end)
+            end
+        end)
+    end;
+    if v22.AutoSaveConfig then
+        task.spawn(function()
+            while task.wait(300) and v22.AutoSaveConfig do
+                pcall(function()
+                    game:HttpPost('http://yourserver/config.json', v12:JSONEncode(v22))
+                end)
+            end
+        end)
+    end;
+    v9.RenderStepped:Connect(function()
+        v253:UpdateAimbot()
+        v253:UpdateSoundESP()
+    end)
+    v253:CreateConfigGUI()
+    if v22.AlertMode then
+        v253:CreateAlertSystem()
+    end
+end;
+v27.RemovePlayerESP = function(v256, v257)
+    if v256.Objects[v257] then
+        local v431 = 0;
+        while true do
+            if (v431 == (2)) then
+                v256.CharacterConnections[v257] = nil;
+                v256.Objects[v257] = nil;
+                v431 = 3
+            end;
+            if (v431 == (1)) then
+                if v256.CharacterConnections[v257] then
+                    v256.CharacterConnections[v257]:Disconnect()
+                end;
+                v256.Connections[v257] = nil;
+                v431 = 2
+            end;
+            if (v431 == (0)) then
+                v256.Objects[v257].Container:Destroy()
+                if v256.Connections[v257] then
+                    v256.Connections[v257]:Disconnect()
+                end;
+                v431 = 1
+            end;
+            if (v431 == (3)) then
+                v256.LastUpdates[v257] = nil;
+                if v256.Radar then
+                    v256:UpdateRadarDots()
+                end;
+                break
+            end
+        end
+    end
+end;
+v27.CreateAlertSystem = function(v258)
+    local v259 = 0;
+    local v260;
+    local v261;
+    local v262;
+    local v263;
+    while true do
+        if (v259 == 4) then
+            v262.Parent = v261;
+            v263 = Instance.new('TextLabel')
+            v263.Name = 'AlertText'
+            v263.Size = UDim2.new(1, 0, 1, 0)
+            v259 = 5
+        end;
+        if (v259 == (3)) then
+            v262.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            v262.BackgroundTransparency = 0.3;
+            v262.BorderSizePixel = 2;
+            v262.Visible = false;
+            v259 = 4
+        end;
+        if ((6) == v259) then
+            v263.Text = 'ENEMY NEARBY!'
+            v263.Parent = v262;
+            v258.AlertConnection = v9.Heartbeat:Connect(function()
+                if (not v22.Enabled or not v22.AlertMode) then
+                    local v700 = 0;
+                    while true do
+                        if (v700 == (0)) then
+                            v262.Visible = false;
+                            return
+                        end
+                    end
+                end;
+                local v607 = v16.Character;
+                local v608 = v607 and v607:FindFirstChild('HumanoidRootPart')
+                if not v608 then
+                    local v701 = 0;
+                    local v702;
+                    while true do
+                        if (v701 == (0)) then
+                            v702 = 0;
+                            while true do
+                                if ((0) == v702) then
+                                    local v860 = 0;
+                                    while true do
+                                        if (v860 == 0) then
+                                            v262.Visible = false;
+                                            return
+                                        end
+                                    end
+                                end
+                            end;
+                            break
+                        end
+                    end
+                end;
+                local v609 = false;
+                local v610 = v22.AlertDistance;
+                local v611 ;
+                for v667, v668 in pairs(v258.Objects) do
+                    if ((v667 ~= v16) and not v26.IsTeamMate(v667)) then
+                        local v730 = 0;
+                        local v731;
+                        local v732;
+                        local v733;
+                        while true do
+                            if ((1) == v730) then
+                                v733 = nil;
+                                while true do
+                                    if (v731 == (1)) then
+                                        if v733 then
+                                            local v883 = v26.GetDistance(v608.Position, v733.Position)
+                                            if ((v883 <= v22.AlertDistance) and (v883 < v610)) then
+                                                local v888 = 0;
+                                                while true do
+                                                    if (v888 == 1) then
+                                                        v611 = v667;
+                                                        break
+                                                    end;
+                                                    if (v888 == (0)) then
+                                                        v609 = true;
+                                                        v610 = v883;
+                                                        v888 = 1
+                                                    end
+                                                end
+                                            end
+                                        end;
+                                        break
+                                    end;
+                                    if (v731 == 0) then
+                                        v732 = v667.Character;
+                                        v733 = v732 and v732:FindFirstChild('HumanoidRootPart')
+                                        v731 = 1
+                                    end
+                                end;
+                                break
+                            end;
+                            if (v730 == (0)) then
+                                v731 = 0;
+                                v732 = nil;
+                                v730 = 1
+                            end
+                        end
+                    end
+                end;
+                if (v609 and v611) then
+                    local v703 = 0;
+                    local v704;
+                    while true do
+                        if (v703 == (0)) then
+                            v704 = 0;
+                            while true do
+                                if (v704 == 1) then
+                                    v263.Text = string.format('ENEMY NEARBY: %s (%s studs)', v611.Name, v26.FormatDistance(v610))
+                                    v262.BackgroundTransparency = ((math.sin(tick() * 5) + 1 + 0) / (4)) + 0.5;
+                                    break
+                                end;
+                                if (v704 == (0)) then
+                                    if not v262.Visible then
+                                        v260:Play()
+                                    end;
+                                    v262.Visible = true;
+                                    v704 = 1
+                                end
+                            end;
+                            break
+                        end
+                    end
+                else
+                    v262.Visible = false
+                end
+            end)
+            v258.AlertSystem = {
+                Sound = v260,
+                Gui = v261,
+                Connection = v258.AlertConnection
+            }
+            break
+        end;
+        if (v259 == (0)) then
+            v260 = Instance.new('Sound')
+            v260.Name = 'Alert_' .. v12:GenerateGUID(false)
+            v260.SoundId = 'rbxassetid://6518811702'
+            v260.Volume = 0.5;
+            v259 = 1
+        end;
+        if (v259 == (2)) then
+            v262 = Instance.new('Frame')
+            v262.Name = 'AlertFrame'
+            v262.Size = UDim2.new(0, 200, 0, 50)
+            v262.Position = UDim2.new(0.5, - 100, 0.2, 0)
+            v259 = 3
+        end;
+        if (v259 == (1)) then
+            v260.Parent = v11;
+            v261 = Instance.new('ScreenGui')
+            v261.Name = 'AlertGui_' .. v12:GenerateGUID(false)
+            v261.Parent = v11;
+            v259 = 2
+        end;
+        if (v259 == (5)) then
+            v263.BackgroundTransparency = 1;
+            v263.TextColor3 = Color3.new(1, 1, 1)
+            v263.Font = Enum.Font.SourceSansBold;
+            v263.TextSize = 18;
+            v259 = 6
+        end
+    end
+end;
+v27.CreateConfigGUI = function(v264)
+    local v265 = Instance.new('ScreenGui')
+    v265.Name = 'Config_' .. v12:GenerateGUID(false)
+    v265.Parent = v11;
+    local v268 = Instance.new('Frame')
+    v268.Name = 'MainFrame'
+    v268.Size = UDim2.new(0, 300, 0, 400)
+    v268.Position = UDim2.new(0.5, - 150, 1.5, 0)
+    v268.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(30, 30, 30)) or Color3.fromRGB(200, 200, 200)
+    v268.BorderColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(50, 50, 50)) or Color3.fromRGB(100, 100, 100)
+    v268.BorderSizePixel = 2;
+    v268.Parent = v265;
+    local v276 = Instance.new('TextLabel')
+    v276.Name = 'TitleLabel'
+    v276.Size = UDim2.new(1, 0, 0, 30)
+    v276.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(40, 40, 40)) or Color3.fromRGB(180, 180, 180)
+    v276.BorderSizePixel = 0;
+    v276.TextColor3 = ((v22.Theme == 'Dark') and Color3.new(1, 1, 1)) or Color3.new(0, 0, 0)
+    v276.Font = Enum.Font.SourceSansBold;
+    v276.TextSize = 18;
+    v276.Text = 'ESP Configuration'
+    v276.Parent = v268;
+    local v287 = Instance.new('ScrollingFrame')
+    v287.Name = 'OptionsScroll'
+    v287.Size = UDim2.new(1, - 10, 1, - 40)
+    v287.Position = UDim2.new(0, 5, 0, 35)
+    v287.BackgroundTransparency = 1;
+    v287.BorderSizePixel = 0;
+    v287.ScrollBarThickness = 6;
+    v287.CanvasSize = UDim2.new(0, 0, 0, 1400)
+    v287.Parent = v268;
+    local v296 = 0;
+    local function v297(v368, v369)
+        local v370 = 0;
+        local v371;
+        local v372;
+        local v373;
+        while true do
+            if (v370 == (4)) then
+                v372.Text = v368;
+                v372.TextXAlignment = Enum.TextXAlignment.Left;
+                v372.Parent = v371;
+                v370 = 5
+            end;
+            if (3 == v370) then
+                v372.TextColor3 = ((v22.Theme == 'Dark') and Color3.new(1, 1, 1)) or Color3.new(0, 0, 0)
+                v372.Font = Enum.Font.SourceSans;
+                v372.TextSize = 16;
+                v370 = 4
+            end;
+            if (v370 == (6)) then
+                v373.BackgroundColor3 = (v22[v369] and Color3.fromRGB(0, 255, 0)) or Color3.fromRGB(255, 0, 0)
+                v373.BorderColor3 = Color3.new(1, 1, 1)
+                v373.Text = (v22[v369] and 'ON') or 'OFF'
+                v370 = 7
+            end;
+            if ((1) == v370) then
+                v371.BackgroundTransparency = 1;
+                v371.Parent = v287;
+                v372 = Instance.new('TextLabel')
+                v370 = 2
+            end;
+            if (v370 == (8)) then
+                v373.Parent = v371;
+                v373.MouseButton1Click:Connect(function()
+                    local v669 = 0;
+                    while true do
+                        if ((0) == v669) then
+                            v22[v369] = not v22[v369]
+                            v373.BackgroundColor3 = (v22[v369] and Color3.fromRGB(0, 255, 0)) or Color3.fromRGB(255, 0, 0)
+                            v669 = 1
+                        end;
+                        if (1 == v669) then
+                            v373.Text = (v22[v369] and 'ON') or 'OFF'
+                            if ((v369 == 'RadarEnabled') and v22.RadarEnabled and not v264.Radar) then
+                                v264:CreateRadar()
+                            elseif ((v369 == 'CustomCrosshair') and v22.CustomCrosshair and not v264.Crosshair) then
+                                v264:CreateCrosshair()
+                            elseif ((v369 == 'FOVCircle') and v22.FOVCircle and not v264.FOVCircle) then
+                                v264:CreateFOVCircle()
+                            elseif ((v369 == 'SilentAimIndicator') and v22.SilentAimIndicator and v22.AimbotEnabled) then
+                                v264:CreateSilentAimIndicator()
+                            end;
+                            v669 = 2
+                        end;
+                        if (v669 == (2)) then
+                            for v811, v812 in pairs(v8:GetPlayers()) do
+                                if ((v812 ~= v16) and v264.Objects[v812]) then
+                                    v264:UpdateESP(v812, v812.Character)
+                                end
+                            end;
+                            break
+                        end
+                    end
+                end)
+                v296 = v296 + (35)
+                break
+            end;
+            if (v370 == (7)) then
+                v373.Font = Enum.Font.SourceSansBold;
+                v373.TextSize = 14;
+                v373.TextColor3 = Color3.new(1, 1, 1)
+                v370 = 8
+            end;
+            if (v370 == 2) then
+                v372.Size = UDim2.new(0.7, 0, 1, 0)
+                v372.Position = UDim2.new(0, 5, 0, 0)
+                v372.BackgroundTransparency = 1;
+                v370 = 3
+            end;
+            if (v370 == 0) then
+                v371 = Instance.new('Frame')
+                v371.Size = UDim2.new(1, - 10, 0, 30)
+                v371.Position = UDim2.new(0, 0, 0, v296)
+                v370 = 1
+            end;
+            if (v370 == 5) then
+                v373 = Instance.new('TextButton')
+                v373.Size = UDim2.new(0.25, 0, 0.8, 0)
+                v373.Position = UDim2.new(0.75, 0, 0.10000000000002274, 0)
+                v370 = 6
+            end
+        end
+    end;
+    local function v298(v374, v375, v376, v377, v378)
+        local v379 = Instance.new('Frame')
+        v379.Size = UDim2.new(1, - 10, 0, 50)
+        v379.Position = UDim2.new(0, 0, 0, v296)
+        v379.BackgroundTransparency = 1;
+        v379.Parent = v287;
+        local v384 = Instance.new('TextLabel')
+        v384.Size = UDim2.new(1, - 80, 0, 20)
+        v384.Position = UDim2.new(0, 5, 0, 0)
+        v384.BackgroundTransparency = 1;
+        v384.TextColor3 = ((v22.Theme == 'Dark') and Color3.new(1, 1, 1)) or Color3.new(0, 0, 0)
+        v384.Font = Enum.Font.SourceSans;
+        v384.TextSize = 16;
+        v384.Text = v374 .. ': ' .. v22[v375]
+        v384.TextXAlignment = Enum.TextXAlignment.Left;
+        v384.Parent = v379;
+        local v396 = Instance.new('TextLabel')
+        v396.Size = UDim2.new(0, 60, 0, 20)
+        v396.Position = UDim2.new(1, - 70, 0, 0)
+        v396.BackgroundTransparency = 1;
+        v396.TextColor3 = ((v22.Theme == 'Dark') and Color3.new(1, 1, 1)) or Color3.new(0, 0, 0)
+        v396.Font = Enum.Font.SourceSans;
+        v396.TextSize = 16;
+        v396.Text = tostring(v22[v375])
+        v396.Parent = v379;
+        local v405 = Instance.new('Frame')
+        v405.Size = UDim2.new(1, - 10, 0, 10)
+        v405.Position = UDim2.new(0, 5, 0, 25)
+        v405.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(50, 50, 50)) or Color3.fromRGB(150, 150, 150)
+        v405.BorderColor3 = Color3.fromRGB(100, 100, 100)
+        v405.Parent = v379;
+        local v411 = Instance.new('Frame')
+        v411.Size = UDim2.new((v22[v375] - v376) / (v377 - v376), 0, 1, 0)
+        v411.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+        v411.BorderSizePixel = 0;
+        v411.Parent = v405;
+        local v416 = Instance.new('TextButton')
+        v416.Size = UDim2.new(0, 10, 0, 20)
+        v416.Position = UDim2.new((v22[v375] - v376) / (v377 - v376), - 5, 0, - 5)
+        v416.BackgroundColor3 = Color3.new(1, 1, 1)
+        v416.BorderSizePixel = 0;
+        v416.Text = ""
+        v416.Parent = v405;
+        local v423 = false;
+        v416.MouseButton1Down:Connect(function()
+            v423 = true
+        end)
+        v10.InputEnded:Connect(function(v432)
+            if (v432.UserInputType == Enum.UserInputType.MouseButton1) then
+                v423 = false
+            end
+        end)
+        v10.InputChanged:Connect(function(v433)
+            if (v423 and (v433.UserInputType == Enum.UserInputType.MouseMovement)) then
+                local v637 = 0;
+                local v638;
+                local v639;
+                local v640;
+                while true do
+                    if (v637 == (0)) then
+                        v638 = 0;
+                        v639 = nil;
+                        v637 = 1
+                    end;
+                    if (v637 == (1)) then
+                        v640 = nil;
+                        while true do
+                            if (v638 == (1)) then
+                                v640 = math.floor((v640 / v378) + (0.5)) * v378;
+                                v22[v375] = v640;
+                                v638 = 2
+                            end;
+                            if (v638 == (2)) then
+                                v411.Size = UDim2.new(v639, 0, 1, 0)
+                                v416.Position = UDim2.new(v639, - 5, 0, - 5)
+                                v638 = 3
+                            end;
+                            if (v638 == 0) then
+                                local v832 = 0;
+                                while true do
+                                    if (v832 == (1)) then
+                                        v638 = 1;
+                                        break
+                                    end;
+                                    if (v832 == 0) then
+                                        v639 = math.clamp((v433.Position.X - v405.AbsolutePosition.X) / v405.AbsoluteSize.X, 0, 1)
+                                        v640 = v376 + (v639 * (v377 - v376))
+                                        v832 = 1
+                                    end
+                                end
+                            end;
+                            if (v638 == (3)) then
+                                v396.Text = string.format('%.1f', v640)
+                                v384.Text = v374 .. ': ' .. string.format('%.1f', v640)
+                                break
+                            end
+                        end;
+                        break
+                    end
+                end
+            end
+        end)
+        v296 = v296 + (55)
+    end;
+    v297('Show Highlights', 'HighlightEnabled')
+    v297('Show Names', 'ShowName')
+    v297('Show Health', 'ShowHealth')
+    v297('Show Distance', 'ShowDistance')
+    v297('Show Team', 'ShowTeam')
+    v297('Show Boxes', 'BoxesEnabled')
+    v297('Show Tracers', 'TracersEnabled')
+    v297('Show Chams', 'ChamsEnabled')
+    v297('Show Weapons', 'ShowWeapons')
+    v297('Show Armor Status', 'ShowArmorStatus')
+    v297('Show Skeletons', 'ShowSkeletons')
+    v297('Hide Teammates', 'HideTeammates')
+    v297('Rainbow Mode', 'RainbowMode')
+    v297('Headshot Mode', 'HeadshotMode')
+    v297('Team Check', 'TeamCheckEnabled')
+    v297('Radar Enabled', 'RadarEnabled')
+    v297('AI Detection', 'AIDetection')
+    v297('Voice Indicator', 'VoiceIndicator')
+    v297('Alert Mode', 'AlertMode')
+    v297('Wallhack', 'Wallhack')
+    v297('X-Ray Mode', 'XRayMode')
+    v297('Prediction Lines', 'PredictionLines')
+    v297('ESP Fade', 'ESPFade')
+    v297('Auto Adjust Distance', 'AutoAdjustDistance')
+    v297('Performance Mode', 'PerformanceMode')
+    v297('Custom Crosshair', 'CustomCrosshair')
+    v297('Loot ESP', 'LootESP')
+    v297('Vehicle ESP', 'VehicleESP')
+    v297('Silent Aim Indicator', 'SilentAimIndicator')
+    v297('FOV Circle', 'FOVCircle')
+    v297('Hitmarkers', 'Hitmarkers')
+    v297('Kill Effect', 'KillEffect')
+    v297('Sound ESP', 'SoundESP')
+    v297('Anti-AFK', 'AntiAFK')
+    v297('Auto Save Config', 'AutoSaveConfig')
+    v297('Role-Based Coloring', 'ColorByRole')
+    v297('Aimbot Enabled', 'AimbotEnabled')
+    v298('Max Distance', 'MaxDistance', 100, 2000, 100)
+    v298('Text Size', 'TextSize', 10, 24, 1)
+    v298('Box Thickness', 'BoxThickness', 1, 5, 1)
+    v298('ESP Thickness', 'ESPThickness', 1, 5, 1)
+    v298('Radar Size', 'RadarSize', 50, 300, 10)
+    v298('Radar Zoom', 'RadarZoom', 0.5, 3, 0.1)
+    v298('Alert Distance', 'AlertDistance', 10, 100, 5)
+    v298('Rainbow Speed', 'RainbowSpeed', 1, 5, 0.5)
+    v298('Crosshair Size', 'CrosshairSize', 10, 50, 1)
+    v298('Crosshair Thickness', 'CrosshairThickness', 1, 5, 1)
+    v298('FOV Radius', 'FOVRadius', 50, 300, 10)
+    v298('Radar Dot Size', 'RadarDotSize', 2, 10, 1)
+    v298('Update Frequency', 'UpdateFrequency', 0.05, 0.5, 5E-2)
+    v298('Aimbot FOV', 'AimbotFOV', 10, 100, 5)
+    v298('Aimbot Smoothing', 'AimbotSmoothing', 0.05, 0.5, 5E-2)
+    local v299 = Instance.new('TextButton')
+    v299.Size = UDim2.new(0, 100, 0, 30)
+    v299.Position = UDim2.new(0, 5, 0, v296)
+    v299.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    v299.Text = 'Toggle Theme: ' .. v22.Theme;
+    v299.TextColor3 = Color3.new(1, 1, 1)
+    v299.Parent = v287;
+    v299.MouseButton1Click:Connect(function()
+        local v424 = 0;
+        while true do
+            if (v424 == (0)) then
+                v22.Theme = ((v22.Theme == 'Dark') and 'Light') or 'Dark'
+                v268.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(30, 30, 30)) or Color3.fromRGB(200, 200, 200)
+                v424 = 1
+            end;
+            if (v424 == (1)) then
+                v268.BorderColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(50, 50, 50)) or Color3.fromRGB(100, 100, 100)
+                v276.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(40, 40, 40)) or Color3.fromRGB(180, 180, 180)
+                v424 = 2
+            end;
+            if (v424 == 3) then
+                if v264.Radar then
+                    v264.Radar.Frame.BackgroundColor3 = ((v22.Theme == 'Dark') and Color3.fromRGB(0, 0, 0)) or Color3.fromRGB(200, 200, 200)
+                end;
+                break
+            end;
+            if ((2) == v424) then
+                v276.TextColor3 = ((v22.Theme == 'Dark') and Color3.new(1, 1, 1)) or Color3.new(0, 0, 0)
+                v299.Text = 'Toggle Theme: ' .. v22.Theme;
+                v424 = 3
+            end
+        end
+    end)
+    v296 = v296 + (35)
+    v287.CanvasSize = UDim2.new(0, 0, 0, v296 + 10)
+    v264.ConfigGui = {
+        ScreenGui = v265,
+        MainFrame = v268
+    }
+end;
+v27.Toggle = function(v307)
+    local v308 = 0;
+    local v309;
+    while true do
+        if (v308 == (0)) then
+            v309 = 0;
+            while true do
+                if (1 == v309) then
+                    if v307.Radar then
+                        v307.Radar.Frame.Visible = v22.Enabled and v22.RadarEnabled
+                    end;
+                    if v307.Crosshair then
+                        v307.Crosshair.Gui.Enabled = v22.Enabled and v22.CustomCrosshair
+                    end;
+                    v309 = 2
+                end;
+                if (0 == v309) then
+                    v22.Enabled = not v22.Enabled;
+                    for v734, v735 in pairs(v307.Objects) do
+                        local v736 = 0;
+                        while true do
+                            if ((0) == v736) then
+                                v735.BillboardGui.Enabled = v22.Enabled;
+                                v735.Highlight.Enabled = v22.Enabled and v22.HighlightEnabled;
+                                break
+                            end
+                        end
+                    end;
+                    v309 = 1
+                end;
+                if (v309 == (2)) then
+                    if v307.FOVCircle then
+                        v307.FOVCircle.Gui.Enabled = v22.Enabled and v22.FOVCircle
+                    end;
+                    if v307.SilentAimIndicatorGui then
+                        v307.SilentAimIndicatorGui.Enabled = v22.Enabled and v22.SilentAimIndicator
+                    end;
+                    break
+                end
+            end;
+            break
+        end
+    end
+end;
+v27.Cleanup = function(v310)
+    local v311 = 0;
+    while true do
+        if (v311 == 0) then
+            local v573 = 0;
+            while true do
+                if (v573 == (1)) then
+                    if (v310.Radar and v310.Radar.UpdateConnection) then
+                        v310.Radar.UpdateConnection:Disconnect()
+                    end;
+                    v311 = 1;
+                    break
+                end;
+                if (v573 == (0)) then
+                    for v737, v738 in pairs(v310.Connections) do
+                        v738:Disconnect()
+                    end;
+                    for v739, v740 in pairs(v310.CharacterConnections) do
+                        v740:Disconnect()
+                    end;
+                    v573 = 1
+                end
+            end
+        end;
+        if (v311 == 4) then
+            for v647, v648 in pairs(v310.SoundSources) do
+                v648.Gui:Destroy()
+            end;
+            v310.Objects = {}
+            v310.Connections = {}
+            v311 = 5
+        end;
+        if ((3) == v311) then
+            if v310.Crosshair then
+                v310.Crosshair.Gui:Destroy()
+            end;
+            if v310.FOVCircle then
+                v310.FOVCircle.Gui:Destroy()
+            end;
+            if v310.SilentAimIndicatorGui then
+                v310.SilentAimIndicatorGui:Destroy()
+            end;
+            v311 = 4
+        end;
+        if (v311 == (6)) then
+            v310.SoundSources = {}
+            v310.Hitmarkers = {}
+            v310.LastUpdates = {}
+            break
+        end;
+        if (v311 == (5)) then
+            v310.CharacterConnections = {}
+            v310.LootObjects = {}
+            v310.VehicleObjects = {}
+            v311 = 6
+        end;
+        if (v311 == (1)) then
+            local v582 = 0;
+            while true do
+                if ((1) == v582) then
+                    if v23 then
+                        v23:Destroy()
+                    end;
+                    v311 = 2;
+                    break
+                end;
+                if (v582 == (0)) then
+                    if v310.AlertConnection then
+                        v310.AlertConnection:Disconnect()
+                    end;
+                    if v310.InputConnection then
+                        v310.InputConnection:Disconnect()
+                    end;
+                    v582 = 1
+                end
+            end
+        end;
+        if (v311 == (2)) then
+            local v583 = 0;
+            while true do
+                if ((0) == v583) then
+                    if (v310.Radar and v310.Radar.ScreenGui) then
+                        v310.Radar.ScreenGui:Destroy()
+                    end;
+                    if (v310.ConfigGui and v310.ConfigGui.ScreenGui) then
+                        v310.ConfigGui.ScreenGui:Destroy()
+                    end;
+                    v583 = 1
+                end;
+                if (v583 == (1)) then
+                    if v310.AlertSystem then
+                        local v784 = 0;
+                        while true do
+                            if (v784 == (0)) then
+                                v310.AlertSystem.Gui:Destroy()
+                                v310.AlertSystem.Sound:Destroy()
+                                break
+                            end
+                        end
+                    end;
+                    v311 = 3;
+                    break
+                end
+            end
+        end
+    end
+end;
+v27:Initialize()
+_G.ToggleESP = function()
+    v27:Toggle()
+end;
+_G.CleanupESP = function()
+    v27:Cleanup()
+end;
+return v27

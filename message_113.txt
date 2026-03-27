@@ -1,0 +1,171 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Steal a Freddy")
+getgenv().yourTycoon = nil
+for r6_0, r7_0 in pairs(game:GetService("Workspace").Plots:GetDescendants()) do
+  if r7_0.Name == "Owner" and r7_0.Parent.Name == "Config" and r7_0.Value == game.Players.LocalPlayer then
+    getgenv().yourTycoon = r7_0.Parent.Parent
+  end
+end
+r1_0:AddButton({
+  text = "Instant Steals",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 1
+    wait(1)
+    task.spawn(function()
+      -- line: [0, 0] id: 2
+      if getgenv().yourTycoon ~= nil then
+        for r4_2, r5_2 in pairs(getgenv().yourTycoon.CollectZone:GetChildren()) do
+          if r5_2.Name == "CollectTrigger" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = r5_2.CFrame
+          end
+        end
+      end
+    end)
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Lock",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_6)
+    -- line: [0, 0] id: 6
+    _G.Lock = r0_6
+    print("Lock: ", r0_6)
+    if r0_6 then
+      Lock()
+    end
+  end,
+})
+function Lock()
+  -- line: [0, 0] id: 8
+  spawn(function()
+    -- line: [0, 0] id: 9
+    _G.Lock = true
+    while _G.Lock do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 10
+        task.spawn(function()
+          -- line: [0, 0] id: 11
+          if getgenv().yourTycoon ~= nil then
+            for r4_11, r5_11 in pairs(getgenv().yourTycoon.Floor1:GetDescendants()) do
+              if r5_11.Name == "TouchInterest" and r5_11.Parent.BillboardGui.Title.Text == "Lock Base" then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r5_11.Parent, 0)
+                wait()
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r5_11.Parent, 1)
+              end
+            end
+          end
+        end)
+        wait()
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Collect Cash",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_7)
+    -- line: [0, 0] id: 7
+    _G.Cash = r0_7
+    print("Cash: ", r0_7)
+    if r0_7 then
+      Cash()
+    end
+  end,
+})
+function Cash()
+  -- line: [0, 0] id: 13
+  spawn(function()
+    -- line: [0, 0] id: 14
+    _G.Cash = true
+    while _G.Cash do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 15
+        task.spawn(function()
+          -- line: [0, 0] id: 16
+          if getgenv().yourTycoon ~= nil then
+            for r4_16, r5_16 in pairs(getgenv().yourTycoon.Pads:GetDescendants()) do
+              if r5_16.Name == "Collect" and r5_16.ClassName == "Part" then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r5_16, 0)
+                wait()
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r5_16, 1)
+              end
+            end
+          end
+        end)
+        for r3_15, r4_15 in pairs(workspace:GetDescendants()) do
+          if r4_15.ClassName == "ProximityPrompt" then
+            r4_15.HoldDuration = 0
+          end
+        end
+        wait(5)
+      end)
+    end
+  end)
+end
+local r3_0 = nil
+local r4_0 = nil
+function noclip()
+  -- line: [0, 0] id: 4
+  r4_0 = false
+  r3_0 = game:GetService("RunService").Stepped:Connect(function()
+    -- line: [0, 0] id: 5
+    if r4_0 == false and game.Players.LocalPlayer.Character ~= nil then
+      for r3_5, r4_5 in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+        if r4_5:IsA("BasePart") and r4_5.CanCollide and r4_5.Name ~= floatName then
+          r4_5.CanCollide = false
+        end
+      end
+    end
+    wait()
+  end)
+end
+function clip()
+  -- line: [0, 0] id: 18
+  if r3_0 then
+    r3_0:Disconnect()
+  end
+  r4_0 = true
+end
+r1_0:AddToggle({
+  text = "Noclip",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_17)
+    -- line: [0, 0] id: 17
+    if r0_17 then
+      noclip()
+    else
+      clip()
+    end
+  end,
+})
+r1_0:AddSlider({
+  text = "Walk Speed",
+  flag = "slider1",
+  value = 16,
+  min = 16,
+  max = 100,
+  callback = function(r0_3)
+    -- line: [0, 0] id: 3
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = r0_3
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()
+game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(r0_12)
+  -- line: [0, 0] id: 12
+  fireproximityprompt(r0_12)
+end)

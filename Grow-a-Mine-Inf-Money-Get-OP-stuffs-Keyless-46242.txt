@@ -1,0 +1,95 @@
+-- // Source Code if u need 
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- Setup GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "BuyGUI"
+pcall(function() gui.Parent = game:GetService("CoreGui") end)
+if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 220)
+frame.Position = UDim2.new(0.5, -125, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true
+
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "Grow A Mine"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.Parent = frame
+
+-- Function Creator
+local function createButton(text, posY, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9, 0, 0, 40)
+    button.Position = UDim2.new(0.05, 0, 0, posY)
+    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 16
+    button.Text = text
+    button.AutoButtonColor = true
+    button.Parent = frame
+
+    local btnCorner = Instance.new("UICorner", button)
+    btnCorner.CornerRadius = UDim.new(0, 8)
+
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
+-- Loop Money Toggle
+local looping = false
+local loopBtn = nil
+local loopThread
+
+loopBtn = createButton("▶️ Loop Money (OFF)", 50, function()
+    looping = not looping
+    loopBtn.Text = looping and "⏹️ Loop Money (ON)" or "▶️ Loop Money (OFF)"
+
+    if looping then
+        loopThread = task.spawn(function()
+            local remote = ReplicatedStorage:WaitForChild("RemoteEvents", 9e9):WaitForChild("Buy", 9e9)
+            while looping do
+                local args = {
+                    [1] = "Subcribe",
+                    [2] = -9999999999999,
+                }
+                pcall(function() remote:FireServer(unpack(args)) end)
+                task.wait(0.1)
+            end
+        end)
+    else
+        if loopThread then
+            task.cancel(loopThread)
+        end
+    end
+end)
+
+-- Get Best Drill
+createButton("🛠️ Get Best Drill", 100, function()
+    local remote = ReplicatedStorage:WaitForChild("RemoteEvents", 9e9):WaitForChild("Buy", 9e9)
+    local args = { [1] = "Crystal Miner", [2] = 0 }
+    pcall(function() remote:FireServer(unpack(args)) end)
+end)
+
+-- Get Best Upgrade
+createButton("🌌 Get Best Upgrade", 150, function()
+    local remote = ReplicatedStorage:WaitForChild("RemoteEvents", 9e9):WaitForChild("Buy", 9e9)
+    local args = { [1] = "Cosmify", [2] = 0 }
+    pcall(function() remote:FireServer(unpack(args)) end)
+end)

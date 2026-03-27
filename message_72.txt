@@ -1,0 +1,381 @@
+pcall(function()
+    if setclipboard then
+        setclipboard("https://scriptsrbx.com/key/")
+    end
+end)
+
+local loadExternalScript = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local localPlayer = Players.LocalPlayer
+
+getgenv().STATE = {
+    AutoPlayBall = false,
+    AutoAwaken = false,
+    AutoAimSpawns = false,
+}
+
+local function fetchKeys(url)
+    local success, response = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if not success or not response then
+        return {}
+    end
+
+    local successDecode, decodedResponse = pcall(function()
+        return HttpService:JSONDecode(response)
+    end)
+
+    if successDecode and type(decodedResponse) == "table" then
+        local keys = {}
+        for _, key in ipairs(decodedResponse) do
+            if type(key) == "string" and #key > 0 then
+                table.insert(keys, key)
+            end
+        end
+        return keys
+    end
+
+    local cleanedResponse = response:gsub("\r", "\n")
+    local keys = {}
+    for line in cleanedResponse:gmatch("[^\n,]+") do
+        line = line:match("^%s*(.-)%s*$")
+        if line ~= "" then
+            table.insert(keys, line)
+        end
+    end
+    return keys
+end
+
+local keys = fetchKeys("https://raw.githubusercontent.com/ScriptsRBXdotCom/scripts/refs/heads/main/Keys")
+if #keys == 0 then
+    keys = {"ScriptsRBX-DFAD3"}
+end
+
+local window = loadExternalScript:CreateWindow({
+    Name = "Racket Rivals | ScriptsRBX",
+    LoadingTitle = "Brought to you by Javen.",
+    LoadingSubtitle = "ScriptsRBX",
+    Theme = "Default",
+    ShowText = "Auto Farm GUI",
+    ToggleUIKeybind = "K",
+    KeySystem = false,
+    KeySettings = {
+        Title = "ScriptsRBX",
+        Subtitle = "Key System (key system set to false by javen)",
+        Note = "Get a key at https://scriptsrbx.com/key | Link copied to clipboard",
+        FileName = "SRBX_AutoFarm",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = keys,
+    },
+}):CreateTab("Main")
+
+pcall(function()
+    if window.CreateParagraph then
+        window:CreateParagraph({
+            Title = "⚠️ Warning",
+            Content = "Auto Play Ball, Auto Aim & Auto Awaken are HIGH RISK.\nUse at your own risk!",
+        })
+    else
+        window:CreateLabel("⚠️ Auto features are HIGH RISK — Use at your own risk!")
+    end
+end)
+
+local function getCharacter()
+    return localPlayer.Character or localPlayer.CharacterAdded:Wait()
+end
+
+local function findBallShadow()
+    for _, descendant in ipairs(workspace:GetDescendants()) do
+        if descendant:IsA("BasePart") and descendant.Name == "BallShadow" then
+            return descendant
+        end
+    end
+end
+
+local currentCourt = nil
+local currentTeam = nil
+local currentCourtMap = nil
+local currentNet = nil
+
+local function updateCourtAndTeam()
+    local character = workspace:FindFirstChild(localPlayer.Name)
+    if not character then return end
+    local gameId = character:GetAttribute("GameId")
+    local team = character:GetAttribute("Team")
+    if gameId and team then
+        local court = workspace.Courts:FindFirstChild(tostring(gameId))
+        if court and court:FindFirstChild("Map") then
+            currentCourt = court
+            currentNet = currentCourt.Map.Colliders:FindFirstChild("Net")
+        end
+        currentTeam = team
+        warn("[AutoPlay] Updated to Court", gameId, "Team", team)
+    end
+end
+
+task.spawn(updateCourtAndTeam)
+task.spawn(function()
+    local character = workspace:WaitForChild(localPlayer.Name)
+    local attrChangedSignal = character:GetAttributeChangedSignal("GameId")
+    attrChangedSignal:Connect(updateCourtAndTeam)
+    local teamChangedSignal = character:GetAttributeChangedSignal("Team")
+    teamChangedSignal:Connect(updateCourtAndTeam)
+end)
+
+local lastBallTouchTime = 0
+local lastAimTime = 0
+local aimInterval = 0.12
+local aimTarget = nil
+
+local function isBallInServeSpawnArea(characterPart)
+    if not currentCourt or not currentCourt:FindFirstChild("Map") then
+        return false
+    end
+    local serveSpawns = currentCourt.Map:FindFirstChild("ServeSpawns")
+    if not serveSpawns then return false end
+    local spawnArea = serveSpawns:FindFirstChild(tostring(currentTeam))
+    if not spawnArea then return false end
+    for _, part in ipairs(spawnArea:GetChildren()) do
+        if part:IsA("BasePart") and (characterPart.Position - part.Position).Magnitude < 15 then
+            return true
+        end
+    end
+    return false
+end
+
+local function autoPlayBall()
+    if not currentCourt or not currentCourt:FindFirstChild("Map") then return end
+    local serveSpawns = currentCourt.Map:FindFirstChild("ServeSpawns")
+    if not serveSpawns then return end
+    local spawnArea = serveSpawns:FindFirstChild(tostring(currentTeam))
+    if not spawnArea then return end
+
+    return function(characterPart)
+        for _, spawnPart in ipairs(spawnArea:GetChildren()) do
+            if spawnPart:IsA("BasePart") and (characterPart.Position - spawnPart.Position).Magnitude < 15 then
+                return true
+            end
+        end
+        return false
+    end
+end
+
+local function aimAndStrike()
+    local connection
+    if connection then connection:Disconnect() end
+    connection = RunService.Heartbeat:Connect(function()
+        if not STATE.AutoPlayBall then return end
+        local character = getCharacter()
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        local ballShadow = findBallShadow()
+        if not humanoidRootPart or not currentNet or not currentTeam then return end
+        local currentTime = tick()
+
+        local isInServeSpawn = isBallInServeSpawnArea(humanoidRootPart)
+        if isInServeSpawn and (currentTime - lastBallTouchTime) >= 0.5 then
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+            task.wait(0.05)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+            lastBallTouchTime = currentTime
+        end
+
+        if currentTeam then
+            local netPosZ = currentNet.Position.Z
+            local targetPosZ = humanoidRootPart.Position.Z
+            if netPosZ < targetPosZ then
+                targetPosZ = 1
+            end
+            if targetPosZ == currentTeam then
+                humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.CFrame.Position, currentNet.CFrame.Position + Vector3.new(0, 8, 0))
+                if (currentTime - lastBallTouchTime) >= 0.5 then
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                    task.wait(0.04)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+                    lastBallTouchTime = currentTime
+                end
+            end
+        end
+    end)
+end
+
+local aimConnection = nil
+local aimTargetIndex = 1
+local aimTargetRandom = 1.2
+
+local function startAiming()
+    if aimConnection then aimConnection:Disconnect() end
+    aimConnection = RunService.RenderStepped:Connect(function()
+        if not STATE.AutoAimSpawns or not currentCourt or not currentTeam then return end
+        local spawns = currentCourt.Map:FindFirstChild("Spawns")
+        if not spawns then return end
+
+        local targetSpawnIndex = currentTeam == 1 and 2 or 1
+        local spawnPoint = spawns:FindFirstChild(tostring(targetSpawnIndex))
+        if not spawnPoint then return end
+
+        local spawnTarget = spawnPoint:FindFirstChild(tostring(aimTargetIndex))
+        if not spawnTarget then return end
+
+        local position = spawnTarget.Position
+        if aimTargetIndex == 2 then
+            position = position + Vector3.new(10, 0, 0)
+        elseif aimTargetIndex == 3 then
+            position = position + Vector3.new(-20, 0, 0)
+        end
+
+        local camera = workspace.CurrentCamera
+        if camera then
+            camera.CFrame = CFrame.new(camera.CFrame.Position, position)
+        end
+    end)
+
+    task.spawn(function()
+        while STATE.AutoAimSpawns do
+            aimTargetIndex = math.random(1, 3)
+            task.wait(aimTargetRandom)
+        end
+    end)
+end
+
+local function stopAiming()
+    if aimConnection then
+        aimConnection:Disconnect()
+        aimConnection = nil
+    end
+end
+
+local awakenButton = localPlayer.PlayerGui:WaitForChild("GAMEPLAYBUTTONS"):WaitForChild("AwakenHolder"):WaitForChild("AwakenButton")
+local chargePercentLabel = awakenButton:WaitForChild("ChargePercentLabel")
+local keybindLabel = awakenButton.KeybindImageLabel:WaitForChild("KeybindLabel")
+
+local keyMap = {
+    ["0"] = "Zero",
+    ["1"] = "One",
+    ["2"] = "Two",
+    ["3"] = "Three",
+    ["4"] = "Four",
+    ["5"] = "Five",
+    ["6"] = "Six",
+    ["7"] = "Seven",
+    ["8"] = "Eight",
+    ["9"] = "Nine",
+}
+
+local keyNameMap = {
+    SPACE = "Space",
+    TAB = "Tab",
+    ENTER = "Return",
+    RETURN = "Return",
+    ESC = "Escape",
+    BACKSPACE = "Backspace",
+    SHIFT = "LeftShift",
+    CTRL = "LeftControl",
+    ALT = "LeftAlt",
+    MINUS = "Minus",
+    ["-"] = "Minus",
+    EQUALS = "Equals",
+    ["="] = "Equals",
+}
+
+local function parseKeyCode(input)
+    local keyStr = tostring(input or ""):upper():gsub("%s+", "")
+    if #keyStr == 1 and keyStr:match("%a") then
+        return Enum.KeyCode[keyStr]
+    end
+    if keyMap[keyStr] then
+        return Enum.KeyCode[keyMap[keyStr]]
+    end
+    if keyNameMap[keyStr] then
+        return Enum.KeyCode[keyNameMap[keyStr]]
+    end
+    local matchKey = keyStr:match("^%[?([A-Z0-9])")
+    if matchKey then
+        if keyMap[matchKey] then
+            return Enum.KeyCode[keyMap[matchKey]]
+        end
+        if matchKey:match("%a") then
+            return Enum.KeyCode[matchKey]
+        end
+    end
+    return nil
+end
+
+local function getNumberFromString(str)
+    return tonumber(str:match("(%d+)")) or 0
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.2)
+        if STATE.AutoAwaken then
+            local chargePercent = getNumberFromString(chargePercentLabel.Text)
+            if chargePercent >= 100 then
+                local keyToPress = parseKeyCode(keybindLabel.Text)
+                if keyToPress then
+                    VirtualInputManager:SendKeyEvent(true, keyToPress, false, game)
+                    task.wait(0.05)
+                    VirtualInputManager:SendKeyEvent(false, keyToPress, false, game)
+                    warn("[AutoAwaken] Used awaken at 100% with key:", chargePercent)
+                    task.wait(1)
+                end
+            end
+        end
+    end
+end)
+
+window:CreateToggle({
+    Name = "Auto Play Ball (PC)",
+    CurrentValue = false,
+    Callback = function(newValue)
+        STATE.AutoPlayBall = newValue
+        if newValue then
+            aimAndStrike()
+        elseif lastBallTouchTime then
+            if lastBallTouchTime then
+            end
+        end
+    end,
+})
+
+window:CreateToggle({
+    Name = "Auto Aim",
+    CurrentValue = false,
+    Callback = function(newValue)
+        STATE.AutoAimSpawns = newValue
+        if newValue then
+            startAiming()
+        else
+            stopAiming()
+        end
+    end,
+})
+
+window:CreateToggle({
+    Name = "Auto Awaken",
+    CurrentValue = false,
+    Callback = function(newValue)
+        STATE.AutoAwaken = newValue
+    end,
+})
+
+window:CreateButton({
+    Name = "Teleport to Lobby",
+    Callback = function()
+        local character = getCharacter()
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local lobby = workspace:FindFirstChild("Lobby")
+            if lobby then
+                local head = lobby.NPCs.EarlyAccessVIP.Build:FindFirstChild("Head")
+                if head then
+                    hrp.CFrame = head.CFrame + Vector3.new(0, 5, 0)
+                end
+            end
+        end
+    end,
+})

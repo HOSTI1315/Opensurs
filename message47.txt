@@ -1,0 +1,245 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local plr = Players.LocalPlayer
+
+local fzjvGui = Instance.new("ScreenGui")
+fzjvGui.Name = "zzzz"
+fzjvGui.Parent = plr:WaitForChild("PlayerGui")
+fzjvGui.ResetOnSpawn = false
+
+local qlfrFrame = Instance.new("Frame")
+qlfrFrame.Size = UDim2.new(0, 180, 0, 80)
+qlfrFrame.Position = UDim2.new(0.5, -90, 0.8, 0)
+qlfrFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+qlfrFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+qlfrFrame.BorderSizePixel = 0
+qlfrFrame.Parent = fzjvGui
+qlfrFrame.Visible = true
+
+local rpxfCorner = Instance.new("UICorner")
+rpxfCorner.CornerRadius = UDim.new(0, 15)
+rpxfCorner.Parent = qlfrFrame
+
+local xgfbTitle = Instance.new("TextLabel")
+xgfbTitle.Size = UDim2.new(1, -10, 0, 25)
+xgfbTitle.Position = UDim2.new(0, 5, 0, 5)
+xgfbTitle.BackgroundTransparency = 1
+xgfbTitle.Text = "zzzz"
+xgfbTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+xgfbTitle.Font = Enum.Font.SourceSansBold
+xgfbTitle.TextSize = 18
+xgfbTitle.TextXAlignment = Enum.TextXAlignment.Left
+xgfbTitle.Parent = qlfrFrame
+
+local autoMaticButton = Instance.new("TextButton")
+autoMaticButton.Size = UDim2.new(1, -20, 0, 35)
+autoMaticButton.Position = UDim2.new(0, 10, 0, 30)
+autoMaticButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+autoMaticButton.BorderSizePixel = 0
+autoMaticButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoMaticButton.Text = "zzzz"
+autoMaticButton.Font = Enum.Font.SourceSansBold
+autoMaticButton.TextSize = 14
+autoMaticButton.Parent = qlfrFrame
+
+local lzoCorner = Instance.new("UICorner")
+lzoCorner.CornerRadius = UDim.new(0, 10)
+lzoCorner.Parent = autoMaticButton
+
+autoMaticButton.MouseEnter:Connect(function()
+    TweenService:Create(autoMaticButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+end)
+
+autoMaticButton.MouseLeave:Connect(function()
+    TweenService:Create(autoMaticButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    qlfrFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+qlfrFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = qlfrFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+qlfrFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+local Net = require(ReplicatedStorage:WaitForChild("Packages").Net)
+local UseItem = Net:RemoteEvent("UseItem")
+local player = Players.LocalPlayer
+
+local function getCharacterHRP()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    return hrp
+end
+
+local function getClosest()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= player then
+            local targetChar = targetPlayer.Character
+            local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                local distance = (targetHRP.Position - getCharacterHRP().Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = targetPlayer
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function showLoadingScreen()
+    local playerGui = player:WaitForChild("PlayerGui")
+    
+    local loadingScreen = Instance.new("ScreenGui")
+    loadingScreen.Name = "LoadingScreen"
+    loadingScreen.IgnoreGuiInset = true
+    loadingScreen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local background = Instance.new("Frame")
+    background.Name = "Background"
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.Position = UDim2.new(0, 0, 0, 0)
+    background.BackgroundColor3 = Color3.new(0, 0, 0)
+    background.BorderSizePixel = 0
+    background.Parent = loadingScreen
+    
+    local loadingText = Instance.new("TextLabel")
+    loadingText.Name = "LoadingText"
+    loadingText.Size = UDim2.new(1, 0, 0.15, 0)
+    loadingText.Position = UDim2.new(0, 0, 0.3, 0)
+    loadingText.BackgroundTransparency = 1
+    loadingText.Text = "zzzz hub making u noclip 👀"
+    loadingText.TextColor3 = Color3.new(0.2, 0.4, 1)
+    loadingText.TextScaled = true
+    loadingText.Font = Enum.Font.GothamBold
+    loadingText.TextStrokeTransparency = 0.8
+    loadingText.TextStrokeColor3 = Color3.new(1, 1, 1)
+    loadingText.Parent = background
+    
+    local loadingBarBackground = Instance.new("Frame")
+    loadingBarBackground.Name = "LoadingBarBackground"
+    loadingBarBackground.Size = UDim2.new(0.6, 0, 0.005, 0)
+    loadingBarBackground.Position = UDim2.new(0.2, 0, 0.55, 0)
+    loadingBarBackground.BackgroundColor3 = Color3.new(1, 1, 1)
+    loadingBarBackground.BackgroundTransparency = 0.7
+    loadingBarBackground.BorderSizePixel = 0
+    loadingBarBackground.Parent = background
+    
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Name = "LoadingBar"
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.Position = UDim2.new(0, 0, 0, 0)
+    loadingBar.BackgroundColor3 = Color3.new(0.2, 0.4, 1)
+    loadingBar.BorderSizePixel = 0
+    loadingBar.Parent = loadingBarBackground
+    
+    loadingScreen.Parent = playerGui
+    
+    return loadingScreen, loadingBar, background, loadingText, loadingBarBackground
+end
+
+local function executeAutoMatic()
+    autoMaticButton.Text = "zzzz..."
+    autoMaticButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    autoMaticButton.Active = false
+    
+    local loadingScreen, loadingBar, background, loadingText, loadingBarBackground = showLoadingScreen()
+    
+    local fillTime = 5.5
+    local startTime = tick()
+    
+    local target = getClosest()
+    if target then
+        local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+        if targetHRP then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            local backpack = player:WaitForChild("Backpack")
+            
+            local tool = backpack:FindFirstChild("Web Slinger") or character:FindFirstChild("Web Slinger")
+            if tool then
+                if tool.Parent == backpack then
+                    humanoid:EquipTool(tool)
+                end
+                
+                UseItem:FireServer(targetHRP.Position, targetHRP)
+                
+                task.wait(5)
+                
+                local root = character:WaitForChild("HumanoidRootPart")
+                local originalPosition = root.Position
+                
+                root.Anchored = true
+                root.CFrame = CFrame.new(0, -999999999999999993939383838383838383383888283883838383838383883838, 0)
+                task.wait(0.5)
+                
+                root.CFrame = CFrame.new(originalPosition)
+                root.Anchored = false
+            end
+        end
+    end
+    
+    while tick() - startTime < fillTime do
+        local progress = (tick() - startTime) / fillTime
+        loadingBar.Size = UDim2.new(progress, 0, 1, 0)
+        task.wait()
+    end
+    
+    loadingBar.Size = UDim2.new(1, 0, 1, 0)
+    
+    local fadeTime = 0.5
+    local fadeStartTime = tick()
+    
+    while tick() - fadeStartTime < fadeTime do
+        local alpha = (tick() - fadeStartTime) / fadeTime
+        background.BackgroundTransparency = alpha
+        loadingText.TextTransparency = alpha
+        loadingBarBackground.BackgroundTransparency = alpha + 0.7
+        loadingBar.BackgroundTransparency = alpha
+        task.wait()
+    end
+    
+    loadingScreen:Destroy()
+    
+    autoMaticButton.Text = "zzzz"
+    autoMaticButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    autoMaticButton.Active = true
+end
+
+autoMaticButton.MouseButton1Click:Connect(executeAutoMatic)

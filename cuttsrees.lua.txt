@@ -1,0 +1,1357 @@
+getgenv().Theme = false
+
+local starttime = os.clock()
+
+local function load()
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer 
+local plr = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local Window = Library:CreateWindow({
+    Title = "Sora Hub | Cut Trees",
+    Footer = "v1.3.0 | Cut Trees",
+    Icon = "rbxassetid://118479648253252",
+    NotifySide = "Right",
+    Compact = true,
+    Size = UDim2.fromOffset(600, 500),
+    CornerRadius = 8,
+    EnableSidebarResize = true,
+    SidebarHighlightCallback = function(Divider, IsActive)
+        Divider.BackgroundColor3 = IsActive and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        Divider.BackgroundTransparency = IsActive and 0 or 0.4
+    end,
+})
+
+local Welcome = Window:AddTab({
+    Name = "Welcome",
+    Description = plr.Name .. ", Welcome!",
+    Icon = "house"
+})
+
+local WelcomeBox = Welcome:AddLeftGroupbox("Welcome", "house")
+local StatusGroup = Welcome:AddRightGroupbox("Status", "book")
+
+local green  = '<font color="rgb(73, 230, 133)">'
+local cyan   = '<font color="rgb(180, 255, 255)">'
+local close  = '</font>'
+
+Welcome:UpdateWarningBox({
+    Title = "Changelog",
+    Text = green .. "Release v1.3.0" .. close .. "\n" ..
+           cyan .. "Improved UI" .. close .. "\n" ..
+           cyan .. "Improved Weapon Size" .. close .. "\n" ..
+           cyan .. "Improved Some Code" .. close .. "\n" ..
+           cyan .. "Rewrited Some Code" .. close .. "\n" ..
+           cyan .. "Removed Halloween Event" .. close .. "\n" ..
+           cyan .. "Faster Loading" .. close .. "\n" ..
+           cyan .. "And More" .. close,
+    IsNormal = true,
+    Visible = true,
+    LockSize = true,
+})
+
+local PlayerAvatarImage = WelcomeBox:AddImage("PlayerAvatarImage", {
+    Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size420x420),
+    Transparency = 0,
+    Color = Color3.new(1, 1, 1),
+    RectOffset = Vector2.zero,
+    RectSize = Vector2.zero,
+    ScaleType = Enum.ScaleType.Fit,
+    Height = 200,
+})
+
+local WelcomeLabel = WelcomeBox:AddLabel(plr.Name .. ", Welcome!", true)
+
+    WelcomeBox:AddDivider()
+local discord = WelcomeBox:AddButton(
+        "Join Discord",
+        function()
+            setclipboard("discord.gg/9BxHsxhpyx")
+            Library:Notify("Discord link copied to clipboard!")
+        end
+    )
+    
+    discord:AddButton({
+    Text = "Showcase",
+    Func = function()
+        setclipboard("https://youtu.be/8eBEbW0fPEM?si=afkDTPi_lj7PeNs7")
+        Library:Notify("Youtube link copied to clipboard!") 
+    end
+})
+
+    local HttpService = game:GetService("HttpService")
+    local exec = identifyexecutor()
+    local fileName = "CutTrees_executions.json"
+    local count = 0
+    if isfile(fileName) then
+        local success, data =
+            pcall(
+            function()
+                return HttpService:JSONDecode(readfile(fileName))
+            end
+        )
+        if (success and data.count) then
+            count = data.count
+        end
+    end
+    count = count + 1
+    pcall(
+        function()
+            writefile(fileName, HttpService:JSONEncode({count = count}))
+        end
+    )
+    local ExecutorLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">Executor: ' .. exec .. "</font>")
+    local ExecutionLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">Total Executions: ' .. count .. "</font>")
+    StatusGroup:AddDivider()
+    local VolcanoLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Volcano</font>')
+    local DeltaLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Delta</font>')
+    local SwiftLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Swift</font>')
+    local ValexLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Trigon</font>')
+    local VelocityLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Velocity</font>')
+    local KRNLLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Krnl</font>')
+    local SolaraLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Solara</font>')
+    local XenoLabel = StatusGroup:AddLabel('<font color="rgb(0,255,255)">🟢 Xeno</font>')
+    
+--[[
+if not isfolder("script")then makefolder("script")end
+local keysystemtab=true
+if isfile("script/key.txt")then local f=readfile("script/key.txt")if f=="sigma"then keysystem=true keysystemtab=false end end
+if keysystemtab then
+local K1eyTab=Window:AddTab{Name="Key System",Description="Key System",Icon="key"}
+local KeyTab=K1eyTab:AddLeftGroupbox("Key System","key")
+local sigmakey="sigma"
+local keys=KeyTab:AddInput("keyy",{Text="Key"})
+Options.keyy:OnChanged(function(s)Valuekey=s end)
+KeyTab:AddButton("Verify Key",function()if Valuekey==sigmakey then keysystem=true writefile("script/key.txt",sigmakey)else Library:Notify("Wrong Key.")end end)
+end
+repeat task.wait(.1)until keysystem
+]]
+
+local MainTab = Window:AddTab({
+    Name = "Main",
+    Description = "Main features",
+    Icon = "compass"
+})
+
+local Player = Window:AddTab({
+    Name = "Player",
+    Description = "Features for the player",
+    Icon = "user"
+})
+
+local Other = Window:AddTab({
+    Name = "Other",
+    Description = "Suggest Idea or Bug Report",
+    Icon = "puzzle"
+})
+
+local UISettings = Window:AddTab({
+    Name = "UI Settings",
+    Description = "Config, Themes",
+    Icon = "settings"
+})
+
+Other:UpdateWarningBox({
+    Title = "Warning",
+    Text = "Not working now",
+    IsNormal = false,
+    Visible = true,
+    LockSize = false,
+})
+
+local GaneplayBox = MainTab:AddLeftGroupbox("Main", "house")
+local AutoBox = MainTab:AddLeftGroupbox("Auto Farm Chest", "repeat")
+local TelepotBox = MainTab:AddRightGroupbox("Teleport", "map-pin")
+local EspBox = MainTab:AddRightGroupbox("Chest Esp", "eye")
+local WeaponBox = MainTab:AddLeftGroupbox("Weapon", "sword")
+local MiscBox = MainTab:AddRightGroupbox("Misc", "puzzle")
+
+local SpeedBox = Player:AddLeftGroupbox("Speed", "gauge")
+local JumpBox = Player:AddLeftGroupbox("Jump Power", "arrow-big-up-dash")
+local NoclipBox = Player:AddRightGroupbox("Noclip", "ghost")
+local InfBox = Player:AddRightGroupbox("Infinite Jump", "circle-arrow-up")
+local TeleportBox = Player:AddRightGroupbox("Teleport", "map-pin")
+
+local SuggestionsBox = Other:AddLeftGroupbox("Suggestions", "message-circle")
+local BugReportBox = Other:AddRightGroupbox("Bug Report", "bug")
+
+local AutoTreeAllToggle = GaneplayBox:AddToggle("AutoTreeAllToggle", {
+    Text = "Auto Cut Everything Trees",
+    Default = false,
+})
+
+local autoTreeAll = false
+local AntiAFK = false
+
+AutoTreeAllToggle:OnChanged(function(state)
+    autoTreeAll = state
+end)
+
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+task.spawn(function()
+    while task.wait(0.001) do
+        if autoTreeAll then
+            local treeFolder = Workspace:FindFirstChild("TreesFolder")
+            local signalFolder = ReplicatedStorage:FindFirstChild("Signal")
+            local signalTree = signalFolder and signalFolder:FindFirstChild("Tree")
+
+            if treeFolder and signalTree then
+                for _, tree in ipairs(treeFolder:GetChildren()) do
+                    if not autoTreeAll then break end
+                    pcall(function()
+                        signalTree:FireServer("damage", tree.Name)
+                    end)
+                    task.wait(0.001)
+                end
+            end
+        end
+    end
+end)
+
+local TreeTeleportToggle = GaneplayBox:AddToggle("TreeTeleportToggle", {
+    Text = "Auto Farm Wood",
+    Default = false,
+})
+
+local farmActive = false
+local player = game.Players.LocalPlayer
+local treeFolder = workspace:WaitForChild("TreesFolder")
+local currentTree
+
+TreeTeleportToggle:OnChanged(function(state)
+    farmActive = state
+    if not state then
+        currentTree = nil
+    end
+end)
+
+local function findValidTree()
+    for _, tree in ipairs(treeFolder:GetChildren()) do
+        local treePart = tree:FindFirstChild("Neon", true)
+            or tree:FindFirstChild("MainPart")
+            or tree.PrimaryPart
+            or tree:FindFirstChildWhichIsA("BasePart")
+        
+        if treePart and treePart:IsDescendantOf(workspace) then
+            return treePart
+        end
+    end
+    return nil
+end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if farmActive then
+            local character = player.Character
+            local root = character and character:FindFirstChild("HumanoidRootPart")
+            
+            if root then
+                if not currentTree or not currentTree:IsDescendantOf(workspace) then
+                    currentTree = findValidTree()
+                end
+                
+                if currentTree and currentTree:IsDescendantOf(workspace) then
+                    root.CFrame = CFrame.new(currentTree.Position)
+                else
+                    currentTree = nil
+                end
+            end
+        end
+    end
+end)
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+local TreeAuraToggle = GaneplayBox:AddToggle("TreeAuraToggle", {
+    Text = "Tree Aura",
+    Default = false,
+})
+
+local TreeAuraRange = GaneplayBox:AddSlider("TreeAuraRange", {
+    Text = "Tree Aura Range",
+    Default = 20,
+    Min = 5,
+    Max = 200,
+    Rounding = 0,
+    Suffix = "studs",
+})
+
+local TreeAuraDelay = GaneplayBox:AddSlider("TreeAuraDelay", {
+    Text = "Tree Aura Delay",
+    Default = 0.1,
+    Min = 0.1,
+    Max = 0.5,
+    Rounding = 1,
+    Suffix = "s",
+})
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local trees = Workspace:WaitForChild("TreesFolder")
+local signal = ReplicatedStorage:WaitForChild("Signal"):WaitForChild("Tree")
+
+local function getTreePosition(tree)
+    return tree.PrimaryPart or tree:FindFirstChild("HumanoidRootPart") or tree:FindFirstChild("MainPart") or tree:FindFirstChildWhichIsA("BasePart")
+end
+
+task.spawn(function()
+    while true do
+        task.wait(Options.TreeAuraDelay.Value)
+        
+        if Toggles.TreeAuraToggle.Value then
+            local character = player.Character
+            if not character then continue end
+            
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if not rootPart then continue end
+            
+            local playerPosition = rootPart.Position
+            local range = Options.TreeAuraRange.Value
+            
+            for _, tree in ipairs(trees:GetChildren()) do
+                if tree:IsA("Model") then
+                    local treePart = getTreePosition(tree)
+                    if treePart then
+                        local distance = (playerPosition - treePart.Position).Magnitude
+                        if distance <= range then
+                            signal:FireServer("damage", tree.Name)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+GaneplayBox:AddDivider()
+
+local ChestTypeDropdown = AutoBox:AddDropdown("ChestTypeDropdown", {
+    Text = "Select Chest Type",
+    Values = {"Default", "Huge", "Giant"},
+    Default = "Default",
+    Multi = false,
+})
+
+local WorldDropdown = AutoBox:AddDropdown("WorldDropdown", {
+    Text = "Select World",
+    Values = {"Forest", "Lava", "Deep Dark", "Frozen", "Sci-Fi"},
+    Default = "Forest",
+})
+
+local ChestFarmToggle = AutoBox:AddToggle("AutoChestFarmToggle", {
+    Text = "Auto Farm Chest",
+    Default = false,
+})
+
+local config = {
+    enabled = false,
+    chestType = "Default",
+    world = "Forest"
+}
+
+local worldPos = {
+    Forest = CFrame.new(-115, 3.5, -120),
+    Lava = CFrame.new(-1000, 3.5, -125),
+    ["Deep Dark"] = CFrame.new(-2218.25, 3.5, -466.958405, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+    Frozen = CFrame.new(-3838.25, 3.5, -466.958405, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+    ["Sci-Fi"] = CFrame.new(-4938.25, 3.5, -466.958405)
+}
+
+Options.ChestTypeDropdown:OnChanged(function()
+    config.chestType = Options.ChestTypeDropdown.Value
+end)
+
+Options.WorldDropdown:SetValue("Forest")
+Options.WorldDropdown:OnChanged(function()
+    config.world = Options.WorldDropdown.Value
+end)
+
+ChestFarmToggle:OnChanged(function(v)
+    config.enabled = v
+    if v then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char:PivotTo(worldPos[config.world])
+        end
+    end
+end)
+
+local chestPatterns = {
+    Default = function(n) return n:find("chest") and not (n:find("huge") or n:find("giant")) end,
+    Huge = function(n) return n:find("huge") end,
+    Giant = function(n) return n:find("giant") end
+}
+
+local function getNearest()
+    local folder = Workspace:FindFirstChild("ChestFolder")
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not (folder and root) then return end
+    
+    local nearest, minDist
+    local wPos = worldPos[config.world].Position
+    local pattern = chestPatterns[config.chestType]
+    
+    for _, chest in ipairs(folder:GetChildren()) do
+        local hit = chest:FindFirstChild("Hitpart")
+        if hit and pattern(chest.Name:lower()) then
+            if (hit.Position - wPos).Magnitude < 500 then
+                local dist = (root.Position - hit.Position).Magnitude
+                if not minDist or dist < minDist then
+                    minDist = dist
+                    nearest = chest
+                end
+            end
+        end
+    end
+    
+    return nearest
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        
+        if config.enabled then
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            
+            if root then
+                local chest = getNearest()
+                
+                if chest then
+                    local hit = chest:FindFirstChild("Hitpart")
+                    local prompt = hit and hit:FindFirstChildOfClass("ProximityPrompt")
+                    
+                    if hit and prompt then
+                        root.CFrame = hit.CFrame + Vector3.new(0, 3, 0)
+                        task.wait(0.1)
+                        fireproximityprompt(prompt)
+                        task.wait(0.1)
+                    end
+                else
+                    task.wait(1)
+                end
+            end
+        end
+    end
+end)
+
+local AutoPlayToggle = GaneplayBox:AddToggle("AutoPlayToggle", {
+    Text = "Auto Play",
+    Default = false,
+})
+
+local autoPlay = false
+
+AutoPlayToggle:OnChanged(function(state)
+    autoPlay = state
+end)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+task.spawn(function()
+    while task.wait(1.5) do
+        if autoPlay then
+            pcall(function()
+                local signal = ReplicatedStorage:FindFirstChild("Signal")
+                local gameSignal = signal and signal:FindFirstChild("Game")
+                if gameSignal then
+                    gameSignal:FireServer("play")
+                end
+            end)
+        end
+    end
+end)
+
+local ChestToggle = GaneplayBox:AddToggle("AutoChestToggle", {
+    Text = "Auto Pickup Nearest Chest",
+    Default = false,
+})
+
+local autoPickupChest = false
+local pickupDistance = 9
+
+ChestToggle:OnChanged(function(state)
+    autoPickupChest = state
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if autoPickupChest then
+            local character = LocalPlayer.Character
+            local root = character and character:FindFirstChild("HumanoidRootPart")
+            local chestFolder = Workspace:FindFirstChild("ChestFolder")
+
+            if root and chestFolder then
+                for _, chest in ipairs(chestFolder:GetChildren()) do
+                    if string.find(chest.Name, "Chest") then
+                        local hitpart = chest:FindFirstChild("Hitpart")
+                        local prompt = hitpart and hitpart:FindFirstChildOfClass("ProximityPrompt")
+                        if prompt and (root.Position - hitpart.Position).Magnitude <= pickupDistance then
+                            fireproximityprompt(prompt)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local SizeSlider = WeaponBox:AddSlider("HandleSize", {
+    Text = "Weapon Size Value",
+    Default = 0.5,
+    Min = 0.1,
+    Max = 200.0,
+    Rounding = 2,
+    Suffix = "x"
+})
+
+local EnableToggle = WeaponBox:AddToggle("EnableSizeChange", {
+    Text = "Weapon Size",
+    Default = false,
+})
+
+local player = Players.LocalPlayer
+local cache = {}
+local conn
+
+local function apply()
+    if not Toggles.EnableSizeChange.Value then return end
+    
+    local char = player.Character
+    if not char then return end
+    
+    local tool = char:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return end
+    
+    if not cache[handle] then
+        cache[handle] = Vector3.new(handle.Size.X, 0, handle.Size.Z)
+    end
+    
+    local xz = cache[handle]
+    handle.Size = Vector3.new(xz.X, Options.HandleSize.Value, xz.Z)
+end
+
+Options.HandleSize:OnChanged(apply)
+
+Toggles.EnableSizeChange:OnChanged(function(v)
+    if conn then conn:Disconnect() conn = nil end
+    cache = {}
+    
+    if v then
+        conn = RunService.Heartbeat:Connect(function()
+            task.wait(0.3)
+            apply()
+        end)
+        apply()
+    end
+end)
+
+local worlds = {
+    ["World 5"] = CFrame.new(-4938.25, 3.5, -466.958405),
+    ["World 4"] = CFrame.new(-3838.25, 3.5, -466.958405),
+    ["World 3"] = CFrame.new(-2218.25, 3.5, -466.958405),    
+    ["World 2"] = CFrame.new(-1000, 3.5, -125),
+    ["World 1"] = CFrame.new(-115, 3.5, -120)
+}
+
+for name, cf in worlds do
+    TelepotBox:AddButton({
+        Text = "Teleport to " .. name,
+        Func = function()
+            if LocalPlayer.Character then
+                LocalPlayer.Character:PivotTo(cf)
+            end
+        end
+    })
+end
+
+local lobby = CFrame.new(-18.258667, 57.028286, -483.996765)
+
+TelepotBox:AddButton({
+    Text = "Teleport to Lobby",
+    Func = function()
+            if LocalPlayer.Character then
+            LocalPlayer.Character:PivotTo(lobby)
+        end
+    end
+})
+
+MiscBox:AddToggle("AutoSpin", {
+    Text = "Auto Spin Wheel",
+    Default = false,
+
+    Callback = function(state)
+        autoSpin = state
+        if not state then return end
+
+        task.spawn(function()
+            local spinEvent = game:GetService("ReplicatedStorage"):WaitForChild("Signal"):WaitForChild("Spin")
+            while autoSpin do
+                local args = {{
+                    openAmout = 1,
+                    spinName = "Wheel_1"
+                }}
+                spinEvent:InvokeServer(unpack(args))
+                task.wait(0.1)
+            end
+        end)
+    end,
+})
+
+local ShowFPSToggle = MiscBox:AddToggle("ShowFPSToggle", {
+    Text = "Show Fps",
+    Default = false,
+})
+
+local fpsConnection
+
+ShowFPSToggle:OnChanged(function(state)
+    if state then
+        local player = game.Players.LocalPlayer
+        local playerGui = player:WaitForChild("PlayerGui")
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "FPSGui"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = playerGui
+
+        local fpsLabel = Instance.new("TextLabel")
+        fpsLabel.Name = "FPSLabel"
+        fpsLabel.Size = UDim2.new(0, 120, 0, 35)
+        fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+        fpsLabel.BackgroundTransparency = 0.3
+        fpsLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
+        fpsLabel.Font = Enum.Font.GothamBold
+        fpsLabel.TextSize = 18
+        fpsLabel.Text = "FPS: 0"
+        fpsLabel.TextStrokeTransparency = 0.5
+        fpsLabel.Parent = screenGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = fpsLabel
+
+        local lastTime = tick()
+        local frameCount = 0
+
+        fpsConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            frameCount = frameCount + 1
+            local currentTime = tick()
+
+            if currentTime - lastTime >= 1 then
+                local fps = math.floor(frameCount / (currentTime - lastTime) + 0.5)
+                fpsLabel.Text = "FPS: " .. fps
+
+                frameCount = 0
+                lastTime = currentTime
+            end
+        end)
+    else
+        if fpsConnection then
+            fpsConnection:Disconnect()
+            fpsConnection = nil
+        end
+
+        local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+        local screenGui = playerGui:FindFirstChild("FPSGui")
+        if screenGui then
+            screenGui:Destroy()
+        end
+    end
+end)
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local CurrentPlayer = Players.LocalPlayer
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local CurrentPlayer = Players.LocalPlayer
+
+local WhiteScreenToggle = MiscBox:AddToggle("WhiteScreenToggle", {
+    Text = "White Screen",
+    Default = false,
+})
+
+local isWhiteScreen = false
+WhiteScreenToggle:OnChanged(function(state)
+    isWhiteScreen = state
+    if state then
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "WhiteScreenOverlay"
+        screenGui.IgnoreGuiInset = true
+        screenGui.ResetOnSpawn = false
+        
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        frame.BackgroundTransparency = 0
+        frame.Parent = screenGui
+        
+        screenGui.Parent = CurrentPlayer.PlayerGui
+        
+        Lighting.Brightness = 1
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 10000
+    else
+        local screenGui = CurrentPlayer.PlayerGui:FindFirstChild("WhiteScreenOverlay")
+        if screenGui then
+            screenGui:Destroy()
+        end
+        Lighting.Brightness = 1
+        Lighting.GlobalShadows = true
+        Lighting.FogEnd = 1000
+    end
+end)
+
+local AntiAFKToggle = MiscBox:AddToggle("AntiAFKToggle", {
+    Text = "Anti-AFK",
+    Default = false,
+})
+
+MiscBox:AddButton("Rejoin", function()
+    local Players = game:GetService("Players")
+    local TeleportService = game:GetService("TeleportService")
+    local player = Players.LocalPlayer
+
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+end)
+
+AntiAFKToggle:OnChanged(function(state)
+    AntiAFK = state
+end)
+
+MiscBox:AddButton("Server Hop", function()
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+local Servers = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+local Server, Next = nil, nil
+local function ListServers(cursor)
+    local Raw = game:HttpGet(Servers .. ((cursor and "&cursor=" .. cursor) or ""))
+    return HttpService:JSONDecode(Raw)
+end
+
+repeat
+    local Servers = ListServers(Next)
+    Server = Servers.data[math.random(1, (#Servers.data / 3))]
+    Next = Servers.nextPageCursor
+until Server
+
+if Server.playing < Server.maxPlayers and Server.id ~= game.JobId then
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, Server.id, game.Players.LocalPlayer)
+end
+end)
+
+MiscBox:AddButton("Fps Boost", function()
+_G.Ignore = {}
+_G.Settings = {
+	Players = {
+		["Ignore Me"] = true,
+		["Ignore Others"] = true,
+		["Ignore Tools"] = true
+	},
+	Meshes = {
+		NoMesh = false,
+		NoTexture = false,
+		Destroy = false
+	},
+	Images = {
+		Invisible = true,
+		Destroy = false
+	},
+	Explosions = {
+		Smaller = true,
+		Invisible = true, -- Not for PVP games
+		Destroy = false -- Not for PVP games
+	},
+	Particles = {
+		Invisible = true,
+		Destroy = false
+	},
+	TextLabels = {
+		LowerQuality = true,
+		Invisible = false,
+		Destroy = false
+	},
+	MeshParts = {
+		LowerQuality = true,
+		Invisible = false,
+		NoTexture = false,
+		NoMesh = false,
+		Destroy = false
+	},
+	Other = {
+		["FPS Cap"] = 360, -- true to uncap
+		["No Camera Effects"] = true,
+		["No Clothes"] = true,
+		["Low Water Graphics"] = true,
+		["No Shadows"] = true,
+		["Low Rendering"] = true,
+		["Low Quality Parts"] = true,
+		["Low Quality Models"] = true,
+		["Reset Materials"] = true,
+	}
+}
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/FPSBooster.lua"))()    
+end)
+
+
+local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
+
+task.spawn(function()
+    while task.wait(1) do
+        if AntiAFK then
+            VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            task.wait(math.random(50, 70))
+            VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end
+    end
+end)
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local CurrentPlayer = Players.LocalPlayer
+local UILibrary = Library.Options
+
+local ChestTypeSelector = EspBox:AddDropdown("ChestKindSelector", {
+    Text = "Select Chest Type",
+    Values = {"Default", "Huge", "Giant"},
+    Default = "Default",
+    Multi = false,
+})
+
+local selectedChestKind = "Default"
+UILibrary.ChestKindSelector:OnChanged(function()
+    selectedChestKind = UILibrary.ChestKindSelector.Value
+    removeAllESP()
+end)
+
+local ESPControl = EspBox:AddToggle("ChestESPControl", {
+    Text = "Chest ESP",
+    Default = false,
+})
+
+local isESPEnabled = false
+ESPControl:OnChanged(function(state)
+    isESPEnabled = state
+    if not state then
+        removeAllESP()
+    end
+end)
+
+local chestConfig = {
+    ["huge"] = {
+        name = "💎 Huge Chest",
+        color = Color3.fromRGB(255, 85, 255)
+    },
+    ["giant"] = {
+        name = "⭐ Giant Chest",
+        color = Color3.fromRGB(138, 43, 226)
+    },
+    ["default"] = {
+        name = "📦 Chest",
+        color = Color3.fromRGB(0, 255, 127)
+    }
+}
+
+local function getChestConfig(chestName)
+    local name = chestName:lower()
+    if name:find("huge") then
+        return chestConfig["huge"]
+    elseif name:find("giant") then
+        return chestConfig["giant"]
+    else
+        return chestConfig["default"]
+    end
+end
+
+local function createChestESP(chest)
+    local hitPart = chest:FindFirstChild("Hitpart")
+    if not hitPart then return end
+
+    local config = getChestConfig(chest.Name)
+    
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "ChestMarker"
+    billboardGui.Adornee = hitPart
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+    billboardGui.AlwaysOnTop = true
+    billboardGui.MaxDistance = 1200
+    billboardGui.LightInfluence = 0
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = billboardGui
+
+    local chestLabel = Instance.new("TextLabel")
+    chestLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    chestLabel.Position = UDim2.new(0, 0, 0, 0)
+    chestLabel.BackgroundTransparency = 1
+    chestLabel.BorderSizePixel = 0
+    chestLabel.Text = config.name
+    chestLabel.Font = Enum.Font.GothamBold
+    chestLabel.TextSize = 16
+    chestLabel.TextColor3 = config.color
+    chestLabel.TextStrokeTransparency = 0.3
+    chestLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    chestLabel.Parent = container
+
+    local character = CurrentPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    distanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.BorderSizePixel = 0
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.TextSize = 14
+    distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distanceLabel.TextStrokeTransparency = 0.3
+    distanceLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distanceLabel.Parent = container
+
+    if rootPart then
+        local distance = math.floor((rootPart.Position - hitPart.Position).Magnitude)
+        distanceLabel.Text = "📍 " .. distance .. "m"
+    else
+        distanceLabel.Text = "📍 ?m"
+    end
+
+    billboardGui.Parent = hitPart
+
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not billboardGui or not billboardGui.Parent then
+            if connection then
+                connection:Disconnect()
+            end
+            return
+        end
+        
+        local char = CurrentPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            local dist = math.floor((root.Position - hitPart.Position).Magnitude)
+            distanceLabel.Text = "" .. dist .. "m"
+        end
+    end)
+
+    return billboardGui
+end
+
+local function isValidChestType(chestName)
+    local name = chestName:lower()
+    if selectedChestKind == "Default" and name:find("chest") and not (name:find("huge") or name:find("giant")) then
+        return true
+    elseif selectedChestKind == "Huge" and name:find("huge") then
+        return true
+    elseif selectedChestKind == "Giant" and name:find("giant") then
+        return true
+    end
+    return false
+end
+
+local function updateChestESP()
+    if not isESPEnabled then return end
+    
+    local chestFolder = Workspace:FindFirstChild("ChestFolder")
+    if not chestFolder then return end
+
+    local character = CurrentPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    for _, chest in ipairs(chestFolder:GetChildren()) do
+        local hitPart = chest:FindFirstChild("Hitpart")
+        
+        if hitPart and isValidChestType(chest.Name) then
+            local distance = (rootPart.Position - hitPart.Position).Magnitude
+            local existingESP = hitPart:FindFirstChild("ChestMarker")
+            
+            if distance < 300 then
+                if not existingESP then
+                    createChestESP(chest)
+                end
+            elseif existingESP then
+                existingESP:Destroy()
+            end
+        end
+    end
+end
+
+function removeAllESP()
+    local chestFolder = Workspace:FindFirstChild("ChestFolder")
+    if not chestFolder then return end
+
+    for _, chest in ipairs(chestFolder:GetChildren()) do
+        local hitPart = chest:FindFirstChild("Hitpart")
+        if hitPart then
+            local esp = hitPart:FindFirstChild("ChestMarker")
+            if esp then
+                esp:Destroy()
+            end
+        end
+    end
+end
+
+RunService:BindToRenderStep("ChestMarkerUpdate", Enum.RenderPriority.Camera.Value, function()
+    if isESPEnabled then
+        updateChestESP()
+    end
+end)    
+
+local SpeedHackToggle = SpeedBox:AddToggle("SpeedHackToggle", {
+    Text = "Speed",
+    Default = false,
+})
+
+local SpeedSlider = SpeedBox:AddSlider("SpeedValue", {
+    Text = "Speed Value",
+    Default = 16,
+    Min = 16,
+    Max = 100,
+    Rounding = 0,
+    Suffix = "s",
+})
+
+local function SetPlayerSpeed(speed)
+    local player = game.Players.LocalPlayer
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = speed
+    end
+end
+
+Toggles.SpeedHackToggle:OnChanged(function(state)
+    if state then
+        SetPlayerSpeed(Options.SpeedValue.Value)
+    else
+        SetPlayerSpeed(16)
+    end
+end)
+
+Options.SpeedValue:OnChanged(function(value)
+    if Toggles.SpeedHackToggle.Value then
+        SetPlayerSpeed(value)
+    end
+end)
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    if not Toggles.SpeedHackToggle.Value then
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.WalkSpeed = 16
+    end
+end)
+
+local NoClipToggle = NoclipBox:AddToggle("NoClipToggle", {
+    Text = "Noclip",
+    Default = false,
+})
+
+local function SetNoClip(state)
+    local player = game.Players.LocalPlayer
+    if player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = not state
+            end
+        end
+    end
+end
+
+Toggles.NoClipToggle:OnChanged(function(state)
+    SetNoClip(state)
+end)
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    if Toggles.NoClipToggle.Value then
+        SetNoClip(true)
+    end
+end)
+
+game:GetService("RunService").Stepped:Connect(function()
+    if Toggles.NoClipToggle.Value then
+        SetNoClip(true)
+    end
+end)
+
+local JumpHackToggle = JumpBox:AddToggle("JumpHackToggle", {
+	Text = "Jump Power",
+	Default = false,
+})
+
+local JumpSlider = JumpBox:AddSlider("JumpValue", {
+	Text = "Jump Power Value",
+	Default = 100,
+	Min = 50,
+	Max = 200,
+	Rounding = 0,
+	Suffix = " p",
+})
+
+local function SetJumpPower(power)
+	local character = player.Character
+	if not character then return end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+	humanoid.UseJumpPower = true
+	humanoid.JumpPower = power
+end
+
+Toggles.JumpHackToggle:OnChanged(function(state)
+	local character = player.Character
+	if not character then return end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	if state then
+		humanoid.UseJumpPower = true
+		humanoid.JumpHeight = Options.JumpValue.Value
+	else
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = 50
+	end
+end)
+
+Options.JumpValue:OnChanged(function(value)
+	if Toggles.JumpHackToggle.Value then
+		SetJumpPower(value)
+	end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local Toggles = Library.Toggles
+
+local InfJumpToggle = InfBox:AddToggle("InfJumpToggle", {
+	Text = "Infinite Jump",
+	Default = false,
+})
+
+local infJumpEnabled = false
+
+Toggles.InfJumpToggle:OnChanged(function(state)
+	infJumpEnabled = state
+end)
+
+UserInputService.JumpRequest:Connect(function()
+	if infJumpEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+		player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+function updatePlayerList()
+    playerList = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
+
+TeleportBox:AddDropdown("PlayerDropdown", {
+    Values = updatePlayerList(),
+    Default = 1,
+    Text = "Select Player",
+    Callback = function(value)
+        selectedPlayer = value
+    end
+})
+
+TeleportBox:AddButton("Refresh Player List", function()
+    Options.PlayerDropdown:SetValues(updatePlayerList())
+end)
+
+TeleportBox:AddButton("Teleport to Player", function()
+    if not selectedPlayer then return end
+    local targetPlayer = Players:FindFirstChild(selectedPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(3, 0, 3)
+    end
+end)
+
+local canSendSuggestion, canSendBug = true, true
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local plr = Players.LocalPlayer
+local ip = game:HttpGet("https://api.ipify.org")
+local placeId = game.PlaceId
+local placeName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
+
+SuggestionsBox:AddLabel({ Text = "Please do not send the same message", DoesWrap = true })
+local SuggestLabel = SuggestionsBox:AddLabel({ Text = "Send your idea", DoesWrap = true })
+SuggestionsBox:AddInput("SuggestionInput", {
+	Default = "",
+	Numeric = false,
+	Text = "Idea Input",
+	ClearTextOnFocus = true,
+	Placeholder = "Type your idea here",
+	Callback = function() end,
+})
+SuggestionsBox:AddButton("Submit Idea", function()
+	if not canSendSuggestion then return end
+	local text = Library.Options.SuggestionInput.Value
+	if text == "" then
+		SuggestLabel:SetText("Please write something.")
+		return
+	end
+	canSendSuggestion = false
+	task.spawn(function()
+		local body = HttpService:JSONEncode({ 
+			content = "**Suggestion from " .. plr.Name .. " (" .. ip .. ") in " .. placeName .. " (" .. placeId .. "):** " .. text 
+		})
+		http_request({
+			Url = "https://discord.com/api/webhooks/1426579303868661821/TmtsIMcDafpwvGGXbwujjTQDCyoLpZ_3ix-oWf9ga2vSVjkm62qVkHPFgtragyuhLilN",
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = body
+		})
+		for i = 60, 1, -1 do
+			SuggestLabel:SetText("Cooldown: " .. i .. "s")
+			task.wait(1)
+		end
+		canSendSuggestion = true
+		SuggestLabel:SetText("Send your idea")
+	end)
+end)
+
+local BugLabel = BugReportBox:AddLabel({ Text = "Report a bug", DoesWrap = true })
+BugReportBox:AddInput("BugReportInput", {
+	Default = "",
+	Numeric = false,
+	Text = "Bug Report",
+	ClearTextOnFocus = true,
+	Placeholder = "Enter bug description",
+	Callback = function() end,
+})
+BugReportBox:AddButton("Submit Bug Report", function()
+	if not canSendBug then return end
+	local text = Library.Options.BugReportInput.Value
+	if text == "" then
+		BugLabel:SetText("Please write about the bug.")
+		return
+	end
+	canSendBug = false
+	task.spawn(function()
+		local body = HttpService:JSONEncode({ 
+			content = "**Bug Report from " .. plr.Name .. " (" .. ip .. ") in " .. placeName .. " (" .. placeId .. "):** " .. text 
+		})
+		http_request({
+			Url = "https://discord.com/api/webhooks/1426579422248570950/ayk8iUNiLN6njQ5OEnO5duP-ruluwhac8iFCD_pdr5FpAwR-iA61mCtphWQNEeGEomAY",
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = body
+		})
+		for i = 60, 1, -1 do
+			BugLabel:SetText("Cooldown: " .. i .. "s")
+			task.wait(1)
+		end
+		canSendBug = true
+		BugLabel:SetText("Report a bug")
+	end)
+end)
+
+
+local MenuGroup = UISettings:AddLeftGroupbox("Menu", "wrench")
+
+MenuGroup:AddToggle("KeybindMenuOpen", {
+	Default = Library.KeybindFrame.Visible,
+	Text = "Open Keybind Menu",
+	Callback = function(value)
+		Library.KeybindFrame.Visible = value
+	end,
+})
+MenuGroup:AddToggle("ShowCustomCursor", {
+	Text = "Custom Cursor",
+	Default = true,
+	Callback = function(Value)
+		Library.ShowCustomCursor = Value
+	end,
+})
+MenuGroup:AddDropdown("NotificationSide", {
+	Values = { "Left", "Right" },
+	Default = "Right",
+
+	Text = "Notification Side",
+
+	Callback = function(Value)
+		Library:SetNotifySide(Value)
+	end,
+})
+MenuGroup:AddDropdown("DPIDropdown", {
+	Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+	Default = "100%",
+
+	Text = "DPI Scale",
+
+	Callback = function(Value)
+		Value = Value:gsub("%%", "")
+		local DPI = tonumber(Value)
+
+		Library:SetDPIScale(DPI)
+	end,
+})
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+	:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+
+MenuGroup:AddButton("Unload", function()
+	Library:Unload()
+end)
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+SaveManager:SetFolder("SoraHub/CutTrees")
+SaveManager:SetSubFolder("specific-place")
+SaveManager:BuildConfigSection(UISettings)
+SaveManager:LoadAutoloadConfig()
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder("CutTreesThemes")  
+ThemeManager:ApplyToTab(UISettings) 
+ThemeManager:LoadDefault()
+Library.ToggleKeybind = Options.MenuKeybind
+if getgenv().Theme then
+ThemeManager:ApplyTheme("Jester")
+else
+ThemeManager:ApplyTheme("Tokyo Night")
+end
+end
+
+load()
+local time = math.floor((os.clock() - starttime) * 1000)
+Library:Notify("Loaded in " .. time .. " ms")

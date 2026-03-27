@@ -1,0 +1,183 @@
+-- 🚀 WALVY COMMUNITY SPEEDHACK + GRAPPLE HOOK V4 FULL INSTANT + ALWAYS EQUIP
+
+local player = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- ===== Vars =====
+local enabled = false
+local currentSpeed = 150
+local DEFAULT_SPEED = 16
+local itemID = "Grapple Hook"
+local useItemRE = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+local args = {0.10267777442932129} -- Adjust as needed
+local character, humanoid, hrp
+local speedConnection
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.Name = "WalvySpeedhackGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 180, 0, 140)
+frame.Position = UDim2.new(0.5, -90, 0.5, -70)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderSizePixel = 0
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Active = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "WALVY COMMUNITY"
+title.Size = UDim2.new(1, 0, 0, 20)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 12
+
+-- Toggle Button
+local toggleButton = Instance.new("TextButton", frame)
+toggleButton.Text = "▶ Turn On SpeedHack"
+toggleButton.Size = UDim2.new(0.8, 0, 0, 30)
+toggleButton.Position = UDim2.new(0.1, 0, 0.25, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 12
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 6)
+
+-- Speed Input
+local speedInput = Instance.new("TextBox", frame)
+speedInput.Size = UDim2.new(0.8, 0, 0, 25)
+speedInput.Position = UDim2.new(0.1, 0, 0.55, 0)
+speedInput.PlaceholderText = "Set speed (0-1000)"
+speedInput.ClearTextOnFocus = false
+speedInput.Text = tostring(currentSpeed)
+speedInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.Font = Enum.Font.Gotham
+speedInput.TextSize = 11
+Instance.new("UICorner", speedInput).CornerRadius = UDim.new(0, 5)
+
+-- ===== Functions =====
+local function buyItem()
+    pcall(function()
+        ReplicatedStorage:WaitForChild("Packages")
+            :WaitForChild("Net")
+            :WaitForChild("RF/CoinsShopService/RequestBuy")
+            :InvokeServer(itemID)
+    end)
+end
+
+local function autoEquip()
+    if not character then return end
+    local backpack = player:WaitForChild("Backpack")
+    local tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if tool then tool.Parent = character end
+end
+
+local function fakeUse()
+    if not character then return end
+    local tool = character:FindFirstChild(itemID)
+    if tool then
+        pcall(function()
+            useItemRE:FireServer(unpack(args))
+        end)
+    end
+end
+
+local function ensureGrappleEquipped()
+    if not character then return end
+    local tool = character:FindFirstChild(itemID)
+    if not tool then
+        local backpackTool = player.Backpack:FindFirstChild(itemID)
+        if backpackTool then
+            backpackTool.Parent = character
+        end
+    end
+end
+
+local function updateCharacter()
+    character = player.Character or player.CharacterAdded:Wait()
+    humanoid = character and character:WaitForChild("Humanoid", 5)
+    hrp = character and character:WaitForChild("HumanoidRootPart", 5)
+    if humanoid and hrp then
+        humanoid.JumpPower = 50
+    end
+end
+
+local function startSpeedHack()
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+    if not enabled or not humanoid or not hrp then return end
+    speedConnection = RunService.Heartbeat:Connect(function()
+        if not enabled or not humanoid or not hrp then return end
+        ensureGrappleEquipped()
+        local dir = humanoid.MoveDirection.Magnitude > 0 and humanoid.MoveDirection.Unit or Vector3.new(0, 0, 0)
+        hrp.AssemblyLinearVelocity = Vector3.new(dir.X * currentSpeed, hrp.AssemblyLinearVelocity.Y, dir.Z * currentSpeed)
+        fakeUse()
+    end)
+end
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.4)
+    updateCharacter()
+    if enabled then
+        buyItem()
+        autoEquip()
+        startSpeedHack()
+    end
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    updateCharacter()
+    if enabled then
+        toggleButton.Text = "⏸ Turn Off SpeedHack"
+        buyItem()
+        autoEquip()
+        startSpeedHack()
+    else
+        toggleButton.Text = "▶ Turn On SpeedHack"
+        if humanoid then humanoid.WalkSpeed = DEFAULT_SPEED end
+        if speedConnection then speedConnection:Disconnect() speedConnection = nil end
+    end
+end)
+
+speedInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local val = tonumber(speedInput.Text)
+    if val then
+        currentSpeed = math.clamp(val, 40, 1000)
+    end
+end)
+
+-- ===== Drag GUI =====
+local dragging, dragInput, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                   startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)

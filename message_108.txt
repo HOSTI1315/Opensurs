@@ -1,0 +1,182 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Swim to Save Princess")
+local r2_0 = nil
+local r3_0 = getrawmetatable(game)
+local r4_0 = r3_0.__namecall
+setreadonly(r3_0, false)
+r3_0.__namecall = newcclosure(function(r0_1, ...)
+  -- line: [0, 0] id: 1
+  local r2_1 = getnamecallmethod()
+  local r3_1 = {
+    ...
+  }
+  if r2_1 == "FireServer" and r0_1.Parent.Name == "RES" and r3_1[1] == "GiveTrophies" then
+    r2_0 = r0_1.Name
+  end
+  return r4_0(r0_1, ...)
+end)
+setreadonly(r3_0, true)
+r1_0:AddButton({
+  text = "Wins Check",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 7
+    if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Art.End.EndBase.CFrame
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Wins Farm",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_6)
+    -- line: [0, 0] id: 6
+    _G.Wins = r0_6
+    print("Wins Farm:", r0_6)
+    if r0_6 and r2_0 then
+      Wins()
+    elseif not r0_6 then
+      _G.Wins = false
+    end
+  end,
+})
+function Wins()
+  -- line: [0, 0] id: 14
+  spawn(function()
+    -- line: [0, 0] id: 15
+    _G.Wins = true
+    while _G.Wins do
+      local r0_15 = r2_0
+      if r0_15 then
+        pcall(function()
+          -- line: [0, 0] id: 16
+          workspace:WaitForChild("RES"):WaitForChild(r2_0):FireServer(unpack({
+            "GiveTrophies"
+          }))
+        end)
+        wait(0.1)
+      else
+        break
+      end
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Coins Farm",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_13)
+    -- line: [0, 0] id: 13
+    _G.Coins = r0_13
+    print("Coins: ", r0_13)
+    if r0_13 then
+      Coins()
+    end
+  end,
+})
+function Coins()
+  -- line: [0, 0] id: 2
+  spawn(function()
+    -- line: [0, 0] id: 3
+    _G.Coins = true
+    while _G.Coins do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 4
+        local r0_4 = game:GetService("Players").LocalPlayer:GetAttribute("CurPlayerAnim")
+        if r0_4 == nil then
+          r0_4 = game.Players.LocalPlayer
+          local r1_4 = r0_4.Character or r0_4.CharacterAdded:Wait()
+          local r2_4 = r1_4:WaitForChild("HumanoidRootPart")
+          local r3_4 = r1_4:WaitForChild("Humanoid")
+          local r4_4 = workspace.Art.Start.Ground
+          local r5_4 = workspace.Art.End.EndBase
+          local r6_4 = workspace.Art.End.EndTelepoart
+          local function r7_4(r0_5)
+            -- line: [0, 0] id: 5
+            local r2_5 = r0_5.Position
+            r2_4.CFrame = CFrame.new(r2_4.Position, r2_5)
+            if r3_4.CameraOffset ~= Vector3.new(0, 0, 0) or r0_4.CameraMode == Enum.CameraMode.LockFirstPerson then
+              workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, r2_5)
+            else
+              workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, r2_5)
+            end
+          end
+          r2_4.CFrame = r4_4.CFrame
+          task.wait(0.1)
+          r7_4(r5_4)
+          local r8_4 = Vector3.new(0, 0, r4_4.Size.Z / -2)
+          r2_4.CFrame = r4_4.CFrame + r4_4.CFrame:VectorToWorldSpace(r8_4)
+          game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.W, false, game)
+          task.wait(2)
+          r2_4.CFrame = r5_4.CFrame + r5_4.CFrame:VectorToWorldSpace(Vector3.new(0, 0, r5_4.Size.Z / 1))
+          task.wait(0.3)
+          game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.W, false, game)
+          r2_4.CFrame = r6_4.CFrame
+          task.wait(1)
+          r2_4.CFrame = r4_4.CFrame + r4_4.CFrame:VectorToWorldSpace(r8_4)
+          -- close: r0_4
+        end
+        r0_4 = wait
+        r0_4(1)
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Auto Hatch (Nearest)",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_12)
+    -- line: [0, 0] id: 12
+    _G.Hatch = r0_12
+    print("Hatch: ", r0_12)
+    if r0_12 then
+      Hatch()
+    end
+  end,
+})
+function Hatch()
+  -- line: [0, 0] id: 8
+  spawn(function()
+    -- line: [0, 0] id: 9
+    _G.Hatch = true
+    while _G.Hatch do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 10
+        local r1_10 = game:GetService("Players").LocalPlayer
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("LootRF"):InvokeServer(unpack({
+          "SingleLootEgg",
+          (function()
+            -- line: [0, 0] id: 11
+            local r1_11 = math.huge
+            local r0_11 = nil	-- notice: implicit variable refs by block#[5]
+            for r5_11, r6_11 in pairs(workspace.Art.Start.build.Pet:GetDescendants()) do
+              if r6_11.Name == "Draw_1" then
+                local r7_11 = r1_10:DistanceFromCharacter(r6_11.CFrame.p)
+                if r7_11 < r1_11 then
+                  r0_11 = r6_11
+                  r1_11 = r7_11
+                end
+              end
+            end
+            return r0_11
+          end)().LocalLootEgg:GetAttribute("LootEggId")
+        }))
+        wait(0.5)
+      end)
+    end
+  end)
+end
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()

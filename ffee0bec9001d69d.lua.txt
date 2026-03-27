@@ -1,0 +1,132 @@
+-- ts file was generated at discord.gg/25ms
+
+
+local v1 = game:GetService("Players")
+local v2 = game:GetService("RunService")
+local vu3 = v1.LocalPlayer
+game.Players.LocalPlayer:GetMouse()
+local vu4 = false
+local vu5 = 0.13683333
+local v6 = game:GetService("Players").LocalPlayer:GetMouse()
+local vu7 = true
+getgenv().Key = "q"
+game.StarterGui:SetCore("SendNotification", {
+    Title = "PresetsCamlock",
+    Text = "Credits Zatirohood"
+})
+function FindNearestEnemy()
+    local v8 = math.huge
+    local v9 = Vector2.new(game:GetService("GuiService"):GetScreenResolution().X / 2, game:GetService("GuiService"):GetScreenResolution().Y / 2)
+    local v10, v11, v12 = ipairs(game:GetService("Players"):GetPlayers())
+    local v13 = nil
+    while true do
+        local v14
+        v12, v14 = v10(v11, v12)
+        if v12 == nil then
+            break
+        end
+        if v14 ~= vu3 then
+            local v15 = v14.Character
+            if v15 and (v15:FindFirstChild("HumanoidRootPart") and v15.Humanoid.Health > 0) then
+                local v16, v17 = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(v15.HumanoidRootPart.Position)
+                if v17 then
+                    local v18 = (v9 - Vector2.new(v16.X, v16.Y)).Magnitude
+                    if v18 < v8 then
+                        v13 = v15.HumanoidRootPart
+                        v8 = v18
+                    end
+                end
+            end
+        end
+    end
+    return v13
+end
+local vu19 = nil
+v2.Heartbeat:Connect(function()
+    if vu4 == true and vu19 then
+        local v20 = workspace.CurrentCamera
+        v20.CFrame = CFrame.new(v20.CFrame.p, vu19.Position + vu19.Velocity * vu5)
+    end
+end)
+v6.KeyDown:Connect(function(p21)
+    if p21 == getgenv().Key then
+        vu7 = not vu7
+        if vu7 then
+            vu19 = FindNearestEnemy()
+            vu4 = true
+        elseif vu19 ~= nil then
+            vu19 = nil
+            vu4 = false
+        end
+    end
+end)
+local v22 = Instance.new("ScreenGui")
+local vu23 = Instance.new("Frame")
+local v24 = Instance.new("UICorner")
+local v25 = Instance.new("ImageLabel")
+local vu26 = Instance.new("TextButton")
+Instance.new("UICorner")
+v22.Name = "PRESETS"
+v22.Parent = game.CoreGui
+v22.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+vu23.Parent = v22
+vu23.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+vu23.BorderColor3 = Color3.fromRGB(0, 0, 0)
+vu23.BorderSizePixel = 0
+vu23.Position = UDim2.new(0.133798108, 0, 0.20107238, 0)
+vu23.Size = UDim2.new(0, 195, 0, 65)
+vu23.Active = true
+vu23.Draggable = true
+local function v27()
+    vu23.Position = UDim2.new(0.5, - vu23.AbsoluteSize.X / 2, 0, - vu23.AbsoluteSize.Y / 2)
+end
+v27()
+local v28 = vu23
+vu23.GetPropertyChangedSignal(v28, "AbsoluteSize"):Connect(v27)
+v24.Parent = vu23
+v25.Name = "Logo"
+v25.Parent = vu23
+v25.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+v25.BackgroundTransparency = 3
+v25.BorderColor3 = Color3.fromRGB(0, 0, 0)
+v25.BorderSizePixel = 0
+v25.Position = UDim2.new(0.326732665, 0, 0, 0)
+v25.Size = UDim2.new(0, 64, 0, 65)
+v25.Image = "rbxassetid://830610397"
+v25.ImageTransparency = 0.3
+vu26.Parent = vu23
+vu26.BackgroundColor3 = Color3.fromRGB(75, 80, 255)
+vu26.BackgroundTransparency = 5
+vu26.BorderColor3 = Color3.fromRGB(0, 0, 0)
+vu26.BorderSizePixel = 0
+vu26.Position = UDim2.new(0.0792079195, 0, 0.18571429, 0)
+vu26.Size = UDim2.new(0, 170, 0, 44)
+vu26.Font = Enum.Font.SourceSansSemibold
+vu26.Text = "PRESETS"
+vu26.TextColor3 = Color3.fromRGB(255, 255, 255)
+vu26.TextScaled = true
+vu26.TextSize = 18
+vu26.TextWrapped = true
+local vu29 = true
+vu26.MouseButton1Click:Connect(function()
+    vu29 = not vu29
+    if vu29 then
+        vu26.Text = "PRESETS OFF"
+        vu4 = false
+        vu19 = nil
+    else
+        vu26.Text = "PRESETS ON"
+        vu4 = true
+        vu19 = FindNearestEnemy()
+    end
+end)
+local function v32()
+    local v30 = 0
+    while true do
+        local v31 = v30 + 5
+        v30 = v31 > 360 and 0 or v31
+        vu26.TextColor3 = Color3.fromHSV(v30 / 360, 1, 1)
+        wait(0.01)
+    end
+end
+spawn(v32)

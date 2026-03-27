@@ -1,0 +1,146 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local parent = CoreGui
+if not pcall(function() local x = CoreGui.Name end) then
+    parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+if parent:FindFirstChild("CryHub_Micro") then
+    parent.CryHub_Micro:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CryHub_Micro"
+ScreenGui.Parent = parent
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(8, 9, 13)
+-- DIMENSIONI RIDOTTE (Prima era 260x140, ora è circa il 20% più piccolo)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -55)
+MainFrame.Size = UDim2.new(0, 200, 0, 110)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 12, 0, 8)
+TitleLabel.Size = UDim2.new(0, 100, 0, 15)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "CryHub Lagger"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 12 -- Testo più piccolo
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseBtn"
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CloseButton.Position = UDim2.new(1, -18, 0, 10)
+CloseButton.Size = UDim2.new(0, 8, 0, 8) -- Puntino più piccolo
+CloseButton.Text = ""
+CloseButton.AutoButtonColor = false
+
+local DotCorner = Instance.new("UICorner")
+DotCorner.CornerRadius = UDim.new(1, 0)
+DotCorner.Parent = CloseButton
+
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Name = "ButtonContainer"
+ButtonContainer.Parent = MainFrame
+ButtonContainer.BackgroundColor3 = Color3.fromRGB(15, 17, 26)
+ButtonContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+ButtonContainer.Position = UDim2.new(0.5, 0, 0.5, 5)
+ButtonContainer.Size = UDim2.new(0, 175, 0, 35) -- Bottone proporzionato al frame piccolo
+ButtonContainer.BorderSizePixel = 0
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = ButtonContainer
+
+local ActionButton = Instance.new("TextButton")
+ActionButton.Name = "LagButton"
+ActionButton.Parent = ButtonContainer
+ActionButton.BackgroundTransparency = 1
+ActionButton.Size = UDim2.new(1, 0, 1, 0)
+ActionButton.Font = Enum.Font.GothamBold
+ActionButton.Text = "Start Lagging"
+ActionButton.TextColor3 = Color3.fromRGB(50, 60, 80)
+ActionButton.TextSize = 13
+
+local active = false
+ActionButton.MouseButton1Click:Connect(function()
+    active = not active
+    if active then
+        ActionButton.Text = "Stop Lagging"
+        TweenService:Create(ButtonContainer, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(45, 15, 15)}):Play()
+        TweenService:Create(ActionButton, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+    else
+        ActionButton.Text = "Start Lagging"
+        TweenService:Create(ButtonContainer, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(15, 17, 26)}):Play()
+        TweenService:Create(ActionButton, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(50, 60, 80)}):Play()
+    end
+end)
+
+local FooterLeft = Instance.new("TextLabel")
+FooterLeft.Parent = MainFrame
+FooterLeft.BackgroundTransparency = 1
+FooterLeft.Position = UDim2.new(0, 12, 1, -18)
+FooterLeft.Size = UDim2.new(0, 60, 0, 10)
+FooterLeft.Font = Enum.Font.Gotham
+FooterLeft.Text = "Discord: cryxn."
+FooterLeft.TextColor3 = Color3.fromRGB(80, 80, 90)
+FooterLeft.TextSize = 8
+FooterLeft.TextXAlignment = Enum.TextXAlignment.Left
+
+local FooterRight = Instance.new("TextLabel")
+FooterRight.Parent = MainFrame
+FooterRight.BackgroundTransparency = 1
+FooterRight.Position = UDim2.new(1, -12, 1, -18)
+FooterRight.Size = UDim2.new(0, 100, 0, 10)
+FooterRight.AnchorPoint = Vector2.new(1, 0)
+FooterRight.Font = Enum.Font.GothamBold
+FooterRight.Text = "discord.gg/hf3g3KqVk7"
+FooterRight.TextColor3 = Color3.fromRGB(90, 110, 255)
+FooterRight.TextSize = 8
+FooterRight.TextXAlignment = Enum.TextXAlignment.Right
+
+-- Dragging 
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)

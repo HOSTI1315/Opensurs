@@ -1,0 +1,167 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Shoot a Brainrot!")
+local r3_0 = game:GetService("Players").LocalPlayer
+local r4_0 = nil
+for r8_0, r9_0 in pairs(workspace.Map.Plots:GetDescendants()) do
+  if r9_0.Name == "UIUserThumbnail" and r9_0.Image == "rbxthumb://type=AvatarHeadShot&id=" .. r3_0.UserId .. "&w=352&h=352" then
+    r4_0 = r9_0.Parent.Parent.Parent
+  end
+end
+r1_0:AddBox({
+  text = "Mobs with HP higher than set",
+  flag = "box",
+  value = "Set HP",
+  callback = function(r0_4)
+    -- line: [0, 0] id: 4
+    HP = r0_4
+  end,
+})
+r1_0:AddToggle({
+  text = "Auto Shoot (hold guns)",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_2)
+    -- line: [0, 0] id: 2
+    _G.Shoot = r0_2
+    print("Shoot: ", r0_2)
+    if r0_2 then
+      Shoot()
+    end
+  end,
+})
+function Shoot()
+  -- line: [0, 0] id: 9
+  spawn(function()
+    -- line: [0, 0] id: 10
+    _G.Shoot = true
+    while _G.Shoot do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 11
+        for r3_11, r4_11 in pairs(workspace.Stampede.NPCs:GetDescendants()) do
+          if r4_11.Name == "Hitbox" and HP * 1 <= r4_11.Parent:GetAttribute("MaxHP") and 0 < r4_11.Parent:GetAttribute("MaxHP") then
+            game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(unpack({
+              buffer.fromstring("\u{11}�זB\u{1c}�\u{1f}\u{8d}��B��\u{8}i\u{1a}�7C���A3D��r\u{c}�3�n���P\u{11}4\u{1}\0\u{1}\01\u{1}\u{2}"),
+              {
+                r4_11,
+                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool")
+              }
+            }))
+          end
+        end
+        wait()
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Show HP ESP",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_12)
+    -- line: [0, 0] id: 12
+    _G.ShowHP = r0_12
+    print("ShowHP:", r0_12)
+    if r0_12 then
+      spawn(function()
+        -- line: [0, 0] id: 13
+        while _G.ShowHP do
+          local r0_13 = pairs
+          for r3_13, r4_13 in r0_13(workspace.Stampede.NPCs:GetChildren()) do
+            if r4_13:IsA("Model") and r4_13:FindFirstChild("Head") then
+              local r5_13 = r4_13:GetAttribute("MaxHP")
+              if r5_13 then
+                if not r4_13:FindFirstChild("BillboardGui") then
+                  local r6_13 = Instance.new("BillboardGui", r4_13.Head)
+                  r6_13.Size = UDim2.new(0, 100, 0, 30)
+                  r6_13.AlwaysOnTop = true
+                  r6_13.Name = "BillboardGui"
+                  local r7_13 = Instance.new("TextLabel", r6_13)
+                  r7_13.Size = UDim2.new(1, 0, 1, 0)
+                  r7_13.BackgroundTransparency = 1
+                  r7_13.TextColor3 = Color3.fromRGB(255, 0, 0)
+                  r7_13.TextStrokeTransparency = 0.5
+                  r7_13.Font = Enum.Font.SourceSansBold
+                  r7_13.TextScaled = true
+                  r7_13.Text = tostring(r5_13)
+                else
+                  r4_13.Head.BillboardGui.TextLabel.Text = tostring(r5_13)
+                end
+              end
+            end
+          end
+          task.wait(1)
+        end
+        for r3_13, r4_13 in pairs(workspace.Stampede.NPCs:GetChildren()) do
+          if r4_13:FindFirstChild("Head") and r4_13.Head:FindFirstChild("BillboardGui") then
+            r4_13.Head.BillboardGui:Destroy()
+          end
+        end
+      end)
+    end
+  end,
+})
+r1_0:AddToggle({
+  text = "Collect Cash",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_5)
+    -- line: [0, 0] id: 5
+    _G.Cash = r0_5
+    print("Cash: ", r0_5)
+    if r0_5 then
+      Cash()
+    end
+  end,
+})
+function Cash()
+  -- line: [0, 0] id: 6
+  spawn(function()
+    -- line: [0, 0] id: 7
+    _G.Cash = true
+    while _G.Cash do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 8
+        for r3_8, r4_8 in pairs(r4_0.Characters:GetDescendants()) do
+          if r4_8:IsA("TouchTransmitter") then
+            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r4_8.Parent, 0)
+            wait()
+            firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r4_8.Parent, 1)
+          end
+        end
+        wait(15)
+      end)
+    end
+  end)
+end
+r1_0:AddButton({
+  text = "Sell All",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 1
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(unpack({
+      buffer.fromstring("\u{1a}")
+    }))
+  end,
+})
+r1_0:AddButton({
+  text = "Sell Holding",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 3
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(unpack({
+      buffer.fromstring(" $\0" .. game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):GetAttribute("Id"))
+    }))
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()

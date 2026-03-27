@@ -1,0 +1,374 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local fflags = {
+    ["NextGenReplicatorEnabledWrite4"] = "True",
+}
+
+for _, existing in ipairs(Workspace:GetChildren()) do
+    if existing.Name == "DesyncESP" then
+        existing:Destroy()
+    end
+end
+
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "DesyncESP"
+ESPFolder.Parent = Workspace
+
+local fakePosESP = nil
+local serverPosition = nil
+
+local old = playerGui:FindFirstChild("DesyncGUI")
+if old then old:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DesyncGUI"
+ScreenGui.Parent = playerGui
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 240, 0, 90)
+Frame.Position = UDim2.new(0, 20, 0, 120)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner", Frame)
+FrameCorner.CornerRadius = UDim.new(0, 14)
+
+local grad = Instance.new("UIGradient", Frame)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 0, 0)),
+}
+
+local Shadow = Instance.new("UIStroke", Frame)
+Shadow.Thickness = 2
+Shadow.Color = Color3.fromRGB(255, 0, 0)
+Shadow.Transparency = 0.3
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 18
+Title.Text = "Desync"
+Title.TextStrokeTransparency = 0.5
+Title.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+Title.Parent = Frame
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(0.9, 0, 0, 35)
+Button.Position = UDim2.new(0.05, 0, 0, 45)
+Button.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.Font = Enum.Font.GothamBold
+Button.TextSize = 13
+Button.Text = "Desync OFF (G)"
+Button.BorderSizePixel = 0
+Button.Parent = Frame
+
+local ButtonCorner = Instance.new("UICorner", Button)
+ButtonCorner.CornerRadius = UDim.new(0, 10)
+
+local circle = Instance.new("ImageLabel", Button)
+circle.Size = UDim2.new(0, 18, 0, 18)
+circle.Position = UDim2.new(1, -26, 0.5, -9)
+circle.BackgroundTransparency = 1
+circle.Image = "rbxassetid://10137946418"
+circle.ImageColor3 = Color3.fromRGB(100, 0, 0)
+
+local toggled = false
+
+local function setupNoWalkAnimation(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    local animator = humanoid:WaitForChild("Animator")
+    
+    local function stopAllAnimations()
+        local tracks = animator:GetPlayingAnimationTracks()
+        for _, track in pairs(tracks) do
+            if track.IsPlaying then
+                track:Stop()
+            end
+        end
+    end
+    
+    stopAllAnimations()
+    
+    humanoid.Running:Connect(function(speed)
+        stopAllAnimations()
+    end)
+    
+    humanoid.Jumping:Connect(function()
+        stopAllAnimations()
+    end)
+    
+    animator.AnimationPlayed:Connect(function(animationTrack)
+        animationTrack:Stop()
+    end)
+    
+    RunService.RenderStepped:Connect(function()
+        stopAllAnimations()
+    end)
+end
+
+local function createESPPart(name, color)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Size = Vector3.new(2, 5, 2)
+    part.Anchored = true
+    part.CanCollide = false
+    part.Material = Enum.Material.Neon
+    part.Color = color
+    part.Transparency = 0.3
+    part.Parent = ESPFolder
+    
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = color
+    highlight.OutlineColor = color
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = part
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 100, 0, 40)
+    billboard.Adornee = part
+    billboard.AlwaysOnTop = true
+    billboard.Parent = part
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = name
+    textLabel.TextColor3 = color
+    textLabel.TextStrokeTransparency = 0.5
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.Parent = billboard
+    
+    return part
+end
+
+local function trackServerPosition()
+    local char = LocalPlayer.Character
+    if not char then return end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local success, result = pcall(function()
+        return hrp:GetNetworkOwner()
+    end)
+    
+    if success and result == nil then
+        if serverPosition then
+            if fakePosESP then
+                fakePosESP.CFrame = CFrame.new(serverPosition)
+            end
+        end
+    else
+        local oldPos = hrp:GetPropertyChangedSignal("Position"):Connect(function()
+            task.wait(0.15)
+            local char = LocalPlayer.Character
+            if char then
+                local currentHRP = char:FindFirstChild("HumanoidRootPart")
+                if currentHRP then
+                    serverPosition = currentHRP.Position
+                end
+            end
+        end)
+    end
+end
+
+local function updateESP()
+    if fakePosESP and serverPosition then
+        fakePosESP.CFrame = CFrame.new(serverPosition)
+    end
+end
+
+local function initializeESP()
+    ESPFolder:ClearAllChildren()
+    
+    fakePosESP = createESPPart("Server Position", Color3.fromRGB(255, 0, 0))
+    
+    local char = LocalPlayer.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            serverPosition = hrp.Position
+            fakePosESP.CFrame = CFrame.new(serverPosition)
+            
+            hrp:GetPropertyChangedSignal("CFrame"):Connect(function()
+                task.wait(0.2)
+                serverPosition = hrp.Position
+            end)
+        end
+    end
+end
+
+local function applyFlags()
+    for name, value in pairs(fflags) do
+        pcall(setfflag, name, value)
+    end
+end
+
+local function respawn(plr)
+    local char = plr.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local origCFrame = hrp.CFrame
+    local camCFrame = Workspace.CurrentCamera.CFrame
+
+    local reject = pcall(function()
+        return gethiddenproperty(Workspace, "RejectCharacterDeletions") ~= Enum.RejectCharacterDeletions.Disabled
+    end)
+
+    local repFocus = gethiddenproperty(plr, "ReplicationFocus")
+
+    if reject and repFocus then
+        repFocus(plr.ConnectDiedSignalBackend)
+        task.wait(Players.RespawnTime - 0.1)
+        repFocus(plr.Kill)
+    else
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Dead) end
+        char:ClearAllChildren()
+        local dummy = Instance.new("Model", Workspace)
+        plr.Character = dummy
+        task.wait()
+        plr.Character = nil
+        dummy:Destroy()
+    end
+
+    task.spawn(function()
+        local newChar = plr.CharacterAdded:Wait()
+        local newHRP = newChar:WaitForChild("HumanoidRootPart", 5)
+        if newHRP then 
+            serverPosition = origCFrame.Position
+            newHRP.CFrame = origCFrame 
+        end
+        Workspace.CurrentCamera.CFrame = camCFrame
+        
+        task.wait(0.5)
+        initializeESP()
+    end)
+end
+
+local function setButtonState(on)
+    if on then
+        Button.Text = "Desync ON (G)"
+        Button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        circle.ImageColor3 = Color3.fromRGB(255, 0, 0)
+    else
+        Button.Text = "Desync OFF (G)"
+        Button.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+        circle.ImageColor3 = Color3.fromRGB(100, 0, 0)
+    end
+end
+
+local function activateDesync()
+    applyFlags()
+    task.wait(0.3)
+    initializeESP()
+    respawn(LocalPlayer)
+end
+
+local function deactivateDesync()
+    ESPFolder:ClearAllChildren()
+    fakePosESP = nil
+    serverPosition = nil
+end
+
+Button.MouseButton1Click:Connect(function()
+    toggled = not toggled
+    setButtonState(toggled)
+    if toggled then
+        activateDesync()
+    else
+        deactivateDesync()
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if UserInputService:GetFocusedTextBox() then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        toggled = not toggled
+        setButtonState(toggled)
+        if toggled then
+            activateDesync()
+        else
+            deactivateDesync()
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if toggled then
+        updateESP()
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    if toggled then
+        task.wait(1)
+        initializeESP()
+    end
+end)
+
+if LocalPlayer.Character then
+    setupNoWalkAnimation(LocalPlayer.Character)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    setupNoWalkAnimation(character)
+end)
+
+setButtonState(false)

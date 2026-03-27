@@ -1,0 +1,94 @@
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+    game:GetService("CoreGui").ToraScript:Destroy()
+end
+
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local win = lib:CreateWindow("Lift Everything")
+
+local trainEnabled = false
+local rebirthEnabled = false
+
+win:AddToggle({
+    text = "Fast Train",
+    callback = function(state)
+        trainEnabled = state
+        print("Fast Train ->", state)
+        if state then
+            spawn(function()
+                while trainEnabled do
+                    task.wait()
+                    pcall(function()
+                        local attach = workspace.Terrain:FindFirstChild("PointToWeightAttachment1")
+                        if not attach then return end
+
+                        local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+                        root.CFrame = CFrame.new(attach.Position) * CFrame.new(0,5,0)
+
+                        local closestWeight = nil
+                        local closestDist = 10
+
+                        for _,v in pairs(workspace.SpawnedWeights:GetDescendants()) do
+                            if v.Name == "PrimaryPart" and v.Parent and v.Parent:IsA("Model") then
+                                local dist = (v.Position - root.Position).Magnitude
+                                if dist <= closestDist then
+                                    closestDist = dist
+                                    closestWeight = v
+                                end
+                            end
+                        end
+
+                        if closestWeight then
+                            game:GetService("ReplicatedStorage").BLINK_RELIABLE_REMOTE:FireServer(
+                                buffer.fromstring("\7$\0"..closestWeight.Parent.Name),
+                                {}
+                            )
+                        end
+
+                        local start = tick()
+                        while tick() - start <= 3 do
+                            game:GetService("ReplicatedStorage").BLINK_RELIABLE_REMOTE:FireServer(
+                                buffer.fromstring("\11"),
+                                {}
+                            )
+                            task.wait(0.05)
+                        end
+
+                        attach = workspace.Terrain:FindFirstChild("PointToWeightAttachment1")
+                        if attach and (attach.Position - (oldPos or attach.Position)).Magnitude > 1 then
+                            game:GetService("ReplicatedStorage").BLINK_RELIABLE_REMOTE:FireServer(
+                                buffer.fromstring("\8\0\0\0@�K�?"),
+                                {}
+                            )
+                            oldPos = attach.Position
+                        end
+                    end)
+                end
+            end)
+        end
+    end
+})
+
+win:AddToggle({
+    text = "Auto Rebirth",
+    callback = function(state)
+        rebirthEnabled = state
+        print("Auto Rebirth ->", state)
+        if state then
+            spawn(function()
+                while rebirthEnabled do
+                    pcall(function()
+                        game:GetService("ReplicatedStorage").BLINK_RELIABLE_REMOTE:FireServer(
+                            buffer.fromstring("'\14"),
+                            {}
+                        )
+                        wait(5)
+                    end)
+                    wait()
+                end
+            end)
+        end
+    end
+})
+
+win:AddLabel({text = "YouTube: Tora IsMe"})
+lib:Init()

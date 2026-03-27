@@ -1,0 +1,42 @@
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local LocalPlayer = Players.LocalPlayer
+local existingUI = CoreGui:FindFirstChild("TigyScriptUI")
+if existingUI then
+    existingUI:Destroy()
+end
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InstaUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 340, 0, 120)
+mainFrame.Position = UDim2.new(0.5, -170, 0.5, -60) -- Centered on screen
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+local cornerRadius = Instance.new("UICorner")
+cornerRadius.CornerRadius = UDim.new(0, 16)
+cornerRadius.Parent = mainFrame
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(0, 140, 255)
+borderStroke.Thickness = 2
+borderStroke.Transparency = 0.2
+borderStroke.Parent = mainFrame
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 1, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Crusty hub\nListening for Steal..."
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 18
+statusLabel.TextColor3 = Color3.fromRGB(0, 140, 255)
+statusLabel.TextWrapped = true
+statusLabel.Parent = mainFrame
+local promptConnection = ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, playerWhoTriggered)
+    if playerWhoTriggered ~= LocalPlayer then
+        statusLabel.Text = "CRUSTY HUB\nDetected: " .. playerWhoTriggered.Name
+    end
+end)

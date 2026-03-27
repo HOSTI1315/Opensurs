@@ -1,0 +1,181 @@
+--[[ FAST SAFE VERSION – MAX SPEED WITHOUT KICK ]]--
+
+local _p = game:GetService("Players")
+local _w = game:GetService("Workspace")
+local _rs = game:GetService("RunService")
+local _lp = _p.LocalPlayer
+
+local _chr, _hrp
+local _busy = false
+local _arrived = false
+
+local _spd = 82          -- ↑ سرعة مرفوعة
+local _reach = 8
+local _cd = 0.25         
+local _wall = 2.2
+
+local F0 = Instance.new("Folder", _lp:WaitForChild("PlayerGui"))
+F0.Name = tostring(math.random(10000,99999)).."_E"
+
+local F1 = Instance.new("Folder", _w)
+F1.Name = tostring(math.random(10000,99999)).."_L"
+
+local _esp,_beam,_a0,_a1
+
+local function _num(t)
+    if not t then return 0 end
+    local n,s = t:match("%$([%d%.]+)%s*([kKmMbB]?)")
+    n = tonumber(n) or 0
+    if s then
+        s=s:lower()
+        if s=="k" then n*=1e3
+        elseif s=="m" then n*=1e6
+        elseif s=="b" then n*=1e9 end
+    end
+    return n
+end
+
+local function _mkESP(a,b,c,part)
+    if _esp then _esp:Destroy() end
+    local g = Instance.new("BillboardGui",F0)
+    g.Size = UDim2.new(0,150,0,45)
+    g.AlwaysOnTop = true
+    g.Adornee = part
+    local l=Instance.new("TextLabel",g)
+    l.BackgroundTransparency=1
+    l.RichText=true
+    l.TextColor3=Color3.new(1,1,1)
+    l.TextStrokeTransparency=0
+    l.TextSize=9
+    l.Text=string.format(
+        '<font color="rgb(255,80,80)">%s</font>\n<font color="rgb(150,255,150)">%s</font>\n<font color="rgb(255,255,120)">%s</font>',
+        a,b,c or ""
+    )
+    _esp=g
+end
+
+local function _mkBeam(t)
+    if _beam then _beam:Destroy() end
+    if _a0 then _a0:Destroy() end
+    if _a1 then _a1:Destroy() end
+    _a0=Instance.new("Attachment",_hrp)
+    _a1=Instance.new("Attachment",t)
+    local b=Instance.new("Beam",F1)
+    b.Attachment0=_a0
+    b.Attachment1=_a1
+    b.Width0=0.2
+    b.Width1=0.2
+    _beam=b
+end
+
+local function _findPet()
+    local best,v=nil,-1
+    for _,o in ipairs(_w:GetDescendants()) do
+        repeat
+            if o.Name~="AnimalOverhead" then break end
+            local p=o.Parent and o.Parent.Parent
+            if not (p and p:IsA("BasePart")) then break end
+            local gen=o:FindFirstChild("Generation")
+            if not gen then break end
+            local val=_num(gen.Text)
+            if val>v then
+                v=val
+                best={
+                    part=p,
+                    info=gen.Text,
+                    name=(o:FindFirstChild("DisplayName") and o.DisplayName.Text) or "",
+                    mutation=(o:FindFirstChild("Mutation") and o.Mutation.Text) or "",
+                }
+            end
+        until true
+    end
+    return best
+end
+
+local function _findHook()
+    for _,loc in ipairs({_chr,_lp.Backpack}) do
+        if loc then
+            for _,t in ipairs(loc:GetChildren()) do
+                local n=t.Name:lower()
+                if t:IsA("Tool") and (n:find("grap") or n:find("hook")) then
+                    return t
+                end
+            end
+        end
+    end
+end
+
+local function _use(t)
+    pcall(function()
+        t.Parent=_chr
+        task.wait(0.03)
+        t:Activate()
+    end)
+end
+
+local function _blocked(trg)
+    local d=trg.Position - _hrp.Position
+    local h=_w:FindPartOnRay(Ray.new(_hrp.Position, d.Unit*_wall), _chr)
+    return h and h.CanCollide
+end
+
+local function _pull(v)
+    local d=v - _hrp.Position
+    if d.Magnitude<1 then return end
+    local bv=Instance.new("BodyVelocity")
+    bv.MaxForce=Vector3.new(8e4,8e4,8e4)
+    bv.Velocity=d.Unit*_spd
+    bv.Parent=_hrp
+    game.Debris:AddItem(bv,0.12)
+end
+
+local function _go(part)
+    if _busy or _arrived then return end
+    _busy=true
+
+    task.spawn(function()
+        local hook=_findHook()
+        local last=0
+
+        while _busy do
+            if not part or not part.Parent then break end
+            local dist=(part.Position-_hrp.Position).Magnitude
+            if dist <= _reach then break end
+            if _blocked(part) then break end
+
+            if hook and tick()-last > _cd then
+                _use(hook)
+                last = tick()
+            end
+
+            _pull(part.Position)
+            _rs.Stepped:Wait()
+        end
+
+        _busy=false
+        _arrived=true
+    end)
+end
+
+local function _init(c)
+    _chr=c
+    _hrp=c:WaitForChild("HumanoidRootPart")
+    _arrived=false
+end
+
+_lp.CharacterAdded:Connect(_init)
+if _lp.Character then _init(_lp.Character) end
+
+task.spawn(function()
+    while true do
+        if _chr and _hrp and not _arrived then
+            local p=_findPet()
+            if p then
+                _mkESP(p.name,p.info,p.mutation,p.part)
+                _mkBeam(p.part)
+                _go(p.part)
+            end
+        end
+        task.wait(0.14) -- سرعة مرفوعة
+    end
+end)

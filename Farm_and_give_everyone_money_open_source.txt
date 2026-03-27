@@ -1,0 +1,15 @@
+local replicated_storage = game:GetService("ReplicatedStorage")
+local remotes = replicated_storage.Remotes
+
+getgenv().a = not getgenv().a
+if (getgenv().a) then
+    repeat
+        for _, v in game:GetService("Players"):GetPlayers() do
+            local user_id = v.UserId
+            remotes.ObbyState:FireServer("Enter",user_id)
+            remotes.RunFinished:FireServer(user_id)
+            task.wait()
+        end
+        task.wait()
+    until (not getgenv().a)
+end

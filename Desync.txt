@@ -1,0 +1,42 @@
+local player = game.Players.LocalPlayer
+local screenGui = player:WaitForChild("PlayerGui"):FindFirstChild("ScreenGui")
+
+if not screenGui then
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "RespawnGui"
+    screenGui.Parent = player.PlayerGui
+end
+
+local button = Instance.new("TextButton")
+button.Name = "RespawnButton"
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0, 20)
+button.AnchorPoint = Vector2.new(0.5, 0)
+button.Text = "RESPAWN"
+button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 14
+button.Parent = screenGui
+
+button.MouseButton1Click:Connect(function()
+    button.Text = "RESPAWNING..."
+    button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    button.AutoButtonColor = false
+    
+    setfflag("NextGenReplicatorEnabledWrite4", "false")
+    task.wait(0.1)
+    setfflag("NextGenReplicatorEnabledWrite4", "true")
+    
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 999999, 0)
+    end
+    
+    task.wait(1)
+    player:LoadCharacter()
+    
+    task.wait(1)
+    button.Text = "RESPAWN"
+    button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    button.AutoButtonColor = true
+end)

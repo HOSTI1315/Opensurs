@@ -1,0 +1,74 @@
+-- LocalScript in StarterPlayerScripts
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "FlingGui"
+gui.ResetOnSpawn = false -- Prevent GUI from resetting on player respawn
+gui.Parent = Players.LocalPlayer.PlayerGui
+
+-- Create draggable button
+local flingButton = Instance.new("TextButton")
+flingButton.Size = UDim2.new(0, 100, 0, 50)
+flingButton.Position = UDim2.new(0.5, -50, 0.5, -25)
+flingButton.Text = "Fling Me!"
+flingButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+flingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+flingButton.Parent = gui
+
+-- Add rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = flingButton
+
+-- Dragging variables
+local isDragging = false
+local lastMousePos = nil
+local clickStartTime = 0
+local dragThreshold = 0.2 -- Time (seconds) to differentiate click vs drag
+
+-- Fling function (client-side, less secure)
+local function triggerFling()
+    local character = Players.LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = character.HumanoidRootPart
+        local flingDistance = 50
+        local flingForce = 300 -- Reduced for controlled speed
+        local direction = humanoidRootPart.CFrame.LookVector * flingDistance
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bodyVelocity.Velocity = direction.Unit * flingForce -- Normalized for consistent speed
+        bodyVelocity.Parent = humanoidRootPart
+        game:GetService("Debris"):AddItem(bodyVelocity, 0.2)
+    end
+end
+
+-- Handle input
+flingButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        clickStartTime = tick()
+        isDragging = true
+        lastMousePos = input.UserInputType == Enum.UserInputType.Touch and input.Position or UserInputService:GetMouseLocation()
+    end
+end)
+
+flingButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if tick() - clickStartTime < dragThreshold then
+            triggerFling() -- Short click triggers fling
+        end
+        isDragging = false
+        clickStartTime = 0
+    end
+end)
+
+-- Handle dragging movement
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local currentMousePos = input.UserInputType == Enum.UserInputType.Touch and input.Position or UserInputService:GetMouseLocation()
+        local delta = currentMousePos - lastMousePos
+        flingButton.Position = flingButton.Position + UDim2.new(0, delta.X, 0, delta.Y)
+        lastMousePos = currentMousePos
+    end
+end)

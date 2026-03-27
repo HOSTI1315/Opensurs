@@ -1,0 +1,810 @@
+
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local config = {
+    autoJoinEnabled = false,
+    checkInterval = 0.5,
+    maxPlayersThreshold = 7,
+    mutationFilters = {
+        Normal = true,
+        Shiny = true,
+        Rainbow = true,
+    },
+    brainrotSelection = {},
+    joinedServers = {},
+    prices = {
+        Normal = 0,
+        Shiny = 500,
+        Rainbow = 2500,
+    },
+    lastUpdate = 0,
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SABJoiner"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = PlayerGui
+
+local screenSize = ScreenGui.AbsoluteSize
+local isMobile = screenSize.X < 800 or screenSize.Y < 600
+local mainFrameSize = isMobile and UDim2.new(0.92, 0, 0.7, 0) or UDim2.new(0, 900, 0, 650)
+local mainFramePos = isMobile and UDim2.new(0.04, 0, 0.15, 0) or UDim2.new(0.5, -450, 0.5, -325)
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = mainFrameSize
+MainFrame.Position = mainFramePos
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(60, 60, 70)
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Size = isMobile and UDim2.new(1, 0, 0, 45) or UDim2.new(1, 0, 0, 60)
+Header.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Header.BorderSizePixel = 0
+Header.Parent = MainFrame
+
+local dragging = false
+local dragStart = nil
+local frameStart = nil
+
+Header.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        frameStart = MainFrame.Position
+    end
+end)
+
+Header.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+Header.InputChanged:Connect(function(input)
+    if dragging and dragStart and frameStart then
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            MainFrame.Position = frameStart + UDim2.new(0, delta.X, 0, delta.Y)
+        end
+    end
+end)
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = Header
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Size = isMobile and UDim2.new(0.6, 0, 1, 0) or UDim2.new(0, 300, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = isMobile and "SAB" or "SAB Auto Joiner"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 100, 150)
+TitleLabel.TextSize = isMobile and 14 or 20
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = Header
+
+local MinButton = Instance.new("ImageButton")
+MinButton.Name = "MinButton"
+MinButton.Size = isMobile and UDim2.new(0, 22, 0, 22) or UDim2.new(0, 25, 0, 25)
+MinButton.Position = isMobile and UDim2.new(1, -55, 0.5, -11) or UDim2.new(1, -65, 0, 17)
+MinButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+MinButton.BorderSizePixel = 0
+MinButton.Image = "rbxassetid://10746932896"
+MinButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+MinButton.Parent = Header
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 5)
+MinCorner.Parent = MinButton
+
+local RestoreButton = Instance.new("TextButton")
+RestoreButton.Name = "RestoreButton"
+RestoreButton.Size = isMobile and UDim2.new(0, 80, 0, 35) or UDim2.new(0, 120, 0, 50)
+RestoreButton.Position = isMobile and UDim2.new(0.5, -40, 0, 40) or UDim2.new(0.5, -60, 0.5, -25)
+RestoreButton.BackgroundColor3 = Color3.fromRGB(255, 100, 150)
+RestoreButton.BorderSizePixel = 0
+RestoreButton.Text = "SAB"
+RestoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RestoreButton.TextSize = isMobile and 12 or 14
+RestoreButton.Font = Enum.Font.GothamBold
+RestoreButton.Visible = false
+RestoreButton.Parent = ScreenGui
+
+local RestoreCorner = Instance.new("UICorner")
+RestoreCorner.CornerRadius = UDim.new(0, 10)
+RestoreCorner.Parent = RestoreButton
+
+local RestoreStroke = Instance.new("UIStroke")
+RestoreStroke.Color = Color3.fromRGB(200, 70, 120)
+RestoreStroke.Thickness = 2
+RestoreStroke.Parent = RestoreButton
+
+local restoreDragging = false
+local restoreDragStart = nil
+local restoreFrameStart = nil
+
+RestoreButton.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        restoreDragging = true
+        restoreDragStart = input.Position
+        restoreFrameStart = RestoreButton.Position
+    end
+end)
+
+RestoreButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        restoreDragging = false
+    end
+end)
+
+RestoreButton.InputChanged:Connect(function(input)
+    if restoreDragging and restoreDragStart and restoreFrameStart then
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - restoreDragStart
+            RestoreButton.Position = restoreFrameStart + UDim2.new(0, delta.X, 0, delta.Y)
+        end
+    end
+end)
+
+local isMinimized = false
+MinButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    MainFrame.Visible = not isMinimized
+    RestoreButton.Visible = isMinimized
+end)
+
+RestoreButton.MouseButton1Click:Connect(function()
+    isMinimized = false
+    MainFrame.Visible = true
+    RestoreButton.Visible = false
+end)
+
+local CloseButton = Instance.new("ImageButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = isMobile and UDim2.new(0, 22, 0, 22) or UDim2.new(0, 25, 0, 25)
+CloseButton.Position = isMobile and UDim2.new(1, -28, 0.5, -11) or UDim2.new(1, -35, 0, 17)
+CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Image = "rbxassetid://10747384394"
+CloseButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+CloseButton.Parent = Header
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 5)
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local SettingsPanel = Instance.new("Frame")
+SettingsPanel.Name = "SettingsPanel"
+SettingsPanel.Size = isMobile and UDim2.new(0.35, 0, 1, -45) or UDim2.new(0, 200, 1, -60)
+SettingsPanel.Position = isMobile and UDim2.new(0, 0, 0, 45) or UDim2.new(0, 0, 0, 60)
+SettingsPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 23)
+SettingsPanel.BorderSizePixel = 0
+SettingsPanel.Parent = MainFrame
+
+local SettingsPadding = Instance.new("UIPadding")
+SettingsPadding.PaddingTop = UDim.new(0, 10)
+SettingsPadding.PaddingLeft = UDim.new(0, 10)
+SettingsPadding.PaddingRight = UDim.new(0, 10)
+SettingsPadding.PaddingBottom = UDim.new(0, 10)
+SettingsPadding.Parent = SettingsPanel
+
+local SettingsLayout = Instance.new("UIListLayout")
+SettingsLayout.FillDirection = Enum.FillDirection.Vertical
+SettingsLayout.Padding = UDim.new(0, 8)
+SettingsLayout.Parent = SettingsPanel
+
+local SettingsTitle = Instance.new("TextLabel")
+SettingsTitle.Name = "SettingsTitle"
+SettingsTitle.Size = UDim2.new(1, 0, 0, 25)
+SettingsTitle.BackgroundTransparency = 1
+SettingsTitle.Text = "Settings"
+SettingsTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+SettingsTitle.TextSize = 14
+SettingsTitle.Font = Enum.Font.GothamBold
+SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
+SettingsTitle.Parent = SettingsPanel
+
+local AutoJoinFrame = Instance.new("Frame")
+AutoJoinFrame.Name = "AutoJoinFrame"
+AutoJoinFrame.Size = UDim2.new(1, 0, 0, 30)
+AutoJoinFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+AutoJoinFrame.BorderSizePixel = 0
+AutoJoinFrame.Parent = SettingsPanel
+
+local AutoJoinCorner = Instance.new("UICorner")
+AutoJoinCorner.CornerRadius = UDim.new(0, 6)
+AutoJoinCorner.Parent = AutoJoinFrame
+
+local AutoJoinLabel = Instance.new("TextLabel")
+AutoJoinLabel.Size = UDim2.new(1, -40, 1, 0)
+AutoJoinLabel.BackgroundTransparency = 1
+AutoJoinLabel.Text = "Auto Join"
+AutoJoinLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+AutoJoinLabel.TextSize = 12
+AutoJoinLabel.Font = Enum.Font.Gotham
+AutoJoinLabel.TextXAlignment = Enum.TextXAlignment.Left
+AutoJoinLabel.Parent = AutoJoinFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "Toggle"
+ToggleButton.Size = UDim2.new(0, 30, 0, 16)
+ToggleButton.Position = UDim2.new(1, -35, 0.5, -8)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 110)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = ""
+ToggleButton.Parent = AutoJoinFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleButton
+
+local ToggleDot = Instance.new("Frame")
+ToggleDot.Size = UDim2.new(0, 12, 0, 12)
+ToggleDot.Position = UDim2.new(0, 2, 0.5, -6)
+ToggleDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ToggleDot.BorderSizePixel = 0
+ToggleDot.Parent = ToggleButton
+
+local DotCorner = Instance.new("UICorner")
+DotCorner.CornerRadius = UDim.new(0, 6)
+DotCorner.Parent = ToggleDot
+
+local function updateToggle(state)
+    config.autoJoinEnabled = state
+    ToggleButton.BackgroundColor3 = state and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(100, 100, 110)
+    local newPos = state and UDim2.new(0, 16, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+    ToggleDot:TweenPosition(newPos, Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.2, true)
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    updateToggle(not config.autoJoinEnabled)
+end)
+
+local BrainrotsTitle = Instance.new("TextLabel")
+BrainrotsTitle.Size = UDim2.new(1, 0, 0, 22)
+BrainrotsTitle.BackgroundTransparency = 1
+BrainrotsTitle.Text = "🐛 Target Brainrots"
+BrainrotsTitle.TextColor3 = Color3.fromRGB(150, 200, 255)
+BrainrotsTitle.TextSize = 11
+BrainrotsTitle.Font = Enum.Font.GothamBold
+BrainrotsTitle.TextXAlignment = Enum.TextXAlignment.Left
+BrainrotsTitle.Parent = SettingsPanel
+
+local BrainrotsFrame = Instance.new("Frame")
+BrainrotsFrame.Name = "BrainrotsFrame"
+BrainrotsFrame.Size = UDim2.new(1, 0, 0, 100)
+BrainrotsFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+BrainrotsFrame.BorderSizePixel = 0
+BrainrotsFrame.Parent = SettingsPanel
+
+local BrainrotsCorner = Instance.new("UICorner")
+BrainrotsCorner.CornerRadius = UDim.new(0, 6)
+BrainrotsCorner.Parent = BrainrotsFrame
+
+local BrainrotsScroll = Instance.new("ScrollingFrame")
+BrainrotsScroll.Name = "BrainrotsScroll"
+BrainrotsScroll.Size = UDim2.new(1, 0, 1, 0)
+BrainrotsScroll.CanvasSize = UDim2.new(1, 0, 0, 0)
+BrainrotsScroll.BackgroundTransparency = 1
+BrainrotsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+BrainrotsScroll.BorderSizePixel = 0
+BrainrotsScroll.Parent = BrainrotsFrame
+
+local BrainrotsLayout = Instance.new("UIListLayout")
+BrainrotsLayout.FillDirection = Enum.FillDirection.Vertical
+BrainrotsLayout.Padding = UDim.new(0, 2)
+BrainrotsLayout.Parent = BrainrotsScroll
+
+local ScrollPadding = Instance.new("UIPadding")
+ScrollPadding.PaddingTop = UDim.new(0, 6)
+ScrollPadding.PaddingLeft = UDim.new(0, 6)
+ScrollPadding.PaddingRight = UDim.new(0, 6)
+ScrollPadding.PaddingBottom = UDim.new(0, 6)
+ScrollPadding.Parent = BrainrotsScroll
+
+local function addBrainrotCheckbox(brainrotName)
+    if config.brainrotSelection[brainrotName] ~= nil then
+        return
+    end
+    
+    config.brainrotSelection[brainrotName] = true
+    
+    local FilterFrame = Instance.new("Frame")
+    FilterFrame.Size = UDim2.new(1, 0, 0, 20)
+    FilterFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    FilterFrame.BorderSizePixel = 0
+    FilterFrame.Parent = BrainrotsScroll
+    
+    local FilterCorner = Instance.new("UICorner")
+    FilterCorner.CornerRadius = UDim.new(0, 4)
+    FilterCorner.Parent = FilterFrame
+    
+    local FilterLabel = Instance.new("TextLabel")
+    FilterLabel.Size = UDim2.new(1, -22, 1, 0)
+    FilterLabel.BackgroundTransparency = 1
+    FilterLabel.Text = brainrotName:sub(1, 14)
+    FilterLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    FilterLabel.TextSize = 9
+    FilterLabel.Font = Enum.Font.Gotham
+    FilterLabel.TextXAlignment = Enum.TextXAlignment.Left
+    FilterLabel.Parent = FilterFrame
+    
+    local CheckBox = Instance.new("TextButton")
+    CheckBox.Size = UDim2.new(0, 14, 0, 14)
+    CheckBox.Position = UDim2.new(1, -16, 0.5, -7)
+    CheckBox.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+    CheckBox.BorderSizePixel = 0
+    CheckBox.Text = "✓"
+    CheckBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CheckBox.TextSize = 9
+    CheckBox.Font = Enum.Font.GothamBold
+    CheckBox.Parent = FilterFrame
+    
+    local CheckCorner = Instance.new("UICorner")
+    CheckCorner.CornerRadius = UDim.new(0, 3)
+    CheckCorner.Parent = CheckBox
+    
+    CheckBox.MouseButton1Click:Connect(function()
+        config.brainrotSelection[brainrotName] = not config.brainrotSelection[brainrotName]
+        CheckBox.BackgroundColor3 = config.brainrotSelection[brainrotName] and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(60, 60, 70)
+    end)
+    
+    BrainrotsScroll.CanvasSize = UDim2.new(1, 0, 0, BrainrotsLayout.AbsoluteContentSize.Y + 12)
+end
+
+local PricesTitle = Instance.new("TextLabel")
+PricesTitle.Size = UDim2.new(1, 0, 0, 25)
+PricesTitle.BackgroundTransparency = 1
+PricesTitle.Text = "💰 Prices"
+PricesTitle.TextColor3 = Color3.fromRGB(255, 200, 100)
+PricesTitle.TextSize = 14
+PricesTitle.Font = Enum.Font.GothamBold
+PricesTitle.TextXAlignment = Enum.TextXAlignment.Left
+PricesTitle.Parent = SettingsPanel
+
+for mutation, price in pairs(config.prices) do
+    local PriceFrame = Instance.new("Frame")
+    PriceFrame.Size = UDim2.new(1, 0, 0, 28)
+    PriceFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    PriceFrame.BorderSizePixel = 0
+    PriceFrame.Parent = SettingsPanel
+
+    local PriceCorner = Instance.new("UICorner")
+    PriceCorner.CornerRadius = UDim.new(0, 6)
+    PriceCorner.Parent = PriceFrame
+
+    local MutationNameLabel = Instance.new("TextLabel")
+    MutationNameLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    MutationNameLabel.BackgroundTransparency = 1
+    MutationNameLabel.Text = mutation
+    MutationNameLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    MutationNameLabel.TextSize = 11
+    MutationNameLabel.Font = Enum.Font.Gotham
+    MutationNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MutationNameLabel.Parent = PriceFrame
+
+    local PriceValueLabel = Instance.new("TextLabel")
+    PriceValueLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    PriceValueLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    PriceValueLabel.BackgroundTransparency = 1
+    PriceValueLabel.Text = "💵 " .. tostring(price)
+    PriceValueLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
+    PriceValueLabel.TextSize = 11
+    PriceValueLabel.Font = Enum.Font.GothamBold
+    PriceValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    PriceValueLabel.Parent = PriceFrame
+end
+
+local ServersPanel = Instance.new("Frame")
+ServersPanel.Name = "ServersPanel"
+ServersPanel.Size = isMobile and UDim2.new(0.65, 0, 1, -45) or UDim2.new(1, -200, 1, -60)
+ServersPanel.Position = isMobile and UDim2.new(0.35, 0, 0, 45) or UDim2.new(0, 200, 0, 60)
+ServersPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ServersPanel.BorderSizePixel = 0
+ServersPanel.Parent = MainFrame
+
+local FilterBar = Instance.new("Frame")
+FilterBar.Name = "FilterBar"
+FilterBar.Size = isMobile and UDim2.new(1, 0, 0, 35) or UDim2.new(1, 0, 0, 50)
+FilterBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+FilterBar.BorderSizePixel = 0
+FilterBar.Parent = ServersPanel
+
+local FilterBarCorner = Instance.new("UICorner")
+FilterBarCorner.CornerRadius = UDim.new(0, 8)
+FilterBarCorner.Parent = FilterBar
+
+local FilterBarPadding = Instance.new("UIPadding")
+FilterBarPadding.PaddingLeft = UDim.new(0, 8)
+FilterBarPadding.PaddingRight = UDim.new(0, 8)
+FilterBarPadding.PaddingTop = UDim.new(0, 5)
+FilterBarPadding.PaddingBottom = UDim.new(0, 5)
+FilterBarPadding.Parent = FilterBar
+
+local SearchBox = Instance.new("TextBox")
+SearchBox.Name = "SearchBox"
+SearchBox.Size = isMobile and UDim2.new(0.45, 0, 0, 22) or UDim2.new(0, 120, 0, 30)
+SearchBox.Position = isMobile and UDim2.new(0, 3, 0, 6) or UDim2.new(0, 5, 0, 10)
+SearchBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SearchBox.BorderSizePixel = 0
+SearchBox.Text = ""
+SearchBox.PlaceholderText = isMobile and "Search..." or "Search pets..."
+SearchBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBox.TextSize = isMobile and 9 or 11
+SearchBox.Font = Enum.Font.Gotham
+SearchBox.Parent = FilterBar
+
+local SearchBoxCorner = Instance.new("UICorner")
+SearchBoxCorner.CornerRadius = UDim.new(0, 5)
+SearchBoxCorner.Parent = SearchBox
+
+local MoneyFilterLabel = Instance.new("TextLabel")
+MoneyFilterLabel.Size = isMobile and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 50, 0, 30)
+MoneyFilterLabel.Position = isMobile and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 130, 0, 10)
+MoneyFilterLabel.BackgroundTransparency = 1
+MoneyFilterLabel.Text = "💰 Filter:"
+MoneyFilterLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+MoneyFilterLabel.TextSize = 10
+MoneyFilterLabel.Font = Enum.Font.GothamBold
+MoneyFilterLabel.TextXAlignment = Enum.TextXAlignment.Center
+MoneyFilterLabel.Visible = not isMobile
+MoneyFilterLabel.Parent = FilterBar
+
+local MoneyFilterDropdown = Instance.new("TextButton")
+MoneyFilterDropdown.Name = "MoneyFilter"
+MoneyFilterDropdown.Size = isMobile and UDim2.new(0.45, 0, 0, 22) or UDim2.new(0, 70, 0, 30)
+MoneyFilterDropdown.Position = isMobile and UDim2.new(0.5, 0, 0, 6) or UDim2.new(0, 180, 0, 10)
+MoneyFilterDropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MoneyFilterDropdown.BorderSizePixel = 0
+MoneyFilterDropdown.Text = "All"
+MoneyFilterDropdown.TextColor3 = Color3.fromRGB(200, 200, 200)
+MoneyFilterDropdown.TextSize = isMobile and 9 or 11
+MoneyFilterDropdown.Font = Enum.Font.GothamBold
+MoneyFilterDropdown.Parent = FilterBar
+
+local MoneyFilterCorner = Instance.new("UICorner")
+MoneyFilterCorner.CornerRadius = UDim.new(0, 5)
+MoneyFilterCorner.Parent = MoneyFilterDropdown
+
+local filterConfig = {
+    moneyFilter = "All",
+    searchText = ""
+}
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    filterConfig.searchText = SearchBox.Text
+end)
+
+MoneyFilterDropdown.MouseButton1Click:Connect(function()
+    local options = {"All", "1M+", "5M+", "10M+"}
+    local currentIdx = table.find(options, MoneyFilterDropdown.Text) or 1
+    currentIdx = currentIdx % #options + 1
+    MoneyFilterDropdown.Text = options[currentIdx]
+    filterConfig.moneyFilter = options[currentIdx]
+end)
+
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Name = "ScrollFrame"
+ScrollFrame.Size = UDim2.new(1, 0, 1, -50)
+ScrollFrame.Position = UDim2.new(0, 0, 0, 50)
+ScrollFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.Parent = ServersPanel
+
+local ScrollLayout = Instance.new("UIListLayout")
+ScrollLayout.FillDirection = Enum.FillDirection.Vertical
+ScrollLayout.Padding = UDim.new(0, 8)
+ScrollLayout.Parent = ScrollFrame
+
+local ScrollPadding = Instance.new("UIPadding")
+ScrollPadding.PaddingTop = UDim.new(0, 10)
+ScrollPadding.PaddingLeft = UDim.new(0, 10)
+ScrollPadding.PaddingRight = UDim.new(0, 10)
+ScrollPadding.PaddingBottom = UDim.new(0, 10)
+ScrollPadding.Parent = ScrollFrame
+
+local function parsePlayerCount(playerStr)
+    local current, max = string.match(playerStr or "0/8", "(%d+)/(%d+)")
+    return tonumber(current) or 0, tonumber(max) or 8
+end
+
+local function createServerButton(pet)
+    local ServerButton = Instance.new("Frame")
+    ServerButton.Size = isMobile and UDim2.new(1, 0, 0, 55) or UDim2.new(1, 0, 0, 70)
+    ServerButton.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    ServerButton.BorderSizePixel = 0
+    ServerButton.Parent = ScrollFrame
+
+    local ServerCorner = Instance.new("UICorner")
+    ServerCorner.CornerRadius = UDim.new(0, 6)
+    ServerCorner.Parent = ServerButton
+
+    local ServerStroke = Instance.new("UIStroke")
+    ServerStroke.Color = Color3.fromRGB(50, 50, 60)
+    ServerStroke.Thickness = 1
+    ServerStroke.Parent = ServerButton
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = isMobile and UDim2.new(0.55, 0, 0, 18) or UDim2.new(0.6, 0, 0, 25)
+    NameLabel.Position = UDim2.new(0, 6, 0, 4)
+    NameLabel.BackgroundTransparency = 1
+    local displayName = pet.name or "Unknown"
+    if isMobile and #displayName > 12 then
+        displayName = displayName:sub(1, 10) .. ".."
+    end
+    NameLabel.Text = displayName
+    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.TextSize = isMobile and 10 or 13
+    NameLabel.Font = Enum.Font.GothamBold
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NameLabel.Parent = ServerButton
+
+    local current, max = parsePlayerCount(pet.players)
+    local PlayerLabel = Instance.new("TextLabel")
+    PlayerLabel.Size = isMobile and UDim2.new(0.4, 0, 0, 14) or UDim2.new(0.3, 0, 0, 20)
+    PlayerLabel.Position = isMobile and UDim2.new(0.55, 0, 0, 5) or UDim2.new(0.65, 0, 0, 10)
+    PlayerLabel.BackgroundTransparency = 1
+    PlayerLabel.Text = isMobile and string.format("%d/%d", current, max) or string.format("Players: %d/%d", current, max)
+    PlayerLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    PlayerLabel.TextSize = isMobile and 8 or 11
+    PlayerLabel.Font = Enum.Font.Gotham
+    PlayerLabel.TextXAlignment = Enum.TextXAlignment.Left
+    PlayerLabel.Parent = ServerButton
+
+    local moneyPerSec = tonumber(pet.money_per_sec) or 0
+    local MoneyLabel = Instance.new("TextLabel")
+    MoneyLabel.Size = isMobile and UDim2.new(0.4, 0, 0, 14) or UDim2.new(0.3, 0, 0, 20)
+    MoneyLabel.Position = isMobile and UDim2.new(0.55, 0, 0, 18) or UDim2.new(0.65, 0, 0, 30)
+    MoneyLabel.BackgroundTransparency = 1
+    MoneyLabel.Text = isMobile and string.format("$%s/s", pet.money_per_sec or "0") or string.format("💰 %s/sec", pet.money_per_sec or "0")
+    MoneyLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    MoneyLabel.TextSize = isMobile and 8 or 11
+    MoneyLabel.Font = Enum.Font.Gotham
+    MoneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MoneyLabel.Parent = ServerButton
+
+    local price = config.prices[pet.mutation or "Normal"] or 0
+    local MutationBadge = Instance.new("Frame")
+    MutationBadge.Size = isMobile and UDim2.new(0.6, 0, 0, 18) or UDim2.new(0, 150, 0, 24)
+    MutationBadge.Position = isMobile and UDim2.new(0, 6, 0, 24) or UDim2.new(0, 10, 0, 35)
+    MutationBadge.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    MutationBadge.BorderSizePixel = 0
+    MutationBadge.Parent = ServerButton
+
+    local BadgeCorner = Instance.new("UICorner")
+    BadgeCorner.CornerRadius = UDim.new(0, 4)
+    BadgeCorner.Parent = MutationBadge
+
+    local MutationLabel = Instance.new("TextLabel")
+    MutationLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    MutationLabel.BackgroundTransparency = 1
+    MutationLabel.Text = pet.mutation or "Normal"
+    MutationLabel.TextColor3 = Color3.fromRGB(100, 200, 150)
+    MutationLabel.TextSize = isMobile and 8 or 11
+    MutationLabel.Font = Enum.Font.GothamBold
+    MutationLabel.TextXAlignment = Enum.TextXAlignment.Center
+    MutationLabel.Parent = MutationBadge
+
+    local PriceLabel = Instance.new("TextLabel")
+    PriceLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    PriceLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    PriceLabel.BackgroundTransparency = 1
+    PriceLabel.Text = string.format("$%d", price)
+    PriceLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    PriceLabel.TextSize = isMobile and 8 or 11
+    PriceLabel.Font = Enum.Font.GothamBold
+    PriceLabel.TextXAlignment = Enum.TextXAlignment.Center
+    PriceLabel.Parent = MutationBadge
+
+    local JoinButton = Instance.new("TextButton")
+    JoinButton.Size = isMobile and UDim2.new(0, 45, 0, 22) or UDim2.new(0, 80, 0, 30)
+    JoinButton.Position = isMobile and UDim2.new(1, -50, 0.5, -11) or UDim2.new(1, -90, 0, 20)
+    JoinButton.BackgroundColor3 = Color3.fromRGB(100, 150, 200)
+    JoinButton.BorderSizePixel = 0
+    JoinButton.Text = isMobile and "GO" or "JOIN"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = isMobile and 9 or 12
+    JoinButton.Font = Enum.Font.GothamBold
+    JoinButton.Parent = ServerButton
+
+    local JoinCorner = Instance.new("UICorner")
+    JoinCorner.CornerRadius = UDim.new(0, 6)
+    JoinCorner.Parent = JoinButton
+
+    JoinButton.MouseButton1Click:Connect(function()
+        if pet.placeId and pet.jobId then
+            config.joinedServers[pet.jobId] = true
+            JoinButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            JoinButton.Text = "JOINING..."
+            pcall(function()
+                TeleportService:TeleportToPlaceInstance(tonumber(pet.placeId), pet.jobId, LocalPlayer)
+            end)
+        end
+    end)
+
+    JoinButton.MouseEnter:Connect(function()
+        JoinButton:TweenSize(UDim2.new(0, 85, 0, 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+
+    JoinButton.MouseLeave:Connect(function()
+        JoinButton:TweenSize(UDim2.new(0, 80, 0, 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+
+    return ServerButton
+end
+
+local function httpRequest(options)
+    local request = syn and syn.request or (http and http.request) or http_request or httprequest or (fluxus and fluxus.request)
+
+    if request then
+        return request(options)
+    end
+
+    local success, response = pcall(function()
+        return HttpService:RequestAsync(options)
+    end)
+
+    if success and response then
+        return response
+    end
+
+    return nil
+end
+
+local function getRecentPets()
+    local response = httpRequest({
+        Url = "https://ere-github-io.onrender.com/recent-pets",
+        Method = "GET"
+    })
+
+    if not response then
+        warn("Failed to fetch recent pets - no response")
+        return {}
+    end
+
+    local decoded
+    local decodeSuccess, decodeError = pcall(function()
+        local body = type(response) == "string" and response or response.Body
+        decoded = HttpService:JSONDecode(body or "{}")
+    end)
+
+    if not decodeSuccess or not decoded then
+        warn("Failed to decode pets JSON: " .. tostring(decodeError))
+        return {}
+    end
+
+    return decoded
+end
+
+local function refreshServers()
+    local response = httpRequest({
+        Url = "https://ere-github-io.onrender.com/recent-pets",
+        Method = "GET"
+    })
+
+    if not response then
+        print("[ERROR] Failed to fetch servers: No response")
+        return
+    end
+
+    local servers
+    local decodeSuccess, decodeError = pcall(function()
+        local body = type(response) == "string" and response or response.Body
+        servers = HttpService:JSONDecode(body or "{}")
+    end)
+
+    if not decodeSuccess then
+        print("[ERROR] Failed to decode JSON: " .. tostring(decodeError))
+        return
+    end
+
+    if not servers or type(servers) ~= "table" then
+        print("[WARNING] Invalid server response: " .. tostring(servers))
+        return
+    end
+
+    for _, child in ipairs(ScrollFrame:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+
+    local serverCount = 0
+    for _, pet in ipairs(servers) do
+        if pet.name then
+            addBrainrotCheckbox(pet.name)
+        end
+        
+        local passesFilter = true
+        
+        if filterConfig.moneyFilter ~= "All" then
+            local moneyValue = tonumber(pet.money_per_sec) or 0
+            if filterConfig.moneyFilter == "1M+" and moneyValue < 1000000 then
+                passesFilter = false
+            elseif filterConfig.moneyFilter == "5M+" and moneyValue < 5000000 then
+                passesFilter = false
+            elseif filterConfig.moneyFilter == "10M+" and moneyValue < 10000000 then
+                passesFilter = false
+            end
+        end
+        
+        if filterConfig.searchText ~= "" then
+            local petName = string.lower(pet.name or "Unknown")
+            if not string.find(petName, string.lower(filterConfig.searchText)) then
+                passesFilter = false
+            end
+        end
+        
+        local brainrotSelected = (pet.name and config.brainrotSelection[pet.name]) or false
+        if config.mutationFilters[pet.mutation or "Normal"] and brainrotSelected and passesFilter then
+            local current, max = parsePlayerCount(pet.players)
+            if current <= config.maxPlayersThreshold and not config.joinedServers[pet.jobId] then
+                createServerButton(pet)
+                serverCount = serverCount + 1
+
+                if config.autoJoinEnabled then
+                    task.wait(0.5)
+                    local joinBtn = ScrollFrame:FindFirstChildOfClass("Frame", true)
+                    if joinBtn then
+                        config.joinedServers[pet.jobId] = true
+                        pcall(function()
+                            TeleportService:TeleportToPlaceInstance(tonumber(pet.placeId), pet.jobId, LocalPlayer)
+                        end)
+                    end
+                end
+            end
+        end
+    end
+
+    if serverCount == 0 then
+        local NoServersLabel = Instance.new("TextLabel")
+        NoServersLabel.Size = UDim2.new(1, 0, 0, 40)
+        NoServersLabel.BackgroundTransparency = 1
+        NoServersLabel.Text = "No servers available"
+        NoServersLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        NoServersLabel.TextSize = 14
+        NoServersLabel.Font = Enum.Font.Gotham
+        NoServersLabel.Parent = ScrollFrame
+    end
+
+    ScrollFrame.CanvasSize = UDim2.new(1, 0, 0, ScrollLayout.AbsoluteContentSize.Y + 20)
+    print("[INFO] Refreshed servers - Found " .. serverCount .. " available")
+end
+
+task.spawn(function()
+    while ScreenGui.Parent do
+        refreshServers()
+        task.wait(config.checkInterval)
+    end
+end)
+
+refreshServers()

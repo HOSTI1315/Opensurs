@@ -1,0 +1,315 @@
+pcall(function()
+
+    game.CoreGui:FindFirstChild("UCT_UI"):Destroy()
+
+end)
+
+local Players = game:GetService("Players")
+
+local RunService = game:GetService("RunService")
+
+local UserInputService = game:GetService("UserInputService")
+
+local Workspace = game:GetService("Workspace")
+
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+gui.Name = "UCT_UI"
+
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame", gui)
+
+main.Size = UDim2.new(0, 260, 0, 280)
+
+main.Position = UDim2.new(1, -280, 0, 120)
+
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+
+main.BorderSizePixel = 0
+
+main.Active = true
+
+main.Draggable = true
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
+
+local stroke = Instance.new("UIStroke", main)
+
+stroke.Color = Color3.fromRGB(255, 50, 50)
+
+stroke.Thickness = 2
+
+-- Título con RGB
+
+local title = Instance.new("TextLabel", main)
+
+title.Text = "Nova Hub | PvP Tools"
+
+title.Font = Enum.Font.FredokaOne
+
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+title.TextSize = 16
+
+title.BackgroundTransparency = 1
+
+title.Size = UDim2.new(1, -30, 0, 26)
+
+title.Position = UDim2.new(0, 10, 0, 6)
+
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Animación RGB del título
+
+task.spawn(function()
+
+    local hue = 0
+
+    while title.Parent do
+
+        hue = (hue + 0.01) % 1
+
+        title.TextColor3 = Color3.fromHSV(hue, 1, 1)
+
+        task.wait(0.05)
+
+    end
+
+end)
+
+-- Botón de cerrar
+
+local close = Instance.new("TextButton", main)
+
+close.Text = "X"
+
+close.Font = Enum.Font.FredokaOne
+
+close.TextSize = 16
+
+close.TextColor3 = Color3.fromRGB(255, 60, 60)
+
+close.BackgroundTransparency = 1
+
+close.Size = UDim2.new(0, 25, 0, 25)
+
+close.Position = UDim2.new(1, -28, 0, 6)
+
+close.MouseButton1Click:Connect(function()
+
+    main.Visible = not main.Visible
+
+end)
+
+-- TOGGLE CREATOR
+
+local function createToggle(parent, text, y)
+
+    local holder = Instance.new("Frame", parent)
+
+    holder.Size = UDim2.new(1, -20, 0, 38)
+
+    holder.Position = UDim2.new(0, 10, 0, y)
+
+    holder.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", holder)
+
+    label.Text = text
+
+    label.Font = Enum.Font.FredokaOne
+
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+
+    label.TextSize = 15
+
+    label.BackgroundTransparency = 1
+
+    label.Size = UDim2.new(1, -60, 1, 0)
+
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local toggle = Instance.new("Frame", holder)
+
+    toggle.Size = UDim2.new(0, 36, 0, 18)
+
+    toggle.Position = UDim2.new(1, -46, 0.5, -9)
+
+    toggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+
+    Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
+
+    local dot = Instance.new("Frame", toggle)
+
+    dot.Size = UDim2.new(0, 14, 0, 14)
+
+    dot.Position = UDim2.new(0, 2, 0.5, -7)
+
+    dot.BackgroundColor3 = Color3.fromRGB(255,50,50)
+
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1,0)
+
+    local state = false
+
+    toggle.InputBegan:Connect(function(i)
+
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+
+            state = not state
+
+            if state then
+
+                dot:TweenPosition(UDim2.new(1, -16, 0.5, -7),"Out","Sine",0.12,true)
+
+                dot.BackgroundColor3 = Color3.fromRGB(0,255,120)
+
+            else
+
+                dot:TweenPosition(UDim2.new(0, 2, 0.5, -7),"Out","Sine",0.12,true)
+
+                dot.BackgroundColor3 = Color3.fromRGB(255,50,50)
+
+            end
+
+        end
+
+    end)
+
+    return function()
+
+        return state
+
+    end
+
+end
+
+-- TOGGLES
+
+local Booster = createToggle(main,"Booster",40)
+
+local AntiKB = createToggle(main,"Anti Knockback",80)
+
+local Hitbox = createToggle(main,"Hitbox Expander",120)
+
+local AutoGrab = createToggle(main,"Auto Grab",160)
+
+local AutoKick = createToggle(main,"Auto Kick",200)
+
+-- AUTO GRAB LOGIC
+
+local ControlTable = {AutoSteal = false}
+
+local promptConnections = {}
+
+local function disconnectPrompts()
+
+    for _,c in pairs(promptConnections) do c:Disconnect() end
+
+    promptConnections = {}
+
+end
+
+local function onPrompt(prompt)
+
+    if ControlTable.AutoSteal and prompt and prompt:IsA("ProximityPrompt") then
+
+        if prompt.ActionText and prompt.ActionText:lower():find("steal") then
+
+            prompt:InputHoldBegin()
+
+        end
+
+    end
+
+end
+
+local function enableAutoGrab()
+
+    disconnectPrompts()
+
+    table.insert(promptConnections,
+
+        ProximityPromptService.PromptShown:Connect(onPrompt)
+
+    )
+
+    for _,p in ipairs(Workspace:GetDescendants()) do
+
+        if p:IsA("ProximityPrompt") then
+
+            onPrompt(p)
+
+        end
+
+    end
+
+end
+
+local function disableAutoGrab()
+
+    disconnectPrompts()
+
+end
+
+-- AUTO KICK LOGIC
+
+local autoKickConnection = nil
+
+local function checkForSteal()
+
+    for _, gui in pairs(LocalPlayer.PlayerGui:GetDescendants()) do
+
+        if gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox") then
+
+            if gui.Text:find("You stole") then
+
+                LocalPlayer:Kick("Nova Hub | You Stole a Pet")
+
+                return
+
+            end
+
+        end
+
+    end
+
+end
+
+-- MAIN LOOP
+
+RunService.Heartbeat:Connect(function()
+
+    -- Auto Grab
+
+    ControlTable.AutoSteal = AutoGrab()
+
+    if ControlTable.AutoSteal then
+
+        enableAutoGrab()
+
+    else
+
+        disableAutoGrab()
+
+    end
+
+    -- Auto Kick
+
+    if AutoKick() then
+
+        if autoKickConnection then autoKickConnection:Disconnect() end
+
+        autoKickConnection = RunService.RenderStepped:Connect(checkForSteal)
+
+    else
+
+        if autoKickConnection then autoKickConnection:Disconnect() autoKickConnection=nil end
+
+    end
+
+end)

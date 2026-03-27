@@ -1,0 +1,1097 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local StatsService = game:GetService("Stats")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local LocalPlayer = player
+local lp = Players.LocalPlayer
+
+local CONFIG = {
+    Colors = {
+        Background = Color3.fromRGB(18, 18, 18),
+        Sidebar = Color3.fromRGB(22, 22, 22),
+        Panel = Color3.fromRGB(28, 28, 28),
+        Stroke = Color3.fromRGB(50, 50, 50),
+        Text = Color3.fromRGB(240, 240, 240),
+        Accent = Color3.fromRGB(14, 144, 210),
+        Hover = Color3.fromRGB(40, 40, 40),
+        SwitchOff = Color3.fromRGB(70, 70, 70),
+        SwitchOn = Color3.fromRGB(14, 144, 210),
+    },
+    UI = {
+        FrameSize = UDim2.new(0, 450, 0, 300),
+        MinimizedSize = UDim2.new(0, 450, 0, 40),
+        SidebarWidth = 140,
+        AnimationSpeed = 0.2,
+    }
+}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ZZZZ_ESPVisuals"
+screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.Size = CONFIG.UI.FrameSize
+mainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+mainFrame.BackgroundColor3 = CONFIG.Colors.Panel
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+local topBar = Instance.new("Frame")
+topBar.Name = "TopBar"
+topBar.Parent = mainFrame
+topBar.BackgroundColor3 = CONFIG.Colors.Background
+topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.BorderSizePixel = 0
+
+local topBarCorner = Instance.new("UICorner")
+topBarCorner.CornerRadius = UDim.new(0, 10)
+topBarCorner.Parent = topBar
+
+local sidebar = Instance.new("Frame")
+sidebar.Name = "Sidebar"
+sidebar.Parent = mainFrame
+sidebar.BackgroundColor3 = CONFIG.Colors.Sidebar
+sidebar.Size = UDim2.new(0, CONFIG.UI.SidebarWidth, 1, -40)
+sidebar.Position = UDim2.new(0, 0, 0, 40)
+sidebar.BorderSizePixel = 0
+
+local sidebarCorner = Instance.new("UICorner")
+sidebarCorner.CornerRadius = UDim.new(0, 10)
+sidebarCorner.Parent = sidebar
+
+local sidebarLayout = Instance.new("UIListLayout")
+sidebarLayout.Parent = sidebar
+sidebarLayout.Padding = UDim.new(0, 6)
+sidebarLayout.FillDirection = Enum.FillDirection.Vertical
+sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sidebarLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+local contentArea = Instance.new("Frame")
+contentArea.Name = "ContentArea"
+contentArea.Parent = mainFrame
+contentArea.BackgroundTransparency = 1
+contentArea.Position = UDim2.new(0, CONFIG.UI.SidebarWidth, 0, 40)
+contentArea.Size = UDim2.new(1, -CONFIG.UI.SidebarWidth, 1, -40)
+
+local sections = {}
+local function createSection(name)
+    local sectionFrame = Instance.new("Frame")
+    sectionFrame.Name = name
+    sectionFrame.BackgroundTransparency = 1
+    sectionFrame.Size = UDim2.new(1, 0, 1, 0)
+    sectionFrame.Visible = false
+    sectionFrame.Parent = contentArea
+    sections[name] = sectionFrame
+    return sectionFrame
+end
+
+local tabButtons = {}
+local activeTab = "Main"
+
+local function createTabButton(tabName)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -12, 0, 36)
+    button.BackgroundColor3 = CONFIG.Colors.Sidebar
+    button.Text = tabName
+    button.Font = Enum.Font.GothamMedium
+    button.TextSize = 14
+    button.TextColor3 = CONFIG.Colors.Text
+    button.AutoButtonColor = false
+    button.Parent = sidebar
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+    
+    button.MouseEnter:Connect(function()
+        if activeTab ~= tabName then
+            TweenService:Create(button, TweenInfo.new(0.15), { BackgroundColor3 = CONFIG.Colors.Hover }):Play()
+        end
+    end)
+    
+    button.MouseLeave:Connect(function()
+        if activeTab ~= tabName then
+            TweenService:Create(button, TweenInfo.new(0.15), { BackgroundColor3 = CONFIG.Colors.Sidebar }):Play()
+        end
+    end)
+    
+    tabButtons[tabName] = button
+    return button
+end
+
+local logo = Instance.new("ImageLabel")
+logo.Name = "Logo"
+logo.Parent = topBar
+logo.BackgroundTransparency = 1
+logo.Size = UDim2.new(0, 32, 0, 32)
+logo.Position = UDim2.new(0, 8, 0.5, -16)
+logo.Image = "rbxassetid://75526418442243"
+Instance.new("UICorner", logo).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel")
+title.Parent = topBar
+title.BackgroundTransparency = 1
+title.Text = "СЫНШ ЛЮХИ HUB"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = CONFIG.Colors.Text
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Position = UDim2.new(0, 48, 0, 0)
+title.Size = UDim2.new(0, 200, 1, 0)
+
+local statsLabel = Instance.new("TextLabel")
+statsLabel.Parent = topBar
+statsLabel.BackgroundTransparency = 1
+statsLabel.Font = Enum.Font.GothamMedium
+statsLabel.TextSize = 11
+statsLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.Position = UDim2.new(0, 48, 0, 22)
+statsLabel.Size = UDim2.new(0, 200, 0, 16)
+
+coroutine.wrap(function()
+    while true do
+        local fps = math.floor(1/RunService.RenderStepped:Wait())
+        local ping = StatsService.Network.ServerStatsItem["Data Ping"]:GetValue()
+        statsLabel.Text = string.format("FPS: %d, PING: %d", fps, ping)
+        wait(0.5)
+    end
+end)()
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Parent = topBar
+minimizeBtn.BackgroundColor3 = CONFIG.Colors.Background
+minimizeBtn.Text = "−"
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 20
+minimizeBtn.TextColor3 = CONFIG.Colors.Text
+minimizeBtn.AutoButtonColor = false
+minimizeBtn.Size = UDim2.new(0, 32, 0, 32)
+minimizeBtn.Position = UDim2.new(1, -112, 0.5, -16)
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 8)
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Parent = topBar
+closeBtn.BackgroundColor3 = CONFIG.Colors.Background
+closeBtn.Text = "×"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 20
+closeBtn.TextColor3 = CONFIG.Colors.Text
+closeBtn.AutoButtonColor = false
+closeBtn.Size = UDim2.new(0, 32, 0, 32)
+closeBtn.Position = UDim2.new(1, -74, 0.5, -16)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+
+createSection("Main")
+createSection("Player")
+createSection("Utility")
+createSection("Stealer")
+createSection("Tools")
+createSection("Discord")
+
+createTabButton("Main")
+createTabButton("Player")
+createTabButton("Utility")
+createTabButton("Stealer")
+createTabButton("Tools")
+createTabButton("Discord")
+
+local function DesyncV3()
+    local flags = {
+        {"GameNetPVHeaderRotationalVelocityZeroCutoffExponent", "-5000"},
+        {"LargeReplicatorWrite5", "true"},
+        {"LargeReplicatorEnabled9", "true"},
+        {"AngularVelociryLimit", "360"},
+        {"TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646"},
+        {"S2PhysicsSenderRate", "15000"},
+        {"DisableDPIScale", "true"},
+        {"MaxDataPacketPerSend", "2147483647"},
+        {"ServerMaxBandwith", "52"},
+        {"PhysicsSenderMaxBandwidthBps", "20000"},
+        {"MaxTimestepMultiplierBuoyancy", "2147483647"},
+        {"SimOwnedNOUCountThresholdMillionth", "2147483647"},
+        {"MaxMissedWorldStepsRemembered", "-2147483648"},
+        {"CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth", "1"},
+        {"StreamJobNOUVolumeLengthCap", "2147483647"},
+        {"DebugSendDistInSteps", "-2147483648"},
+        {"MaxTimestepMultiplierAcceleration", "2147483647"},
+        {"LargeReplicatorRead5", "true"},
+        {"SimExplicitlyCappedTimestepMultiplier", "2147483646"},
+        {"GameNetDontSendRedundantNumTimes", "1"},
+        {"CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent", "1"},
+        {"CheckPVCachedRotVelThresholdPercent", "10"},
+        {"LargeReplicatorSerializeRead3", "true"},
+        {"ReplicationFocusNouExtentsSizeCutoffForPauseStuds", "2147483647"},
+        {"NextGenReplicatorEnabledWrite4", "true"},
+        {"CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth", "1"},
+        {"GameNetDontSendRedundantDeltaPositionMillionth", "1"},
+        {"InterpolationFrameVelocityThresholdMillionth", "5"},
+        {"StreamJobNOUVolumeCap", "2147483647"},
+        {"InterpolationFrameRotVelocityThresholdMillionth", "5"},
+        {"WorldStepMax", "30"},
+        {"TimestepArbiterHumanoidLinearVelThreshold", "1"},
+        {"InterpolationFramePositionThresholdMillionth", "5"},
+        {"TimestepArbiterHumanoidTurningVelThreshold", "1"},
+        {"MaxTimestepMultiplierContstraint", "2147483647"},
+        {"GameNetPVHeaderLinearVelocityZeroCutoffExponent", "-5000"},
+        {"CheckPVCachedVelThresholdPercent", "10"},
+        {"TimestepArbiterOmegaThou", "1073741823"},
+        {"MaxAcceptableUpdateDelay", "1"},
+        {"LargeReplicatorSerializeWrite4", "true"},
+    }
+
+    for _, data in ipairs(flags) do
+        pcall(function()
+            setfflag(data[1], data[2])
+        end)
+    end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+    end
+
+    char:ClearAllChildren()
+
+    local fakeModel = Instance.new("Model", workspace)
+    LocalPlayer.Character = fakeModel
+    task.wait()
+    LocalPlayer.Character = char
+    fakeModel:Destroy()
+end
+
+local unwalk = false
+local savedAnims = {}
+local watcher
+
+local function isMovementAnim(anim)
+	return anim and anim:IsA("Animation") and (
+		anim.Name:lower():find("walk") or
+		anim.Name:lower():find("run") or
+		anim.Name:lower():find("jump") or
+		anim.Name:lower():find("swim") or
+		anim.Name:lower():find("fall") or
+		anim.Name:lower():find("climb") or
+		anim.Name:lower():find("idle") or
+		anim.Name:lower():find("land") or
+		anim.Name:lower():find("sit") or
+		anim.Name:lower():find("crouch")
+	)
+end
+
+local function stopMovementAnims(hum)
+	if not hum then return end
+	for _, t in ipairs(hum:GetPlayingAnimationTracks()) do
+		if t.Name:lower():find("walk") or
+		   t.Name:lower():find("run") or
+		   t.Name:lower():find("jump") or
+		   t.Name:lower():find("swim") or
+		   t.Name:lower():find("fall") or
+		   t.Name:lower():find("climb") or
+		   t.Name:lower():find("idle") or
+		   t.Name:lower():find("land") or
+		   t.Name:lower():find("sit") or
+		   t.Name:lower():find("crouch") then
+			t:Stop()
+		end
+	end
+end
+
+local function saveAndClear(anim)
+	for _, v in ipairs(savedAnims) do
+		if v.instance == anim then return end
+	end
+	table.insert(savedAnims, {instance = anim, id = anim.AnimationId})
+	anim.AnimationId = ""
+end
+
+local function restoreAnims()
+	for _, v in ipairs(savedAnims) do
+		if v.instance then
+			v.instance.AnimationId = v.id
+		end
+	end
+end
+
+local function added(desc)
+	if unwalk and isMovementAnim(desc) then
+		saveAndClear(desc)
+	end
+end
+
+local function scan(character)
+	local animate = character and character:FindFirstChild("Animate")
+	if not animate then return end
+
+	local function clear(folder, name)
+		local anim = folder and folder:FindFirstChild(name)
+		if anim and anim:IsA("Animation") then
+			saveAndClear(anim)
+		end
+	end
+
+	clear(animate:FindFirstChild("walk"), "WalkAnim")
+	clear(animate:FindFirstChild("run"), "RunAnim")
+	clear(animate:FindFirstChild("jump"), "JumpAnim")
+	clear(animate:FindFirstChild("swim"), "Swim")
+	clear(animate:FindFirstChild("swimidle"), "SwimIdle")
+	clear(animate:FindFirstChild("fall"), "FallAnim")
+	clear(animate:FindFirstChild("climb"), "ClimbAnim")
+	clear(animate:FindFirstChild("idle"), "Animation1")
+	clear(animate:FindFirstChild("idle"), "Animation2")
+	clear(animate:FindFirstChild("sit"), "SitAnim")
+	clear(animate:FindFirstChild("toolnone"), "ToolNoneAnim")
+	clear(animate:FindFirstChild("toolsit"), "ToolSitAnim")
+
+	local hum = character:FindFirstChildOfClass("Humanoid")
+	if hum then stopMovementAnims(hum) end
+end
+
+local function DisableAnimations()
+    if unwalk then
+        if watcher then watcher:Disconnect() watcher = nil end
+        restoreAnims()
+        savedAnims = {}
+        unwalk = false
+    else
+        local char = player.Character
+        if not char then return end
+        unwalk = true
+        savedAnims = {}
+        task.spawn(function()
+            scan(char)
+            if watcher then watcher:Disconnect() end
+            watcher = char.DescendantAdded:Connect(added)
+        end)
+    end
+end
+
+player.CharacterAdded:Connect(function(c)
+	if unwalk then
+		task.spawn(function()
+			scan(c)
+			if watcher then watcher:Disconnect() end
+			watcher = c.DescendantAdded:Connect(added)
+		end)
+	end
+end)
+
+local InvisibleEnabled = false
+
+local switchRow = Instance.new("Frame")
+switchRow.Parent = sections["Main"]
+switchRow.BackgroundColor3 = CONFIG.Colors.Background
+switchRow.Size = UDim2.new(1, -15, 0, 40)
+switchRow.Position = UDim2.new(0.5, 0, 0, 10)
+switchRow.AnchorPoint = Vector2.new(0.5, 0)
+Instance.new("UICorner", switchRow).CornerRadius = UDim.new(0, 8)
+
+local switchStroke = Instance.new("UIStroke", switchRow)
+switchStroke.Thickness = 0.8
+switchStroke.Color = CONFIG.Colors.Stroke
+switchStroke.Transparency = 0.4
+
+local switchLabel = Instance.new("TextLabel")
+switchLabel.Parent = switchRow
+switchLabel.BackgroundTransparency = 1
+switchLabel.Text = "Reset Desync (Invisible)"
+switchLabel.Font = Enum.Font.GothamMedium
+switchLabel.TextSize = 14
+switchLabel.TextColor3 = CONFIG.Colors.Text
+switchLabel.TextXAlignment = Enum.TextXAlignment.Left
+switchLabel.Position = UDim2.new(0, 10, 0, 0)
+switchLabel.Size = UDim2.new(1, -80, 1, 0)
+
+local switch = Instance.new("Frame")
+switch.Parent = switchRow
+switch.AnchorPoint = Vector2.new(1, 0.5)
+switch.Position = UDim2.new(1, -10, 0.5, 0)
+switch.Size = UDim2.new(0, 48, 0, 22)
+switch.BackgroundColor3 = CONFIG.Colors.SwitchOff
+Instance.new("UICorner", switch).CornerRadius = UDim.new(0, 11)
+
+local knob = Instance.new("Frame")
+knob.Parent = switch
+knob.Size = UDim2.new(0, 18, 0, 18)
+knob.Position = UDim2.new(0, 2, 0, 2)
+knob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 9)
+
+local disableAnimSwitchRow = Instance.new("Frame")
+disableAnimSwitchRow.Parent = sections["Main"]
+disableAnimSwitchRow.BackgroundColor3 = CONFIG.Colors.Background
+disableAnimSwitchRow.Size = UDim2.new(1, -15, 0, 40)
+disableAnimSwitchRow.Position = UDim2.new(0.5, 0, 0, 60)
+disableAnimSwitchRow.AnchorPoint = Vector2.new(0.5, 0)
+Instance.new("UICorner", disableAnimSwitchRow).CornerRadius = UDim.new(0, 8)
+
+local disableAnimSwitchStroke = Instance.new("UIStroke", disableAnimSwitchRow)
+disableAnimSwitchStroke.Thickness = 0.8
+disableAnimSwitchStroke.Color = CONFIG.Colors.Stroke
+disableAnimSwitchStroke.Transparency = 0.4
+
+local disableAnimSwitchLabel = Instance.new("TextLabel")
+disableAnimSwitchLabel.Parent = disableAnimSwitchRow
+disableAnimSwitchLabel.BackgroundTransparency = 1
+disableAnimSwitchLabel.Text = "Disable Animations"
+disableAnimSwitchLabel.Font = Enum.Font.GothamMedium
+disableAnimSwitchLabel.TextSize = 14
+disableAnimSwitchLabel.TextColor3 = CONFIG.Colors.Text
+disableAnimSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+disableAnimSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+disableAnimSwitchLabel.Size = UDim2.new(1, -80, 1, 0)
+
+local disableAnimSwitch = Instance.new("Frame")
+disableAnimSwitch.Parent = disableAnimSwitchRow
+disableAnimSwitch.AnchorPoint = Vector2.new(1, 0.5)
+disableAnimSwitch.Position = UDim2.new(1, -10, 0.5, 0)
+disableAnimSwitch.Size = UDim2.new(0, 48, 0, 22)
+disableAnimSwitch.BackgroundColor3 = CONFIG.Colors.SwitchOff
+Instance.new("UICorner", disableAnimSwitch).CornerRadius = UDim.new(0, 11)
+
+local disableAnimKnob = Instance.new("Frame")
+disableAnimKnob.Parent = disableAnimSwitch
+disableAnimKnob.Size = UDim2.new(0, 18, 0, 18)
+disableAnimKnob.Position = UDim2.new(0, 2, 0, 2)
+disableAnimKnob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+Instance.new("UICorner", disableAnimKnob).CornerRadius = UDim.new(0, 9)
+
+local disableAnimHit = Instance.new("TextButton")
+disableAnimHit.Parent = disableAnimSwitch
+disableAnimHit.BackgroundTransparency = 1
+disableAnimHit.Text = ""
+disableAnimHit.Size = UDim2.new(1, 0, 1, 0)
+disableAnimHit.AutoButtonColor = false
+
+local disableAnimEnabled = false
+
+disableAnimHit.MouseButton1Click:Connect(function()
+    local newState = not disableAnimEnabled
+    disableAnimEnabled = newState
+    
+    TweenService:Create(disableAnimSwitch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = newState and CONFIG.Colors.SwitchOn or CONFIG.Colors.SwitchOff
+    }):Play()
+    TweenService:Create(disableAnimKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = newState and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 2, 0, 2)
+    }):Play()
+    
+    if newState then
+        unwalk = true
+        DisableAnimations()
+    else
+        if unwalk then
+            DisableAnimations()
+        end
+    end
+end)
+
+local hit = Instance.new("TextButton")
+hit.Parent = switch
+hit.BackgroundTransparency = 1
+hit.Text = ""
+hit.Size = UDim2.new(1, 0, 1, 0)
+hit.AutoButtonColor = false
+
+local setState = function(newState)
+    InvisibleEnabled = newState
+    TweenService:Create(switch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = newState and CONFIG.Colors.SwitchOn or CONFIG.Colors.SwitchOff
+    }):Play()
+    TweenService:Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = newState and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 2, 0, 2)
+    }):Play()
+    
+    if newState then
+        DesyncV3()
+    end
+end
+
+hit.MouseButton1Click:Connect(function()
+    setState(not InvisibleEnabled)
+end)
+
+setState(false)
+
+local sentryEnabled = false
+local sentryConn = nil
+
+local function startSentryWatch()
+    if sentryConn then sentryConn:Disconnect() end
+    
+    sentryConn = workspace.DescendantAdded:Connect(function(desc)
+        if not sentryEnabled then return end
+        if not desc:IsA("Model") and not desc:IsA("BasePart") then return end
+        if not string.find(desc.Name:lower(), "sentry") then return end
+
+        local char = lp.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        
+        local hrp = char.HumanoidRootPart
+        
+        local playerOwnsSentry = false
+        for _, playerObj in pairs(Players:GetPlayers()) do
+            if playerObj.Character and desc:IsDescendantOf(playerObj.Character) then
+                if playerObj == lp then
+                    playerOwnsSentry = true
+                end
+                break
+            end
+        end
+        
+        if playerOwnsSentry then return end
+
+        task.wait(4.1)
+
+        if not desc.Parent or not sentryEnabled then return end
+
+        local backpack = lp.Backpack
+        local batTool = backpack:FindFirstChild("Bat") or char:FindFirstChild("Bat")
+        if not batTool then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Tool") and obj.Name == "Bat" and obj.Parent == workspace then
+                    batTool = obj
+                    obj.Parent = backpack
+                    break
+                end
+            end
+        end
+
+        if not batTool then
+            return
+        end
+
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if batTool.Parent == backpack and humanoid then
+            humanoid:EquipTool(batTool)
+            task.wait(0.25)
+        end
+
+        local lookDir = hrp.CFrame.LookVector
+        local spawnOffset = lookDir * 3.5 + Vector3.new(0, 1.2, 0)
+        if desc:IsA("Model") and desc.PrimaryPart then
+            desc:SetPrimaryPartCFrame(hrp.CFrame + spawnOffset)
+        elseif desc:IsA("BasePart") then
+            desc.CFrame = hrp.CFrame + spawnOffset
+        end
+
+        if batTool.Parent == char and desc.Parent then
+            batTool:Activate()
+        end
+
+        local maxHits = 5
+        local hitCount = 0
+        while batTool.Parent == char and desc.Parent and sentryEnabled and hitCount < maxHits do
+            task.wait(0.12)
+            if desc.Parent then
+                batTool:Activate()
+                hitCount += 1
+            else
+                break
+            end
+        end
+
+        task.wait(0.1)
+        if batTool.Parent == char then
+            batTool.Parent = backpack
+        end
+    end)
+end
+
+local function stopSentryWatch()
+    sentryEnabled = false
+    if sentryConn then
+        sentryConn:Disconnect()
+        sentryConn = nil
+    end
+end
+
+local sentrySwitchRow = Instance.new("Frame")
+sentrySwitchRow.Parent = sections["Main"]
+sentrySwitchRow.BackgroundColor3 = CONFIG.Colors.Background
+sentrySwitchRow.Size = UDim2.new(1, -15, 0, 40)
+sentrySwitchRow.Position = UDim2.new(0.5, 0, 0, 110)
+sentrySwitchRow.AnchorPoint = Vector2.new(0.5, 0)
+Instance.new("UICorner", sentrySwitchRow).CornerRadius = UDim.new(0, 8)
+
+local sentrySwitchStroke = Instance.new("UIStroke", sentrySwitchRow)
+sentrySwitchStroke.Thickness = 0.8
+sentrySwitchStroke.Color = CONFIG.Colors.Stroke
+sentrySwitchStroke.Transparency = 0.4
+
+local sentrySwitchLabel = Instance.new("TextLabel")
+sentrySwitchLabel.Parent = sentrySwitchRow
+sentrySwitchLabel.BackgroundTransparency = 1
+sentrySwitchLabel.Text = "Auto Destroy Turret"
+sentrySwitchLabel.Font = Enum.Font.GothamMedium
+sentrySwitchLabel.TextSize = 14
+sentrySwitchLabel.TextColor3 = CONFIG.Colors.Text
+sentrySwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+sentrySwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+sentrySwitchLabel.Size = UDim2.new(1, -80, 1, 0)
+
+local sentrySwitch = Instance.new("Frame")
+sentrySwitch.Parent = sentrySwitchRow
+sentrySwitch.AnchorPoint = Vector2.new(1, 0.5)
+sentrySwitch.Position = UDim2.new(1, -10, 0.5, 0)
+sentrySwitch.Size = UDim2.new(0, 48, 0, 22)
+sentrySwitch.BackgroundColor3 = CONFIG.Colors.SwitchOff
+Instance.new("UICorner", sentrySwitch).CornerRadius = UDim.new(0, 11)
+
+local sentryKnob = Instance.new("Frame")
+sentryKnob.Parent = sentrySwitch
+sentryKnob.Size = UDim2.new(0, 18, 0, 18)
+sentryKnob.Position = UDim2.new(0, 2, 0, 2)
+sentryKnob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+Instance.new("UICorner", sentryKnob).CornerRadius = UDim.new(0, 9)
+
+local sentryHit = Instance.new("TextButton")
+sentryHit.Parent = sentrySwitch
+sentryHit.BackgroundTransparency = 1
+sentryHit.Text = ""
+sentryHit.Size = UDim2.new(1, 0, 1, 0)
+sentryHit.AutoButtonColor = false
+
+sentryHit.MouseButton1Click:Connect(function()
+    sentryEnabled = not sentryEnabled
+    
+    TweenService:Create(sentrySwitch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = sentryEnabled and CONFIG.Colors.SwitchOn or CONFIG.Colors.SwitchOff
+    }):Play()
+    TweenService:Create(sentryKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = sentryEnabled and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 2, 0, 2)
+    }):Play()
+    
+    if sentryEnabled then
+        startSentryWatch()
+    else
+        stopSentryWatch()
+    end
+end)
+
+local adminSpammerGUI = nil
+local adminSpammerEnabled = false
+
+local function AdminPanelSpammer()
+    local v0 = getgenv and getgenv() or _G
+    
+    if adminSpammerGUI then
+        adminSpammerGUI:Destroy()
+        adminSpammerGUI = nil
+        v0.__XD_SPAM_PANEL__ = nil
+        adminSpammerEnabled = false
+        return
+    end
+    
+    if v0.__XD_SPAM_PANEL__ then
+        return 
+    else
+        v0.__XD_SPAM_PANEL__ = true
+        adminSpammerEnabled = true
+        task.wait()
+        repeat task.wait() until game and game.IsLoaded and game:IsLoaded()
+        local l_Players_0 = Players
+        local l_ReplicatedStorage_0 = ReplicatedStorage
+        local l_StarterGui_0 = StarterGui
+        local l_CoreGui_0 = CoreGui
+        local l_LocalPlayer_0 = Players.LocalPlayer
+        local _ = 0
+        local v7 = false
+        local v8 = {"rocket", "balloon", "inverse", "tiny"}
+        local function v12(v9, v10, v11)
+            if not v7 then
+                return 
+            else
+                pcall(function()
+                    l_StarterGui_0:SetCore("SendNotification", {Title = v9, Text = v10, Duration = v11 or 3})
+                end)
+                return 
+            end
+        end
+        local v20 = (function(v13)
+            if not v13 then
+                v13 = 6
+            end
+            local v14 = os.clock()
+            local l_Packages_0 = l_ReplicatedStorage_0:FindFirstChild("Packages")
+            while true do
+                if not l_Packages_0 then
+                    if v13 >= os.clock() - v14 then
+                        task.wait(0.1)
+                        l_Packages_0 = l_ReplicatedStorage_0:FindFirstChild("Packages")
+                    else
+                        return nil
+                    end
+                else
+                    local v16 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                    while true do
+                        if not v16 then
+                            if v13 < os.clock() - v14 then
+                                return nil
+                            else
+                                task.wait(0.1)
+                                v16 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                            end
+                        else
+                            local v17 = v16.FindFirstChild(v16, "RE/AdminPanelService/ExecuteCommand")
+                            local v18 = v14 + v13
+                            while not v17 and os.clock() < v18 do
+                                task.wait(0.1)
+                                local v19 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                                if v19 then
+                                    v17 = l_Packages_0.Net:FindFirstChild("RE/AdminPanelService/ExecuteCommand")
+                                else
+                                    v17 = v19
+                                end
+                            end
+                            return v17
+                        end
+                    end
+                end
+            end
+        end)(6)
+        if not v20 or not v20:IsA("RemoteEvent") then
+            v12("Missing Remote", "RE/AdminPanelService/ExecuteCommand not found", 5)
+            return 
+        else
+            local function v23(v21)
+                local v22 = v21.DisplayName or ""
+                if v22 == "" or v22 == v21.Name then
+                    return "@" .. v21.Name
+                else
+                    return string.format("%s  (@%s)", v22, v21.Name)
+                end
+            end
+            local l_ScreenGui_0 = Instance.new("ScreenGui")
+            l_ScreenGui_0.Name = "xd_spam_gui"
+            l_ScreenGui_0.ResetOnSpawn = false
+            l_ScreenGui_0.IgnoreGuiInset = true
+            l_ScreenGui_0.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            l_ScreenGui_0.Parent = not not l_CoreGui_0:FindFirstChildOfClass("ScreenGui") and l_CoreGui_0 or l_LocalPlayer_0:FindFirstChildOfClass("PlayerGui") or l_CoreGui_0
+            adminSpammerGUI = l_ScreenGui_0
+            
+            l_ScreenGui_0.Destroying:Connect(function()
+                adminSpammerGUI = nil
+                v0.__XD_SPAM_PANEL__ = nil
+                adminSpammerEnabled = false
+            end)
+            
+            local l_Frame_0 = Instance.new("Frame")
+            l_Frame_0.Name = "Root"
+            l_Frame_0.Size = UDim2.fromOffset(300, 380)
+            l_Frame_0.Position = UDim2.fromOffset(40, 120)
+            l_Frame_0.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            l_Frame_0.BorderSizePixel = 0
+            l_Frame_0.BackgroundTransparency = 0.08
+            l_Frame_0.Parent = l_ScreenGui_0
+            local l_UIStroke_0 = Instance.new("UIStroke")
+            l_UIStroke_0.Thickness = 1
+            l_UIStroke_0.Color = Color3.fromRGB(255, 70, 85)
+            l_UIStroke_0.Transparency = 0.25
+            l_UIStroke_0.Parent = l_Frame_0
+            local l_UICorner_0 = Instance.new("UICorner")
+            l_UICorner_0.CornerRadius = UDim.new(0, 12)
+            l_UICorner_0.Parent = l_Frame_0
+            local l_Frame_1 = Instance.new("Frame")
+            l_Frame_1.Name = "TopBar"
+            l_Frame_1.Size = UDim2.new(1, 0, 0, 36)
+            l_Frame_1.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+            l_Frame_1.BorderSizePixel = 0
+            l_Frame_1.Parent = l_Frame_0
+            local l_UICorner_1 = Instance.new("UICorner")
+            l_UICorner_1.CornerRadius = UDim.new(0, 12)
+            l_UICorner_1.Parent = l_Frame_1
+            local l_TextLabel_0 = Instance.new("TextLabel")
+            l_TextLabel_0.Name = "Title"
+            l_TextLabel_0.BackgroundTransparency = 1
+            l_TextLabel_0.Size = UDim2.new(1, -90, 1, 0)
+            l_TextLabel_0.Position = UDim2.fromOffset(12, 0)
+            l_TextLabel_0.Font = Enum.Font.GothamBold
+            l_TextLabel_0.TextSize = 16
+            l_TextLabel_0.TextXAlignment = Enum.TextXAlignment.Left
+            l_TextLabel_0.TextColor3 = Color3.fromRGB(235, 235, 235)
+            l_TextLabel_0.Text = "Sora Hub AP SPAM"
+            l_TextLabel_0.Parent = l_Frame_1
+            local l_TextButton_0 = Instance.new("TextButton")
+            l_TextButton_0.Text = "Refresh"
+            l_TextButton_0.AutoButtonColor = true
+            l_TextButton_0.Font = Enum.Font.Gotham
+            l_TextButton_0.TextSize = 14
+            l_TextButton_0.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+            l_TextButton_0.TextColor3 = Color3.fromRGB(235, 235, 235)
+            l_TextButton_0.Size = UDim2.fromOffset(80, 26)
+            l_TextButton_0.Position = UDim2.new(1, -86, 0, 5)
+            l_TextButton_0.Parent = l_Frame_1
+            local l_UICorner_2 = Instance.new("UICorner")
+            l_UICorner_2.CornerRadius = UDim.new(0, 8)
+            l_UICorner_2.Parent = l_TextButton_0
+            local l_Frame_2 = Instance.new("Frame")
+            l_Frame_2.Name = "Holder"
+            l_Frame_2.BackgroundTransparency = 1
+            l_Frame_2.Size = UDim2.new(1, -16, 1, -52)
+            l_Frame_2.Position = UDim2.fromOffset(8, 44)
+            l_Frame_2.Parent = l_Frame_0
+            local l_ScrollingFrame_0 = Instance.new("ScrollingFrame")
+            l_ScrollingFrame_0.Name = "List"
+            l_ScrollingFrame_0.Active = true
+            l_ScrollingFrame_0.ScrollingDirection = Enum.ScrollingDirection.Y
+            l_ScrollingFrame_0.ScrollBarThickness = 6
+            l_ScrollingFrame_0.BackgroundTransparency = 1
+            l_ScrollingFrame_0.BorderSizePixel = 0
+            l_ScrollingFrame_0.Size = UDim2.new(1, 0, 1, 0)
+            l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, 0)
+            l_ScrollingFrame_0.Parent = l_Frame_2
+            local l_UIListLayout_0 = Instance.new("UIListLayout")
+            l_UIListLayout_0.Padding = UDim.new(0, 6)
+            l_UIListLayout_0.SortOrder = Enum.SortOrder.LayoutOrder
+            l_UIListLayout_0.Parent = l_ScrollingFrame_0
+            local l_UIPadding_0 = Instance.new("UIPadding")
+            l_UIPadding_0.PaddingTop = UDim.new(0, 4)
+            l_UIPadding_0.PaddingLeft = UDim.new(0, 2)
+            l_UIPadding_0.PaddingRight = UDim.new(0, 2)
+            l_UIPadding_0.PaddingBottom = UDim.new(0, 8)
+            l_UIPadding_0.Parent = l_ScrollingFrame_0
+            local v37 = false
+            local v38 = nil
+            local v39 = nil
+            do
+                local l_v37_0, l_v38_0, l_v39_0 = v37, v38, v39
+                local function v45(v43)
+                    local v44 = v43.Position - l_v38_0
+                    l_Frame_0.Position = UDim2.fromOffset(l_v39_0.X.Offset + v44.X, l_v39_0.Y.Offset + v44.Y)
+                end
+                l_Frame_1.InputBegan:Connect(function(v46)
+                    if v46.UserInputType == Enum.UserInputType.MouseButton1 then
+                        l_v37_0 = true
+                        l_v38_0 = v46.Position
+                        l_v39_0 = l_Frame_0.Position
+                        v46.Changed:Connect(function()
+                            if v46.UserInputState == Enum.UserInputState.End then
+                                l_v37_0 = false
+                            end
+                        end)
+                    end
+                end)
+                l_Frame_1.InputChanged:Connect(function(v47)
+                    if v47.UserInputType == Enum.UserInputType.MouseMovement and l_v37_0 then
+                        v45(v47)
+                    end
+                end)
+            end
+            function v37(v48)
+                if v48 and v48.Parent == l_Players_0 then
+                    task.spawn(function()
+                        for _, v50 in ipairs(v8) do
+                            do
+                                local l_v50_0 = v50
+                                pcall(function()
+                                    v20:FireServer(v48, l_v50_0)
+                                end)
+                            end
+                        end
+                        v12("Sent", string.format("\226\134\146 %s (%d cmds)", v48.Name, #v8), 2)
+                    end)
+                    return 
+                else
+                    return 
+                end
+            end
+            function v38(v52)
+                local l_TextButton_1 = Instance.new("TextButton")
+                l_TextButton_1.Name = "P_" .. v52.UserId
+                l_TextButton_1.Size = UDim2.new(1, -6, 0, 34)
+                l_TextButton_1.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+                l_TextButton_1.TextColor3 = Color3.fromRGB(235, 235, 235)
+                l_TextButton_1.Font = Enum.Font.Gotham
+                l_TextButton_1.TextSize = 14
+                l_TextButton_1.AutoButtonColor = true
+                l_TextButton_1.TextXAlignment = Enum.TextXAlignment.Left
+                l_TextButton_1.Text = "  " .. v23(v52)
+                local l_UICorner_3 = Instance.new("UICorner")
+                l_UICorner_3.CornerRadius = UDim.new(0, 8)
+                l_UICorner_3.Parent = l_TextButton_1
+                l_TextButton_1.MouseEnter:Connect(function()
+                    l_TextButton_1.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+                end)
+                l_TextButton_1.MouseLeave:Connect(function()
+                    l_TextButton_1.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+                end)
+                l_TextButton_1.Activated:Connect(function()
+                    v37(v52)
+                end)
+                return l_TextButton_1
+            end
+            function v39()
+                for _, v56 in ipairs(l_ScrollingFrame_0:GetChildren()) do
+                    if v56:IsA("TextButton") then
+                        v56:Destroy()
+                    end
+                end
+                local v57 = {}
+                for _, v59 in ipairs(l_Players_0:GetPlayers()) do
+                    if v59 ~= l_LocalPlayer_0 then
+                        table.insert(v57, v59)
+                    end
+                end
+                table.sort(v57, function(v60, v61)
+                    if v60.Name:lower() >= v61.Name:lower() then
+                        local _ = false
+                    end
+                    return true
+                end)
+                for _, v64 in ipairs(v57) do
+                    v38(v64).Parent = l_ScrollingFrame_0
+                end
+                task.defer(function()
+                    local l_AbsoluteContentSize_0 = l_UIListLayout_0.AbsoluteContentSize
+                    l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, l_AbsoluteContentSize_0.Y + 16)
+                end)
+            end
+            l_UIListLayout_0:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                local l_AbsoluteContentSize_1 = l_UIListLayout_0.AbsoluteContentSize
+                l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, l_AbsoluteContentSize_1.Y + 16)
+            end)
+            l_TextButton_0.MouseButton1Click:Connect(v39)
+            l_Players_0.PlayerAdded:Connect(v39)
+            l_Players_0.PlayerRemoving:Connect(v39)
+            v39()
+            v12("xd spam ready", "Click a player to run instant rocket/balloon/inverse/tiny", 4)
+            return
+        end
+    end
+end
+
+local adminSpammerSwitchRow = Instance.new("Frame")
+adminSpammerSwitchRow.Parent = sections["Main"]
+adminSpammerSwitchRow.BackgroundColor3 = CONFIG.Colors.Background
+adminSpammerSwitchRow.Size = UDim2.new(1, -15, 0, 40)
+adminSpammerSwitchRow.Position = UDim2.new(0.5, 0, 0, 160)
+adminSpammerSwitchRow.AnchorPoint = Vector2.new(0.5, 0)
+Instance.new("UICorner", adminSpammerSwitchRow).CornerRadius = UDim.new(0, 8)
+
+local adminSpammerSwitchStroke = Instance.new("UIStroke", adminSpammerSwitchRow)
+adminSpammerSwitchStroke.Thickness = 0.8
+adminSpammerSwitchStroke.Color = CONFIG.Colors.Stroke
+adminSpammerSwitchStroke.Transparency = 0.4
+
+local adminSpammerSwitchLabel = Instance.new("TextLabel")
+adminSpammerSwitchLabel.Parent = adminSpammerSwitchRow
+adminSpammerSwitchLabel.BackgroundTransparency = 1
+adminSpammerSwitchLabel.Text = "Admin Panel Spammer"
+adminSpammerSwitchLabel.Font = Enum.Font.GothamMedium
+adminSpammerSwitchLabel.TextSize = 14
+adminSpammerSwitchLabel.TextColor3 = CONFIG.Colors.Text
+adminSpammerSwitchLabel.TextXAlignment = Enum.TextXAlignment.Left
+adminSpammerSwitchLabel.Position = UDim2.new(0, 10, 0, 0)
+adminSpammerSwitchLabel.Size = UDim2.new(1, -80, 1, 0)
+
+local adminSpammerSwitch = Instance.new("Frame")
+adminSpammerSwitch.Parent = adminSpammerSwitchRow
+adminSpammerSwitch.AnchorPoint = Vector2.new(1, 0.5)
+adminSpammerSwitch.Position = UDim2.new(1, -10, 0.5, 0)
+adminSpammerSwitch.Size = UDim2.new(0, 48, 0, 22)
+adminSpammerSwitch.BackgroundColor3 = CONFIG.Colors.SwitchOff
+Instance.new("UICorner", adminSpammerSwitch).CornerRadius = UDim.new(0, 11)
+
+local adminSpammerKnob = Instance.new("Frame")
+adminSpammerKnob.Parent = adminSpammerSwitch
+adminSpammerKnob.Size = UDim2.new(0, 18, 0, 18)
+adminSpammerKnob.Position = UDim2.new(0, 2, 0, 2)
+adminSpammerKnob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+Instance.new("UICorner", adminSpammerKnob).CornerRadius = UDim.new(0, 9)
+
+local adminSpammerHit = Instance.new("TextButton")
+adminSpammerHit.Parent = adminSpammerSwitch
+adminSpammerHit.BackgroundTransparency = 1
+adminSpammerHit.Text = ""
+adminSpammerHit.Size = UDim2.new(1, 0, 1, 0)
+adminSpammerHit.AutoButtonColor = false
+
+adminSpammerHit.MouseButton1Click:Connect(function()
+    adminSpammerEnabled = not adminSpammerEnabled
+    
+    TweenService:Create(adminSpammerSwitch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = adminSpammerEnabled and CONFIG.Colors.SwitchOn or CONFIG.Colors.SwitchOff
+    }):Play()
+    TweenService:Create(adminSpammerKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = adminSpammerEnabled and UDim2.new(1, -20, 0, 2) or UDim2.new(0, 2, 0, 2)
+    }):Play()
+    
+    AdminPanelSpammer()
+end)
+
+sections["Main"].Visible = true
+if tabButtons["Main"] then
+    tabButtons["Main"].BackgroundColor3 = CONFIG.Colors.Accent
+end
+
+for tabName, button in pairs(tabButtons) do
+    button.MouseButton1Click:Connect(function()
+        if activeTab and sections[activeTab] then
+            sections[activeTab].Visible = false
+            if tabButtons[activeTab] then
+                TweenService:Create(tabButtons[activeTab], TweenInfo.new(0.15), { BackgroundColor3 = CONFIG.Colors.Sidebar }):Play()
+            end
+        end
+        
+        sections[tabName].Visible = true
+        TweenService:Create(button, TweenInfo.new(0.15), { BackgroundColor3 = CONFIG.Colors.Accent }):Play()
+        activeTab = tabName
+    end)
+end
+
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+local isMinimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        mainFrame.Size = CONFIG.UI.MinimizedSize
+        contentArea.Visible = false
+        sidebar.Visible = false
+    else
+        mainFrame.Size = CONFIG.UI.FrameSize
+        contentArea.Visible = true
+        sidebar.Visible = true
+    end
+end)
+
+local sidebarPadding = Instance.new("UIPadding")
+sidebarPadding.Parent = sidebar
+sidebarPadding.PaddingTop = UDim.new(0, 10)
+sidebarPadding.PaddingBottom = UDim.new(0, 10)
+
+local function updateButtonSizes()
+    local availableHeight = sidebar.AbsoluteSize.Y - 20
+    local buttonCount = 6
+    local padding = 6
+    
+    if buttonCount > 0 then
+        local totalPadding = (buttonCount - 1) * padding
+        local buttonHeight = (availableHeight - totalPadding) / buttonCount
+        
+        for _, child in ipairs(sidebar:GetChildren()) do
+            if child:IsA("TextButton") then
+                child.Size = UDim2.new(1, -8, 0, buttonHeight)
+            end
+        end
+    end
+end
+
+sidebar:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateButtonSizes)
+updateButtonSizes()

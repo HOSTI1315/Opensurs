@@ -1,0 +1,290 @@
+local rgui = game:GetService("CoreGui").RobloxGui
+
+for _, gui in ipairs(rgui:GetChildren()) do
+    if gui:IsA("ScreenGui") and gui.Name == "WindUI" then
+        gui:Destroy()
+    end
+end
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "Plants Vs Brainrots",
+    Icon = "door-open",
+    Author = "By Kjs and Avexy",
+    Folder = "MySuperHub",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Callback = function()
+            print("clicked")
+        end,
+    },
+})
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character.HumanoidRootPart
+local players = game:GetService("Players")
+local remotes = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
+local itemSell = remotes:WaitForChild("ItemSell")
+local buyItem = remotes:WaitForChild("BuyItem")
+local equipBestBrainrots = remotes:WaitForChild("EquipBestBrainrots")
+local plants = player.PlayerGui.Main.Seeds.Frame.ScrollingFrame
+local plots = workspace.Plots
+
+local amount = 5
+getgenv().AutoCollectMoney = false
+getgenv().AutoSellBrainrots = false
+getgenv().AutoBuySeeds = false
+
+local TabMain = Window:Tab({
+    Title = "Main",
+    Icon = "grid",
+    Locked = false,
+})
+
+local Tab1 = Window:Tab({
+    Title = "Farm",
+    Icon = "refresh-cw",
+    Locked = false,
+})
+
+local Tab2 = Window:Tab({
+    Title = "Plants",
+    Icon = "leaf",
+    Locked = false,
+})
+
+local Toggle = Tab1:Toggle({
+    Title = "Auto Equip Best",
+    Desc = "Auto equips best brainrots.",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        getgenv().AutoCollectMoney = state
+        task.spawn(function()
+            while getgenv().AutoCollectMoney do
+                equipBestBrainrots:FireServer()
+                WindUI:Notify({
+                    Title = "Equipped",
+                    Content = "Best brainrots equipped successfully!",
+                    Duration = 2,
+                    Icon = "badge-check",
+                })
+                task.wait(2.15)
+            end
+        end)
+    end
+})
+
+local Button = TabMain:Button({
+    Title = "Sell Brainrots",
+    Desc = "Sells all brainrots",
+    Locked = false,
+    Callback = function()
+        WindUI:Popup({
+            Title = "Warning",
+            Icon = "info",
+            Content = "Are you sure you want to sell all brainrots? this includes all of your inventory as well",
+            Buttons = {
+                {
+                    Title = "Cancel",
+                    Callback = function() end,
+                    Variant = "Tertiary",
+                },
+                {
+                    Title = "Continue",
+                    Icon = "arrow-right",
+                    Callback = function()
+                        itemSell:FireServer()
+                        WindUI:Notify({
+                            Title = "Sold",
+                            Content = "All brainrots sold successfully!",
+                            Duration = 2,
+                            Icon = "badge-check",
+                        })
+                    end,
+                    Variant = "Primary",
+                }
+            }
+        })
+    end
+})
+
+local Button = TabMain:Button({
+    Title = "Sell Plants",
+    Desc = "Sells all Plants",
+    Locked = false,
+    Callback = function()
+        -- Add your sell plants logic here
+        WindUI:Notify({
+            Title = "Sold",
+            Content = "All plants sold successfully!",
+            Duration = 2,
+            Icon = "badge-check",
+        })
+    end
+})
+
+local Toggle = Tab1:Toggle({
+    Title = "Auto Sell Brainrots",
+    Desc = "Auto sells brainrots every (amount) of seconds.",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().AutoSellBrainrots = state
+        if getgenv().AutoSellBrainrots == false then
+            amount = 5
+        end
+        task.spawn(function()
+            while getgenv().AutoSellBrainrots do
+                task.wait(amount)
+                itemSell:FireServer()
+                WindUI:Notify({
+                    Title = "Sold",
+                    Content = "Brainrots auto-sold successfully!",
+                    Duration = 2,
+                    Icon = "badge-check",
+                })
+            end
+        end)
+    end
+})
+
+local Input = Tab1:Input({
+    Title = "Amount of seconds.",
+    Desc = "Input (amount) of seconds to Auto Sell.",
+    Value = amount,
+    Type = "Input",
+    Placeholder = "Enter amount...",
+    Callback = function(input)
+        amount = input
+    end
+})
+
+local plants_table = {}
+local selectedSeed = {}
+
+for _, seed in ipairs(plants:GetChildren()) do
+    if seed:IsA("Frame") and seed.Name:lower():find("seed") then
+        local stockLabel = seed:FindFirstChild("Stock")
+        local stockValue = 0
+        if stockLabel then
+            stockValue = tonumber(stockLabel.Text:match("%d+")) or 0
+        end
+        table.insert(plants_table, seed.Name .. " (Stock: " .. stockValue .. ")")
+    end
+end
+
+local Dropdown = Tab2:Dropdown({
+    Title = "Select Seed to buy",
+    Values = plants_table,
+    Value = { "None" },
+    Multi = true,
+    AllowNone = true,
+    Callback = function(option)
+        if type(option) == "table" then
+            selectedSeed = {}
+            for _, v in ipairs(option) do
+                if v ~= "None" then
+                    table.insert(selectedSeed, tostring(v))
+                end
+            end
+        else
+            selectedSeed = { tostring(option) }
+        end
+        print("Selected seeds:", game:GetService("HttpService"):JSONEncode(selectedSeed))
+    end
+})
+
+local Button = Tab2:Button({
+    Title = "Buy Selected Seed(s)",
+    Desc = "Buy all currently selected seeds from the dropdown.",
+    Locked = false,
+    Callback = function()
+        if not selectedSeed or #selectedSeed == 0 then
+            WindUI:Notify({
+                Title = "Error",
+                Content = "No seeds selected!",
+                Duration = 3,
+                Icon = "x",
+            })
+            return
+        end
+        for _, seedStr in ipairs(selectedSeed) do
+            local seedName = seedStr:match("^(.-) %(") or seedStr
+            local seedFrame = plants:FindFirstChild(seedName)
+            local stockLabel = seedFrame and seedFrame:FindFirstChild("Stock")
+            local stockValue = 0
+            if stockLabel then
+                stockValue = tonumber(stockLabel.Text:match("%d+")) or 0
+            end
+            if stockValue <= 0 then
+                WindUI:Notify({
+                    Title = "Out of Stock",
+                    Content = seedName .. " is currently out of stock!",
+                    Duration = 3,
+                    Icon = "octagon-alert",
+                })
+            else
+                buyItem:FireServer(seedName, true)
+                WindUI:Notify({
+                    Title = "Purchased",
+                    Content = seedName .. " bought successfully!",
+                    Duration = 2,
+                    Icon = "badge-check",
+                })
+            end
+            task.wait(0.15)
+        end
+    end
+})
+
+local AutoBuyToggle = Tab2:Toggle({
+    Title = "Auto Buy Seeds",
+    Desc = "Automatically buys selected seeds when in stock.",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().AutoBuySeeds = state
+    end
+})
+
+task.spawn(function()
+    while true do
+        if getgenv().AutoBuySeeds then
+            if selectedSeed and #selectedSeed > 0 then
+                for _, seedStr in ipairs(selectedSeed) do
+                    local seedName = seedStr:match("^(.-) %(") or seedStr
+                    local seedFrame = plants:FindFirstChild(seedName)
+                    local stockLabel = seedFrame and seedFrame:FindFirstChild("Stock")
+                    local stockValue = 0
+                    if stockLabel then
+                        stockValue = tonumber(stockLabel.Text:match("%d+")) or 0
+                    end
+                    if stockValue > 0 then
+                        buyItem:FireServer(seedName, true)
+                        WindUI:Notify({
+                            Title = "Auto Purchased",
+                            Content = seedName .. " bought successfully!",
+                            Duration = 2,
+                            Icon = "badge-check",
+                        })
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)

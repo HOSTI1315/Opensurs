@@ -1,0 +1,298 @@
+local env = getgenv()
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/MaybeNotMandy/ktest2/refs/heads/main/lib"))()
+
+env.ESPEnabled = false
+env.AutoGenerator = false
+env.ESPGenerators = false
+env.AutoCoin = false
+env.AutoClickPopup = false
+env.ESPTools = false
+env.AutoGeneratorDelay = 1.25
+
+local mainWindow = library.CreateLib("Mandy Forsaken", "DarkTheme")
+local mainTab = mainWindow:AddTab("Main")
+local miscTab = mainWindow:AddTab("Misc")
+local discordTab = mainWindow:AddTab("Discord")
+
+local mainSection = mainTab.NewSection(mainTab, "Main Section")
+local espSection = miscTab.NewSection(miscTab, "ESP")
+local skillsSection = miscTab.NewSection(miscTab, "Skills")
+local discordSection = discordTab.NewSection(discordTab, "Discord link")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer.Character then
+    LocalPlayer.CharacterAdded:Wait()
+end
+
+local HumanoidRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+local TweenService = game:GetService("TweenService")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local generatorRange = 30
+
+local clickedPopups = {}
+
+local function getGenerators()
+    local generators = {}
+    if workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") then
+        for _, obj in pairs(workspace.Map.Ingame:GetChildren()) do
+            if obj:FindFirstChild("Remotes") and obj.Remotes:FindFirstChild("RE") and obj:FindFirstChild("Progress") and obj:IsA("Model") then
+                table.insert(generators, obj)
+            end
+        end
+    end
+    return generators
+end
+
+local function createESPHighlight(model, color)
+    if model:FindFirstChild("ESPHighlight") then
+        return
+    end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESPHighlight"
+    highlight.FillColor = color
+    highlight.OutlineColor = color
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0.2
+    highlight.Adornee = model
+    highlight.Parent = model
+end
+
+local function createNameTag(character, name, color)
+    if not character:FindFirstChild("Head") or character.Head:FindFirstChild("NameTag") then
+        return
+    end
+    
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "NameTag"
+    billboardGui.Adornee = character.Head
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+    billboardGui.AlwaysOnTop = true
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = name
+    textLabel.TextColor3 = color
+    textLabel.TextStrokeTransparency = 0.5
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextSize = 20
+    textLabel.Parent = billboardGui
+    
+    billboardGui.Parent = character.Head
+end
+
+local function clickButton(button)
+    if isMobile then
+        VirtualInputManager:SendMouseButtonEvent(button.AbsolutePosition.X + button.AbsoluteSize.X / 2, button.AbsolutePosition.Y + button.AbsoluteSize.Y / 2, 0, true, game, 0)
+        task.wait(0.05)
+        VirtualInputManager:SendMouseButtonEvent(button.AbsolutePosition.X + button.AbsoluteSize.X / 2, button.AbsolutePosition.Y + button.AbsoluteSize.Y / 2, 0, false, game, 0)
+    else
+        local connection
+        connection = button.MouseButton1Down:Connect(function()
+            connection:Disconnect()
+        end)
+        
+        for _, event in pairs(getconnections(button.MouseButton1Down)) do
+            event:Fire()
+        end
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(env.AutoGeneratorDelay)
+        
+        if env.AutoGenerator then
+            if not LocalPlayer.Character then
+                LocalPlayer.CharacterAdded:Wait()
+            end
+            
+            local character = LocalPlayer.Character
+            HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            
+            local generators = getGenerators()
+            
+            if generators then
+                for _, generator in pairs(generators) do
+                    local generatorPart = generator.PrimaryPart or generator:FindFirstChild("HumanoidRootPart") or generator:FindFirstChildWhichIsA("BasePart")
+                    
+                    if generatorPart and (HumanoidRootPart.Position - generatorPart.Position).Magnitude <= generatorRange then
+                        generator.Remotes.RE:FireServer()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if env.ESPEnabled then
+            local playersFolder = workspace:FindFirstChild("Players")
+            
+            if playersFolder then
+                local survivors = playersFolder:FindFirstChild("Survivors")
+                local killers = playersFolder:FindFirstChild("Killers")
+                
+                if survivors then
+                    for _, survivor in pairs(survivors:GetChildren()) do
+                        if survivor:IsA("Model") then
+                            if survivor:FindFirstChild("Head") and not survivor.Head:FindFirstChild("NameTag") then
+                                createNameTag(survivor, survivor.Name, Color3.new(0, 1, 0))
+                            end
+                        end
+                    end
+                end
+                
+                if killers then
+                    for _, killer in pairs(killers:GetChildren()) do
+                        if killer:IsA("Model") then
+                            if killer:FindFirstChild("Head") and not killer.Head:FindFirstChild("NameTag") then
+                                createNameTag(killer, killer.Name, Color3.new(1, 0, 0))
+                            end
+                        end
+                    end
+                end
+                
+                for _, folderName in ipairs({"Survivors", "Killers"}) do
+                    local folder = playersFolder:FindFirstChild(folderName)
+                    if folder then
+                        for _, character in pairs(folder:GetChildren()) do
+                            if character:IsA("Model") then
+                                if character:FindFirstChild("Head") and character.Head:FindFirstChild("NameTag") and not character:FindFirstChild("Humanoid") then
+                                    character.Head.NameTag:Destroy()
+                                end
+                                
+                                if character:FindFirstChild("ESPHighlight") and not character:FindFirstChild("Humanoid") then
+                                    character.ESPHighlight:Destroy()
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        task.wait(0.5)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        
+        if env.ESPGenerators then
+            for _, generator in pairs(getGenerators()) do
+                createESPHighlight(generator, Color3.fromRGB(255, 255, 0))
+            end
+        else
+            for _, generator in pairs(getGenerators()) do
+                if generator:FindFirstChild("ESPHighlight") then
+                    generator.ESPHighlight:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if env.AutoClickPopup then
+            for _, gui in pairs(PlayerGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and gui:FindFirstChild("1x1x1x1Popup") then
+                    local popup = gui["1x1x1x1Popup"]
+                    
+                    if popup:IsA("ImageButton") and popup.Visible and popup.Active and not clickedPopups[popup] then
+                        clickButton(popup)
+                        clickedPopups[popup] = true
+                    end
+                end
+            end
+        end
+        
+        task.wait(0.016)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        
+        if env.ESPTools then
+            if workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") then
+                for _, obj in pairs(workspace.Map.Ingame:GetDescendants()) do
+                    if obj:IsA("Tool") and not obj:FindFirstChild("ESPHighlight") then
+                        createESPHighlight(obj, Color3.fromRGB(170, 0, 255))
+                    end
+                end
+            end
+        else
+            if workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") then
+                for _, obj in pairs(workspace.Map.Ingame:GetDescendants()) do
+                    if obj:IsA("Tool") and obj:FindFirstChild("ESPHighlight") then
+                        obj.ESPHighlight:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+mainSection:NewToggle("Auto Generator", "Completes the generator automatically", function(enabled)
+    env.AutoGenerator = enabled
+end)
+
+mainSection:NewSlider("Generator Speed", 1.25, 7.5, 1.25, "Adjusts Auto Generator delay (seconds)", function(value)
+    env.AutoGeneratorDelay = value
+end)
+
+espSection:NewToggle("ESP Generator", "Make a Esp to Generators", function(enabled)
+    env.ESPGenerators = enabled
+end)
+
+espSection:NewToggle("ESP (Survivors/Killers)", "Make a Esp to Players", function(enabled)
+    env.ESPEnabled = enabled
+end)
+
+espSection:NewToggle("ESP Tools", "Make a Esp to Tools", function(enabled)
+    env.ESPTools = enabled
+end)
+
+skillsSection:NewToggle("Auto CoinFlip", "(PC ONLY)", function(enabled)
+    env.AutoCoin = enabled
+    
+    if enabled then
+        task.spawn(function()
+            while env.AutoCoin do
+                if isMobile then
+                    if game.ReplicatedStorage:FindFirstChild("CoinFlipEvent") and game.ReplicatedStorage.CoinFlipEvent:IsA("RemoteEvent") then
+                        game.ReplicatedStorage.CoinFlipEvent:FireServer()
+                    end
+                else
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+                end
+                
+                task.wait(1.25)
+            end
+        end)
+    end
+end)
+
+skillsSection:NewToggle("Auto Click 1x1x1 Popup", "(PC ONLY)", function(enabled)
+    env.AutoClickPopup = enabled
+end)
+
+discordSection:NewButton("Discord", ":)", function()
+    setclipboard("https://discord.gg/YPCRZMaKnA")
+end)

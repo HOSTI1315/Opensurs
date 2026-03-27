@@ -1,0 +1,205 @@
+
+
+
+
+local Players = game:GetService("Players")
+
+local RunService = game:GetService("RunService")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local CoreGui = game:GetService("CoreGui")
+
+--// Local Player
+
+local LocalPlayer = Players.LocalPlayer
+
+--// Remote Event Reference
+
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local CandyEvent = RemoteEvents:FindFirstChild("CarnivalCompleteShootingGallery")
+
+--// Destroy old GUI (if exists)
+
+local existingGui = CoreGui:FindFirstChild("ringtá CANDY Dupe")
+
+if existingGui then
+
+	existingGui:Destroy()end
+
+--// GUI Setup
+
+local ScreenGui = Instance.new("ScreenGui")
+
+ScreenGui.Name = "ringtá CANDY Dupe"
+
+ScreenGui.Parent = CoreGui
+
+ScreenGui.ResetOnSpawn = false
+
+--// Main Frame
+
+local MainFrame = Instance.new("Frame")
+
+MainFrame.Name = "MainFrame"
+
+MainFrame.Size = UDim2.new(0, 260, 0, 180)
+
+MainFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
+
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+
+UICorner.CornerRadius = UDim.new(0, 12)
+
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+
+UIStroke.Thickness = 1.5
+
+UIStroke.Color = Color3.fromRGB(255, 255, 255)
+
+UIStroke.Parent = MainFrame
+
+--// Title
+
+local TitleLabel = Instance.new("TextLabel")
+
+TitleLabel.Name = "TitleLabel"
+
+TitleLabel.Text = "ringtá CANDY Dupe"
+
+TitleLabel.Size = UDim2.new(1, 0, 0, 35)
+
+TitleLabel.BackgroundTransparency = 1
+
+TitleLabel.Font = Enum.Font.GothamBold
+
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+TitleLabel.TextSize = 18
+
+TitleLabel.Parent = MainFrame
+
+--// Dupe Button
+
+local DupeBtn = Instance.new("TextButton")
+
+DupeBtn.Name = "DupeBtn"
+
+DupeBtn.Text = "Start CANDY Dupe"
+
+DupeBtn.Size = UDim2.new(0, 180, 0, 40)
+
+DupeBtn.Position = UDim2.new(0.5, -90, 0.5, -20)
+
+DupeBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+DupeBtn.Font = Enum.Font.GothamBold
+
+DupeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+DupeBtn.TextSize = 16
+
+DupeBtn.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+
+BtnCorner.CornerRadius = UDim.new(0, 8)
+
+BtnCorner.Parent = DupeBtn
+
+--// Credit Label
+
+local CreditLabel = Instance.new("TextLabel")
+
+CreditLabel.Name = "CreditLabel"
+
+CreditLabel.Text = "Credit: mr_bloxy_god.5 (Discord)"
+
+CreditLabel.Size = UDim2.new(1, 0, 0, 25)
+
+CreditLabel.Position = UDim2.new(0, 0, 1, -25)
+
+CreditLabel.BackgroundTransparency = 1
+
+CreditLabel.Font = Enum.Font.Gotham
+
+CreditLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+CreditLabel.TextSize = 12
+
+CreditLabel.Parent = MainFrame
+
+--// Dupe Logic
+
+local dupeRunning = false
+
+local dupeConnection
+
+local function startDupe()
+
+	if dupeRunning then return end
+
+	dupeRunning = true
+
+	DupeBtn.Text = "Stop CANDY Dupe"
+
+	DupeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+
+	
+
+	dupeConnection = RunService.Heartbeat:Connect(function()
+
+		if CandyEvent then
+
+			CandyEvent:FireServer()
+
+		end
+
+	end)
+
+end
+
+local function stopDupe()
+
+	if not dupeRunning then return end
+
+	dupeRunning = false
+
+	DupeBtn.Text = "Start CANDY Dupe"
+
+	DupeBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+	
+
+	if dupeConnection then
+
+		dupeConnection:Disconnect()
+
+		dupeConnection = nil
+
+	end
+
+end
+
+--// Button Control
+
+DupeBtn.MouseButton1Click:Connect(function()
+
+	if dupeRunning then
+
+		stopDupe()
+
+	else
+
+		startDupe()
+
+	end
+
+end)

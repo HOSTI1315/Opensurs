@@ -1,0 +1,825 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PhysicsService = game:GetService("PhysicsService")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Character = LocalPlayer.Character
+local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
+local Config = {
+    ControlDuration = 10, 
+    DetectionRange = math.huge, 
+    WebSlingerTool = "Web Slinger",
+    AutoControl = false, 
+    WhitelistEnabled = false, 
+    BlacklistEnabled = false, 
+    Whitelist = {}, 
+    Blacklist = {}, 
+    ShowNotifications = true,
+    AutoEquipTools = true
+}
+
+
+local function SaveConfig()
+end
+
+local function LoadConfig()
+end
+
+task.spawn(function()
+    pcall(function()
+        local classes = ReplicatedStorage:FindFirstChild("Classes")
+        if classes then
+            local plotClient = classes:FindFirstChild("PlotClient")
+            if plotClient then
+                require(plotClient)
+            end
+        end
+    end)
+    
+    pcall(function()
+        local packages = ReplicatedStorage:FindFirstChild("Packages")
+        if packages then
+            local observers = packages:FindFirstChild("Observers")
+            if observers then
+                require(observers)
+            end
+        end
+    end)
+end)
+
+local Net = nil
+task.spawn(function()
+    pcall(function()
+        local packages = ReplicatedStorage:FindFirstChild("Packages")
+        if packages then
+            local net = packages:FindFirstChild("Net")
+            if net then
+                Net = require(net)
+            end
+        end
+    end)
+end)
+
+if Character then
+    LocalPlayer.CharacterAdded:Connect(function(newChar)
+        Character = newChar
+        HumanoidRootPart = newChar:FindFirstChild("HumanoidRootPart") or newChar:WaitForChild("HumanoidRootPart")
+    end)
+else
+    LocalPlayer.CharacterAdded:Connect(function(newChar)
+        Character = newChar
+        HumanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+    end)
+end
+
+local NoCollideGroup = "NoCollideGroup"
+
+local IsControlling = false
+local ControlledPlayer = nil
+
+pcall(function()
+    PhysicsService:CreateCollisionGroup(NoCollideGroup)
+    PhysicsService:CollisionGroupSetCollidable(NoCollideGroup, "Default", false)
+end)
+
+local UseItemRemote = nil
+local function GetUseItemRemote()
+    if UseItemRemote then return UseItemRemote end
+    
+    local success, remote = pcall(function()
+        local packages = ReplicatedStorage:FindFirstChild("Packages")
+        if packages then
+            local net = packages:FindFirstChild("Net")
+            if net then
+                local reUseItem = net:FindFirstChild("RE/UseItem")
+                if reUseItem and reUseItem:IsA("RemoteEvent") then
+                    return reUseItem
+                end
+                local reFolder = net:FindFirstChild("RE")
+                if reFolder then
+                    local useItem = reFolder:FindFirstChild("UseItem")
+                    if useItem and useItem:IsA("RemoteEvent") then
+                        return useItem
+                    end
+                end
+            end
+        end
+        return nil
+    end)
+    
+    if success and remote then
+        UseItemRemote = remote
+        return UseItemRemote
+    end
+    
+    local fallbackSuccess, fallbackRemote = pcall(function()
+        return ReplicatedStorage:FindFirstChild("UseItem", true)
+    end)
+    
+    if fallbackSuccess and fallbackRemote and fallbackRemote:IsA("RemoteEvent") then
+        UseItemRemote = fallbackRemote
+        return UseItemRemote
+    end
+    
+    return nil
+end
+
+local PlayerMouseModule = nil
+local function GetPlayerMouse()
+    if PlayerMouseModule then return PlayerMouseModule end
+    local success, result = pcall(function()
+        local packages = ReplicatedStorage:FindFirstChild("Packages")
+        if packages then
+            local playerMouse = packages:FindFirstChild("PlayerMouse")
+            if playerMouse then
+                return require(playerMouse)
+            end
+        end
+        return nil
+    end)
+    if success and result then
+        PlayerMouseModule = result
+        return PlayerMouseModule
+    end
+    return nil
+end
+
+local function ShowNotification(message, duration, notificationType)
+    if not Config.ShowNotifications then return end
+    
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "Crusty Hub";
+            Text = message or "Notification";
+            Duration = duration or 2;
+        })
+    end)
+end
+
+local function EnsureTool(toolName)
+    if not toolName then return false end
+    if not Character then return false end
+    
+    local hasTool = false
+    if LocalPlayer.Backpack then
+        hasTool = LocalPlayer.Backpack:FindFirstChild(toolName) ~= nil
+    end
+    if not hasTool then
+        hasTool = Character:FindFirstChild(toolName) ~= nil
+    end
+    
+    if not hasTool and Net and Config.AutoEquipTools then
+        pcall(function()
+            Net:RemoteFunction("CoinsShopService/RequestBuy"):InvokeServer(toolName)
+        end)
+    end
+    
+    local tool = LocalPlayer.Backpack and LocalPlayer.Backpack:FindFirstChild(toolName)
+    local humanoid = tool and Character and Character:FindFirstChildOfClass("Humanoid")
+    if humanoid and tool then
+        pcall(function()
+            humanoid:EquipTool(tool)
+        end)
+        if Character:FindFirstChild(toolName) then
+            return true
+        end
+    elseif Character:FindFirstChild(toolName) then
+        return true
+    end
+    
+    return false
+end
+
+if Config.AutoEquipTools then
+    task.spawn(function()
+        EnsureTool("Speed Coil")
+        EnsureTool(Config.WebSlingerTool)
+    end)
+end
+
+local function IsPlayerAllowed(player)
+    if not player then return false end
+    
+    if Config.BlacklistEnabled then
+        for _, blocked in ipairs(Config.Blacklist) do
+            if type(blocked) == "number" then
+                if player.UserId == blocked then
+                    return false, "Player is blacklisted"
+                end
+            elseif type(blocked) == "string" then
+                if player.Name:lower():find(blocked:lower()) then
+                    return false, "Player is blacklisted"
+                end
+            end
+        end
+    end
+    
+    if Config.WhitelistEnabled then
+        local isWhitelisted = false
+        for _, allowed in ipairs(Config.Whitelist) do
+            if type(allowed) == "number" then
+                if player.UserId == allowed then
+                    isWhitelisted = true
+                    break
+                end
+            elseif type(allowed) == "string" then
+                if player.Name:lower():find(allowed:lower()) then
+                    isWhitelisted = true
+                    break
+                end
+            end
+        end
+        if not isWhitelisted then
+            return false, "Player is not whitelisted"
+        end
+    end
+    
+    return true
+end
+
+local function GetPlayerList()
+    local playerList = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local allowed, reason = IsPlayerAllowed(player)
+                if allowed then
+                    table.insert(playerList, {
+                        Player = player,
+                        Name = player.Name,
+                        DisplayName = player.DisplayName,
+                        UserId = player.UserId,
+                        Distance = Character and HumanoidRootPart and (hrp.Position - HumanoidRootPart.Position).Magnitude or math.huge
+                    })
+                end
+            end
+        end
+    end
+    
+    table.sort(playerList, function(a, b)
+        return a.Distance < b.Distance
+    end)
+    
+    return playerList
+end
+
+local function FindNearestPlayer()
+    local playerList = GetPlayerList()
+    if #playerList > 0 then
+        return playerList[1].Player
+    end
+    return nil
+end
+
+local function ControlPlayer(targetPlayer)
+    if IsControlling then
+        ShowNotification("Already controlling a player!", 2)
+        return false
+    end
+    
+    if not targetPlayer or not targetPlayer.Character then
+        ShowNotification("Invalid target player!", 2)
+        return false
+    end
+    
+    local allowed, reason = IsPlayerAllowed(targetPlayer)
+    if not allowed then
+        ShowNotification(reason or "Player not allowed", 2)
+        return false
+    end
+    
+    local targetCharacter = targetPlayer.Character
+    local targetHRP = targetCharacter:FindFirstChild("HumanoidRootPart")
+    if not targetHRP then
+        ShowNotification("Target missing HumanoidRootPart!", 2)
+        return false
+    end
+    
+    local myCharacter = LocalPlayer.Character
+    if not myCharacter then
+        ShowNotification("Your character not found!", 2)
+        return false
+    end
+    
+    local characterSounds = LocalPlayer.PlayerScripts:FindFirstChild("RbxCharacterSounds")
+    if characterSounds then
+        characterSounds.Disabled = true
+    end
+    
+    local useItemRemote = GetUseItemRemote()
+    local playerMouse = GetPlayerMouse()
+    
+    if not useItemRemote then
+        ShowNotification("Failed to find UseItem remote!", 1)
+        return false
+    end
+    
+    EnsureTool(Config.WebSlingerTool)
+    local webSlinger = Character:FindFirstChild(Config.WebSlingerTool) or LocalPlayer.Backpack:FindFirstChild(Config.WebSlingerTool)
+    if webSlinger and webSlinger.Parent == LocalPlayer.Backpack then
+        local humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:EquipTool(webSlinger)
+        end
+    end
+    
+    if not Character:FindFirstChild(Config.WebSlingerTool) then
+        ShowNotification("Web Slinger not equipped!", 1)
+        if characterSounds then
+            characterSounds.Disabled = false
+        end
+        return false
+    end
+    
+    local function FireWebSlingAtCurrentPosition()
+        if not targetHRP or not targetHRP.Parent or not targetCharacter or not targetCharacter.Parent then
+            return false
+        end
+        
+        local currentHRP = targetCharacter:FindFirstChild("HumanoidRootPart")
+        if not currentHRP then
+            return false
+        end
+        
+        local currentPosition = currentHRP.Position
+        local currentTarget = currentHRP
+        
+        if playerMouse then
+            playerMouse.Hit = CFrame.new(currentPosition)
+            playerMouse.Target = currentTarget
+            currentPosition = playerMouse.Hit.Position
+            currentTarget = playerMouse.Target
+        end
+        
+        local webSlingArgs = {currentPosition, currentTarget}
+        
+        useItemRemote:FireServer(unpack(webSlingArgs))
+        return true
+    end
+    
+    if not targetCharacter or not targetCharacter.Parent then
+        ShowNotification("Target lost!", 1)
+        if characterSounds then
+            characterSounds.Disabled = false
+        end
+        return false
+    end
+    
+    targetHRP = targetCharacter:FindFirstChild("HumanoidRootPart")
+    if not targetHRP then
+        ShowNotification("Target missing HumanoidRootPart!", 1)
+        if characterSounds then
+            characterSounds.Disabled = false
+        end
+        return false
+    end
+    
+    FireWebSlingAtCurrentPosition()
+
+    local webTarget = targetHRP:WaitForChild("WebTargetAttch", 2)
+    if not webTarget then
+        ShowNotification("Failed to websling!", 1)
+        if characterSounds then
+            characterSounds.Disabled = false
+        end
+        return false
+    end
+
+    IsControlling = true
+    ControlledPlayer = targetPlayer
+
+    local webRope = Workspace:FindFirstChild("WebRope")
+    if webRope and webRope:IsA("RopeConstraint") then
+        webRope.Length = 1000
+    end
+
+    LocalPlayer.Character = targetCharacter
+    local targetHumanoid = targetCharacter:FindFirstChildOfClass("Humanoid")
+    if targetHumanoid then
+        Workspace.CurrentCamera.CameraSubject = targetHumanoid
+    end
+
+    local startTime = tick()
+    local controlDuration = Config.ControlDuration
+    
+    task.spawn(function()
+        while IsControlling and ControlledPlayer == targetPlayer and (tick() - startTime) < controlDuration do
+            local elapsed = tick() - startTime
+            local remaining = math.max(0, controlDuration - elapsed)
+            if TimerLabel then
+                TimerLabel.Text = string.format("%.1fs", remaining)
+            end
+            task.wait(0.1)
+        end
+        if TimerLabel then
+            TimerLabel.Text = ""
+        end
+    end)
+
+    task.delay(controlDuration, function()
+        if myCharacter and myCharacter.Parent then
+            LocalPlayer.Character = myCharacter
+            local myHumanoid = myCharacter:FindFirstChildOfClass("Humanoid")
+            if myHumanoid then
+                Workspace.CurrentCamera.CameraSubject = myHumanoid
+            end
+        end
+        if characterSounds then
+            characterSounds.Disabled = false
+        end
+        IsControlling = false
+        ControlledPlayer = nil
+        if TimerLabel then
+            TimerLabel.Text = ""
+        end
+        ShowNotification("Control released automatically", 1)
+    end)
+    
+    ShowNotification("Successfully controlling " .. targetPlayer.Name, 2)
+    return true
+end
+
+local function ReleaseControl()
+    if not IsControlling then return end
+    
+    local myCharacter = LocalPlayer.Character
+    if myCharacter and myCharacter.Parent then
+        LocalPlayer.Character = myCharacter
+        local myHumanoid = myCharacter:FindFirstChildOfClass("Humanoid")
+        if myHumanoid then
+            Workspace.CurrentCamera.CameraSubject = myHumanoid
+        end
+    end
+    
+    local characterSounds = LocalPlayer.PlayerScripts:FindFirstChild("RbxCharacterSounds")
+    if characterSounds then
+        characterSounds.Disabled = false
+    end
+    
+    IsControlling = false
+    ControlledPlayer = nil
+    if TimerLabel then
+        TimerLabel.Text = ""
+    end
+    ShowNotification("Control released manually", 1)
+end
+
+if Config.AutoControl then
+    task.spawn(function()
+        while Config.AutoControl do
+            if not IsControlling then
+                local target = FindNearestPlayer()
+                if target then
+                    ControlPlayer(target)
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+pcall(function()
+    local existingGui = PlayerGui:FindFirstChild("CrustyHubGui")
+    if existingGui then
+        existingGui:Destroy()
+    end
+end)
+
+if not PlayerGui then
+    warn("PlayerGui not found, cannot create GUI")
+    return
+end
+
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "CrustyHubGui"
+MainGui.ResetOnSpawn = false
+MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+MainGui.DisplayOrder = 100
+MainGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 220, 0, 200)
+MainFrame.Position = UDim2.new(0, 20, 0, 50)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0.05
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = MainGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(110, 120, 250)
+MainStroke.Thickness = 2
+MainStroke.Transparency = 0.3
+MainStroke.Parent = MainFrame
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 28)
+TitleBar.Position = UDim2.new(0, 0, 0, 0)
+TitleBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+TitleBar.BackgroundTransparency = 0.1
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8, 0, 0)
+TitleCorner.Parent = TitleBar
+
+local TitleDivider = Instance.new("Frame")
+TitleDivider.Size = UDim2.new(1, 0, 0, 1)
+TitleDivider.Position = UDim2.new(0, 0, 1, 0)
+TitleDivider.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+TitleDivider.BackgroundTransparency = 0.5
+TitleDivider.BorderSizePixel = 0
+TitleDivider.Parent = TitleBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -30, 1, 0)
+Title.Position = UDim2.new(0, 8, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Crusty Hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 12
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
+MinimizeButton.Position = UDim2.new(1, -24, 0.5, -10)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MinimizeButton.BackgroundTransparency = 0.5
+MinimizeButton.Text = "−"
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextSize = 12
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.AutoButtonColor = false
+MinimizeButton.Parent = TitleBar
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 4)
+MinimizeCorner.Parent = MinimizeButton
+
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, 0, 1, -28)
+ContentFrame.Position = UDim2.new(0, 0, 0, 28)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.ClipsDescendants = true
+ContentFrame.Parent = MainFrame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -16, 0, 14)
+StatusLabel.Position = UDim2.new(0, 8, 0, 4)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Ready"
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 10
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = ContentFrame
+
+local TimerLabel = Instance.new("TextLabel")
+TimerLabel.Size = UDim2.new(1, -16, 0, 14)
+TimerLabel.Position = UDim2.new(0, 8, 0, 18)
+TimerLabel.BackgroundTransparency = 1
+TimerLabel.Text = ""
+TimerLabel.Font = Enum.Font.GothamBold
+TimerLabel.TextSize = 11
+TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+TimerLabel.TextXAlignment = Enum.TextXAlignment.Left
+TimerLabel.Parent = ContentFrame
+
+local PlayerSelectionFrame = Instance.new("Frame")
+PlayerSelectionFrame.Size = UDim2.new(1, -16, 0, 24)
+PlayerSelectionFrame.Position = UDim2.new(0, 8, 0, 36)
+PlayerSelectionFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+PlayerSelectionFrame.BorderSizePixel = 0
+PlayerSelectionFrame.Parent = ContentFrame
+
+local PlayerSelectionCorner = Instance.new("UICorner")
+PlayerSelectionCorner.CornerRadius = UDim.new(0, 6)
+PlayerSelectionCorner.Parent = PlayerSelectionFrame
+
+local PlayerDropdown = Instance.new("TextButton")
+PlayerDropdown.Size = UDim2.new(1, 0, 1, 0)
+PlayerDropdown.BackgroundTransparency = 1
+PlayerDropdown.Text = "Select Player..."
+PlayerDropdown.Font = Enum.Font.Gotham
+PlayerDropdown.TextSize = 10
+PlayerDropdown.TextColor3 = Color3.fromRGB(200, 200, 200)
+PlayerDropdown.Parent = PlayerSelectionFrame
+
+local function UpdatePlayerDropdown()
+    local playerList = GetPlayerList()
+    if #playerList > 0 then
+        PlayerDropdown.Text = playerList[1].Name .. " (" .. math.floor(playerList[1].Distance) .. " studs)"
+    else
+        PlayerDropdown.Text = "No players found"
+    end
+end
+
+PlayerDropdown.MouseButton1Click:Connect(function()
+    local playerList = GetPlayerList()
+    if #playerList > 0 then
+        local selectedPlayer = playerList[1].Player
+        ControlPlayer(selectedPlayer)
+    else
+        ShowNotification("No player found!", 1)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not IsControlling then
+        UpdatePlayerDropdown()
+    end
+end)
+
+local ControlButton = Instance.new("TextButton")
+ControlButton.Size = UDim2.new(1, -16, 0, 28)
+ControlButton.Position = UDim2.new(0, 8, 0, 64)
+ControlButton.BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+ControlButton.BorderSizePixel = 0
+ControlButton.Text = "CONTROL NEAREST"
+ControlButton.Font = Enum.Font.GothamBold
+ControlButton.TextSize = 11
+ControlButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ControlButton.AutoButtonColor = false
+ControlButton.Parent = ContentFrame
+
+local ControlCorner = Instance.new("UICorner")
+ControlCorner.CornerRadius = UDim.new(0, 6)
+ControlCorner.Parent = ControlButton
+
+ControlButton.MouseButton1Click:Connect(function()
+    local target = FindNearestPlayer()
+    if target then
+        ControlPlayer(target)
+    else
+        ShowNotification("No player found!", 1)
+    end
+end)
+
+ControlButton.MouseEnter:Connect(function()
+    TweenService:Create(ControlButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(130, 140, 255)
+    }):Play()
+end)
+
+ControlButton.MouseLeave:Connect(function()
+    TweenService:Create(ControlButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(110, 120, 250)
+    }):Play()
+end)
+
+local ReleaseButton = Instance.new("TextButton")
+ReleaseButton.Size = UDim2.new(1, -16, 0, 28)
+ReleaseButton.Position = UDim2.new(0, 8, 0, 96)
+ReleaseButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+ReleaseButton.BorderSizePixel = 0
+ReleaseButton.Text = "RELEASE"
+ReleaseButton.Font = Enum.Font.GothamBold
+ReleaseButton.TextSize = 11
+ReleaseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReleaseButton.AutoButtonColor = false
+ReleaseButton.Parent = ContentFrame
+
+local ReleaseCorner = Instance.new("UICorner")
+ReleaseCorner.CornerRadius = UDim.new(0, 6)
+ReleaseCorner.Parent = ReleaseButton
+
+ReleaseButton.MouseButton1Click:Connect(function()
+    ReleaseControl()
+end)
+
+ReleaseButton.MouseEnter:Connect(function()
+    TweenService:Create(ReleaseButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+    }):Play()
+end)
+
+ReleaseButton.MouseLeave:Connect(function()
+    TweenService:Create(ReleaseButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    }):Play()
+end)
+
+local SettingsButton = Instance.new("TextButton")
+SettingsButton.Size = UDim2.new(1, -16, 0, 24)
+SettingsButton.Position = UDim2.new(0, 8, 0, 128)
+SettingsButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+SettingsButton.BorderSizePixel = 0
+SettingsButton.Text = "SETTINGS"
+SettingsButton.Font = Enum.Font.GothamBold
+SettingsButton.TextSize = 10
+SettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsButton.AutoButtonColor = false
+SettingsButton.Parent = ContentFrame
+
+local SettingsCorner = Instance.new("UICorner")
+SettingsCorner.CornerRadius = UDim.new(0, 6)
+SettingsCorner.Parent = SettingsButton
+
+SettingsButton.MouseButton1Click:Connect(function()
+    ShowNotification("Settings panel coming soon!", 2)
+end)
+
+SettingsButton.MouseEnter:Connect(function()
+    TweenService:Create(SettingsButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    }):Play()
+end)
+
+SettingsButton.MouseLeave:Connect(function()
+    TweenService:Create(SettingsButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    }):Play()
+end)
+
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {
+            Size = UDim2.new(0, 220, 0, 28)
+        }):Play()
+        MinimizeButton.Text = "+"
+        ContentFrame.Visible = false
+    else
+        ContentFrame.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {
+            Size = UDim2.new(0, 220, 0, 200)
+        }):Play()
+        MinimizeButton.Text = "−"
+    end
+end)
+
+MinimizeButton.MouseEnter:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.15), {
+        BackgroundTransparency = 0.2
+    }):Play()
+end)
+
+MinimizeButton.MouseLeave:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.15), {
+        BackgroundTransparency = 0.5
+    }):Play()
+end)
+
+RunService.Heartbeat:Connect(function()
+    if IsControlling and ControlledPlayer then
+        StatusLabel.Text = "Controlling: " .. ControlledPlayer.Name
+    elseif not IsControlling then
+        StatusLabel.Text = "Ready"
+        if TimerLabel then
+            TimerLabel.Text = ""
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    local char = LocalPlayer.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if humanoid then
+            humanoid.PlatformStand = false
+            humanoid.Sit = false
+        end
+        if hrp then
+            hrp.Anchored = false
+        end
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    HumanoidRootPart = newChar:FindFirstChild("HumanoidRootPart") or newChar:WaitForChild("HumanoidRootPart")
+    if Config.AutoEquipTools then
+        EnsureTool(Config.WebSlingerTool)
+    end
+    IsControlling = false
+    ControlledPlayer = nil
+    if StatusLabel then
+        StatusLabel.Text = "Ready"
+    end
+    if TimerLabel then
+        TimerLabel.Text = ""
+    end
+end)
+
+task.spawn(function()
+    ShowNotification("Crusty Hub Loaded!", 2)
+end)

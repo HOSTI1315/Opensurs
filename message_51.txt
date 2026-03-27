@@ -1,0 +1,470 @@
+-- VR Controller GUI
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local SoundService = game:GetService("SoundService")
+
+-- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Ð¾ÑÐ½Ð¾Ð²Ð½Ð¾Ð¹ GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "VRController"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- ÐžÑÐ½Ð¾Ð²Ð½Ð¾Ð¹ Ñ„Ñ€ÐµÐ¹Ð¼
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 160)
+MainFrame.Position = UDim2.new(0, 10, 0, 10)
+MainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.new(1, 1, 1)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Ð—Ð°Ð³Ð¾Ð»Ð¾Ð²Ð¾Ðº
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Text = "VR Controller"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+-- ÐšÐ½Ð¾Ð¿ÐºÐ° START VR / STOP VR
+local VRButton = Instance.new("TextButton")
+VRButton.Name = "VRButton"
+VRButton.Size = UDim2.new(0.8, 0, 0, 30)
+VRButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+VRButton.TextColor3 = Color3.new(1, 1, 1)
+VRButton.Text = "START VR"
+VRButton.Font = Enum.Font.Gotham
+VRButton.TextSize = 14
+VRButton.Parent = MainFrame
+
+-- ÐšÐ½Ð¾Ð¿ÐºÐ° GAMEPASSES
+local GamepassesButton = Instance.new("TextButton")
+GamepassesButton.Name = "GamepassesButton"
+GamepassesButton.Size = UDim2.new(0.8, 0, 0, 30)
+GamepassesButton.Position = UDim2.new(0.1, 0, 0.45, 0)
+GamepassesButton.BackgroundColor3 = Color3.new(0, 0.3, 0.8)
+GamepassesButton.TextColor3 = Color3.new(1, 1, 1)
+GamepassesButton.Text = "GAMEPASSES"
+GamepassesButton.Font = Enum.Font.Gotham
+GamepassesButton.TextSize = 14
+GamepassesButton.Parent = MainFrame
+
+-- ÐšÐ½Ð¾Ð¿ÐºÐ° SHOW RIG / HIDE RIG
+local RigButton = Instance.new("TextButton")
+RigButton.Name = "RigButton"
+RigButton.Size = UDim2.new(0.8, 0, 0, 30)
+RigButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+RigButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
+RigButton.TextColor3 = Color3.new(1, 1, 1)
+RigButton.Text = "SHOW RIG"
+RigButton.Font = Enum.Font.Gotham
+RigButton.TextSize = 14
+RigButton.Parent = MainFrame
+
+-- ÐŸÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ñ‹Ðµ Ð´Ð»Ñ ÑƒÐ¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ñ VR ÑÐºÑ€Ð¸Ð¿Ñ‚Ð¾Ð¼
+local VRScriptActive = false
+local VRScreenGui = nil
+local VRConnection = nil
+local RigVisible = false
+local LeftRigPart = nil
+local RightRigPart = nil
+local RigConnection = nil
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ¸ R6/R15
+local function isR6()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        return character.Humanoid.RigType == Enum.HumanoidRigType.R6
+    end
+    return false
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð´Ð»Ñ Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ð¾Ð³Ð¾ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ñ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+local function getCharacter()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+        return character
+    end
+    return nil
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð¿Ð¾ÐºÐ°Ð·Ð° ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ BY WFSBRO Ð¸ Ð¼ÑƒÐ·Ñ‹ÐºÐ¸
+local function showIntro()
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ GUI Ð´Ð»Ñ Ñ‚ÐµÐºÑÑ‚Ð°
+    local IntroGui = Instance.new("ScreenGui")
+    IntroGui.Name = "IntroGUI"
+    IntroGui.ResetOnSpawn = false
+    IntroGui.Parent = PlayerGui
+    
+    local IntroFrame = Instance.new("Frame")
+    IntroFrame.Size = UDim2.new(0, 300, 0, 100)
+    IntroFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
+    IntroFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    IntroFrame.BackgroundTransparency = 0.3
+    IntroFrame.BorderSizePixel = 0
+    IntroFrame.Parent = IntroGui
+    
+    local IntroText = Instance.new("TextLabel")
+    IntroText.Size = UDim2.new(1, 0, 1, 0)
+    IntroText.BackgroundTransparency = 1
+    IntroText.Text = "BY WFSBRO"
+    IntroText.TextColor3 = Color3.new(1, 1, 1)
+    IntroText.Font = Enum.Font.GothamBold
+    IntroText.TextSize = 24
+    IntroText.Parent = IntroFrame
+    
+    -- Ð—Ð°Ð¿ÑƒÑÐºÐ°ÐµÐ¼ Ð¼ÑƒÐ·Ñ‹ÐºÑƒ
+    local introSound = Instance.new("Sound")
+    introSound.SoundId = "rbxassetid://6350854289"
+    introSound.Volume = 0.5
+    introSound.Parent = SoundService
+    introSound:Play()
+    
+    -- Ð§ÐµÑ€ÐµÐ· 3 ÑÐµÐºÑƒÐ½Ð´Ñ‹ ÑƒÐ±Ð¸Ñ€Ð°ÐµÐ¼ Ð²ÑÑ‘
+    wait(3)
+    IntroGui:Destroy()
+    introSound:Stop()
+    introSound:Destroy()
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ñ€Ð¸Ð³Ð° (Ð¿Ð°Ð»Ð¾Ñ‡ÐµÐº Ð² Ñ€ÑƒÐºÐ°Ñ…)
+local function createRig()
+    local character = getCharacter()
+    if not character then return end
+    
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Ð»ÐµÐ²ÑƒÑŽ Ð¿Ð°Ð»Ð¾Ñ‡ÐºÑƒ
+    LeftRigPart = Instance.new("Part")
+    LeftRigPart.Name = "LeftRigStick"
+    LeftRigPart.Size = Vector3.new(0.2, 2.0, 0.2) -- Ð”Ð»Ð¸Ð½Ð° 2.0
+    LeftRigPart.BrickColor = BrickColor.new("Medium stone grey")
+    LeftRigPart.Material = Enum.Material.Neon
+    LeftRigPart.CanCollide = false
+    LeftRigPart.Anchored = false
+    LeftRigPart.Parent = workspace
+    
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Ð¿Ñ€Ð°Ð²ÑƒÑŽ Ð¿Ð°Ð»Ð¾Ñ‡ÐºÑƒ
+    RightRigPart = Instance.new("Part")
+    RightRigPart.Name = "RightRigStick"
+    RightRigPart.Size = Vector3.new(0.2, 2.0, 0.2) -- Ð”Ð»Ð¸Ð½Ð° 2.0
+    RightRigPart.BrickColor = BrickColor.new("Medium stone grey")
+    RightRigPart.Material = Enum.Material.Neon
+    RightRigPart.CanCollide = false
+    RightRigPart.Anchored = false
+    RightRigPart.Parent = workspace
+    
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Weld Ð´Ð»Ñ Ð»ÐµÐ²Ð¾Ð¹ Ð¿Ð°Ð»Ð¾Ñ‡ÐºÐ¸ (Ð¿Ñ€Ð¸ÐºÑ€ÐµÐ¿Ð»ÑÐµÐ¼ Ðº Ð»ÐµÐ²Ð¾Ð¹ Ñ€ÑƒÐºÐµ)
+    local leftWeld = Instance.new("Weld")
+    leftWeld.Part0 = character:FindFirstChild("Left Arm")
+    leftWeld.Part1 = LeftRigPart
+    leftWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0) -- Ð’ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑŒÐ½Ð¾ Ð² Ñ†ÐµÐ½Ñ‚Ñ€Ðµ Ñ€ÑƒÐºÐ¸
+    leftWeld.Parent = LeftRigPart
+    
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ Weld Ð´Ð»Ñ Ð¿Ñ€Ð°Ð²Ð¾Ð¹ Ð¿Ð°Ð»Ð¾Ñ‡ÐºÐ¸ (Ð¿Ñ€Ð¸ÐºÑ€ÐµÐ¿Ð»ÑÐµÐ¼ Ðº Ð¿Ñ€Ð°Ð²Ð¾Ð¹ Ñ€ÑƒÐºÐµ)
+    local rightWeld = Instance.new("Weld")
+    rightWeld.Part0 = character:FindFirstChild("Right Arm")
+    rightWeld.Part1 = RightRigPart
+    rightWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0) -- Ð’ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑŒÐ½Ð¾ Ð² Ñ†ÐµÐ½Ñ‚Ñ€Ðµ Ñ€ÑƒÐºÐ¸
+    rightWeld.Parent = RightRigPart
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ñ€Ð¸Ð³Ð°
+local function removeRig()
+    RigVisible = false
+    if RigConnection then
+        RigConnection:Disconnect()
+        RigConnection = nil
+    end
+    if LeftRigPart then
+        LeftRigPart:Destroy()
+        LeftRigPart = nil
+    end
+    if RightRigPart then
+        RightRigPart:Destroy()
+        RightRigPart = nil
+    end
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð¿ÐµÑ€ÐµÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ñ Ñ€Ð¸Ð³Ð°
+local function toggleRig()
+    if RigButton.Text == "SHOW RIG" then
+        -- ÐŸÐ¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÐ¼ Ñ€Ð¸Ð³
+        RigVisible = true
+        createRig()
+        RigButton.Text = "HIDE RIG"
+        RigButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+    else
+        -- Ð¡ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ Ñ€Ð¸Ð³
+        removeRig()
+        RigButton.Text = "SHOW RIG"
+        RigButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
+    end
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ ÑƒÐ±Ð¸Ð¹ÑÑ‚Ð²Ð° Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+local function killCharacter()
+    local character = getCharacter()
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.Health = 0
+    end
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð·Ð°Ð¿ÑƒÑÐºÐ° VR ÑÐºÑ€Ð¸Ð¿Ñ‚Ð°
+local function StartVRScript()
+    if VRScriptActive then return end
+    
+    -- ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ R6/R15
+    if not isR6() then
+        VRButton.Text = "R15 ERROR"
+        VRButton.BackgroundColor3 = Color3.new(0.8, 0, 0)
+        wait(2)
+        VRButton.Text = "START VR"
+        VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+        return
+    end
+    
+    -- ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼, ÐµÑÑ‚ÑŒ Ð»Ð¸ Ð¶Ð¸Ð²Ð¾Ð¹ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶
+    local character = getCharacter()
+    if not character then
+        VRButton.Text = "NO CHARACTER"
+        VRButton.BackgroundColor3 = Color3.new(0.8, 0, 0)
+        wait(2)
+        VRButton.Text = "START VR"
+        VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+        return
+    end
+    
+    -- ÐŸÐ¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÐ¼ Ð¸Ð½Ñ‚Ñ€Ð¾ Ð¸ Ð¼ÑƒÐ·Ñ‹ÐºÑƒ
+    showIntro()
+    
+    -- Ð—Ð°Ð¿ÑƒÑÐºÐ°ÐµÐ¼ VR ÑÐºÑ€Ð¸Ð¿Ñ‚
+    VRScriptActive = true
+    VRButton.Text = "STOP VR"
+    VRButton.BackgroundColor3 = Color3.new(0.8, 0, 0)
+    
+    -- Ð¡Ð¾Ð·Ð´Ð°ÐµÐ¼ VR GUI
+    VRScreenGui = Instance.new("ScreenGui")
+    VRScreenGui.Name = "FakeVR_GUI"
+    VRScreenGui.ResetOnSpawn = false
+    VRScreenGui.Parent = PlayerGui
+    
+    local player = game.Players.LocalPlayer
+    local runService = game:GetService("RunService")
+    
+    -- === ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸ ===
+    local GUI_SIZE = 150
+    local INNER_SIZE = 40
+    local ROTATION_ANGLE = 180
+    local UPDOWN_ANGLE = 120
+    local SMOOTHNESS = 0.3
+    
+    -- === GUI ===
+    local function makeZone(color, posX)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, GUI_SIZE, 0, GUI_SIZE)
+        frame.Position = UDim2.new(posX, -GUI_SIZE/2, 0.8, -GUI_SIZE/2)
+        frame.BackgroundColor3 = color
+        frame.BorderSizePixel = 2
+        frame.Parent = VRScreenGui
+        
+        local inner = Instance.new("Frame")
+        inner.Size = UDim2.new(0, INNER_SIZE, 0, INNER_SIZE)
+        inner.Position = UDim2.new(0.5, -INNER_SIZE/2, 0.5, -INNER_SIZE/2)
+        inner.BackgroundColor3 = Color3.new(1,1,1)
+        inner.Active = true
+        inner.Draggable = true
+        inner.Parent = frame
+        
+        return frame, inner
+    end
+    
+    local redZone, redSquare = makeZone(Color3.fromRGB(255,0,0), 0.3)
+    local blueZone, blueSquare = makeZone(Color3.fromRGB(0,0,255), 0.7)
+    
+    -- === ÐŸÐµÑ€ÑÐ¾Ð½Ð°Ð¶ ===
+    local character = getCharacter()
+    if not character then
+        -- Ð•ÑÐ»Ð¸ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶ ÑƒÐ¼ÐµÑ€ Ð²Ð¾ Ð²Ñ€ÐµÐ¼Ñ Ð·Ð°Ð¿ÑƒÑÐºÐ°, Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ VR
+        VRScriptActive = false
+        VRButton.Text = "START VR"
+        VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+        VRScreenGui:Destroy()
+        return
+    end
+    
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    -- ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚Ð½Ñ‹Ðµ Ð°Ð½Ð¸Ð¼Ð°Ñ†Ð¸Ð¸
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if animator then animator:Destroy() end
+    for _, a in ipairs(humanoid:GetChildren()) do
+        if a:IsA("Animation") then a:Destroy() end
+    end
+    
+    local torso = character:WaitForChild("Torso")
+    local leftShoulder = torso:WaitForChild("Left Shoulder")
+    local rightShoulder = torso:WaitForChild("Right Shoulder")
+    
+    -- Ð‘Ð°Ð·Ð¾Ð²Ñ‹Ðµ Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ Ð¿Ð»ÐµÑ‡
+    local leftBase = leftShoulder.C0
+    local rightBase = rightShoulder.C0
+    
+    -- === ÐŸÑ€ÐµÐ¾Ð±Ñ€Ð°Ð·Ð¾Ð²Ð°Ð½Ð¸Ðµ GUI â†’ ÑƒÐ³Ð»Ñ‹ ===
+    local function guiToRotation(square, zone)
+        local zoneAbs = zone.AbsoluteSize
+        local squareAbs = square.AbsolutePosition - zone.AbsolutePosition
+        
+        -- Ñ†ÐµÐ½Ñ‚Ñ€ Ð·Ð¾Ð½Ñ‹
+        local centerX, centerY = zoneAbs.X / 2, zoneAbs.Y / 2
+        
+        -- Ð¾Ñ‚ÐºÐ»Ð¾Ð½ÐµÐ½Ð¸Ðµ Ð¾Ñ‚ Ñ†ÐµÐ½Ñ‚Ñ€Ð° (Ð² Ð´Ð¾Ð»ÑÑ…)
+        local relX = (squareAbs.X + INNER_SIZE/2 - centerX) / zoneAbs.X
+        local relY = (squareAbs.Y + INNER_SIZE/2 - centerY) / zoneAbs.Y
+        
+        -- Ð§ÐµÐ¼ Ð´Ð°Ð»ÑŒÑˆÐµ Ð¾Ñ‚ Ñ†ÐµÐ½Ñ‚Ñ€Ð° â€” Ñ‚ÐµÐ¼ ÑÐ¸Ð»ÑŒÐ½ÐµÐµ Ð²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ðµ
+        local yaw = math.rad(relX * ROTATION_ANGLE)
+        local pitch = math.rad(relY * UPDOWN_ANGLE)
+        
+        return yaw, pitch
+    end
+    
+    -- ÐŸÐ»Ð°Ð²Ð½Ð¾ÑÑ‚ÑŒ
+    local leftCurrent = CFrame.new()
+    local rightCurrent = CFrame.new()
+    local leftTarget = CFrame.new()
+    local rightTarget = CFrame.new()
+    
+    -- === ÐžÑÐ½Ð¾Ð²Ð½Ð¾Ð¹ Ñ†Ð¸ÐºÐ» ===
+    VRConnection = runService.RenderStepped:Connect(function()
+        if not VRScriptActive then
+            VRConnection:Disconnect()
+            return
+        end
+        
+        -- ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼, Ð¶Ð¸Ð² Ð»Ð¸ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶
+        local currentCharacter = getCharacter()
+        if not currentCharacter then
+            -- ÐŸÐµÑ€ÑÐ¾Ð½Ð°Ð¶ ÑƒÐ¼ÐµÑ€, Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ VR
+            VRScriptActive = false
+            VRButton.Text = "START VR"
+            VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+            if VRScreenGui then
+                VRScreenGui:Destroy()
+                VRScreenGui = nil
+            end
+            VRConnection:Disconnect()
+            return
+        end
+        
+        if not (leftShoulder and rightShoulder) then return end
+        
+        local lyaw, lpitch = guiToRotation(redSquare, redZone)
+        local ryaw, rpitch = guiToRotation(blueSquare, blueZone)
+        
+        leftTarget = CFrame.Angles(lpitch, 0, lyaw)
+        rightTarget = CFrame.Angles(rpitch, 0, ryaw)
+        
+        leftCurrent = leftCurrent:Lerp(leftTarget, 1 - SMOOTHNESS)
+        rightCurrent = rightCurrent:Lerp(rightTarget, 1 - SMOOTHNESS)
+        
+        leftShoulder.C0 = leftBase * leftCurrent
+        rightShoulder.C0 = rightBase * rightCurrent
+    end)
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð¾ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸ VR ÑÐºÑ€Ð¸Ð¿Ñ‚Ð° Ð¸ ÑƒÐ±Ð¸Ð¹ÑÑ‚Ð²Ð° Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+local function StopVRScript()
+    -- Ð£Ð±Ð¸Ð²Ð°ÐµÐ¼ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+    killCharacter()
+    
+    -- ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ VR ÑÐºÑ€Ð¸Ð¿Ñ‚
+    VRScriptActive = false
+    VRButton.Text = "START VR"
+    VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+    
+    if VRScreenGui then
+        VRScreenGui:Destroy()
+        VRScreenGui = nil
+    end
+    
+    if VRConnection then
+        VRConnection:Disconnect()
+    end
+end
+
+-- Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ Ð´Ð»Ñ Gamepasses
+local function LoadGamepasses()
+    local function SlicerX(func)
+        local success, result = pcall(func)
+        if not success then
+            warn("[SlicerX ERROR]:", result)
+        end
+        return success, result
+    end
+
+    SlicerX(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ahma174/Fake-Gamepasses/refs/heads/main/V5"))()
+    end)
+end
+
+-- ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸Ðº ÐºÐ½Ð¾Ð¿ÐºÐ¸ START VR / STOP VR
+VRButton.MouseButton1Click:Connect(function()
+    if VRButton.Text == "START VR" then
+        -- Ð—Ð°Ð¿ÑƒÑÐºÐ°ÐµÐ¼ VR ÑÐºÑ€Ð¸Ð¿Ñ‚
+        StartVRScript()
+    else
+        -- ÐžÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÐ¼ VR ÑÐºÑ€Ð¸Ð¿Ñ‚ Ð¸ ÑƒÐ±Ð¸Ð²Ð°ÐµÐ¼ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+        StopVRScript()
+    end
+end)
+
+-- ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸Ðº ÐºÐ½Ð¾Ð¿ÐºÐ¸ GAMEPASSES
+GamepassesButton.MouseButton1Click:Connect(function()
+    LoadGamepasses()
+    GamepassesButton.Text = "LOADED!"
+    GamepassesButton.BackgroundColor3 = Color3.new(0, 0.8, 0)
+    wait(2)
+    GamepassesButton.Text = "GAMEPASSES"
+    GamepassesButton.BackgroundColor3 = Color3.new(0, 0.3, 0.8)
+end)
+
+-- ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸Ðº ÐºÐ½Ð¾Ð¿ÐºÐ¸ SHOW RIG / HIDE RIG
+RigButton.MouseButton1Click:Connect(toggleRig)
+
+-- ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸Ðº ÑÐ¼ÐµÑ€Ñ‚Ð¸ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+LocalPlayer.CharacterAdded:Connect(function(character)
+    -- Ð–Ð´ÐµÐ¼ Ð¿Ð¾ÑÐ²Ð»ÐµÐ½Ð¸Ñ Humanoid
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    -- Ð¡Ð»ÐµÐ´Ð¸Ð¼ Ð·Ð° Ð·Ð´Ð¾Ñ€Ð¾Ð²ÑŒÐµÐ¼ Ð¿ÐµÑ€ÑÐ¾Ð½Ð°Ð¶Ð°
+    humanoid.Died:Connect(function()
+        -- ÐŸÑ€Ð¸ ÑÐ¼ÐµÑ€Ñ‚Ð¸ Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ VR ÑÐºÑ€Ð¸Ð¿Ñ‚ Ð¸ Ñ€Ð¸Ð³
+        VRScriptActive = false
+        RigVisible = false
+        VRButton.Text = "START VR"
+        VRButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
+        RigButton.Text = "SHOW RIG"
+        RigButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
+        
+        if VRScreenGui then
+            VRScreenGui:Destroy()
+            VRScreenGui = nil
+        end
+        
+        if VRConnection then
+            VRConnection:Disconnect()
+        end
+        
+        removeRig()
+    end)
+end)
+
+print("VR Controller GUI loaded! (R15 protection + Intro + Rig with 2.0 length)")

@@ -1,0 +1,1520 @@
+local v0 = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))();
+local v1 = "https://raw.githubusercontent.com/Wic1k/Scripts/refs/heads/main/Modules/";
+local __ = game:GetService("Players");
+local l_ReplicatedStorage_0 = game:GetService("ReplicatedStorage");
+local __ = game:GetService("Workspace");
+local l_Players_1 = game:GetService("Players");
+local l_RunService_0 = game:GetService("RunService");
+local __ = l_Players_1.LocalPlayer;
+local l_Animations_0 = l_ReplicatedStorage_0:WaitForChild("Animations");
+local l_Remotes_0 = l_ReplicatedStorage_0:WaitForChild("Remotes");
+local l_Modules_0 = l_ReplicatedStorage_0:WaitForChild("Modules");
+local l_Shoot_0 = l_Animations_0:WaitForChild("Shoot");
+local l_ShootGun_0 = l_Remotes_0:WaitForChild("ShootGun");
+local l_BulletRenderer_0 = require(l_Modules_0:WaitForChild("BulletRenderer"));
+local v14 = {
+    GUN = "Gun_Equip"
+};
+local v15 = 250;
+getgenv().aimConfig = {
+    MAX_DISTANCE = 250, 
+    MAX_VELOCITY = 40, 
+    VISIBLE_PARTS = 4, 
+    CAMERA_CAST = true, 
+    FOV_CHECK = true, 
+    REACTION_TIME = 0.01, 
+    ACTION_TIME = 0.3, 
+    AUTO_EQUIP = false, 
+    EQUIP_LOOP = 0.3, 
+    NATIVE_UI = true, 
+    DEVIATION_ENABLED = true, 
+    BASE_DEVIATION = 2.05, 
+    DISTANCE_FACTOR = 0.6, 
+    VELOCITY_FACTOR = 0.9, 
+    ACCURACY_BUILDUP = 0.14, 
+    MIN_DEVIATION = 1, 
+    RAYCAST_DISTANCE = 1000
+};
+getgenv().killButton = {
+    gun = false, 
+    knife = false
+};
+getgenv().killLoop = {
+    gun = false, 
+    knife = false
+};
+v0:AddTheme({
+    Name = "Solar", 
+    Accent = "#ff9d3a", 
+    Dialog = "#2a1b0f", 
+    Outline = "#ffd8a1", 
+    Text = "#fff5e0", 
+    Placeholder = "#7a6554", 
+    Background = "#1b120c", 
+    Button = "#ff7b00", 
+    Icon = "#ffcc33"
+});
+local l_v0_Window_0 = v0:CreateWindow({
+    Title = "Wicik", 
+    Icon = "sun", 
+    Author = "MVSD", 
+    Folder = "Wicik_MVSD", 
+    Size = UDim2.fromOffset(420, 420), 
+    Transparent = true, 
+    Theme = "Solar", 
+    Resizable = true, 
+    SideBarWidth = 200, 
+    HideSearchBar = true, 
+    ScrollBarEnabled = false, 
+    CornerRadius = UDim.new(0, 14), 
+    DropShadow = true
+});
+l_v0_Window_0:EditOpenButton({
+    Title = "Wicik", 
+    Icon = "sun", 
+    CornerRadius = UDim.new(0, 16), 
+    StrokeThickness = 2, 
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromHex("#FF0F7B")), 
+        ColorSequenceKeypoint.new(1, Color3.fromHex("#F89B29"))
+    }), 
+    OnlyMobile = true, 
+    Enabled = true, 
+    Draggable = true
+});
+local v17 = {};
+loadModule = function(v18) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v17 (ref), v1 (ref)
+    if v17[v18] then
+        return;
+    else
+        table.insert(v17, v18);
+        local l_v17_0 = v17;
+        local l_status_0, l_result_0 = pcall(loadstring(game:HttpGet(v1 .. v18)));
+        l_v17_0[v18] = l_result_0;
+        _ = l_status_0;
+        return;
+    end;
+end;
+local v22 = nil;
+local v23 = nil;
+lockToggle = function(v24) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v22 (ref), v23 (ref)
+    if v24 == "knife" and v22 and v22.Lock then
+        v22:Lock();
+        return;
+    elseif v24 == "gun" and v23 and v23.Lock then
+        v23:Lock();
+        return;
+    else
+        if v22 and v22.Unlock then
+            v22:Unlock();
+        end;
+        if v23 and v23.Unlock then
+            v23:Unlock();
+        end;
+        return;
+    end;
+end;
+local v25 = {};
+local v26 = {};
+local v27 = {
+    "Press to try and refresh"
+};
+local v28 = "";
+local v29 = nil;
+local v30 = nil;
+local l_LocalPlayer_1 = l_Players_1.LocalPlayer;
+local function v38() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_1 (ref), v26 (ref), v27 (ref), v25 (ref)
+    if not l_LocalPlayer_1.Character then
+        return;
+    else
+        v26 = {};
+        v27 = {};
+        for __, v33 in ipairs(game:GetDescendants()) do
+            local l_Name_0 = v33.Name;
+            if v33:IsA("Animation") and not v26[l_Name_0] then
+                v26[l_Name_0] = v33;
+                table.insert(v27, l_Name_0);
+            end;
+        end;
+        for __, v36 in ipairs(v25) do
+            if not v26[v36] then
+                local l_Animation_0 = Instance.new("Animation");
+                l_Animation_0.AnimationId = v36;
+                v26[v36] = l_Animation_0;
+                table.insert(v27, v36);
+            end;
+        end;
+        table.sort(v27);
+        return;
+    end;
+end;
+local v39 = nil;
+local function v41(v40) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v39 (ref), v0 (ref), v30 (ref), v26 (ref), v29 (ref)
+    if not v39 then
+        v39 = 0;
+        v0:Notify({
+            Title = "Warning", 
+            Content = "Some emotes require server replicated parts and thus cannot be triggered without server interactions.", 
+            Duration = 4, 
+            Icon = "triangle-alert"
+        });
+    end;
+    if v30 then
+        v30:Stop();
+    end;
+    if v26[v40] then
+        v30 = v29:LoadAnimation(v26[v40]);
+        v30:Play();
+    end;
+end;
+local function v43() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_1 (ref), v29 (ref), v30 (ref)
+    local l_Humanoid_0 = l_LocalPlayer_1.Character:WaitForChild("Humanoid");
+    v29 = l_Humanoid_0:WaitForChild("Animator");
+    l_Humanoid_0:GetPropertyChangedSignal("MoveDirection"):Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v30 (ref), l_Humanoid_0 (ref)
+        if v30 and l_Humanoid_0.MoveDirection.Magnitude > 0 then
+            v30:Stop();
+            v30 = nil;
+        end;
+    end);
+end;
+local v44 = l_v0_Window_0:Tab({
+    Title = "Information", 
+    Icon = "info", 
+    Locked = false
+});
+l_v0_Window_0:Divider();
+v44:Section({
+    Title = "Discord", 
+    Icon = "github"
+});
+local __ = "SKGYUrmkpH";
+v44:Button({
+    Title = "Copy Discord Invite", 
+    Locked = true, 
+    Callback = function() --[[ Line: 0 ]] --[[ Name:  ]]
+        WindUI:Notify({
+            Title = "Wicik", 
+            Content = "Copy Success", 
+            Duration = 3
+        });
+        setclipboard("hello");
+    end
+});
+v44:Section({
+    Title = "Credits", 
+    Icon = "info"
+});
+v44:Paragraph({
+    Title = "Minidream Scripts", 
+    Desc = "The Best Scripts here", 
+    Image = "https://cdn.discordapp.com/attachments/1097184734062330097/1425555407086289118/IMG_20251008_214732_612.jpg?ex=68e8036e&is=68e6b1ee&hm=3f13c0f286d0b96d2178ded3d9bbd6592e8ecc2dc6dbac15ca7d5078b4b6dca1&", 
+    ImageSize = 43, 
+    Locked = false, 
+    Buttons = {
+        {
+            Title = "Copy Link", 
+            Callback = function() --[[ Line: 0 ]] --[[ Name:  ]]
+                setclipboard("https://t.me/minidreamscripts");
+            end
+        }
+    }
+});
+v44:Paragraph({
+    Title = "Wicik", 
+    Desc = "em just used goose script to make my script"
+});
+v44:Paragraph({
+    Title = "Goose", 
+    Desc = "The script developer, rewrote everything from scratch"
+});
+local v46 = l_v0_Window_0:Tab({
+    Title = "Aimbot", 
+    Icon = "crosshair", 
+    Locked = false
+});
+v46:Section({
+    Title = "Aimbot", 
+    Icon = "crosshair"
+});
+local v51 = v46:Toggle({
+    Title = "Aimbot", 
+    Callback = function(v47) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v17 (ref)
+        local v48 = v17["aimbot.lua"];
+        if not v47 and v48 then
+            for __, v50 in pairs(v48) do
+                v50:Disconnect();
+            end;
+            v17["aimbot.lua"] = nil;
+            return;
+        else
+            loadModule("aimbot.lua");
+            return;
+        end;
+    end
+});
+v46:Section({
+    Title = "Settings", 
+    Icon = "settings"
+});
+local v53 = v46:Toggle({
+    Title = "Native Raycast Method", 
+    Value = true, 
+    Callback = function(v52) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.CAMERA_CAST = v52;
+    end
+});
+local v55 = v46:Toggle({
+    Title = "FOV Check", 
+    Value = true, 
+    Callback = function(v54) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.FOV_CHECK = v54;
+    end
+});
+local v57 = v46:Toggle({
+    Title = "Switch weapons", 
+    Value = false, 
+    Callback = function(v56) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.AUTO_EQUIP = v56;
+    end
+});
+local v59 = v46:Toggle({
+    Title = "Native User Interface", 
+    Value = true, 
+    Callback = function(v58) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.NATIVE_UI = v58;
+    end
+});
+local v61 = v46:Toggle({
+    Title = "Aim Deviation", 
+    Value = true, 
+    Callback = function(v60) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.DEVIATION_ENABLED = v60;
+    end
+});
+local v63 = v46:Slider({
+    Title = "Maximum distance", 
+    Value = {
+        Min = 50, 
+        Max = 1000, 
+        Default = 250
+    }, 
+    Callback = function(v62) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.MAX_DISTANCE = tonumber(v62);
+    end
+});
+local v65 = v46:Slider({
+    Title = "Maximum velocity", 
+    Value = {
+        Min = 20, 
+        Max = 200, 
+        Default = 40
+    }, 
+    Callback = function(v64) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.MAX_VELOCITY = tonumber(v64);
+    end
+});
+local v67 = v46:Slider({
+    Title = "Required Visible Parts", 
+    Value = {
+        Min = 1, 
+        Max = 18, 
+        Default = 4
+    }, 
+    Callback = function(v66) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.VISIBLE_PARTS = tonumber(v66);
+    end
+});
+local v69 = v46:Slider({
+    Title = "Reaction Time", 
+    Step = 0.01, 
+    Value = {
+        Min = 0.01, 
+        Max = 1, 
+        Default = 0.01
+    }, 
+    Callback = function(v68) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.REACTION_TIME = tonumber(v68);
+    end
+});
+local v71 = v46:Slider({
+    Title = "Action Time", 
+    Step = 0.01, 
+    Value = {
+        Min = 0.2, 
+        Max = 4, 
+        Default = 0.32
+    }, 
+    Callback = function(v70) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.ACTION_TIME = tonumber(v70);
+    end
+});
+local v73 = v46:Slider({
+    Title = "Equip Time", 
+    Step = 0.1, 
+    Value = {
+        Min = 0.1, 
+        Max = 4, 
+        Default = 0.3
+    }, 
+    Callback = function(v72) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.EQUIP_LOOP = tonumber(v72);
+    end
+});
+local v75 = v46:Slider({
+    Title = "Base Deviation", 
+    Step = 0.1, 
+    Value = {
+        Min = 0.5, 
+        Max = 5, 
+        Default = 2.05
+    }, 
+    Callback = function(v74) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.BASE_DEVIATION = tonumber(v74);
+    end
+});
+local v77 = v46:Slider({
+    Title = "Distance Factor", 
+    Step = 0.1, 
+    Value = {
+        Min = 0, 
+        Max = 2, 
+        Default = 0.6
+    }, 
+    Callback = function(v76) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.DISTANCE_FACTOR = tonumber(v76);
+    end
+});
+local v79 = v46:Slider({
+    Title = "Velocity Factor", 
+    Step = 0.1, 
+    Value = {
+        Min = 0, 
+        Max = 2, 
+        Default = 0.9
+    }, 
+    Callback = function(v78) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.VELOCITY_FACTOR = tonumber(v78);
+    end
+});
+local v81 = v46:Slider({
+    Title = "Accuracy Buildup", 
+    Step = 0.01, 
+    Value = {
+        Min = 0, 
+        Max = 0.5, 
+        Default = 0.13
+    }, 
+    Callback = function(v80) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.ACCURACY_BUILDUP = tonumber(v80);
+    end
+});
+local v83 = v46:Slider({
+    Title = "Min Deviation", 
+    Step = 0.1, 
+    Value = {
+        Min = 0.1, 
+        Max = 3, 
+        Default = 1
+    }, 
+    Callback = function(v82) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().aimConfig.MIN_DEVIATION = tonumber(v82);
+    end
+});
+local l_Players_2 = game:GetService("Players");
+local l_RunService_1 = game:GetService("RunService");
+local l_Workspace_1 = game:GetService("Workspace");
+local l_LocalPlayer_2 = l_Players_2.LocalPlayer;
+local l_CurrentCamera_0 = l_Workspace_1.CurrentCamera;
+local v89 = Color3.fromRGB(30, 214, 134);
+local v90 = Color3.fromRGB(15, 107, 67);
+local v91 = Color3.fromRGB(255, 41, 121);
+local v92 = Color3.fromRGB(127, 20, 60);
+getgenv().espEnemies = true;
+getgenv().espTeamMates = false;
+getgenv().espTracers = true;
+local v93 = {};
+local function v95() --[[ Line: 0 ]] --[[ Name:  ]]
+    local v94 = Drawing.new("Line");
+    v94.Visible = false;
+    v94.From = Vector2.new(0, 0);
+    v94.To = Vector2.new(0, 0);
+    v94.Thickness = 1.5;
+    v94.Transparency = 0.8;
+    return v94;
+end;
+local function v104(v96, v97, v98, v99) --[[ Line: 0 ]] --[[ Name:  ]]
+    local l_HumanoidRootPart_0 = v96:FindFirstChild("HumanoidRootPart");
+    if not l_HumanoidRootPart_0 then
+        return;
+    else
+        local l_Highlight_0 = Instance.new("Highlight");
+        l_Highlight_0.Name = "ESP_Highlight";
+        l_Highlight_0.OutlineColor = v98;
+        l_Highlight_0.FillColor = v99;
+        l_Highlight_0.FillTransparency = 0.7;
+        l_Highlight_0.Parent = v96;
+        local l_BillboardGui_0 = Instance.new("BillboardGui");
+        l_BillboardGui_0.AlwaysOnTop = true;
+        l_BillboardGui_0.Size = UDim2.new(0, 200, 0, 50);
+        l_BillboardGui_0.StudsOffset = Vector3.new(0, 3, 0);
+        l_BillboardGui_0.Name = "ESP_Label";
+        l_BillboardGui_0.Adornee = l_HumanoidRootPart_0;
+        l_BillboardGui_0.Parent = l_HumanoidRootPart_0;
+        local l_TextLabel_0 = Instance.new("TextLabel");
+        l_TextLabel_0.BackgroundTransparency = 1;
+        l_TextLabel_0.Text = v97.Name;
+        l_TextLabel_0.TextColor3 = Color3.new(1, 1, 1);
+        l_TextLabel_0.TextStrokeTransparency = 0;
+        l_TextLabel_0.Font = Enum.Font.Ubuntu;
+        l_TextLabel_0.TextSize = 14;
+        l_TextLabel_0.Size = UDim2.new(1, 0, 1, 0);
+        l_TextLabel_0.Parent = l_BillboardGui_0;
+        return l_Highlight_0, l_BillboardGui_0;
+    end;
+end;
+local function v108(v105) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v93 (ref)
+    if v93[v105] then
+        local v106 = v93[v105];
+        do
+            local l_v106_0 = v106;
+            if l_v106_0.tracer then
+                pcall(function() --[[ Line: 0 ]] --[[ Name:  ]]
+                    -- upvalues: l_v106_0 (ref)
+                    l_v106_0.tracer:Remove();
+                end);
+            end;
+            if l_v106_0.highlight then
+                l_v106_0.highlight:Destroy();
+            end;
+            if l_v106_0.billboard then
+                l_v106_0.billboard:Destroy();
+            end;
+            v93[v105] = nil;
+        end;
+    end;
+end;
+local function v117(v109) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_2 (ref), v89 (ref), v91 (ref), v90 (ref), v92 (ref), v104 (ref), v95 (ref), v93 (ref), v108 (ref)
+    v109.CharacterAdded:Connect(function(v110) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v109 (ref), l_LocalPlayer_2 (ref), v89 (ref), v91 (ref), v90 (ref), v92 (ref), v104 (ref), v95 (ref), v93 (ref)
+        v110:WaitForChild("HumanoidRootPart");
+        task.wait(0.2);
+        local v111 = v109.Team == l_LocalPlayer_2.Team;
+        local v112 = v111 and v89 or v91;
+        local v113 = v111 and v90 or v92;
+        local v114, v115 = v104(v110, v109, v112, v113);
+        local v116 = v95();
+        v93[v109] = {
+            tracer = v116, 
+            highlight = v114, 
+            billboard = v115, 
+            character = v110
+        };
+    end);
+    v109.CharacterRemoving:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v108 (ref), v109 (ref)
+        v108(v109);
+    end);
+end;
+for __, v119 in pairs(l_Players_2:GetPlayers()) do
+    if v119 ~= l_LocalPlayer_2 then
+        v117(v119);
+    end;
+end;
+l_Players_2.PlayerAdded:Connect(function(v120) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_2 (ref), v117 (ref)
+    if v120 ~= l_LocalPlayer_2 then
+        v117(v120);
+    end;
+end);
+l_Players_2.PlayerRemoving:Connect(v108);
+l_RunService_1.RenderStepped:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v93 (ref), l_LocalPlayer_2 (ref), l_CurrentCamera_0 (ref), v89 (ref), v91 (ref)
+    for v121, v122 in pairs(v93) do
+        local l_character_0 = v122.character;
+        local v124 = l_character_0 and l_character_0:FindFirstChild("HumanoidRootPart");
+        local v125 = l_LocalPlayer_2.Character and l_LocalPlayer_2.Character:FindFirstChild("HumanoidRootPart");
+        local v126 = v121.Team == l_LocalPlayer_2.Team;
+        if (not getgenv().espEnemies or v126) and (not getgenv().espTeamMates or not v126) or not v124 or not v125 then
+            v122.tracer.Visible = false;
+            if v122.highlight then
+                v122.highlight.Enabled = false;
+            end;
+            if v122.billboard then
+                v122.billboard.Enabled = false;
+            end;
+        else
+            if v122.highlight then
+                v122.highlight.Enabled = true;
+            end;
+            if v122.billboard then
+                v122.billboard.Enabled = true;
+            end;
+            if getgenv().espTracers and l_CurrentCamera_0 then
+                local l_Magnitude_0 = (v125.Position - v124.Position).Magnitude;
+                local v128 = (getgenv().espTracerRange or 0) > 0 and l_Magnitude_0 <= getgenv().espTracerRange;
+                local v129, v130 = l_CurrentCamera_0:WorldToViewportPoint(v124.Position);
+                if v130 and v128 then
+                    v122.tracer.Visible = true;
+                    v122.tracer.From = Vector2.new(l_CurrentCamera_0.ViewportSize.X / 2, l_CurrentCamera_0.ViewportSize.Y);
+                    v122.tracer.To = Vector2.new(v129.X, v129.Y);
+                    v122.tracer.Color = v126 and v89 or v91;
+                else
+                    v122.tracer.Visible = false;
+                end;
+            else
+                v122.tracer.Visible = false;
+            end;
+        end;
+    end;
+end);
+local v131 = l_v0_Window_0:Tab({
+    Title = "ESP", 
+    Icon = "eye", 
+    Locked = false
+});
+v131:Section({
+    Title = "ESP", 
+    Icon = "eye"
+});
+local v133 = v131:Toggle({
+    Title = "ESP", 
+    Value = true, 
+    Callback = function(v132) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().espEnemies = v132;
+    end
+});
+v131:Section({
+    Title = "Settings", 
+    Icon = "settings"
+});
+local v135 = v131:Toggle({
+    Title = "Display Team", 
+    Value = false, 
+    Callback = function(v134) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().espTeamMates = v134;
+    end
+});
+local v137 = v131:Toggle({
+    Title = "Tracers", 
+    Value = true, 
+    Callback = function(v136) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().espTracers = v136;
+        getgenv().espTracerRange = v136 and 300 or 0;
+    end
+});
+local v138 = l_v0_Window_0:Tab({
+    Title = "Rage", 
+    Icon = "skull", 
+    Locked = false
+});
+local v139 = l_v0_Window_0:Tab({
+    Title = "Auto Farm", 
+    Icon = "scroll", 
+    Locked = false
+});
+v139:Section({
+    Title = "Auto Farm", 
+    Icon = "biceps-flexed"
+});
+local l_Players_3 = game:GetService("Players");
+local __ = game:GetService("RunService");
+local l_Workspace_2 = game:GetService("Workspace");
+local __ = l_Players_3.LocalPlayer;
+local __ = l_Workspace_2.Lobby:WaitForChild("DuelRingsGroup");
+local l_Players_4 = game:GetService("Players");
+local l_RunService_3 = game:GetService("RunService");
+local l_Workspace_3 = game:GetService("Workspace");
+local l_LocalPlayer_4 = l_Players_4.LocalPlayer;
+local l_DuelRingsGroup_1 = l_Workspace_3.Lobby:WaitForChild("DuelRingsGroup");
+local __ = v139:Toggle({
+    Title = "Auto Farm Duels", 
+    Value = false, 
+    Callback = function(v150) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().autoFarmDuels = v150;
+        if v150 then
+            if not getgenv().killLoop then
+                getgenv().killLoop = {};
+            end;
+            if not getgenv().killLoop.knife then
+                getgenv().killLoop.knife = true;
+                loadModule("killall.lua");
+            end;
+        elseif getgenv().killLoop and getgenv().killLoop.knife then
+            getgenv().killLoop.knife = false;
+        end;
+    end
+});
+getgenv().autoFarmDuels = false;
+l_RunService_3.Heartbeat:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_4 (ref), l_DuelRingsGroup_1 (ref)
+    if getgenv().autoFarmDuels then
+        if l_LocalPlayer_4:GetAttribute("Match") then
+            return;
+        else
+            for __, v153 in ipairs(l_DuelRingsGroup_1:GetChildren()) do
+                if v153.Name == "DuelRing_1v1" then
+                    local l_DuelPad_0 = v153:FindFirstChild("DuelPad");
+                    if l_DuelPad_0 then
+                        for __, __ in ipairs(l_DuelPad_0:GetChildren()) do
+                            local l_Pad_0 = workspace.Lobby:GetChildren()[10].DuelRing_1v1:GetChildren()[3].Pad;
+                            if l_Pad_0 and l_LocalPlayer_4.Character and l_LocalPlayer_4.Character:FindFirstChild("HumanoidRootPart") then
+                                l_LocalPlayer_4.Character.HumanoidRootPart.CFrame = l_Pad_0.CFrame + Vector3.new(0, 3, 0);
+                                return;
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+        end;
+    end;
+end);
+v138:Section({
+    Title = "Kill all", 
+    Icon = "sword"
+});
+local __ = v138:Button({
+    Title = "[Knife] Kill All", 
+    Callback = function() --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().killButton.knife = true;
+        loadModule("killall.lua");
+    end
+});
+local __ = v138:Button({
+    Title = "[Gun] Kill All", 
+    Callback = function() --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().killButton.gun = true;
+        loadModule("killall.lua");
+    end
+});
+v138:Section({
+    Title = "Loop Kill all", 
+    Icon = "swords"
+});
+v23 = v138:Toggle({
+    Title = "[Knife] Loop Kill All", 
+    Callback = function(v160) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v17 (ref)
+        if v160 then
+            local v161 = v17["killall.lua"];
+            if not v161 then
+                v161:Disconnect();
+                v17["killall.lua"] = nil;
+                return;
+            else
+                lockToggle("knife");
+            end;
+        else
+            lockToggle();
+        end;
+        getgenv().killLoop.knife = v160;
+        loadModule("killall.lua");
+    end
+});
+v22 = v138:Toggle({
+    Title = "[Gun] Loop Kill All", 
+    Callback = function(v162) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v17 (ref)
+        if v162 then
+            local v163 = v17["killall.lua"];
+            if not v163 then
+                v163:Disconnect();
+                v17["killall.lua"] = nil;
+                return;
+            else
+                lockToggle("gun");
+            end;
+        else
+            lockToggle();
+        end;
+        getgenv().killLoop.gun = v162;
+        loadModule("killall.lua");
+    end
+});
+local v164 = RaycastParams.new();
+v164.IgnoreWater = true;
+v164.FilterType = Enum.RaycastFilterType.Blacklist;
+local function v169(v165) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_1 (ref)
+    local l_Character_0 = l_LocalPlayer_1.Character;
+    if not l_Character_0 then
+        return;
+    else
+        for __, v168 in ipairs(l_Character_0:GetChildren()) do
+            if v168:IsA("Tool") and v168:GetAttribute("EquipAnimation") == v165 then
+                return v168;
+            end;
+        end;
+        return;
+    end;
+end;
+local function v175(v170, v171) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_1 (ref), v164 (ref), l_Workspace_3 (ref)
+    local l_Character_1 = l_LocalPlayer_1.Character;
+    if not l_Character_1 then
+        return false;
+    else
+        v164.FilterDescendantsInstances = {
+            l_Character_1
+        };
+        local v173 = v170.Position - v171;
+        local v174 = l_Workspace_3:Raycast(v171, v173.Unit * v173.Magnitude, v164);
+        return not v174 or v174.Instance:IsDescendantOf(v170.Parent);
+    end;
+end;
+local function v191(v176) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v15 (ref), v169 (ref), v14 (ref), l_Players_4 (ref), l_LocalPlayer_1 (ref)
+    local v177 = nil;
+    local v178 = nil;
+    local v179 = v15 + 1;
+    local v180 = v169(v14.GUN);
+    if not v180 then
+        return;
+    else
+        local l_v180_FirstChild_0 = v180:FindFirstChild("Muzzle", true);
+        if not l_v180_FirstChild_0 then
+            return;
+        else
+            local __ = l_v180_FirstChild_0.WorldPosition;
+            for __, v184 in ipairs(l_Players_4:GetPlayers()) do
+                if v184 ~= l_LocalPlayer_1 and v184.Character and v184.Character.Parent and (not v184.Team or not l_LocalPlayer_1.Team or v184.Team ~= l_LocalPlayer_1.Team) then
+                    local l_Character_2 = v184.Character;
+                    local l_Humanoid_1 = l_Character_2:FindFirstChild("Humanoid");
+                    local l_HumanoidRootPart_1 = l_Character_2:FindFirstChild("HumanoidRootPart");
+                    if l_Humanoid_1 and l_Humanoid_1.Health > 0 and l_HumanoidRootPart_1 then
+                        local l_Magnitude_1 = (l_HumanoidRootPart_1.Position - v176.Position).Magnitude;
+                        if l_Magnitude_1 < v179 and l_Magnitude_1 <= v15 then
+                            local l_v184_0 = v184;
+                            local l_l_HumanoidRootPart_1_0 = l_HumanoidRootPart_1;
+                            v179 = l_Magnitude_1;
+                            v178 = l_l_HumanoidRootPart_1_0;
+                            v177 = l_v184_0;
+                        end;
+                    end;
+                end;
+            end;
+            return v177, v178;
+        end;
+    end;
+end;
+local function v199(v192, v193) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v169 (ref), v14 (ref), l_Workspace_3 (ref), l_Shoot_0 (ref), l_BulletRenderer_0 (ref), v175 (ref), l_ShootGun_0 (ref)
+    local v194 = v169(v14.GUN);
+    if not v194 then
+        return;
+    else
+        local l_v194_FirstChild_0 = v194:FindFirstChild("Muzzle", true);
+        if not l_v194_FirstChild_0 then
+            return;
+        elseif not v192 or not v192:IsDescendantOf(l_Workspace_3) then
+            return;
+        else
+            local l_WorldPosition_1 = l_v194_FirstChild_0.WorldPosition;
+            local v197 = v192.Position + Vector3.new(0, 2, 0);
+            v193:LoadAnimation(l_Shoot_0):Play();
+            local l_Fire_0 = v194:FindFirstChild("Fire");
+            if l_Fire_0 then
+                l_Fire_0:Play();
+            end;
+            l_BulletRenderer_0(l_WorldPosition_1, v197, "Default");
+            if v175(v192, l_WorldPosition_1) then
+                l_ShootGun_0:FireServer(l_WorldPosition_1, v197, v192, v197);
+            end;
+            return;
+        end;
+    end;
+end;
+v138:Section({
+    Title = "Misc", 
+    Icon = "candy-cane"
+});
+local v200 = 0.1;
+local v201 = nil;
+local v212 = v138:Toggle({
+    Title = "Auto Shoot", 
+    Callback = function(v202) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v201 (ref), l_RunService_0 (ref), v200 (ref), l_LocalPlayer_1 (ref), v191 (ref), v199 (ref)
+        if v202 and not v201 then
+            local v203 = 0;
+            do
+                local l_v203_0 = v203;
+                v201 = l_RunService_0.Heartbeat:Connect(function(v205) --[[ Line: 0 ]] --[[ Name:  ]]
+                    -- upvalues: l_v203_0 (ref), v200 (ref), l_LocalPlayer_1 (ref), v191 (ref), v199 (ref)
+                    l_v203_0 = l_v203_0 + v205;
+                    if l_v203_0 < v200 then
+                        return;
+                    else
+                        l_v203_0 = 0;
+                        local l_Character_3 = l_LocalPlayer_1.Character;
+                        if not l_Character_3 then
+                            return;
+                        else
+                            local l_HumanoidRootPart_2 = l_Character_3:FindFirstChild("HumanoidRootPart");
+                            local l_Humanoid_2 = l_Character_3:FindFirstChild("Humanoid");
+                            local v209 = l_Humanoid_2 and l_Humanoid_2:FindFirstChild("Animator");
+                            if not l_HumanoidRootPart_2 or not l_Humanoid_2 or not v209 then
+                                return;
+                            else
+                                local v210, v211 = v191(l_HumanoidRootPart_2);
+                                if v210 and v211 then
+                                    v199(v211, v209);
+                                end;
+                                return;
+                            end;
+                        end;
+                    end;
+                end);
+            end;
+        elseif not v202 and v201 then
+            v201:Disconnect();
+            v201 = nil;
+        end;
+    end
+});
+local v214 = v138:Slider({
+    Title = "Auto Shoot Delay", 
+    Step = 0.01, 
+    Value = {
+        Min = 0.1, 
+        Max = 0.3, 
+        Default = v200
+    }, 
+    Callback = function(v213) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v200 (ref)
+        v200 = tonumber(v213);
+    end
+});
+local v215 = l_v0_Window_0:Tab({
+    Title = "Hitboxes", 
+    Icon = "swords", 
+    Locked = false
+});
+local l_Players_5 = game:GetService("Players");
+local __ = game:GetService("RunService");
+local l_LocalPlayer_5 = l_Players_5.LocalPlayer;
+local v219 = {
+    Enabled = false, 
+    ShowHitboxes = false, 
+    Size = 5, 
+    Color = Color3.fromRGB(255, 0, 0), 
+    Transparency = 0.5
+};
+local v220 = {};
+local function v229() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v219 (ref), l_Players_5 (ref), l_LocalPlayer_5 (ref), v220 (ref)
+    while v219.Enabled do
+        wait(0.1);
+        for __, v222 in pairs(l_Players_5:GetPlayers()) do
+            if v222 ~= l_LocalPlayer_5 and v222.Team ~= l_LocalPlayer_5.Team then
+                local l_Character_4 = v222.Character;
+                if l_Character_4 then
+                    local l_HumanoidRootPart_3 = l_Character_4:FindFirstChild("HumanoidRootPart");
+                    if l_HumanoidRootPart_3 then
+                        if not v220[v222] then
+                            v220[v222] = {
+                                Size = l_HumanoidRootPart_3.Size, 
+                                Transparency = l_HumanoidRootPart_3.Transparency, 
+                                Color = l_HumanoidRootPart_3.Color
+                            };
+                        end;
+                        l_HumanoidRootPart_3.Size = Vector3.new(v219.Size, v219.Size, v219.Size);
+                        l_HumanoidRootPart_3.CanCollide = false;
+                        l_HumanoidRootPart_3.Transparency = v219.ShowHitboxes and v219.Transparency or 1;
+                        l_HumanoidRootPart_3.Color = v219.Color;
+                    end;
+                end;
+            end;
+        end;
+    end;
+    for __, v226 in pairs(l_Players_5:GetPlayers()) do
+        if v226 ~= l_LocalPlayer_5 and v226.Team ~= l_LocalPlayer_5.Team then
+            local l_Character_5 = v226.Character;
+            if l_Character_5 then
+                local l_HumanoidRootPart_4 = l_Character_5:FindFirstChild("HumanoidRootPart");
+                if l_HumanoidRootPart_4 and v220[v226] then
+                    l_HumanoidRootPart_4.Size = v220[v226].Size;
+                    l_HumanoidRootPart_4.Transparency = v220[v226].Transparency;
+                    l_HumanoidRootPart_4.Color = v220[v226].Color;
+                    l_HumanoidRootPart_4.CanCollide = false;
+                end;
+            end;
+        end;
+    end;
+    v220 = {};
+end;
+local function v233(v230) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: v219 (ref), l_LocalPlayer_5 (ref), v220 (ref)
+    v230.CharacterAdded:Connect(function(v231) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), v230 (ref), l_LocalPlayer_5 (ref), v220 (ref)
+        if v219.Enabled then
+            local l_HumanoidRootPart_5 = v231:FindFirstChild("HumanoidRootPart");
+            if l_HumanoidRootPart_5 and v230 ~= l_LocalPlayer_5 and v230.Team ~= l_LocalPlayer_5.Team then
+                v220[v230] = {
+                    Size = l_HumanoidRootPart_5.Size, 
+                    Transparency = l_HumanoidRootPart_5.Transparency, 
+                    Color = l_HumanoidRootPart_5.Color
+                };
+                l_HumanoidRootPart_5.Size = Vector3.new(v219.Size, v219.Size, v219.Size);
+                l_HumanoidRootPart_5.CanCollide = false;
+                l_HumanoidRootPart_5.Transparency = v219.ShowHitboxes and v219.Transparency or 1;
+                l_HumanoidRootPart_5.Color = v219.Color;
+            end;
+        end;
+    end);
+end;
+v215:Section({
+    Title = "Hitbox", 
+    Icon = "gamepad-2"
+});
+HitboxToggle = v215:Toggle({
+    Title = "Enable Hitbox", 
+    Default = false, 
+    Callback = function(v234) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), l_Players_5 (ref), v233 (ref), v229 (ref), v220 (ref)
+        v219.Enabled = v234;
+        if v234 then
+            for __, v236 in ipairs(l_Players_5:GetPlayers()) do
+                v233(v236);
+            end;
+            l_Players_5.PlayerAdded:Connect(v233);
+            spawn(v229);
+        else
+            v220 = {};
+        end;
+    end
+});
+v215:Section({
+    Title = "Settings", 
+    Icon = "settings"
+});
+ShowToggle = v215:Toggle({
+    Title = "Show hitboxes", 
+    Default = false, 
+    Callback = function(v237) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), l_Players_5 (ref), l_LocalPlayer_5 (ref)
+        v219.ShowHitboxes = v237;
+        for __, v239 in pairs(l_Players_5:GetPlayers()) do
+            if v239 ~= l_LocalPlayer_5 and v239.Team ~= l_LocalPlayer_5.Team then
+                local l_Character_6 = v239.Character;
+                if l_Character_6 then
+                    local l_HumanoidRootPart_6 = l_Character_6:FindFirstChild("HumanoidRootPart");
+                    if l_HumanoidRootPart_6 then
+                        l_HumanoidRootPart_6.Transparency = v237 and v219.Transparency or 1;
+                    end;
+                end;
+            end;
+        end;
+    end
+});
+SizeToggle = v215:Slider({
+    Title = "Hitbox Size", 
+    Value = {
+        Min = 1, 
+        Max = 250, 
+        Default = 5, 
+        Step = 0.1
+    }, 
+    Callback = function(v242) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), l_Players_5 (ref), l_LocalPlayer_5 (ref)
+        v219.Size = v242;
+        for __, v244 in pairs(l_Players_5:GetPlayers()) do
+            if v244 ~= l_LocalPlayer_5 and v244.Team ~= l_LocalPlayer_5.Team then
+                local l_Character_7 = v244.Character;
+                if l_Character_7 then
+                    local l_HumanoidRootPart_7 = l_Character_7:FindFirstChild("HumanoidRootPart");
+                    if l_HumanoidRootPart_7 then
+                        l_HumanoidRootPart_7.Size = Vector3.new(v242, v242, v242);
+                    end;
+                end;
+            end;
+        end;
+    end
+});
+ColorToggle = v215:Colorpicker({
+    Title = "Hitbox Color", 
+    Default = Color3.fromRGB(255, 0, 0), 
+    Transparency = 0.5, 
+    Callback = function(v247, v248) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), l_Players_5 (ref), l_LocalPlayer_5 (ref)
+        v219.Color = v247;
+        v219.Transparency = v248;
+        for __, v250 in pairs(l_Players_5:GetPlayers()) do
+            if v250 ~= l_LocalPlayer_5 and v250.Team ~= l_LocalPlayer_5.Team then
+                local l_Character_8 = v250.Character;
+                if l_Character_8 then
+                    local l_HumanoidRootPart_8 = l_Character_8:FindFirstChild("HumanoidRootPart");
+                    if l_HumanoidRootPart_8 then
+                        l_HumanoidRootPart_8.Color = v247;
+                        l_HumanoidRootPart_8.Transparency = v219.ShowHitboxes and v248 or 1;
+                    end;
+                end;
+            end;
+        end;
+    end
+});
+Trans = v215:Slider({
+    Title = "Hitbox Transparency", 
+    Step = 0.1, 
+    Value = {
+        Min = 0, 
+        Max = 1, 
+        Default = 0.5
+    }, 
+    Callback = function(v253) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v219 (ref), l_Players_5 (ref), l_LocalPlayer_5 (ref)
+        v219.Transparency = v253;
+        for __, v255 in pairs(l_Players_5:GetPlayers()) do
+            if v255 ~= l_LocalPlayer_5 and v255.Team ~= l_LocalPlayer_5.Team then
+                local l_Character_9 = v255.Character;
+                if l_Character_9 then
+                    local l_HumanoidRootPart_9 = l_Character_9:FindFirstChild("HumanoidRootPart");
+                    if l_HumanoidRootPart_9 then
+                        l_HumanoidRootPart_9.Transparency = v219.ShowHitboxes and v253 or 1;
+                    end;
+                end;
+            end;
+        end;
+    end
+});
+local v258 = l_v0_Window_0:Tab({
+    Title = "Player", 
+    Icon = "user", 
+    Locked = false
+});
+v258:Section({
+    Title = "Cooldown", 
+    Icon = "ban"
+});
+local v260 = v258:Toggle({
+    Title = "Set Cooldown", 
+    Value = false, 
+    Callback = function(v259) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().cooldownEnabled = v259;
+    end
+});
+local v262 = v258:Slider({
+    Title = "Cooldown Value", 
+    Step = 0.1, 
+    Value = {
+        Min = 0, 
+        Max = 5, 
+        Default = 0
+    }, 
+    Callback = function(v261) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().cooldownValue = tonumber(v261);
+    end
+});
+getgenv().cooldownEnabled = false;
+getgenv().cooldownValue = 0;
+game:GetService("RunService").Heartbeat:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    if getgenv().cooldownEnabled then
+        local l_LocalPlayer_6 = game.Players.LocalPlayer;
+        local l_Backpack_0 = l_LocalPlayer_6:FindFirstChild("Backpack");
+        if l_Backpack_0 then
+            for __, v266 in ipairs(l_Backpack_0:GetChildren()) do
+                if v266:IsA("Tool") and v266:GetAttribute("Cooldown") then
+                    v266:SetAttribute("Cooldown", getgenv().cooldownValue);
+                end;
+            end;
+        end;
+        if l_LocalPlayer_6.Character then
+            for __, v268 in ipairs(l_LocalPlayer_6.Character:GetChildren()) do
+                if v268:IsA("Tool") and v268:GetAttribute("Cooldown") then
+                    v268:SetAttribute("Cooldown", getgenv().cooldownValue);
+                end;
+            end;
+        end;
+    end;
+end);
+v258:Section({
+    Title = "Spin", 
+    Icon = "shield-user"
+});
+getgenv().spinEnabled = false;
+getgenv().spinSpeed = 100;
+getgenv().modsRequireMatch = true;
+local l_LocalPlayer_7 = game.Players.LocalPlayer;
+local v276 = v258:Toggle({
+    Title = "Spin", 
+    Value = false, 
+    Callback = function(v270) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_LocalPlayer_7 (ref)
+        getgenv().spinEnabled = v270;
+        local l_Character_10 = l_LocalPlayer_7.Character;
+        if not l_Character_10 then
+            return;
+        else
+            local l_HumanoidRootPart_10 = l_Character_10:FindFirstChild("HumanoidRootPart");
+            if not l_HumanoidRootPart_10 then
+                return;
+            else
+                for __, v274 in ipairs(l_HumanoidRootPart_10:GetChildren()) do
+                    if v274.Name == "Spinning" then
+                        v274:Destroy();
+                    end;
+                end;
+                if v270 and (not getgenv().modsRequireMatch or l_LocalPlayer_7:GetAttribute("Match")) then
+                    local l_BodyAngularVelocity_0 = Instance.new("BodyAngularVelocity");
+                    l_BodyAngularVelocity_0.Name = "Spinning";
+                    l_BodyAngularVelocity_0.Parent = l_HumanoidRootPart_10;
+                    l_BodyAngularVelocity_0.MaxTorque = Vector3.new(0, math.huge, 0);
+                    l_BodyAngularVelocity_0.AngularVelocity = Vector3.new(0, getgenv().spinSpeed / 10, 0);
+                end;
+                return;
+            end;
+        end;
+    end
+});
+local v281 = v258:Slider({
+    Title = "Spin Speed", 
+    Step = 5, 
+    Value = {
+        Min = 10, 
+        Max = 500, 
+        Default = 100
+    }, 
+    Callback = function(v277) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_LocalPlayer_7 (ref)
+        getgenv().spinSpeed = tonumber(v277);
+        local l_Character_11 = l_LocalPlayer_7.Character;
+        if not l_Character_11 then
+            return;
+        else
+            local l_HumanoidRootPart_11 = l_Character_11:FindFirstChild("HumanoidRootPart");
+            if not l_HumanoidRootPart_11 then
+                return;
+            else
+                local l_Spinning_0 = l_HumanoidRootPart_11:FindFirstChild("Spinning");
+                if l_Spinning_0 then
+                    l_Spinning_0.AngularVelocity = Vector3.new(0, getgenv().spinSpeed / 10, 0);
+                end;
+                return;
+            end;
+        end;
+    end
+});
+l_LocalPlayer_7.CharacterAdded:Connect(function(v282) --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_7 (ref)
+    v282:WaitForChild("HumanoidRootPart");
+    task.wait(0.5);
+    local l_HumanoidRootPart_12 = v282:FindFirstChild("HumanoidRootPart");
+    if getgenv().spinEnabled and (not getgenv().modsRequireMatch or l_LocalPlayer_7:GetAttribute("Match")) and l_HumanoidRootPart_12 then
+        for __, v285 in ipairs(l_HumanoidRootPart_12:GetChildren()) do
+            if v285.Name == "Spinning" then
+                v285:Destroy();
+            end;
+        end;
+        local l_BodyAngularVelocity_1 = Instance.new("BodyAngularVelocity");
+        l_BodyAngularVelocity_1.Name = "Spinning";
+        l_BodyAngularVelocity_1.Parent = l_HumanoidRootPart_12;
+        l_BodyAngularVelocity_1.MaxTorque = Vector3.new(0, math.huge, 0);
+        l_BodyAngularVelocity_1.AngularVelocity = Vector3.new(0, getgenv().spinSpeed / 10, 0);
+    end;
+end);
+v258:Section({
+    Title = "Local Player", 
+    Icon = "user"
+});
+local v288 = v258:Toggle({
+    Title = "Set Speed", 
+    Value = false, 
+    Callback = function(v287) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().speedEnabled = v287;
+    end
+});
+local v290 = v258:Slider({
+    Title = "Speed Value", 
+    Step = 1, 
+    Value = {
+        Min = 16, 
+        Max = 150, 
+        Default = 16
+    }, 
+    Callback = function(v289) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().walkSpeedValue = tonumber(v289);
+    end
+});
+local v292 = v258:Dropdown({
+    Title = "Speed Mode", 
+    Values = {
+        "Normal", 
+        "Blatant"
+    }, 
+    Value = "Normal", 
+    Callback = function(v291) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().speedMode = v291;
+    end
+});
+getgenv().speedEnabled = false;
+getgenv().walkSpeedValue = 16;
+getgenv().speedMode = "Normal";
+local l_Players_6 = game:GetService("Players");
+local __ = game:GetService("RunService");
+local __ = l_Players_6.LocalPlayer;
+local l_RunService_6 = game:GetService("RunService");
+local l_LocalPlayer_9 = game.Players.LocalPlayer;
+l_RunService_6.RenderStepped:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_9 (ref)
+    if not getgenv().modsRequireMatch or l_LocalPlayer_9:GetAttribute("Match") then
+        if not getgenv().speedEnabled then
+            return;
+        else
+            local l_Character_12 = l_LocalPlayer_9.Character;
+            if not l_Character_12 or not l_Character_12:FindFirstChild("Humanoid") or not l_Character_12:FindFirstChild("HumanoidRootPart") then
+                return;
+            else
+                local l_Humanoid_3 = l_Character_12.Humanoid;
+                local l_HumanoidRootPart_13 = l_Character_12.HumanoidRootPart;
+                if getgenv().speedMode == "Normal" then
+                    l_Humanoid_3.WalkSpeed = getgenv().walkSpeedValue;
+                elseif getgenv().speedMode == "Blatant" then
+                    local l_MoveDirection_0 = l_Humanoid_3.MoveDirection;
+                    if l_MoveDirection_0.Magnitude > 0 then
+                        l_HumanoidRootPart_13.CFrame = l_HumanoidRootPart_13.CFrame + l_MoveDirection_0 * (getgenv().walkSpeedValue / 50);
+                    end;
+                end;
+            end;
+        end;
+    end;
+end);
+local v303 = v258:Toggle({
+    Title = "Set Jump Power", 
+    Value = false, 
+    Callback = function(v302) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().jumpEnabled = v302;
+    end
+});
+local v305 = v258:Slider({
+    Title = "Jump Power Value", 
+    Step = 1, 
+    Value = {
+        Min = 50, 
+        Max = 200, 
+        Default = 50
+    }, 
+    Callback = function(v304) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().jumpPowerValue = tonumber(v304);
+    end
+});
+getgenv().jumpEnabled = false;
+getgenv().jumpPowerValue = 50;
+game:GetService("RunService").Heartbeat:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    if (not getgenv().modsRequireMatch or game.Players.LocalPlayer:GetAttribute("Match")) and getgenv().jumpEnabled then
+        local l_Character_13 = game.Players.LocalPlayer.Character;
+        if l_Character_13 and l_Character_13:FindFirstChild("Humanoid") then
+            l_Character_13.Humanoid.UseJumpPower = true;
+            l_Character_13.Humanoid.JumpPower = getgenv().jumpPowerValue;
+        end;
+    end;
+end);
+v258:Section({
+    Title = "Emote", 
+    Icon = "candy-cane"
+});
+v38();
+local v308 = v258:Dropdown({
+    Title = "Emote Selector", 
+    Values = v27, 
+    Callback = function(v307) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v28 (ref), v41 (ref)
+        v28 = v307;
+        v41(v307);
+    end
+});
+local v310 = v258:Keybind({
+    Title = "Start Emote", 
+    Desc = "Keybind to start playing the selected emote", 
+    Value = "X", 
+    Callback = function(__) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: v41 (ref), v28 (ref)
+        v41(v28);
+    end
+});
+v258:Section({
+    Title = "Misc", 
+    Icon = "candy-cane"
+});
+local v312 = v258:Slider({
+    Title = "Fov", 
+    Step = 1, 
+    Value = {
+        Min = 30, 
+        Max = 120, 
+        Default = 70
+    }, 
+    Callback = function(v311) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_Workspace_3 (ref)
+        l_Workspace_3.CurrentCamera.FieldOfView = v311;
+    end
+});
+local l_Players_7 = game:GetService("Players");
+local l_RunService_7 = game:GetService("RunService");
+local l_LocalPlayer_10 = l_Players_7.LocalPlayer;
+local __ = game:GetService("UserInputService");
+local v318 = v258:Toggle({
+    Title = "Bunny Hop", 
+    Value = false, 
+    Callback = function(v317) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().bunnyHopEnabled = v317;
+    end
+});
+getgenv().bunnyHopEnabled = false;
+l_RunService_7.Heartbeat:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    -- upvalues: l_LocalPlayer_10 (ref)
+    if (not getgenv().modsRequireMatch or l_LocalPlayer_10:GetAttribute("Match")) and getgenv().bunnyHopEnabled then
+        local l_Character_14 = l_LocalPlayer_10.Character;
+        local v320 = l_Character_14 and l_Character_14:FindFirstChild("Humanoid");
+        if v320 and v320.MoveDirection.Magnitude > 0 and v320.FloorMaterial ~= Enum.Material.Air then
+            v320:ChangeState(Enum.HumanoidStateType.Jumping);
+        end;
+    end;
+end);
+local v322 = v258:Toggle({
+    Title = "Anti Stun", 
+    Value = false, 
+    Callback = function(v321) --[[ Line: 0 ]] --[[ Name:  ]]
+        getgenv().antiStunEnabled = v321;
+    end
+});
+getgenv().antiStunEnabled = false;
+game:GetService("RunService").Heartbeat:Connect(function() --[[ Line: 0 ]] --[[ Name:  ]]
+    if (not getgenv().modsRequireMatch or game.Players.LocalPlayer:GetAttribute("Match")) and getgenv().antiStunEnabled then
+        local l_Character_15 = game.Players.LocalPlayer.Character;
+        if l_Character_15 then
+            for __, v325 in ipairs(l_Character_15:GetChildren()) do
+                if v325:IsA("BasePart") and v325.Anchored then
+                    v325.Anchored = false;
+                end;
+            end;
+        end;
+    end;
+end);
+local v326 = l_v0_Window_0:Tab({
+    Title = "Config", 
+    Icon = "paperclip", 
+    Locked = false
+});
+local __ = l_v0_Window_0.ConfigManager;
+local l_Config_0 = l_v0_Window_0.ConfigManager:CreateConfig("dildo");
+l_Config_0:Register("aimbotToggle", v51);
+l_Config_0:Register("cameraCastToggle", v53);
+l_Config_0:Register("fovCheckToggle", v55);
+l_Config_0:Register("autoEquipToggle", v57);
+l_Config_0:Register("nativeUIToggle", v59);
+l_Config_0:Register("aimDeviationToggle", v61);
+l_Config_0:Register("maxDistanceSlider", v63);
+l_Config_0:Register("maxVelocitySlider", v65);
+l_Config_0:Register("visiblePartsSlider", v67);
+l_Config_0:Register("reactionTimeSlider", v69);
+l_Config_0:Register("actionTimeSlider", v71);
+l_Config_0:Register("equipTimeSlider", v73);
+l_Config_0:Register("baseDeviationSlider", v75);
+l_Config_0:Register("distanceFactorSlider", v77);
+l_Config_0:Register("velocityFactorSlider", v79);
+l_Config_0:Register("accuracyBuildupSlider", v81);
+l_Config_0:Register("minDeviationSlider", v83);
+l_Config_0:Register("cooldownToggle", v260);
+l_Config_0:Register("cooldownValueSlider", v262);
+l_Config_0:Register("matchToggle", matchToggle);
+l_Config_0:Register("spinToggle", v276);
+l_Config_0:Register("spinSpeedSlider", v281);
+l_Config_0:Register("speedToggle", v288);
+l_Config_0:Register("speedSlider", v290);
+l_Config_0:Register("autoJumpToggle", v318);
+l_Config_0:Register("espToggle", v133);
+l_Config_0:Register("ShowToggle", ShowToggle);
+l_Config_0:Register("SizeToggle", SizeToggle);
+l_Config_0:Register("ColorToggle", ColorToggle);
+l_Config_0:Register("Trans", Trans);
+l_Config_0:Register("HitboxToggle", HitboxToggle);
+l_Config_0:Register("jumpToggle", v303);
+l_Config_0:Register("jumpSlider", v305);
+l_Config_0:Register("orbitSpeedSlider", orbitSpeedSlider);
+l_Config_0:Register("orbitDistanceSlider", orbitDistanceSlider);
+l_Config_0:Register("fovSlider", v312);
+l_Config_0:Register("antiStunToggle", v322);
+l_Config_0:Register("autospin", autospin);
+l_Config_0:Register("emoteselect", v308);
+l_Config_0:Register("emoteInput", emoteInput);
+l_Config_0:Register("startemote", v310);
+l_Config_0:Register("speedModeDropdown", v292);
+l_Config_0:Register("autoShootToggle", v212);
+l_Config_0:Register("autoShootSpeed", v214);
+l_Config_0:Register("tracersToggle", v137);
+l_Config_0:Register("teamToggle", v135);
+v326:Section({
+    Title = "Config", 
+    Icon = "paperclip"
+});
+local __ = v326:Button({
+    Title = "Save Config", 
+    Callback = function() --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_Config_0 (ref)
+        l_Config_0:Save();
+        print("penis!");
+    end
+});
+local __ = v326:Toggle({
+    Title = "Auto Load", 
+    Value = true, 
+    Callback = function(v330) --[[ Line: 0 ]] --[[ Name:  ]]
+        print("Toggle Activated" .. tostring(v330));
+    end
+});
+local v332 = {};
+for v333, __ in pairs(WindUI:GetThemes()) do
+    table.insert(v332, v333);
+end;
+local v335 = l_v0_Window_0:Tab({
+    Title = "UI Settings", 
+    Icon = "settings", 
+    Locked = false
+});
+v335:Section({
+    Title = "UI Settings", 
+    Icon = "settings"
+});
+v335:Dropdown({
+    Title = "Select Theme", 
+    Multi = false, 
+    AllowNone = false, 
+    Values = v332, 
+    Value = Solar, 
+    Callback = function(v336) --[[ Line: 0 ]] --[[ Name:  ]]
+        WindUI:SetTheme(v336);
+    end
+});
+v335:Toggle({
+    Title = "Toggle Window Transparency", 
+    Value = WindUI:GetTransparency(), 
+    Callback = function(v337) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_v0_Window_0 (ref)
+        l_v0_Window_0:ToggleTransparency(v337);
+    end
+});
+v335:Keybind({
+    Title = "Toggle UI Keybind", 
+    Value = "G", 
+    Callback = function(v338) --[[ Line: 0 ]] --[[ Name:  ]]
+        -- upvalues: l_v0_Window_0 (ref)
+        l_v0_Window_0:SetToggleKey(Enum.KeyCode[v338]);
+    end
+});
+l_LocalPlayer_9.CharacterAdded:Connect(v43);
+if l_LocalPlayer_9.Character then
+    v43();
+end;
+local v339 = "Load";
+local l_l_Config_0_0 = l_Config_0;
+l_Config_0[v339](l_l_Config_0_0);
+v339 = "SelectTab";
+l_l_Config_0_0 = l_v0_Window_0;
+l_v0_Window_0[v339](l_l_Config_0_0, 1);

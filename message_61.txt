@@ -1,0 +1,136 @@
+-- Services
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+-- Variables
+local LocalPlayer = Players.LocalPlayer
+local keyFileExists = isfile("Lukazin_KeyData.json")
+local currentTime = os.time()
+
+-- Create GUI Elements
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local TitleLabel = Instance.new("TextLabel")
+local TitleCorner = Instance.new("UICorner")
+local TimerLabel = Instance.new("TextLabel")
+local InputFrame = Instance.new("Frame")
+local KeyInput = Instance.new("TextBox")
+local SubmitButton = Instance.new("TextButton")
+local ButtonCorner = Instance.new("UICorner")
+local StatusLabel = Instance.new("TextLabel")
+
+-- Setup ScreenGui
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Setup Main Frame
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0.3
+MainFrame.BorderSizePixel = 1
+MainFrame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.Size = UDim2.new(0, 250, 0, 150)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+
+-- Setup Title Corner
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = MainFrame
+
+-- Setup Title Label
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "LUKAZIN AUTO JOINER"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+
+-- Setup Timer Label
+TimerLabel.Parent = MainFrame
+TimerLabel.BackgroundTransparency = 1
+TimerLabel.Position = UDim2.new(0, 0, 0, 40)
+TimerLabel.Size = UDim2.new(1, 0, 0, 20)
+TimerLabel.Font = Enum.Font.Gotham
+TimerLabel.Text = "Tempo restante: Carregando..."
+TimerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+TimerLabel.TextSize = 12
+TimerLabel.Visible = false
+
+-- Setup Input Frame
+InputFrame.Parent = MainFrame
+InputFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InputFrame.BackgroundTransparency = 0.2
+InputFrame.Position = UDim2.new(0.1, 0, 0.4, 0)
+InputFrame.Size = UDim2.new(0.8, 0, 0, 35)
+
+-- Setup Key Input
+KeyInput.Parent = InputFrame
+KeyInput.BackgroundTransparency = 1
+KeyInput.Position = UDim2.new(0, 5, 0, 0)
+KeyInput.Size = UDim2.new(0.6, 0, 1, 0)
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.PlaceholderText = "Digite a Key..."
+KeyInput.Text = ""
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.TextSize = 14
+KeyInput.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Setup Submit Button
+SubmitButton.Parent = InputFrame
+SubmitButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SubmitButton.Position = UDim2.new(0.65, 0, 0.1, 0)
+SubmitButton.Size = UDim2.new(0.3, 0, 0.8, 0)
+SubmitButton.Font = Enum.Font.GothamBold
+SubmitButton.Text = "ENTRAR"
+SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitButton.TextSize = 12
+
+-- Setup Button Corner
+ButtonCorner.CornerRadius = UDim.new(0, 4)
+ButtonCorner.Parent = SubmitButton
+
+-- Setup Status Label
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 0, 0.78, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Aguardando Key..."
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 12
+
+-- Key Validation Function
+local function validateKey(inputKey)
+	local enteredKey = inputKey
+	local timestamp = os.time()
+	
+	-- Show incorrect key message
+	StatusLabel.Text = "Key incorreta!"
+	StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+	KeyInput.Text = ""
+end
+
+-- Button Click Event
+SubmitButton.MouseButton1Click:Connect(function()
+	validateKey(KeyInput.Text)
+end)
+
+-- Focus Lost Event
+KeyInput.FocusLost:Connect(function()
+	validateKey(KeyInput.Text)
+end)
+
+-- Enable GUI
+ScreenGui.Enabled = true
+
+-- Keep GUI enabled (anti-deletion)
+RunService.RenderStepped:Connect(function()
+	ScreenGui.Enabled = true
+end)
+
+-- Auto-focus input after delay
+task.wait(0.5)
+KeyInput:CaptureFocus()

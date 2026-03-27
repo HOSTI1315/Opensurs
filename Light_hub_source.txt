@@ -1,0 +1,293 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LightHub"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "LH"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.AutoButtonColor = false
+ToggleButton.Parent = ScreenGui
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 12)
+ButtonCorner.Parent = ToggleButton
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Color = Color3.fromRGB(50, 50, 50)
+ButtonStroke.Thickness = 2
+ButtonStroke.Parent = ToggleButton
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -120)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.BackgroundTransparency = 0
+MainFrame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 10)
+FrameCorner.Parent = MainFrame
+
+local FrameStroke = Instance.new("UIStroke")
+FrameStroke.Color = Color3.fromRGB(25, 25, 25)
+FrameStroke.Thickness = 1.5
+FrameStroke.Parent = MainFrame
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.Position = UDim2.new(0, 0, 0, 0)
+TitleBar.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+TitleBar.BorderSizePixel = 0
+TitleBar.ClipsDescendants = true
+TitleBar.BackgroundTransparency = 0
+TitleBar.Parent = MainFrame
+
+local TitleBarCorner = Instance.new("UICorner")
+TitleBarCorner.CornerRadius = UDim.new(0, 10)
+TitleBarCorner.Parent = TitleBar
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Name = "TitleText"
+TitleText.Size = UDim2.new(1, -10, 1, 0)
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "LIGHT HUB"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.TextSize = 16
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Parent = TitleBar
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 80, 1, -30)
+Sidebar.Position = UDim2.new(0, 0, 0, 30)
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Sidebar.BorderSizePixel = 0
+Sidebar.BackgroundTransparency = 0
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, 10)
+SidebarCorner.Parent = Sidebar
+
+local SidebarStroke = Instance.new("UIStroke")
+SidebarStroke.Color = Color3.fromRGB(25, 25, 25)
+SidebarStroke.Thickness = 1
+SidebarStroke.Parent = Sidebar
+
+local Divider = Instance.new("Frame")
+Divider.Name = "Divider"
+Divider.Size = UDim2.new(0, 1, 1, -30)
+Divider.Position = UDim2.new(0, 80, 0, 30)
+Divider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Divider.BorderSizePixel = 0
+Divider.BackgroundTransparency = 0
+Divider.Parent = MainFrame
+
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -81, 1, -30)
+ContentFrame.Position = UDim2.new(0, 81, 0, 30)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ContentFrame.BorderSizePixel = 0
+ContentFrame.BackgroundTransparency = 0
+ContentFrame.Parent = MainFrame
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 10)
+ContentCorner.Parent = ContentFrame
+
+local ContentStroke = Instance.new("UIStroke")
+ContentStroke.Color = Color3.fromRGB(25, 25, 25)
+ContentStroke.Thickness = 1
+ContentStroke.Parent = ContentFrame
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateInput(input)
+	local delta = input.Position - dragStart
+	MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+TitleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		updateInput(input)
+	end
+end)
+
+local function CreateTabButton(name, yPos)
+	local button = Instance.new("TextButton")
+	button.Name = name .. "Tab"
+	button.Size = UDim2.new(1, -10, 0, 28)
+	button.Position = UDim2.new(0, 5, 0, yPos)
+	button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	button.BorderSizePixel = 0
+	button.Text = name
+	button.TextColor3 = Color3.fromRGB(150, 150, 150)
+	button.TextSize = 12
+	button.Font = Enum.Font.Gotham
+	button.AutoButtonColor = false
+	button.Parent = Sidebar
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = button
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(30, 30, 30)
+	stroke.Thickness = 1
+	stroke.Parent = button
+	return button
+end
+
+local MainTab = CreateTabButton("MAIN", 10)
+local HelperTab = CreateTabButton("HELPER", 45)
+local OtherTab = CreateTabButton("OTHER", 80)
+
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Name = "DiscordText"
+DiscordLabel.Size = UDim2.new(1, -10, 0, 20)
+DiscordLabel.Position = UDim2.new(0, 5, 1, -25)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Text = "discord.gg/8BUQMkPY"
+DiscordLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+DiscordLabel.TextSize = 10
+DiscordLabel.Font = Enum.Font.Gotham
+DiscordLabel.Parent = ContentFrame
+
+local Categories = {
+	MAIN = {"ANTI-HIT", "GO TO BEST", "INFINITE JUMP", "SPEED BOOST"},
+	HELPER = {"MAIN ESP", "SEMI-INVISIBLE", "GRAPPLE SPEED"},
+	OTHER = {"AIMBOT", "LAG EVERYONE"},
+	CONFIG = {"ANTI HIT UI", "DISCORD", "XRAY"},
+}
+
+local CurrentTab = "MAIN"
+
+local function ClearContent()
+	for _, child in ipairs(ContentFrame:GetChildren()) do
+		if child:IsA("TextButton") or (child:IsA("TextLabel") and child.Name ~= "DiscordText") then
+			child:Destroy()
+		end
+	end
+end
+
+local function CreateFeatureButton(feature, index)
+	local btn = Instance.new("TextButton")
+	btn.Name = feature .. "Btn"
+	btn.Size = UDim2.new(1, -15, 0, 28)
+	btn.Position = UDim2.new(0, 8, 0, 10 + (index - 1) * 35)
+	btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	btn.BorderSizePixel = 0
+	btn.Text = feature
+	btn.TextColor3 = Color3.fromRGB(150, 150, 150)
+	btn.TextSize = 12
+	btn.Font = Enum.Font.Gotham
+	btn.AutoButtonColor = false
+	btn.Parent = ContentFrame
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(30, 30, 30)
+	stroke.Thickness = 1
+	stroke.Parent = btn
+	local enabled = false
+	btn.MouseButton1Click:Connect(function()
+		enabled = not enabled
+		btn.TextColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(150, 150, 150)
+	end)
+	return btn
+end
+
+local function LoadCategory(category)
+	ClearContent()
+	CurrentTab = category
+	local buttons = Categories[category]
+	if not buttons then return end
+	for i, feature in ipairs(buttons) do
+		CreateFeatureButton(feature, i)
+	end
+end
+
+local function HighlightTab(tabButton)
+	MainTab.TextColor3 = Color3.fromRGB(150, 150, 150)
+	HelperTab.TextColor3 = Color3.fromRGB(150, 150, 150)
+	OtherTab.TextColor3 = Color3.fromRGB(150, 150, 150)
+	tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+end
+
+MainTab.MouseButton1Click:Connect(function()
+	HighlightTab(MainTab)
+	LoadCategory("MAIN")
+end)
+
+HelperTab.MouseButton1Click:Connect(function()
+	HighlightTab(HelperTab)
+	LoadCategory("HELPER")
+end)
+
+OtherTab.MouseButton1Click:Connect(function()
+	HighlightTab(OtherTab)
+	LoadCategory("OTHER")
+end)
+
+local guiOpen = false
+ToggleButton.MouseButton1Click:Connect(function()
+	guiOpen = not guiOpen
+	MainFrame.Visible = guiOpen
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.F then
+		guiOpen = not guiOpen
+		MainFrame.Visible = guiOpen
+	end
+end)
+
+HighlightTab(MainTab)
+LoadCategory("MAIN")

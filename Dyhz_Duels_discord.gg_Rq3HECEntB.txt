@@ -1,0 +1,280 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Get necessary Roblox services
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Stats = game:GetService("Stats")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+
+-- Get player character
+local Character = LocalPlayer.Character
+if not Character then return end
+
+-- Wait for HumanoidRootPart
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart", 5)
+if not HumanoidRootPart then return end
+
+-- Create spin effect (makes character rotate)
+local BodyAngularVelocity = Instance.new("BodyAngularVelocity")
+BodyAngularVelocity.MaxTorque = Vector3.new(0, math.huge, 0)
+BodyAngularVelocity.AngularVelocity = Vector3.new(0, 25, 0) -- Rotation speed
+BodyAngularVelocity.Parent = HumanoidRootPart
+
+-- Handle character respawn
+local Connection
+Connection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    local newRoot = newCharacter:WaitForChild("HumanoidRootPart", 5)
+    if not newRoot then return end
+    
+    -- Remove old spin effect
+    if BodyAngularVelocity then 
+        BodyAngularVelocity:Destroy() 
+    end
+    
+    -- Create new spin effect for respawned character
+    BodyAngularVelocity = Instance.new("BodyAngularVelocity")
+    BodyAngularVelocity.MaxTorque = Vector3.new(0, math.huge, 0)
+    BodyAngularVelocity.AngularVelocity = Vector3.new(0, 25, 0)
+    BodyAngularVelocity.Parent = newRoot
+end)
+
+-- Remove any existing GUI with same name
+local existingGui = CoreGui:FindFirstChild("Cxyro_Hub_V1")
+if existingGui then 
+    existingGui:Destroy() 
+end
+
+-- Create main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = CoreGui
+ScreenGui.Name = "Cxyro_Hub_V1"
+ScreenGui.IgnoreGuiInset = true
+
+-- Create top info panel
+local TopFrame = Instance.new("Frame")
+TopFrame.Parent = ScreenGui
+TopFrame.Size = UDim2.new(0, 180, 0, 65)
+TopFrame.Position = UDim2.new(0.5, -90, 0, 35)
+TopFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+TopFrame.BackgroundTransparency = 0.3
+TopFrame.Active = false
+
+-- Style the frame
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = TopFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = TopFrame
+UIStroke.Thickness = 2
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke.Color = Color3.fromRGB(0, 220, 255)
+
+-- Add gradient to stroke
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Parent = UIStroke
+UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+})
+
+-- Add title
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = TopFrame
+TitleLabel.Size = UDim2.new(1, 0, 0.35, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Cxyro HUB"
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextSize = 14
+
+-- Add Discord link
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Parent = TopFrame
+DiscordLabel.Size = UDim2.new(1, 0, 0.3, 0)
+DiscordLabel.Position = UDim2.new(0, 0, 0.35, 0)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Text = "discord.gg/Rq3HECEntB"
+DiscordLabel.Font = Enum.Font.GothamBold
+DiscordLabel.TextSize = 10
+
+-- Add FPS/PING display
+local StatsLabel = Instance.new("TextLabel")
+StatsLabel.Parent = TopFrame
+StatsLabel.Size = UDim2.new(1, 0, 0.35, 0)
+StatsLabel.Position = UDim2.new(0, 0, 0.65, 0)
+StatsLabel.BackgroundTransparency = 1
+StatsLabel.Font = Enum.Font.Code
+StatsLabel.TextSize = 9
+
+-- Update FPS and PING display
+task.spawn(function()
+    while task.wait(0.5) do
+        -- Calculate FPS
+        local deltaTime = RunService.RenderStepped:Wait()
+        local fps = math.floor(1 / deltaTime)
+        
+        -- Get ping from stats
+        local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+        ping = math.floor(ping)
+        
+        -- Update display
+        StatsLabel.Text = "FPS: " .. fps .. " | PING: " .. ping .. "ms"
+    end
+end)
+
+-- Create main menu panel
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 180, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -90, 0.4, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+
+-- Style main menu
+Instance.new("UICorner").Parent = MainFrame
+
+local UIStroke2 = Instance.new("UIStroke")
+UIStroke2.Parent = MainFrame
+UIStroke2.Thickness = 2
+UIStroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke2.Color = Color3.fromRGB(0, 220, 255)
+
+local UIGradient2 = Instance.new("UIGradient")
+UIGradient2.Parent = UIStroke2
+UIGradient2.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+})
+
+-- Menu title
+local MenuTitle = Instance.new("TextLabel")
+MenuTitle.Parent = MainFrame
+MenuTitle.Size = UDim2.new(1, 0, 0, 40)
+MenuTitle.BackgroundTransparency = 1
+MenuTitle.Text = "MAIN MENU"
+MenuTitle.Font = Enum.Font.GothamBlack
+MenuTitle.TextSize = 16
+
+-- Speed button
+local SpeedBtn = Instance.new("TextButton")
+SpeedBtn.Parent = MainFrame
+SpeedBtn.Size = UDim2.new(1, -20, 0, 35)
+SpeedBtn.Position = UDim2.new(0, 10, 0, 50)
+SpeedBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+SpeedBtn.Text = "SPEED (56/28)"
+SpeedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBtn.Font = Enum.Font.GothamBold
+SpeedBtn.TextSize = 9
+Instance.new("UICorner").Parent = SpeedBtn
+
+SpeedBtn.MouseButton1Click:Connect(function()
+    SpeedBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    -- Speed hack logic would go here
+end)
+
+-- Auto bat button
+local AutoBatBtn = Instance.new("TextButton")
+AutoBatBtn.Parent = MainFrame
+AutoBatBtn.Size = UDim2.new(1, -20, 0, 35)
+AutoBatBtn.Position = UDim2.new(0, 10, 0, 95)
+AutoBatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+AutoBatBtn.Text = "AUTO BAT"
+AutoBatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoBatBtn.Font = Enum.Font.GothamBold
+AutoBatBtn.TextSize = 9
+Instance.new("UICorner").Parent = AutoBatBtn
+
+AutoBatBtn.MouseButton1Click:Connect(function()
+    AutoBatBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    
+    -- Auto bat logic
+    task.spawn(function()
+        for i = 1, 22 do
+            task.wait(0.1)
+            if Character and Character:FindFirstChild("Humanoid") then
+                local Backpack = LocalPlayer.Backpack
+                local Bat = Backpack:FindFirstChild("Bat")
+                
+                if Bat and Bat.Parent ~= Character then
+                    Character.Humanoid:EquipTool(Bat)
+                    Bat:Activate()
+                end
+            end
+        end
+    end)
+end)
+
+-- Spinbot button
+local SpinBotBtn = Instance.new("TextButton")
+SpinBotBtn.Parent = MainFrame
+SpinBotBtn.Size = UDim2.new(1, -20, 0, 35)
+SpinBotBtn.Position = UDim2.new(0, 10, 0, 140)
+SpinBotBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+SpinBotBtn.Text = "FAST SPINBOT"
+SpinBotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpinBotBtn.Font = Enum.Font.GothamBold
+SpinBotBtn.TextSize = 9
+Instance.new("UICorner").Parent = SpinBotBtn
+
+SpinBotBtn.MouseButton1Click:Connect(function()
+    SpinBotBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    -- Spinbot is already active from start
+end)
+
+-- Copy Discord button
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Parent = MainFrame
+DiscordBtn.Size = UDim2.new(1, -20, 0, 35)
+DiscordBtn.Position = UDim2.new(0, 10, 0, 185)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Discord blue
+DiscordBtn.Text = "COPY DISCORD"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 9
+Instance.new("UICorner").Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/Rq3HECEntB")
+    DiscordBtn.Text = "COPIED!"
+    task.wait(1)
+    DiscordBtn.Text = "COPY DISCORD"
+end)
+
+-- Toggle menu button
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 20, 0.2, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+ToggleBtn.Text = "CH"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBlack
+ToggleBtn.TextSize = 15
+ToggleBtn.Draggable = true
+
+Instance.new("UICorner").Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Parent = ToggleBtn
+ToggleStroke.Thickness = 2
+ToggleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+ToggleStroke.Color = Color3.fromRGB(0, 220, 255)
+
+local ToggleGradient = Instance.new("UIGradient")
+ToggleGradient.Parent = ToggleStroke
+ToggleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+})
+
+-- Toggle menu visibility
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Note: This script is for educational purposes only
+-- Using exploits in online games may violate terms of service

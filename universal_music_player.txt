@@ -1,0 +1,1064 @@
+local success, runService = pcall(game.GetService, game, 'RunService')
+
+if success then
+    local tweenService = game:GetService('TweenService')
+    local playersService = game:GetService('Players')
+    local lighting = game:GetService('Lighting')
+    local coreGui = game:GetService('CoreGui')
+    local marketplaceService = game:GetService('MarketplaceService')
+    local userInputService = game:GetService('UserInputService')
+    local httpService = game:GetService('HttpService')
+    local visualizerModule = {}
+    local config = {
+        MUSIC_ID = 'rbxassetid://16190782181',
+        PART_SPACING = 3.6,
+        BASE_RADIUS = 6,
+        RADIUS_MULTIPLIER = 10,
+        SIZE_X = 0.2,
+        SIZE_Z = 0.05,
+        SIZE_MULTIPLIER = 4,
+        COLOR_SEQUENCE = ColorSequence.new(Color3.fromRGB(0, 255, 255)),
+        LIGHT_RANGE = 7,
+        LIGHT_BRIGHTNESS_MULT = 0.25,
+        WAVE_SPEED = 10,
+        WAVE_HEIGHT = 0.25,
+        ROTATION_SPEED_MULT = 1,
+        DEATH_FADE_DURATION = 2,
+        SPAWN_DURATION = 1.5,
+        CAMERA_SHAKE_INTENSITY = 0.01,
+        CAMERA_FOV_INCREASE = 8,
+        BLOOM_INTENSITY_MULTIPLIER = 2,
+        SUNRAYS_INTENSITY_MULTIPLIER = 0.1,
+    }
+    local activeVisualizer = {}
+
+    local function lerp(startVal, endVal, alpha)
+        return startVal + (endVal - startVal) * alpha
+    end
+
+    local function evaluateColorSequence(colorSequence, time)
+        local keypoints = colorSequence.Keypoints
+        local prevKeypoint = nil
+        local nextKeypoint = nil
+
+        for i, keypoint in ipairs(keypoints) do
+            if prevKeypoint then
+                if keypoint.Time > prevKeypoint.Time and keypoint.Time <= time then
+                    nextKeypoint = colorSequence.Keypoints[i + 1] or keypoint
+                    prevKeypoint = keypoint
+                end
+            else
+                nextKeypoint = colorSequence.Keypoints[i + 1] or keypoint
+                prevKeypoint = keypoint
+            end
+        end
+
+        local lerpFactor = (time - prevKeypoint.Time) / (nextKeypoint.Time - prevKeypoint.Time)
+
+        if lerpFactor == lerpFactor then
+            return prevKeypoint.Value:lerp(nextKeypoint.Value, lerpFactor)
+        else
+            return prevKeypoint.Value
+        end
+    end
+
+    function visualizerModule.Stop(_)
+        if activeVisualizer.IsActive then
+            activeVisualizer.IsActive = false
+
+            for _, connection in pairs(activeVisualizer.connections or {}) do
+                connection:Disconnect()
+            end
+
+            if activeVisualizer.mainRenderConnection then
+                activeVisualizer.mainRenderConnection:Disconnect()
+            end
+
+            for _, objectName in ipairs({
+                'effectFolder',
+                'bloomEffect',
+                'sunRaysEffect',
+                'sound',
+            }) do
+                if activeVisualizer[objectName] and activeVisualizer[objectName].Parent then
+                    activeVisualizer[objectName]:Destroy()
+                end
+            end
+
+            activeVisualizer = {}
+        end
+    end
+
+    function visualizerModule.Start(_)
+        if activeVisualizer.IsActive then
+            visualizerModule:Stop()
+        end
+
+        activeVisualizer = {
+            IsActive = true,
+            connections = {},
+            isDying = false,
+            startTime = tick(),
+        }
+
+        local localPlayer = playersService.LocalPlayer
+        local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild('Humanoid')
+        local humanoidRootPart = character:WaitForChild('HumanoidRootPart')
+        local currentCamera = workspace.CurrentCamera
+
+        activeVisualizer.defaultFieldOfView = currentCamera.FieldOfView
+        activeVisualizer.sound = Instance.new('Sound')
+        activeVisualizer.effectFolder = Instance.new('Folder')
+        activeVisualizer.bloomEffect = Instance.new('BloomEffect')
+        activeVisualizer.sunRaysEffect = Instance.new('SunRaysEffect')
+        activeVisualizer.sound.SoundId = config.MUSIC_ID
+        activeVisualizer.sound.Looped = true
+        activeVisualizer.sound.Parent = humanoidRootPart
+
+        activeVisualizer.sound:Play()
+
+        activeVisualizer.effectFolder.Name = 'AudioVisualizerFolder'
+        activeVisualizer.effectFolder.Parent = character
+        activeVisualizer.bloomEffect.Name = 'WaveBloom'
+        activeVisualizer.bloomEffect.Enabled = true
+        activeVisualizer.bloomEffect.Parent = lighting
+        activeVisualizer.sunRaysEffect.Name = 'WaveSunRays'
+        activeVisualizer.sunRaysEffect.Enabled = true
+        activeVisualizer.sunRaysEffect.Parent = lighting
+
+        for i = 0, math.floor(360 / config.PART_SPACING) - 1 do
+            local angle = i * config.PART_SPACING
+            local part = Instance.new('Part')
+
+            part.Size = Vector3.new()
+            part.Anchored = true
+            part.CanCollide = false
+            part.Material = Enum.Material.Neon
+            part.Transparency = 0.7
+            part.Color = Color3.new(1, 1, 1)
+            part.Name = tostring(angle)
+
+            part:SetAttribute('RelativePos', Vector3.new(math.sin(math.rad(angle)), 0, math.cos(math.rad(angle))))
+
+            part.Parent = activeVisualizer.effectFolder
+        end
+
+        local function startDeathSequence()
+            if not activeVisualizer.isDying and activeVisualizer.IsActive then
+                activeVisualizer.isDying = true
+
+                if activeVisualizer.mainRenderConnection then
+                    activeVisualizer.mainRenderConnection:Disconnect()
+                    activeVisualizer.mainRenderConnection = nil
+                end
+
+                tweenService:Create(activeVisualizer.sound, TweenInfo.new(config.DEATH_FADE_DURATION), {Volume = 0}):Play()
+
+                local deathStartTime = tick()
+                local startAngle = activeVisualizer.sound.TimePosition / activeVisualizer.sound.TimeLength * 3600
+                local deathConnection = nil
+
+                deathConnection = runService.RenderStepped:Connect(function()
+                    if activeVisualizer.effectFolder and activeVisualizer.effectFolder.Parent then
+                        local elapsed = tick() - deathStartTime
+                        local progress = math.clamp((tick() - deathStartTime) / config.DEATH_FADE_DURATION, 0, 1)
+                        local currentAngle = lerp(startAngle, 15000, progress)
+                        local currentRadius = lerp(config.BASE_RADIUS, 0, progress)
+
+                        for _, child in ipairs(activeVisualizer.effectFolder:GetChildren()) do
+                            if child:IsA('BasePart') then
+                                child.Transparency = lerp(child.Transparency, 1, progress)
+                                child.Size = child.Size:Lerp(Vector3.new(), progress)
+
+                                local childAngle = tonumber(child.Name)
+
+                                if childAngle then
+                                    local rotation = CFrame.Angles(0, math.rad(currentAngle * elapsed + childAngle), 0)
+                                    local position = (CFrame.new(humanoidRootPart.Position) * rotation * CFrame.new(child:GetAttribute('RelativePos') * currentRadius)).Position
+
+                                    child.CFrame = CFrame.new(position)
+                                end
+                            end
+                        end
+
+                        if config.DEATH_FADE_DURATION <= elapsed then
+                            deathConnection:Disconnect()
+                            visualizerModule:Stop()
+                        end
+                    else
+                        deathConnection:Disconnect()
+                        visualizerModule:Stop()
+                    end
+                end)
+
+                table.insert(activeVisualizer.connections, deathConnection)
+            end
+        end
+
+        table.insert(activeVisualizer.connections, humanoid.Died:Connect(startDeathSequence))
+
+        activeVisualizer.mainRenderConnection = runService.RenderStepped:Connect(function(deltaTime)
+            if activeVisualizer.isDying or not character.Parent then
+                visualizerModule:Stop()
+                return
+            elseif activeVisualizer.effectFolder and activeVisualizer.effectFolder.Parent then
+                local spawnProgress = (function(start, target, t)
+                    return (target - start) * (-math.pow(2, -10 * t) + 1) + start
+                end)(0, 1, math.clamp((tick() - activeVisualizer.startTime) / config.SPAWN_DURATION, 0, 1))
+
+                local loudness = activeVisualizer.sound.PlaybackLoudness / 1000
+                local intensity = math.clamp(loudness, 0, 1)
+                local shakeAmount = intensity * config.CAMERA_SHAKE_INTENSITY
+
+                currentCamera.CFrame = currentCamera.CFrame * CFrame.Angles(
+                    math.random() * shakeAmount - shakeAmount / 2,
+                    math.random() * shakeAmount - shakeAmount / 2,
+                    math.random() * shakeAmount - shakeAmount / 2
+                )
+                currentCamera.FieldOfView = lerp(currentCamera.FieldOfView, activeVisualizer.defaultFieldOfView + config.CAMERA_FOV_INCREASE * intensity, deltaTime * 10)
+                activeVisualizer.bloomEffect.Intensity = intensity * config.BLOOM_INTENSITY_MULTIPLIER
+                activeVisualizer.sunRaysEffect.Intensity = intensity * config.SUNRAYS_INTENSITY_MULTIPLIER
+
+                local waveAngle = math.abs(math.sin(math.rad(loudness * 360))) * 360
+                local rotationAngle = activeVisualizer.sound.TimePosition / activeVisualizer.sound.TimeLength * 3600
+                local waveFactor = math.sin(math.rad(waveAngle)) + 1
+                local currentRadius = lerp(config.BASE_RADIUS, loudness * config.RADIUS_MULTIPLIER + config.BASE_RADIUS, deltaTime * 4) * spawnProgress
+
+                for _, child in ipairs(activeVisualizer.effectFolder:GetChildren()) do
+                    if child:IsA('BasePart') then
+                        local childAngle = tonumber(child.Name)
+                        local relativeWave = math.sin(math.rad(childAngle)) + 1 - waveFactor
+                        local sizeFactor = (2 - math.abs(relativeWave) * 3) / 2
+                        local clampedFactor = math.clamp(sizeFactor, 0, 1) * math.clamp(loudness * 10, 0, 1)
+                        local height = (function(start, target, t)
+                            return (target - start) * math.pow(2, 10 * (t - 1)) + start
+                        end)(0, 1, clampedFactor) * config.SIZE_MULTIPLIER * spawnProgress
+
+                        child.Size = child.Size:Lerp(Vector3.new(config.SIZE_X, height, config.SIZE_Z), math.clamp(clampedFactor, deltaTime * 4, 1))
+
+                        local colorAtTime = evaluateColorSequence(config.COLOR_SEQUENCE, clampedFactor)
+
+                        child.Color = child.Color:Lerp(colorAtTime, math.clamp(clampedFactor, deltaTime * 4, 1))
+
+                        local yOffset = math.sin(tick() * config.WAVE_SPEED + childAngle / 30) * config.WAVE_HEIGHT
+                        local position = (CFrame.new(humanoidRootPart.Position + Vector3.new(0, child.Size.Y / 2 + yOffset, 0)) *
+                                         CFrame.Angles(0, math.rad(rotationAngle * config.ROTATION_SPEED_MULT), 0) *
+                                         CFrame.new(child:GetAttribute('RelativePos') * currentRadius)).Position
+
+                        child.CFrame = CFrame.new(position, humanoidRootPart.Position + Vector3.new(0, child.Size.Y / 2, 0))
+
+                        local pointLight = child:FindFirstChildOfClass('PointLight')
+                        if pointLight then
+                            pointLight:Destroy()
+                        end
+
+                        local newLight = Instance.new('PointLight')
+                        newLight.Color = child.Color
+                        newLight.Brightness = clampedFactor * config.LIGHT_BRIGHTNESS_MULT * spawnProgress
+                        newLight.Range = config.LIGHT_RANGE
+                        newLight.Shadows = false
+                        newLight.Parent = child
+                    end
+                end
+            else
+                visualizerModule:Stop()
+            end
+        end)
+    end
+
+    function visualizerModule.SetMusic(_, musicId)
+        if tostring(musicId):match('%d+') then
+            musicId = 'rbxassetid://' .. tostring(musicId):match('%d+') or musicId
+        end
+
+        config.MUSIC_ID = musicId
+
+        if activeVisualizer.IsActive then
+            visualizerModule:Stop()
+            visualizerModule:Start()
+        end
+    end
+
+    function visualizerModule.SetConfigValue(_, key, value)
+        config[key] = value
+    end
+
+    function visualizerModule.SetColorSequence(_, colorSeq)
+        config.COLOR_SEQUENCE = colorSeq
+    end
+
+    function visualizerModule.SetPlaybackSpeed(_, speed)
+        if activeVisualizer.sound then
+            activeVisualizer.sound.PlaybackSpeed = speed
+        end
+    end
+
+    function visualizerModule.SetTimePosition(_, timePos)
+        if activeVisualizer.sound then
+            activeVisualizer.sound.TimePosition = timePos
+        end
+    end
+
+    function visualizerModule.GetSoundObject(_)
+        return activeVisualizer.sound
+    end
+
+    function visualizerModule.GetCurrentConfig(_)
+        return config
+    end
+
+    function visualizerModule.LoadConfig(_, loadedConfig)
+        for key, value in pairs(loadedConfig) do
+            if key == 'COLOR_SEQUENCE' then
+                local keypoints = {}
+                for _, kp in ipairs(value.Keypoints) do
+                    table.insert(keypoints, ColorSequenceKeypoint.new(kp.Time, Color3.new(kp.Value.R, kp.Value.G, kp.Value.B)))
+                end
+                config[key] = ColorSequence.new(keypoints)
+            else
+                config[key] = value
+            end
+        end
+
+        if activeVisualizer.IsActive then
+            visualizerModule:Stop()
+            visualizerModule:Start()
+        end
+    end
+
+    local uiModule = {}
+    local colorThemes = {
+        ['Fire & Ice'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 100, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0)),
+        }),
+        ['Neon Night'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(75, 0, 130)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(238, 130, 238)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 20, 147)),
+        }),
+        ['Forest Vibe'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 139, 34)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(85, 107, 47)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(154, 205, 50)),
+        }),
+        ['Ocean Depths'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 105, 148)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 165, 200)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(173, 216, 230)),
+        }),
+        Sunset = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(253, 94, 83)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 150, 113)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 209, 163)),
+        }),
+        Vaporwave = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 110, 199)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(155, 89, 182)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255)),
+        }),
+        ['Lava Flow'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 20, 0)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 150, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 0)),
+        }),
+        Cyberpunk = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(247, 255, 0)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 171)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 132, 255)),
+        }),
+        Monochrome = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 50)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+        }),
+        ['Cotton Candy'] = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 182, 193)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(137, 207, 240)),
+        }),
+        Matrix = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 50, 0)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 150, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 0)),
+        }),
+        Gold = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 224)),
+        }),
+        Toxic = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 128)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(173, 255, 47)),
+        }),
+        Ice = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(175, 238, 238)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 255, 255)),
+        }),
+        Rainbow = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+            ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
+            ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
+            ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+            ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255)),
+        }),
+        ['Just Red'] = ColorSequence.new(Color3.fromRGB(255, 0, 0)),
+    }
+    local presetSongs = {
+        '16190782181',
+        '74968963477163',
+        '122761529841977',
+        '113315560178270',
+        '95945175209701',
+        '94489672980216',
+        '118462387831337',
+        '93807022050390',
+        '118939739460633',
+    }
+
+    function uiModule.Initialize(_)
+        local screenGui = Instance.new('ScreenGui', coreGui)
+
+        screenGui.Name = 'VisualizerControlGui_Rework'
+        screenGui.ResetOnSpawn = false
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+        local mainFrame = Instance.new('Frame')
+
+        mainFrame.Name = 'MainFrame'
+        mainFrame.Parent = screenGui
+        mainFrame.BackgroundColor3 = Color3.fromRGB(25, 26, 33)
+        mainFrame.Position = UDim2.new(1, 10, 0.5, -225)
+        mainFrame.Active = true
+        mainFrame.Draggable = true
+        mainFrame.ClipsDescendants = true
+        mainFrame.Size = UDim2.new(0, 320, 0, 450)
+        Instance.new('UICorner', mainFrame).CornerRadius = UDim.new(0, 8)
+        mainFrame.Visible = false
+
+        local titleLabel = Instance.new('TextLabel', mainFrame)
+
+        titleLabel.Size = UDim2.new(1, 0, 0, 40)
+        titleLabel.BackgroundColor3 = Color3.fromRGB(31, 32, 41)
+        titleLabel.Text = "Secret's Music Player v1"
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.TextSize = 18
+
+        local tabBar = Instance.new('Frame', mainFrame)
+
+        tabBar.Size = UDim2.new(1, 0, 0, 35)
+        tabBar.Position = UDim2.new(0, 0, 0, 40)
+        tabBar.BackgroundTransparency = 1
+
+        local tabLayout = Instance.new('UIListLayout', tabBar)
+
+        tabLayout.FillDirection = Enum.FillDirection.Horizontal
+        tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+        tabLayout.Padding = UDim.new(0, 5)
+
+        local contentArea = Instance.new('Frame', mainFrame)
+
+        contentArea.Size = UDim2.new(1, -20, 1, -135)
+        contentArea.Position = UDim2.new(0, 10, 0, 85)
+        contentArea.BackgroundTransparency = 1
+
+        local controlsScroll = Instance.new('ScrollingFrame', contentArea)
+
+        controlsScroll.Name = 'Controls'
+        controlsScroll.Size = UDim2.new(1, 0, 1, 0)
+        controlsScroll.BackgroundTransparency = 1
+        controlsScroll.BorderSizePixel = 0
+        controlsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        controlsScroll.ScrollBarThickness = 4
+        Instance.new('UIListLayout', controlsScroll).Padding = UDim.new(0, 10)
+
+        local songsScroll = Instance.new('ScrollingFrame', contentArea)
+
+        songsScroll.Name = 'Songs'
+        songsScroll.Size = UDim2.new(1, 0, 1, 0)
+        songsScroll.BackgroundTransparency = 1
+        songsScroll.Visible = false
+        songsScroll.BorderSizePixel = 0
+        songsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        songsScroll.ScrollBarThickness = 4
+        Instance.new('UIListLayout', songsScroll).Padding = UDim.new(0, 5)
+
+        local themesScroll = Instance.new('ScrollingFrame', contentArea)
+
+        themesScroll.Name = 'Themes'
+        themesScroll.Size = UDim2.new(1, 0, 1, 0)
+        themesScroll.BackgroundTransparency = 1
+        themesScroll.Visible = false
+        themesScroll.BorderSizePixel = 0
+        themesScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        themesScroll.ScrollBarThickness = 4
+
+        local themesGrid = Instance.new('UIGridLayout', themesScroll)
+
+        themesGrid.CellSize = UDim2.new(0, 85, 0, 25)
+        themesGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+
+        local settingsScroll = Instance.new('ScrollingFrame', contentArea)
+
+        settingsScroll.Name = 'Settings'
+        settingsScroll.Size = UDim2.new(1, 0, 1, 0)
+        settingsScroll.BackgroundTransparency = 1
+        settingsScroll.Visible = false
+        settingsScroll.BorderSizePixel = 0
+        settingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        settingsScroll.ScrollBarThickness = 4
+        Instance.new('UIListLayout', settingsScroll).Padding = UDim.new(0, 10)
+
+        local allScrolls = {
+            controlsScroll,
+            songsScroll,
+            themesScroll,
+            settingsScroll,
+        }
+
+        local function createTabButton(text)
+            local button = Instance.new('TextButton', tabBar)
+
+            button.Size = UDim2.new(0, 70, 1, 0)
+            button.BackgroundColor3 = Color3.fromRGB(45, 47, 59)
+            button.TextColor3 = Color3.fromRGB(180, 180, 180)
+            button.Font = Enum.Font.GothamBold
+            button.TextSize = 14
+            button.Text = text
+            Instance.new('UICorner', button).CornerRadius = UDim.new(0, 4)
+
+            return button
+        end
+
+        local function switchTab(selectedButton, targetScroll)
+            for _, scroll in ipairs(allScrolls) do
+                scroll.Visible = (scroll == targetScroll)
+            end
+
+            for _, child in ipairs(tabBar:GetChildren()) do
+                if child:IsA('TextButton') then
+                    local isSelected = (child == selectedButton)
+                    tweenService:Create(child, TweenInfo.new(0.2), {
+                        BackgroundColor3 = isSelected and Color3.fromRGB(88, 101, 242) or Color3.fromRGB(45, 47, 59),
+                    }):Play()
+                    tweenService:Create(child, TweenInfo.new(0.2), {
+                        TextColor3 = isSelected and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180),
+                    }):Play()
+                end
+            end
+        end
+
+        local controlsTab = createTabButton('Controls')
+        local songsTab = createTabButton('Songs')
+        local themesTab = createTabButton('Themes')
+        local settingsTab = createTabButton('Settings')
+
+        controlsTab.MouseButton1Click:Connect(function()
+            switchTab(controlsTab, controlsScroll)
+        end)
+        songsTab.MouseButton1Click:Connect(function()
+            switchTab(songsTab, songsScroll)
+        end)
+        themesTab.MouseButton1Click:Connect(function()
+            switchTab(themesTab, themesScroll)
+        end)
+        settingsTab.MouseButton1Click:Connect(function()
+            switchTab(settingsTab, settingsScroll)
+        end)
+
+        local sliderHandles = {}
+
+        local function createSlider(parent, configKey, label, minVal, maxVal, displayFunc, callback)
+            local container = Instance.new('Frame', parent)
+
+            container.Size = UDim2.new(1, 0, 0, 50)
+            container.BackgroundTransparency = 1
+
+            local labelText = Instance.new('TextLabel', container)
+
+            labelText.Size = UDim2.new(1, 0, 0, 20)
+            labelText.Text = label
+            labelText.Font = Enum.Font.Gotham
+            labelText.TextColor3 = Color3.fromRGB(220, 222, 230)
+            labelText.TextXAlignment = Enum.TextXAlignment.Left
+            labelText.TextSize = 14
+            labelText.BackgroundTransparency = 1
+
+            local valueText = Instance.new('TextLabel', labelText)
+
+            valueText.Size = UDim2.new(0.5, 0, 1, 0)
+            valueText.AnchorPoint = Vector2.new(1, 0)
+            valueText.Position = UDim2.new(1, 0, 0, 0)
+            valueText.Font = Enum.Font.GothamBold
+            valueText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            valueText.TextXAlignment = Enum.TextXAlignment.Right
+            valueText.TextSize = 14
+            valueText.BackgroundTransparency = 1
+
+            local track = Instance.new('Frame', container)
+
+            track.Size = UDim2.new(1, 0, 0, 6)
+            track.Position = UDim2.new(0, 0, 0, 25)
+            track.BackgroundColor3 = Color3.fromRGB(25, 26, 33)
+            Instance.new('UICorner', track).CornerRadius = UDim.new(0, 3)
+
+            local fill = Instance.new('Frame', track)
+
+            fill.BackgroundColor3 = Color3.fromRGB(115, 134, 242)
+            Instance.new('UICorner', fill).CornerRadius = UDim.new(0, 3)
+
+            local thumb = Instance.new('TextButton', track)
+
+            thumb.Size = UDim2.new(0, 14, 0, 14)
+            thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            thumb.Text = ''
+            Instance.new('UICorner', thumb).CornerRadius = UDim.new(1, 0)
+
+            local dragging = false
+            local dragConnection = nil
+
+            local function updateSlider(value)
+                local norm = (value - minVal) / (maxVal - minVal)
+                norm = math.clamp(norm, 0, 1)
+
+                fill.Size = UDim2.new(norm, 0, 1, 0)
+                thumb.Position = UDim2.new(norm, -7, 0.5, -7)
+                valueText.Text = displayFunc(value)
+            end
+
+            thumb.MouseButton1Down:Connect(function()
+                dragging = true
+                dragConnection = userInputService.InputChanged:Connect(function(input)
+                    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        local relativeX = (input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
+                        local newValue = minVal + (maxVal - minVal) * math.clamp(relativeX, 0, 1)
+
+                        updateSlider(newValue)
+
+                        if callback then
+                            callback(newValue)
+                        end
+                    end
+                end)
+            end)
+            thumb.MouseButton1Up:Connect(function()
+                dragging = false
+                if dragConnection then
+                    dragConnection:Disconnect()
+                end
+            end)
+            updateSlider(visualizerModule:GetCurrentConfig()[configKey])
+
+            if configKey then
+                sliderHandles[configKey] = {Update = updateSlider}
+            end
+
+            return {
+                Container = container,
+                Update = updateSlider,
+                Handle = thumb,
+            }
+        end
+
+        local speedSlider = createSlider(controlsScroll, nil, 'Playback Speed', 0.5, 2, 1, function(val)
+            return string.format('%.2fx', val)
+        end, function(val)
+            visualizerModule:SetPlaybackSpeed(val)
+        end)
+
+        local timeSlider = createSlider(controlsScroll, nil, 'Time Position', 0, 1, 0, function(val)
+            local soundObj = visualizerModule:GetSoundObject()
+            local seconds = val * (soundObj and (soundObj.TimeLength > 0 and soundObj.TimeLength or 0) or 0)
+
+            return string.format('%d:%02d', math.floor(seconds / 60), seconds % 60)
+        end, function(val)
+            local soundObj = visualizerModule:GetSoundObject()
+
+            if soundObj and soundObj.TimeLength > 0 then
+                visualizerModule:SetTimePosition(val * soundObj.TimeLength)
+            end
+        end)
+
+        local customSongRow = Instance.new('Frame', songsScroll)
+
+        customSongRow.BackgroundTransparency = 1
+        customSongRow.Size = UDim2.new(1, 0, 0, 35)
+        customSongRow.LayoutOrder = -1
+
+        local songRowLayout = Instance.new('UIListLayout', customSongRow)
+
+        songRowLayout.FillDirection = Enum.FillDirection.Horizontal
+        songRowLayout.Padding = UDim.new(0, 5)
+
+        local musicIdBox = Instance.new('TextBox', customSongRow)
+
+        musicIdBox.Size = UDim2.new(0.7, -5, 1, 0)
+        musicIdBox.BackgroundColor3 = Color3.fromRGB(45, 47, 59)
+        musicIdBox.TextColor3 = Color3.fromRGB(220, 222, 230)
+        musicIdBox.Font = Enum.Font.Gotham
+        musicIdBox.TextSize = 14
+        musicIdBox.PlaceholderText = 'Paste Music ID'
+        Instance.new('UICorner', musicIdBox).CornerRadius = UDim.new(0, 4)
+
+        local setMusicButton = Instance.new('TextButton', customSongRow)
+
+        setMusicButton.Size = UDim2.new(0.3, 0, 1, 0)
+        setMusicButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+        setMusicButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        setMusicButton.Text = 'Set Music ID'
+        setMusicButton.Font = Enum.Font.GothamBold
+        setMusicButton.TextSize = 14
+        Instance.new('UICorner', setMusicButton).CornerRadius = UDim.new(0, 4)
+
+        setMusicButton.MouseButton1Click:Connect(function()
+            visualizerModule:SetMusic(musicIdBox.Text)
+        end)
+
+        task.spawn(function()
+            for _, songId in ipairs(presetSongs) do
+                local success, info = pcall(function()
+                    return marketplaceService:GetProductInfo(tonumber(songId), Enum.InfoType.Asset)
+                end)
+                local songName = success and info.Name or 'Song ' .. tostring(_)
+
+                local songButton = Instance.new('TextButton', songsScroll)
+
+                songButton.Size = UDim2.new(1, 0, 0, 30)
+                songButton.BackgroundColor3 = Color3.fromRGB(45, 47, 59)
+                songButton.TextColor3 = Color3.fromRGB(220, 222, 230)
+                songButton.Font = Enum.Font.Gotham
+                songButton.TextSize = 12
+                songButton.Text = songName
+                songButton.TextTruncate = Enum.TextTruncate.AtEnd
+                Instance.new('UICorner', songButton).CornerRadius = UDim.new(0, 4)
+
+                songButton.MouseButton1Click:Connect(function()
+                    visualizerModule:SetMusic(songId)
+                end)
+            end
+        end)
+
+        for themeName, colorSeq in pairs(colorThemes) do
+            local themeButton = Instance.new('TextButton', themesScroll)
+
+            themeButton.BackgroundColor3 = Color3.fromRGB(25, 26, 33)
+            themeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            themeButton.Font = Enum.Font.Gotham
+            themeButton.TextSize = 11
+            themeButton.Text = themeName
+            Instance.new('UICorner', themeButton).CornerRadius = UDim.new(0, 3)
+
+            themeButton.MouseButton1Click:Connect(function()
+                visualizerModule:SetColorSequence(colorSeq)
+            end)
+        end
+
+        local function createSettingSlider(key, label, minVal, maxVal, displayFunc)
+            return createSlider(settingsScroll, key, label, minVal, maxVal, displayFunc, function(val)
+                visualizerModule:SetConfigValue(key, val)
+            end)
+        end
+
+        createSettingSlider('BASE_RADIUS', 'Base Radius', 2, 20, function(val)
+            return string.format('%.1f', val)
+        end)
+        createSettingSlider('RADIUS_MULTIPLIER', 'Radius Multiplier', 5, 50, function(val)
+            return string.format('%.1f', val)
+        end)
+        createSettingSlider('SIZE_MULTIPLIER', 'Size Multiplier', 1, 10, function(val)
+            return string.format('%.1f', val)
+        end)
+        createSettingSlider('WAVE_HEIGHT', 'Wave Height', 0, 2, function(val)
+            return string.format('%.2f', val)
+        end)
+        createSettingSlider('ROTATION_SPEED_MULT', 'Rotation Speed', 0, 5, function(val)
+            return string.format('%.1fx', val)
+        end)
+
+        local configSection = Instance.new('Frame', settingsScroll)
+
+        configSection.BackgroundTransparency = 1
+        configSection.Size = UDim2.new(1, 0, 0, 0)
+        configSection.AutomaticSize = Enum.AutomaticSize.Y
+        Instance.new('UIListLayout', configSection).Padding = UDim.new(0, 5)
+
+        local configLabel = Instance.new('TextLabel', configSection)
+
+        configLabel.Size = UDim2.new(1, 0, 0, 20)
+        configLabel.BackgroundTransparency = 1
+        configLabel.Text = 'Config Management'
+        configLabel.Font = Enum.Font.GothamBold
+        configLabel.TextColor3 = Color3.fromRGB(220, 222, 230)
+        configLabel.TextXAlignment = Enum.TextXAlignment.Left
+        configLabel.TextSize = 14
+
+        local configRow = Instance.new('Frame', configSection)
+
+        configRow.BackgroundTransparency = 1
+        configRow.Size = UDim2.new(1, 0, 0, 35)
+
+        local configRowLayout = Instance.new('UIListLayout', configRow)
+
+        configRowLayout.FillDirection = Enum.FillDirection.Horizontal
+        configRowLayout.Padding = UDim.new(0, 5)
+
+        local configNameBox = Instance.new('TextBox', configRow)
+
+        configNameBox.Size = UDim2.new(0.7, -5, 1, 0)
+        configNameBox.BackgroundColor3 = Color3.fromRGB(45, 47, 59)
+        configNameBox.TextColor3 = Color3.fromRGB(220, 222, 230)
+        configNameBox.Font = Enum.Font.Gotham
+        configNameBox.TextSize = 14
+        configNameBox.PlaceholderText = 'Config Name'
+        Instance.new('UICorner', configNameBox).CornerRadius = UDim.new(0, 4)
+
+        local saveConfigButton = Instance.new('TextButton', configRow)
+
+        saveConfigButton.Size = UDim2.new(0.3, 0, 1, 0)
+        saveConfigButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+        saveConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        saveConfigButton.Text = 'SAVE'
+        saveConfigButton.Font = Enum.Font.GothamBold
+        saveConfigButton.TextSize = 14
+        Instance.new('UICorner', saveConfigButton).CornerRadius = UDim.new(0, 4)
+
+        local configList = Instance.new('Frame', configSection)
+
+        configList.BackgroundTransparency = 1
+        configList.Size = UDim2.new(1, 0, 0, 0)
+        configList.AutomaticSize = Enum.AutomaticSize.Y
+        Instance.new('UIListLayout', configList).Padding = UDim.new(0, 2)
+
+        local configFolder = 'VisualizerConfigs'
+
+        if not isfolder(configFolder) then
+            makefolder(configFolder)
+        end
+
+        local function refreshConfigList()
+            configList:ClearAllChildren()
+
+            Instance.new('UIListLayout', configList).Padding = UDim.new(0, 2)
+
+            local success, files = pcall(listfiles, configFolder)
+
+            if success then
+                for _, filePath in ipairs(files) do
+                    if filePath:sub(-5) == '.json' then
+                        local configName = filePath:sub(#configFolder + 2, -6)
+                        local row = Instance.new('Frame', configList)
+
+                        row.Size = UDim2.new(1, 0, 0, 30)
+                        row.BackgroundTransparency = 1
+
+                        local rowLayout = Instance.new('UIListLayout', row)
+
+                        rowLayout.FillDirection = Enum.FillDirection.Horizontal
+                        rowLayout.Padding = UDim.new(0, 5)
+
+                        local nameLabel = Instance.new('TextLabel', row)
+
+                        nameLabel.Size = UDim2.new(0.4, -10, 1, 0)
+                        nameLabel.BackgroundColor3 = Color3.fromRGB(45, 47, 59)
+                        nameLabel.TextColor3 = Color3.fromRGB(220, 222, 230)
+                        nameLabel.Font = Enum.Font.Gotham
+                        nameLabel.TextSize = 11
+                        nameLabel.Text = ' ' .. configName
+                        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                        Instance.new('UICorner', nameLabel).CornerRadius = UDim.new(0, 4)
+
+                        local loadBtn = Instance.new('TextButton', row)
+
+                        loadBtn.Size = UDim2.new(0.2, 0, 1, 0)
+                        loadBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+                        loadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        loadBtn.Font = Enum.Font.GothamBold
+                        loadBtn.TextSize = 11
+                        loadBtn.Text = 'Load'
+                        Instance.new('UICorner', loadBtn).CornerRadius = UDim.new(0, 4)
+
+                        local autoBtn = Instance.new('TextButton', row)
+
+                        autoBtn.Size = UDim2.new(0.2, 0, 1, 0)
+                        autoBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+                        autoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        autoBtn.Font = Enum.Font.GothamBold
+                        autoBtn.TextSize = 11
+                        autoBtn.Text = 'Auto'
+                        Instance.new('UICorner', autoBtn).CornerRadius = UDim.new(0, 4)
+
+                        local deleteBtn = Instance.new('TextButton', row)
+
+                        deleteBtn.Size = UDim2.new(0.2, 0, 1, 0)
+                        deleteBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+                        deleteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        deleteBtn.Font = Enum.Font.GothamBold
+                        deleteBtn.TextSize = 11
+                        deleteBtn.Text = 'Del'
+                        Instance.new('UICorner', deleteBtn).CornerRadius = UDim.new(0, 4)
+
+                        loadBtn.MouseButton1Click:Connect(function()
+                            local ok, data = pcall(readfile, filePath)
+
+                            if ok and data then
+                                local decodeOk, decoded = pcall(function()
+                                    return httpService:JSONDecode(data)
+                                end)
+
+                                if decodeOk then
+                                    visualizerModule:LoadConfig(decoded)
+
+                                    for key, handle in pairs(sliderHandles) do
+                                        handle.Update(decoded[key] or 0)
+                                    end
+                                end
+                            end
+                        end)
+
+                        autoBtn.MouseButton1Click:Connect(function()
+                            pcall(writefile, configFolder .. '/autoload.txt', configName)
+                        end)
+
+                        deleteBtn.MouseButton1Click:Connect(function()
+                            pcall(delfile, filePath)
+                            refreshConfigList()
+                        end)
+                    end
+                end
+            end
+        end
+
+        saveConfigButton.MouseButton1Click:Connect(function()
+            local name = configNameBox.Text
+
+            if name:gsub('%s', '') ~= '' then
+                local json = httpService:JSONEncode(visualizerModule:GetCurrentConfig())
+
+                pcall(writefile, configFolder .. '/' .. name .. '.json', json)
+                refreshConfigList()
+            end
+        end)
+
+        local autoLoadOk, autoLoadName = pcall(readfile, configFolder .. '/autoload.txt')
+
+        if autoLoadOk and autoLoadName then
+            local configOk, configData = pcall(readfile, configFolder .. '/' .. autoLoadName .. '.json')
+
+            if configOk and configData then
+                local decodeOk, decoded = pcall(function()
+                    return httpService:JSONDecode(configData)
+                end)
+
+                if decodeOk then
+                    visualizerModule:LoadConfig(decoded)
+                end
+            end
+        end
+
+        refreshConfigList()
+
+        local toggleButton = Instance.new('TextButton', mainFrame)
+
+        toggleButton.Name = 'ToggleButton'
+        toggleButton.Size = UDim2.new(1, -20, 0, 40)
+        toggleButton.Position = UDim2.new(0.5, 0, 1, -30)
+        toggleButton.AnchorPoint = Vector2.new(0.5, 1)
+        toggleButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+        toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleButton.Text = 'ENABLE'
+        toggleButton.Font = Enum.Font.GothamBold
+        toggleButton.TextSize = 16
+        Instance.new('UICorner', toggleButton).CornerRadius = UDim.new(0, 4)
+
+        local isEnabled = false
+
+        toggleButton.MouseButton1Click:Connect(function()
+            isEnabled = not isEnabled
+
+            if isEnabled then
+                visualizerModule:Start()
+
+                toggleButton.Text = 'DISABLE'
+                toggleButton.BackgroundColor3 = Color3.fromRGB(237, 66, 69)
+            else
+                visualizerModule:Stop()
+
+                toggleButton.Text = 'ENABLE'
+                toggleButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+            end
+        end)
+
+        local uiToggleButton = Instance.new('TextButton', screenGui)
+
+        uiToggleButton.Size = UDim2.new(0, 50, 0, 50)
+        uiToggleButton.Position = UDim2.new(1, -60, 1, -60)
+        uiToggleButton.BackgroundColor3 = Color3.fromRGB(25, 26, 33)
+        uiToggleButton.Text = 'UI'
+        uiToggleButton.Font = Enum.Font.GothamBold
+        uiToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Instance.new('UICorner', uiToggleButton).CornerRadius = UDim.new(1, 0)
+
+        uiToggleButton.MouseButton1Click:Connect(function()
+            mainFrame.Visible = not mainFrame.Visible
+
+            if mainFrame.Visible then
+                mainFrame:TweenPosition(UDim2.new(1, -330, 0.5, -225), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.5, true)
+            else
+                mainFrame:TweenPosition(UDim2.new(1, 10, 0.5, -225), Enum.EasingDirection.In, Enum.EasingStyle.Quint, 0.3, true)
+            end
+        end)
+
+        switchTab(controlsTab, controlsScroll)
+
+        local timeDragging = false
+
+        timeSlider.Handle.MouseButton1Down:Connect(function()
+            timeDragging = true
+        end)
+        timeSlider.Handle.MouseButton1Up:Connect(function()
+            timeDragging = false
+        end)
+
+        runService.Heartbeat:Connect(function()
+            local soundObj = visualizerModule:GetSoundObject()
+
+            if soundObj and soundObj.IsLoaded and soundObj.TimeLength > 0 then
+                if not timeDragging then
+                    timeSlider.Update(soundObj.TimePosition / soundObj.TimeLength)
+                end
+
+                speedSlider.Update(soundObj.PlaybackSpeed)
+            end
+
+            for _, scroll in ipairs(allScrolls) do
+                if scroll:IsA('ScrollingFrame') then
+                    local layout = scroll:FindFirstChildOfClass('UILayout')
+
+                    if layout then
+                        scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+                    end
+                end
+            end
+        end)
+    end
+
+    uiModule:Initialize()
+
+    playersService.LocalPlayer.CharacterAdded:Connect(function(_)
+        task.wait(2)
+        pcall(function()
+            local existingGui = coreGui:FindFirstChild('VisualizerControlGui_Rework', true)
+
+            if existingGui then
+                local toggleBtn = existingGui:FindFirstChild('ToggleButton', true)
+
+                if toggleBtn and toggleBtn.Text == 'DISABLE' then
+                    visualizerModule:Start()
+                end
+            end
+        end)
+    end)
+end

@@ -1,0 +1,1734 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TabbedGUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  -- Add this
+screenGui.Parent = playerGui
+
+local squareButton = Instance.new("TextButton")
+squareButton.Name = "SquareButton"
+squareButton.Size = UDim2.new(0, 50, 0, 50)
+squareButton.Position = UDim2.new(0, 15, 0.25, 0)
+squareButton.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+squareButton.Text = ""
+squareButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+squareButton.Font = Enum.Font.GothamBold
+squareButton.TextSize = 14
+squareButton.Parent = screenGui
+ 
+local squareCorner = Instance.new("UICorner")
+squareCorner.CornerRadius = UDim.new(0, 8)
+squareCorner.Parent = squareButton
+
+local squareIcon = Instance.new("TextLabel")
+squareIcon.Size = UDim2.new(1, 0, 1, 0)
+squareIcon.BackgroundTransparency = 1
+squareIcon.Text = "☰"
+squareIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+squareIcon.Font = Enum.Font.GothamBold
+squareIcon.TextSize = 24
+squareIcon.Parent = squareButton
+
+local mainPanel = Instance.new("Frame")
+mainPanel.Name = "MainPanel"
+mainPanel.Size = UDim2.new(0, 320, 0, 380)
+mainPanel.Position = UDim2.new(1, -335, 0.5, -190)
+mainPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainPanel.Visible = false
+mainPanel.Parent = screenGui
+
+local panelCorner = Instance.new("UICorner")
+panelCorner.CornerRadius = UDim.new(0, 12)
+panelCorner.Parent = mainPanel
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")  -- Add this
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	mainPanel.Position = UDim2.new(
+		startPos.X.Scale, startPos.X.Offset + delta.X,
+		startPos.Y.Scale, startPos.Y.Offset + delta.Y
+	)
+end
+
+local titleHeader = Instance.new("Frame")
+titleHeader.Name = "TitleHeader"
+titleHeader.Size = UDim2.new(1, 0, 0, 40)
+titleHeader.Position = UDim2.new(0, 0, 0, 0)
+titleHeader.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+titleHeader.BorderSizePixel = 0
+titleHeader.Parent = mainPanel
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleHeader
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -20, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Ar1se Hub X Aezy"
+titleLabel.TextColor3 = Color3.fromRGB(59, 130, 246)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+titleLabel.Parent = titleHeader
+
+titleHeader.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainPanel.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+titleHeader.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+local tabContainer = Instance.new("Frame")
+tabContainer.Name = "TabContainer"
+tabContainer.Size = UDim2.new(1, 0, 0, 45)
+tabContainer.Position = UDim2.new(0, 0, 0, 45)
+tabContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+tabContainer.BorderSizePixel = 0
+tabContainer.Parent = mainPanel
+
+local tabs = {"Main", "Player", "Visual"}
+local tabButtons = {}
+local contentFrames = {}
+
+-- ======================
+-- ANTI RAGDOLL MODULE (v1)
+-- ======================
+local ANTI_RAGDOLL = {}
+
+local antiRagdollMode = nil
+local ragdollConnections = {}
+local cachedCharData = {}
+
+-- Cache character data for performance
+local function cacheCharacterData()
+    local char = player.Character
+    if not char then return false end
+    
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    
+    if not hum or not root then return false end
+    
+    cachedCharData = {
+        character = char,
+        humanoid = hum,
+        root = root,
+        originalWalkSpeed = hum.WalkSpeed,
+        originalJumpPower = hum.JumpPower,
+        isFrozen = false
+    }
+    
+    return true
+end
+
+-- Clean disconnect helper
+local function disconnectAll()
+    for _, conn in ipairs(ragdollConnections) do
+        if typeof(conn) == "RBXScriptConnection" then
+            pcall(function() conn:Disconnect() end)
+        end
+    end
+    ragdollConnections = {}
+end
+
+-- Check if currently ragdolled (using multiple detection methods)
+local function isRagdolled()
+    if not cachedCharData.humanoid then return false end
+    
+    local hum = cachedCharData.humanoid
+    local state = hum:GetState()
+    
+    -- State check
+    local ragdollStates = {
+        [Enum.HumanoidStateType.Physics] = true,
+        [Enum.HumanoidStateType.Ragdoll] = true,
+        [Enum.HumanoidStateType.FallingDown] = true
+    }
+    
+    if ragdollStates[state] then
+        return true
+    end
+    
+    -- Timer attribute check
+    local endTime = player:GetAttribute("RagdollEndTime")
+    if endTime then
+        local now = workspace:GetServerTimeNow()
+        if (endTime - now) > 0 then
+            return true
+        end
+    end
+    
+    return false
+end
+
+-- Remove all ragdoll constraints (v1 method)
+local function removeRagdollConstraints()
+    if not cachedCharData.character then return false end
+    
+    local removed = false
+    
+    for _, descendant in ipairs(cachedCharData.character:GetDescendants()) do
+        if descendant:IsA("BallSocketConstraint") or 
+           (descendant:IsA("Attachment") and descendant.Name:find("RagdollAttachment")) then
+            pcall(function()
+                descendant:Destroy()
+                removed = true
+            end)
+        end
+    end
+    
+    return removed
+end
+
+-- Force exit ragdoll state
+local function forceExitRagdoll()
+    if not cachedCharData.humanoid or not cachedCharData.root then return end
+    
+    local hum = cachedCharData.humanoid
+    local root = cachedCharData.root
+    
+    -- Clear ragdoll timer
+    pcall(function()
+        local now = workspace:GetServerTimeNow()
+        player:SetAttribute("RagdollEndTime", now)
+    end)
+    
+    -- Force standing state
+    if hum.Health > 0 then
+        hum:ChangeState(Enum.HumanoidStateType.Running)
+    end
+    
+    -- Reset physics
+    root.Anchored = false
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+end
+
+-- Main heartbeat loop for v1 (Moveable)
+local function v1HeartbeatLoop()
+    while antiRagdollMode == "v1" and cachedCharData.humanoid do
+        task.wait()
+        
+        if isRagdolled() then
+            -- Remove constraints and force exit
+            removeRagdollConstraints()
+            forceExitRagdoll()
+        end
+    end
+end
+
+-- Setup camera binding for v1
+local function setupCameraBinding()
+    if not cachedCharData.humanoid then return end
+    
+    local conn = RunService.RenderStepped:Connect(function()
+        if antiRagdollMode ~= "v1" then return end
+        
+        local cam = workspace.CurrentCamera
+        if cam and cachedCharData.humanoid and cam.CameraSubject ~= cachedCharData.humanoid then
+            cam.CameraSubject = cachedCharData.humanoid
+        end
+    end)
+    
+    table.insert(ragdollConnections, conn)
+end
+
+-- Handle character respawn
+local function onCharacterAdded(char)
+    task.wait(0.5) -- Wait for character to load
+    
+    if not antiRagdollMode then return end
+    
+    if cacheCharacterData() then
+        if antiRagdollMode == "v1" then
+            setupCameraBinding()
+            task.spawn(v1HeartbeatLoop)
+        end
+    end
+end
+
+function ANTI_RAGDOLL.Enable(mode)
+    if mode ~= "v1" then return end
+    
+    if antiRagdollMode == mode then return end
+    
+    -- Disable first
+    ANTI_RAGDOLL.Disable()
+    
+    -- Cache character data
+    if not cacheCharacterData() then
+        return
+    end
+    
+    antiRagdollMode = mode
+    
+    -- Setup character respawn listener
+    local charConn = player.CharacterAdded:Connect(onCharacterAdded)
+    table.insert(ragdollConnections, charConn)
+    
+    -- Start v1 mode
+    setupCameraBinding()
+    task.spawn(v1HeartbeatLoop)
+end
+
+function ANTI_RAGDOLL.Disable()
+    if not antiRagdollMode then return end
+    
+    antiRagdollMode = nil
+    
+    -- Disconnect all
+    disconnectAll()
+    
+    -- Clear cache
+    cachedCharData = {}
+end
+
+-- ======================
+-- CONFIGURATION
+-- ======================
+local CONFIG = {
+    AUTO_STEAL_NEAREST_ENABLED = true,
+    INVISIBLE_BASE_WALLS_ENABLED = false
+}
+
+-- ======================
+-- 3RD FLOOR STEAL MODULE (Improved from source)
+-- ======================
+local FLOOR_STEAL = {
+    platform = nil,
+    connection = nil,
+    platformActive = false,
+    isRising = false
+}
+
+local function canRise(platform)
+    if not platform then return false end
+    local origin = platform.Position + Vector3.new(0, platform.Size.Y/2, 0)
+    local direction = Vector3.new(0, 2, 0)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {platform, player.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    return not workspace:Raycast(origin, direction, rayParams)
+end
+
+function FLOOR_STEAL:DestroyPlatform()
+    if self.platform then 
+        self.platform:Destroy() 
+        self.platform = nil 
+    end
+    self.platformActive = false 
+    self.isRising = false
+    if self.connection then 
+        self.connection:Disconnect() 
+        self.connection = nil 
+    end
+end
+
+function FLOOR_STEAL:Enable()
+    if self.platformActive then return end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    if not rootPart then
+        warn("Failed to find HumanoidRootPart for Platform")
+        return
+    end
+    
+    self.platformActive = true
+    
+    self.platform = Instance.new("Part")
+    self.platform.Size = Vector3.new(6, 0.5, 6)
+    self.platform.Anchored = true
+    self.platform.CanCollide = true
+    self.platform.Transparency = 0
+    self.platform.Material = Enum.Material.Neon
+    self.platform.Color = Color3.fromRGB(100, 200, 255)
+    self.platform.Position = rootPart.Position - Vector3.new(0, rootPart.Size.Y/2 + self.platform.Size.Y/2, 0)
+    self.platform.Parent = workspace
+
+    local faces = {Enum.NormalId.Top, Enum.NormalId.Bottom, Enum.NormalId.Left, Enum.NormalId.Right, Enum.NormalId.Front, Enum.NormalId.Back}
+    for _, face in ipairs(faces) do
+        local texture = Instance.new("Texture")
+        texture.Texture = "rbxassetid://6731652062"
+        texture.Face = face
+        texture.StudsPerTileU = 4
+        texture.StudsPerTileV = 4
+        texture.Parent = self.platform
+    end
+
+    self.isRising = true
+    self.connection = RunService.Heartbeat:Connect(function(dt)
+        if self.platform and self.platformActive then
+            local currentPos = self.platform.Position
+            local newXZ = Vector3.new(rootPart.Position.X, currentPos.Y, rootPart.Position.Z)
+            if self.isRising and canRise(self.platform) then
+                self.platform.Position = newXZ + Vector3.new(0, dt * 50, 0) -- Default rise speed of 50
+            else
+                self.isRising = false
+                self.platform.Position = newXZ
+            end
+        end
+    end)
+    
+    -- Clean up on character death
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        self:DestroyPlatform()
+    end)
+    
+    print("✅ Platform enabled")
+end
+
+function FLOOR_STEAL:Disable()
+    self:DestroyPlatform()
+    print("❌ Platform disabled")
+end
+
+-- ======================
+-- INVISIBLE WALLS MODULE
+-- ======================
+local INVISIBLE_WALLS = {}
+local invisibleWallsLoaded = false
+local originalTransparency = {}
+
+local function isBaseWall(obj)
+    if not obj:IsA("BasePart") then return false end
+    local n = obj.Name:lower()
+    local parent = obj.Parent and obj.Parent.Name:lower() or ""
+    return n:find("base") or parent:find("base")
+end
+
+local function tryApplyInvisibleWalls()
+    if not CONFIG.INVISIBLE_BASE_WALLS_ENABLED then return end
+    
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return end
+    if #plots:GetChildren() == 0 then return end
+    
+    if invisibleWallsLoaded then return end
+    invisibleWallsLoaded = true
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Anchored and obj.CanCollide and isBaseWall(obj) then
+            originalTransparency[obj] = obj.LocalTransparencyModifier
+            obj.LocalTransparencyModifier = 0.85
+        end
+    end
+    
+    workspace.DescendantAdded:Connect(function(obj)
+        if CONFIG.INVISIBLE_BASE_WALLS_ENABLED and isBaseWall(obj) then
+            originalTransparency[obj] = obj.LocalTransparencyModifier
+            obj.LocalTransparencyModifier = 0.85
+        end
+    end)
+end
+
+function INVISIBLE_WALLS.Enable()
+    CONFIG.INVISIBLE_BASE_WALLS_ENABLED = true
+    
+    task.spawn(function()
+        for _ = 1, 20 do
+            tryApplyInvisibleWalls()
+            if invisibleWallsLoaded then return end
+            task.wait(0.5)
+        end
+    end)
+end
+
+function INVISIBLE_WALLS.Disable()
+    CONFIG.INVISIBLE_BASE_WALLS_ENABLED = false
+    invisibleWallsLoaded = false
+    
+    for part, value in pairs(originalTransparency) do
+        if part then
+            part.LocalTransparencyModifier = value
+        end
+    end
+    originalTransparency = {}
+end
+
+-- ======================
+-- FOV MANAGER MODULE
+-- ======================
+local FOV_MANAGER = {
+    activeCount = 0,
+    conn = nil,
+    forcedFOV = 70,
+}
+
+function FOV_MANAGER:Start()
+    if self.conn then return end
+    
+    self.conn = RunService.RenderStepped:Connect(function()
+        local cam = workspace.CurrentCamera
+        if cam and cam.FieldOfView ~= self.forcedFOV then
+            cam.FieldOfView = self.forcedFOV
+        end
+    end)
+end
+
+function FOV_MANAGER:Stop()
+    if self.conn then
+        self.conn:Disconnect()
+        self.conn = nil
+    end
+end
+
+function FOV_MANAGER:Push()
+    self.activeCount += 1
+    self:Start()
+end
+
+function FOV_MANAGER:Pop()
+    if self.activeCount > 0 then
+        self.activeCount -= 1
+    end
+    if self.activeCount == 0 then
+        self:Stop()
+    end
+end
+
+-- ======================
+-- ANTI BEE & DISCO MODULE
+-- ======================
+local ANTI_BEE_DISCO = {}
+local antiBeeDiscoRunning = false
+local antiBeeDiscoConnections = {}
+local originalMoveFunction = nil
+local controlsProtected = false
+
+local BAD_LIGHTING_NAMES = {
+    Blue = true,
+    DiscoEffect = true,
+    BeeBlur = true,
+    ColorCorrection = true,
+}
+
+local function antiBeeDiscoNuke(obj)
+    if not obj or not obj.Parent then return end
+    if BAD_LIGHTING_NAMES[obj.Name] then
+        pcall(function()
+            obj:Destroy()
+        end)
+    end
+end
+
+local function antiBeeDiscoDisconnectAll()
+    for _, conn in ipairs(antiBeeDiscoConnections) do
+        if typeof(conn) == "RBXScriptConnection" then
+            conn:Disconnect()
+        end
+    end
+    antiBeeDiscoConnections = {}
+end
+
+-- Protect player controls from inversion
+local function protectControls()
+    if controlsProtected then return end
+    
+    pcall(function()
+        local PlayerScripts = player.PlayerScripts
+        local PlayerModule = PlayerScripts:FindFirstChild("PlayerModule")
+        if not PlayerModule then return end
+        
+        local Controls = require(PlayerModule):GetControls()
+        if not Controls then return end
+        
+        -- Store original move function
+        if not originalMoveFunction then
+            originalMoveFunction = Controls.moveFunction
+        end
+        
+        -- Create protected wrapper that prevents control inversion
+        local function protectedMoveFunction(self, moveVector, relativeToCamera)
+            -- Call original function with original parameters (no negation)
+            if originalMoveFunction then
+                originalMoveFunction(self, moveVector, relativeToCamera)
+            end
+        end
+        
+        -- Monitor for control hijacking
+        local controlCheckConn = RunService.Heartbeat:Connect(function()
+            if not antiBeeDiscoRunning then return end
+            
+            -- Restore controls if they've been modified
+            if Controls.moveFunction ~= protectedMoveFunction then
+                Controls.moveFunction = protectedMoveFunction
+            end
+        end)
+        
+        table.insert(antiBeeDiscoConnections, controlCheckConn)
+        
+        -- Set protected function
+        Controls.moveFunction = protectedMoveFunction
+        controlsProtected = true
+    end)
+end
+
+-- Restore original controls
+local function restoreControls()
+    if not controlsProtected then return end
+    
+    pcall(function()
+        local PlayerScripts = player.PlayerScripts
+        local PlayerModule = PlayerScripts:FindFirstChild("PlayerModule")
+        if not PlayerModule then return end
+        
+        local Controls = require(PlayerModule):GetControls()
+        if not Controls or not originalMoveFunction then return end
+        
+        Controls.moveFunction = originalMoveFunction
+        controlsProtected = false
+    end)
+end
+
+-- Block buzzing sound
+local function blockBuzzingSound()
+    pcall(function()
+        local PlayerScripts = player.PlayerScripts
+        local beeScript = PlayerScripts:FindFirstChild("Bee", true)
+        if beeScript then
+            local buzzing = beeScript:FindFirstChild("Buzzing")
+            if buzzing and buzzing:IsA("Sound") then
+                buzzing:Stop()
+                buzzing.Volume = 0
+            end
+        end
+    end)
+end
+
+function ANTI_BEE_DISCO.Enable()
+    if antiBeeDiscoRunning then return end
+    antiBeeDiscoRunning = true
+    
+    local Lighting = game:GetService("Lighting")
+    
+    -- Nuke existing bad effects
+    for _, inst in ipairs(Lighting:GetDescendants()) do
+        antiBeeDiscoNuke(inst)
+    end
+    
+    -- Monitor for new effects
+    table.insert(antiBeeDiscoConnections, Lighting.DescendantAdded:Connect(function(obj)
+        if not antiBeeDiscoRunning then return end
+        antiBeeDiscoNuke(obj)
+    end))
+    
+    -- Protect controls from inversion
+    protectControls()
+    
+    -- Block buzzing sound
+    table.insert(antiBeeDiscoConnections, RunService.Heartbeat:Connect(function()
+        if not antiBeeDiscoRunning then return end
+        blockBuzzingSound()
+    end))
+    
+    FOV_MANAGER:Push()
+end
+
+function ANTI_BEE_DISCO.Disable()
+    if not antiBeeDiscoRunning then return end
+    antiBeeDiscoRunning = false
+    
+    -- Restore original controls
+    restoreControls()
+    
+    -- Disconnect all monitors
+    antiBeeDiscoDisconnectAll()
+    
+    FOV_MANAGER:Pop()
+end
+
+-- ======================
+-- ESP TIMER MODULE (FAST)
+-- ======================
+if not _G.SAB then _G.SAB = {} end
+if not _G.SAB.BigPlotTimers then
+    _G.SAB.BigPlotTimers = { enabled = false, isRunning = false }
+end
+local ESP_TIMER = _G.SAB.BigPlotTimers
+
+function ESP_TIMER:Toggle(enable)
+    if enable and not self.isRunning then
+        self.enabled = true
+    elseif not enable and self.enabled then
+        self.enabled = false
+    end
+    self.isRunning = true
+    
+    task.spawn(function()
+        while wait() and self.enabled do
+            pcall(function()
+                if workspace:FindFirstChild("Plots") then
+                    for _, plot in workspace.Plots:GetChildren() do
+                        if plot:FindFirstChild("Purchases") and plot.Purchases:FindFirstChild("PlotBlock") then
+                            local plotBlock = plot.Purchases.PlotBlock
+                            if plotBlock:FindFirstChild("Main") then
+                                local main = plotBlock.Main
+                                if main:FindFirstChild("BillboardGui") then
+                                    local billboard = main.BillboardGui
+                                    billboard.AlwaysOnTop = true
+                                    billboard.MaxDistance = 1000
+                                    billboard.Size = UDim2.fromScale(35, 50)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+        
+        pcall(function()
+            if workspace:FindFirstChild("Plots") then
+                for _, plot in workspace.Plots:GetChildren() do
+                    if plot:FindFirstChild("Purchases") and plot.Purchases:FindFirstChild("PlotBlock") then
+                        local plotBlock = plot.Purchases.PlotBlock
+                        if plotBlock:FindFirstChild("Main") then
+                            local main = plotBlock.Main
+                            if main:FindFirstChild("BillboardGui") then
+                                local billboard = main.BillboardGui
+                                billboard.AlwaysOnTop = false
+                                billboard.MaxDistance = 60
+                                billboard.Size = UDim2.fromScale(7, 10)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+        self.isRunning = false
+    end)
+end
+
+-- ======================
+-- AUTO STEAL MODULE (Animal Stealing)
+-- ======================
+local AUTO_STEAL_ANIMALS = {}
+local allAnimalsCache = {}
+local PromptMemoryCache = {}
+local InternalStealCache = {}
+local stealConnection = nil
+local AUTO_STEAL_PROX_RADIUS = 20
+
+local function isMyBaseAnimal(animalData)
+    if not animalData or not animalData.plot then return false end
+    
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return false end
+    
+    local plot = plots:FindFirstChild(animalData.plot)
+    if not plot then return false end
+    
+    local sign = plot:FindFirstChild("PlotSign")
+    if sign then
+        local yourBase = sign:FindFirstChild("YourBase")
+        if yourBase and yourBase:IsA("BillboardGui") then
+            return yourBase.Enabled == true
+        end
+    end
+    
+    return false
+end
+
+local function findProximityPromptForAnimal(animalData)
+    if not animalData then return nil end
+    
+    local cachedPrompt = PromptMemoryCache[animalData.uid]
+    if cachedPrompt and cachedPrompt.Parent then
+        return cachedPrompt
+    end
+    
+    local plot = workspace.Plots:FindFirstChild(animalData.plot)
+    if not plot then return nil end
+    
+    local podiums = plot:FindFirstChild("AnimalPodiums")
+    if not podiums then return nil end
+    
+    local podium = podiums:FindFirstChild(animalData.slot)
+    if not podium then return nil end
+    
+    local base = podium:FindFirstChild("Base")
+    if not base then return nil end
+    
+    local spawn = base:FindFirstChild("Spawn")
+    if not spawn then return nil end
+    
+    local attach = spawn:FindFirstChild("PromptAttachment")
+    if not attach then return nil end
+    
+    for _, p in ipairs(attach:GetChildren()) do
+        if p:IsA("ProximityPrompt") then
+            PromptMemoryCache[animalData.uid] = p
+            return p
+        end
+    end
+    
+    return nil
+end
+
+local function getAnimalPosition(animalData)
+    local plot = workspace.Plots:FindFirstChild(animalData.plot)
+    if not plot then return nil end
+    
+    local podiums = plot:FindFirstChild("AnimalPodiums")
+    if not podiums then return nil end
+    
+    local podium = podiums:FindFirstChild(animalData.slot)
+    if not podium then return nil end
+    
+    return podium:GetPivot().Position
+end
+
+local function getNearestAnimal()
+    local character = player.Character
+    if not character then return nil end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso")
+    if not hrp then return nil end
+    
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, animalData in ipairs(allAnimalsCache) do
+        if isMyBaseAnimal(animalData) then
+            continue
+        end
+        
+        local pos = getAnimalPosition(animalData)
+        if pos then
+            local dist = (hrp.Position - pos).Magnitude
+            
+            if dist < minDist then
+                minDist = dist
+                nearest = animalData
+            end
+        end
+    end
+    
+    return nearest
+end
+
+local function buildStealCallbacks(prompt)
+    if InternalStealCache[prompt] then return end
+    
+    local data = {
+        holdCallbacks = {},
+        triggerCallbacks = {},
+        ready = true,
+    }
+    
+    local ok1, conns1 = pcall(getconnections, prompt.PromptButtonHoldBegan)
+    if ok1 and type(conns1) == "table" then
+        for _, conn in ipairs(conns1) do
+            if type(conn.Function) == "function" then
+                table.insert(data.holdCallbacks, conn.Function)
+            end
+        end
+    end
+    
+    local ok2, conns2 = pcall(getconnections, prompt.Triggered)
+    if ok2 and type(conns2) == "table" then
+        for _, conn in ipairs(conns2) do
+            if type(conn.Function) == "function" then
+                table.insert(data.triggerCallbacks, conn.Function)
+            end
+        end
+    end
+    
+    if (#data.holdCallbacks > 0) or (#data.triggerCallbacks > 0) then
+        InternalStealCache[prompt] = data
+    end
+end
+
+local function executeInternalStealAsync(prompt)
+    local data = InternalStealCache[prompt]
+    if not data or not data.ready then return false end
+    
+    data.ready = false
+    
+    task.spawn(function()
+        if #data.holdCallbacks > 0 then
+            for _, fn in ipairs(data.holdCallbacks) do
+                task.spawn(fn)
+            end
+        end
+        
+        task.wait(1.3)
+        
+        if #data.triggerCallbacks > 0 then
+            for _, fn in ipairs(data.triggerCallbacks) do
+                task.spawn(fn)
+            end
+        end
+        
+        task.wait(0.1)
+        data.ready = true
+    end)
+    
+    return true
+end
+
+local function attemptSteal(prompt)
+    if not prompt or not prompt.Parent then
+        return false
+    end
+    
+    buildStealCallbacks(prompt)
+    if not InternalStealCache[prompt] then
+        return false
+    end
+    
+    return executeInternalStealAsync(prompt)
+end
+
+local function scanAllPlots()
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return {} end
+    
+    local newCache = {}
+    
+    for _, plot in ipairs(plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if not sign then continue end
+        
+        local ownerName = "Unknown"
+        local yourBase = sign:FindFirstChild("YourBase")
+        if yourBase and yourBase:IsA("BillboardGui") then
+            ownerName = "You"
+        else
+            ownerName = "Other"
+        end
+        
+        -- For simplicity, just add placeholder data
+        table.insert(newCache, {
+            name = "Animal",
+            plot = plot.Name,
+            slot = "1",
+            uid = plot.Name .. "_1",
+            owner = ownerName
+        })
+    end
+    
+    allAnimalsCache = newCache
+    return #allAnimalsCache
+end
+
+function AUTO_STEAL_ANIMALS.Enable()
+    CONFIG.AUTO_STEAL_NEAREST_ENABLED = true
+    if stealConnection then return end
+    
+    stealConnection = RunService.Heartbeat:Connect(function()
+        if not CONFIG.AUTO_STEAL_NEAREST_ENABLED then return end
+        
+        local targetAnimal = getNearestAnimal()
+        if not targetAnimal then return end
+        
+        local character = player.Character
+        if not character then return end
+        
+        local hrp = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso")
+        if not hrp then return end
+        
+        local animalPos = getAnimalPosition(targetAnimal)
+        if not animalPos then return end
+        
+        local dist = (hrp.Position - animalPos).Magnitude
+        if dist > AUTO_STEAL_PROX_RADIUS then return end
+        
+        local prompt = PromptMemoryCache[targetAnimal.uid]
+        if not prompt or not prompt.Parent then
+            prompt = findProximityPromptForAnimal(targetAnimal)
+        end
+        
+        if prompt then
+            attemptSteal(prompt)
+        end
+    end)
+    
+    -- Start scanning
+    task.spawn(function()
+        while wait(5) and CONFIG.AUTO_STEAL_NEAREST_ENABLED do
+            scanAllPlots()
+        end
+    end)
+end
+
+function AUTO_STEAL_ANIMALS.Disable()
+    CONFIG.AUTO_STEAL_NEAREST_ENABLED = false
+    if stealConnection then
+        stealConnection:Disconnect()
+        stealConnection = nil
+    end
+end
+
+-- ======================
+-- SENTRY WATCH MODULE
+-- ======================
+local SENTRY_WATCH = {}
+local sentryEnabled = false
+local sentryConn = nil
+
+local function startSentryWatch()
+    if sentryConn then sentryConn:Disconnect() end
+    
+    sentryConn = workspace.DescendantAdded:Connect(function(desc)
+        if not sentryEnabled then return end
+        if not desc:IsA("Model") and not desc:IsA("BasePart") then return end
+        if not string.find(desc.Name:lower(), "sentry") then return end
+
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
+        local hrp = char.HumanoidRootPart
+
+        wait(4.1)
+
+        if not desc.Parent or not sentryEnabled then return end
+
+        local backpack = player.Backpack
+        local batTool = backpack:FindFirstChild("Bat") or char:FindFirstChild("Bat")
+        if not batTool then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Tool") and obj.Name == "Bat" and obj.Parent == workspace then
+                    batTool = obj
+                    obj.Parent = backpack
+                    break
+                end
+            end
+        end
+
+        if not batTool then
+            return
+        end
+
+        if batTool.Parent == backpack then
+            hum:EquipTool(batTool)
+            wait(0.25)
+        end
+
+        local lookDir = hrp.CFrame.LookVector
+        local spawnOffset = lookDir * 3.5 + Vector3.new(0, 1.2, 0)
+        if desc:IsA("Model") and desc.PrimaryPart then
+            desc:SetPrimaryPartCFrame(hrp.CFrame + spawnOffset)
+        elseif desc:IsA("BasePart") then
+            desc.CFrame = hrp.CFrame + spawnOffset
+        end
+
+        if batTool.Parent == char and desc.Parent then
+            batTool:Activate()
+        end
+
+        local maxHits = 5
+        local hitCount = 0
+        while batTool.Parent == char and desc.Parent and sentryEnabled and hitCount < maxHits do
+            wait(0.12)
+            if desc.Parent then
+                batTool:Activate()
+                hitCount = hitCount + 1 
+            else
+                break
+            end
+        end
+
+        wait(0.1)
+        if batTool.Parent == char then
+            batTool.Parent = backpack
+        end
+    end)
+end
+
+function SENTRY_WATCH.Enable()
+    if sentryEnabled then return end
+    sentryEnabled = true
+    startSentryWatch()
+end
+
+function SENTRY_WATCH.Disable()
+    if not sentryEnabled then return end
+    sentryEnabled = false
+    if sentryConn then
+        sentryConn:Disconnect()
+        sentryConn = nil
+    end
+end
+
+-- ======================
+-- CREATE TAB CONTENT
+-- ======================
+for i, tabName in ipairs(tabs) do
+	local tabButton = Instance.new("TextButton")
+	tabButton.Name = tabName .. "Tab"
+	tabButton.Size = UDim2.new(1/3, -4, 1, -10)
+	tabButton.Position = UDim2.new((i-1)/3, 2, 0, 5)
+	tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	tabButton.Text = tabName
+	tabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+	tabButton.Font = Enum.Font.GothamSemibold
+	tabButton.TextSize = 16
+	tabButton.Parent = tabContainer
+	
+	local tabBtnCorner = Instance.new("UICorner")
+	tabBtnCorner.CornerRadius = UDim.new(0, 6)
+	tabBtnCorner.Parent = tabButton
+	
+	tabButtons[tabName] = tabButton
+	
+	local contentFrame = Instance.new("Frame")
+	contentFrame.Name = tabName .. "Content"
+	contentFrame.Size = UDim2.new(1, -20, 1, -105)
+	contentFrame.Position = UDim2.new(0, 10, 0, 95)
+	contentFrame.BackgroundTransparency = 1
+	contentFrame.Visible = false
+	contentFrame.Parent = mainPanel
+	
+	contentFrames[tabName] = contentFrame
+	
+	if tabName == "Main" then
+		-- Perm Desync button
+		local permDesyncBtn = Instance.new("TextButton")
+		permDesyncBtn.Name = "PermDesyncButton"
+		permDesyncBtn.Size = UDim2.new(1, 0, 0, 40)
+		permDesyncBtn.Position = UDim2.new(0, 0, 0, 10)
+		permDesyncBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+		permDesyncBtn.Text = "Perm Desync"
+		permDesyncBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		permDesyncBtn.Font = Enum.Font.GothamBold
+		permDesyncBtn.TextSize = 15
+		permDesyncBtn.Parent = contentFrame
+		
+		local permCorner = Instance.new("UICorner")
+		permCorner.CornerRadius = UDim.new(0, 8)
+		permCorner.Parent = permDesyncBtn
+		
+		local permDesyncCooldown = false
+		
+		permDesyncBtn.MouseButton1Click:Connect(function()
+			if permDesyncCooldown then return end
+			permDesyncCooldown = true
+			
+			local fflags = {
+				{"GameNetPVHeaderRotationalVelocityZeroCutoffExponent", "-5000"},
+				{"LargeReplicatorWrite5", "true"},
+				{"LargeReplicatorEnabled9", "true"},
+				{"DFIntMaximumUnstickForceInGs", "-8"},
+				{"TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646"},
+				{"S2PhysicsSenderRate", "15000"},
+				{"DisableDPIScale", "true"},
+				{"MaxDataPacketPerSend", "2147483647"},
+				{"ServerMaxBandwith", "52"},
+				{"PhysicsSenderMaxBandwidthBps", "20000"},
+				{"MaxTimestepMultiplierBuoyancy", "2147483647"},
+				{"MaxTimestepMultiplierConstraint", "2147483647"},
+				{"SimOwnedNOUCountThresholdMillionth", "2147483647"},
+				{"MaxMissedWorldStepsRemembered", "-2147483648"},
+				{"CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth", "1"},
+				{"StreamJobNOUVolumeLengthCap", "2147483647"},
+				{"DebugSendDistInSteps", "-2147483648"},
+				{"MaxTimestepMultiplierAcceleration", "2147483647"},
+				{"LargeReplicatorRead5", "true"},
+				{"SimExplicitlyCappedTimestepMultiplier", "2147483646"},
+				{"GameNetDontSendRedundantNumTimes", "1"},
+				{"CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent", "1"},
+				{"CheckPVCachedRotVelThresholdPercent", "10"},
+				{"LargeReplicatorSerializeRead3", "true"},
+				{"ReplicationFocusNouExtentsSizeCutoffForPauseStuds", "2147483647"},
+				{"CheckPVCachedVelThresholdPercent", "10"},
+				{"CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth", "1"},
+				{"GameNetDontSendRedundantDeltaPositionMillionth", "1"},
+				{"InterpolationFrameVelocityThresholdMillionth", "5"},
+				{"StreamJobNOUVolumeCap", "2147483647"},
+				{"InterpolationFrameRotVelocityThresholdMillionth", "5"},
+				{"WorldStepMax", "30"},
+				{"TimestepArbiterHumanoidLinearVelThreshold", "1"},
+				{"InterpolationFramePositionThresholdMillionth", "5"},
+				{"AngularVelocityLimit", "360"},
+				{"NextGenReplicatorEnabledWrite4", "true"},
+				{"GameNetPVHeaderLinearVelocityZeroCutoffExponent", "-5000"},
+				{"TimestepArbiterHumanoidTurningVelThreshold", "1"},
+				{"TimestepArbiterOmegaThou", "1073741823"},
+				{"MaxAcceptableUpdateDelay", "1"},
+				{"LargeReplicatorSerializeWrite4", "true"}
+			}
+			
+			for _, flag in ipairs(fflags) do
+				pcall(function()
+					setfflag(flag[1], flag[2])
+				end)
+			end
+			
+			permDesyncBtn.BackgroundColor3 = Color3.fromRGB(22, 163, 74)
+			permDesyncBtn.Text = "Desync Applied!"
+			wait(1)
+			permDesyncBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+			permDesyncBtn.Text = "Perm Desync"
+			permDesyncCooldown = false
+		end)
+		
+		-- Reset Desync button
+		local resetDesyncBtn = Instance.new("TextButton")
+		resetDesyncBtn.Name = "ResetDesyncButton"
+		resetDesyncBtn.Size = UDim2.new(1, 0, 0, 40)
+		resetDesyncBtn.Position = UDim2.new(0, 0, 0, 60)
+		resetDesyncBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+		resetDesyncBtn.Text = "Reset Desync"
+		resetDesyncBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		resetDesyncBtn.Font = Enum.Font.GothamBold
+		resetDesyncBtn.TextSize = 15
+		resetDesyncBtn.Parent = contentFrame
+		
+		local resetCorner = Instance.new("UICorner")
+		resetCorner.CornerRadius = UDim.new(0, 8)
+		resetCorner.Parent = resetDesyncBtn
+		
+		local resetDesyncCooldown = false
+		
+		resetDesyncBtn.MouseButton1Click:Connect(function()
+			if resetDesyncCooldown then return end
+			resetDesyncCooldown = true
+			
+			local function AntiHit()
+				local function DesyncV2()  
+					local flags = {  
+						{"GameNetPVHeaderRotationalVelocityZeroCutoffExponent", "-5000"},  
+						{"LargeReplicatorWrite5", "true"},  
+						{"LargeReplicatorEnabled9", "true"},  
+						{"AngularVelociryLimit", "360"},  
+						{"TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646"},  
+						{"S2PhysicsSenderRate", "15000"},  
+						{"DisableDPIScale", "true"},  
+						{"MaxDataPacketPerSend", "2147483647"},  
+						{"ServerMaxBandwith", "52"},  
+						{"PhysicsSenderMaxBandwidthBps", "20000"},  
+						{"MaxTimestepMultiplierBuoyancy", "2147483647"},  
+						{"SimOwnedNOUCountThresholdMillionth", "2147483647"},  
+						{"MaxMissedWorldStepsRemembered", "-2147483648"},  
+						{"CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth", "1"},  
+						{"StreamJobNOUVolumeLengthCap", "2147483647"},  
+						{"DebugSendDistInSteps", "-2147483648"},  
+						{"MaxTimestepMultiplierAcceleration", "2147483647"},  
+						{"LargeReplicatorRead5", "true"},  
+						{"SimExplicitlyCappedTimestepMultiplier", "2147483646"},  
+						{"GameNetDontSendRedundantNumTimes", "1"},  
+						{"CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent", "1"},  
+						{"CheckPVCachedRotVelThresholdPercent", "10"},  
+						{"LargeReplicatorSerializeRead3", "true"},  
+						{"ReplicationFocusNouExtentsSizeCutoffForPauseStuds", "2147483647"},  
+						{"NextGenReplicatorEnabledWrite4", "true"},  
+						{"CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth", "1"},  
+						{"GameNetDontSendRedundantDeltaPositionMillionth", "1"},  
+						{"InterpolationFrameVelocityThresholdMillionth", "5"},  
+						{"StreamJobNOUVolumeCap", "2147483647"},  
+						{"InterpolationFrameRotVelocityThresholdMillionth", "5"},  
+						{"WorldStepMax", "30"},  
+						{"TimestepArbiterHumanoidLinearVelThreshold", "1"},  
+						{"InterpolationFramePositionThresholdMillionth", "5"},  
+						{"TimestepArbiterHumanoidTurningVelThreshold", "1"},  
+						{"MaxTimestepMultiplierContstraint", "2147483647"},  
+						{"GameNetPVHeaderLinearVelocityZeroCutoffExponent", "-5000"},  
+						{"CheckPVCachedVelThresholdPercent", "10"},  
+						{"TimestepArbiterOmegaThou", "1073741823"},  
+						{"MaxAcceptableUpdateDelay", "1"},  
+						{"LargeReplicatorSerializeWrite4", "true"},  
+					}  
+
+					for _, data in ipairs(flags) do  
+						pcall(function()  
+							setfflag(data[1], data[2])  
+						end)  
+					end  
+
+					local char = player.Character  
+					if not char then return end  
+
+					local humanoid = char:FindFirstChildWhichIsA("Humanoid")  
+					if humanoid then  
+						humanoid:ChangeState(Enum.HumanoidStateType.Dead)  
+					end  
+
+					char:ClearAllChildren()  
+
+					local fakeModel = Instance.new("Model", workspace)  
+					player.Character = fakeModel  
+					wait()  
+					player.Character = char  
+					fakeModel:Destroy()  
+				end  
+
+				DesyncV2()
+			end
+			
+			AntiHit()
+			resetDesyncBtn.BackgroundColor3 = Color3.fromRGB(185, 28, 28)
+			resetDesyncBtn.Text = "Resetting..."
+			wait(1)
+			resetDesyncBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+			resetDesyncBtn.Text = "Reset Desync"
+			resetDesyncCooldown = false
+		end)
+		
+		-- Speed Boost button
+		local speedBoostBtn = Instance.new("TextButton")
+		speedBoostBtn.Name = "SpeedBoostButton"
+		speedBoostBtn.Size = UDim2.new(1, 0, 0, 40)
+		speedBoostBtn.Position = UDim2.new(0, 0, 0, 110)
+		speedBoostBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		speedBoostBtn.Text = "Speed Boost: OFF"
+		speedBoostBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		speedBoostBtn.Font = Enum.Font.GothamBold
+		speedBoostBtn.TextSize = 15
+		speedBoostBtn.Parent = contentFrame
+
+		local speedBoostCorner = Instance.new("UICorner")
+		speedBoostCorner.CornerRadius = UDim.new(0, 8)
+		speedBoostCorner.Parent = speedBoostBtn
+
+		local baseSpeed = 27.5
+		local speedConn
+		local speedBoostEnabled = false
+
+		local function GetCharacter()
+			local Char = player.Character or player.CharacterAdded:Wait()
+			local HRP = Char:WaitForChild("HumanoidRootPart")
+			local Hum = Char:FindFirstChildOfClass("Humanoid")
+			return Char, HRP, Hum
+		end
+
+		local function getMovementInput()
+			local Char, HRP, Hum = GetCharacter()
+			if not Char or not HRP or not Hum then
+				return Vector3.new(0,0,0)
+			end
+			local moveVector = Hum.MoveDirection
+			if moveVector.Magnitude > 0.1 then
+				return Vector3.new(moveVector.X, 0, moveVector.Z).Unit
+			end
+			return Vector3.new(0,0,0)
+		end
+
+		local function startSpeedControl()
+			if speedConn and speedConn.Connected then
+				return
+			end
+			speedConn = RunService.Heartbeat:Connect(function()
+				local Char, HRP, Hum = GetCharacter()
+				if not Char or not HRP or not Hum then
+					return
+				end
+				local inputDirection = getMovementInput()
+				if inputDirection.Magnitude > 0 then
+					HRP.AssemblyLinearVelocity = Vector3.new(inputDirection.X * baseSpeed, HRP.AssemblyLinearVelocity.Y, inputDirection.Z * baseSpeed)
+				else
+					HRP.AssemblyLinearVelocity = Vector3.new(0, HRP.AssemblyLinearVelocity.Y, 0)
+				end
+			end)
+		end
+
+		local function stopSpeedControl()
+			if speedConn then
+				speedConn:Disconnect()
+				speedConn = nil
+			end
+			local Char, HRP = GetCharacter()
+			if HRP then
+				HRP.AssemblyLinearVelocity = Vector3.new(0, HRP.AssemblyLinearVelocity.Y, 0)
+			end
+		end
+
+		speedBoostBtn.MouseButton1Click:Connect(function()
+			speedBoostEnabled = not speedBoostEnabled
+			if speedBoostEnabled then
+				speedBoostBtn.Text = "Speed Boost: ON"
+				speedBoostBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				startSpeedControl()
+			else
+				speedBoostBtn.Text = "Speed Boost: OFF"
+				speedBoostBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				stopSpeedControl()
+			end
+		end)
+		
+		-- 3rd Floor Steal button (from source)
+		local floorStealBtn = Instance.new("TextButton")
+		floorStealBtn.Name = "FloorStealButton"
+		floorStealBtn.Size = UDim2.new(1, 0, 0, 40)
+		floorStealBtn.Position = UDim2.new(0, 0, 0, 160)
+		floorStealBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		floorStealBtn.Text = "3rd Floor Steal: OFF"
+		floorStealBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		floorStealBtn.Font = Enum.Font.GothamBold
+		floorStealBtn.TextSize = 15
+		floorStealBtn.Parent = contentFrame
+
+		local floorStealCorner = Instance.new("UICorner")
+		floorStealCorner.CornerRadius = UDim.new(0, 8)
+		floorStealCorner.Parent = floorStealBtn
+
+		floorStealBtn.MouseButton1Click:Connect(function()
+			if FLOOR_STEAL.platformActive then
+				floorStealBtn.Text = "3rd Floor Steal: OFF"
+				floorStealBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				FLOOR_STEAL:Disable()
+			else
+				floorStealBtn.Text = "3rd Floor Steal: ON"
+				floorStealBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				FLOOR_STEAL:Enable()
+			end
+		end)
+		
+	elseif tabName == "Player" then
+		-- ======================
+		-- ANTI RAGDOLL v1 BUTTON
+		-- ======================
+		local antiRagdollBtn = Instance.new("TextButton")
+		antiRagdollBtn.Name = "AntiRagdollButton"
+		antiRagdollBtn.Size = UDim2.new(1, 0, 0, 40)
+		antiRagdollBtn.Position = UDim2.new(0, 0, 0, 10)
+		antiRagdollBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		antiRagdollBtn.Text = "Anti Ragdoll: OFF"
+		antiRagdollBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		antiRagdollBtn.Font = Enum.Font.GothamBold
+		antiRagdollBtn.TextSize = 15
+		antiRagdollBtn.Parent = contentFrame
+		
+		local antiRagdollCorner = Instance.new("UICorner")
+		antiRagdollCorner.CornerRadius = UDim.new(0, 8)
+		antiRagdollCorner.Parent = antiRagdollBtn
+		
+		local antiRagdollEnabled = false
+		
+		antiRagdollBtn.MouseButton1Click:Connect(function()
+			antiRagdollEnabled = not antiRagdollEnabled
+			if antiRagdollEnabled then
+				antiRagdollBtn.Text = "Anti Ragdoll: ON"
+				antiRagdollBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				ANTI_RAGDOLL.Enable("v1")
+			else
+				antiRagdollBtn.Text = "Anti Ragdoll: OFF"
+				antiRagdollBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				ANTI_RAGDOLL.Disable()
+			end
+		end)
+		
+		-- ======================
+		-- ANTI BEE & DISCO BUTTON
+		-- ======================
+		local antiBeeDiscoBtn = Instance.new("TextButton")
+		antiBeeDiscoBtn.Name = "AntiBeeDiscoButton"
+		antiBeeDiscoBtn.Size = UDim2.new(1, 0, 0, 40)
+		antiBeeDiscoBtn.Position = UDim2.new(0, 0, 0, 60)
+		antiBeeDiscoBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		antiBeeDiscoBtn.Text = "Anti Bee & Disco: OFF"
+		antiBeeDiscoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		antiBeeDiscoBtn.Font = Enum.Font.GothamBold
+		antiBeeDiscoBtn.TextSize = 15
+		antiBeeDiscoBtn.Parent = contentFrame
+		
+		local antiBeeDiscoCorner = Instance.new("UICorner")
+		antiBeeDiscoCorner.CornerRadius = UDim.new(0, 8)
+		antiBeeDiscoCorner.Parent = antiBeeDiscoBtn
+		
+		local antiBeeDiscoEnabled = false
+		
+		antiBeeDiscoBtn.MouseButton1Click:Connect(function()
+			antiBeeDiscoEnabled = not antiBeeDiscoEnabled
+			if antiBeeDiscoEnabled then
+				antiBeeDiscoBtn.Text = "Anti Bee & Disco: ON"
+				antiBeeDiscoBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				ANTI_BEE_DISCO.Enable()
+			else
+				antiBeeDiscoBtn.Text = "Anti Bee & Disco: OFF"
+				antiBeeDiscoBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				ANTI_BEE_DISCO.Disable()
+			end
+		end)
+		
+		-- ======================
+		-- AUTO STEAL BUTTON (Animal Stealing)
+		-- ======================
+		local autoStealBtn = Instance.new("TextButton")
+		autoStealBtn.Name = "AutoStealButton"
+		autoStealBtn.Size = UDim2.new(1, 0, 0, 40)
+		autoStealBtn.Position = UDim2.new(0, 0, 0, 110)
+		autoStealBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		autoStealBtn.Text = "Auto Steal: OFF"
+		autoStealBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		autoStealBtn.Font = Enum.Font.GothamBold
+		autoStealBtn.TextSize = 15
+		autoStealBtn.Parent = contentFrame
+		
+		local autoStealCorner = Instance.new("UICorner")
+		autoStealCorner.CornerRadius = UDim.new(0, 8)
+		autoStealCorner.Parent = autoStealBtn
+		
+		local autoStealEnabled = false
+		
+		autoStealBtn.MouseButton1Click:Connect(function()
+			autoStealEnabled = not autoStealEnabled
+			if autoStealEnabled then
+				autoStealBtn.Text = "Auto Steal: ON"
+				autoStealBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				AUTO_STEAL_ANIMALS.Enable()
+			else
+				autoStealBtn.Text = "Auto Steal: OFF"
+				autoStealBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				AUTO_STEAL_ANIMALS.Disable()
+			end
+		end)
+		
+		-- Sentry Watch button (from source)
+		local sentryWatchBtn = Instance.new("TextButton")
+		sentryWatchBtn.Name = "SentryWatchButton"
+		sentryWatchBtn.Size = UDim2.new(1, 0, 0, 40)
+		sentryWatchBtn.Position = UDim2.new(0, 0, 0, 160)
+		sentryWatchBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		sentryWatchBtn.Text = "Auto Destroy Sentry"
+		sentryWatchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		sentryWatchBtn.Font = Enum.Font.GothamBold
+		sentryWatchBtn.TextSize = 15
+		sentryWatchBtn.Parent = contentFrame
+
+		local sentryWatchCorner = Instance.new("UICorner")
+		sentryWatchCorner.CornerRadius = UDim.new(0, 8)
+		sentryWatchCorner.Parent = sentryWatchBtn
+
+		sentryWatchBtn.MouseButton1Click:Connect(function()
+			sentryEnabled = not sentryEnabled
+			if sentryEnabled then
+				sentryWatchBtn.Text = "Sentry Watch: ON"
+				sentryWatchBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				SENTRY_WATCH.Enable()
+			else
+				sentryWatchBtn.Text = "Sentry Watch: OFF"
+				sentryWatchBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				SENTRY_WATCH.Disable()
+			end
+		end)
+		
+	elseif tabName == "Visual" then
+		-- Player ESP button
+		local playerEspBtn = Instance.new("TextButton")
+		playerEspBtn.Name = "PlayerEspButton"
+		playerEspBtn.Size = UDim2.new(1, 0, 0, 40)
+		playerEspBtn.Position = UDim2.new(0, 0, 0, 10)
+		playerEspBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		playerEspBtn.Text = "Player ESP: OFF"
+		playerEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		playerEspBtn.Font = Enum.Font.GothamBold
+		playerEspBtn.TextSize = 15
+		playerEspBtn.Parent = contentFrame
+
+		local playerEspCorner = Instance.new("UICorner")
+		playerEspCorner.CornerRadius = UDim.new(0, 8)
+		playerEspCorner.Parent = playerEspBtn
+
+		local espFolder = Instance.new("Folder")
+		espFolder.Name = "PlayerESP"
+
+		local espSuccess = pcall(function()
+			espFolder.Parent = game:GetService("CoreGui")
+		end)
+
+		if not espSuccess then
+			espFolder.Parent = player:WaitForChild("PlayerGui")
+		end
+
+		local playerESPConnections = {}
+		local espEnabled = false
+
+		local function createESP(p)
+			if p == player then return end
+			local character = p.Character
+			if not character then return end
+			local rootPart = character:FindFirstChild("HumanoidRootPart")
+			if not rootPart then return end
+			local existingESP = espFolder:FindFirstChild(p.Name)
+			if existingESP then
+				existingESP:Destroy()
+			end
+			local box = Instance.new("BoxHandleAdornment")
+			box.Name = p.Name
+			box.Adornee = rootPart
+			box.Size = rootPart.Size + Vector3.new(1.5, 2.5, 1.5)
+			box.Color3 = Color3.fromRGB(0, 255, 0)
+			box.AlwaysOnTop = true
+			box.ZIndex = 10
+			box.Transparency = 0.2
+			box.Parent = espFolder
+		end
+
+		local function removeESP(p)
+			local esp = espFolder:FindFirstChild(p.Name)
+			if esp then
+				esp:Destroy()
+			end
+		end
+
+		local function cleanupESP()
+			for _, connection in ipairs(playerESPConnections) do
+				connection:Disconnect()
+			end
+			playerESPConnections = {}
+			for _, child in ipairs(espFolder:GetChildren()) do
+				child:Destroy()
+			end
+		end
+
+		local function enablePlayerESP()
+			cleanupESP()
+			
+			for _, p in ipairs(game.Players:GetPlayers()) do
+				if p.Character then
+					createESP(p)
+				end
+				table.insert(playerESPConnections, p.CharacterAdded:Connect(function()
+					wait(0.5)
+					createESP(p)
+				end))
+			end
+			table.insert(playerESPConnections, game.Players.PlayerAdded:Connect(function(p)
+				table.insert(playerESPConnections, p.CharacterAdded:Connect(function()
+					wait(0.5)
+					createESP(p)
+				end))
+			end))
+			table.insert(playerESPConnections, game.Players.PlayerRemoving:Connect(removeESP))
+		end
+
+		playerEspBtn.MouseButton1Click:Connect(function()
+			espEnabled = not espEnabled
+			if espEnabled then
+				playerEspBtn.Text = "Player ESP: ON"
+				playerEspBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				enablePlayerESP()
+			else
+				playerEspBtn.Text = "Player ESP: OFF"
+				playerEspBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				cleanupESP()
+			end
+		end)
+		
+		-- Invisible Walls button
+		local invisibleWallsBtn = Instance.new("TextButton")
+		invisibleWallsBtn.Name = "InvisibleWallsButton"
+		invisibleWallsBtn.Size = UDim2.new(1, 0, 0, 40)
+		invisibleWallsBtn.Position = UDim2.new(0, 0, 0, 60)
+		invisibleWallsBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		invisibleWallsBtn.Text = "Invisible Walls: OFF"
+		invisibleWallsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		invisibleWallsBtn.Font = Enum.Font.GothamBold
+		invisibleWallsBtn.TextSize = 15
+		invisibleWallsBtn.Parent = contentFrame
+
+		local invisibleWallsCorner = Instance.new("UICorner")
+		invisibleWallsCorner.CornerRadius = UDim.new(0, 8)
+		invisibleWallsCorner.Parent = invisibleWallsBtn
+
+		invisibleWallsBtn.MouseButton1Click:Connect(function()
+			local invisibleWallsEnabled = not CONFIG.INVISIBLE_BASE_WALLS_ENABLED
+			if invisibleWallsEnabled then
+				invisibleWallsBtn.Text = "Invisible Walls: ON"
+				invisibleWallsBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				INVISIBLE_WALLS.Enable()
+			else
+				invisibleWallsBtn.Text = "Invisible Walls: OFF"
+				invisibleWallsBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				INVISIBLE_WALLS.Disable()
+			end
+		end)
+		
+		-- Esp Timer button
+		local espTimerBtn = Instance.new("TextButton")
+		espTimerBtn.Name = "EspTimerButton"
+		espTimerBtn.Size = UDim2.new(1, 0, 0, 40)
+		espTimerBtn.Position = UDim2.new(0, 0, 0, 110)
+		espTimerBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+		espTimerBtn.Text = "Esp Timer: OFF"
+		espTimerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		espTimerBtn.Font = Enum.Font.GothamBold
+		espTimerBtn.TextSize = 15
+		espTimerBtn.Parent = contentFrame
+
+		local espTimerCorner = Instance.new("UICorner")
+		espTimerCorner.CornerRadius = UDim.new(0, 8)
+		espTimerCorner.Parent = espTimerBtn
+		
+		local espTimerEnabled = false
+		
+		espTimerBtn.MouseButton1Click:Connect(function()
+			espTimerEnabled = not espTimerEnabled
+			if espTimerEnabled then
+				espTimerBtn.Text = "Esp Timer: ON"
+				espTimerBtn.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+				ESP_TIMER:Toggle(true)
+			else
+				espTimerBtn.Text = "Esp Timer: OFF"
+				espTimerBtn.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+				ESP_TIMER:Toggle(false)
+			end
+		end)
+	end
+end
+
+local function switchTab(tabName)
+	for name, button in pairs(tabButtons) do
+		if name == tabName then
+			button.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+			button.TextColor3 = Color3.fromRGB(255, 255, 255)
+		else
+			button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+			button.TextColor3 = Color3.fromRGB(200, 200, 200)
+		end
+	end
+	
+	for name, frame in pairs(contentFrames) do
+		frame.Visible = (name == tabName)
+	end
+end
+
+for tabName, button in pairs(tabButtons) do
+	button.MouseButton1Click:Connect(function()
+		switchTab(tabName)
+	end)
+end
+
+squareButton.MouseButton1Click:Connect(function()
+	mainPanel.Visible = not mainPanel.Visible
+	if mainPanel.Visible then
+		switchTab("Main")
+	end
+end)
+
+switchTab("Main")
+
+print("GUI Loaded Successfully!")

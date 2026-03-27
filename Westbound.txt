@@ -1,0 +1,500 @@
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
+local StatsService = game:GetService("Stats")
+local SoundService = game:GetService("SoundService")
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+local bag = localPlayer:WaitForChild("States"):WaitForChild("Bag")
+local bagSizeLevel = localPlayer:WaitForChild("Stats"):WaitForChild("BagSizeLevel"):WaitForChild("CurrentAmount")
+local robEvent = ReplicatedStorage:WaitForChild("GeneralEvents"):WaitForChild("Rob")
+local targetPosition = CFrame.new(1636.62537, 104.349976, -1736.184)
+local function ensureAntiDeath(char)
+local ok, h = pcall(function()
+local hum = char:FindFirstChildWhichIsA("Humanoid")
+if not hum then return end
+local cloned = hum:Clone()
+        cloned.Parent = char
+        localPlayer.Character = nil
+        cloned:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        cloned:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        cloned:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:Destroy()
+        localPlayer.Character = char
+local cam = Workspace.CurrentCamera
+        cam.CameraSubject = cloned
+        cam.CFrame = cam.CFrame
+        cloned.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+local animate = char:FindFirstChild("Animate")
+if animate then
+            animate.Disabled = true
+            task.wait(0.07)
+            animate.Disabled = false
+end
+        cloned.Health = cloned.MaxHealth
+        humanoid = cloned
+        humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
+end)
+return ok
+end
+ensureAntiDeath(character)
+localPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+if getgenv().AntiAfkExecuted and game.CoreGui:FindFirstChild("DiabloAutoFarmUI") then
+    getgenv().AntiAfkExecuted = false
+    getgenv().AutoFarmActive = false
+game.CoreGui.DiabloAutoFarmUI:Destroy()
+end
+getgenv().AntiAfkExecuted = true
+getgenv().AutoFarmActive = false
+local FAST_LOOP_INTERVAL = 0.08
+local function formatNumber(n)
+local s = tostring(n)
+while true do
+local k
+        s, k = string.gsub(s, "^(-?%d+)(%d%d%d)", "%1,%2")
+if k == 0 then break end
+end
+return s
+end
+local cashRegisters = {}
+local safes = {}
+local function clearTable(t)
+for i = 1, #t do t[i] = nil end
+end
+local function updateCaches()
+    clearTable(cashRegisters)
+    clearTable(safes)
+for _, child in ipairs(Workspace:GetChildren()) do
+if child:IsA("Model") then
+if child.Name == "CashRegister" then
+                table.insert(cashRegisters, child)
+elseif child.Name == "Safe" then
+                table.insert(safes, child)
+end
+end
+end
+end
+updateCaches()
+Workspace.ChildAdded:Connect(function(child)
+if child:IsA("Model") then
+if child.Name == "CashRegister" then
+            table.insert(cashRegisters, child)
+elseif child.Name == "Safe" then
+            table.insert(safes, child)
+end
+end
+end)
+Workspace.ChildRemoved:Connect(function(child)
+if child:IsA("Model") then
+if child.Name == "CashRegister" then
+for i = #cashRegisters, 1, -1 do
+if cashRegisters[i] == child then table.remove(cashRegisters, i) end
+end
+elseif child.Name == "Safe" then
+for i = #safes, 1, -1 do
+if safes[i] == child then table.remove(safes, i) end
+end
+end
+end
+end)
+local function moveTo(cf)
+if humanoidRootPart and cf then
+        humanoidRootPart.CFrame = cf
+end
+end
+local function findNearestCashRegister()
+if not humanoidRootPart then return nil end
+local best, bestDist = nil, math.huge
+for _, reg in ipairs(cashRegisters) do
+if reg and reg.Parent and reg:IsDescendantOf(Workspace) then
+local openPart = reg:FindFirstChild("Open")
+if openPart then
+local d = (humanoidRootPart.Position - openPart.Position).Magnitude
+if d < bestDist then
+                    bestDist = d
+                    best = {model = reg, openPart = openPart}
+end
+end
+end
+end
+return best
+end
+local function findNearestSafe()
+if not humanoidRootPart then return nil end
+local best, bestDist = nil, math.huge
+for _, s in ipairs(safes) do
+if s and s.Parent and s:IsDescendantOf(Workspace) and s:FindFirstChild("Amount") and s.Amount.Value > 0 then
+local safePart = s:FindFirstChild("Safe")
+if safePart then
+local d = (humanoidRootPart.Position - safePart.Position).Magnitude
+if d < bestDist then
+                    bestDist = d
+                    best = {model = s, safePart = safePart}
+end
+end
+end
+end
+return best
+end
+local function attemptRegister(regData)
+if not regData or not regData.model then return false end
+local ok = pcall(function()
+        moveTo(regData.openPart.CFrame)
+        robEvent:FireServer("Register", {
+            Part = regData.model:FindFirstChild("Union"),
+            OpenPart = regData.openPart,
+            ActiveValue = regData.model:FindFirstChild("Active"),
+            Active = true
+})
+end)
+return ok
+end
+local function attemptSafe(sData)
+if not sData or not sData.model then return false end
+local ok = pcall(function()
+        moveTo(sData.safePart.CFrame)
+local openFlag = sData.model:FindFirstChild("Open")
+if openFlag and openFlag.Value then
+            robEvent:FireServer("Safe", sData.model)
+else
+local openSafe = sData.model:FindFirstChild("OpenSafe")
+if openSafe then
+                openSafe:FireServer("Completed")
+end
+            robEvent:FireServer("Safe", sData.model)
+end
+end)
+return ok
+end
+local function farmOnce()
+if bag.Value >= bagSizeLevel.Value then
+        moveTo(targetPosition)
+return false
+end
+local reg = findNearestCashRegister()
+if reg then
+if attemptRegister(reg) then return true end
+end
+local s = findNearestSafe()
+if s then
+if attemptSafe(s) then return true end
+end
+return false
+end
+local function createNotifierGUI()
+local gui = Instance.new("ScreenGui")
+    gui.Name = "DiabloNotifier"
+    gui.ResetOnSpawn = false
+    gui.Parent = game.CoreGui
+local container = Instance.new("Frame")
+    container.Name = "Container"
+    container.AnchorPoint = Vector2.new(0.5, 0)
+    container.Position = UDim2.new(0.5, 0, 0, 6)
+    container.Size = UDim2.new(0, 380, 0, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = gui
+return gui, container
+end
+local notifierGui, notifierContainer = createNotifierGUI()
+local activeNotifiers = {}
+local function repositionNotifiers()
+for i, v in ipairs(activeNotifiers) do
+if v and v.frame then
+local targetY = 6 + (i - 1) * 56
+            TweenService:Create(v.frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0, targetY)}):Play()
+end
+end
+end
+local function notify(text, timeSec)
+    timeSec = timeSec or 3
+if not notifierContainer or notifierContainer.Parent == nil then
+        notifierGui, notifierContainer = createNotifierGUI()
+end
+local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 340, 0, 50)
+    frame.Position = UDim2.new(0.5, 0, 0, -60)
+    frame.AnchorPoint = Vector2.new(0.5, 0)
+    frame.BackgroundTransparency = 1
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BorderSizePixel = 0
+    frame.Parent = notifierContainer
+local uic = Instance.new("UICorner", frame)
+    uic.CornerRadius = UDim.new(0, 10)
+local uistroke = Instance.new("UIStroke", frame)
+    uistroke.Thickness = 1
+    uistroke.Color = Color3.fromRGB(100, 100, 100)
+    uistroke.Transparency = 0.5
+local txt = Instance.new("TextLabel", frame)
+    txt.Size = UDim2.new(1, -20, 1, 0)
+    txt.Position = UDim2.new(0, 10, 0, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = tostring(text)
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 16
+    txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    txt.TextXAlignment = Enum.TextXAlignment.Left
+    txt.TextTransparency = 1
+local snd = Instance.new("Sound", frame)
+    snd.SoundId = "rbxassetid://3442983711"
+    snd.Volume = 1
+    snd.PlayOnRemove = false
+    snd:Play()
+    table.insert(activeNotifiers, {frame = frame})
+    repositionNotifiers()
+local appearTween = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0, 6 + (#activeNotifiers - 1) * 56), BackgroundTransparency = 0})
+    appearTween:Play()
+    TweenService:Create(txt, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+spawn(function()
+        task.wait(timeSec)
+local disappearTween = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0, -60), BackgroundTransparency = 1})
+        disappearTween:Play()
+        TweenService:Create(txt, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1}):Play()
+        disappearTween.Completed:Wait()
+        frame:Destroy()
+for i = #activeNotifiers, 1, -1 do
+if activeNotifiers[i] and activeNotifiers[i].frame == frame then
+                table.remove(activeNotifiers, i)
+end
+end
+        repositionNotifiers()
+end)
+end
+local AutoFarmUI = Instance.new("ScreenGui")
+AutoFarmUI.Name = "DiabloAutoFarmUI"
+AutoFarmUI.Parent = game.CoreGui
+AutoFarmUI.ResetOnSpawn = false
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 160)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundTransparency = 0
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = AutoFarmUI
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 14)
+local Accent = Instance.new("Frame", MainFrame)
+Accent.Size = UDim2.new(1, 0, 0, 40)
+Accent.Position = UDim2.new(0, 0, 0, 0)
+Accent.BackgroundTransparency = 0
+Accent.BackgroundColor3 = Color3.fromRGB(45, 10, 90)
+Accent.BorderSizePixel = 0
+local g = Instance.new("UIGradient", Accent)
+g.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 25, 200)), ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 10, 140)) }
+g.Rotation = 45
+local Title = Instance.new("TextLabel", Accent)
+Title.Size = UDim2.new(0.75, 0, 1, 0)
+Title.Position = UDim2.new(0.02, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Diablo Hub W.B"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+local credit = Instance.new("TextLabel", Accent)
+credit.Size = UDim2.new(0.23, -10, 1, 0)
+credit.Position = UDim2.new(0.75, 0, 0, 0)
+credit.BackgroundTransparency = 1
+credit.Text = "Made by Diablo"
+credit.TextColor3 = Color3.fromRGB(200, 200, 200)
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 12
+credit.TextXAlignment = Enum.TextXAlignment.Right
+local content = Instance.new("Frame", MainFrame)
+content.Size = UDim2.new(1, -16, 1, -56)
+content.Position = UDim2.new(0, 8, 0, 48)
+content.BackgroundTransparency = 1
+local contentCorner = Instance.new("UICorner", content)
+contentCorner.CornerRadius = UDim.new(0, 12)
+local statsList = Instance.new("Frame", content)
+statsList.Size = UDim2.new(0.6, 0, 1, 0)
+statsList.Position = UDim2.new(0, 0, 0, 0)
+statsList.BackgroundTransparency = 1
+local function makeStatLabel(txt, y)
+local lbl = Instance.new("TextLabel", statsList)
+    lbl.Size = UDim2.new(1, 0, 0, 18)
+    lbl.Position = UDim2.new(0, 0, 0, y)
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextColor3 = Color3.fromRGB(230, 230, 230)
+    lbl.Text = txt
+return lbl
+end
+local PingLabel = makeStatLabel("Ping: Calculating...", 0)
+local CashLabel = makeStatLabel("Earnings: $0", 22)
+local FPSLabel = makeStatLabel("FPS: Calculating...", 44)
+local TimerLabel = makeStatLabel("Time: 00:00:00", 66)
+local StatusLabel = makeStatLabel("Status: Stopped", 88)
+local controls = Instance.new("Frame", content)
+controls.Size = UDim2.new(0.4, 0, 1, 0)
+controls.Position = UDim2.new(0.6, 0, 0, 0)
+controls.BackgroundTransparency = 1
+local StartBtn = Instance.new("TextButton", controls)
+StartBtn.Size = UDim2.new(1, -10, 0, 36)
+StartBtn.Position = UDim2.new(0, 5, 0, 0)
+StartBtn.Text = "START"
+StartBtn.Font = Enum.Font.GothamBlack
+StartBtn.TextSize = 14
+StartBtn.TextColor3 = Color3.fromRGB(20, 20, 20)
+StartBtn.BackgroundColor3 = Color3.fromRGB(120, 25, 200)
+StartBtn.AutoButtonColor = true
+StartBtn.BorderSizePixel = 0
+local StartCorner = Instance.new("UICorner", StartBtn)
+StartCorner.CornerRadius = UDim.new(0, 8)
+local StopBtn = Instance.new("TextButton", controls)
+StopBtn.Size = UDim2.new(1, -10, 0, 28)
+StopBtn.Position = UDim2.new(0, 5, 0, 44)
+StopBtn.Text = "STOP"
+StopBtn.Font = Enum.Font.GothamBold
+StopBtn.TextSize = 13
+StopBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+StopBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+StopBtn.AutoButtonColor = true
+StopBtn.BorderSizePixel = 0
+local StopCorner = Instance.new("UICorner", StopBtn)
+StopCorner.CornerRadius = UDim.new(0, 8)
+local pulse = Instance.new("Frame", Accent)
+pulse.Size = UDim2.new(0, 10, 0, 10)
+pulse.Position = UDim2.new(0.98, -20, 0.5, -5)
+pulse.AnchorPoint = Vector2.new(1, 0.5)
+pulse.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+pulse.BorderSizePixel = 0
+local pulseCorner = Instance.new("UICorner", pulse)
+pulseCorner.CornerRadius = UDim.new(0, 10)
+spawn(function()
+while AutoFarmUI.Parent and AutoFarmUI.Parent ~= nil do
+        TweenService:Create(pulse, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.3, Size = UDim2.new(0, 14, 0, 14)}):Play()
+        task.wait(1.8)
+end
+end)
+do
+local dragging, dragStart, startPos
+local currentTween
+    MainFrame.InputBegan:Connect(function(input)
+if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+end
+end)
+end
+end)
+    MainFrame.InputChanged:Connect(function(input)
+if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+local delta = input.Position - dragStart
+local target = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+if currentTween then currentTween:Cancel() end
+            currentTween = TweenService:Create(MainFrame, TweenInfo.new(0.05, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Position = target})
+            currentTween:Play()
+end
+end)
+end
+spawn(function()
+while true do
+local dt = RunService.RenderStepped:Wait()
+        FPSLabel.Text = "FPS: " .. tostring(math.floor(1 / dt))
+end
+end)
+spawn(function()
+while true do
+        task.wait(0.8)
+local perfStats = StatsService:FindFirstChild("PerformanceStats")
+if perfStats and perfStats:FindFirstChild("Ping") then
+            PingLabel.Text = "Ping: " .. tostring(math.floor(perfStats.Ping:GetValue())) .. "ms"
+end
+end
+end)
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local cashStat = leaderstats:WaitForChild("$$")
+local initialCash = cashStat.Value
+local seconds, minutes, hours = 0, 0, 0
+spawn(function()
+while true do
+        task.wait(0.9)
+local earned = cashStat.Value - initialCash
+        CashLabel.Text = "Earnings: $" .. formatNumber(earned)
+end
+end)
+spawn(function()
+while true do
+        task.wait(1)
+        seconds = seconds + 1
+if seconds >= 60 then seconds = 0 minutes = minutes + 1 end
+if minutes >= 60 then minutes = 0 hours = hours + 1 end
+        TimerLabel.Text = string.format("Time: %02d:%02d:%02d", hours, minutes, seconds)
+end
+end)
+local farmThread
+local function startFarming()
+if getgenv().AutoFarmActive then return end
+    getgenv().AutoFarmActive = true
+    StatusLabel.Text = "Status: Running"
+    notify("AutoFarm started — Diablo & Westbound", 2.5)
+    farmThread = coroutine.create(function()
+while getgenv().AutoFarmActive do
+local ok = pcall(function()
+                farmOnce()
+end)
+            task.wait(FAST_LOOP_INTERVAL)
+end
+end)
+    coroutine.resume(farmThread)
+end
+local function resetProgress()
+    initialCash = cashStat.Value
+    seconds, minutes, hours = 0, 0, 0
+    CashLabel.Text = "Earnings: $0"
+    TimerLabel.Text = "Time: 00:00:00"
+end
+local function stopFarming()
+if not getgenv().AutoFarmActive then
+        resetProgress()
+return
+end
+    getgenv().AutoFarmActive = false
+    StatusLabel.Text = "Status: Stopped"
+    notify("AutoFarm stopped", 1.8)
+    resetProgress()
+end
+StartBtn.MouseButton1Click:Connect(function()
+    startFarming()
+end)
+StopBtn.MouseButton1Click:Connect(function()
+    stopFarming()
+end)
+UserInputService.InputBegan:Connect(function(inp, gp)
+if gp then return end
+if inp.KeyCode == Enum.KeyCode.RightShift then
+        AutoFarmUI:Destroy()
+        notifierGui:Destroy()
+        getgenv().AutoFarmActive = false
+        resetProgress()
+end
+end)
+AutoFarmUI.AncestryChanged:Connect(function(_, parent)
+if not parent then
+        getgenv().AutoFarmActive = false
+        resetProgress()
+end
+end)
+localPlayer.CharacterAdded:Connect(function(char)
+    character = char
+    task.wait(0.2)
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    ensureAntiDeath(character)
+end)

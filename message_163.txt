@@ -1,0 +1,1795 @@
+-- LocalScript em StarterPlayerScripts
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Workspace = game:GetService("Workspace")
+local Camera = workspace.CurrentCamera
+local player = Players.LocalPlayer
+
+-- Variáveis do sistema
+local purpleFloorsActive = false
+local autoToggleActive = false
+local espActive = false
+local currentFloor = nil
+local jumpConnection = nil
+local heartbeatConnection = nil
+local autoToggleConnection = nil
+local espConnections = {}
+local autoFloorWindowOpen = false
+local guiOpen = false
+local serverVipWindowOpen = false
+local currentTab = "main" -- "main" ou "credits"
+
+-- Variáveis do Gravity Coil
+local gravityValue = 0.5
+local bodyForce
+local gravityActive = false
+
+-- Variáveis ESP
+local activeESP = {}
+local activeLockTimeEsp = false
+local lteInstances = {}
+local RaritySettings = {
+    ["Brainrot God"] = {
+        Color = Color3.new(0.7, 0.8, 1), -- Azul lunar claro
+        Size = UDim2.new(0, 180, 0, 60)
+    },
+    ["Secret"] = {
+        Color = Color3.new(0.9, 0.9, 1), -- Prata lunar
+        Size = UDim2.new(0, 200, 0, 70)
+    }
+}
+
+-- Cores do tema lunar
+local MOON_COLORS = {
+    PRIMARY = Color3.fromRGB(200, 220, 255),      -- Azul lunar claro
+    SECONDARY = Color3.fromRGB(150, 170, 200),    -- Azul acinzentado
+    DARK = Color3.fromRGB(25, 30, 40),           -- Azul escuro noturno
+    DARKER = Color3.fromRGB(15, 18, 25),         -- Quase preto azulado
+    ACCENT = Color3.fromRGB(180, 200, 255),      -- Brilho lunar
+    SILVER = Color3.fromRGB(192, 192, 220),      -- Prata lunar
+    GLOW = Color3.fromRGB(220, 235, 255),        -- Brilho suave
+    GOLD = Color3.fromRGB(255, 215, 0)           -- Dourado para VIP
+}
+
+-- ===============================
+-- CÓDIGO SERVER VIP FINDER
+-- ===============================
+
+local md5 = {}
+local hmac = {}
+local base64 = {}
+
+do
+    do
+        local T = {
+            0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
+            0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+            0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
+            0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+            0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa,
+            0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+            0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
+            0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+            0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
+            0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+            0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05,
+            0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+            0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039,
+            0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+            0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
+            0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
+        }
+
+        local function add(a, b)
+            local lsw = bit32.band(a, 0xFFFF) + bit32.band(b, 0xFFFF)
+            local msw = bit32.rshift(a, 16) + bit32.rshift(b, 16) + bit32.rshift(lsw, 16)
+            return bit32.bor(bit32.lshift(msw, 16), bit32.band(lsw, 0xFFFF))
+        end
+
+        local function rol(x, n)
+            return bit32.bor(bit32.lshift(x, n), bit32.rshift(x, 32 - n))
+        end
+
+        local function F(x, y, z)
+            return bit32.bor(bit32.band(x, y), bit32.band(bit32.bnot(x), z))
+        end
+        local function G(x, y, z)
+            return bit32.bor(bit32.band(x, z), bit32.band(y, bit32.bnot(z)))
+        end
+        local function H(x, y, z)
+            return bit32.bxor(x, bit32.bxor(y, z))
+        end
+        local function I(x, y, z)
+            return bit32.bxor(y, bit32.bor(x, bit32.bnot(z)))
+        end
+
+        function md5.sum(message)
+            local a, b, c, d = 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476
+            local message_len = #message
+            local padded_message = message .. "\128"
+            while #padded_message % 64 ~= 56 do
+                padded_message = padded_message .. "\0"
+            end
+
+            local len_bytes = ""
+            local len_bits = message_len * 8
+            for i = 0, 7 do
+                len_bytes = len_bytes .. string.char(bit32.band(bit32.rshift(len_bits, i * 8), 0xFF))
+            end
+            padded_message = padded_message .. len_bytes
+
+            for i = 1, #padded_message, 64 do
+                local chunk = padded_message:sub(i, i + 63)
+                local X = {}
+                for j = 0, 15 do
+                    local b1, b2, b3, b4 = chunk:byte(j * 4 + 1, j * 4 + 4)
+                    X[j] = bit32.bor(b1, bit32.lshift(b2, 8), bit32.lshift(b3, 16), bit32.lshift(b4, 24))
+                end
+
+                local aa, bb, cc, dd = a, b, c, d
+                local s = { 7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21 }
+
+                for j = 0, 63 do
+                    local f, k, shift_index
+                    if j < 16 then
+                        f = F(b, c, d)
+                        k = j
+                        shift_index = j % 4
+                    elseif j < 32 then
+                        f = G(b, c, d)
+                        k = (1 + 5 * j) % 16
+                        shift_index = 4 + (j % 4)
+                    elseif j < 48 then
+                        f = H(b, c, d)
+                        k = (5 + 3 * j) % 16
+                        shift_index = 8 + (j % 4)
+                    else
+                        f = I(b, c, d)
+                        k = (7 * j) % 16
+                        shift_index = 12 + (j % 4)
+                    end
+
+                    local temp = add(a, f)
+                    temp = add(temp, X[k])
+                    temp = add(temp, T[j + 1])
+                    temp = rol(temp, s[shift_index + 1])
+
+                    local new_b = add(b, temp)
+                    a, b, c, d = d, new_b, b, c
+                end
+
+                a = add(a, aa)
+                b = add(b, bb)
+                c = add(c, cc)
+                d = add(d, dd)
+            end
+
+            local function to_le_hex(n)
+                local s = ""
+                for i = 0, 3 do
+                    s = s .. string.char(bit32.band(bit32.rshift(n, i * 8), 0xFF))
+                end
+                return s
+            end
+
+            return to_le_hex(a) .. to_le_hex(b) .. to_le_hex(c) .. to_le_hex(d)
+        end
+    end
+
+    do
+        function hmac.new(key, msg, hash_func)
+            if #key > 64 then
+                key = hash_func(key)
+            end
+
+            local o_key_pad = ""
+            local i_key_pad = ""
+            for i = 1, 64 do
+                local byte = (i <= #key and string.byte(key, i)) or 0
+                o_key_pad = o_key_pad .. string.char(bit32.bxor(byte, 0x5C))
+                i_key_pad = i_key_pad .. string.char(bit32.bxor(byte, 0x36))
+            end
+
+            return hash_func(o_key_pad .. hash_func(i_key_pad .. msg))
+        end
+    end
+
+    do
+        local b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+        function base64.encode(data)
+            return (
+                (data:gsub(".", function(x)
+                    local r, b_val = "", x:byte()
+                    for i = 8, 1, -1 do
+                        r = r .. (b_val % 2 ^ i - b_val % 2 ^ (i - 1) > 0 and "1" or "0")
+                    end
+                    return r
+                end) .. "0000"):gsub("%d%d%d?%d?%d?%d?", function(x)
+                    if #x < 6 then
+                        return ""
+                    end
+                    local c = 0
+                    for i = 1, 6 do
+                        c = c + (x:sub(i, i) == "1" and 2 ^ (6 - i) or 0)
+                    end
+                    return b:sub(c + 1, c + 1)
+                end) .. ({ "", "==", "=" })[#data % 3 + 1]
+            )
+        end
+    end
+end
+
+local function GenerateReservedServerCode(placeId)
+    local uuid = {}
+    for i = 1, 16 do
+        uuid[i] = math.random(0, 255)
+    end
+
+    uuid[7] = bit32.bor(bit32.band(uuid[7], 0x0F), 0x40)
+    uuid[9] = bit32.bor(bit32.band(uuid[9], 0x3F), 0x80)
+
+    local firstBytes = ""
+    for i = 1, 16 do
+        firstBytes = firstBytes .. string.char(uuid[i])
+    end
+
+    local gameCode = string.format("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", table.unpack(uuid))
+
+    local placeIdBytes = ""
+    local pIdRec = placeId
+    for _ = 1, 8 do
+        placeIdBytes = placeIdBytes .. string.char(pIdRec % 256)
+        pIdRec = math.floor(pIdRec / 256)
+    end
+
+    local content = firstBytes .. placeIdBytes
+    local SUPERDUPERSECRETROBLOXKEYTHATTHEYDIDNTCHANGEEVERSINCEFOREVER = "e4Yn8ckbCJtw2sv7qmbg"
+    local signature = hmac.new(SUPERDUPERSECRETROBLOXKEYTHATTHEYDIDNTCHANGEEVERSINCEFOREVER, content, md5.sum)
+
+    local accessCodeBytes = signature .. content
+    local accessCode = base64.encode(accessCodeBytes)
+    accessCode = accessCode:gsub("+", "-"):gsub("/", "_")
+
+    local pdding = 0
+    accessCode, _ = accessCode:gsub("=", function()
+        pdding = pdding + 1
+        return ""
+    end)
+
+    accessCode = accessCode .. tostring(pdding)
+
+    return accessCode, gameCode
+end
+
+-- Encontrar plot do jogador para ESP BASE
+local plotName
+for _, plot in ipairs(workspace.Plots:GetChildren()) do
+    if plot:FindFirstChild("YourBase", true) and plot:FindFirstChild("YourBase", true).Enabled then
+        plotName = plot.Name
+        break
+    end
+end
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "MoonlightGui"
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
+
+-- Botão Toggle com ícone (sempre visível) - tema lunar
+local toggleButton = Instance.new("ImageButton")
+toggleButton.Parent = gui
+toggleButton.Name = "MoonlightToggle"
+toggleButton.Size = UDim2.new(0, 60, 0, 60)
+toggleButton.Position = UDim2.new(0, 20, 0.5, -30)
+toggleButton.BackgroundColor3 = MOON_COLORS.DARK
+toggleButton.BorderSizePixel = 0
+toggleButton.Active = true
+toggleButton.Draggable = true
+toggleButton.Image = "rbxassetid://117926056556916"
+toggleButton.ImageTransparency = 0
+toggleButton.ImageColor3 = MOON_COLORS.GLOW
+
+local toggleCorner = Instance.new("UICorner", toggleButton)
+toggleCorner.CornerRadius = UDim.new(0.5, 0)
+
+local toggleStroke = Instance.new("UIStroke", toggleButton)
+toggleStroke.Thickness = 3
+toggleStroke.Color = MOON_COLORS.PRIMARY
+
+-- Frame principal (Aumentado para tabs) - tema lunar
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = gui
+mainFrame.Name = "MoonlightMainFrame"
+mainFrame.Size = UDim2.new(0, 350, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
+mainFrame.BackgroundColor3 = MOON_COLORS.DARKER
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Visible = false
+
+-- Cantos arredondados do frame
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 12)
+
+-- Stroke com aura lunar alternando
+local stroke = Instance.new("UIStroke", mainFrame)
+stroke.Thickness = 4
+stroke.Color = MOON_COLORS.PRIMARY
+stroke.Transparency = 0
+
+-- Header com gradiente lunar
+local headerFrame = Instance.new("Frame")
+headerFrame.Parent = mainFrame
+headerFrame.Size = UDim2.new(1, 0, 0, 40)
+headerFrame.Position = UDim2.new(0, 0, 0, 0)
+headerFrame.BackgroundColor3 = MOON_COLORS.DARK
+headerFrame.BorderSizePixel = 0
+
+local headerCorner = Instance.new("UICorner", headerFrame)
+headerCorner.CornerRadius = UDim.new(0, 12)
+
+-- MOONLIGHT FREE Label (header)
+local moonlightLabel = Instance.new("TextLabel")
+moonlightLabel.Parent = headerFrame
+moonlightLabel.Size = UDim2.new(0.7, 0, 1, 0)
+moonlightLabel.Position = UDim2.new(0, 15, 0, 0)
+moonlightLabel.BackgroundTransparency = 1
+moonlightLabel.Text = "MOONLIGHT FREE"
+moonlightLabel.Font = Enum.Font.GothamBold
+moonlightLabel.TextSize = 18
+moonlightLabel.TextColor3 = MOON_COLORS.GLOW
+moonlightLabel.TextXAlignment = Enum.TextXAlignment.Left
+moonlightLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+-- TikTok Label (header direita) com efeito rainbow
+local tiktokLabel = Instance.new("TextLabel")
+tiktokLabel.Parent = headerFrame
+tiktokLabel.Size = UDim2.new(0.3, -15, 1, 0)
+tiktokLabel.Position = UDim2.new(0.7, 0, 0, 0)
+tiktokLabel.BackgroundTransparency = 1
+tiktokLabel.Text = "TIKTOK@LIPHYR"
+tiktokLabel.Font = Enum.Font.Gotham
+tiktokLabel.TextSize = 11
+tiktokLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+tiktokLabel.TextXAlignment = Enum.TextXAlignment.Right
+tiktokLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+-- Tabs Container
+local tabsContainer = Instance.new("Frame")
+tabsContainer.Parent = mainFrame
+tabsContainer.Size = UDim2.new(1, 0, 0, 30)
+tabsContainer.Position = UDim2.new(0, 0, 0, 40)
+tabsContainer.BackgroundTransparency = 1
+
+-- Botão Tab Main
+local mainTabBtn = Instance.new("TextButton")
+mainTabBtn.Parent = tabsContainer
+mainTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+mainTabBtn.Position = UDim2.new(0, 0, 0, 0)
+mainTabBtn.BackgroundColor3 = MOON_COLORS.PRIMARY
+mainTabBtn.Text = "FUNÇÕES"
+mainTabBtn.Font = Enum.Font.GothamBold
+mainTabBtn.TextSize = 12
+mainTabBtn.TextColor3 = MOON_COLORS.DARKER
+mainTabBtn.BorderSizePixel = 0
+mainTabBtn.AutoButtonColor = false
+
+local mainTabCorner = Instance.new("UICorner", mainTabBtn)
+mainTabCorner.CornerRadius = UDim.new(0, 8)
+
+-- Botão Tab Credits
+local creditsTabBtn = Instance.new("TextButton")
+creditsTabBtn.Parent = tabsContainer
+creditsTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+creditsTabBtn.Position = UDim2.new(0.5, 0, 0, 0)
+creditsTabBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+creditsTabBtn.Text = "CRÉDITOS"
+creditsTabBtn.Font = Enum.Font.GothamBold
+creditsTabBtn.TextSize = 12
+creditsTabBtn.TextColor3 = MOON_COLORS.DARKER
+creditsTabBtn.BorderSizePixel = 0
+creditsTabBtn.AutoButtonColor = false
+
+local creditsTabCorner = Instance.new("UICorner", creditsTabBtn)
+creditsTabCorner.CornerRadius = UDim.new(0, 8)
+
+-- Container para conteúdo das tabs
+local contentContainer = Instance.new("Frame")
+contentContainer.Parent = mainFrame
+contentContainer.Size = UDim2.new(1, -20, 1, -110)
+contentContainer.Position = UDim2.new(0, 10, 0, 80)
+contentContainer.BackgroundTransparency = 1
+
+-- ===============================
+-- TAB PRINCIPAL (FUNÇÕES)
+-- ===============================
+
+local mainTabContent = Instance.new("Frame")
+mainTabContent.Parent = contentContainer
+mainTabContent.Size = UDim2.new(1, 0, 1, 0)
+mainTabContent.BackgroundTransparency = 1
+mainTabContent.Visible = true
+mainTabContent.Name = "MainTabContent"
+
+-- Layout para os botões da tab principal
+local mainLayout = Instance.new("UIGridLayout")
+mainLayout.Parent = mainTabContent
+mainLayout.CellSize = UDim2.new(0, 155, 0, 35)
+mainLayout.CellPadding = UDim2.new(0, 10, 0, 8)
+mainLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+mainLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+mainLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Função para criar botão estilizado (cores lunares)
+local function createStyledButton(name, text, layoutOrder, color, parent)
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Parent = parent or mainTabContent
+	button.BackgroundColor3 = color or MOON_COLORS.PRIMARY
+	button.Text = text
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 11
+	button.TextColor3 = MOON_COLORS.DARKER
+	button.BorderSizePixel = 0
+	button.AutoButtonColor = false
+	button.LayoutOrder = layoutOrder
+	
+	local corner = Instance.new("UICorner", button)
+	corner.CornerRadius = UDim.new(0, 8)
+	
+	local gradient = Instance.new("UIGradient", button)
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, MOON_COLORS.GLOW),
+		ColorSequenceKeypoint.new(1, MOON_COLORS.SILVER)
+	}
+	gradient.Rotation = 90
+	gradient.Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 0.6)
+	}
+	
+	return button
+end
+
+-- Create styled buttons with lunar colors
+local espGodBtn = createStyledButton("EspGod", "ESP GOD", 1, MOON_COLORS.PRIMARY)
+local espSecretBtn = createStyledButton("EspSecret", "ESP SECRET", 2, MOON_COLORS.SECONDARY)
+local espBaseBtn = createStyledButton("EspBase", "ESP BASE", 3, MOON_COLORS.PRIMARY)
+local espLockTimeBtn = createStyledButton("EspLockTime", "ESP LOCK TIME", 4, MOON_COLORS.SECONDARY)
+local espPlayerBtn = createStyledButton("EspPlayer", "ESP PLAYER", 5, MOON_COLORS.PRIMARY)
+local base3DBtn = createStyledButton("Base3D", "BASE 3D", 6, MOON_COLORS.SECONDARY)
+local autoFloorBtn = createStyledButton("AutoFloor", "AUTO FLOOR", 7, MOON_COLORS.ACCENT)
+local serverVipBtn = createStyledButton("ServerVip", "SERVER VIP FINDER", 8, MOON_COLORS.GOLD)
+
+-- ===============================
+-- TAB CRÉDITOS
+-- ===============================
+
+local creditsTabContent = Instance.new("Frame")
+creditsTabContent.Parent = contentContainer
+creditsTabContent.Size = UDim2.new(1, 0, 1, 0)
+creditsTabContent.BackgroundTransparency = 1
+creditsTabContent.Visible = false
+creditsTabContent.Name = "CreditsTabContent"
+
+-- Título dos Créditos
+local creditsTitle = Instance.new("TextLabel")
+creditsTitle.Parent = creditsTabContent
+creditsTitle.Size = UDim2.new(1, 0, 0, 40)
+creditsTitle.Position = UDim2.new(0, 0, 0, 10)
+creditsTitle.BackgroundTransparency = 1
+creditsTitle.Text = "CRÉDITOS MOONLIGHT"
+creditsTitle.Font = Enum.Font.GothamBold
+creditsTitle.TextSize = 20
+creditsTitle.TextColor3 = MOON_COLORS.GLOW
+creditsTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Container das informações de crédito
+local creditsInfoFrame = Instance.new("Frame")
+creditsInfoFrame.Parent = creditsTabContent
+creditsInfoFrame.Size = UDim2.new(1, -20, 0, 120)
+creditsInfoFrame.Position = UDim2.new(0, 10, 0, 60)
+creditsInfoFrame.BackgroundColor3 = MOON_COLORS.DARK
+creditsInfoFrame.BorderSizePixel = 0
+
+local creditsInfoCorner = Instance.new("UICorner", creditsInfoFrame)
+creditsInfoCorner.CornerRadius = UDim.new(0, 12)
+
+local creditsInfoStroke = Instance.new("UIStroke", creditsInfoFrame)
+creditsInfoStroke.Thickness = 2
+creditsInfoStroke.Color = MOON_COLORS.PRIMARY
+
+-- Informações do Desenvolvedor
+local devTitle = Instance.new("TextLabel")
+devTitle.Parent = creditsInfoFrame
+devTitle.Size = UDim2.new(1, -20, 0, 30)
+devTitle.Position = UDim2.new(0, 10, 0, 10)
+devTitle.BackgroundTransparency = 1
+devTitle.Text = "DEV"
+devTitle.Font = Enum.Font.GothamBold
+devTitle.TextSize = 16
+devTitle.TextColor3 = MOON_COLORS.GLOW
+devTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+local devName = Instance.new("TextLabel")
+devName.Parent = creditsInfoFrame
+devName.Size = UDim2.new(1, -20, 0, 25)
+devName.Position = UDim2.new(0, 10, 0, 45)
+devName.BackgroundTransparency = 1
+devName.Text = "LIPHYR"
+devName.Font = Enum.Font.GothamBold
+devName.TextSize = 18
+devName.TextColor3 = MOON_COLORS.ACCENT
+devName.TextXAlignment = Enum.TextXAlignment.Center
+
+-- TikTok
+local tiktokTitle = Instance.new("TextLabel")
+tiktokTitle.Parent = creditsInfoFrame
+tiktokTitle.Size = UDim2.new(1, -20, 0, 20)
+tiktokTitle.Position = UDim2.new(0, 10, 0, 75)
+tiktokTitle.BackgroundTransparency = 1
+tiktokTitle.Text = "TIKTOK"
+tiktokTitle.Font = Enum.Font.GothamBold
+tiktokTitle.TextSize = 14
+tiktokTitle.TextColor3 = MOON_COLORS.SECONDARY
+tiktokTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+local tiktokLink = Instance.new("TextLabel")
+tiktokLink.Parent = creditsInfoFrame
+tiktokLink.Size = UDim2.new(1, -20, 0, 25)
+tiktokLink.Position = UDim2.new(0, 10, 0, 95)
+tiktokLink.BackgroundTransparency = 1
+tiktokLink.Text = "@LIPHYR"
+tiktokLink.Font = Enum.Font.Gotham
+tiktokLink.TextSize = 14
+tiktokLink.TextColor3 = Color3.fromRGB(255, 0, 80) -- Rosa TikTok
+tiktokLink.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Botão GET DISCORD com cores Moonlight
+local getDiscordBtn = Instance.new("TextButton")
+getDiscordBtn.Parent = creditsTabContent
+getDiscordBtn.Size = UDim2.new(1, -20, 0, 50)
+getDiscordBtn.Position = UDim2.new(0, 10, 0, 190)
+getDiscordBtn.BackgroundColor3 = MOON_COLORS.PRIMARY
+getDiscordBtn.Text = "GET DISCORD"
+getDiscordBtn.Font = Enum.Font.GothamBold
+getDiscordBtn.TextSize = 16
+getDiscordBtn.TextColor3 = MOON_COLORS.DARKER
+getDiscordBtn.BorderSizePixel = 0
+getDiscordBtn.AutoButtonColor = false
+
+local getDiscordCorner = Instance.new("UICorner", getDiscordBtn)
+getDiscordCorner.CornerRadius = UDim.new(0, 12)
+
+local getDiscordStroke = Instance.new("UIStroke", getDiscordBtn)
+getDiscordStroke.Thickness = 3
+getDiscordStroke.Color = MOON_COLORS.GLOW
+getDiscordStroke.Transparency = 0.3
+
+-- Gradiente para o botão Discord com cores Moonlight
+local discordGradient = Instance.new("UIGradient")
+discordGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, MOON_COLORS.GLOW),
+    ColorSequenceKeypoint.new(0.5, MOON_COLORS.PRIMARY),
+    ColorSequenceKeypoint.new(1, MOON_COLORS.ACCENT)
+})
+discordGradient.Rotation = 45
+discordGradient.Parent = getDiscordBtn
+
+-- Mensagem de agradecimento
+local thanksLabel = Instance.new("TextLabel")
+thanksLabel.Parent = creditsTabContent
+thanksLabel.Size = UDim2.new(1, -20, 0, 40)
+thanksLabel.Position = UDim2.new(0, 10, 0, 250)
+thanksLabel.BackgroundTransparency = 1
+thanksLabel.Text = "Obrigado por usar o MOONLIGHT FREE!"
+thanksLabel.Font = Enum.Font.Gotham
+thanksLabel.TextSize = 12
+thanksLabel.TextColor3 = MOON_COLORS.SILVER
+thanksLabel.TextXAlignment = Enum.TextXAlignment.Center
+thanksLabel.TextWrapped = true
+
+
+-- Seção Gravity Coil no final da janela principal (tema lunar)
+local gravityFrame = Instance.new("Frame")
+gravityFrame.Parent = mainFrame
+gravityFrame.Size = UDim2.new(1, -20, 0, 45)
+gravityFrame.Position = UDim2.new(0, 10, 1, -55)
+gravityFrame.BackgroundColor3 = MOON_COLORS.DARK
+gravityFrame.BorderSizePixel = 0
+
+local gravityCorner = Instance.new("UICorner", gravityFrame)
+gravityCorner.CornerRadius = UDim.new(0, 10)
+
+local gravityStroke = Instance.new("UIStroke", gravityFrame)
+gravityStroke.Thickness = 3
+gravityStroke.Color = MOON_COLORS.PRIMARY
+
+-- Label Gravity
+local gravityLabel = Instance.new("TextLabel")
+gravityLabel.Parent = gravityFrame
+gravityLabel.Size = UDim2.new(0, 85, 1, 0)
+gravityLabel.Position = UDim2.new(0, 8, 0, 0)
+gravityLabel.BackgroundTransparency = 1
+gravityLabel.Text = "GRAVITY:"
+gravityLabel.Font = Enum.Font.GothamBold
+gravityLabel.TextSize = 12
+gravityLabel.TextColor3 = MOON_COLORS.GLOW
+gravityLabel.TextXAlignment = Enum.TextXAlignment.Left
+gravityLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+-- TextBox para valor da gravidade (tema lunar)
+local gravityTextBox = Instance.new("TextBox")
+gravityTextBox.Parent = gravityFrame
+gravityTextBox.Size = UDim2.new(0, 50, 0, 25)
+gravityTextBox.Position = UDim2.new(0, 95, 0, 10)
+gravityTextBox.BackgroundColor3 = MOON_COLORS.DARKER
+gravityTextBox.Text = tostring(gravityValue)
+gravityTextBox.PlaceholderText = "0.5"
+gravityTextBox.TextColor3 = MOON_COLORS.GLOW
+gravityTextBox.Font = Enum.Font.Gotham
+gravityTextBox.TextSize = 12
+gravityTextBox.BorderSizePixel = 0
+
+local gravityTextCorner = Instance.new("UICorner", gravityTextBox)
+gravityTextCorner.CornerRadius = UDim.new(0, 6)
+
+local gravityTextStroke = Instance.new("UIStroke", gravityTextBox)
+gravityTextStroke.Thickness = 1
+gravityTextStroke.Color = MOON_COLORS.SECONDARY
+
+-- Botão ON/OFF Gravity (tema lunar)
+local gravityToggleBtn = Instance.new("TextButton")
+gravityToggleBtn.Parent = gravityFrame
+gravityToggleBtn.Size = UDim2.new(0, 55, 0, 25)
+gravityToggleBtn.Position = UDim2.new(0, 155, 0, 10)
+gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(100, 120, 160) -- Azul desativado
+gravityToggleBtn.Text = "OFF"
+gravityToggleBtn.Font = Enum.Font.GothamBold
+gravityToggleBtn.TextSize = 10
+gravityToggleBtn.TextColor3 = MOON_COLORS.GLOW
+gravityToggleBtn.BorderSizePixel = 0
+
+local gravityToggleCorner = Instance.new("UICorner", gravityToggleBtn)
+gravityToggleCorner.CornerRadius = UDim.new(0, 6)
+
+-- Botões + e - (tema lunar)
+local gravityPlusBtn = Instance.new("TextButton")
+gravityPlusBtn.Parent = gravityFrame
+gravityPlusBtn.Size = UDim2.new(0, 25, 0, 25)
+gravityPlusBtn.Position = UDim2.new(0, 220, 0, 10)
+gravityPlusBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+gravityPlusBtn.Text = "+"
+gravityPlusBtn.Font = Enum.Font.GothamBold
+gravityPlusBtn.TextSize = 14
+gravityPlusBtn.TextColor3 = MOON_COLORS.GLOW
+gravityPlusBtn.BorderSizePixel = 0
+
+local gravityPlusCorner = Instance.new("UICorner", gravityPlusBtn)
+gravityPlusCorner.CornerRadius = UDim.new(0, 6)
+
+local gravityMinusBtn = Instance.new("TextButton")
+gravityMinusBtn.Parent = gravityFrame
+gravityMinusBtn.Size = UDim2.new(0, 25, 0, 25)
+gravityMinusBtn.Position = UDim2.new(0, 250, 0, 10)
+gravityMinusBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+gravityMinusBtn.Text = "-"
+gravityMinusBtn.Font = Enum.Font.GothamBold
+gravityMinusBtn.TextSize = 14
+gravityMinusBtn.TextColor3 = MOON_COLORS.GLOW
+gravityMinusBtn.BorderSizePixel = 0
+
+local gravityMinusCorner = Instance.new("UICorner", gravityMinusBtn)
+gravityMinusCorner.CornerRadius = UDim.new(0, 6)
+
+-- ===============================
+-- JANELA SERVER VIP FINDER
+-- ===============================
+
+local serverVipFrame = Instance.new("Frame")
+serverVipFrame.Parent = gui
+serverVipFrame.Name = "ServerVipFrame"
+serverVipFrame.Size = UDim2.new(0, 300, 0, 200)
+serverVipFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+serverVipFrame.BackgroundColor3 = MOON_COLORS.DARKER
+serverVipFrame.BorderSizePixel = 0
+serverVipFrame.Active = true
+serverVipFrame.Draggable = true
+serverVipFrame.Visible = false
+
+local serverVipCorner = Instance.new("UICorner", serverVipFrame)
+serverVipCorner.CornerRadius = UDim.new(0, 12)
+
+local serverVipStroke = Instance.new("UIStroke", serverVipFrame)
+serverVipStroke.Thickness = 3
+serverVipStroke.Color = MOON_COLORS.PRIMARY
+
+-- Header da janela Server VIP
+local serverVipHeader = Instance.new("Frame")
+serverVipHeader.Parent = serverVipFrame
+serverVipHeader.Size = UDim2.new(1, 0, 0, 40)
+serverVipHeader.BackgroundColor3 = MOON_COLORS.DARK
+serverVipHeader.BorderSizePixel = 0
+
+local serverVipHeaderCorner = Instance.new("UICorner", serverVipHeader)
+serverVipHeaderCorner.CornerRadius = UDim.new(0, 12)
+
+local serverVipTitle = Instance.new("TextLabel")
+serverVipTitle.Parent = serverVipHeader
+serverVipTitle.Size = UDim2.new(1, 0, 1, 0)
+serverVipTitle.BackgroundTransparency = 1
+serverVipTitle.Text = "SERVER VIP FINDER"
+serverVipTitle.Font = Enum.Font.GothamBold
+serverVipTitle.TextSize = 16
+serverVipTitle.TextColor3 = MOON_COLORS.GLOW
+serverVipTitle.TextXAlignment = Enum.TextXAlignment.Center
+serverVipTitle.TextYAlignment = Enum.TextYAlignment.Center
+
+-- Status Label
+local serverVipStatusLabel = Instance.new("TextLabel")
+serverVipStatusLabel.Parent = serverVipFrame
+serverVipStatusLabel.Size = UDim2.new(1, -20, 0, 40)
+serverVipStatusLabel.Position = UDim2.new(0, 10, 0, 50)
+serverVipStatusLabel.BackgroundTransparency = 1
+serverVipStatusLabel.Text = "Clique para criar servidor VIP privado"
+serverVipStatusLabel.Font = Enum.Font.Gotham
+serverVipStatusLabel.TextSize = 12
+serverVipStatusLabel.TextColor3 = MOON_COLORS.SECONDARY
+serverVipStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+serverVipStatusLabel.TextWrapped = true
+
+-- Botão criar servidor VIP
+local createServerBtn = Instance.new("TextButton")
+createServerBtn.Parent = serverVipFrame
+createServerBtn.Size = UDim2.new(0.9, 0, 0, 45)
+createServerBtn.Position = UDim2.new(0.05, 0, 0, 100)
+createServerBtn.BackgroundColor3 = MOON_COLORS.GOLD
+createServerBtn.Text = "CRIAR SERVER VIP"
+createServerBtn.Font = Enum.Font.GothamBold
+createServerBtn.TextSize = 14
+createServerBtn.TextColor3 = MOON_COLORS.DARKER
+createServerBtn.BorderSizePixel = 0
+
+local createServerCorner = Instance.new("UICorner", createServerBtn)
+createServerCorner.CornerRadius = UDim.new(0, 8)
+
+-- Close Server VIP window button
+local closeServerVipBtn = Instance.new("TextButton")
+closeServerVipBtn.Parent = serverVipFrame
+closeServerVipBtn.Size = UDim2.new(0.9, 0, 0, 30)
+closeServerVipBtn.Position = UDim2.new(0.05, 0, 0, 155)
+closeServerVipBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+closeServerVipBtn.Text = "Close"
+closeServerVipBtn.Font = Enum.Font.Gotham
+closeServerVipBtn.TextSize = 11
+closeServerVipBtn.TextColor3 = MOON_COLORS.GLOW
+closeServerVipBtn.BorderSizePixel = 0
+
+local closeServerVipCorner = Instance.new("UICorner", closeServerVipBtn)
+closeServerVipCorner.CornerRadius = UDim.new(0, 6)
+
+-- ===============================
+-- JANELA AUTO FLOOR
+-- ===============================
+
+local autoFloorFrame = Instance.new("Frame")
+autoFloorFrame.Parent = gui
+autoFloorFrame.Name = "AutoFloorFrame"
+autoFloorFrame.Size = UDim2.new(0, 200, 0, 100)
+autoFloorFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+autoFloorFrame.BackgroundColor3 = MOON_COLORS.DARK
+autoFloorFrame.BorderSizePixel = 0
+autoFloorFrame.Active = true
+autoFloorFrame.Draggable = true
+autoFloorFrame.Visible = false
+
+local autoFloorCorner = Instance.new("UICorner", autoFloorFrame)
+autoFloorCorner.CornerRadius = UDim.new(0, 10)
+
+local autoFloorStroke = Instance.new("UIStroke", autoFloorFrame)
+autoFloorStroke.Thickness = 3
+autoFloorStroke.Color = MOON_COLORS.PRIMARY
+
+-- Header da janela Auto Floor
+local autoFloorHeader = Instance.new("TextLabel")
+autoFloorHeader.Parent = autoFloorFrame
+autoFloorHeader.Size = UDim2.new(1, 0, 0, 25)
+autoFloorHeader.BackgroundTransparency = 1
+autoFloorHeader.Text = "AUTO FLOOR"
+autoFloorHeader.Font = Enum.Font.GothamBold
+autoFloorHeader.TextSize = 14
+autoFloorHeader.TextColor3 = MOON_COLORS.GLOW
+autoFloorHeader.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Status Label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = autoFloorFrame
+statusLabel.Size = UDim2.new(1, -20, 0, 12)
+statusLabel.Position = UDim2.new(0, 10, 0, 25)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: Waiting..."
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 9
+statusLabel.TextColor3 = MOON_COLORS.SECONDARY
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Auto Floor toggle button
+local autoFloorToggleBtn = Instance.new("TextButton")
+autoFloorToggleBtn.Parent = autoFloorFrame
+autoFloorToggleBtn.Size = UDim2.new(0.9, 0, 0, 25)
+autoFloorToggleBtn.Position = UDim2.new(0.05, 0, 0, 40)
+autoFloorToggleBtn.BackgroundColor3 = MOON_COLORS.PRIMARY
+autoFloorToggleBtn.Text = "ATIVAR AUTO FLOOR"
+autoFloorToggleBtn.Font = Enum.Font.GothamBold
+autoFloorToggleBtn.TextSize = 10
+autoFloorToggleBtn.TextColor3 = MOON_COLORS.DARKER
+autoFloorToggleBtn.BorderSizePixel = 0
+
+local autoFloorToggleCorner = Instance.new("UICorner", autoFloorToggleBtn)
+autoFloorToggleCorner.CornerRadius = UDim.new(0, 6)
+
+-- Close Auto Floor window button
+local closeAutoFloorBtn = Instance.new("TextButton")
+closeAutoFloorBtn.Parent = autoFloorFrame
+closeAutoFloorBtn.Size = UDim2.new(0.9, 0, 0, 20)
+closeAutoFloorBtn.Position = UDim2.new(0.05, 0, 0, 70)
+closeAutoFloorBtn.BackgroundColor3 = Color3.fromRGB(60, 70, 90)
+closeAutoFloorBtn.Text = "Close"
+closeAutoFloorBtn.Font = Enum.Font.Gotham
+closeAutoFloorBtn.TextSize = 10
+closeAutoFloorBtn.TextColor3 = MOON_COLORS.GLOW
+closeAutoFloorBtn.BorderSizePixel = 0
+
+local closeAutoFloorCorner = Instance.new("UICorner", closeAutoFloorBtn)
+closeAutoFloorCorner.CornerRadius = UDim.new(0, 6)
+
+-- ===============================
+-- FUNÇÕES UTILITÁRIAS
+-- ===============================
+
+-- Função para criar notificação
+local function notify(text, duration)
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "MOONLIGHT FREE";
+		Text = text;
+		Duration = duration or 3;
+	})
+end
+
+-- Função para alternar entre tabs
+local function switchTab(tabName)
+    currentTab = tabName
+    
+    if tabName == "main" then
+        mainTabContent.Visible = true
+        creditsTabContent.Visible = false
+        mainTabBtn.BackgroundColor3 = MOON_COLORS.PRIMARY
+        creditsTabBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+    elseif tabName == "credits" then
+        mainTabContent.Visible = false
+        creditsTabContent.Visible = true
+        mainTabBtn.BackgroundColor3 = MOON_COLORS.SECONDARY
+        creditsTabBtn.BackgroundColor3 = MOON_COLORS.PRIMARY
+    end
+end
+
+-- ===============================
+-- FUNÇÕES GRAVITY COIL
+-- ===============================
+
+-- Função para atualizar a gravidade
+local function updateGravity(value)
+    local character = player.Character
+    if not character then return end
+    
+    local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRoot then return end
+
+    if not bodyForce then
+        bodyForce = Instance.new("BodyForce")
+        bodyForce.Parent = humanoidRoot
+    end
+
+    local mass = humanoidRoot:GetMass()
+    bodyForce.Force = Vector3.new(0, workspace.Gravity * mass * value, 0)
+end
+
+-- Função para ativar/desativar gravidade
+local function toggleGravity()
+    gravityActive = not gravityActive
+    
+    if gravityActive then
+        updateGravity(gravityValue)
+    else
+        if bodyForce then
+            bodyForce:Destroy()
+            bodyForce = nil
+        end
+    end
+end
+
+-- ===============================
+-- FUNÇÕES SERVER VIP
+-- ===============================
+
+-- Função para criar servidor VIP
+local function createVipServer()
+    pcall(function()
+        serverVipStatusLabel.Text = "Criando servidor VIP..."
+        serverVipStatusLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        
+        local accessCode, _ = GenerateReservedServerCode(game.PlaceId)
+        game.RobloxReplicatedStorage.ContactListIrisInviteTeleport:FireServer(game.PlaceId, "", accessCode)
+        
+        wait(1)
+        serverVipStatusLabel.Text = "Servidor VIP criado com sucesso!\nCódigo: " .. accessCode
+        serverVipStatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        
+        if setclipboard then
+            setclipboard(accessCode)
+            notify("Código copiado para clipboard!", 3)
+        end
+        
+        notify("Entrando no servidor VIP...", 3)
+    end)
+end
+
+-- ===============================
+-- FUNÇÕES AUTO FLOOR
+-- ===============================
+
+-- Função para criar/atualizar o chão lunar
+local function createOrUpdatePurpleFloor()
+	if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then 
+		return 
+	end
+	
+	local playerPosition = player.Character.HumanoidRootPart.Position
+	local floorPosition = Vector3.new(playerPosition.X, playerPosition.Y - 3, playerPosition.Z)
+	
+	-- Se não existe chão, criar um novo
+	if not currentFloor or not currentFloor.Parent then
+		currentFloor = Instance.new("Part")
+		currentFloor.Name = "LunarFloor_Follow"
+		currentFloor.Size = Vector3.new(6, 0.5, 6)
+		currentFloor.BrickColor = BrickColor.new("Light blue") -- Cor lunar
+		currentFloor.Material = Enum.Material.Neon
+		currentFloor.Anchored = true
+		currentFloor.CanCollide = true
+		currentFloor.Shape = Enum.PartType.Block
+		currentFloor.TopSurface = Enum.SurfaceType.Smooth
+		currentFloor.BottomSurface = Enum.SurfaceType.Smooth
+		currentFloor.Parent = workspace
+		
+		-- Adicionar brilho lunar
+		local pointLight = Instance.new("PointLight")
+		pointLight.Parent = currentFloor
+		pointLight.Color = MOON_COLORS.GLOW
+		pointLight.Brightness = 2
+		pointLight.Range = 15
+	end
+	
+	-- Atualizar posição do chão
+	currentFloor.Position = floorPosition
+end
+
+-- Função para remover o chão
+local function removePurpleFloor()
+	if currentFloor and currentFloor.Parent then
+		currentFloor:Destroy()
+		currentFloor = nil
+	end
+end
+
+-- Função para ativar sistema AutoFloor (individual)
+local function activateFloorSystem()
+	if not player.Character or not player.Character:FindFirstChild("Humanoid") then
+		return false
+	end
+	
+	purpleFloorsActive = true
+	
+	-- Conectar evento de pulo
+	jumpConnection = player.Character.Humanoid.StateChanged:Connect(function(old, new)
+		if new == Enum.HumanoidStateType.Jumping then
+			createOrUpdatePurpleFloor()
+		end
+	end)
+	
+	-- Conectar atualização contínua
+	heartbeatConnection = RunService.Heartbeat:Connect(function()
+		createOrUpdatePurpleFloor()
+	end)
+	
+	return true
+end
+
+-- Função para desativar sistema AutoFloor (individual)
+local function deactivateFloorSystem()
+	purpleFloorsActive = false
+	
+	-- Desconectar eventos
+	if jumpConnection then
+		jumpConnection:Disconnect()
+		jumpConnection = nil
+	end
+	
+	if heartbeatConnection then
+		heartbeatConnection:Disconnect()
+		heartbeatConnection = nil
+	end
+	
+	-- Remover o chão
+	removePurpleFloor()
+end
+
+-- Função para iniciar o loop rápido de liga/desliga
+local function startFastToggleLoop()
+	if autoToggleConnection then
+		autoToggleConnection:Disconnect()
+	end
+	
+	autoToggleConnection = spawn(function()
+		while autoToggleActive do
+			-- Ligar AutoFloor
+			if activateFloorSystem() then
+				statusLabel.Text = "Status: AutoFloor ON"
+				wait(0.2)
+			end
+			
+			-- Check if still active
+			if not autoToggleActive then break end
+			
+			-- Turn off AutoFloor
+			deactivateFloorSystem()
+			statusLabel.Text = "Status: AutoFloor OFF"
+			
+			wait(0.1)
+		end
+	end)
+end
+
+-- Função para parar o loop rápido
+local function stopFastToggleLoop()
+	if autoToggleConnection then
+		autoToggleConnection:Disconnect()
+		autoToggleConnection = nil
+	end
+	
+	deactivateFloorSystem()
+end
+
+-- Função principal para alternar o modo
+local function toggleFastMode()
+	if autoToggleActive then
+		autoToggleActive = false
+		stopFastToggleLoop()
+		autoFloorToggleBtn.Text = "ATIVAR AUTO FLOOR"
+		statusLabel.Text = "Status: Waiting..."
+		
+		notify("Auto Floor DESATIVADO", 3)
+	else
+		autoToggleActive = true
+		startFastToggleLoop()
+		autoFloorToggleBtn.Text = "AUTO FLOOR ATIVO"
+		
+		notify("Auto Floor ATIVADO!", 4)
+	end
+end
+
+-- ===============================
+-- FUNÇÕES ESP
+-- ===============================
+
+-- Função para ESP Lock Time
+local function updateLockTimeESP()
+    if not activeLockTimeEsp then
+        for _, instance in pairs(lteInstances) do
+            if instance then
+                instance:Destroy()
+            end
+        end
+        lteInstances = {}
+        return
+    end
+
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        local timeLabel = plot:FindFirstChild("Purchases", true) and 
+        plot.Purchases:FindFirstChild("PlotBlock", true) and
+        plot.Purchases.PlotBlock.Main:FindFirstChild("BillboardGui", true) and
+        plot.Purchases.PlotBlock.Main.BillboardGui:FindFirstChild("RemainingTime", true)
+        
+        if timeLabel and timeLabel:IsA("TextLabel") then
+            local espName = "LockTimeESP_" .. plot.Name
+            local existingBillboard = plot:FindFirstChild(espName)
+            
+            local isUnlocked = timeLabel.Text == "0s"
+            local displayText = isUnlocked and "Unlocked" or ("Lock: " .. timeLabel.Text)
+            
+            local textColor
+            if plot.Name == plotName then
+                textColor = isUnlocked and Color3.fromRGB(120, 200, 255)
+                            or Color3.fromRGB(120, 200, 255)
+            else
+                textColor = isUnlocked and Color3.fromRGB(220, 235, 255)
+                            or Color3.fromRGB(200, 220, 255)
+            end
+            
+            if not existingBillboard then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = espName
+                billboard.Size = UDim2.new(0, 200, 0, 30)
+                billboard.StudsOffset = Vector3.new(0, 5, 0)
+                billboard.AlwaysOnTop = true
+                billboard.Adornee = plot.Purchases.PlotBlock.Main
+                
+                local label = Instance.new("TextLabel")
+                label.Text = displayText
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.TextScaled = true
+                label.TextColor3 = textColor
+                label.TextStrokeColor3 = MOON_COLORS.DARKER
+                label.TextStrokeTransparency = 0
+                label.Font = Enum.Font.SourceSansBold
+                label.Parent = billboard
+                
+                billboard.Parent = plot
+                lteInstances[plot.Name] = billboard
+            else
+                existingBillboard.TextLabel.Text = displayText
+                existingBillboard.TextLabel.TextColor3 = textColor
+            end
+        end
+    end
+end
+
+-- Função para ESP de raridades (tema lunar)
+local function updateRarityESP()
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        if plot.Name ~= plotName then
+            for _, child in pairs(plot:GetDescendants()) do
+                if child.Name == "Rarity" and child:IsA("TextLabel") and RaritySettings[child.Text] then
+                    local parentModel = child.Parent.Parent
+                    local espName = child.Text.."_ESP"
+                    local existingBillboard = parentModel:FindFirstChild(espName)
+                    
+                    if activeESP[child.Text] then
+                        if not existingBillboard then
+                            local settings = RaritySettings[child.Text]
+                            
+                            local billboard = Instance.new("BillboardGui")
+                            billboard.Name = espName
+                            billboard.Size = settings.Size
+                            billboard.StudsOffset = Vector3.new(0, 3, 0)
+                            billboard.AlwaysOnTop = true
+                            
+                            local label = Instance.new("TextLabel")
+                            label.Text = child.Parent.DisplayName.Text
+                            label.Size = UDim2.new(1, 0, 1, 0)
+                            label.BackgroundTransparency = 1
+                            label.TextScaled = true
+                            label.TextColor3 = settings.Color
+                            label.TextStrokeColor3 = MOON_COLORS.DARKER
+                            label.TextStrokeTransparency = 0
+                            label.Font = Enum.Font.SourceSansBold
+                            
+                            label.Parent = billboard
+                            billboard.Parent = parentModel
+                        end
+                    else
+                        if existingBillboard then
+                            existingBillboard:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Função para ESP BASE (mostra informações dos plots) - tema lunar
+local function updateBaseESP(enable)
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        if plot.Name ~= plotName then -- Não mostrar no próprio plot
+            local baseESPName = "BaseESP_" .. plot.Name
+            local existingBillboard = plot:FindFirstChild(baseESPName)
+            
+            if enable then
+                if not existingBillboard then
+                    -- Pegar informações do plot
+                    local plotSign = plot:FindFirstChild("PlotSign")
+                    local ownerText = "Unknown Owner"
+                    if plotSign and plotSign:FindFirstChild("SurfaceGui") then
+                        local textLabel = plotSign.SurfaceGui:FindFirstChild("Frame") and 
+                                         plotSign.SurfaceGui.Frame:FindFirstChild("TextLabel")
+                        if textLabel then
+                            ownerText = textLabel.Text:match("^(.-)'s Base") or textLabel.Text
+                        end
+                    end
+                    
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = baseESPName
+                    billboard.Size = UDim2.new(0, 200, 0, 40)
+                    billboard.StudsOffset = Vector3.new(0, 8, 0)
+                    billboard.AlwaysOnTop = true
+                    billboard.Adornee = plot:FindFirstChild("PlotBlock") or plot
+                    
+                    local label = Instance.new("TextLabel")
+                    label.Text = "BASE: " .. ownerText
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextScaled = true
+                    label.TextColor3 = MOON_COLORS.ACCENT -- Cor lunar para base
+                    label.TextStrokeColor3 = MOON_COLORS.DARKER
+                    label.TextStrokeTransparency = 0
+                    label.Font = Enum.Font.SourceSansBold
+                    
+                    label.Parent = billboard
+                    billboard.Parent = plot
+                end
+            else
+                if existingBillboard then
+                    existingBillboard:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Função para criar ESP em um player (cores lunares)
+local function createESP(targetPlayer, espType)
+	if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Head") then
+		return
+	end
+	
+	local existingESP = targetPlayer.Character.Head:FindFirstChild("MoonlightESP")
+	if existingESP then
+		existingESP:Destroy()
+	end
+	
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "MoonlightESP"
+	billboard.Parent = targetPlayer.Character.Head
+	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 2, 0)
+	billboard.AlwaysOnTop = true
+	
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Parent = billboard
+	nameLabel.Size = UDim2.new(1, 0, 1, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = targetPlayer.Name .. " [" .. espType .. "]"
+	nameLabel.TextStrokeTransparency = 0
+	nameLabel.TextStrokeColor3 = MOON_COLORS.DARKER
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 14
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	nameLabel.TextYAlignment = Enum.TextYAlignment.Center
+	
+	-- Cores lunares por tipo de ESP
+	if espType == "GOD" then
+		nameLabel.TextColor3 = MOON_COLORS.GLOW
+	elseif espType == "SECRET" then
+		nameLabel.TextColor3 = MOON_COLORS.PRIMARY
+	elseif espType == "BASE" then
+		nameLabel.TextColor3 = MOON_COLORS.ACCENT
+	else
+		nameLabel.TextColor3 = MOON_COLORS.SILVER
+	end
+end
+
+-- Variables for Base 3D functionality
+local base3DActive = false
+local originalTransparencies = {}
+
+-- Function to make all plots transparent
+local function toggleBase3D()
+    if not base3DActive then
+        -- Activate Base 3D - make plots transparent
+        base3DActive = true
+        
+        for _, plot in pairs(workspace.Plots:GetChildren()) do
+            if plot:IsA("Model") then
+                -- Store original transparencies and make transparent
+                for _, descendant in pairs(plot:GetDescendants()) do
+                    if descendant:IsA("BasePart") and descendant.Name ~= "HumanoidRootPart" then
+                        -- Store original transparency
+                        if not originalTransparencies[descendant] then
+                            originalTransparencies[descendant] = descendant.Transparency
+                        end
+                        -- Make transparent
+                        descendant.Transparency = 0.8
+                    end
+                end
+            end
+        end
+        
+        notify("Base 3D ATIVADA", 3)
+    else
+        -- Deactivate Base 3D - restore original transparencies
+        base3DActive = false
+        
+        for descendant, originalTransparency in pairs(originalTransparencies) do
+            if descendant and descendant.Parent then
+                descendant.Transparency = originalTransparency
+            end
+        end
+        
+        -- Clear the stored transparencies
+        originalTransparencies = {}
+        
+        notify("Base 3D DESATIVADA!", 3)
+    end
+end
+
+-- ===============================
+-- EVENTOS PRINCIPAIS
+-- ===============================
+
+-- Função para toggle da GUI principal
+local function toggleMainGUI()
+	guiOpen = not guiOpen
+	mainFrame.Visible = guiOpen
+	
+	if guiOpen then
+		-- Animação de abertura
+		mainFrame.Size = UDim2.new(0, 0, 0, 0)
+		mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+		TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, 350, 0, 400),
+			Position = UDim2.new(0.5, -175, 0.5, -200)
+		}):Play()
+		notify("MOONLIGHT FREE Aberto!", 2)
+	else
+		-- Animação de fechamento
+		TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 0, 0, 0),
+			Position = UDim2.new(0.5, 0, 0.5, 0)
+		}):Play()
+		wait(0.2)
+		mainFrame.Visible = false
+		notify("MOONLIGHT FREE Fechado!", 2)
+	end
+end
+
+-- Evento do botão toggle
+toggleButton.MouseButton1Click:Connect(function()
+	-- Animação no botão toggle
+	TweenService:Create(toggleButton, TweenInfo.new(0.1), {
+		Size = UDim2.new(0, 55, 0, 55)
+	}):Play()
+	wait(0.1)
+	TweenService:Create(toggleButton, TweenInfo.new(0.1), {
+		Size = UDim2.new(0, 60, 0, 60)
+	}):Play()
+	
+	toggleMainGUI()
+end)
+
+-- Eventos das Tabs
+mainTabBtn.MouseButton1Click:Connect(function()
+    switchTab("main")
+end)
+
+creditsTabBtn.MouseButton1Click:Connect(function()
+    switchTab("credits")
+end)
+
+-- Evento do botão GET DISCORD
+getDiscordBtn.MouseButton1Click:Connect(function()
+    -- Efeito visual no botão
+    local originalSize = getDiscordBtn.Size
+    TweenService:Create(getDiscordBtn, TweenInfo.new(0.1), {
+        Size = UDim2.new(0.95, 0, 0, 45)
+    }):Play()
+    
+    TweenService:Create(getDiscordStroke, TweenInfo.new(0.2), {
+        Thickness = 5,
+        Transparency = 0
+    }):Play()
+    
+    wait(0.1)
+    
+    TweenService:Create(getDiscordBtn, TweenInfo.new(0.1), {
+        Size = originalSize
+    }):Play()
+    
+    TweenService:Create(getDiscordStroke, TweenInfo.new(0.3), {
+        Thickness = 3,
+        Transparency = 0.3
+    }):Play()
+    
+    -- Copiar link do Discord
+    if setclipboard then
+        setclipboard("https://discord.gg/moon-light")
+        notify("✅ Discord copiado: discord.gg/moon-light", 5)
+    else
+        notify("❌ Função de copiar não disponível", 3)
+    end
+end)
+
+-- Efeitos de hover no botão GET DISCORD com cores Moonlight
+getDiscordBtn.MouseEnter:Connect(function()
+    TweenService:Create(getDiscordBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = MOON_COLORS.ACCENT,
+        Size = UDim2.new(1, -15, 0, 52)
+    }):Play()
+    TweenService:Create(getDiscordStroke, TweenInfo.new(0.2), {
+        Transparency = 0.1
+    }):Play()
+end)
+
+getDiscordBtn.MouseLeave:Connect(function()
+    TweenService:Create(getDiscordBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = MOON_COLORS.PRIMARY,
+        Size = UDim2.new(1, -20, 0, 50)
+    }):Play()
+    TweenService:Create(getDiscordStroke, TweenInfo.new(0.2), {
+        Transparency = 0.3
+    }):Play()
+end)
+
+-- Eventos dos botões principais
+espGodBtn.MouseButton1Click:Connect(function()
+	activeESP["Brainrot God"] = not activeESP["Brainrot God"]
+	updateRarityESP()
+	notify("ESP Brainrot God " .. (activeESP["Brainrot God"] and "Activated" or "Deactivated") .. "!", 2)
+end)
+
+espSecretBtn.MouseButton1Click:Connect(function()
+	activeESP["Secret"] = not activeESP["Secret"]
+	updateRarityESP()
+	notify("ESP Secret " .. (activeESP["Secret"] and "Activated" or "Deactivated") .. "!", 2)
+end)
+
+local baseESPActive = false
+espBaseBtn.MouseButton1Click:Connect(function()
+	baseESPActive = not baseESPActive
+	updateBaseESP(baseESPActive)
+	notify("ESP Base " .. (baseESPActive and "Activated" or "Deactivated") .. "!", 2)
+end)
+
+-- Event for ESP Lock Time
+espLockTimeBtn.MouseButton1Click:Connect(function()
+	activeLockTimeEsp = not activeLockTimeEsp
+	updateLockTimeESP()
+	notify("ESP Lock Time " .. (activeLockTimeEsp and "Activated" or "Deactivated") .. "!", 2)
+end)
+
+-- Base 3D button event
+base3DBtn.MouseButton1Click:Connect(function()
+	toggleBase3D()
+end)
+
+-- ESP Player button event
+espPlayerBtn.MouseButton1Click:Connect(function()
+	notify("ESP PLAYER Activated!", 2)
+	for _, targetPlayer in pairs(Players:GetPlayers()) do
+		if targetPlayer ~= Players.LocalPlayer then
+			createESP(targetPlayer, "PLAYER")
+		end
+	end
+end)
+
+-- Event for Server VIP button
+serverVipBtn.MouseButton1Click:Connect(function()
+	serverVipFrame.Visible = true
+	serverVipWindowOpen = true
+	notify("Server VIP Finder aberto!", 2)
+end)
+
+-- Event for Auto Floor button (opens Auto Floor window)
+autoFloorBtn.MouseButton1Click:Connect(function()
+	autoFloorFrame.Visible = true
+	autoFloorWindowOpen = true
+	notify("Auto Floor window opened!", 2)
+end)
+
+-- Evento do botão toggle na janela Auto Floor
+autoFloorToggleBtn.MouseButton1Click:Connect(function()
+	-- Efeito visual no botão
+	local originalSize = autoFloorToggleBtn.Size
+	TweenService:Create(autoFloorToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0.8, 0, 0, 22)}):Play()
+	wait(0.1)
+	TweenService:Create(autoFloorToggleBtn, TweenInfo.new(0.1), {Size = originalSize}):Play()
+	
+	toggleFastMode()
+end)
+
+-- Evento do botão fechar Auto Floor window
+closeAutoFloorBtn.MouseButton1Click:Connect(function()
+	autoFloorFrame.Visible = false
+	autoFloorWindowOpen = false
+end)
+
+-- Eventos do Gravity Coil
+gravityToggleBtn.MouseButton1Click:Connect(function()
+    toggleGravity()
+    
+    if gravityActive then
+        gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 180)
+        gravityToggleBtn.Text = "ON"
+        notify("Gravity Coil ATIVADO (Valor: " .. gravityValue .. ")", 3)
+    else
+        gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(100, 120, 160)
+        gravityToggleBtn.Text = "OFF"
+        notify("Gravity Coil DESATIVADO", 3)
+    end
+end)
+
+gravityPlusBtn.MouseButton1Click:Connect(function()
+    gravityValue = gravityValue + 0.1
+    gravityTextBox.Text = string.format("%.1f", gravityValue)
+    if gravityActive then
+        updateGravity(gravityValue)
+        notify("Gravidade: " .. string.format("%.1f", gravityValue), 2)
+    end
+end)
+
+gravityMinusBtn.MouseButton1Click:Connect(function()
+    gravityValue = gravityValue - 0.1
+    if gravityValue < 0 then gravityValue = 0 end
+    gravityTextBox.Text = string.format("%.1f", gravityValue)
+    if gravityActive then
+        updateGravity(gravityValue)
+        notify("Gravidade: " .. string.format("%.1f", gravityValue), 2)
+    end
+end)
+
+gravityTextBox.FocusLost:Connect(function(enterPressed)
+    local val = tonumber(gravityTextBox.Text)
+    if val and val >= 0 then
+        gravityValue = val
+        if gravityActive then
+            updateGravity(gravityValue)
+            notify("Gravidade alterada para: " .. gravityValue, 2)
+        end
+    else
+        gravityTextBox.Text = string.format("%.1f", gravityValue)
+    end
+end)
+
+-- Evento do botão criar servidor VIP
+createServerBtn.MouseButton1Click:Connect(function()
+    createVipServer()
+end)
+
+-- Evento do botão fechar Server VIP
+closeServerVipBtn.MouseButton1Click:Connect(function()
+    serverVipFrame.Visible = false
+    serverVipWindowOpen = false
+end)
+
+-- ===============================
+-- ANIMAÇÕES E EFEITOS
+-- ===============================
+
+-- Animação aura lunar alternando (azul lunar/prata)
+local function startLunarAura()
+	spawn(function()
+		local toggle = false
+		while mainFrame and mainFrame.Parent do
+			toggle = not toggle
+			local targetColor = toggle and MOON_COLORS.GLOW or MOON_COLORS.PRIMARY
+			
+			TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = targetColor
+			}):Play()
+			
+			TweenService:Create(autoFloorStroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = targetColor
+			}):Play()
+			
+			TweenService:Create(serverVipStroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = targetColor
+			}):Play()
+			
+			TweenService:Create(toggleStroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = targetColor
+			}):Play()
+			
+			TweenService:Create(gravityStroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Color = targetColor
+			}):Play()
+			
+			wait(1)
+		end
+	end)
+end
+
+-- Animação rainbow do TikTok
+local function animateRainbowTiktok()
+    spawn(function()
+        local colors = {
+            Color3.fromRGB(255, 0, 0),   -- Vermelho
+            Color3.fromRGB(255, 127, 0), -- Laranja
+            Color3.fromRGB(255, 255, 0), -- Amarelo
+            Color3.fromRGB(0, 255, 0),   -- Verde
+            Color3.fromRGB(0, 0, 255),   -- Azul
+            Color3.fromRGB(75, 0, 130),  -- Índigo
+            Color3.fromRGB(148, 0, 211)  -- Violeta
+        }
+        
+        local currentIndex = 1
+        
+        while tiktokLabel and tiktokLabel.Parent do
+            local nextIndex = currentIndex % #colors + 1
+            
+            TweenService:Create(tiktokLabel, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                TextColor3 = colors[nextIndex]
+            }):Play()
+            
+            currentIndex = nextIndex
+            wait(0.5)
+        end
+    end)
+end
+
+-- Efeito de hover nos botões principais
+for _, button in pairs(mainTabContent:GetChildren()) do
+	if button:IsA("TextButton") then
+		button.MouseEnter:Connect(function()
+			TweenService:Create(button, TweenInfo.new(0.2), {
+				Size = UDim2.new(0, 160, 0, 38),
+				BackgroundTransparency = 0.1
+			}):Play()
+		end)
+		
+		button.MouseLeave:Connect(function()
+			TweenService:Create(button, TweenInfo.new(0.2), {
+				Size = UDim2.new(0, 155, 0, 35),
+				BackgroundTransparency = 0.3
+			}):Play()
+		end)
+	end
+end
+
+-- Animação de pulsação lunar no botão toggle
+spawn(function()
+	while toggleButton and toggleButton.Parent do
+		TweenService:Create(toggleButton, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			BackgroundTransparency = 0.3,
+			ImageColor3 = MOON_COLORS.PRIMARY
+		}):Play()
+		wait(1)
+		TweenService:Create(toggleButton, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			BackgroundTransparency = 0.1,
+			ImageColor3 = MOON_COLORS.GLOW
+		}):Play()
+		wait(1)
+	end
+end)
+
+-- ===============================
+-- LOOPs E ATUALIZAÇÕES
+-- ===============================
+
+-- Loop para atualizar ESP de raridades e Lock Time continuamente
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+        if activeLockTimeEsp then
+            updateLockTimeESP()
+        end
+        if next(activeESP) ~= nil then
+            updateRarityESP()
+        end
+    end
+end)
+
+-- Manter o efeito de gravidade ativo
+RunService.RenderStepped:Connect(function()
+    if gravityActive and bodyForce then
+        local character = player.Character
+        if character then
+            local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
+            if humanoidRoot and bodyForce.Parent ~= humanoidRoot then
+                bodyForce.Parent = humanoidRoot
+            end
+        end
+    end
+end)
+
+-- ===============================
+-- TECLAS DE ATALHO
+-- ===============================
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	
+	if input.KeyCode == Enum.KeyCode.L then
+		toggleMainGUI()
+	elseif input.KeyCode == Enum.KeyCode.K then
+		if autoFloorWindowOpen then
+			autoFloorFrame.Visible = false
+			autoFloorWindowOpen = false
+		else
+			autoFloorFrame.Visible = true
+			autoFloorWindowOpen = true
+		end
+	elseif input.KeyCode == Enum.KeyCode.V then
+		if serverVipWindowOpen then
+			serverVipFrame.Visible = false
+			serverVipWindowOpen = false
+		else
+			serverVipFrame.Visible = true
+			serverVipWindowOpen = true
+		end
+	elseif input.KeyCode == Enum.KeyCode.P then
+		toggleFastMode()
+	elseif input.KeyCode == Enum.KeyCode.G then
+		toggleGravity()
+		if gravityActive then
+			gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 180)
+			gravityToggleBtn.Text = "ON"
+		else
+			gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(100, 120, 160)
+			gravityToggleBtn.Text = "OFF"
+		end
+	end
+end)
+
+-- ===============================
+-- LIMPEZA E RESPAWN
+-- ===============================
+
+-- Limpar quando personagem spawnar
+player.CharacterAdded:Connect(function()
+	wait(1)
+	if autoToggleActive then
+		stopFastToggleLoop()
+		autoToggleActive = false
+		autoFloorToggleBtn.Text = "ATIVAR AUTO FLOOR"
+		statusLabel.Text = "Status: Waiting..."
+		notify("System restarted after respawn", 3)
+	end
+	
+	-- Reconfigurar gravity se estava ativo
+	if gravityActive then
+		gravityActive = false
+		bodyForce = nil
+		wait(0.5)
+		toggleGravity()
+		gravityToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 180)
+		gravityToggleBtn.Text = "ON"
+	end
+	
+	-- Stop Base 3D if active
+	if base3DActive then
+		base3DActive = false
+		originalTransparencies = {}
+	end
+end)
+
+-- Limpeza ao sair
+player.CharacterRemoving:Connect(function()
+	if autoToggleActive then
+		stopFastToggleLoop()
+		autoToggleActive = false
+	end
+	
+	-- Limpeza do gravity
+	if gravityActive and bodyForce then
+		bodyForce:Destroy()
+		bodyForce = nil
+		gravityActive = false
+	end
+end)
+
+-- ===============================
+-- INICIALIZAÇÃO
+-- ===============================
+
+-- Iniciar animações
+startLunarAura()
+animateRainbowTiktok()
+
+notify("MOONLIGHT FREE Carregado com Sucesso!", 6)

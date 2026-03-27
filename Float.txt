@@ -1,0 +1,80 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local pgui = player:WaitForChild("PlayerGui")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "FloatToggleGui"
+gui.ResetOnSpawn = false
+gui.Parent = pgui
+
+local btn = Instance.new("TextButton")
+btn.Name = "FloatBtn"
+btn.Size = UDim2.new(0, 70, 0, 40)
+btn.Position = UDim2.new(0, 100, 0, 100)
+btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+btn.BorderSizePixel = 0
+btn.Text = "Float"
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 18
+btn.Parent = gui
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+btn.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = btn.Position
+	end
+end)
+
+btn.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+local enabled = false
+
+local function setState(state)
+	enabled = state
+	btn.BackgroundColor3 = state and Color3.fromRGB(0, 140, 255) or Color3.fromRGB(20, 20, 20)
+end
+
+btn.MouseButton1Click:Connect(function()
+	enabled = not enabled
+	setState(enabled)
+end)
+
+RunService.Heartbeat:Connect(function()
+	if enabled then
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local hrp = char.HumanoidRootPart
+		local handle = workspace:FindFirstChild("Handle")
+		if handle and handle:IsA("BasePart") or handle:IsA("Model") then
+			handle:PivotTo(hrp.CFrame * CFrame.new(0, -3.5, 0))
+		else
+			setState(false)
+		end
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	if not workspace:FindFirstChild("Handle") then
+		setState(false)
+	end
+end)

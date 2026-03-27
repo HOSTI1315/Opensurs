@@ -1,0 +1,184 @@
+local lista_cframe = {
+    Vector3.new(-478, 14, 219),
+    Vector3.new(-478, 13, 113),
+    Vector3.new(-478, 14, 6),
+    Vector3.new(-478, 14, -102),
+    Vector3.new(-341, 13, -99),
+    Vector3.new(-341, 14, 8),
+    Vector3.new(-341, 13, 114),
+    Vector3.new(-341, 14, 221),
+}
+
+local Players = game:GetService('Players')
+local rs = game:GetService('ReplicatedStorage')
+local p = Players.LocalPlayer
+
+local function getCharacterParts()
+    local char = p.Character or p.CharacterAdded:Wait()
+    local hrp = char:WaitForChild('HumanoidRootPart', 2)
+    local humanoid = char:FindFirstChildOfClass('Humanoid')
+    return char, humanoid, hrp
+end
+
+local c, h, hrp = getCharacterParts()
+
+-- Configs
+local COIL = 'Coil Combo'
+local GRAPPLE, CARPET = 'Grapple Hook', 'Flying Carpet'
+local REMOTE =
+    rs:WaitForChild('Packages'):WaitForChild('Net'):WaitForChild('RE/UseItem')
+local ARGS = { 0.28693917592366536 }
+local ASCEND_HEIGHT = 25
+
+-- Função para equipar tool rapidamente
+local function equip(toolName)
+    c, h, hrp = getCharacterParts()
+    local t = p.Backpack:FindFirstChild(toolName) or c:FindFirstChild(toolName)
+    if t then
+        h:EquipTool(t)
+        return t
+    end
+    return nil
+end
+
+-- Função para parsear valor da geração
+local function parseGenerationNumber(text)
+    text = text:gsub('[%$%s]', '')
+    local numberPart, suffix = text:match('([%d%.]+)([KMB]?)')
+    numberPart = tonumber(numberPart) or 0
+    local mult = (suffix == 'K' and 1e3)
+        or (suffix == 'M' and 1e6)
+        or (suffix == 'B' and 1e9)
+        or 1
+    return numberPart * mult
+end
+
+-- Localiza o animal com maior geração
+local function findHighestGeneration()
+    local bestValue = -math.huge
+    local bestInfo = nil
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA('TextLabel') and obj.Name == 'Generation' then
+            if not string.find(obj.Text:lower(), 'fusing') then
+                local value = parseGenerationNumber(obj.Text)
+                if value > bestValue then
+                    local displayNameObj =
+                        obj.Parent:FindFirstChild('DisplayName')
+                    local rarityObj = obj.Parent:FindFirstChild('Rarity')
+                    if
+                        not (
+                            displayNameObj
+                            and string.find(
+                                displayNameObj.Text:lower(),
+                                'fusing'
+                            )
+                        )
+                    then
+                        local parent, model = obj.Parent, nil
+                        while parent and parent ~= workspace do
+                            if
+                                parent:IsA('Model')
+                                and parent.Parent
+                                and parent.Parent.Name == 'Plots'
+                            then
+                                model = parent
+                                break
+                            end
+                            parent = parent.Parent
+                        end
+
+                        local primaryPart = model
+                            and (
+                                model.PrimaryPart
+                                or model:FindFirstChildWhichIsA('BasePart')
+                            )
+                        bestValue = value
+                        bestInfo = {
+                            displayName = displayNameObj
+                                    and displayNameObj.Text
+                                or 'N/A',
+                            generation = obj.Text,
+                            rarity = rarityObj and rarityObj.Text or 'N/A',
+                            value = value,
+                            model = model,
+                            primaryPart = primaryPart,
+                        }
+                    end
+                end
+            end
+        end
+    end
+    return bestInfo
+end
+
+-- Pega o CFrame mais próximo da lista
+local function findNearestCFrame(pos)
+    local closest, dist = nil, math.huge
+    for _, v in ipairs(lista_cframe) do
+        local d = (Vector3.new(v.X, pos.Y, v.Z) - pos).Magnitude
+        if d < dist then
+            dist = d
+            closest = v
+        end
+    end
+    return closest
+end
+
+-- 🚀 Sequência de teleporte exata e confiável
+local function teleportSequence(tpPos)
+    c, h, hrp = getCharacterParts()
+    if not hrp then
+        return
+    end
+
+    -- :one: Equipa Coil Combo e sobe
+    local coil = equip(COIL)
+    if coil then
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 75, 0)
+    end
+
+    -- Espera atingir altura desejada
+    local targetY = hrp.Position.Y + ASCEND_HEIGHT
+    repeat
+        task.wait()
+    until hrp.Position.Y >= targetY
+
+    -- Zera a velocidade vertical
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+
+    -- :two: Teleporta para o ponto calculado
+    hrp.CFrame = CFrame.new(tpPos)
+
+    -- :three: Grapple Hook + Remote
+    local g = equip(GRAPPLE)
+    if g then
+        pcall(function()
+            REMOTE:FireServer(unpack(ARGS))
+        end)
+    end
+
+    task.wait(0.05)
+
+    -- :four: Flying Carpet + Activate
+    local f = equip(CARPET)
+    if f then
+        pcall(function()
+            f:Activate()
+        end)
+    end
+end
+
+-- Loop principal
+print('🔍 Procurando brainrots...')
+while true do
+    local highest = findHighestGeneration()
+    if highest and highest.primaryPart then
+        local brainPos = highest.primaryPart.Position
+        local nearest = findNearestCFrame(brainPos)
+        if nearest then
+            local tpPos = Vector3.new(nearest.X, brainPos.Y + 2, nearest.Z)
+            teleportSequence(tpPos)
+        end
+    end
+    task.wait(2)
+end

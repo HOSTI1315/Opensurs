@@ -1,0 +1,105 @@
+-- Se no dropdown não for selectedPlayerName a referência nem targetPlayer, vc pode pedir pro chatgpt consertar falando o nome de referência
+
+
+-- Serviços
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+if not humanoidRootPart or not humanoid then
+    warn("Erro: HumanoidRootPart ou Humanoid não encontrados")
+    return
+end
+
+local originalPosition = humanoidRootPart.CFrame
+
+-- Função: Obtém o ônibus
+local function GetBus()
+    local vehicles = workspace:FindFirstChild("Vehicles")
+    if vehicles then
+        return vehicles:FindFirstChild(LocalPlayer.Name .. "Car")
+    end
+    return nil
+end
+
+-- Garante o spawn do TowTruck
+local bus = GetBus()
+if not bus then
+    humanoidRootPart.CFrame = CFrame.new(1118.81, 75.998, -1138.61)
+    task.wait(0.5)
+
+    local remoteEvent = ReplicatedStorage:FindFirstChild("RE")
+    if remoteEvent and remoteEvent:FindFirstChild("1Ca1r") then
+        remoteEvent["1Ca1r"]:FireServer("PickingCar", "TowTruck")
+    end
+
+    task.wait(1.5)
+    bus = GetBus()
+end
+
+-- Força o jogador a sentar
+if bus and bus:FindFirstChild("Body") then
+    local seat = bus.Body:FindFirstChild("VehicleSeat")
+    if seat and not humanoid.Sit then
+        repeat
+            humanoidRootPart.CFrame = seat.CFrame * CFrame.new(0, 2, 0)
+            task.wait()
+        until humanoid.Sit or not bus.Parent
+
+        if humanoid.Sit or not bus.Parent then
+            for _, v in pairs(bus.Body:GetChildren()) do
+                if v:IsA("Seat") then
+                    v.CanTouch = false
+                end
+            end
+        end
+    end
+end
+
+-- Função: Simula pulo
+local function simulateJump()
+    local h = character:FindFirstChildOfClass("Humanoid")
+    if h then
+        h:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end
+
+-- Função: Rastreia e flinga o jogador selecionado
+local function TrackPlayer()
+    while true do
+        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHumanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+            local targetRoot = targetPlayer.Character.HumanoidRootPart
+
+            if targetHumanoid and targetHumanoid.Sit then
+                -- Jogador alvo sentou → fling
+                if humanoid then
+                    bus:SetPrimaryPartCFrame(CFrame.new(9999, 100, 9999))
+                    task.wait(0.2)
+                    simulateJump()
+                    task.wait(0.5)
+                    humanoidRootPart.CFrame = originalPosition
+                end
+                break
+            else
+                -- Orbitando o jogador
+                local time = tick() * 35
+                local lateral = math.sin(time) * 4
+                local frontBack = math.cos(time) * 20
+                if bus.PrimaryPart then
+                    bus:SetPrimaryPartCFrame(targetRoot.CFrame * CFrame.new(lateral, 0, frontBack))
+                end
+            end
+        end
+        RunService.RenderStepped:Wait()
+    end
+end
+
+-- Inicia rastreamento
+task.spawn(TrackPlayer)

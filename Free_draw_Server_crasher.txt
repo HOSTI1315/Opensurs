@@ -1,0 +1,171 @@
+local Settings = {
+    SpamAmount = 40000, -- Amount of lines to spam
+    Radius = 100, -- Max radius of the random positions
+    Color = Color3.new(1,1,1), -- Color of the lines
+    Transparency = 0.9999, -- Transparency of the lines
+    Thickness = 0.05, -- Thickness of the lines
+    AntiLag = true -- It will delete all your art to prevent from lag
+}
+repeat task.wait() until game:IsLoaded() and task.wait(0.025) and workspace.DistributedGameTime > 2
+
+-- Settings you can change --
+
+local Settings = (...) or {
+    SpamAmount = 40000, -- Amount of lines to spam
+    Radius = 100, -- Max radius of the random positions
+    Color = Color3.new(1,1,1), -- Color of the lines
+    Transparency = 0.9999, -- Transparency of the lines
+    Thickness = 0.05, -- Thickness of the lines
+    AntiLag = true -- It will delete all your art to prevent from lag
+}
+
+-- Variables --
+
+local CreateLineEvent = game:GetService("ReplicatedStorage").packages._Index["vorlias_net@2.1.4"].net._NetManaged.createLine
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local DrawInstancesFolder = workspace:FindFirstChild("Container(Drawing)")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local UIList = LocalPlayer.PlayerGui:WaitForChild("ToolbarGUI"):WaitForChild("Toolbar")
+local Spinner = UIList.Parent.Parent:FindFirstChild("Spinner",true):Clone()
+local UIAction = UIList:WaitForChild("actions")
+local UICount
+local UIPing
+local UIText
+local UIScale1
+local UIScale2
+local UIHadExisted
+local Ping = game.CoreGui:FindFirstChild("Ping") or Instance.new("NumberValue", game.CoreGui)
+local LineCount = game.CoreGui:FindFirstChild("LineCount") or Instance.new("NumberValue", game.CoreGui)
+LineCount.Name = "LineCount"
+Ping.Name = "Ping"
+
+-- UI Creation --
+
+if UIList:FindFirstChild("count") then
+    UIHadExisted = true
+    UICount = UIList:FindFirstChild("count")
+    UIText = UICount:FindFirstChild("Content"):FindFirstChildOfClass("TextLabel")
+    UIPing = UIList:FindFirstChild("ping")
+else
+    UIHadExisted = false
+
+    UIScale1 = Instance.new("UIScale")
+    UIScale1.Scale = 0
+    UIScale2 = UIScale1:Clone()
+
+    UICount = UIAction:Clone()
+    UIScale1.Parent = UICount
+    UICount.Parent = UIList
+    UICount.Name = "count"
+    UICount.Size = UDim2.new(0,117,0,40)
+    UICount["Content"]["clearAll"].Visible = false
+    UICount["Content"].AutomaticSize = Enum.AutomaticSize.X
+    
+    UIText = Instance.new("TextLabel")
+    UIText.Parent = UICount:FindFirstChild("Content")
+    UIText.AutomaticSize = Enum.AutomaticSize.X
+    UIText.RichText = true
+    UIText.TextSize = 12
+    UIText.BackgroundTransparency = 1
+    UIText.Size = UDim2.new(0,85,1,0)
+
+    UIPing = UIAction:Clone()
+    UIPing["Content"]["clearAll"].Visible = false
+    UIScale2.Parent = UIPing
+    UIPing.Parent = UIList
+    UIPing.Name = "ping"
+    UIPing.Size = UDim2.new(0,40,0,40)
+    UIPing.Visible = false
+    UIPing["Content"]["Layout"].HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Spinner.Parent = UIPing
+
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.Parent = UIText
+    UIPadding.PaddingLeft = UDim.new(0,8)
+    UIPadding.PaddingRight = UDim.new(0,8)
+end
+
+-- Scripting --
+
+local function GetPing()
+	return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+end
+
+local function CreateRandomPos(amount,radius)
+    local randompos = {}
+    for i = 1,amount do
+        table.insert(randompos,Vector2.new(math.random(-radius,radius),math.random(-radius,radius)))
+        if Settings.SpamAmount > 50 then
+        if i % 2 == 0 then
+            task.spawn(function()
+                task.wait(math.random(1, 25) / 80)
+                LineCount.Value += 1
+                UIText.Text = "<b><font color='rgb(84, 102, 255)'>" .. LineCount.Value .. "</font> Lines</b>"
+            end)
+        else
+            LineCount.Value += 1
+        end
+    else
+        task.wait()
+        LineCount.Value += 1
+        UIText.Text = "<b><font color='rgb(84, 102, 255)'>" .. LineCount.Value .. "</font> Lines</b>"
+        end
+    end
+    return randompos
+end
+
+local function CodeFilter(input)
+    return string.sub(input, 7, -2)
+end
+
+local Code = (game.CoreGui:FindFirstChild("MainCodeSave") and game.CoreGui:FindFirstChild("MainCodeSave").Value) or CodeFilter(DrawInstancesFolder:FindFirstChild("Collector(" .. tostring(LocalPlayer.UserId) .. ")"):GetChildren()[1].Name)
+local MainCodeSave = game.CoreGui:FindFirstChild("MainCodeSave") or Instance.new("StringValue", game.CoreGui)
+MainCodeSave.Name = "MainCodeSave"
+MainCodeSave.Value = Code 
+
+if not UIHadExisted then
+    task.spawn(function()
+        task.spawn(function()
+            while task.wait(1.25) do
+                local CurrentPing = GetPing()
+                if CurrentPing > 1000 or Ping.Value == CurrentPing then
+                    UIPing.Visible = true
+                    TweenService:Create(UIScale2, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+                else
+                    TweenService:Create(UIScale2, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0}):Play()
+                    task.wait(0.65)
+                    UIPing.Visible = false
+                end
+                Ping.Value = CurrentPing
+            end
+        end)
+        Spinner["Foreground"].Rotation = 0
+        TweenService:Create(Spinner["Foreground"], TweenInfo.new(0.75, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, false), {Rotation = 360}):Play()
+        TweenService:Create(UIScale1, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        task.wait(0.655)
+        UICount.Size = UDim2.new(0, UICount:FindFirstChild("Content").AbsoluteSize.X , 0, 40)
+        UICount:FindFirstChild("Content"):GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            UICount.Size = UDim2.new(0, UICount:FindFirstChild("Content").AbsoluteSize.X , 0, 40)
+        end)
+    end)
+end
+
+local RandomKey = tostring(HttpService:GenerateGUID(false))
+local RemoteArgumentData = {
+	[1] = Code,
+	[2] = CreateRandomPos(math.clamp(Settings.SpamAmount,1,1500000), Settings.Radius),
+	[3] = {
+		["color"] = Settings.Color,
+		["transparency"] = math.clamp(Settings.Transparency, 0, 0.999),
+		["thickness"] = math.clamp(Settings.Thickness, 0.05, 2)
+	}
+}
+
+if Settings.AntiLag then
+    if DrawInstancesFolder and DrawInstancesFolder:FindFirstChild("Collector(" .. tostring(LocalPlayer.UserId) .. ")"):GetChildren()[1] then
+        DrawInstancesFolder:FindFirstChild("Collector(" .. tostring(LocalPlayer.UserId) .. ")"):GetChildren()[1]:Destroy()
+    end
+end
+
+CreateLineEvent:FireServer(RandomKey, RemoteArgumentData)

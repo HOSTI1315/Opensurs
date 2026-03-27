@@ -1,0 +1,276 @@
+-- Compiled with roblox-ts v3.0.0
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local function getDirection(currentRow, currentCol, otherRow, otherCol)
+	if otherRow < currentRow then
+		return "up"
+	end
+	if otherRow > currentRow then
+		return "down"
+	end
+	if otherCol < currentCol then
+		return "left"
+	end
+	if otherCol > currentCol then
+		return "right"
+	end
+end
+local function getConnections(prev, curr, nextnode)
+	local connections = {}
+	if prev and curr then
+		local dir = getDirection(curr.row, curr.col, prev.row, prev.col)
+		if dir == "up" then
+			dir = "down"
+		elseif dir == "down" then
+			dir = "up"
+		elseif dir == "left" then
+			dir = "right"
+		elseif dir == "right" then
+			dir = "left"
+		end
+		if dir ~= "" and dir then
+			connections[dir] = true
+		end
+	end
+	if nextnode and curr then
+		local dir = getDirection(curr.row, curr.col, nextnode.row, nextnode.col)
+		if dir ~= "" and dir then
+			connections[dir] = true
+		end
+	end
+	return connections
+end
+local function isNeighbourLocal(r1, c1, r2, c2)
+	if r2 == r1 - 1 and c2 == c1 then
+		return "up"
+	end
+	if r2 == r1 + 1 and c2 == c1 then
+		return "down"
+	end
+	if r2 == r1 and c2 == c1 - 1 then
+		return "left"
+	end
+	if r2 == r1 and c2 == c1 + 1 then
+		return "right"
+	end
+	return false
+end
+local function coordKey(node)
+	return `{node.row}-{node.col}`
+end
+local function orderPathFromEndpoints(path, endpoints)
+	if not path or #path == 0 then
+		return path
+	end
+	local startEndpoint
+	for _, ep in endpoints or {} do
+		for _1, n in path do
+			if n.row == ep.row and n.col == ep.col then
+				startEndpoint = {
+					row = ep.row,
+					col = ep.col,
+				}
+				break
+			end
+		end
+		if startEndpoint then
+			break
+		end
+	end
+	if not startEndpoint then
+		local inPath = {}
+		for _, n in path do
+			local _arg0 = coordKey(n)
+			inPath[_arg0] = n
+		end
+		for _, n in path do
+			local neighbours = 0
+			local dirs = { { n.row - 1, n.col }, { n.row + 1, n.col }, { n.row, n.col - 1 }, { n.row, n.col + 1 } }
+			for _1, _binding in dirs do
+				local r = _binding[1]
+				local c = _binding[2]
+				local _arg0 = `{r}-{c}`
+				if inPath[_arg0] ~= nil then
+					neighbours += 1
+				end
+			end
+			if neighbours == 1 then
+				startEndpoint = {
+					row = n.row,
+					col = n.col,
+				}
+				break
+			end
+		end
+	end
+	if not startEndpoint then
+		startEndpoint = {
+			row = path[1].row,
+			col = path[1].col,
+		}
+	end
+	local remaining = {}
+	for _, n in path do
+		local _arg0 = coordKey(n)
+		local _arg1 = {
+			row = n.row,
+			col = n.col,
+		}
+		remaining[_arg0] = _arg1
+	end
+	local ordered = {}
+	local current = {
+		row = startEndpoint.row,
+		col = startEndpoint.col,
+	}
+	local _object = table.clone(current)
+	setmetatable(_object, nil)
+	table.insert(ordered, _object)
+	local _arg0 = coordKey(current)
+	remaining[_arg0] = nil
+	while true do
+		-- ▼ ReadonlyMap.size ▼
+		local _size = 0
+		for _ in remaining do
+			_size += 1
+		end
+		-- ▲ ReadonlyMap.size ▲
+		if not (_size > 0) then
+			break
+		end
+		local foundNext = false
+		for key, node in remaining do
+			local _value = isNeighbourLocal(current.row, current.col, node.row, node.col)
+			if _value ~= "" and _value then
+				local _object_1 = table.clone(node)
+				setmetatable(_object_1, nil)
+				table.insert(ordered, _object_1)
+				remaining[key] = nil
+				current = node
+				foundNext = true
+				break
+			end
+		end
+		if not foundNext then
+			return path
+		end
+	end
+	return ordered
+end
+local HintSystem = {}
+do
+	local _container = HintSystem
+	local function DrawSolutionOneByOne(self, puzzle, delayTime)
+		if delayTime == nil then
+			delayTime = 0.05
+		end
+		if not puzzle or not puzzle.Solution then
+			return nil
+		end
+		local totalPaths = #puzzle.Solution
+		local indices = {}
+		do
+			local i = 1
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i <= totalPaths) then
+					break
+				end
+				local _i = i
+				table.insert(indices, _i)
+			end
+		end
+		for i = #indices - 1, 2, -1 do
+			local j = math.random(1, i)
+			local temp = indices[i + 1]
+			indices[i + 1] = indices[j + 1]
+			indices[j + 1] = temp
+		end
+		for _, colorIndex in indices do
+			local path = puzzle.Solution[colorIndex]
+			local endpoints = puzzle.targetPairs[colorIndex]
+			local orderedPath = orderPathFromEndpoints(path, endpoints)
+			puzzle.paths[colorIndex] = {}
+			for i = 0, #orderedPath - 1 do
+				local node = orderedPath[i + 1]
+				local _exp = puzzle.paths[colorIndex]
+				local _arg0 = {
+					row = node.row,
+					col = node.col,
+				}
+				table.insert(_exp, _arg0)
+				local prev = orderedPath[i]
+				local nextNode = orderedPath[i + 2]
+				local conn = getConnections(prev, node, nextNode)
+				puzzle.gridConnections = puzzle.gridConnections or {}
+				puzzle.gridConnections[`{node.row}-{node.col}`] = conn
+				puzzle:updateGui()
+				task.wait(delayTime)
+			end
+			puzzle:checkForWin()
+		end
+		puzzle:checkForWin()
+	end
+	_container.DrawSolutionOneByOne = DrawSolutionOneByOne
+	local function DrawSolutionInstantly(self, puzzle, delayTime)
+		if delayTime == nil then
+			delayTime = 0.03
+		end
+		if not puzzle or not puzzle.Solution then
+			return nil
+		end
+		for colorIndex = 0, #puzzle.Solution - 1 do
+			puzzle.paths[colorIndex + 1] = {}
+		end
+		local finished = false
+		local step = 1
+		while not finished do
+			finished = true
+			for colorIndex = 0, #puzzle.Solution - 1 do
+				local path = puzzle.Solution[colorIndex + 1]
+				local endpoints = puzzle.targetPairs[colorIndex + 1]
+				local orderedPath = orderPathFromEndpoints(path, endpoints)
+				puzzle.paths[colorIndex + 1] = {}
+				for _, node in orderedPath do
+					local _exp = puzzle.paths[colorIndex + 1]
+					local _arg0 = {
+						row = node.row,
+						col = node.col,
+					}
+					table.insert(_exp, _arg0)
+				end
+			end
+			puzzle:updateGui()
+			task.wait(delayTime)
+			step += 1
+		end
+		puzzle:checkForWin()
+	end
+	_container.DrawSolutionInstantly = DrawSolutionInstantly
+end
+local _result = ReplicatedStorage:WaitForChild("Modules"):FindFirstChild("Misc")
+if _result ~= nil then
+	_result = _result:FindFirstChild("FlowGameManager")
+	if _result ~= nil then
+		_result = _result:FindFirstChild("FlowGame")
+	end
+end
+local bb = _result
+if bb then
+	local FlowGameModule = require(bb)
+	local old = FlowGameModule.new
+	FlowGameModule.new = function(...)
+		local args = { ... }
+		local output = { old(unpack(args)) }
+		local puzzle = output[1]
+		task.spawn(function()
+			HintSystem:DrawSolutionOneByOne(puzzle, 0.04)
+		end)
+		return puzzle
+	end
+end
+return nil

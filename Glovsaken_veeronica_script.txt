@@ -1,0 +1,445 @@
+-- Services declaration
+-- leakk by kittygd
+local playersService = game:GetService("Players")
+local lightingService = game:GetService("Lighting")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local materialService = game:GetService("MaterialService")
+local workspaceService = game:GetService("Workspace")
+local statsService = game:GetService("Stats")
+local debrisService = game:GetService("Debris")
+local textChatService = game:GetService("TextChatService")
+
+
+-- Client references
+local clientPlayer = playersService.LocalPlayer
+local PlayerGui = clientPlayer:WaitForChild("PlayerGui", 10)
+
+
+-- Load WindUI library
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+
+-- Create main window
+local Window = WindUI:CreateWindow({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    Author = "By GlovDev",
+    Folder = "GlovSakenScript",
+    Size = UDim2.fromOffset(350, 300),
+    Transparent = false,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+
+-- Window toggle key
+Window:SetToggleKey(Enum.KeyCode.K)
+
+
+-- Window text font
+WindUI:SetFont("rbxasset://fonts/families/AccanthisADFStd.json")
+
+
+-- Mobile open button configuration
+Window:EditOpenButton({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 0,
+    Color = ColorSequence.new(
+        Color3.fromHex("000000"), 
+        Color3.fromHex("000000")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+
+----------------------------------------------------------------
+-- Survivor Tab
+----------------------------------------------------------------
+local SurvivorTab = Window:Tab({
+    Title = "Survivors",
+    Icon = "backpack",
+    Locked = false,
+})
+
+
+----------------------------------------------------------------
+-- Veeronica Section
+----------------------------------------------------------------
+local VeeronicaSection = SurvivorTab:Section({
+    Title = "Veeronica",
+    Opened = true,
+})
+
+
+-- Services
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+
+-- Constants
+local veerSk8DashSpeed = 60
+local veerSk8AnimationIds = { "117058860640843" }
+
+
+-- Variables
+local veerAutoSkateEnabled = false
+local veerSkateLoop = nil
+local veerLocalPlayer = playersService.LocalPlayer
+local veerPlayerName = veerLocalPlayer.Name
+
+
+local veerSk8ControlEnabled = false
+local veerIsSk8Active = false
+local veerSk8Loop = nil
+local veerSavedHumanoid = {}
+local veerCamera = workspace.CurrentCamera
+local veerActiveSk8Track = nil
+
+
+local veerAutoJumpEnabled = false
+local veerLastHighlightTime = 0
+local veerMonitoredHighlights = {}
+
+
+-- Auto SkateTrick Farm (without jump)
+local function veerFireSkateEvent()
+    local eventName = veerPlayerName .. "SkateTrick"
+    local modules = replicatedStorage:FindFirstChild("Modules")
+    if not modules then return end
+    local network = modules:FindFirstChild("Network")
+    if not network then return end
+    local remote = network:FindFirstChild("RemoteEvent")
+    if not remote then return end
+    remote:FireServer(eventName, {})
+end
+
+
+local function veerStartSkateFarm()
+    if veerSkateLoop then return end
+    veerSkateLoop = runService.Heartbeat:Connect(function()
+        if not veerAutoSkateEnabled then
+            if veerSkateLoop then
+                veerSkateLoop:Disconnect()
+                veerSkateLoop = nil
+            end
+            return
+        end
+        if tick() % 0.2 < (1/60) then
+            veerFireSkateEvent()
+        end
+    end)
+end
+
+
+-- Sk8 Control System
+local function veerGetHumanoid()
+    local char = veerLocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChildOfClass("Humanoid")
+end
+
+
+local function veerGetRootPart()
+    local char = veerLocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+
+local function veerSaveHumanoidState(humanoid)
+    if not humanoid or veerSavedHumanoid[humanoid] then return end
+    local state = {
+        walkSpeed = humanoid.WalkSpeed,
+        jumpPower = humanoid.JumpPower or humanoid.JumpHeight,
+        platformStand = humanoid.PlatformStand
+    }
+    veerSavedHumanoid[humanoid] = state
+end
+
+
+local function veerRestoreHumanoidState(humanoid)
+    if not humanoid then return end
+    local state = veerSavedHumanoid[humanoid]
+    if not state then return end
+    humanoid.WalkSpeed = state.walkSpeed
+    if humanoid:FindFirstChild("JumpPower") then
+        humanoid.JumpPower = state.jumpPower
+    elseif humanoid:FindFirstChild("JumpHeight") then
+        humanoid.JumpHeight = state.jumpPower
+    end
+    humanoid.PlatformStand = state.platformStand
+    veerSavedHumanoid[humanoid] = nil
+end
+
+
+local function veerIsSk8AnimationActive()
+    local humanoid = veerGetHumanoid()
+    if not humanoid then return false end
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        local anim = track.Animation
+        if anim then
+            local id = tostring(anim.AnimationId):match("%d+")
+            if id and table.find(veerSk8AnimationIds, id) then
+                return track
+            end
+        end
+    end
+    return false
+end
+
+
+local function veerStartSk8Override()
+    if veerIsSk8Active then return end
+    local humanoid = veerGetHumanoid()
+    local root = veerGetRootPart()
+    if not humanoid or not root then return end
+
+
+    veerIsSk8Active = true
+    veerSaveHumanoidState(humanoid)
+    humanoid.WalkSpeed = veerSk8DashSpeed
+
+
+    if veerSk8Loop then veerSk8Loop:Disconnect() end
+
+
+    veerSk8Loop = runService.RenderStepped:Connect(function()
+        local hum = veerGetHumanoid()
+        local rootPart = veerGetRootPart()
+        if not hum or not rootPart then
+            veerStopSk8Override()
+            return
+        end
+
+
+        hum.WalkSpeed = veerSk8DashSpeed
+
+
+        local camLook = veerCamera.CFrame.LookVector
+        local moveDir = Vector3.new(camLook.X, 0, camLook.Z)
+        if moveDir.Magnitude > 0 then
+            moveDir = moveDir.Unit
+            hum:Move(moveDir, false)
+        end
+
+
+        local targetCFrame = CFrame.new(rootPart.Position, rootPart.Position + moveDir)
+        rootPart.CFrame = rootPart.CFrame:Lerp(targetCFrame, 0.3)
+    end)
+end
+
+
+local function veerStopSk8Override()
+    if not veerIsSk8Active then return end
+    veerIsSk8Active = false
+
+
+    if veerSk8Loop then
+        veerSk8Loop:Disconnect()
+        veerSk8Loop = nil
+    end
+
+
+    if veerActiveSk8Track then
+        pcall(function() veerActiveSk8Track.Stopped:Disconnect() end)
+        veerActiveSk8Track = nil
+    end
+
+
+    local humanoid = veerGetHumanoid()
+    if humanoid then
+        veerRestoreHumanoidState(humanoid)
+        humanoid:Move(Vector3.new(0, 0, 0), false)
+    end
+end
+
+
+-- Main Sk8 control loop
+runService.RenderStepped:Connect(function()
+    if not veerSk8ControlEnabled then
+        if veerIsSk8Active then veerStopSk8Override() end
+        return
+    end
+
+
+    local humanoid = veerGetHumanoid()
+    if not humanoid then
+        if veerIsSk8Active then veerStopSk8Override() end
+        return
+    end
+
+
+    local currentTrack = veerIsSk8AnimationActive()
+
+
+    if currentTrack and not veerIsSk8Active then
+        veerActiveSk8Track = currentTrack
+        currentTrack.Stopped:Connect(function()
+            if veerIsSk8Active then veerStopSk8Override() end
+        end)
+        veerStartSk8Override()
+    elseif not currentTrack and veerIsSk8Active then
+        veerStopSk8Override()
+    end
+end)
+
+
+-- Character respawn handler
+veerLocalPlayer.CharacterAdded:Connect(function()
+    veerStopSk8Override()
+    veerSavedHumanoid = {}
+end)
+
+
+-- Auto jump on highlight (Veeronica behavior)
+local function veerIsPlayerCharacter(obj)
+    local char = veerLocalPlayer.Character
+    if not char then return false end
+    return obj == char or obj:IsDescendantOf(char)
+end
+
+
+local function veerMonitorHighlight(highlight)
+    if veerMonitoredHighlights[highlight] then return end
+    veerMonitoredHighlights[highlight] = true
+
+
+    local function checkAndJump()
+        local adornee = highlight.Adornee
+        if adornee and veerIsPlayerCharacter(adornee) then
+            local now = tick()
+            if now - veerLastHighlightTime < 0.5 then return end
+            veerLastHighlightTime = now
+
+
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            task.delay(0.09, function()
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+            end)
+        end
+    end
+
+
+    local conn = highlight:GetPropertyChangedSignal("Adornee"):Connect(checkAndJump)
+    task.spawn(checkAndJump)
+
+
+    highlight.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            conn:Disconnect()
+            veerMonitoredHighlights[highlight] = nil
+        end
+    end)
+end
+
+
+local function veerStartHighlightMonitor()
+    local behavior = replicatedStorage:FindFirstChild("Assets")
+        and replicatedStorage.Assets:FindFirstChild("Survivors")
+        and replicatedStorage.Assets.Survivors:FindFirstChild("Veeronica")
+        and replicatedStorage.Assets.Survivors.Veeronica:FindFirstChild("Behavior")
+
+
+    if not behavior then return end
+
+
+    for _, child in ipairs(behavior:GetDescendants()) do
+        if child:IsA("Highlight") then
+            veerMonitorHighlight(child)
+        end
+    end
+
+
+    behavior.DescendantAdded:Connect(function(child)
+        if child:IsA("Highlight") then
+            veerMonitorHighlight(child)
+        end
+    end)
+end
+
+
+-- UI Controls
+VeeronicaSection:Toggle({
+    Title = "Auto SkateTrick Farm (Not Jump)",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        veerAutoSkateEnabled = state
+        if state then
+            veerPlayerName = veerLocalPlayer.Name
+            veerStartSkateFarm()
+        else
+            if veerSkateLoop then
+                veerSkateLoop:Disconnect()
+                veerSkateLoop = nil
+            end
+        end
+    end
+})
+
+
+VeeronicaSection:Toggle({
+    Title = "Sk8 Control",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        veerSk8ControlEnabled = state
+        if not state and veerIsSk8Active then
+            veerStopSk8Override()
+        end
+    end
+})
+
+
+VeeronicaSection:Toggle({
+    Title = "Auto SkateTrick (With Jump)",
+    Type = "Checkbox",
+    Default = false,
+    Locked = true,
+    Callback = function(state)
+        veerAutoJumpEnabled = state
+        if state then
+            veerStartHighlightMonitor()
+        else
+            veerLastHighlightTime = 0
+            veerMonitoredHighlights = {}
+        end
+    end
+})
+
+
+----------------------------------------------------------------
+-- Interface Tab
+----------------------------------------------------------------
+local InterfaceTab = Window:Tab({
+    Title = "Interface",
+    Icon = "scan",
+    Locked = false,
+})
+
+
+----------------------------------------------------------------
+-- UI Functions Section
+----------------------------------------------------------------
+local UIFunctionsSection = InterfaceTab:Section({ 
+    Title = "UI Functions",
+    Opened = true,
+})
+
+
+-- Close UI
+InterfaceTab:Button({
+    Title = "Close UI",
+    Locked = false,
+    Callback = function()
+        Window:Destroy()
+    end
+})

@@ -1,0 +1,147 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local AutoFarm = false
+
+if LocalPlayer.PlayerGui:FindFirstChild("ModernAutoFarm") then
+    LocalPlayer.PlayerGui.ModernAutoFarm:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ModernAutoFarm"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 280, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -60)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(60, 120, 255)
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Size = UDim2.new(0, 240, 0, 50)
+ToggleFrame.Position = UDim2.new(0.5, -120, 0.5, -15)
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+ToggleFrame.BorderSizePixel = 0
+ToggleFrame.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleFrame
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(70, 70, 90)
+ToggleStroke.Thickness = 1
+ToggleStroke.Parent = ToggleFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+ToggleButton.Position = UDim2.new(0, 0, 0, 0)
+ToggleButton.BackgroundTransparency = 1
+ToggleButton.Text = ""
+ToggleButton.Parent = ToggleFrame
+
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Text = "AutoFarm"
+ToggleLabel.Font = Enum.Font.GothamBold
+ToggleLabel.TextSize = 18
+ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+ToggleLabel.Parent = ToggleFrame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Text = "OFF"
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 16
+StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+StatusLabel.Size = UDim2.new(0.3, 0, 1, 0)
+StatusLabel.Position = UDim2.new(0.7, -15, 0, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Right
+StatusLabel.Parent = ToggleFrame
+
+local Footer = Instance.new("TextLabel")
+Footer.Text = "Made By voxxel_0"
+Footer.Font = Enum.Font.Gotham
+Footer.TextSize = 12
+Footer.TextColor3 = Color3.fromRGB(150, 150, 170)
+Footer.Position = UDim2.new(0.5, 0, 1, -20)
+Footer.Size = UDim2.new(1, 0, 0, 16)
+Footer.BackgroundTransparency = 1
+Footer.TextXAlignment = Enum.TextXAlignment.Center
+Footer.AnchorPoint = Vector2.new(0.5, 0)
+Footer.Parent = MainFrame
+
+local function updateToggle()
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    
+    if AutoFarm then
+        StatusLabel.Text = "ON"
+        local colorTween = TweenService:Create(StatusLabel, tweenInfo, {TextColor3 = Color3.fromRGB(80, 255, 120)})
+        local strokeTween = TweenService:Create(ToggleStroke, tweenInfo, {Color = Color3.fromRGB(80, 255, 120)})
+        colorTween:Play()
+        strokeTween:Play()
+    else
+        StatusLabel.Text = "OFF"
+        local colorTween = TweenService:Create(StatusLabel, tweenInfo, {TextColor3 = Color3.fromRGB(255, 80, 80)})
+        local strokeTween = TweenService:Create(ToggleStroke, tweenInfo, {Color = Color3.fromRGB(70, 70, 90)})
+        colorTween:Play()
+        strokeTween:Play()
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    AutoFarm = not AutoFarm
+    updateToggle()
+end)
+
+ToggleButton.MouseEnter:Connect(function()
+    local hoverTween = TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 65)})
+    hoverTween:Play()
+end)
+
+ToggleButton.MouseLeave:Connect(function()
+    local leaveTween = TweenService:Create(ToggleFrame, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)})
+    leaveTween:Play()
+end)
+
+RunService.RenderStepped:Connect(function()
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    if AutoFarm and Character and Character:FindFirstChild("HumanoidRootPart") then
+        local Closest, ClosestMag = nil, 30
+        for _,Enemy in workspace.Debris.Monsters:GetChildren() do
+            if Enemy:FindFirstChild("HumanoidRootPart")
+            and Enemy:GetAttribute("Health")
+            and Enemy:FindFirstChild("Humanoid") then
+                local mag = (Character.HumanoidRootPart.Position - Enemy.HumanoidRootPart.Position).Magnitude
+                if mag < ClosestMag then
+                    ClosestMag = mag
+                    Closest = Enemy
+                end
+            end
+        end
+        if Closest then
+            ReplicatedStorage.Events.To_Server:FireServer({Id = Closest.Name, Action = "_Mouse_Click"})
+        else
+            ReplicatedStorage.Events.To_Server:FireServer({Action = "_Mouse_Click"})
+        end
+    end
+end)

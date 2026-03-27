@@ -1,0 +1,2232 @@
+-- Tawun Hub GUI - 4 Tab Version
+-- Make by Tawun
+-- Discord: https://discord.gg/NCdtGRQHQm
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- GUI Library
+local TawunLib = {}
+
+function TawunLib:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local TopBar = Instance.new("Frame")
+    local UICorner_2 = Instance.new("UICorner")
+    local Title = Instance.new("TextLabel")
+    local CloseButton = Instance.new("TextButton")
+    local UICorner_3 = Instance.new("UICorner")
+    local Credit = Instance.new("TextLabel")
+    local SocialFrame = Instance.new("Frame")
+    local UICorner_4 = Instance.new("UICorner")
+    local DiscordButton = Instance.new("TextButton")
+    local UICorner_5 = Instance.new("UICorner")
+    local YouTubeButton = Instance.new("TextButton")
+    local UICorner_6 = Instance.new("UICorner")
+    
+    -- Tab System
+    local TabContainer = Instance.new("Frame")
+    local TabButtonsFrame = Instance.new("Frame")
+    local UIListLayout_Tabs = Instance.new("UIListLayout")
+    
+    -- Toggle Button
+    local ToggleMenuButton = Instance.new("TextButton")
+    local UICorner_Toggle = Instance.new("UICorner")
+
+    ScreenGui.Name = "SybauHub"
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -250)
+    MainFrame.Size = UDim2.new(0, 600, 0, 500)
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+
+    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.Parent = MainFrame
+
+    TopBar.Name = "TopBar"
+    TopBar.Parent = MainFrame
+    TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    TopBar.BorderSizePixel = 0
+    TopBar.Size = UDim2.new(1, 0, 0, 50)
+
+    UICorner_2.CornerRadius = UDim.new(0, 12)
+    UICorner_2.Parent = TopBar
+
+    Title.Name = "Title"
+    Title.Parent = TopBar
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.Size = UDim2.new(0, 300, 1, 0)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = title
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 20
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    CloseButton.Name = "CloseButton"
+    CloseButton.Parent = TopBar
+    CloseButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    CloseButton.Position = UDim2.new(1, -45, 0.5, -15)
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 16
+
+    UICorner_3.CornerRadius = UDim.new(0, 8)
+    UICorner_3.Parent = CloseButton
+
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+
+    Credit.Name = "Credit"
+    Credit.Parent = MainFrame
+    Credit.BackgroundTransparency = 1
+    Credit.Position = UDim2.new(0, 15, 0, 55)
+    Credit.Size = UDim2.new(1, -30, 0, 25)
+    Credit.Font = Enum.Font.Gotham
+    Credit.Text = "Make by Tawun | https://discord.gg/kD95xE7n6U"
+    Credit.TextColor3 = Color3.fromRGB(150, 150, 160)
+    Credit.TextSize = 12
+    Credit.TextXAlignment = Enum.TextXAlignment.Left
+
+    SocialFrame.Name = "SocialFrame"
+    SocialFrame.Parent = MainFrame
+    SocialFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+    SocialFrame.BorderSizePixel = 0
+    SocialFrame.Position = UDim2.new(0, 15, 0, 85)
+    SocialFrame.Size = UDim2.new(1, -30, 0, 50)
+
+    UICorner_4.CornerRadius = UDim.new(0, 8)
+    UICorner_4.Parent = SocialFrame
+
+    DiscordButton.Name = "DiscordButton"
+    DiscordButton.Parent = SocialFrame
+    DiscordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    DiscordButton.Position = UDim2.new(0, 10, 0.5, -15)
+    DiscordButton.Size = UDim2.new(0.48, -15, 0, 30)
+    DiscordButton.Font = Enum.Font.GothamBold
+    DiscordButton.Text = "Discord Server"
+    DiscordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DiscordButton.TextSize = 14
+
+    UICorner_5.CornerRadius = UDim.new(0, 6)
+    UICorner_5.Parent = DiscordButton
+
+    DiscordButton.MouseButton1Click:Connect(function()
+        setclipboard("https://discord.gg/kD95xE7n6U")
+        DiscordButton.Text = "Link Copied!"
+        task.wait(2)
+        DiscordButton.Text = "Discord Server"
+    end)
+
+    YouTubeButton.Name = "YouTubeButton"
+    YouTubeButton.Parent = SocialFrame
+    YouTubeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    YouTubeButton.Position = UDim2.new(0.52, 5, 0.5, -15)
+    YouTubeButton.Size = UDim2.new(0.48, -15, 0, 30)
+    YouTubeButton.Font = Enum.Font.GothamBold
+    YouTubeButton.Text = "YouTube Channel"
+    YouTubeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    YouTubeButton.TextSize = 14
+
+    UICorner_6.CornerRadius = UDim.new(0, 6)
+    UICorner_6.Parent = YouTubeButton
+
+    YouTubeButton.MouseButton1Click:Connect(function()
+        setclipboard("https://www.youtube.com/@Tawun12")
+        YouTubeButton.Text = "Link Copied!"
+        task.wait(2)
+        YouTubeButton.Text = "YouTube Channel"
+    end)
+
+    -- Tab Container
+    TabContainer.Name = "TabContainer"
+    TabContainer.Parent = MainFrame
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.Position = UDim2.new(0, 15, 0, 145)
+    TabContainer.Size = UDim2.new(1, -30, 1, -160)
+
+    -- Tab Buttons Frame
+    TabButtonsFrame.Name = "TabButtonsFrame"
+    TabButtonsFrame.Parent = TabContainer
+    TabButtonsFrame.BackgroundTransparency = 1
+    TabButtonsFrame.Size = UDim2.new(0, 120, 1, 0)
+
+    UIListLayout_Tabs.Parent = TabButtonsFrame
+    UIListLayout_Tabs.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout_Tabs.Padding = UDim.new(0, 8)
+
+    -- Toggle Button
+    ToggleMenuButton.Name = "ToggleMenuButton"
+    ToggleMenuButton.Parent = ScreenGui
+    ToggleMenuButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    ToggleMenuButton.Position = UDim2.new(1, -70, 0.5, -30)
+    ToggleMenuButton.Size = UDim2.new(0, 60, 0, 60)
+    ToggleMenuButton.Font = Enum.Font.GothamBold
+    ToggleMenuButton.Text = "☰"
+    ToggleMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleMenuButton.TextSize = 28
+    ToggleMenuButton.Active = true
+    ToggleMenuButton.Draggable = true
+
+    UICorner_Toggle.CornerRadius = UDim.new(0, 12)
+    UICorner_Toggle.Parent = ToggleMenuButton
+
+    local menuVisible = true
+    local function toggleMenu()
+        menuVisible = not menuVisible
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = menuVisible and UDim2.new(0.5, -300, 0.5, -250) or UDim2.new(0.5, -300, 1.5, 0)
+        }):Play()
+        ToggleMenuButton.Text = menuVisible and "☰" or "▲"
+    end
+
+    ToggleMenuButton.MouseButton1Click:Connect(toggleMenu)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.RightControl then
+            toggleMenu()
+        end
+    end)
+
+    local WindowManager = {}
+    WindowManager.Tabs = {}
+    WindowManager.CurrentTab = nil
+
+    function WindowManager:CreateTab(tabName)
+        local TabButton = Instance.new("TextButton")
+        local UICorner_Tab = Instance.new("UICorner")
+        local ContentFrame = Instance.new("ScrollingFrame")
+        local UIListLayout = Instance.new("UIListLayout")
+        local UIPadding = Instance.new("UIPadding")
+
+        TabButton.Name = tabName .. "Button"
+        TabButton.Parent = TabButtonsFrame
+        TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        TabButton.Size = UDim2.new(1, 0, 0, 40)
+        TabButton.Font = Enum.Font.GothamBold
+        TabButton.Text = tabName
+        TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TabButton.TextSize = 13
+
+        UICorner_Tab.CornerRadius = UDim.new(0, 8)
+        UICorner_Tab.Parent = TabButton
+
+        ContentFrame.Name = tabName .. "Content"
+        ContentFrame.Parent = TabContainer
+        ContentFrame.BackgroundTransparency = 1
+        ContentFrame.BorderSizePixel = 0
+        ContentFrame.Position = UDim2.new(0, 130, 0, 0)
+        ContentFrame.Size = UDim2.new(1, -130, 1, 0)
+        ContentFrame.ScrollBarThickness = 4
+        ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        ContentFrame.Visible = false
+
+        UIListLayout.Parent = ContentFrame
+        UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        UIListLayout.Padding = UDim.new(0, 8)
+
+        UIPadding.Parent = ContentFrame
+        UIPadding.PaddingTop = UDim.new(0, 5)
+
+        UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            ContentFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+        end)
+
+        local Tab = {
+            Name = tabName,
+            Button = TabButton,
+            Content = ContentFrame
+        }
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(WindowManager.Tabs) do
+                tab.Content.Visible = false
+                tab.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+                tab.Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+            ContentFrame.Visible = true
+            TabButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+            TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WindowManager.CurrentTab = Tab
+        end)
+
+        function Tab:CreateToggle(config)
+            local ToggleFrame = Instance.new("Frame")
+            local UICorner = Instance.new("UICorner")
+            local ToggleButton = Instance.new("TextButton")
+            local ToggleLabel = Instance.new("TextLabel")
+            local ToggleIndicator = Instance.new("Frame")
+            local UICorner_3 = Instance.new("UICorner")
+
+            ToggleFrame.Name = "ToggleFrame"
+            ToggleFrame.Parent = ContentFrame
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+            ToggleFrame.BorderSizePixel = 0
+            ToggleFrame.Size = UDim2.new(1, 0, 0, 45)
+
+            UICorner.CornerRadius = UDim.new(0, 8)
+            UICorner.Parent = ToggleFrame
+
+            ToggleButton.Name = "ToggleButton"
+            ToggleButton.Parent = ToggleFrame
+            ToggleButton.BackgroundTransparency = 1
+            ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+            ToggleButton.Font = Enum.Font.Gotham
+            ToggleButton.Text = ""
+            ToggleButton.TextSize = 14
+
+            ToggleLabel.Name = "ToggleLabel"
+            ToggleLabel.Parent = ToggleFrame
+            ToggleLabel.BackgroundTransparency = 1
+            ToggleLabel.Position = UDim2.new(0, 15, 0, 0)
+            ToggleLabel.Size = UDim2.new(1, -70, 1, 0)
+            ToggleLabel.Font = Enum.Font.GothamSemibold
+            ToggleLabel.Text = config.Name
+            ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ToggleLabel.TextSize = 14
+            ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            ToggleIndicator.Name = "ToggleIndicator"
+            ToggleIndicator.Parent = ToggleFrame
+            ToggleIndicator.BackgroundColor3 = config.CurrentValue and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(100, 100, 110)
+            ToggleIndicator.Position = UDim2.new(1, -55, 0.5, -10)
+            ToggleIndicator.Size = UDim2.new(0, 40, 0, 20)
+
+            UICorner_3.CornerRadius = UDim.new(1, 0)
+            UICorner_3.Parent = ToggleIndicator
+
+            local ToggleCircle = Instance.new("Frame")
+            local UICorner_4 = Instance.new("UICorner")
+
+            ToggleCircle.Name = "ToggleCircle"
+            ToggleCircle.Parent = ToggleIndicator
+            ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ToggleCircle.Position = config.CurrentValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+            ToggleCircle.Size = UDim2.new(0, 16, 0, 16)
+
+            UICorner_4.CornerRadius = UDim.new(1, 0)
+            UICorner_4.Parent = ToggleCircle
+
+            local toggled = config.CurrentValue
+
+            ToggleButton.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                
+                TweenService:Create(ToggleIndicator, TweenInfo.new(0.3), {
+                    BackgroundColor3 = toggled and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(100, 100, 110)
+                }):Play()
+                
+                TweenService:Create(ToggleCircle, TweenInfo.new(0.3), {
+                    Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+                }):Play()
+                
+                config.Callback(toggled)
+            end)
+
+            return { CurrentValue = toggled }
+        end
+
+        function Tab:CreateSlider(config)
+            local SliderFrame = Instance.new("Frame")
+            local UICorner = Instance.new("UICorner")
+            local SliderLabel = Instance.new("TextLabel")
+            local SliderValue = Instance.new("TextLabel")
+            local SliderBar = Instance.new("Frame")
+            local UICorner_2 = Instance.new("UICorner")
+            local SliderFill = Instance.new("Frame")
+            local UICorner_3 = Instance.new("UICorner")
+            local SliderButton = Instance.new("TextButton")
+
+            SliderFrame.Name = "SliderFrame"
+            SliderFrame.Parent = ContentFrame
+            SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+            SliderFrame.BorderSizePixel = 0
+            SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+
+            UICorner.CornerRadius = UDim.new(0, 8)
+            UICorner.Parent = SliderFrame
+
+            SliderLabel.Name = "SliderLabel"
+            SliderLabel.Parent = SliderFrame
+            SliderLabel.BackgroundTransparency = 1
+            SliderLabel.Position = UDim2.new(0, 15, 0, 8)
+            SliderLabel.Size = UDim2.new(1, -80, 0, 20)
+            SliderLabel.Font = Enum.Font.GothamSemibold
+            SliderLabel.Text = config.Name
+            SliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SliderLabel.TextSize = 14
+            SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            SliderValue.Name = "SliderValue"
+            SliderValue.Parent = SliderFrame
+            SliderValue.BackgroundTransparency = 1
+            SliderValue.Position = UDim2.new(1, -65, 0, 8)
+            SliderValue.Size = UDim2.new(0, 50, 0, 20)
+            SliderValue.Font = Enum.Font.GothamBold
+            SliderValue.Text = tostring(config.CurrentValue) .. (config.Suffix or "")
+            SliderValue.TextColor3 = Color3.fromRGB(100, 180, 255)
+            SliderValue.TextSize = 14
+            SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+
+            SliderBar.Name = "SliderBar"
+            SliderBar.Parent = SliderFrame
+            SliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            SliderBar.Position = UDim2.new(0, 15, 1, -22)
+            SliderBar.Size = UDim2.new(1, -30, 0, 6)
+
+            UICorner_2.CornerRadius = UDim.new(1, 0)
+            UICorner_2.Parent = SliderBar
+
+            SliderFill.Name = "SliderFill"
+            SliderFill.Parent = SliderBar
+            SliderFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+            SliderFill.Size = UDim2.new((config.CurrentValue - config.Range[1]) / (config.Range[2] - config.Range[1]), 0, 1, 0)
+
+            UICorner_3.CornerRadius = UDim.new(1, 0)
+            UICorner_3.Parent = SliderFill
+
+            SliderButton.Name = "SliderButton"
+            SliderButton.Parent = SliderBar
+            SliderButton.BackgroundTransparency = 1
+            SliderButton.Size = UDim2.new(1, 0, 1, 0)
+            SliderButton.Text = ""
+
+            local dragging = false
+
+            SliderButton.MouseButton1Down:Connect(function()
+                dragging = true
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+
+            SliderButton.MouseMoved:Connect(function(x)
+                if dragging then
+                    local percent = math.clamp((x - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+                    local value = config.Range[1] + (config.Range[2] - config.Range[1]) * percent
+                    value = math.floor(value / config.Increment + 0.5) * config.Increment
+                    value = math.clamp(value, config.Range[1], config.Range[2])
+                    
+                    SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+                    SliderValue.Text = tostring(value) .. (config.Suffix or "")
+                    config.Callback(value)
+                end
+            end)
+        end
+
+        table.insert(WindowManager.Tabs, Tab)
+        
+        if #WindowManager.Tabs == 1 then
+            ContentFrame.Visible = true
+            TabButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+            TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WindowManager.CurrentTab = Tab
+        end
+
+        return Tab
+    end
+
+    return WindowManager
+end
+
+-- Initialize GUI
+local Window = TawunLib:CreateWindow("Sybau Hub")
+
+-- TAB 1: LEGIT
+local LegitTab = Window:CreateTab("Legit")
+
+-- TAB 2: Rage
+local RageTab = Window:CreateTab("Rage")
+
+-- TAB 3: COMBO
+local ComboTab = Window:CreateTab("Combo")
+
+-- TAB 4: UTILITY
+local UtilityTab = Window:CreateTab("Utility")
+
+-- TAB 5: SETTINGS
+local SettingsTab = Window:CreateTab("Settings")
+
+-- ==================== TAB 1: LEGIT ====================
+
+-- Variables for Legit features
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- AUTO COUNTER
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Player References
+local LocalPlayer = Players.LocalPlayer
+
+-- Animation ID Sets (converted to dictionary for O(1) lookup)
+local attackAnimSet = {}
+local dashAnimSet = {}
+
+do
+    local attackIds = {
+        "10469493270", "10469630950", "10469639222", "10469643643", "13532562418",
+        "13532600125", "13532604085", "13294471966", "13491635433", "13296577783",
+        "13295919399", "13295936866", "13370310513", "13390230973", "13378751717",
+        "13378708199", "14004222985", "13997092940", "14001963401", "14136436157",
+        "15259161390", "15240216931", "15240176873", "15162694192", "165115503507",
+        "16515520431", "16515448089", "16552234590", "17889458563", "17889461810",
+        "17889471098", "17889290569", "17325510002", "17325513870", "17325522388", "17325537719",
+    }
+    local dashIds = {"13380255751", "10479335397"}
+    
+    for _, id in ipairs(attackIds) do attackAnimSet[id] = true end
+    for _, id in ipairs(dashIds) do dashAnimSet[id] = true end
+end
+
+-- Shared State
+local isLeftClickHeld = false
+local lastLeftClickRelease = 0
+
+-- Auto Counter State
+local counterRunning = false
+local autoCounterConnection = nil
+local CounterReactionTime = 0
+local CounterDistanceAttack = 12
+local CounterDistanceDash = 15
+local isCurrentlyCountering = false
+local trackedCounterEnemies = {}
+
+-- Auto Block State
+local AutoBlockConnection = nil
+local BlockReactionTime = 0.12
+local BlockHoldTime = 2.0
+local BlockDistanceAttack = 10
+local BlockDistanceDash = 15
+local isCurrentlyBlocking = false
+local trackedBlockEnemies = {}
+local clickCooldown = 0.5
+
+-- Input Tracking
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isLeftClickHeld = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isLeftClickHeld = false
+        lastLeftClickRelease = tick()
+    end
+end)
+
+-- Utility Functions
+local function getCharacterParts(char)
+    if not char then return nil, nil, nil end
+    return char:FindFirstChild("HumanoidRootPart"),
+           char:FindFirstChild("Humanoid"),
+           char:FindFirstChild("Communicate")
+end
+
+local function isAttacking(char)
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return false, false end
+    
+    local anim = hum:FindFirstChildOfClass("Animator")
+    if not anim then return false, false end
+    
+    for _, track in ipairs(anim:GetPlayingAnimationTracks()) do
+        local animId = tostring(track.Animation.AnimationId):match("%d+")
+        if animId then
+            if dashAnimSet[animId] then return false, true end
+            if attackAnimSet[animId] then return true, false end
+        end
+    end
+    
+    return false, false
+end
+
+local function isMovingTowards(enemyHRP, myPos)
+    local vel = enemyHRP.Velocity
+    if vel.Magnitude < 10 then return false end
+    
+    local dirToPlayer = (myPos - enemyHRP.Position).Unit
+    local velNorm = vel.Unit
+    return velNorm:Dot(dirToPlayer) > 0.7
+end
+
+local function getTool()
+    return LocalPlayer.Backpack:FindFirstChild("Prey's Peril") 
+        or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Prey's Peril"))
+end
+
+-- Counter Logic
+local function fireCounter()
+    if isCurrentlyCountering then return end
+    isCurrentlyCountering = true
+    
+    task.spawn(function()
+        if CounterReactionTime > 0 then task.wait(CounterReactionTime) end
+        
+        local tool = getTool()
+        local _, _, communicate = getCharacterParts(LocalPlayer.Character)
+        
+        if tool and communicate then
+            local success = pcall(function()
+                communicate:FireServer({ 
+                    Tool = tool, 
+                    Goal = "Console Move", 
+                    ToolName = "Prey's Peril" 
+                })
+                
+                task.wait(0.2)
+                communicate:FireServer({ 
+                    Goal = "Auto Use End", 
+                    Tool = tool 
+                })
+            end)
+        end
+        
+        task.wait(0.3)
+        isCurrentlyCountering = false
+    end)
+end
+
+-- Block Logic
+local function pressBlock()
+    if isCurrentlyBlocking then return end
+    isCurrentlyBlocking = true
+    
+    task.spawn(function()
+        task.wait(BlockReactionTime)
+        
+        local _, _, communicate = getCharacterParts(LocalPlayer.Character)
+        if not communicate then 
+            isCurrentlyBlocking = false
+            return 
+        end
+        
+        pcall(function()
+            communicate:FireServer({ Goal = "KeyPress", Key = Enum.KeyCode.F })
+        end)
+        
+        local blockStartTime = tick()
+        while tick() - blockStartTime < BlockHoldTime do
+            if isLeftClickHeld then break end
+            task.wait(0.05)
+        end
+        
+        pcall(function()
+            communicate:FireServer({ Goal = "KeyRelease", Key = Enum.KeyCode.F })
+        end)
+        
+        isCurrentlyBlocking = false
+    end)
+end
+
+-- Shared Detection Logic
+local function checkThreats(myPos, distAttack, distDash, trackedTable, actionCallback)
+    for _, enemy in ipairs(Players:GetPlayers()) do
+        if enemy == LocalPlayer then continue end
+        
+        local enemyChar = enemy.Character
+        if not enemyChar then continue end
+        
+        local eHRP, eHum = getCharacterParts(enemyChar)
+        if not eHRP or not eHum or eHum.Health <= 0 then continue end
+        
+        local dist = (eHRP.Position - myPos).Magnitude
+        local isAttack, isDash = isAttacking(enemyChar)
+        
+        local maxDist = math.max(distAttack, distDash)
+        
+        -- Clear tracking if out of range
+        if dist >= maxDist or (not isAttack and not isDash) then
+            trackedTable[enemy.UserId] = nil
+            continue
+        end
+        
+        -- Check if should trigger action
+        local shouldAct = false
+        if isAttack and dist < distAttack and isMovingTowards(eHRP, myPos) then
+            shouldAct = true
+        elseif isDash and dist < distDash and isMovingTowards(eHRP, myPos) then
+            shouldAct = true
+        end
+        
+        if shouldAct and not trackedTable[enemy.UserId] then
+            trackedTable[enemy.UserId] = true
+            actionCallback()
+            return -- Only handle one threat per frame
+        end
+    end
+end
+
+-- Auto Counter Toggle
+LegitTab:CreateToggle({
+    Name = "Auto Counter",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            autoCounterConnection = RunService.Heartbeat:Connect(function()
+                if isLeftClickHeld then return end
+                
+                local myHRP = getCharacterParts(LocalPlayer.Character)
+                if not myHRP then return end
+                
+                checkThreats(
+                    myHRP.Position,
+                    CounterDistanceAttack,
+                    CounterDistanceDash,
+                    trackedCounterEnemies,
+                    fireCounter
+                )
+            end)
+        else
+            if autoCounterConnection then
+                autoCounterConnection:Disconnect()
+                autoCounterConnection = nil
+            end
+            trackedCounterEnemies = {}
+        end
+    end
+})
+
+-- Sliders (Counter)
+LegitTab:CreateSlider({
+    Name = "Counter Reaction Time",
+    Range = {0, 0.3},
+    Increment = 0.01,
+    Suffix = "s",
+    CurrentValue = 0,
+    Callback = function(v) CounterReactionTime = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Counter Distance (Attack)",
+    Range = {5, 20},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 12,
+    Callback = function(v) CounterDistanceAttack = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Counter Distance (Dash)",
+    Range = {10, 25},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 15,
+    Callback = function(v) CounterDistanceDash = v end,
+})
+
+-- Auto Block Toggle
+LegitTab:CreateToggle({
+    Name = "Auto Block",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            AutoBlockConnection = RunService.Heartbeat:Connect(function()
+                if isLeftClickHeld or (tick() - lastLeftClickRelease < clickCooldown) then
+                    return
+                end
+                
+                local myHRP = getCharacterParts(LocalPlayer.Character)
+                if not myHRP then return end
+                
+                checkThreats(
+                    myHRP.Position,
+                    BlockDistanceAttack,
+                    BlockDistanceDash,
+                    trackedBlockEnemies,
+                    pressBlock
+                )
+            end)
+        else
+            if AutoBlockConnection then
+                AutoBlockConnection:Disconnect()
+                AutoBlockConnection = nil
+            end
+            trackedBlockEnemies = {}
+        end
+    end
+})
+
+
+-- Sliders (Block)
+LegitTab:CreateSlider({
+    Name = "Block Reaction Time",
+    Range = {0, 0.4},
+    Increment = 0.01,
+    Suffix = "s",
+    CurrentValue = 0.12,
+    Callback = function(v) BlockReactionTime = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Block Hold Time",
+    Range = {0.5, 3.0},
+    Increment = 0.1,
+    Suffix = "s",
+    CurrentValue = 2.0,
+    Callback = function(v) BlockHoldTime = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Block Distance (Attack)",
+    Range = {5, 15},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 10,
+    Callback = function(v) BlockDistanceAttack = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Block Distance (Dash)",
+    Range = {10, 20},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 15,
+    Callback = function(v) BlockDistanceDash = v end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Click Cooldown",
+    Range = {0.1, 1.5},
+    Increment = 0.1,
+    Suffix = "s",
+    CurrentValue = 0.5,
+    Callback = function(v) clickCooldown = v end,
+})
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- Animation IDs cần detect
+local DASH_ANIM_IDS = {"13380255751", "10479335397"}
+
+-- Cấu hình
+local MAX_TARGET_DISTANCE = 50
+local FOV_ANGLE = 120
+
+-- State management
+local lastDamagedPlayers = {}
+local damageTimeout = 5
+local currentTarget = nil
+local isEnabled = false
+
+-- Connections để cleanup
+local connections = {}
+
+-- Kiểm tra target ở trước mặt
+local function isInFrontOfPlayer(rootPart, targetPosition)
+    local lookVector = rootPart.CFrame.LookVector
+    local directionToTarget = (targetPosition - rootPart.Position).Unit
+    local dotProduct = lookVector:Dot(directionToTarget)
+    local angle = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
+    return angle <= (FOV_ANGLE / 2)
+end
+
+-- Track damage
+local function trackDamage(targetPlayer)
+    lastDamagedPlayers[targetPlayer] = tick()
+end
+
+-- Tìm target
+local function findTargetInFront(rootPart)
+    local validTargets = {}
+    local currentTime = tick()
+    
+    -- Cleanup damaged players timeout
+    for targetPlayer, damageTime in pairs(lastDamagedPlayers) do
+        if currentTime - damageTime > damageTimeout then
+            lastDamagedPlayers[targetPlayer] = nil
+        end
+    end
+    
+    -- Ưu tiên người vừa đánh
+    for targetPlayer, damageTime in pairs(lastDamagedPlayers) do
+        if currentTime - damageTime <= damageTimeout then
+            if targetPlayer and targetPlayer.Character then
+                local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local targetHumanoid = targetPlayer.Character:FindFirstChild("Humanoid")
+                
+                if targetRoot and targetHumanoid and targetHumanoid.Health > 0 then
+                    local distance = (rootPart.Position - targetRoot.Position).Magnitude
+                    
+                    if distance <= MAX_TARGET_DISTANCE and isInFrontOfPlayer(rootPart, targetRoot.Position) then
+                        table.insert(validTargets, {
+                            player = targetPlayer,
+                            distance = distance,
+                            root = targetRoot
+                        })
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Nếu không có người vừa đánh, tìm người chơi gần nhất
+    if #validTargets == 0 then
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local otherHumanoid = otherPlayer.Character:FindFirstChild("Humanoid")
+                
+                if otherRoot and otherHumanoid and otherHumanoid.Health > 0 then
+                    local distance = (rootPart.Position - otherRoot.Position).Magnitude
+                    
+                    if distance <= MAX_TARGET_DISTANCE and isInFrontOfPlayer(rootPart, otherRoot.Position) then
+                        table.insert(validTargets, {
+                            player = otherPlayer,
+                            distance = distance,
+                            root = otherRoot
+                        })
+                    end
+                end
+            end
+        end
+    end
+    
+    if #validTargets > 0 then
+        table.sort(validTargets, function(a, b) return a.distance < b.distance end)
+        return validTargets[1].player, validTargets[1].root
+    end
+    
+    return nil, nil
+end
+
+-- Setup damage detection cho character
+local function setupDamageDetection(character)
+    local function onToolAdded(tool)
+        if tool:IsA("Tool") then
+            local handle = tool:FindFirstChild("Handle")
+            if handle then
+                local conn = handle.Touched:Connect(function(hit)
+                    if not isEnabled then return end
+                    
+                    local targetChar = hit.Parent
+                    if targetChar and targetChar:FindFirstChild("Humanoid") then
+                        local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+                        if targetPlayer and targetPlayer ~= player then
+                            trackDamage(targetPlayer)
+                        end
+                    end
+                end)
+                table.insert(connections, conn)
+            end
+        end
+    end
+    
+    local conn1 = character.ChildAdded:Connect(onToolAdded)
+    table.insert(connections, conn1)
+    
+    for _, tool in pairs(character:GetChildren()) do
+        onToolAdded(tool)
+    end
+end
+
+-- Monitor animation để tự động set target
+local function monitorDashAnimation(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    
+    local conn = humanoid.AnimationPlayed:Connect(function(animTrack)
+        -- CHECK: Không chạy nếu không enabled HOẶC S+Dash đang active
+        if not isEnabled then return end
+        if _G.isSDashActive == true then return end
+        
+        local animId = animTrack.Animation.AnimationId
+        
+        -- Kiểm tra có phải dash animation không
+        for _, dashId in pairs(DASH_ANIM_IDS) do
+            if animId:find(dashId) then
+                -- Tìm và set target ngay khi animation bắt đầu
+                local target, targetRoot = findTargetInFront(rootPart)
+                
+                if target and targetRoot then
+                    currentTarget = targetRoot
+                    
+                    -- Bắt đầu auto-aim
+                    local originalAutoRotate = humanoid.AutoRotate
+                    humanoid.AutoRotate = false
+                    
+                    local aimConnection
+                    aimConnection = RunService.Heartbeat:Connect(function()
+                        -- Kiểm tra các điều kiện dừng
+                        if not isEnabled then
+                            if aimConnection then aimConnection:Disconnect() end
+                            pcall(function()
+                                if humanoid and humanoid.Parent then
+                                    humanoid.AutoRotate = originalAutoRotate
+                                end
+                            end)
+                            currentTarget = nil
+                            return
+                        end
+                        
+                        -- Dừng nếu S+Dash active
+                        if _G.isSDashActive == true then
+                            if aimConnection then aimConnection:Disconnect() end
+                            pcall(function()
+                                if humanoid and humanoid.Parent then
+                                    humanoid.AutoRotate = originalAutoRotate
+                                end
+                            end)
+                            currentTarget = nil
+                            return
+                        end
+                        
+                        -- Dừng nếu animation không còn play hoặc target mất
+                        if not animTrack.IsPlaying or not currentTarget or not currentTarget.Parent then
+                            if aimConnection then aimConnection:Disconnect() end
+                            pcall(function()
+                                if humanoid and humanoid.Parent then
+                                    humanoid.AutoRotate = originalAutoRotate
+                                end
+                            end)
+                            currentTarget = nil
+                            return
+                        end
+                        
+                        -- Xoay nhân vật về target
+                        pcall(function()
+                            if rootPart and rootPart.Parent and currentTarget and currentTarget.Parent then
+                                local targetPos = currentTarget.Position
+                                local lookAtTarget = CFrame.new(
+                                    rootPart.Position, 
+                                    Vector3.new(targetPos.X, rootPart.Position.Y, targetPos.Z)
+                                )
+                                rootPart.CFrame = lookAtTarget
+                            end
+                        end)
+                    end)
+                    
+                    table.insert(connections, aimConnection)
+                end
+                
+                break
+            end
+        end
+    end)
+    
+    table.insert(connections, conn)
+end
+
+-- Cleanup tất cả connections
+local function cleanup()
+    for _, conn in pairs(connections) do
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    connections = {}
+    
+    currentTarget = nil
+    lastDamagedPlayers = {}
+    
+    -- Restore AutoRotate nếu có character
+    pcall(function()
+        if player.Character then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.AutoRotate = true
+            end
+        end
+    end)
+end
+
+-- Setup cho character mới
+local function setupCharacter(character)
+    cleanup()
+    
+    if not isEnabled then return end
+    
+    -- Đợi character load đầy đủ
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    
+    if not humanoid or not rootPart then return end
+    
+    setupDamageDetection(character)
+    monitorDashAnimation(character)
+end
+
+-- Xử lý respawn
+local respawnConnection = player.CharacterAdded:Connect(function(character)
+    setupCharacter(character)
+end)
+
+-- Setup character hiện tại nếu có
+if player.Character then
+    task.spawn(function()
+        setupCharacter(player.Character)
+    end)
+end
+
+-- UI Controls
+local AutoAimToggle = LegitTab:CreateToggle({
+    Name = "Target Dash (Legit)",
+    CurrentValue = false,
+    Callback = function(Value)
+        isEnabled = Value
+        
+        if Value then
+            -- Bật: setup lại character hiện tại
+            if player.Character then
+                setupCharacter(player.Character)
+            end
+        else
+            -- Tắt: cleanup everything
+            cleanup()
+        end
+    end,
+})
+
+LegitTab:CreateSlider({
+    Name = "FOV",
+    Range = {0, 360},
+    Increment = 1,
+    Suffix = "°",
+    CurrentValue = 120,
+    Callback = function(Value)
+        FOV_ANGLE = Value
+    end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Target Distance",
+    Range = {10, 100},
+    Increment = 5,
+    Suffix = " studs",
+    CurrentValue = 50,
+    Callback = function(Value)
+        MAX_TARGET_DISTANCE = Value
+    end,
+})
+
+-- Cleanup khi player leave
+Players.PlayerRemoving:Connect(function(removingPlayer)
+    if removingPlayer == player then
+        cleanup()
+        if respawnConnection then
+            respawnConnection:Disconnect()
+        end
+    end
+end)
+
+-- AIM ASSIST
+local AimAssistToggle
+local AimConnection = nil
+local AimStrength = 0.15
+
+AimAssistToggle = LegitTab:CreateToggle({
+    Name = "Aim Assist",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            AimConnection = RunService.RenderStepped:Connect(function()
+                local myChar = LocalPlayer.Character
+                if not myChar then return end
+                
+                local camera = workspace.CurrentCamera
+                local mousePos = UserInputService:GetMouseLocation()
+                local closest = nil
+                local closestDist = math.huge
+                
+                for _, enemy in ipairs(Players:GetPlayers()) do
+                    if enemy == LocalPlayer then continue end
+                    if not enemy.Character then continue end
+                    
+                    local eHRP = enemy.Character:FindFirstChild("HumanoidRootPart")
+                    if not eHRP then continue end
+                    
+                    local screenPos, onScreen = camera:WorldToScreenPoint(eHRP.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                        if distance < closestDist and distance < 200 then
+                            closest = enemy
+                            closestDist = distance
+                        end
+                    end
+                end
+                
+                if closest and closest.Character then
+                    local eHRP = closest.Character:FindFirstChild("HumanoidRootPart")
+                    if eHRP then
+                        local targetPos = eHRP.Position
+                        local currentCFrame = camera.CFrame
+                        local targetCFrame = CFrame.new(camera.CFrame.Position, targetPos)
+                        camera.CFrame = currentCFrame:Lerp(targetCFrame, AimStrength)
+                    end
+                end
+            end)
+        else
+            if AimConnection then AimConnection:Disconnect() end
+        end
+    end,
+})
+
+LegitTab:CreateSlider({
+    Name = "Aim Assist Strength",
+    Range = {0.005, 0.5},
+    Increment = 0.05,
+    Suffix = "",
+    CurrentValue = 0.15,
+    Callback = function(Value) AimStrength = Value end,
+})
+
+-- ==================== M1 Reset Script ====================
+local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- Configuration
+local Config = {
+    QHoldTime = 0.19,
+    CamBackDelay = 0.1,
+    CamBackAngle = 85,
+    MoveDistance = 12,
+    MoveDuration = 0.1
+}
+
+-- State
+local isM1ResetEnabled = false
+local isExecuting = false
+
+-- Functions
+local function PressKey(key)
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, key, false, game)
+    end)
+end
+
+local function ReleaseKey(key)
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(false, key, false, game)
+    end)
+end
+
+local function RotateCamera()
+    if Camera then
+        Camera.CFrame = Camera.CFrame * CFrame.Angles(0, math.rad(Config.CamBackAngle), 0)
+    end
+end
+
+local function SendDashSignal()
+    local args = {
+        {
+            Dash = Enum.KeyCode.W,
+            Key = Enum.KeyCode.Q,
+            Goal = "KeyPress"
+        }
+    }
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("Communicate") then
+        character.Communicate:FireServer(unpack(args))
+    end
+end
+
+local function MoveRight(distance, duration)
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local hrp = character.HumanoidRootPart
+        local offset = hrp.CFrame.RightVector * distance
+        local targetCFrame = hrp.CFrame + offset
+        TweenService:Create(hrp, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+            CFrame = CFrame.new(targetCFrame.Position, targetCFrame.Position + hrp.CFrame.LookVector)
+        }):Play()
+    end
+end
+
+local function ExecuteM1Reset()
+    if not isM1ResetEnabled or isExecuting then return end
+    
+    isExecuting = true
+    
+    pcall(function()
+        -- Thực hiện M1 Reset
+        PressKey(Enum.KeyCode.D)
+        PressKey(Enum.KeyCode.Q)
+        MoveRight(Config.MoveDistance, Config.MoveDuration)
+        task.wait(Config.QHoldTime)
+        ReleaseKey(Enum.KeyCode.D)
+        ReleaseKey(Enum.KeyCode.Q)
+        task.wait(Config.CamBackDelay)
+        RotateCamera()
+        SendDashSignal()
+    end)
+    
+    task.wait(0.1)
+    isExecuting = false
+end
+
+-- Keybind Handler (Press E)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
+        ExecuteM1Reset()
+    end
+end)
+
+-- GUI Creation
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "M1ResetUI_Improved"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Enabled = false -- Bắt đầu ở trạng thái ẩn
+pcall(function()
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end)
+
+-- Main Button
+local MainButton = Instance.new("TextButton")
+MainButton.Parent = ScreenGui
+MainButton.Size = UDim2.new(0, 120, 0, 50)
+MainButton.Position = UDim2.new(0.5, -60, 0.5, -25)
+MainButton.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+MainButton.Text = "M1 RESET"
+MainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainButton.TextSize = 18
+MainButton.Font = Enum.Font.GothamBold
+MainButton.Active = true
+MainButton.Draggable = true
+
+local MainCorner = Instance.new("UICorner", MainButton)
+MainCorner.CornerRadius = UDim.new(0, 12)
+
+local MainStroke = Instance.new("UIStroke", MainButton)
+MainStroke.Color = Color3.fromRGB(80, 150, 255)
+MainStroke.Thickness = 2
+MainStroke.Transparency = 0.3
+
+local MainGradient = Instance.new("UIGradient", MainButton)
+MainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 60))
+})
+MainGradient.Rotation = 90
+
+-- Keybind Label
+local KeybindLabel = Instance.new("TextLabel")
+KeybindLabel.Parent = MainButton
+KeybindLabel.Size = UDim2.new(1, 0, 0, 16)
+KeybindLabel.Position = UDim2.new(0, 0, 1, 4)
+KeybindLabel.BackgroundTransparency = 1
+KeybindLabel.Text = "[Press E]"
+KeybindLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+KeybindLabel.TextSize = 12
+KeybindLabel.Font = Enum.Font.Gotham
+KeybindLabel.TextTransparency = 0.4
+
+-- Button Click Animation
+local OriginalSize = MainButton.Size
+local function AnimateButton()
+    local Shrink = TweenService:Create(MainButton, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 110, 0, 45)
+    })
+    local Expand = TweenService:Create(MainButton, TweenInfo.new(0.12, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+        Size = OriginalSize
+    })
+    Shrink:Play()
+    Shrink.Completed:Connect(function()
+        Expand:Play()
+    end)
+end
+
+-- Button Click Handler
+MainButton.MouseButton1Click:Connect(function()
+    AnimateButton()
+    ExecuteM1Reset()
+end)
+
+-- UI Controls
+local M1ResetToggle = LegitTab:CreateToggle({
+    Name = "M1 Reset",
+    CurrentValue = false,
+    Callback = function(Value)
+        isM1ResetEnabled = Value
+        -- Hiện/ẩn GUI dựa trên toggle
+        if ScreenGui then
+            ScreenGui.Enabled = Value
+        end
+    end,
+})
+
+-- ==================== TAB 2: Rage ====================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local char, root, humanoid
+
+-- Animation IDs
+local DASH_ANIM_IDS = {["13380255751"] = true, ["10479335397"] = true}
+local BLOCK_ANIM_ID = "10470389827", "13935548552"
+
+-- Constants
+local TAU = math.pi * 2
+local HALF_PI = math.pi * 0.5
+
+-- Config
+local config = {
+    -- Target Dash
+    targetMaxDistance = 50,
+    targetFOV = 120,
+    damageTimeout = 5,
+    
+    -- Teleport Behind
+    behindDistance = 7,
+    teleportTriggerDistance = 10,
+    aimDelay = 0.5
+}
+
+-- State
+local state = {
+    enabled = false,
+    target = nil,
+    targetPlayer = nil,
+    mode = "IDLE", -- "IDLE", "TARGET_DASH", "DASH_TO_TELEPORT", "TELEPORT_BEHIND"
+    
+    -- Teleport Behind state
+    lockedHeight = nil,
+    phase = "IDLE",
+    behindCheckTime = 0,
+    lastCleanup = 0
+}
+
+local damagedPlayers = {}
+local connections = {}
+local targetBlockAnimTrack = nil
+
+-- ============================================================================
+-- UTILITY FUNCTIONS
+-- ============================================================================
+
+local function isInFOV(fromPos, lookVec, toPos, fovAngle)
+    local dir = (toPos - fromPos).Unit
+    local dot = lookVec:Dot(dir)
+    return math.acos(math.clamp(dot, -1, 1)) <= math.rad(fovAngle * 0.5)
+end
+
+local function cleanupDamagedPlayers()
+    local now = tick()
+    if now - state.lastCleanup < 1 then return end
+    
+    state.lastCleanup = now
+    for p, t in pairs(damagedPlayers) do
+        if now - t > config.damageTimeout or not p.Parent then
+            damagedPlayers[p] = nil
+        end
+    end
+end
+
+-- ============================================================================
+-- BLOCK DETECTION
+-- ============================================================================
+
+local function isTargetBlockingPlayer()
+    if not state.target or not state.targetPlayer then return false end
+    if not root then return false end
+    
+    local targetChar = state.targetPlayer.Character
+    if not targetChar then return false end
+    
+    local targetHumanoid = targetChar:FindFirstChild("Humanoid")
+    if not targetHumanoid then return false end
+    
+    -- Check khoảng cách
+    local distance = (root.Position - state.target.Position).Magnitude
+    if distance > config.targetMaxDistance then return false end
+    
+    -- Check target có đang play block animation không
+    local isBlocking = false
+    for _, track in pairs(targetHumanoid:GetPlayingAnimationTracks()) do
+        local animId = track.Animation.AnimationId:match("%d+")
+        if animId == BLOCK_ANIM_ID then
+            isBlocking = true
+            targetBlockAnimTrack = track
+            break
+        end
+    end
+    
+    if not isBlocking then 
+        targetBlockAnimTrack = nil
+        return false 
+    end
+    
+    -- Check player có trong FOV của target không
+    local targetPos = state.target.Position
+    local targetLookVec = state.target.CFrame.LookVector
+    local playerPos = root.Position
+    
+    return isInFOV(targetPos, targetLookVec, playerPos, config.targetFOV)
+end
+
+-- ============================================================================
+-- TARGET FINDING
+-- ============================================================================
+
+local function findTarget()
+    if not root then return nil, nil end
+    
+    cleanupDamagedPlayers()
+    
+    local rootPos = root.Position
+    local lookVec = root.CFrame.LookVector
+    local bestTarget, bestPlayer, bestDist = nil, nil, math.huge
+    
+    -- Priority 1: Recently damaged players
+    for p in pairs(damagedPlayers) do
+        if p.Character then
+            local r = p.Character:FindFirstChild("HumanoidRootPart")
+            local h = p.Character:FindFirstChild("Humanoid")
+            
+            if r and h and h.Health > 0 then
+                local dist = (rootPos - r.Position).Magnitude
+                if dist <= config.targetMaxDistance and dist < bestDist and isInFOV(rootPos, lookVec, r.Position, config.targetFOV) then
+                    bestTarget = r
+                    bestPlayer = p
+                    bestDist = dist
+                end
+            end
+        end
+    end
+    
+    if bestTarget then return bestTarget, bestPlayer end
+    
+    -- Priority 2: Any valid player in FOV
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            local r = p.Character:FindFirstChild("HumanoidRootPart")
+            local h = p.Character:FindFirstChild("Humanoid")
+            
+            if r and h and h.Health > 0 then
+                local dist = (rootPos - r.Position).Magnitude
+                if dist <= config.targetMaxDistance and dist < bestDist and isInFOV(rootPos, lookVec, r.Position, config.targetFOV) then
+                    bestTarget = r
+                    bestPlayer = p
+                    bestDist = dist
+                end
+            end
+        end
+    end
+    
+    return bestTarget, bestPlayer
+end
+
+-- ============================================================================
+-- TARGET DASH LOGIC
+-- ============================================================================
+
+local function updateTargetDash()
+    if not state.enabled or not root or not state.target or not state.target.Parent then
+        return false
+    end
+    
+    -- Xoay về target
+    pcall(function()
+        if root and root.Parent and state.target and state.target.Parent then
+            local targetPos = state.target.Position
+            local lookAtTarget = CFrame.new(
+                root.Position, 
+                Vector3.new(targetPos.X, root.Position.Y, targetPos.Z)
+            )
+            root.CFrame = lookAtTarget
+        end
+    end)
+    
+    return true
+end
+
+-- ============================================================================
+-- DASH TO TELEPORT LOGIC
+-- ============================================================================
+
+local function updateDashToTeleport()
+    if not state.enabled or not root or not state.target or not state.target.Parent then
+        return false
+    end
+    
+    -- Tính khoảng cách đến target
+    local distance = (root.Position - state.target.Position).Magnitude
+    
+    -- Nếu đã đến gần target đủ (9 studs), chuyển sang teleport
+    if distance <= config.teleportTriggerDistance then
+        print("[HYBRID DASH] Distance reached, teleporting behind...")
+        state.mode = "TELEPORT_BEHIND"
+        state.lockedHeight = root.Position.Y
+        state.phase = "TELEPORT"
+        return true
+    end
+    
+    -- Vẫn còn xa, tiếp tục dash về phía target
+    pcall(function()
+        if root and root.Parent and state.target and state.target.Parent then
+            local targetPos = state.target.Position
+            local lookAtTarget = CFrame.new(
+                root.Position, 
+                Vector3.new(targetPos.X, root.Position.Y, targetPos.Z)
+            )
+            root.CFrame = lookAtTarget
+        end
+    end)
+    
+    return true
+end
+
+-- ============================================================================
+-- TELEPORT BEHIND LOGIC
+-- ============================================================================
+
+local function updateTeleportBehind(dt)
+    if not state.enabled or not root or not state.target or not state.target.Parent then
+        return false
+    end
+    
+    local targetPos = state.target.Position
+    
+    -- Phase 1: Teleport behind target
+    if state.phase == "TELEPORT" then
+        -- Lấy hướng nhìn của target
+        local targetLook = Vector3.new(
+            state.target.CFrame.LookVector.X,
+            0,
+            state.target.CFrame.LookVector.Z
+        ).Unit
+        
+        -- Tính vị trí phía sau target (distance = 7 studs)
+        local behindPos = Vector3.new(
+            targetPos.X - targetLook.X * config.behindDistance,
+            state.lockedHeight,
+            targetPos.Z - targetLook.Z * config.behindDistance
+        )
+        
+        -- Teleport thẳng về phía sau
+        root.CFrame = CFrame.new(behindPos, Vector3.new(targetPos.X, state.lockedHeight, targetPos.Z))
+        
+        state.phase = "BEHIND_AIM"
+        state.behindCheckTime = tick()
+        
+    -- Phase 2: Aim at target from behind
+    elseif state.phase == "BEHIND_AIM" then
+        local targetLook = Vector3.new(
+            state.target.CFrame.LookVector.X,
+            0,
+            state.target.CFrame.LookVector.Z
+        ).Unit
+        
+        local behindPos = Vector3.new(
+            targetPos.X - targetLook.X * config.behindDistance,
+            state.lockedHeight,
+            targetPos.Z - targetLook.Z * config.behindDistance
+        )
+        
+        -- Giữ vị trí và aim vào target
+        root.CFrame = CFrame.new(behindPos, Vector3.new(targetPos.X, state.lockedHeight, targetPos.Z))
+        
+        if tick() - state.behindCheckTime >= config.aimDelay then
+            return false
+        end
+    end
+    
+    return true
+end
+
+-- ============================================================================
+-- DAMAGE DETECTION
+-- ============================================================================
+
+local function setupDamageDetection()
+    local function onToolAdded(tool)
+        if not tool:IsA("Tool") then return end
+        
+        local handle = tool:FindFirstChild("Handle")
+        if not handle then return end
+        
+        local conn = handle.Touched:Connect(function(hit)
+            if not state.enabled then return end
+            
+            local targetChar = hit.Parent
+            if not targetChar then return end
+            
+            local targetHum = targetChar:FindFirstChild("Humanoid")
+            if not targetHum then return end
+            
+            local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+            if targetPlayer and targetPlayer ~= player then
+                damagedPlayers[targetPlayer] = tick()
+            end
+        end)
+        
+        table.insert(connections, conn)
+    end
+    
+    table.insert(connections, char.ChildAdded:Connect(onToolAdded))
+    
+    for _, tool in ipairs(char:GetChildren()) do
+        onToolAdded(tool)
+    end
+end
+
+-- ============================================================================
+-- ANIMATION MONITORING
+-- ============================================================================
+
+local function startDashMode(dashAnimTrack, targetRoot, targetPlr)
+    state.target = targetRoot
+    state.targetPlayer = targetPlr
+    
+    -- Check nếu target đang block và nhìn player
+    local shouldTeleportBehind = isTargetBlockingPlayer()
+    
+    if shouldTeleportBehind then
+        -- DASH TO TELEPORT MODE
+        state.mode = "DASH_TO_TELEPORT"
+        
+        print("[HYBRID DASH] Dashing to target (will teleport at 9 studs)")
+    else
+        -- TARGET DASH MODE
+        state.mode = "TARGET_DASH"
+        print("[HYBRID DASH] Target Dash activated")
+    end
+    
+    -- Save and disable auto-rotate
+    local originalAutoRotate = humanoid.AutoRotate
+    humanoid.AutoRotate = false
+    
+    -- Main dash loop
+    local dashConn
+    dashConn = RunService.Heartbeat:Connect(function(dt)
+        -- Stop conditions
+        if not state.enabled or not dashAnimTrack.IsPlaying then
+            if dashConn then dashConn:Disconnect() end
+            pcall(function()
+                if humanoid and humanoid.Parent then
+                    humanoid.AutoRotate = originalAutoRotate
+                end
+            end)
+            state.target = nil
+            state.targetPlayer = nil
+            state.mode = "IDLE"
+            state.lockedHeight = nil
+            state.phase = "IDLE"
+            targetBlockAnimTrack = nil
+            return
+        end
+        
+        -- Check nếu target bắt đầu block giữa chừng -> chuyển sang Dash to Teleport
+        if state.mode == "TARGET_DASH" and isTargetBlockingPlayer() then
+            print("[HYBRID DASH] Target started blocking, switching to dash-teleport mode")
+            state.mode = "DASH_TO_TELEPORT"
+        end
+        
+        -- Update based on mode
+        local success, shouldContinue = true, true
+        
+        if state.mode == "TARGET_DASH" then
+            success, shouldContinue = pcall(updateTargetDash)
+        elseif state.mode == "DASH_TO_TELEPORT" then
+            success, shouldContinue = pcall(updateDashToTeleport)
+        elseif state.mode == "TELEPORT_BEHIND" then
+            success, shouldContinue = pcall(updateTeleportBehind, dt)
+        end
+        
+        if not success or not shouldContinue then
+            if dashConn then dashConn:Disconnect() end
+            pcall(function()
+                if humanoid and humanoid.Parent then
+                    humanoid.AutoRotate = originalAutoRotate
+                end
+            end)
+            state.target = nil
+            state.targetPlayer = nil
+            state.mode = "IDLE"
+            state.lockedHeight = nil
+            state.phase = "IDLE"
+            targetBlockAnimTrack = nil
+        end
+    end)
+    
+    table.insert(connections, dashConn)
+end
+
+local function monitorAnimations()
+    local conn = humanoid.AnimationPlayed:Connect(function(track)
+        if not state.enabled then return end
+        if _G.isSDashActive == true then return end
+        
+        local animId = track.Animation.AnimationId:match("%d+")
+        if not animId or not DASH_ANIM_IDS[animId] then return end
+        
+        local targetRoot, targetPlr = findTarget()
+        if not targetRoot then return end
+        
+        startDashMode(track, targetRoot, targetPlr)
+    end)
+    
+    table.insert(connections, conn)
+end
+
+-- ============================================================================
+-- CHARACTER SETUP & CLEANUP
+-- ============================================================================
+
+local function cleanup()
+    for _, conn in ipairs(connections) do
+        if conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    table.clear(connections)
+    
+    state.target = nil
+    state.targetPlayer = nil
+    state.mode = "IDLE"
+    state.lockedHeight = nil
+    state.phase = "IDLE"
+    table.clear(damagedPlayers)
+    targetBlockAnimTrack = nil
+    
+    if humanoid and humanoid.Parent then
+        humanoid.AutoRotate = true
+    end
+end
+
+local function setupCharacter(character)
+    cleanup()
+    
+    char = character
+    root = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:WaitForChild("Humanoid")
+    
+    if not state.enabled then return end
+    if not root or not humanoid then return end
+    
+    setupDamageDetection()
+    monitorAnimations()
+end
+
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
+
+player.CharacterAdded:Connect(setupCharacter)
+if player.Character then
+    task.spawn(setupCharacter, player.Character)
+end
+
+-- ============================================================================
+-- UI CONTROLS
+-- ============================================================================
+
+RageTab:CreateToggle({
+    Name = "Target Dash (Anti Block)",
+    CurrentValue = false,
+    Callback = function(v)
+        state.enabled = v
+        if v then
+            if player.Character then setupCharacter(player.Character) end
+        else
+            cleanup()
+        end
+    end,
+})
+
+RageTab:CreateSlider({
+    Name = "FOV",
+    Range = {0, 360},
+    Increment = 1,
+    Suffix = "°",
+    CurrentValue = 120,
+    Callback = function(v) config.targetFOV = v end,
+})
+
+RageTab:CreateSlider({
+    Name = "Target Distance",
+    Range = {10, 100},
+    Increment = 5,
+    Suffix = " studs",
+    CurrentValue = 50,
+    Callback = function(v) config.targetMaxDistance = v end,
+})
+
+-- ==================== TAB 3: COMBO ====================
+
+local player = game:GetService("Players").LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local KyotoToggle
+local animationConnection = nil
+local isKyotoEnabled = false
+local shiftLockWasEnabled = false
+local isComboRunning = false
+
+local function isShiftLockEnabled()
+    local enabled = false
+    pcall(function()
+        if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+            enabled = true
+        end
+    end)
+    return enabled
+end
+
+local function disableShiftLock()
+    shiftLockWasEnabled = isShiftLockEnabled()
+    if shiftLockWasEnabled then
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftShift, false, game)
+        wait(0.05)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game)
+    end
+end
+
+local function holdD()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.D, false, game)
+end
+
+local function releaseD()
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.D, false, game)
+end
+
+local function pressQ()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+    wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+    
+    wait(0.05)
+    pcall(function()
+        local args = {{ Dash = Enum.KeyCode.D, Key = Enum.KeyCode.Q, Goal = "KeyPress" }}
+        character:WaitForChild("Communicate"):FireServer(unpack(args))
+    end)
+end
+
+local function useHuntersGrasp()
+    pcall(function()
+        local args = {{
+            Tool = player:WaitForChild("Backpack"):WaitForChild("Hunter's Grasp"),
+            Goal = "Console Move",
+            ToolName = "Hunter's Grasp"
+        }}
+        character:WaitForChild("Communicate"):FireServer(unpack(args))
+    end)
+end
+
+local function executeCombo(flowingWaterTrack)
+    if isComboRunning or not isKyotoEnabled then return end
+    isComboRunning = true
+    
+    task.spawn(function()
+        disableShiftLock()
+        wait(0.1)
+        holdD()
+        
+        local animLength = flowingWaterTrack.Length
+        local timeToWait = math.max(0, animLength - 0.52)
+        wait(timeToWait)
+        
+        pressQ()
+
+        wait(0.2)
+        useHuntersGrasp()
+        
+        wait(0.5)
+        releaseD()
+        isComboRunning = false
+    end)
+end
+
+local function setupKyotoDetection()
+    local anim = humanoid:WaitForChild("Animator")
+    if animationConnection then animationConnection:Disconnect() end
+    
+    animationConnection = anim.AnimationPlayed:Connect(function(animationTrack)
+        if isComboRunning or not isKyotoEnabled then return end
+        local animId = animationTrack.Animation.AnimationId
+        if animId:find("12273188754") then
+            executeCombo(animationTrack)
+        end
+    end)
+end
+
+KyotoToggle = ComboTab:CreateToggle({
+    Name = "Kyoto Combo",
+    CurrentValue = false,
+    Callback = function(Value)
+        isKyotoEnabled = Value
+        if Value then
+            setupKyotoDetection()
+        else
+            if animationConnection then
+                animationConnection:Disconnect()
+                animationConnection = nil
+            end
+            isComboRunning = false
+        end
+    end,
+})
+
+-- LWS TECH
+local LWSTechToggle
+local lwsTechConnection = nil
+local isLWSTechEnabled = false
+local isLWSProcessing = false
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local function teleportUp()
+    if rootPart then
+        rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 100, 0)
+    end
+end
+
+local function setupLWSTechDetection()
+    if lwsTechConnection then lwsTechConnection:Disconnect() end
+    
+    lwsTechConnection = humanoid.AnimationPlayed:Connect(function(animationTrack)
+        if isLWSProcessing or not isLWSTechEnabled then return end
+        if animationTrack.Animation.AnimationId == "rbxassetid://12296113986" then
+            isLWSProcessing = true
+            wait(1.55)
+            teleportUp()
+            wait(0.5)
+            isLWSProcessing = false
+        end
+    end)
+end
+
+LWSTechToggle = ComboTab:CreateToggle({
+    Name = "LWS Tech",
+    CurrentValue = false,
+    Callback = function(Value)
+        isLWSTechEnabled = Value
+        if Value then
+            setupLWSTechDetection()
+        else
+            if lwsTechConnection then
+                lwsTechConnection:Disconnect()
+                lwsTechConnection = nil
+            end
+            isLWSProcessing = false
+        end
+    end,
+})
+
+-- S + DASH
+local SDashToggle
+local sDashConnection = nil
+local isSDashEnabled = false
+local isSDashProcessing = false
+
+-- Biến global để các script khác có thể kiểm tra
+_G.isSDashActive = false
+
+local function pressKey(keyCode)
+    local vim = game:GetService("VirtualInputManager")
+    vim:SendKeyEvent(true, keyCode, false, game)
+    task.wait(0.05)
+    vim:SendKeyEvent(false, keyCode, false, game)
+end
+
+local function onSDashAnimation(animationTrack)
+    if not isSDashEnabled or isSDashProcessing then return end
+    
+    local animId = animationTrack.Animation.AnimationId
+    animId = animId:gsub("http://www.roblox.com/asset/%?id=", "rbxassetid://")
+    animId = animId:gsub("https://www.roblox.com/asset/%?id=", "rbxassetid://")
+    
+    if animId == "rbxassetid://13294471966" then
+        isSDashProcessing = true
+        _G.isSDashActive = true -- Đánh dấu S+Dash đang active
+        
+        task.wait(0.4)
+        pressKey(Enum.KeyCode.S)
+        task.wait(0.05)
+        pressKey(Enum.KeyCode.Q)
+        task.wait(0.1)
+        
+        _G.isSDashActive = false -- Đánh dấu S+Dash đã xong
+        isSDashProcessing = false
+    end
+end
+
+local function setupSDashDetection()
+    if player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            if sDashConnection then sDashConnection:Disconnect() end
+            sDashConnection = humanoid.AnimationPlayed:Connect(onSDashAnimation)
+        end
+    end
+end
+
+-- Character respawn handling
+player.CharacterAdded:Connect(function(character)
+    if isSDashEnabled then
+        character:WaitForChild("Humanoid")
+        setupSDashDetection()
+    end
+end)
+
+-- UI Toggle
+SDashToggle = ComboTab:CreateToggle({
+    Name = "S + Dash",
+    CurrentValue = false,
+    Callback = function(Value)
+        isSDashEnabled = Value
+        if Value then
+            setupSDashDetection()
+        else
+            if sDashConnection then
+                sDashConnection:Disconnect()
+                sDashConnection = nil
+            end
+            isSDashProcessing = false
+            _G.isSDashActive = false
+        end
+    end,
+})
+
+-- Cleanup when player leaves
+Players.PlayerRemoving:Connect(function(removingPlayer)
+    if removingPlayer == player then
+        if sDashConnection then
+            sDashConnection:Disconnect()
+        end
+        _G.isSDashActive = false
+    end
+end)
+
+-- ==================== TAB 4: UTILITY ====================
+
+-- ANTI STUN
+local AntiStunToggle
+local isHoldingW = false
+local AntiStunLoop
+
+local function TrackKeys()
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.W then isHoldingW = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.W then isHoldingW = false end
+    end)
+end
+
+AntiStunToggle = UtilityTab:CreateToggle({
+    Name = "Anti Stun",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            TrackKeys()
+            AntiStunLoop = RunService.RenderStepped:Connect(function()
+                if Humanoid then
+                    Humanoid.WalkSpeed = isHoldingW and 27 or 16
+                end
+            end)
+        else
+            if AntiStunLoop then AntiStunLoop:Disconnect() end
+            if Humanoid then Humanoid.WalkSpeed = 16 end
+        end
+    end,
+})
+
+-- ANTI RAGDOLL
+local AntiRagdollToggle
+local AntiRagdollLoop
+
+AntiRagdollToggle = UtilityTab:CreateToggle({
+    Name = "Anti Ragdoll",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            AntiRagdollLoop = RunService.RenderStepped:Connect(function()
+                local HRP = Character:FindFirstChild("HumanoidRootPart")
+                local Ragdoll = Character:FindFirstChild("Ragdoll")
+                if HRP then
+                    HRP.Anchored = Ragdoll and Ragdoll:IsA("Accessory")
+                end
+            end)
+        else
+            if AntiRagdollLoop then AntiRagdollLoop:Disconnect() end
+            local HRP = Character:FindFirstChild("HumanoidRootPart")
+            if HRP then HRP.Anchored = false end
+        end
+    end,
+})
+
+-- ANTI LAUNCH
+local AntiLaunchToggle
+local AntiLaunchLoop
+
+AntiLaunchToggle = UtilityTab:CreateToggle({
+    Name = "Anti Launch",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            AntiLaunchLoop = RunService.RenderStepped:Connect(function()
+                local HRP = Character:FindFirstChild("HumanoidRootPart")
+                local BeingLaunched = Character:FindFirstChild("BeingLaunched")
+                if HRP then
+                    HRP.Anchored = BeingLaunched and BeingLaunched:IsA("Accessory")
+                end
+            end)
+        else
+            if AntiLaunchLoop then AntiLaunchLoop:Disconnect() end
+            local HRP = Character:FindFirstChild("HumanoidRootPart")
+            if HRP then HRP.Anchored = false end
+        end
+    end,
+})
+
+-- ==================== TAB 5: SETTINGS ====================
+
+-- GUI THEMES (Coming soon)
+-- CONFIG SYSTEM (Coming soon)
+-- KEYBIND SYSTEM (Coming soon)
+
+-- Handle character respawn
+player.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    character = newChar
+    Humanoid = Character:WaitForChild("Humanoid")
+    humanoid = Humanoid
+    rootPart = Character:WaitForChild("HumanoidRootPart")
+    isComboRunning = false
+    isLWSProcessing = false
+    isSDashProcessing = false
+    shiftLockWasEnabled = false
+    
+    if isKyotoEnabled then setupKyotoDetection() end
+    if isLWSTechEnabled then setupLWSTechDetection() end
+    if isSDashEnabled then setupSDashDetection() end
+end)

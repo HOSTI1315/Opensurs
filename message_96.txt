@@ -1,0 +1,400 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local VERSION = 5.3
+if _G.TWINPACK_VERSION and _G.TWINPACK_VERSION >= VERSION then return end
+_G.TWINPACK_VERSION = VERSION
+
+for _, v in pairs(_G.TWIN_CHAMS or {}) do pcall(function() v:Destroy() end) end
+for _, v in pairs(_G.TWIN_TRACERS or {}) do pcall(function() v:Remove() end) end
+for _, v in pairs(_G.TWIN_NAMETAGS or {}) do pcall(function() v:Remove() end) end
+
+_G.TWIN_CHAMS = {}
+_G.TWIN_TRACERS = {}
+_G.TWIN_NAMETAGS = {}
+
+local Chams = _G.TWIN_CHAMS
+local Tracers = _G.TWIN_TRACERS
+local NameTags = _G.TWIN_NAMETAGS
+
+local blatantEnabled = false
+local hardLockEnabled = false
+local teamCheckEnabled = true
+local BlatantConnection = nil
+local currentTween = nil
+local lastTpTime = 0
+
+local function isEnemy(plr)
+    if not teamCheckEnabled then return true end
+    if not LocalPlayer.Team or not plr.Team then return true end
+    return LocalPlayer.Team ~= plr.Team
+end
+
+local function getClosestEnemy()
+    local closest = nil
+    local best = math.huge
+    local me = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not me then return end
+    
+    for _, plr in Players:GetPlayers() do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and isEnemy(plr) then
+            local dist = (plr.Character.HumanoidRootPart.Position - me.Position).Magnitude
+            if dist < best then 
+                best = dist
+                closest = plr 
+            end
+        end
+    end
+    return closest
+end
+
+local function instantBackstab(plr)
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local theirRoot = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot or not theirRoot then return end
+    local behind = theirRoot.Position - theirRoot.CFrame.LookVector * 3.8
+    local goal = CFrame.new(behind, theirRoot.Position)
+    if currentTween then currentTween:Cancel() end
+    local tween = TweenService:Create(myRoot, TweenInfo.new(0.11, Enum.EasingStyle.Linear), {CFrame = goal})
+    currentTween = tween
+    tween:Play()
+end
+
+local function newTracer()
+    local l = Drawing.new("Line")
+    l.Thickness = 2
+    return l
+end
+
+local function newText()
+    local t = Drawing.new("Text")
+    t.Size = 16
+    t.Center = true
+    t.Outline = true
+    t.Font = 2
+    return t
+end
+
+local function refreshChams(plr)
+    if not plr.Character then return end
+    if Chams[plr] and (not Chams[plr].Parent or Chams[plr].Parent ~= plr.Character) then
+        Chams[plr]:Destroy()
+        Chams[plr] = nil
+    end
+    if not Chams[plr] then
+        local hl = Instance.new("Highlight")
+        hl.FillTransparency = 0.5
+        hl.OutlineTransparency = 0
+        hl.OutlineColor = Color3.new(1,1,1)
+        hl.Parent = plr.Character
+        Chams[plr] = hl
+    end
+end
+
+local function removeESP(plr)
+    if Tracers[plr] then
+        pcall(function() Tracers[plr]:Remove() end)
+        Tracers[plr] = nil
+    end
+    if NameTags[plr] then
+        pcall(function() NameTags[plr]:Remove() end)
+        NameTags[plr] = nil
+    end
+    if Chams[plr] then
+        pcall(function() Chams[plr]:Destroy() end)
+        Chams[plr] = nil
+    end
+end
+
+local function ensureESP(plr)
+    if plr == LocalPlayer then return end
+    Tracers[plr] = Tracers[plr] or newTracer()
+    NameTags[plr] = NameTags[plr] or newText()
+    refreshChams(plr)
+end
+
+for _, plr in Players:GetPlayers() do
+    if plr ~= LocalPlayer then
+        ensureESP(plr)
+        plr.CharacterAdded:Connect(function()
+            task.wait(0.3)
+            ensureESP(plr)
+        end)
+    end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        ensureESP(plr)
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    removeESP(plr)
+end)
+
+spawn(function()
+    while true do
+        wait(1)
+        for plr, _ in pairs(Tracers) do
+            if not plr or not plr.Parent or plr == LocalPlayer then
+                removeESP(plr)
+            end
+        end
+    end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    
+    if i.KeyCode == Enum.KeyCode.C then
+        teamCheckEnabled = not teamCheckEnabled
+        print("TEAM CHECK:", teamCheckEnabled and "ON" or "OFF")
+    elseif i.KeyCode == Enum.KeyCode.V then
+        hardLockEnabled = not hardLockEnabled
+        print("HARD CAMERA LOCK (V):", hardLockEnabled and "ON — STUCK ON CLOSEST" or "OFF")
+    elseif i.KeyCode == Enum.KeyCode.Z then
+        blatantEnabled = not blatantEnabled
+        print("INSTANT BACKSTAB:", blatantEnabled and "ON" or "OFF")
+        if blatantEnabled then
+            BlatantConnection = RunService.Heartbeat:Connect(function()
+                if tick() - lastTpTime > 0.14 then
+                    local t = getClosestEnemy()
+                    if t then 
+                        instantBackstab(t)
+                        lastTpTime = tick()
+                    end
+                end
+            end)
+        else
+            if BlatantConnection then 
+                BlatantConnection:Disconnect()
+                BlatantConnection = nil
+            end
+        end
+    elseif i.KeyCode == Enum.KeyCode.DPadUp then
+        hardLockEnabled = not hardLockEnabled
+        print("HARD CAMERA LOCK (DPAD UP):", hardLockEnabled and "ON — STUCK ON CLOSEST" or "OFF")
+    elseif i.KeyCode == Enum.KeyCode.DPadDown then
+        blatantEnabled = not blatantEnabled
+        print("INSTANT BACKSTAB (DPAD DOWN):", blatantEnabled and "ON" or "OFF")
+        if blatantEnabled then
+            BlatantConnection = RunService.Heartbeat:Connect(function()
+                if tick() - lastTpTime > 0.14 then
+                    local t = getClosestEnemy()
+                    if t then 
+                        instantBackstab(t)
+                        lastTpTime = tick()
+                    end
+                end
+            end)
+        else
+            if BlatantConnection then 
+                BlatantConnection:Disconnect()
+                BlatantConnection = nil
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    for _, plr in Players:GetPlayers() do
+        if plr == LocalPlayer then continue end
+        ensureESP(plr)
+        local char = plr.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 or not isEnemy(plr) then
+            Tracers[plr].Visible = false
+            NameTags[plr].Visible = false
+            continue
+        end
+        local root = char.HumanoidRootPart
+        local hp = char.Humanoid.Health / char.Humanoid.MaxHealth
+        local col = Color3.fromHSV(hp * 0.33, 1, 1)
+        if Chams[plr] then Chams[plr].FillColor = col end
+        local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+        if onScreen then
+            local dist = math.floor((root.Position - Camera.CFrame.Position).Magnitude)
+            local weapon = char:FindFirstChildOfClass("Tool") and char:FindFirstChildOfClass("Tool").Name or "None"
+            Tracers[plr].Visible = true
+            Tracers[plr].Color = col
+            Tracers[plr].From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+            Tracers[plr].To = Vector2.new(pos.X, pos.Y)
+            NameTags[plr].Visible = true
+            NameTags[plr].Color = col
+            NameTags[plr].Text = string.format("%s\n[%d%%] %dm\n%s", plr.Name, math.floor(hp*100), dist, weapon)
+            NameTags[plr].Position = Vector2.new(pos.X, pos.Y - 50)
+        else
+            Tracers[plr].Visible = false
+            NameTags[plr].Visible = false
+        end
+    end
+    
+    if hardLockEnabled then
+        local target = getClosestEnemy()
+        if target and target.Character and target.Character:FindFirstChild("Head") then
+            local head = target.Character.Head
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+        end
+    end
+end)
+
+local function createWelcomeGUI()
+
+local function createKillNotification(compliment)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TwinKillNotif"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
+    
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 320, 0, 100)
+    Frame.Position = UDim2.new(0, 20, 1, -120)
+    Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = ScreenGui
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = Frame
+    
+    local Glow = Instance.new("UIStroke")
+    Glow.Color = Color3.fromRGB(255, 0, 100)
+    Glow.Thickness = 3
+    Glow.Parent = Frame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -20, 0, 35)
+    Title.Position = UDim2.new(0, 10, 0, 10)
+    Title.BackgroundTransparency = 1
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "💀 ELIMINATED! 💀"
+    Title.TextColor3 = Color3.fromRGB(255, 50, 100)
+    Title.TextSize = 20
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Frame
+    
+    local Compliment = Instance.new("TextLabel")
+    Compliment.Size = UDim2.new(1, -20, 0, 35)
+    Compliment.Position = UDim2.new(0, 10, 0, 50)
+    Compliment.BackgroundTransparency = 1
+    Compliment.Font = Enum.Font.Gotham
+    Compliment.Text = compliment
+    Compliment.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Compliment.TextSize = 16
+    Compliment.TextXAlignment = Enum.TextXAlignment.Left
+    Compliment.Parent = Frame
+    
+    ScreenGui.Parent = game:GetService("CoreGui")
+    
+    Frame.BackgroundTransparency = 1
+    Title.TextTransparency = 1
+    Compliment.TextTransparency = 1
+    Glow.Transparency = 1
+    
+    TweenService:Create(Frame, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+    TweenService:Create(Compliment, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+    TweenService:Create(Glow, TweenInfo.new(0.2), {Transparency = 0}):Play()
+    
+    task.delay(2.5, function()
+        if ScreenGui and ScreenGui.Parent then
+            TweenService:Create(Frame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(Title, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            TweenService:Create(Compliment, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            TweenService:Create(Glow, TweenInfo.new(0.3), {Transparency = 1}):Play()
+            task.wait(0.3)
+            ScreenGui:Destroy()
+        end
+    end)
+end
+
+spawn(function()
+    local killfeed = LocalPlayer.PlayerGui:WaitForChild("MainGui"):WaitForChild("Game"):WaitForChild("Killfeed")
+    
+    killfeed.ChildAdded:Connect(function(killEntry)
+        task.wait(0.05)
+        if killEntry:IsA("Frame") and killEntry:FindFirstChild("Left") then
+            local leftLabel = killEntry.Left
+            if leftLabel:IsA("TextLabel") and leftLabel.Text == LocalPlayer.Name then
+                local randomCompliment = compliments[math.random(1, #compliments)]
+                createKillNotification(randomCompliment)
+            end
+        end
+    end)
+end)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TwinWelcomeGUI"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
+    
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 350, 0, 250)
+    Frame.Position = UDim2.new(0, 20, 1, -270)
+    Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = ScreenGui
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.Parent = Frame
+    
+    local Glow = Instance.new("ImageLabel")
+    Glow.Size = UDim2.new(1, 30, 1, 30)
+    Glow.Position = UDim2.new(0, -15, 0, -15)
+    Glow.BackgroundTransparency = 1
+    Glow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    Glow.ImageColor3 = Color3.fromRGB(255, 0, 100)
+    Glow.ImageTransparency = 0.7
+    Glow.ScaleType = Enum.ScaleType.Slice
+    Glow.SliceCenter = Rect.new(10, 10, 118, 118)
+    Glow.Parent = Frame
+    
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Size = UDim2.new(0, 80, 0, 80)
+    ImageLabel.Position = UDim2.new(0.5, -40, 0, 15)
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.Image = "rbxassetid://7072707198"
+    ImageLabel.Parent = Frame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -40, 0, 40)
+    Title.Position = UDim2.new(0, 20, 0, 100)
+    Title.BackgroundTransparency = 1
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "dfgmjkdmfhmfdghmf"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 20
+    Title.Parent = Frame
+    
+    local Message = Instance.new("TextLabel")
+    Message.Size = UDim2.new(1, -40, 0, 60)
+    Message.Position = UDim2.new(0, 20, 0, 145)
+    Message.BackgroundTransparency = 1
+    Message.Font = Enum.Font.Gotham
+    Message.Text = "hi twin"
+    Message.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Message.TextSize = 14
+    Message.TextWrapped = true
+    Message.TextYAlignment = Enum.TextYAlignment.Top
+    Message.Parent = Frame
+    
+    ScreenGui.Parent = game:GetService("CoreGui")
+    
+    task.delay(2, function()
+        if ScreenGui and ScreenGui.Parent then
+            ScreenGui:Destroy()
+        end
+    end)
+end
+
+createWelcomeGUI()
+
+print("twin this is my final form")
+wait(5)
+print("twin do you like this script")

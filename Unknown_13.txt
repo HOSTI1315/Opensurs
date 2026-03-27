@@ -1,0 +1,258 @@
+--=========================================================
+-- ZZZZ's Auto Buy - Automatic merchant buying for your plot
+--=========================================================
+
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local player = Players.LocalPlayer
+
+--// Variables
+local AutoBuyEnabled = false
+local MyPlotID = nil
+local ReadyToBuy = false
+
+local function findMyPlotID()
+    local plotsFolder = workspace:FindFirstChild("Plots")
+    if not plotsFolder then 
+        warn("❌ Plots folder not found in workspace")
+        return nil
+    end
+    print("Scanning for your plot...")
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        if plot:IsA("Model") then
+            local sign = plot:FindFirstChild("PlotSign")
+            if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled == true then
+                print("Plot ID: " .. plot.Name)
+                return plot.Name
+            end
+        end
+    end
+    print("couldn't find it gang")
+    return nil
+end
+
+local function startAutoBuy()
+    if AutoBuyEnabled then
+        warn("Auto buy is already running!")
+        return
+    end
+    MyPlotID = findMyPlotID()
+    if not MyPlotID then
+        warn("Cannot start auto buy - ID not found brokie!")
+        return
+    end
+    AutoBuyEnabled = true
+    print("🛒 Auto buy started with Plot ID: " .. MyPlotID)
+end
+
+local function stopAutoBuy()
+    if not AutoBuyEnabled then
+        warn("Auto buy is not running!")
+        return
+    end
+    AutoBuyEnabled = false
+    print("🛑 Auto buy stopped!")
+end
+
+local function createAutoBuyButton()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "ZZZZAutoBuyGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    pcall(function()
+        screenGui.Parent = CoreGui
+    end)
+    if not screenGui.Parent then
+        screenGui.Parent = player:WaitForChild("PlayerGui")
+    end
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 200, 0, 80)
+    mainFrame.Position = UDim2.new(0.5, -100, 0.1, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = mainFrame
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(50, 50, 50)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.4
+    stroke.Parent = mainFrame
+
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            mousePos = input.Position
+            framePos = mainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    mainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            mainFrame.Position = UDim2.new(
+                framePos.X.Scale,
+                framePos.X.Offset + delta.X,
+                framePos.Y.Scale,
+                framePos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 25)
+    title.Position = UDim2.new(0, 0, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "zzzz's auto buy \n discord.gg/zzzzhub"
+    title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
+    title.Parent = mainFrame
+
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "ToggleButton"
+    toggleButton.Size = UDim2.new(0, 160, 0, 35)
+    toggleButton.Position = UDim2.new(0.5, -80, 0, 40)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(70, 220, 70)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Text = "Start Auto Buy"
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.TextSize = 14
+    toggleButton.Font = Enum.Font.GothamMedium
+    toggleButton.Parent = mainFrame
+
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = toggleButton
+
+    toggleButton.MouseButton1Click:Connect(function()
+        if AutoBuyEnabled then
+            stopAutoBuy()
+            toggleButton.Text = "Start Auto Buy"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(70, 220, 70)
+        else
+            startAutoBuy()
+            toggleButton.Text = "Stop Auto Buy"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
+        end
+    end)
+
+    toggleButton.MouseEnter:Connect(function()
+        toggleButton.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(240, 90, 90) or Color3.fromRGB(90, 240, 90)
+    end)
+
+    toggleButton.MouseLeave:Connect(function()
+        toggleButton.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(220, 70, 70) or Color3.fromRGB(70, 220, 70)
+    end)
+
+    print("==========================================")
+    print("ZZZZ's Auto Buy loaded!")
+    print("Join the discord >>>>> discord.gg/zzzzhub ")
+    print("==========================================")
+end
+
+createAutoBuyButton()
+
+MyPlotID = findMyPlotID()
+local merchantRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RF/MerchantService/Buy")
+
+local soldOutPaths = {
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.Normal.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.ToiletTemplate.Spacer.Left.Txt",
+    "Merchant.Merchant.Frame.List.ShakeTemplate.Spacer.Left.Txt"
+}
+
+local changedLabels = {}
+
+for index, path in ipairs(soldOutPaths) do
+    local segments = {}
+    for seg in string.gmatch(path, "[^%.]+") do
+        table.insert(segments, seg)
+    end
+
+    local function getLabel()
+        local current = player:FindFirstChild("PlayerGui") or player
+        for _, seg in ipairs(segments) do
+            current = current:FindFirstChild(seg)
+            if not current then return nil end
+        end
+        return current
+    end
+
+    local label = getLabel()
+    if label then
+        local printedWaiting = false
+        label:GetPropertyChangedSignal("Text"):Connect(function()
+            local trimmed = label.Text:gsub("^%s*(.-)%s*$", "%1")
+            if trimmed:upper() == "SOLD OUT" then
+                if not ReadyToBuy and not printedWaiting then
+                    print("waiting for sold out to change")
+                    printedWaiting = true
+                end
+            elseif AutoBuyEnabled then
+                ReadyToBuy = true
+                changedLabels[index] = true
+                task.spawn(function()
+                    task.wait(0.0001)
+
+                  
+                    local highest = nil
+                    for idx in pairs(changedLabels) do
+                        if not highest or idx > highest then
+                            highest = idx
+                        end
+                    end
+
+                    if highest then
+                      
+                        pcall(function()
+                            merchantRemote:InvokeServer(MyPlotID, highest)
+                        end)
+
+                   
+                        task.wait(0.001)
+                        pcall(function()
+                            for i = 10, 1, -1 do
+                                if i ~= highest then
+                                    merchantRemote:InvokeServer(MyPlotID, i)
+                                end
+                            end
+                        end)
+                    end
+
+                    ReadyToBuy = false
+                    printedWaiting = false
+                    changedLabels = {}
+                end)
+            end
+        end)
+    end
+end

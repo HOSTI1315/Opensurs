@@ -1,0 +1,293 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local seedsFrame = player.PlayerGui.Main.Seeds.Frame.ScrollingFrame
+local gearsFrame = player.PlayerGui.Main.Gears.Frame.ScrollingFrame
+
+local dataRemoteEvent = ReplicatedStorage:WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent")
+local useItemRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UseItem")
+
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local function getStock(text)
+    local amount = text:match("x(%d+)")
+    return tonumber(amount) or 0
+end
+
+local function getItemList(scrollFrame)
+    local items = {}
+    for _, itemFrame in ipairs(scrollFrame:GetChildren()) do
+        if itemFrame:IsA("Frame") and itemFrame:FindFirstChild("Stock") then
+            table.insert(items, itemFrame.Name)
+        end
+    end
+    return items
+end
+
+local function buyItem(itemName, amount, isSeed)
+    local arg2 = isSeed and "\b" or "\026"
+    for i = 1, amount do
+        local args = {
+            {itemName, arg2}
+        }
+        dataRemoteEvent:FireServer(unpack(args))
+    end
+end
+
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local plotsFolder = Workspace:WaitForChild("Plots")
+local myPlot
+for _, plot in ipairs(plotsFolder:GetChildren()) do
+    if plot:GetAttribute("Owner") == player.Name then
+        myPlot = plot
+        break
+    end
+end
+if not myPlot then return end
+
+local tierModel
+local highestTier = 0
+if myPlot:FindFirstChild("Other") then
+    for _, candidate in ipairs(myPlot.Other:GetChildren()) do
+        local tierNum = candidate.Name:match("^Tier(%d+)$")
+        if tierNum then
+            tierNum = tonumber(tierNum)
+            if tierNum > highestTier and candidate:IsA("Model") then
+                highestTier = tierNum
+                tierModel = candidate
+            end
+        end
+    end
+end
+if not tierModel then return end
+
+local roadModel = tierModel:FindFirstChild("Road")
+if not roadModel then return end
+local roadParts = {}
+for _, p in ipairs(roadModel:GetDescendants()) do
+    if p:IsA("BasePart") then table.insert(roadParts,p) end
+end
+
+local Clip = true
+local NoclipConnection
+local floatName = "HumanoidRootPart"
+local function noclip()
+    Clip = false
+    NoclipConnection = RunService.Stepped:Connect(function()
+        if not Clip and character then
+            for _, v in pairs(character:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide and v.Name ~= floatName then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+local function clip()
+    Clip = true
+    if NoclipConnection then
+        NoclipConnection:Disconnect()
+        NoclipConnection = nil
+    end
+end
+
+local function findFrostGrenade()
+    for _, container in ipairs({character, player:WaitForChild("Backpack")}) do
+        for _, item in ipairs(container:GetChildren()) do
+            if item:IsA("Tool") and string.match(item.Name, "^%[x%d+%] Frost Grenade$") then
+                return item
+            end
+        end
+    end
+    return nil
+end
+
+local function fireFrostGrenade(brainrot)
+    if not brainrot or not brainrot.Parent then return end
+    local progress = brainrot:GetAttribute("Progress") or 0
+    if progress > 0.6 then
+        local tool = findFrostGrenade()
+        if tool then
+            local bp = brainrot.PrimaryPart or brainrot:FindFirstChildWhichIsA("BasePart")
+            if bp then
+                humanoid:EquipTool(tool)
+                local args = {{
+                    Toggle = true,
+                    Tool = tool,
+                    Time = 0.5,
+                    Pos = Vector3.new(bp.Position.X, bp.Position.Y, bp.Position.Z)
+                }}
+                useItemRemote:FireServer(unpack(args))
+            end
+        end
+    end
+end
+
+local brainrotsFolder = Workspace:WaitForChild("ScriptedMap"):WaitForChild("Brainrots")
+local DETECT_RADIUS = 20
+local FIRE_INTERVAL = 2
+
+local function findTargetBrainrot(selectedRarities)
+    for _, b in ipairs(brainrotsFolder:GetChildren()) do
+        if b:IsA("Model") then
+            local rarity = b:GetAttribute("Rarity")
+            if rarity and table.find(selectedRarities, rarity) then
+                local primary = b.PrimaryPart or b:FindFirstChildWhichIsA("BasePart")
+                if primary then
+                    for _, roadPart in ipairs(roadParts) do
+                        if (primary.Position - roadPart.Position).Magnitude <= DETECT_RADIUS then
+                            return b
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local Window = Rayfield:CreateWindow({
+    Name = "Lock Hub,
+    LoadingTitle = "Welcome Back!",
+    LoadingSubtitle = "P.V.B",
+    ConfigurationSaving = {Enabled = false}
+})
+
+local ShopTab = Window:CreateTab("Shop")
+local SelectedSeeds = {}
+local SelectedGears = {}
+local AutoBuyEnabled = false
+
+ShopTab:CreateDropdown({
+    Name = "Select Seeds to Auto-Buy",
+    Options = getItemList(seedsFrame),
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "SeedDropdown",
+    Callback = function(selected)
+        SelectedSeeds = selected
+    end
+})
+
+ShopTab:CreateDropdown({
+    Name = "Select Gears to Auto-Buy",
+    Options = getItemList(gearsFrame),
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "GearDropdown",
+    Callback = function(selected)
+        SelectedGears = selected
+    end
+})
+
+ShopTab:CreateToggle({
+    Name = "Enable Auto-Buy",
+    CurrentValue = false,
+    Flag = "AutoBuyToggle",
+    Callback = function(value)
+        AutoBuyEnabled = value
+    end
+})
+
+local CombatTab = Window:CreateTab("Combat")
+local AutoFireEnabled = false
+local SelectedRarities = {"Secret","Limited"}
+
+local RarityOptions = {"Rare","Epic","Legendary","Mythic","Godly","Secret","Limited"}
+
+CombatTab:CreateDropdown({
+    Name = "Select Rarities",
+    Options = RarityOptions,
+    CurrentOption = SelectedRarities,
+    MultipleOptions = true,
+    Flag = "RarityDropdown",
+    Callback = function(selected)
+        SelectedRarities = selected
+    end
+})
+
+CombatTab:CreateToggle({
+    Name = "Auto Frost Grenade",
+    CurrentValue = false,
+    Flag = "AutoFireToggle",
+    Callback = function(value)
+        AutoFireEnabled = value
+    end
+})
+
+task.spawn(function()
+    while task.wait(1) do
+        if AutoBuyEnabled then
+            for _, seedName in ipairs(SelectedSeeds) do
+                local seedFrame = seedsFrame:FindFirstChild(seedName)
+                if seedFrame and seedFrame:FindFirstChild("Stock") then
+                    local stock = getStock(seedFrame.Stock.Text)
+                    if stock > 0 then
+                        buyItem(seedName, stock, true)
+                    end
+                end
+            end
+
+            for _, gearName in ipairs(SelectedGears) do
+                local gearFrame = gearsFrame:FindFirstChild(gearName)
+                if gearFrame and gearFrame:FindFirstChild("Stock") then
+                    local stock = getStock(gearFrame.Stock.Text)
+                    if stock > 0 then
+                        buyItem(gearName, stock, false)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if AutoFireEnabled then
+            local targetBrainrot = findTargetBrainrot(SelectedRarities)
+            if targetBrainrot then
+                local targetPart = targetBrainrot.PrimaryPart or targetBrainrot:FindFirstChildWhichIsA("BasePart")
+                if targetPart then
+                    noclip()
+                    hrp.CFrame = CFrame.new(targetPart.Position)
+                    local bodyPos = Instance.new("BodyPosition")
+                    bodyPos.MaxForce = Vector3.new(1e5,1e5,1e5)
+                    bodyPos.P = 5000
+                    bodyPos.D = 100
+                    bodyPos.Position = hrp.Position
+                    bodyPos.Parent = hrp
+                    local lastFire = 0
+                    while targetBrainrot.Parent and AutoFireEnabled do
+                        bodyPos.Position = targetPart.Position
+                        local progress = targetBrainrot:GetAttribute("Progress") or 0
+                        if progress > 0.6 then
+                            local tool = findFrostGrenade()
+                            if tool then
+                                humanoid:EquipTool(tool)
+                            end
+                        end
+                        local now = tick()
+                        if now - lastFire >= FIRE_INTERVAL then
+                            fireFrostGrenade(targetBrainrot)
+                            lastFire = now
+                        end
+                        task.wait(0.03)
+                    end
+                    humanoid:UnequipTools()
+                    bodyPos:Destroy()
+                    clip()
+                end
+            else
+                task.wait(1)
+            end
+        else
+            task.wait(1)
+        end
+    end
+end)

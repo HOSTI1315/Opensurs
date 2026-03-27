@@ -1,0 +1,114 @@
+
+local users = {
+    {UserId = 4690131256, UserName = "lena"},
+    {UserId = 523759874, UserName = "Ooo"},
+    {UserId = 2395613299, UserName = "Bullet"},
+    {UserId = 8208385845, UserName = "amir"},
+    {UserId = 22782710, UserName = "cat"},
+    {UserId = 140383551, UserName = "ender"},
+    {UserId = 3759059, UserName = "noobslayer2010"},
+    {UserId = 9013721214, UserName = "Fatal"},
+}
+
+local CopyAppearance = true
+local HasHeadLess = false 
+local HasKorblox = false 
+
+local function Morph(UserId, PlayerName)
+    local appearance = Players:GetCharacterAppearanceAsync(UserId)
+    local player = Players:FindFirstChild(PlayerName)
+    if not player or not player.Character then return end
+
+    
+    for _, v in pairs(player.Character:GetChildren()) do
+        if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("CharacterMesh") or v:IsA("BodyColors") then
+            v:Destroy()
+        end
+    end
+    if player.Character.Head:FindFirstChild("face") then
+        player.Character.Head.face:Destroy()
+    end
+
+    for _, v in pairs(appearance:GetChildren()) do
+        if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then
+            v.Parent = player.Character
+        elseif v:IsA("Accessory") then
+            player.Character.Humanoid:AddAccessory(v)
+        elseif v:IsA("CharacterMesh") then
+            if player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+                v.Parent = player.Character
+            end
+        elseif v.Name == "R15" then
+            if player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+                local mesh = v:FindFirstChildOfClass("CharacterMesh")
+                if mesh then
+                    mesh.Parent = player.Character
+                end
+            end
+        end
+    end
+
+    if appearance:FindFirstChild("face") then
+        appearance.face.Parent = player.Character.Head
+    else
+        local face = Instance.new("Decal")
+        face.Face = Enum.NormalId.Front
+        face.Name = "face"
+        face.Texture = "rbxasset://textures/face.png"
+        face.Transparency = 0
+        face.Parent = player.Character.Head
+    end
+
+    local parent = player.Character.Parent
+    player.Character.Parent = nil
+    player.Character.Parent = parent
+end
+
+Avatar:AddToggle('HeadlessToggle', {
+    Text = 'Enable Headless',
+    Default = false,
+    Callback = function(value)
+        HasHeadLess = value
+    end
+})
+
+
+Avatar:AddToggle('KorbloxToggle', {
+    Text = 'Enable Korblox',
+    Default = false,
+    Callback = function(value)
+        HasKorblox = value
+    end
+})
+
+local dropdown = Avatar:AddDropdown('Char', {
+    Text = 'Select User to Morph Into',
+    Default = 'None',
+    Values = {users[1].UserName, users[2].UserName, users[3].UserName, users[4].UserName, users[5].UserName, users[6].UserName, users[7].UserName, users[8].UserName},
+    Callback = function(selectedUserName)
+        for _, user in pairs(users) do
+            if user.UserName == selectedUserName then
+                if CopyAppearance then
+                    if HasHeadLess then
+                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
+                            LocalPlayer.Character.Head.MeshId = 6686307858
+                        end
+                    end
+                    if HasKorblox then
+                        local char = LocalPlayer.Character
+                        if char then
+                            char.RightLowerLeg.MeshId = "902942093"
+                            char.RightLowerLeg.Transparency = 1
+                            char.RightUpperLeg.MeshId = "http://www.roblox.com/asset/?id=902942096"
+                            char.RightUpperLeg.TextureID = "http://roblox.com/asset/?id=902843398"
+                            char.RightFoot.MeshId = "902942089"
+                            char.RightFoot.Transparency = 1
+                        end
+                    end
+                    Morph(user.UserId, LocalPlayer.Name)
+                end
+                break
+            end
+        end
+    end
+})

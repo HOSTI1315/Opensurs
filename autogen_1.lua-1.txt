@@ -1,0 +1,1113 @@
+if getgenv().autogenisloaded then
+    return
+end
+getgenv().autogenisloaded = true
+if game.PlaceId == 18687417158 then
+print("Successful Injection")
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
+local GuiService = game:GetService("GuiService")
+local function removeErrorGui()
+    for _, v in ipairs(CoreGui:GetDescendants()) do
+        if v.Name == "ErrorPrompt" or v.Name == "ErrorMessage" then
+            pcall(function()
+                GuiService:ClearError()
+            end)
+        end
+    end
+end
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
+local function safeRejoin()
+    local player = Players.LocalPlayer
+    TeleportService:Teleport(game.PlaceId, player)
+end
+game:GetService("GuiService").ErrorMessageChanged:Connect(function(msg)
+    if msg ~= "" then
+        if string.find(msg:lower(), "full") or string.find(msg:lower(), "unavailable") then
+            return
+        end
+        safeRejoin()
+    end
+end)
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer
+repeat task.wait() until game.Players.LocalPlayer.Character
+repeat task.wait() until workspace:FindFirstChild("Map")
+print("Game Loaded 100%")
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local LocalPlayer = Players.LocalPlayer
+local GC = getconnections or get_signal_cons
+if GC then
+    for i, v in pairs(GC(LocalPlayer.Idled)) do
+        if v["Disable"] then
+            v["Disable"](v)
+        elseif v["Disconnect"] then
+            v["Disconnect"](v)
+        end
+    end
+else
+    LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new(0,0))
+    end)
+end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local function getPing()
+    return LocalPlayer:GetNetworkPing()
+end
+local function getWaitTime()
+    local rawPingMs = LocalPlayer:GetNetworkPing() * 1000
+    local finalPing = rawPingMs * 0.0005
+    return finalPing
+end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local function getretrytime()
+    local freshpingms = LocalPlayer:GetNetworkPing() * 1000
+    local lps = freshpingms * 0.01
+    return lps
+end
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local floatName = "FloatPart"
+local FloatValue = -3.1
+local floatingConnections = {}
+local FloatingEnabled = false
+local function getRoot(char)
+	return char and char:FindFirstChild("HumanoidRootPart")
+end
+local function SetupFloat(char)
+	if not char or char:FindFirstChild(floatName) or not FloatingEnabled then return end
+	local Float = Instance.new("Part")
+	Float.Name = floatName
+	Float.Size = Vector3.new(2,0.2,1.5)
+	Float.Anchored = true
+	Float.Transparency = 1
+	Float.Parent = char
+	local conn
+	conn = RunService.Heartbeat:Connect(function()
+		local root = getRoot(char)
+		if root and Float.Parent and FloatingEnabled then
+			Float.CFrame = root.CFrame * CFrame.new(0, FloatValue, 0)
+		else
+			if conn then conn:Disconnect() end
+			if Float then Float:Destroy() end
+			floatingConnections[char] = nil
+		end
+	end)
+	floatingConnections[char] = conn
+end
+for _, player in pairs(Players:GetPlayers()) do
+	if player.Character then
+		SetupFloat(player.Character)
+	end
+end
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(char)
+		if FloatingEnabled then
+			SetupFloat(char)
+		end
+	end)
+end)
+RunService.Heartbeat:Connect(function()
+	if not FloatingEnabled then return end
+	for _, player in pairs(Players:GetPlayers()) do
+		local char = player.Character
+		if char and not floatingConnections[char] then
+			SetupFloat(char)
+		end
+	end
+end)
+local function getCharacter()
+    return LocalPlayer.Character
+end
+RunService.Heartbeat:Connect(function()
+    local char = getCharacter()
+    if char then
+        local detector = char:FindFirstChild("NoclipDetector")
+        if detector then
+            detector:Destroy()
+        end
+    end
+end)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local RemoteEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+local MaliceSetting = LocalPlayer:WaitForChild("PlayerData"):WaitForChild("Settings"):WaitForChild("Game"):WaitForChild("MaliceDisabled")
+if MaliceSetting.Value == false then
+    local args = {
+        "UpdateSettings",
+        {
+            MaliceSetting,
+            buffer.fromstring("true")
+        }
+    }
+    RemoteEvent:FireServer(unpack(args))
+end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+getgenv().NoRender = false
+getgenv().WebhookEnabled = false
+getgenv().WebhookURL = ""
+getgenv().AutoExecuted = false
+getgenv().tpDelay = 0.5
+getgenv().repairgenerators = true
+getgenv().ForceWin = false
+getgenv().FarmSukkars = false
+getgenv().msfarm = false
+local currentMode = false
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+	Name = "Nyansaken",
+	Icon = 134395825211880,
+	LoadingTitle = "Loading Nyansaken",
+	LoadingSubtitle = "by zxcv",
+	ShowText = "Nyansaken",
+	Theme = "Default",
+	ToggleUIKeybind = "K",
+	DisableRayfieldPrompts = false,
+	DisableBuildWarnings = false,
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "nyansakenfarm",
+		FileName = "autofarmnyansakenhub"
+	},
+	KeySystem = true,
+	KeySettings = {
+		  Title = "Nyan-System",
+		  Subtitle = "Key System",
+		  Note = "(discord.gg/zgSrNAKW3x) - Join our discord right now, and check your clipboard",
+		  FileName = "nyansakenkeyfarm",
+		  SaveKey = true,
+		  GrabKeyFromSite = false,
+		  Key = {"COMEBACK", "MEOWMEOW", "NOLSAKEN", "DOOMSAKEN", "COOLGOTTEN", "VORTEXSAKEN", "T1M3L355", "CAT"}
+	}
+})
+local MainTab = Window:CreateTab("Main")
+local InfoSection = MainTab:CreateSection("Info")
+local pointsLabel = MainTab:CreateLabel("Points : 0")
+local timeLabel = MainTab:CreateLabel("Playtime : 00:00:00")
+local equippedLabel = MainTab:CreateLabel("Equipped : None")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local root = nil
+local folder = nil
+local getsukkars = false
+local savedPos = nil
+local returning = false
+local index = 1
+local function updateRoot()
+	local char = lp.Character
+	if char then
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			root = hrp
+		end
+	end
+end
+local function updateFolder()
+	local map = workspace:FindFirstChild("Map")
+	if not map then return end
+	local ingame = map:FindFirstChild("Ingame")
+	if not ingame then return end
+	local f = ingame:FindFirstChild("CurrencyLocations")
+	if f then
+		folder = f
+	end
+end
+updateRoot()
+updateFolder()
+lp.CharacterAdded:Connect(function()
+	root = nil
+	updateRoot()
+	getsukkars = false
+end)
+workspace.DescendantAdded:Connect(function(obj)
+	if obj.Name == "CurrencyLocations" then
+		folder = obj
+	end
+end)
+workspace.DescendantRemoving:Connect(function(obj)
+	if obj == folder then
+		folder = nil
+	end
+end)
+local function tpToNext()
+	if returning or not folder or not root then return end
+	local children = folder:GetChildren()
+	if #children == 0 then return end
+	if index > #children then index = 1 end
+	local A = children[index]
+	if not A then
+		index += 1
+		return
+	end
+	local inner = A:GetChildren()
+	local hasCollect = false
+	for _, obj in ipairs(inner) do
+		if obj:FindFirstChild("Collect") then
+			hasCollect = true
+			break
+		end
+	end
+	if hasCollect then
+		index += 1
+		getsukkars = false
+		return
+	end
+	for _, obj in ipairs(inner) do
+		if obj:IsA("BasePart") then
+			savedPos = root.CFrame
+			root.CFrame = obj.CFrame + Vector3.new(0, 1, 0)
+			getsukkars = true
+			returning = true
+			root.CFrame = obj.CFrame + Vector3.new(0, 0, 0)
+			break
+		end
+	end
+end
+RunService.Heartbeat:Connect(function()
+	if not root then updateRoot() end
+	if not folder then updateFolder() end
+	if not getgenv().AutoGetReady then
+		returning = false
+		getsukkars = false
+		savedPos = nil
+		return
+	end
+	if not getgenv().FarmSukkars then
+		returning = false
+		getsukkars = false
+		savedPos = nil
+		return
+	end
+	if returning then
+		getsukkars = true
+		if savedPos and root then
+			root.CFrame = savedPos
+		end
+		returning = false
+		getsukkars = false
+		return
+	end
+	tpToNext()
+end)
+local msFarmConn
+local function getHighestSurvivor(survivors)
+	local highestName = nil
+	local highestValue = -math.huge
+	for _, child in ipairs(survivors:GetChildren()) do
+		if child:IsA("IntValue") then
+			local val = child.Value
+			if val < 59390 and val > highestValue then
+				highestValue = val
+				highestName = child.Name
+			end
+		end
+	end
+	return highestName
+end
+
+local function startMSFarm()
+	local survivors = player:WaitForChild("PlayerData"):WaitForChild("Purchased"):WaitForChild("Survivors")
+	local RemoteEvent = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+	
+	if msFarmConn then msFarmConn:Disconnect() end
+	msFarmConn = RunService.RenderStepped:Connect(function()
+		if currentMode ~= "MS-Farm" then return end
+
+		local highestName = getHighestSurvivor(survivors)
+
+		if highestName then
+			local equip = {
+				"EquipState",
+				{ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Survivors"):WaitForChild(highestName),
+				 buffer.fromstring("true")}
+			}
+			RemoteEvent:FireServer(unpack(equip))
+		end
+	end)
+end
+startMSFarm()
+MainTab:CreateToggle({
+	Name = "MS-Farm Mode",
+	Flag = "MSFarmMode",
+	CurrentValue = getgenv().msfarm,
+	Callback = function(value)
+		if value then
+			getgenv().msfarm = true
+			currentMode = "MS-Farm"
+		else
+			currentMode = "Normal"
+			getgenv().msfarm = true
+		end
+	end
+})
+local MethodsSection = MainTab:CreateSection("Methods")
+getgenv().MethodConfig = getgenv().MethodConfig or { FarmGenerators = false, ForceWin = false }
+MainTab:CreateToggle({
+	Name = "Auto Repair Generators",
+	Flag = "AutoRepairGenerators",
+	CurrentValue = getgenv().repairgenerators,
+	Callback = function(val)
+		loadValue("RepairGens", val)
+		getgenv().repairgenerators = val
+	end
+})
+MainTab:CreateToggle({
+	Name = "Auto Win",
+	Flag = "AutoWin",
+	CurrentValue = getgenv().ForceWin,
+	Callback = function(val)
+		getgenv().ForceWin = val
+	end
+})
+MainTab:CreateToggle({
+	Name = "Auto Farm Sukkars",
+	Flag = "AutoFarmSukkars",
+	CurrentValue = getgenv().FarmSukkars,
+	Callback = function(val)
+		getgenv().FarmSukkars = val
+	end
+})
+local Settings = Window:CreateTab("Settings")
+local SettingsSection = Settings:CreateSection("General")
+local screenGui = Instance.new("ScreenGui")
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+local blackFrame = Instance.new("Frame")
+blackFrame.Size = UDim2.fromScale(1,1)
+blackFrame.Position = UDim2.fromScale(0,0)
+blackFrame.BackgroundColor3 = Color3.new(0,0,0)
+blackFrame.BorderSizePixel = 0
+blackFrame.Visible = false
+blackFrame.Parent = screenGui
+Settings:CreateToggle({
+	Name = "Increase FPS (Recommend To Turn On)",
+Flag = "IncreaseFPSRecommendToTurnOn",
+	CurrentValue = getgenv().NoRender,
+	Callback = function(val)
+		getgenv().NoRender = val
+		if val then
+			RunService:Set3dRenderingEnabled(false)
+			blackFrame.Visible = true
+		else
+			RunService:Set3dRenderingEnabled(true)
+			blackFrame.Visible = false
+		end
+	end
+})
+Settings:CreateToggle({
+	Name = "Webhook Toggle",
+	Flag = "WebhookToggle",
+	CurrentValue = getgenv().WebhookEnabled,
+	Callback = function(val)
+		getgenv().WebhookEnabled = val
+	end
+})
+Settings:CreateInput({
+	Name = "Webhook URL",
+	Flag = "WebhookURL",
+	PlaceholderText = "Enter Discord Webhook URL",
+	Value = getgenv().WebhookURL or "",
+	RemoveTextAfterFocus = false,
+	Callback = function(txt)
+		getgenv().WebhookURL = txt
+	end
+})
+Settings:CreateToggle({
+	Name = "Auto Execute",
+	Flag = "AutoExecute",
+	CurrentValue = getgenv().AutoExecuted,
+	Callback = function(val)
+		getgenv().AutoExecuted = val
+	end
+})
+Settings:CreateInput({
+	Name = "TP Delay",
+	Flag = "TPDelay",
+	CurrentValue = getgenv().tpDelay,
+	PlaceholderText = "Enter Teleport Delay (s)",
+	Callback = function(txt)
+		local n = txt
+		getgenv().tpDelay = n
+	end
+})
+local startClock = os.clock()
+task.spawn(function()
+	while true do
+		local player = Players.LocalPlayer
+		local stats = player:FindFirstChild("PlayerData") and player.PlayerData:FindFirstChild("Stats")
+		if stats and stats:FindFirstChild("Currency") and stats.Currency:FindFirstChild("Money") then
+			pcall(function()
+				if pointsLabel and pointsLabel.Set then
+					pointsLabel:Set("Points : " .. tostring(stats.Currency.Money.Value))
+				end
+			end)
+		end
+		pcall(function()
+			if timeLabel and timeLabel.Set then
+				local t = os.clock() - startClock
+				local h = math.floor(t/3600)
+				local m = math.floor((t%3600)/60)
+				local s = math.floor(t%60)
+				timeLabel:Set(string.format("Playtime : %02d:%02d:%02d", h, m, s))
+			end
+		end)
+		pcall(function()
+			if equippedLabel and equippedLabel.Set then
+				local pdata = player:FindFirstChild("PlayerData")
+				if pdata and pdata:FindFirstChild("Equipped") then
+					local survivor = pdata.Equipped:FindFirstChild("Survivor")
+					if survivor and survivor.Value ~= "" then
+						local name = survivor.Value
+						local val = 0
+						local purchased = pdata:FindFirstChild("Purchased")
+						if purchased and purchased:FindFirstChild("Survivors") then
+							local folder = purchased.Survivors
+							if folder:FindFirstChild(name) then
+								val = folder[name].Value
+							end
+						end
+						equippedLabel:Set(("Equipped : %s (%d)"):format(name, val))
+					else
+						equippedLabel:Set("Equipped : None")
+					end
+				end
+			end
+		end)
+		task.wait(0.5)
+	end
+end)
+
+Rayfield:LoadConfiguration()
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local requestFunc = request or http_request or syn and syn.request
+if not requestFunc then
+    return
+end
+local function SendEmbed(title, description, color)
+    if not getgenv().WebhookEnabled or getgenv().WebhookURL == "" then return end
+    local embed = {
+        embeds = {{
+            title = title or "Notification",
+            description = description or "",
+            color = color or 0x1ABC9C,
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+    local data = HttpService:JSONEncode(embed)
+    pcall(function()
+        requestFunc({
+            Url = getgenv().WebhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = data
+        })
+    end)
+end
+repeat task.wait() until player:FindFirstChild("PlayerGui")
+repeat task.wait() until player.PlayerGui:FindFirstChild("NotificationUI")
+local notificationUI = player.PlayerGui.NotificationUI
+local notificationStorage = notificationUI:FindFirstChild("NotificationStorage")
+local function watchNotification(notification)
+    local main = notification:FindFirstChild("Main")
+    if not main then return end
+    local titles = main:FindFirstChild("Titles")
+    if not titles then return end
+    local primary = titles:FindFirstChild("Primary")
+    local secondary = titles:FindFirstChild("Secondary")
+    local lastText = ""
+    RunService.Heartbeat:Connect(function()
+        if primary.Text ~= lastText then
+            lastText = primary.Text
+            if lastText:find("Level") or lastText:find("Milestone") then
+                SendEmbed(
+                    "Nyansaken",
+                    lastText .. ((secondary and secondary.Text ~= "") and ("\n" .. secondary.Text) or ""),
+                    0xFF77FF
+                )
+            end
+        end
+    end)
+end
+for _, notif in ipairs(notificationStorage:GetChildren()) do
+    watchNotification(notif)
+end
+notificationStorage.ChildAdded:Connect(watchNotification)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
+local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local LocalPlayer = player
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
+local player = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local function pingBasedDelay(baseDelay)
+    local ping = getPing()
+    local adjustedDelay = baseDelay + ping
+    wait(adjustedDelay)
+end
+local function pingDelay(baseDelay1)
+    local ping1 = getPing()
+    local adjustedDelay1 = baseDelay1 + ping1
+    task.wait(adjustedDelay1)
+end
+local function delayKillerIntroUI()
+    local playerGui = player:WaitForChild("PlayerGui")
+    local ui = playerGui:WaitForChild("KillerIntroUI")
+    local childrenRemoved = Instance.new("BindableEvent")
+    ui.ChildRemoved:Connect(function()
+        if #ui:GetChildren() == 0 then
+            childrenRemoved:Fire()
+        end
+    end)
+    if #ui:GetChildren() > 0 then
+        childrenRemoved.Event:Wait()
+    end
+end
+getgenv().Players = Players
+getgenv().LocalPlayer = LocalPlayer
+getgenv().Remote = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+getgenv().HookRules = getgenv().HookRules or {}
+if not getgenv().originalNamecall then
+    getgenv().originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        if method == "FireServer" then
+            for _, rule in ipairs(getgenv().HookRules) do
+                if (not rule.remoteName or self.Name == rule.remoteName) then
+                    if not rule.blockedFirstArg or args[1] == rule.blockedFirstArg then
+                        if rule.block then
+                            return
+                        end
+                    end
+                end
+            end
+        end
+        return getgenv().originalNamecall(self, ...)
+    end)
+end
+getgenv().activateRemoteHook = function(remoteName, blockedFirstArg)
+    for _, rule in ipairs(getgenv().HookRules) do
+        if rule.remoteName == remoteName and rule.blockedFirstArg == blockedFirstArg then
+            return
+        end
+    end
+    table.insert(getgenv().HookRules, {remoteName = remoteName, blockedFirstArg = blockedFirstArg, block = true})
+end
+getgenv().deactivateRemoteHook = function(remoteName, blockedFirstArg)
+    for i, rule in ipairs(getgenv().HookRules) do
+        if rule.remoteName == remoteName and rule.blockedFirstArg == blockedFirstArg then
+            table.remove(getgenv().HookRules, i)
+            break
+        end
+    end
+end
+local teleportDebounce = false
+getgenv().isTeleporting = false
+getgenv().cancelTeleportRetry = false
+getgenv().recentServers = getgenv().recentServers or {}
+local function addRecentServer(id)
+    table.insert(getgenv().recentServers, 1, id)
+    if #getgenv().recentServers > 5 then
+        table.remove(getgenv().recentServers)
+    end
+end
+local function isRecentlyUsed(id)
+    for _, v in ipairs(getgenv().recentServers) do
+        if v == id then
+            return true
+        end
+    end
+    return false
+end
+local function safeHttpGet(url)
+    local retries = 0
+    while retries < 6 do
+        local ok, result = pcall(function() return game:HttpGet(url) end)
+        if ok and result and #result > 0 then
+            return result
+        else
+            task.wait(5 + retries * 1.5)
+            retries = retries + 1
+        end
+    end
+    return nil
+end
+local function safeJSONDecode(jsonStr)
+    local ok, decoded = pcall(function() return HttpService:JSONDecode(jsonStr) end)
+    return ok and decoded or { data = {}, nextPageCursor = nil }
+end
+local function listServers(cursor)
+    local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+    if cursor then url = url .. "&cursor=" .. HttpService:UrlEncode(cursor) end
+    local response = safeHttpGet(url)
+    return safeJSONDecode(response)
+end
+local seenProgress, doneAll = {}, false
+local flagflyaway = false
+local function resetProgress()
+seenProgress, doneAll = {}, false
+end
+local function checkObjectives()
+    local objectives = player.PlayerGui:FindFirstChild("MainUI") and player.PlayerGui.MainUI:FindFirstChild("Objectives")
+    if not objectives then return end
+    for _, obj in ipairs(objectives:GetChildren()) do
+        if obj.Name:match("^SetupGenerators_") then
+            local desc = obj:FindFirstChild("Description")
+            if desc and desc:IsA("TextLabel") then
+                local progress = desc.Text:match("%((%d+/%d+)%)")
+                if progress then
+                    if progress == "0/5" then
+                        resetProgress()
+                    elseif not seenProgress[progress] then
+                        seenProgress[progress] = true
+                        if progress == "5/5" then
+						doneAll = true
+						if getgenv().ForceWin then
+							if not flagflyaway then
+								local hrp = char:WaitForChild("HumanoidRootPart")
+								hrp.CFrame = hrp.CFrame + Vector3.new(0,10000,0)
+								FloatingEnabled = true
+								flagflyaway = true
+								end
+							end
+						end
+                    end
+                end
+            end
+        end
+    end
+end
+local function updateCancelTeleport()
+    local char = player.Character
+    if not char or char.Parent.Name ~= "Survivors" then
+        getgenv().cancelTeleportRetry = false
+        return
+    end
+    if not doneAll then
+        getgenv().cancelTeleportRetry = true
+    else
+        getgenv().cancelTeleportRetry = false
+    end
+end
+local function forceRejoin()
+	local Players = game:GetService("Players")
+	local TeleportService = game:GetService("TeleportService")
+	local PlaceId = game.PlaceId
+	local JobId = game.JobId
+	getgenv().isTeleporting = false
+	teleportDebounce = false
+	getgenv().cancelTeleportRetry = false
+	task.wait()
+	if #Players:GetPlayers() <= 1 then
+		Players.LocalPlayer:Kick("\nRejoining...")
+		task.wait()
+		TeleportService:Teleport(PlaceId, Players.LocalPlayer)
+	else
+		TeleportService:TeleportToPlaceInstance(PlaceId, JobId, Players.LocalPlayer)
+	end
+end
+local function teleportToEmptyServer()
+    if teleportDebounce or getgenv().cancelTeleportRetry then return end
+    teleportDebounce = true
+    task.spawn(function()
+        local cursor = nil
+        local success = false
+        for page = 1, 100 do
+            local servers = listServers(cursor)
+            if servers and servers.data then
+                for _, s in ipairs(servers.data) do
+                    if s.playing <= 2
+                    and s.maxPlayers > 0
+                    and s.id ~= game.JobId
+                    and not s.reserved
+                    and not isRecentlyUsed(s.id) then
+                        local ok = pcall(function()
+                            TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
+                        end)
+                        if ok then
+                            addRecentServer(s.id)
+                            getgenv().isTeleporting = true
+                            success = true
+                            break
+                        end
+                    end
+                end
+                if success then break end
+            end
+            if not servers.nextPageCursor then break end
+            cursor = servers.nextPageCursor
+            task.wait(0.5)
+        end
+        teleportDebounce = false
+        if not success then
+            getgenv().isTeleporting = false
+        end
+    end)
+end
+local function tryTeleport()
+    if teleportDebounce or getgenv().isTeleporting then return end
+    task.delay(0.5, teleportToEmptyServer)
+end
+TeleportService.TeleportInitFailed:Connect(function(_, _, err)
+    tryTeleport()
+end)
+local LogService = game:GetService("LogService")
+local TeleportService = game:GetService("TeleportService")
+LogService.MessageOut:Connect(function(message, messageType)
+	if message and message:lower():find("isteleport") then
+		TeleportService:TeleportCancel()
+		teleportToEmptyServer()
+	end
+end)
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local joinTime = {}
+local function updateJoinTime()
+    for _, player in pairs(Players:GetPlayers()) do
+        if not joinTime[player] then
+            joinTime[player] = tick()
+        end
+    end
+end
+local function playerNotLoadedTime(player)
+    local loadedAttr = player:GetAttribute("Loaded")
+    if loadedAttr == true then
+        return 0
+    end
+    return tick() - (joinTime[player] or tick())
+end
+local function countAFKPlayers()
+    local afkCount = 0
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local pd = player:FindFirstChild("PlayerData")
+            if not pd or not pd:FindFirstChild("Settings") then
+                return 0
+            end
+            if pd.Settings.Game.AFK == false then
+                afkCount = afkCount + 1
+            end
+        end
+    end
+    return afkCount
+end
+local function checkTwoPlayerTimeout()
+    local currentPlayers = Players:GetPlayers()
+    if #currentPlayers ~= 2 then
+        return false
+    end
+    for _, player in pairs(currentPlayers) do
+        if player ~= localPlayer then
+            if playerNotLoadedTime(player) >= 30 then
+                return true
+            end
+        end
+    end
+    return false
+end
+local function checkAFK()
+    if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("LoadingGui") then
+        return
+    end
+    updateJoinTime()
+    local afkCount = countAFKPlayers()
+    if (afkCount > 0 and afkCount < 2) or checkTwoPlayerTimeout() then
+        teleportToEmptyServer()
+    end
+end
+RunService.Heartbeat:Connect(checkAFK)
+local startClock = os.clock()
+local hbConn
+hbConn = game:GetService("RunService").Heartbeat:Connect(function()
+    updateCancelTeleport()
+    if os.clock() - startClock >= 300 then
+        getgenv().cancelTeleportRetry = false
+        teleportToEmptyServer()
+        hbConn:Disconnect()
+    end
+end)
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local function activeghosting(char)
+    FloatingEnabled = true
+    local queryHitbox
+    repeat
+        queryHitbox = char:FindFirstChild("QueryHitbox")
+        wait(getWaitTime())
+    until queryHitbox
+    local firstInvisible = true
+    local hasLifted = false
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    while (queryHitbox.Position.Y - hrp.Position.Y) < 5000 do
+        local oldpos = hrp.CFrame
+        if not hasLifted then
+            hrp.CFrame = hrp.CFrame + Vector3.new(0,10000,0)
+            wait(getWaitTime())
+            if firstInvisible then
+                getgenv().activateRemoteHook("UnreliableRemoteEvent","UpdCF")
+                firstInvisible = false
+            else
+                wait(getWaitTime())
+                getgenv().deactivateRemoteHook("UnreliableRemoteEvent","UpdCF")
+                wait(getWaitTime())
+                getgenv().activateRemoteHook("UnreliableRemoteEvent","UpdCF")
+            end
+            wait(getWaitTime())
+            hrp.CFrame = oldpos
+            hasLifted = true
+        end
+        if (queryHitbox.Position.Y - hrp.Position.Y) < 5000 then
+            hasLifted = false
+        end
+        wait(getretrytime())
+    end
+    FloatingEnabled = false
+end
+local function stopAnimations(char)
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do track:Stop() end
+        end
+    end
+end
+RunService.Heartbeat:Connect(function()
+    if LocalPlayer.Character then
+        stopAnimations(LocalPlayer.Character)
+    end
+end)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+getgenv().AutoGetReady = false
+local function checkChar(char)
+    if char and char.Parent and char.Parent.Name == "Survivors" then
+		FloatingEnabled = false
+		activeghosting(char)
+		resetProgress()
+		delayKillerIntroUI()
+		getgenv().AutoGetReady = true
+	else
+		getgenv().deactivateRemoteHook("UnreliableRemoteEvent", "UpdCF")
+		getgenv().AutoGetReady = false
+    end
+end
+LocalPlayer.CharacterAdded:Connect(checkChar)
+if LocalPlayer.Character then
+    checkChar(LocalPlayer.Character)
+end
+local lastTp = 0
+local genIndex = 1
+local function isOccupied(pos)
+    for _, survivor in pairs(workspace.Players.Survivors:GetChildren()) do
+        local root = survivor:FindFirstChild("HumanoidRootPart")
+        if root and survivor ~= LocalPlayer.Character then
+            if (root.Position - pos).Magnitude <= 6 then
+                return true
+            end
+        end
+    end
+    return false
+end
+local function getGenerators()
+    local map = workspace:FindFirstChild("Map")
+    map = map and map:FindFirstChild("Ingame")
+    map = map and map:FindFirstChild("Map")
+    if not map then return {} end
+    local gens = {}
+    for _, gen in pairs(map:GetChildren()) do
+        if gen.Name == "Generator"
+        and gen:FindFirstChild("Progress")
+        and gen.Progress.Value < 100 then
+            table.insert(gens, gen)
+        end
+    end
+    return gens
+end
+local char = LocalPlayer.Character
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    genIndex = 1
+    lastTp = 0
+end)
+local lastGenerators = {}
+local function sameGenerators(a, b)
+    if #a ~= #b then return false end
+    for i = 1, #a do
+        if a[i] ~= b[i] then return false end
+    end
+    return true
+end
+local function repairGenerators()
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    if char.Parent and char.Parent.Name ~= "Survivors" then return end
+	local hrp = char.HumanoidRootPart
+    local gens = getGenerators()
+    if #gens == 0 then return end
+    if not sameGenerators(gens, lastGenerators) then
+        genIndex = 1
+        lastGenerators = gens
+    end
+    local gen = gens[genIndex]
+    if not gen then
+        genIndex = 1
+        return
+    end
+    if tick() - lastTp < (getgenv().tpDelay + LocalPlayer:GetNetworkPing()) then return end
+    lastTp = tick()
+    if gen:FindFirstChild("Positions") then
+        for _, pos in ipairs({gen.Positions.Center, gen.Positions.Right, gen.Positions.Left}) do
+            if pos and not isOccupied(pos.Position) then
+				hrp.CFrame = pos.CFrame
+                break
+            end
+        end
+    end
+    task.wait(0.2)
+    pcall(function()
+        if gen.Remotes and gen.Remotes:FindFirstChild("RF") then
+            gen.Remotes.RF:InvokeServer("enter")
+        end
+        if gen.Remotes and gen.Remotes:FindFirstChild("RE") then
+            gen.Remotes.RE:FireServer()
+        end
+    end)
+    genIndex = genIndex + 1
+    if genIndex > #gens then genIndex = 1 end
+end
+RunService.Heartbeat:Connect(function()
+    if not getgenv().AutoGetReady then return end
+    local map = workspace:FindFirstChild("Map")
+    local ingame = map and map:FindFirstChild("Ingame")
+    local f = ingame and ingame:FindFirstChild("CurrencyLocations")
+    if getgenv().FarmSukkars then
+        if (not f) and (not getgenv().repairgenerators) then
+            teleportToEmptyServer()
+            return
+        end
+    end
+    if not getsukkars then
+        if getgenv().ForceWin and getgenv().repairgenerators then
+            if not doneAll then
+                repairGenerators()
+                checkObjectives()
+            end
+            return
+        end
+        if getgenv().repairgenerators and not getgenv().ForceWin then
+            if doneAll then
+                if not f then
+                    teleportToEmptyServer()
+                end
+            else
+                repairGenerators()
+                checkObjectives()
+            end
+            return
+        end
+        if getgenv().ForceWin and not getgenv().repairgenerators then
+            return
+        end
+    end
+end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local roundTimer = ReplicatedStorage:WaitForChild("RoundTimer")
+local function onCharacterAdded(char)
+    local hum = char:WaitForChild("Humanoid")
+    RunService.RenderStepped:Connect(function()
+        if hum and hum.Health > 0 and hum.MaxHealth > 300 then
+            hum.Health = 0
+        end
+    end)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+RunService.RenderStepped:Connect(function()
+    local char = player.Character
+    if not char then return end
+    if tostring(roundTimer.Value) == "Round ends in:" then
+        pingDelay(1)
+        if tostring(roundTimer.Value) == "Round ends in:" then
+            if char.Parent and char.Parent.Name == "Spectating" then
+                teleportToEmptyServer()
+            end
+        end
+    end
+end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local checkInterval = 0
+local lastCheck = 0
+RunService.Heartbeat:Connect(function(dt)
+    lastCheck = lastCheck + dt
+    if lastCheck >= checkInterval then
+        lastCheck = 0
+        local alone = true
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                alone = false
+                break
+            end
+        end
+        if alone then
+		wait(5)
+		if alone then
+            teleportToEmptyServer()
+        end
+		end
+    end
+end)
+end
+local queueteleport =
+    queue_on_teleport
+    or (syn and syn.queue_on_teleport)
+    or (getgenv().fluxus and getgenv().fluxus.queue_on_teleport)
+local hubLoader = [[
+loadstring(game:HttpGet("https://pastefy.app/S4wGCukr/raw"))()
+]]
+local TeleportCheck = false
+game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+	if getgenv().AutoExecuted and (not TeleportCheck) and queueteleport then
+		TeleportCheck = true
+		queueteleport(hubLoader)
+	end
+end)
+print("Script Loaded 100%")

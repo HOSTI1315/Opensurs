@@ -1,0 +1,364 @@
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+
+local Window = Library:CreateWindow({
+    Title = "RINGTA",
+    Footer = "discord.gg/ringta",
+    Icon = nil,
+    NotifySide = "Right",
+    ShowCustomCursor = false,
+    AutoShow = true
+})
+
+local Tabs = {
+    Main = Window:AddTab("Main", "home"),
+    Visual = Window:AddTab("Visual", "visibility"),
+    Brainrot = Window:AddTab("Brainrot Finder", "search"),
+    Credit = Window:AddTab("Credit", "star"),
+    ["UI Settings"] = Window:AddTab("UI Settings", "settings")
+}
+
+local MainGB = Tabs.Main:AddLeftGroupbox("Main Features")
+local MainGB2 = Tabs.Main:AddRightGroupbox("Utilities")
+
+MainGB:AddButton("Desync/AntiHit", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ergergq2/eoiogeg.github.io/refs/heads/main/egege.lua"))()
+end)
+MainGB:AddButton("Steal Helper Gui", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ringta9321/stealhelp.github.io/main/ere.lua"))()
+end)
+
+local speedActive = false
+local speed = 40
+local heartbeatConn
+MainGB2:AddToggle("BoostSpeed", {
+    Text = "Boost Speed",
+    Default = false,
+    Callback = function(val)
+        speedActive = val
+        if speedActive then
+            if heartbeatConn then heartbeatConn:Disconnect() end
+            heartbeatConn = rs.Heartbeat:Connect(function()
+                local character = player.Character
+                if speedActive and character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = character.Humanoid
+                    local hrp = character.HumanoidRootPart
+                    local moveDir = humanoid.MoveDirection
+                    if moveDir.Magnitude > 0 then
+                        hrp.AssemblyLinearVelocity = moveDir * speed + Vector3.new(0, hrp.AssemblyLinearVelocity.Y, 0)
+                    end
+                end
+            end)
+        else
+            if heartbeatConn then heartbeatConn:Disconnect() heartbeatConn = nil end
+        end
+    end
+})
+
+MainGB:AddButton("Antisteal (OP)", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/34wefwef/antisteal.github.io/main/ere.lua"))()
+end)
+
+local infJumpEnabled = false
+local infJumpConn
+MainGB2:AddToggle("InfiniteJump", {
+    Text = "Infinite Jump",
+    Default = false,
+    Callback = function(val)
+        infJumpEnabled = val
+        if infJumpEnabled then
+            if not infJumpConn then
+                infJumpConn = UIS.JumpRequest:Connect(function()
+                    local character = player.Character
+                    if not character then return end
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    local rootPart = character:FindFirstChild("HumanoidRootPart")
+                    if humanoid and rootPart then
+                        rootPart.Velocity = Vector3.new(rootPart.Velocity.X, 50, rootPart.Velocity.Z)
+                    end
+                end)
+            end
+        else
+            if infJumpConn then infJumpConn:Disconnect() infJumpConn = nil end
+        end
+    end
+})
+
+local antiRagdollActive = false
+local ragdollConn
+MainGB2:AddToggle("AntiRagdoll", {
+    Text = "Anti Ragdoll",
+    Default = false,
+    Callback = function(val)
+        antiRagdollActive = val
+        if antiRagdollActive then
+            local function handleRagdoll(char)
+                local humanoid = char:WaitForChild("Humanoid", 5)
+                if not humanoid then return end
+                ragdollConn = humanoid.StateChanged:Connect(function(_, newState)
+                    if antiRagdollActive and (
+                        newState == Enum.HumanoidStateType.Physics or
+                        newState == Enum.HumanoidStateType.Ragdoll or
+                        newState == Enum.HumanoidStateType.FallingDown
+                    ) then
+                        for _, part in pairs(char:GetDescendants()) do
+                            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                                part.Anchored = true
+                            end
+                        end
+                        task.wait(0.01)
+                        for _, part in pairs(char:GetDescendants()) do
+                            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                                part.Anchored = false
+                            end
+                        end
+                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+                end)
+            end
+            if player.Character then handleRagdoll(player.Character) end
+            player.CharacterAdded:Connect(handleRagdoll)
+        else
+            if ragdollConn then ragdollConn:Disconnect() ragdollConn = nil end
+        end
+    end
+})
+
+local VisualGB = Tabs.Visual:AddLeftGroupbox("ESP Features")
+local VisualGB2 = Tabs.Visual:AddRightGroupbox("Visual Utilities")
+
+VisualGB:AddButton("Player ESP", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Okaye21/plauer.github.io/main/ere.lua"))()
+end)
+VisualGB:AddButton("ESP Your Base", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ringta9321/espbase.github.io/main/ere.lua"))()
+end)
+
+VisualGB2:AddButton("Esp Most Expensive Brainrot", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/34t34t33/mostexpensive.github.io/main/rare.lua"))()
+end)
+
+local plotTimers_Enabled = false
+local plotTimers_RenderConnection = nil
+local plotTimers_OriginalProperties = {}
+
+local function randomName(length)
+    local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    local name = ""
+    for i = 1, length do
+        local rand = math.random(1, #charset)
+        name = name .. charset:sub(rand, rand)
+    end
+    return name
+end
+
+local function disablePlotTimers()
+    plotTimers_Enabled = false
+    if plotTimers_RenderConnection then
+        plotTimers_RenderConnection:Disconnect()
+        plotTimers_RenderConnection = nil
+    end
+    for label, props in pairs(plotTimers_OriginalProperties) do
+        pcall(function()
+            if label and label.Parent then
+                local bb = label.Parent
+                if bb:IsA("BillboardGui") then
+                    bb.Name = props.bb_name
+                    bb.Enabled = props.bb_enabled
+                    bb.AlwaysOnTop = props.bb_alwaysOnTop
+                    bb.Size = props.bb_size
+                    bb.MaxDistance = props.bb_maxDistance
+                    label.TextScaled = props.label_textScaled
+                    label.TextWrapped = props.label_textWrapped
+                    label.AutomaticSize = props.label_automaticSize
+                    label.Size = props.label_size
+                    label.TextSize = props.label_textSize
+                end
+            end
+        end)
+    end
+    table.clear(plotTimers_OriginalProperties)
+end
+
+local function enablePlotTimers()
+    disablePlotTimers()
+    plotTimers_Enabled = true
+    local camera = workspace.CurrentCamera
+    local DISTANCE_THRESHOLD = 45
+    local SCALE_START, SCALE_RANGE = 100, 300
+    local MIN_TEXT_SIZE, MAX_TEXT_SIZE = 30, 36
+    local lastUpdate = 0
+    plotTimers_RenderConnection = rs.RenderStepped:Connect(function(step)
+        lastUpdate = lastUpdate + step
+        if not plotTimers_Enabled then return end
+        if lastUpdate < 0.2 then return end
+        lastUpdate = 0
+        for _, label in ipairs(workspace.Plots:GetDescendants()) do
+            if label:IsA("TextLabel") and label.Name == "RemainingTime" then
+                local bb = label.Parent
+                if not bb:IsA("BillboardGui") then
+                    local parentPart = bb
+                    bb = Instance.new("BillboardGui")
+                    bb.Name = randomName(12)
+                    bb.Adornee = parentPart
+                    bb.Size = UDim2.new(0, 300, 0, 150)
+                    bb.AlwaysOnTop = true
+                    bb.MaxDistance = 10000
+                    bb.ClipsDescendants = false
+                    bb.Parent = parentPart
+                    label.Parent = bb
+                end
+                if not plotTimers_OriginalProperties[label] then
+                    plotTimers_OriginalProperties[label] = {
+                        bb_name = bb.Name,
+                        bb_enabled = bb.Enabled,
+                        bb_alwaysOnTop = bb.AlwaysOnTop,
+                        bb_size = bb.Size,
+                        bb_maxDistance = bb.MaxDistance,
+                        label_textScaled = label.TextScaled,
+                        label_textWrapped = label.TextWrapped,
+                        label_automaticSize = label.AutomaticSize,
+                        label_size = label.Size,
+                        label_textSize = label.TextSize,
+                    }
+                end
+                bb.MaxDistance = 10000
+                bb.AlwaysOnTop = true
+                bb.ClipsDescendants = false
+                bb.Size = UDim2.new(0, 300, 0, 150)
+                label.TextScaled = false
+                label.TextWrapped = true
+                label.ClipsDescendants = false
+                label.Size = UDim2.new(1, 0, 0, 32)
+                label.AutomaticSize = Enum.AutomaticSize.Y
+                local basePart = bb.Adornee
+                if basePart and basePart.Position then
+                    local distance = (camera.CFrame.Position - basePart.Position).Magnitude
+                    if distance > DISTANCE_THRESHOLD and basePart.Position.Y >= 0 then
+                        bb.Enabled = false
+                    else
+                        bb.Enabled = true
+                        local t = math.clamp((distance - SCALE_START) / SCALE_RANGE, 0, 1)
+                        local newTextSize = math.clamp(MIN_TEXT_SIZE + (MAX_TEXT_SIZE - MIN_TEXT_SIZE) * t, MIN_TEXT_SIZE, MAX_TEXT_SIZE)
+                        label.TextSize = newTextSize
+                        label.Size = UDim2.new(1, 0, 0, newTextSize + 6)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+VisualGB2:AddToggle("ViewBaseLockTimers", {
+    Text = "View Base Lock Timers",
+    Default = false,
+    Callback = function(val)
+        plotTimers_Enabled = val
+        if val then
+            enablePlotTimers()
+        else
+            disablePlotTimers()
+        end
+    end
+})
+
+local BrainrotGB = Tabs.Brainrot:AddLeftGroupbox("Finder Features")
+BrainrotGB:AddButton("BRAINROT RARE JOINER", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/3eferfer/finder.github.io/main/ere.lua"))()
+end)
+BrainrotGB:AddButton("Pet Finder Secret Only", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/eere34/secretonly.github.io/main/secret.lua"))()
+end)
+BrainrotGB:AddLabel({
+    Text = "How The Pet Finder Works\n\nThe way the pet finder works is by 3 roblox bots in 3 different servers and also IT TRACKS EVERY BRAINROT INSIDE OF THE SERVER OF THE PLAYER THAT EXECUTES THE SCRIPT. Which means IF YOU HAVE RARE BRAINROTS STORE 1ST IN ALT ACCOUNT THEN USE SCRIPT OR ELSE RISK OF STOLEN.",
+    DoesWrap = true
+})
+
+local CreditGB = Tabs.Credit:AddLeftGroupbox("Credit & Discord")
+CreditGB:AddButton("JOIN DISCORD SERVER RINGTA", function()
+    if setclipboard then
+        setclipboard("discord.gg/ringta")
+    elseif syn and syn.setclipboard then
+        syn.setclipboard("discord.gg/ringta")
+    end
+end)
+CreditGB:AddLabel({
+    Text = "PLEASE JOIN DISCORD SERVER\n\nAlright guys join the RINGTA discord server if you haven't since that's where updates and everything happens and new scripts and you get to talk to cool people and have fun and yea.",
+    DoesWrap = true
+})
+
+local CreditGB2 = Tabs.Credit:AddRightGroupbox("Extra Code Info")
+CreditGB2:AddLabel({
+    Text = "IF You have extra code for steal a brainrot or something dm me in discord and give me it ill credit you in the credit sections and server and video thanks very much and appreciate it m8",
+    DoesWrap = true
+})
+
+local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
+MenuGroup:AddToggle("KeybindMenuOpen", {
+    Default = Library.KeybindFrame.Visible,
+    Text = "Open Keybind Menu",
+    Callback = function(value)
+        Library.KeybindFrame.Visible = value
+    end,
+})
+MenuGroup:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Default = false,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end,
+})
+MenuGroup:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+MenuGroup:AddDropdown("DPIDropdown", {
+    Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+    Default = "100%",
+    Text = "DPI Scale",
+    Callback = function(Value)
+        Value = Value:gsub("%%", "")
+        local DPI = tonumber(Value)
+        Library:SetDPIScale(DPI)
+    end,
+})
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+    :AddKeyPicker("MenuKeybind", { Default = "RightControl", NoUI = true, Text = "Menu keybind" })
+MenuGroup:AddButton("Unload", function()
+    Library:Unload()
+end)
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+ThemeManager:SetFolder("ringta")
+SaveManager:SetFolder("ringta/EUT")
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+ThemeManager:ApplyToTab(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
+
+Library:Notify({
+    Title = "RINGTA",
+    Description = "DM RINGTA IF HAVE EXTRA CODE I CAN ADD",
+    Time = 7.7
+})
+
+task.spawn(function()
+    task.wait(1)
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/eruiier/loaderinfjump.github.io/main/jump.lua"))()
+    end)
+end)

@@ -1,0 +1,881 @@
+local PlayersService = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGuiService = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = PlayersService.LocalPlayer
+local CurrentCamera = workspace.CurrentCamera
+
+local SilentAimModule = loadstring(game:HttpGet("https://scriptprotector.vercel.app/api/raw/3da509461b7cb4cd130b019f256cfa70"))()
+local CombatModule = loadstring(game:HttpGet("https://scriptprotector.vercel.app/api/raw/8602e9746626d975703ab5dc6a3b1c8c"))()
+
+local IsCamLockEnabled = false
+local CamLockTarget = nil
+local CamLockConnection = nil
+local CamLockDefaultPosition = UDim2.new(0.5, -100, 0.3, 0)
+
+local IsAntiStunEnabled = false
+local AntiStunConnection = nil
+
+local MainMenuGUI = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+MainMenuGUI.Name = "MainMenuUI"
+MainMenuGUI.ResetOnSpawn = false
+
+local MenuToggleButton = Instance.new("TextButton")
+MenuToggleButton.Size = UDim2.new(0, 80, 0, 30)
+MenuToggleButton.Position = UDim2.new(0, 10, 0, 10)
+MenuToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MenuToggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+MenuToggleButton.Text = "Menu"
+MenuToggleButton.Font = Enum.Font.GothamBold
+MenuToggleButton.TextScaled = true
+MenuToggleButton.Parent = MainMenuGUI
+MenuToggleButton.BorderSizePixel = 0
+MenuToggleButton.AutoButtonColor = false
+
+Instance.new("UICorner", MenuToggleButton).CornerRadius = UDim.new(0, 12)
+MenuToggleButton.Active = true
+MenuToggleButton.Draggable = true
+
+local MenuScrollFrame = Instance.new("ScrollingFrame")
+MenuScrollFrame.Size = UDim2.new(0, 156, 0, 224)
+MenuScrollFrame.Position = UDim2.new(0, 10, 0, 60)
+MenuScrollFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MenuScrollFrame.Visible = false
+MenuScrollFrame.Parent = MainMenuGUI
+MenuScrollFrame.BorderSizePixel = 0
+MenuScrollFrame.CanvasSize = UDim2.new(0, 10, 0, 100)
+MenuScrollFrame.ScrollBarThickness = 6
+
+Instance.new("UICorner", MenuScrollFrame).CornerRadius = UDim.new(0, 12)
+
+local MenuListLayout = Instance.new("UIListLayout", MenuScrollFrame)
+MenuListLayout.Padding = UDim.new(0, 10)
+MenuListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+MenuListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+MenuListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    MenuScrollFrame.CanvasSize = UDim2.new(0, 0, 0, MenuListLayout.AbsoluteContentSize.Y + 20)
+end)
+
+local function CreateMenuButton(ButtonText, TextColor, ClickCallback)
+    local MenuButton = Instance.new("TextButton")
+    MenuButton.Size = UDim2.new(0, 80, 0, 40)
+    MenuButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    MenuButton.TextColor3 = TextColor
+    MenuButton.Text = ButtonText
+    MenuButton.Font = Enum.Font.GothamBold
+    MenuButton.TextScaled = true
+    MenuButton.BorderSizePixel = 0
+    MenuButton.AutoButtonColor = false
+    MenuButton.Parent = MenuScrollFrame
+    
+    Instance.new("UICorner", MenuButton).CornerRadius = UDim.new(0, 10)
+    
+    if ClickCallback then
+        MenuButton.MouseButton1Click:Connect(ClickCallback)
+    end
+    
+    return MenuButton
+end
+
+local CamLockButton = CreateMenuButton("CentuDox Camlock", Color3.fromRGB(170, 0, 255))
+local RedzHubButton = CreateMenuButton("Redz HUB", Color3.fromRGB(255, 0, 0), function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Scripts/refs/heads/main/main.luau"))({
+        JoinTeam = "Pirates",
+        Translator = true,
+    })
+end)
+
+local AntiStunButton = CreateMenuButton("Anti Stun OFF", Color3.fromRGB(0, 255, 255))
+local JumpHackButton = CreateMenuButton("Jump Hack", Color3.fromRGB(255, 105, 180))
+local NoclipButton = CreateMenuButton("Noclip OFF", Color3.fromRGB(255, 165, 0))
+local FlyButton = CreateMenuButton("Fly OFF", Color3.fromRGB(0, 0, 139))
+local AimbotSkillsButton = CreateMenuButton("Aimbot skills", Color3.fromRGB(0, 200, 200))
+
+local IsAimbotEnabled = false
+AimbotSkillsButton.MouseButton1Click:Connect(function()
+    IsAimbotEnabled = not IsAimbotEnabled
+    if IsAimbotEnabled then
+        AimbotSkillsButton.Text = "Aimbot Skills"
+        SilentAimModule:SetPlayerSilentAim(true)
+        SilentAimModule:SetNPCSilentAim(true)
+        SilentAimModule:SetPrediction(true)
+        SilentAimModule:SetPredictionAmount(0.12)
+        SilentAimModule:SetHighlight(true)
+        SilentAimModule:SetMiniTogglePlayerSilentAim(true)
+        SilentAimModule:SetMiniToggleNpcSilentAim(true)
+    else
+        AimbotSkillsButton.Text = "Aimbot Skills"
+        SilentAimModule:SetPlayerSilentAim(false)
+        SilentAimModule:SetNPCSilentAim(false)
+        SilentAimModule:SetHighlight(false)
+        SilentAimModule:Pause()
+    end
+end)
+
+local KillAuraButton = CreateMenuButton("Fast Attack OFF", Color3.fromRGB(255, 50, 50))
+local IsKillAuraEnabled = false
+KillAuraButton.MouseButton1Click:Connect(function()
+    IsKillAuraEnabled = not IsKillAuraEnabled
+    if IsKillAuraEnabled then
+        KillAuraButton.Text = "Kill Aura ON"
+        CombatModule:SetFastAttack(true)
+    else
+        KillAuraButton.Text = "Kill Aura OFF"
+        CombatModule:SetFastAttack(false)
+    end
+end)
+
+local RemoveFogButton = CreateMenuButton("Remove Fog OFF", Color3.fromRGB(100, 150, 255))
+local IsFogRemoved = false
+RemoveFogButton.MouseButton1Click:Connect(function()
+    IsFogRemoved = not IsFogRemoved
+    if IsFogRemoved then
+        RemoveFogButton.Text = "Remove Fog ON"
+        CombatModule:SetFog(true)
+    else
+        RemoveFogButton.Text = "Remove Fog OFF"
+        CombatModule:SetFog(false)
+    end
+end)
+
+local RemoveLavaButton = CreateMenuButton("Remove Lava OFF", Color3.fromRGB(255, 80, 80))
+local IsLavaRemoved = false
+RemoveLavaButton.MouseButton1Click:Connect(function()
+    IsLavaRemoved = not IsLavaRemoved
+    if IsLavaRemoved then
+        RemoveLavaButton.Text = "Remove Lava ON"
+        CombatModule:SetLava(true)
+    else
+        RemoveLavaButton.Text = "Remove Lava OFF"
+        CombatModule:SetLava(false)
+    end
+end)
+
+local ESPButton = CreateMenuButton("ESP OFF", Color3.fromRGB(255, 50, 50))
+local IsESPEnabled = false
+ESPButton.MouseButton1Click:Connect(function()
+    IsESPEnabled = not IsESPEnabled
+    if IsESPEnabled then
+        ESPButton.Text = "ESP ON"
+        _G.PlayerEsp = true
+    else
+        ESPButton.Text = "ESP OFF"
+        _G.PlayerEsp = false
+    end
+end)
+
+local InfiniteEnergyButton = CreateMenuButton("Infinite Energy OFF", Color3.fromRGB(255, 255, 0))
+local IsInfiniteEnergyEnabled = false
+InfiniteEnergyButton.MouseButton1Click:Connect(function()
+    IsInfiniteEnergyEnabled = not IsInfiniteEnergyEnabled
+    if IsInfiniteEnergyEnabled then
+        InfiniteEnergyButton.Text = "Infinite Energy ON"
+        _G.InfEnergy = true
+    else
+        InfiniteEnergyButton.Text = "Infinite Energy OFF"
+        _G.InfEnergy = false
+    end
+end)
+
+local WalkOnWaterButton = CreateMenuButton("Walk on Water OFF", Color3.fromRGB(0, 150, 255))
+local IsWalkOnWaterEnabled = false
+WalkOnWaterButton.MouseButton1Click:Connect(function()
+    IsWalkOnWaterEnabled = not IsWalkOnWaterEnabled
+    if IsWalkOnWaterEnabled then
+        WalkOnWaterButton.Text = "Walk on Water ON"
+        WalkOnWaterButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+        _G.WalkOnWater = true
+    else
+        WalkOnWaterButton.Text = "Walk on Water OFF"
+        WalkOnWaterButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+        _G.WalkOnWater = false
+    end
+end)
+
+local AutoRaceV3Button = CreateMenuButton("Auto Race V3 OFF", Color3.fromRGB(0, 255, 255))
+local IsAutoRaceV3Enabled = false
+AutoRaceV3Button.MouseButton1Click:Connect(function()
+    IsAutoRaceV3Enabled = not IsAutoRaceV3Enabled
+    if IsAutoRaceV3Enabled then
+        AutoRaceV3Button.Text = "Auto Race V3 ON"
+        _G.AutoRaceV3 = true
+    else
+        AutoRaceV3Button.Text = "Auto Race V3 OFF"
+        _G.AutoRaceV3 = false
+    end
+end)
+
+local AutoRaceV4Button = CreateMenuButton("Auto Race V4 OFF", Color3.fromRGB(255, 0, 255))
+local IsAutoRaceV4Enabled = false
+AutoRaceV4Button.MouseButton1Click:Connect(function()
+    IsAutoRaceV4Enabled = not IsAutoRaceV4Enabled
+    if IsAutoRaceV4Enabled then
+        AutoRaceV4Button.Text = "Auto Race V4 ON"
+        _G.AutoRaceV4 = true
+    else
+        AutoRaceV4Button.Text = "Auto Race V4 OFF"
+        _G.AutoRaceV4 = false
+    end
+end)
+
+MenuToggleButton.MouseButton1Click:Connect(function()
+    MenuScrollFrame.Visible = not MenuScrollFrame.Visible
+end)
+
+local function EnableAntiStun()
+    AntiStunConnection = RunService.RenderStepped:Connect(function()
+        local PlayerCharacter = LocalPlayer.Character
+        if not PlayerCharacter then
+            return
+        end
+        
+        local HumanoidRootPart = PlayerCharacter:FindFirstChild("HumanoidRootPart")
+        local Humanoid = PlayerCharacter:FindFirstChildOfClass("Humanoid")
+        
+        if HumanoidRootPart and Humanoid then
+            local MoveDirection = Humanoid.MoveDirection
+            if MoveDirection.Magnitude > 0 then
+                HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + Vector3.new(MoveDirection.X, 0, MoveDirection.Z).Unit * 1.2
+            end
+        end
+    end)
+end
+
+local function DisableAntiStun()
+    if AntiStunConnection then
+        AntiStunConnection:Disconnect()
+        AntiStunConnection = nil
+    end
+end
+
+AntiStunButton.MouseButton1Click:Connect(function()
+    IsAntiStunEnabled = not IsAntiStunEnabled
+    if IsAntiStunEnabled then
+        AntiStunButton.Text = "Anti Stun ON"
+        EnableAntiStun()
+    else
+        AntiStunButton.Text = "Anti Stun OFF"
+        DisableAntiStun()
+    end
+end)
+
+JumpHackButton.MouseButton1Click:Connect(function()
+    local JumpButtonGUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    JumpButtonGUI.Name = "JumpButtonGUI"
+    
+    local JumpButton = Instance.new("TextButton", JumpButtonGUI)
+    JumpButton.Text = "Jump"
+    JumpButton.Size = UDim2.new(0, 110, 0, 44)
+    JumpButton.Position = UDim2.new(0, 20, 0.5, -22)
+    JumpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    JumpButton.BackgroundTransparency = 0.3
+    JumpButton.TextColor3 = Color3.fromRGB(230, 230, 255)
+    JumpButton.Font = Enum.Font.GothamBold
+    JumpButton.TextSize = 22
+    JumpButton.BorderSizePixel = 0
+    JumpButton.Active = true
+    JumpButton.Draggable = true
+    
+    Instance.new("UICorner", JumpButton).CornerRadius = UDim.new(0, 14)
+    
+    local ButtonStroke = Instance.new("UIStroke", JumpButton)
+    ButtonStroke.Color = Color3.fromRGB(0, 0, 139)
+    ButtonStroke.Thickness = 3
+    ButtonStroke.LineJoinMode = Enum.LineJoinMode.Round
+    
+    local JumpPowerValue = 250
+    local IsJumping = false
+    local JumpConnection = nil
+    
+    local function StopJumping()
+        IsJumping = false
+        JumpButton.Text = "Jump"
+        if JumpConnection then
+            JumpConnection:Disconnect()
+            JumpConnection = nil
+        end
+    end
+    
+    JumpButton.MouseButton1Down:Connect(function()
+        if IsJumping then
+            return
+        end
+        
+        IsJumping = true
+        JumpButton.Text = "Jump ON"
+        
+        local Humanoid = (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):FindFirstChildOfClass("Humanoid")
+        if Humanoid then
+            local OriginalJumpPower = Humanoid.JumpPower
+            Humanoid.JumpPower = JumpPowerValue
+            
+            JumpConnection = RunService.Heartbeat:Connect(function()
+                if Humanoid and IsJumping then
+                    Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+            
+            task.delay(0.5, function()
+                if Humanoid then
+                    Humanoid.JumpPower = OriginalJumpPower
+                end
+            end)
+        end
+    end)
+    
+    JumpButton.MouseButton1Up:Connect(StopJumping)
+end)
+
+local function CreateCamLockUI()
+    if MainMenuGUI:FindFirstChild("CamLockUI") then
+        return
+    end
+    
+    local CamLockUI = Instance.new("TextButton")
+    CamLockUI.Name = "CamLockUI"
+    CamLockUI.Size = UDim2.new(0, 200, 0, 50)
+    CamLockUI.Position = CamLockDefaultPosition
+    CamLockUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    CamLockUI.TextColor3 = Color3.fromRGB(170, 0, 255)
+    CamLockUI.TextScaled = true
+    CamLockUI.Font = Enum.Font.GothamBold
+    CamLockUI.Text = "CentuDox OFF"
+    CamLockUI.Parent = MainMenuGUI
+    CamLockUI.BorderSizePixel = 0
+    CamLockUI.AutoButtonColor = false
+    
+    Instance.new("UICorner", CamLockUI).CornerRadius = UDim.new(0, 12)
+    CamLockUI.Active = true
+    CamLockUI.Draggable = true
+    
+    local IsDragging = false
+    local DragInput = nil
+    local DragStart = nil
+    local StartPosition = nil
+    
+    CamLockUI.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+            IsDragging = true
+            DragStart = Input.Position
+            StartPosition = CamLockUI.Position
+            
+            Input.Changed:Connect(function()
+                if Input.UserInputState == Enum.UserInputState.End then
+                    IsDragging = false
+                    CamLockDefaultPosition = CamLockUI.Position
+                end
+            end)
+        end
+    end)
+    
+    CamLockUI.InputChanged:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+            DragInput = Input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(Input)
+        if Input == DragInput and IsDragging then
+            local Delta = Input.Position - DragStart
+            CamLockUI.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        end
+    end)
+    
+    local function FindBestTarget()
+        local BestDotProduct = -1
+        local BestTarget = nil
+        
+        for _, Player in ipairs(PlayersService:GetPlayers()) do
+            if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                local DotProduct = CurrentCamera.CFrame.LookVector:Dot((Player.Character.HumanoidRootPart.Position - CurrentCamera.CFrame.Position).Unit)
+                if BestDotProduct < DotProduct then
+                    BestTarget = Player
+                    BestDotProduct = DotProduct
+                end
+            end
+        end
+        
+        return BestTarget
+    end
+    
+    local function StartCamLock()
+        CamLockTarget = FindBestTarget()
+        if not CamLockTarget then
+            return
+        end
+        
+        CamLockConnection = RunService.RenderStepped:Connect(function()
+            if CamLockTarget and CamLockTarget.Character and CamLockTarget.Character:FindFirstChild("HumanoidRootPart") then
+                CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, CamLockTarget.Character.HumanoidRootPart.Position)
+            end
+        end)
+    end
+    
+    local function StopCamLock()
+        if CamLockConnection then
+            CamLockConnection:Disconnect()
+            CamLockConnection = nil
+        end
+        CamLockTarget = nil
+    end
+    
+    CamLockUI.MouseButton1Click:Connect(function()
+        IsCamLockEnabled = not IsCamLockEnabled
+        if IsCamLockEnabled then
+            CamLockUI.Text = "CentuDox ON"
+            StartCamLock()
+        else
+            CamLockUI.Text = "CentuDox OFF"
+            StopCamLock()
+        end
+    end)
+end
+
+CamLockButton.MouseButton1Click:Connect(CreateCamLockUI)
+
+local IsNoclipEnabled = false
+local NoclipConnection = nil
+
+local function EnableNoclip()
+    NoclipConnection = RunService.Stepped:Connect(function()
+        local PlayerCharacter = LocalPlayer.Character
+        if not PlayerCharacter then
+            return
+        end
+        
+        for _, Part in pairs(PlayerCharacter:GetChildren()) do
+            if Part:IsA("BasePart") then
+                Part.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function DisableNoclip()
+    if NoclipConnection then
+        NoclipConnection:Disconnect()
+    end
+    
+    local PlayerCharacter = LocalPlayer.Character
+    if PlayerCharacter then
+        for _, Part in pairs(PlayerCharacter:GetChildren()) do
+            if Part:IsA("BasePart") then
+                Part.CanCollide = true
+            end
+        end
+    end
+end
+
+NoclipButton.MouseButton1Click:Connect(function()
+    IsNoclipEnabled = not IsNoclipEnabled
+    NoclipButton.Text = IsNoclipEnabled and "Noclip ON" or "Noclip OFF"
+    
+    if IsNoclipEnabled then
+        EnableNoclip()
+    else
+        DisableNoclip()
+    end
+end)
+
+local IsFlyEnabled = false
+local FlyConnection = nil
+
+local function EnableFly()
+    local PlayerCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local HumanoidRootPart = PlayerCharacter:WaitForChild("HumanoidRootPart")
+    local Humanoid = PlayerCharacter:WaitForChild("Humanoid")
+    
+    if HumanoidRootPart:FindFirstChild("FlyVelocity") then
+        HumanoidRootPart.FlyVelocity:Destroy()
+    end
+    
+    if HumanoidRootPart:FindFirstChild("FlyGyro") then
+        HumanoidRootPart.FlyGyro:Destroy()
+    end
+    
+    local FlyVelocity = Instance.new("BodyVelocity")
+    FlyVelocity.Name = "FlyVelocity"
+    FlyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    FlyVelocity.P = 12500
+    FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+    FlyVelocity.Parent = HumanoidRootPart
+    
+    local FlyGyro = Instance.new("BodyGyro")
+    FlyGyro.Name = "FlyGyro"
+    FlyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    FlyGyro.P = 10000
+    FlyGyro.CFrame = HumanoidRootPart.CFrame
+    FlyGyro.Parent = HumanoidRootPart
+    
+    Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+    
+    FlyConnection = RunService.RenderStepped:Connect(function()
+        local Camera = workspace.CurrentCamera
+        FlyGyro.CFrame = Camera.CFrame
+        
+        if Humanoid.MoveDirection.Magnitude > 0.01 then
+            FlyVelocity.Velocity = Camera.CFrame.LookVector * 55
+        else
+            FlyVelocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end)
+end
+
+local function DisableFly()
+    local PlayerCharacter = LocalPlayer.Character
+    if not PlayerCharacter then
+        return
+    end
+    
+    local HumanoidRootPart = PlayerCharacter:FindFirstChild("HumanoidRootPart")
+    local Humanoid = PlayerCharacter:FindFirstChild("Humanoid")
+    
+    if HumanoidRootPart then
+        if HumanoidRootPart:FindFirstChild("FlyVelocity") then
+            HumanoidRootPart.FlyVelocity:Destroy()
+        end
+        
+        if HumanoidRootPart:FindFirstChild("FlyGyro") then
+            HumanoidRootPart.FlyGyro:Destroy()
+        end
+    end
+    
+    if Humanoid then
+        Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
+    
+    if FlyConnection then
+        FlyConnection:Disconnect()
+        FlyConnection = nil
+    end
+end
+
+FlyButton.MouseButton1Click:Connect(function()
+    IsFlyEnabled = not IsFlyEnabled
+    FlyButton.Text = IsFlyEnabled and "Fly ON" or "Fly OFF"
+    
+    if IsFlyEnabled then
+        EnableFly()
+    else
+        DisableFly()
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if MainMenuGUI:FindFirstChild("CamLockUI") then
+        CreateCamLockUI()
+    end
+end)
+
+local IsSpeedEnabled = false
+local SpeedValue = 16
+local SpeedConnection = nil
+
+local SpeedButton = CreateMenuButton("Speed OFF", Color3.fromRGB(0, 255, 0))
+
+local SpeedInputBox = Instance.new("TextBox")
+SpeedInputBox.Size = UDim2.new(0, 80, 0, 40)
+SpeedInputBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+SpeedInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedInputBox.PlaceholderText = "Enter a Value"
+SpeedInputBox.Font = Enum.Font.Gotham
+SpeedInputBox.TextScaled = true
+SpeedInputBox.ClearTextOnFocus = false
+SpeedInputBox.Text = tostring(SpeedValue)
+SpeedInputBox.Parent = MenuScrollFrame
+SpeedInputBox.BorderSizePixel = 0
+
+Instance.new("UICorner", SpeedInputBox).CornerRadius = UDim.new(0, 8)
+
+local function SetWalkSpeed(Speed)
+    local PlayerCharacter = LocalPlayer.Character
+    if not PlayerCharacter then
+        return
+    end
+    
+    local Humanoid = PlayerCharacter:FindFirstChildOfClass("Humanoid")
+    if Humanoid then
+        Humanoid.WalkSpeed = Speed
+    end
+end
+
+local function EnableSpeed()
+    if SpeedConnection then
+        SpeedConnection:Disconnect()
+    end
+    
+    SpeedConnection = RunService.RenderStepped:Connect(function()
+        SetWalkSpeed(SpeedValue)
+    end)
+end
+
+local function DisableSpeed()
+    if SpeedConnection then
+        SpeedConnection:Disconnect()
+        SpeedConnection = nil
+    end
+    SetWalkSpeed(16)
+end
+
+SpeedButton.MouseButton1Click:Connect(function()
+    IsSpeedEnabled = not IsSpeedEnabled
+    if IsSpeedEnabled then
+        local InputValue = tonumber(SpeedInputBox.Text)
+        if not InputValue or InputValue <= 0 then
+            InputValue = 16
+            SpeedInputBox.Text = "16"
+        end
+        SpeedValue = InputValue
+        SpeedButton.Text = "Speed ON"
+        EnableSpeed()
+    else
+        SpeedButton.Text = "Speed OFF"
+        DisableSpeed()
+    end
+end)
+
+SpeedInputBox:GetPropertyChangedSignal("Text"):Connect(function()
+    if IsSpeedEnabled then
+        local InputValue = tonumber(SpeedInputBox.Text)
+        if InputValue and InputValue > 0 then
+            SpeedValue = InputValue
+        else
+            SpeedValue = 16
+        end
+    end
+end)
+
+local IsAutoTPEnabled = false
+local HealthThreshold = 50
+local AutoTPConnection = nil
+
+local AutoTPButton = CreateMenuButton("Auto TP OFF", Color3.fromRGB(0, 255, 0))
+
+local HealthThresholdInput = Instance.new("TextBox")
+HealthThresholdInput.Size = UDim2.new(0, 80, 0, 40)
+HealthThresholdInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+HealthThresholdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+HealthThresholdInput.PlaceholderText = "HP Threshold"
+HealthThresholdInput.Font = Enum.Font.Gotham
+HealthThresholdInput.TextScaled = true
+HealthThresholdInput.ClearTextOnFocus = false
+HealthThresholdInput.Text = tostring(HealthThreshold)
+HealthThresholdInput.Parent = MenuScrollFrame
+HealthThresholdInput.BorderSizePixel = 0
+
+Instance.new("UICorner", HealthThresholdInput).CornerRadius = UDim.new(0, 8)
+
+local function TeleportToSky()
+    local PlayerCharacter = LocalPlayer.Character
+    if PlayerCharacter and PlayerCharacter:FindFirstChild("HumanoidRootPart") then
+        PlayerCharacter.HumanoidRootPart.CFrame = CFrame.new(PlayerCharacter.HumanoidRootPart.Position.X, 10000, PlayerCharacter.HumanoidRootPart.Position.Z)
+    end
+end
+
+local function TeleportToGround()
+    local PlayerCharacter = LocalPlayer.Character
+    if PlayerCharacter and PlayerCharacter:FindFirstChild("HumanoidRootPart") then
+        local RootPart = PlayerCharacter.HumanoidRootPart
+        RootPart.CFrame = CFrame.new(RootPart.Position.X, workspace.FallenPartsDestroyHeight + 10, RootPart.Position.Z)
+    end
+end
+
+local function EnableAutoTP()
+    if AutoTPConnection then
+        AutoTPConnection:Disconnect()
+    end
+    
+    AutoTPConnection = RunService.RenderStepped:Connect(function()
+        local PlayerCharacter = LocalPlayer.Character
+        if not PlayerCharacter then
+            return
+        end
+        
+        local Humanoid = PlayerCharacter:FindFirstChildOfClass("Humanoid")
+        if Humanoid then
+            if Humanoid.Health <= HealthThreshold then
+                TeleportToSky()
+            elseif Humanoid.Health >= Humanoid.MaxHealth * 0.9 then
+                TeleportToGround()
+            end
+        end
+    end)
+end
+
+local function DisableAutoTP()
+    if AutoTPConnection then
+        AutoTPConnection:Disconnect()
+        AutoTPConnection = nil
+    end
+end
+
+AutoTPButton.MouseButton1Click:Connect(function()
+    IsAutoTPEnabled = not IsAutoTPEnabled
+    if IsAutoTPEnabled then
+        local InputValue = tonumber(HealthThresholdInput.Text)
+        if not InputValue or InputValue <= 0 then
+            InputValue = 50
+            HealthThresholdInput.Text = "50"
+        end
+        HealthThreshold = InputValue
+        AutoTPButton.Text = "Auto TP ON"
+        EnableAutoTP()
+    else
+        AutoTPButton.Text = "Auto TP OFF"
+        DisableAutoTP()
+    end
+end)
+
+HealthThresholdInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local InputValue = tonumber(HealthThresholdInput.Text)
+    if InputValue and InputValue > 0 then
+        HealthThreshold = InputValue
+    else
+        HealthThreshold = 50
+    end
+end)
+
+local PlayerInstance = game:GetService("Players").LocalPlayer
+_G.InfEnergy = false
+local MaxEnergyValue = 1000
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if _G.InfEnergy and PlayerInstance.Character and PlayerInstance.Character:FindFirstChild("Energy") then
+            if not MaxEnergyValue or MaxEnergyValue <= 0 then
+                MaxEnergyValue = PlayerInstance.Character.Energy.Value
+            end
+            PlayerInstance.Character.Energy.Value = MaxEnergyValue
+        end
+    end
+end)
+
+PlayerInstance.CharacterAdded:Connect(function(Character)
+    task.wait(1)
+    local EnergyValue = Character:FindFirstChild("Energy")
+    if EnergyValue then
+        MaxEnergyValue = EnergyValue.Value
+    end
+end)
+
+local Players = game:GetService("Players")
+local LocalPlayerInstance = Players.LocalPlayer
+local LocalPlayerTeam = LocalPlayerInstance.Team
+
+local function IsNil(Value)
+    return Value == nil
+end
+
+local function RoundNumber(Number)
+    return math.floor(tonumber(Number) + 0.5)
+end
+
+local ESPRandomID = math.random(1, 1000000)
+_G.PlayerEsp = false
+
+local function UpdateESP()
+    for _, Player in ipairs(Players:GetPlayers()) do
+        pcall(function()
+            if Player ~= LocalPlayerInstance and Player.Character and Player.Character:FindFirstChild("Head") then
+                if _G.PlayerEsp then
+                    if not Player.Character.Head:FindFirstChild("NameEsp" .. ESPRandomID) then
+                        local ESPBillboard = Instance.new("BillboardGui", Player.Character.Head)
+                        ESPBillboard.Name = "NameEsp" .. ESPRandomID
+                        ESPBillboard.ExtentsOffset = Vector3.new(0, 2, 0)
+                        ESPBillboard.Size = UDim2.new(0, 200, 0, 50)
+                        ESPBillboard.Adornee = Player.Character.Head
+                        ESPBillboard.AlwaysOnTop = true
+                        
+                        local ESPLabel = Instance.new("TextLabel", ESPBillboard)
+                        ESPLabel.Font = Enum.Font.Code
+                        ESPLabel.TextWrapped = true
+                        ESPLabel.Size = UDim2.new(1, 0, 1, 0)
+                        ESPLabel.TextYAlignment = Enum.TextYAlignment.Top
+                        ESPLabel.BackgroundTransparency = 1
+                        ESPLabel.TextStrokeTransparency = 0.5
+                        ESPLabel.TextScaled = true
+                        
+                        if Player.Team == LocalPlayerTeam then
+                            ESPLabel.TextColor3 = Color3.fromRGB(0, 0, 255)
+                        else
+                            ESPLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                        end
+                    else
+                        local ESPLabel = Player.Character.Head["NameEsp" .. ESPRandomID].TextLabel
+                        local PlayerLevel = Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Level") and (Player.Data.Level.Value or "?")
+                        ESPLabel.Text = PlayerLevel .. " | " .. Player.Name .. " | " .. RoundNumber(((LocalPlayerInstance.Character.Head.Position - Player.Character.Head.Position)).Magnitude / 3) .. " M" .. "\nHealth : " .. RoundNumber(Player.Character.Humanoid.Health * 100 / Player.Character.Humanoid.MaxHealth) .. "%"
+                    end
+                elseif Player.Character.Head:FindFirstChild("NameEsp" .. ESPRandomID) then
+                    Player.Character.Head:FindFirstChild("NameEsp" .. ESPRandomID):Destroy()
+                end
+            end
+        end)
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.5) do
+        UpdateESP()
+    end
+end)
+
+_G.WalkOnWater = false
+local WaterPlane = workspace.Map:FindFirstChild("WaterBase-Plane")
+if not WaterPlane then
+    warn("[⚠] Couldn't find WaterBase-Plane.")
+    return
+end
+
+local OriginalWaterSize = WaterPlane.Size
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.WalkOnWater then
+            pcall(function()
+                WaterPlane.Size = Vector3.new(1000, 112, 1000)
+            end)
+        else
+            pcall(function()
+                WaterPlane.Size = OriginalWaterSize
+            end)
+        end
+    end
+end)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+_G.AutoRaceV3 = false
+
+task.spawn(function()
+    while task.wait(0.2) do
+        pcall(function()
+            if _G.AutoRaceV3 and ReplicatedStorage:FindFirstChild("Remotes") then
+                ReplicatedStorage.Remotes.CommE:FireServer("ActivateAbility")
+                task.wait(30)
+            end
+        end)
+    end
+end)
+
+local PlayersInstance = game:GetService("Players")
+local LocalPlayerCharacter = PlayersInstance.LocalPlayer
+_G.AutoRaceV4 = false
+
+local function PressYKey()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, "Y", false, game)
+    task.wait(0.1)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, "Y", false, game)
+end
+
+local function AutoRaceV4Loop()
+    while task.wait(0.2) do
+        pcall(function()
+            if _G.AutoRaceV4 and LocalPlayerCharacter.Character and LocalPlayerCharacter.Character:FindFirstChild("RaceEnergy") and LocalPlayerCharacter.Character.RaceEnergy.Value == 1 then
+                PressYKey()
+            end
+        end)
+    end
+end
+
+task.spawn(AutoRaceV4Loop)

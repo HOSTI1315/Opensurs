@@ -1,0 +1,224 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local input = game:GetService("UserInputService")
+local mobile = input.TouchEnabled and not input.KeyboardEnabled
+local wicikhub = mobile and UDim2.fromOffset(360, 420) or UDim2.fromOffset(600, 480)
+
+local vu = game:GetService("VirtualUser")
+local player = game:GetService("Players").LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local plr = game.Players.LocalPlayer
+local character = plr.Character or plr.CharacterAdded:Wait()
+local humPart = character:WaitForChild("HumanoidRootPart")
+plr.CharacterAdded:Connect(function(char)
+character = char
+humPart = char:WaitForChild("HumanoidRootPart")
+end)
+
+local Window = WindUI:CreateWindow({
+Title = "Wicik | Murder Mystery 2",
+Icon = "skull",
+Author = "v1.1 | Murder Mystery 2",
+Folder = "",
+Size = wicikhub,
+Transparent = false,
+Theme = "Dark",
+SideBarWidth = 200,
+})
+
+Window:EditOpenButton({
+Title = "Wicik | v1.1",
+Icon = "monitor",
+CornerRadius = UDim.new(0,16),
+StrokeThickness = 2,
+Color = ColorSequence.new( -- gradient
+Color3.fromHex("FF0F7B"),
+Color3.fromHex("F89B29")
+),
+OnlyMobile = false,
+Enabled = true,
+Draggable = true,
+})
+
+local auto = Window:Tab({
+Title = "Auto Farm",
+Icon = "coins",
+Locked = false,
+})
+
+auto:Select()
+
+local afk = Window:Tab({
+Title = "Anti-Afk",
+Icon = "moon",
+Locked = false,
+})
+
+local antisteal = Window:Tab({
+Title = "Anti-Steal",
+Icon = "shield",
+Locked = false,
+})
+
+auto:Paragraph({
+Title = 'Wicik Hub | v1.1',
+Desc = "💻 Made by Wicik Hub",
+Image = "zap",
+RichText = true,
+})
+
+local InviteCode = "w7mpnRStv3"
+
+auto:Button({
+Title = "Copy Discord Invite",
+Callback = function()
+local link = "https://discord.gg/" .. InviteCode
+setclipboard(link)
+WindUI:Notify({
+Title = "Copied!",
+Content = "Discord invite copied!",
+Duration = 2,
+Icon = "clipboard-check",
+})
+end
+})
+
+local collected = 0
+local startTime = 0
+local speed = 15
+local visited = {}
+local farming = false
+
+auto:Divider()
+auto:Section({ Title = "Auto Farm", Icon = "coins" })
+
+local statspp = auto:Paragraph({
+Title = "Auto Farm Candy",
+Desc = "Collected: 0 | Time Active: 0s | Coins/Hour: 0"
+})
+
+auto:Toggle({
+Title = "Auto Farm Candy",
+Default = false,
+Callback = function(state)
+farming = state
+if farming then
+collected = 0
+startTime = tick()
+visited = {}
+
+task.spawn(function()
+while farming do
+local elapsed = tick() - startTime
+local rate = math.floor((collected / math.max(1, elapsed)) * 3600)
+statspp:SetDesc(("Collected: %d | Time Active: %ds | Coins/Hour: %d"):format(collected, elapsed, rate))
+task.wait(1)
+end
+end)
+
+task.spawn(function()
+while farming do
+local character = plr.Character or plr.CharacterAdded:Wait()
+local humPart = character:FindFirstChild("HumanoidRootPart")
+if humPart then
+local closest, dist = nil, math.huge
+for _, obj in ipairs(workspace:GetDescendants()) do
+if obj:IsA("BasePart") and obj.Name == "Coin_Server"
+and obj:GetAttribute("CoinID") == "Candy"
+and not visited[obj] then
+local d = (obj.Position - humPart.Position).Magnitude
+if d < dist and d <= 250 then
+closest, dist = obj, d
+end
+end
+end
+if closest and closest.Parent then
+visited[closest] = true
+for _, part in ipairs(character:GetChildren()) do
+if part:IsA("BasePart") then
+part.CanCollide = false
+end
+end
+local tween = TweenService:Create(
+humPart,
+TweenInfo.new(dist / speed, Enum.EasingStyle.Linear),
+{ CFrame = CFrame.new(closest.Position) }
+)
+tween:Play()
+tween.Completed:Wait()
+collected += 1
+end
+end
+task.wait(0.3) -- if u have issues with fps set higher
+end
+end)
+else
+statspp:SetDesc("Collected: 0 | Time Active: 0s | Coins/Hour: 0")
+end
+end
+})
+
+auto:Input({
+Title = "Fly Speed",
+Desc = "recommended 15",
+Placeholder = "e.g. 15",
+Callback = function(val)
+local num = tonumber(val)
+if num then
+speed = math.clamp(num, 5, 50)
+end
+end
+})
+
+afk:Section({ Title = "Anti-Afk", Icon = "moon" })
+
+local antiafk = false
+afk:Toggle({
+Title = "Anti-Afk",
+Default = false,
+Callback = function(state)
+antiafk = state
+if antiafk then
+player.Idled:Connect(function()
+vu:CaptureController()
+vu:ClickButton2(Vector2.new())
+end)
+end
+end
+})
+
+local antisteals = false
+local antistealp = antisteal:Paragraph({
+Title = "Anti-Steal",
+Desc = "Protects your stuff from being hacked by other scripts",
+Image = "lock"
+})
+
+if not hookmetamethod then
+antistealp:SetDesc("Your executor doesn't support hookmetamethod")
+antistealb:Destroy()
+else
+local old
+old = hookmetamethod(game, "__namecall", function(self, ...)
+local method = getnamecallmethod()
+if antisteals and method == "FireServer" then
+local name = tostring(self.Name)
+if name == "SendRequest" or name == "AcceptTrade" or name == "OfferItem" then
+return nil
+end
+end
+return old(self, ...)
+end)
+end
+
+antisteal:Divider()
+antisteal:Section({ Title = "Anti-Steal", Icon = "shield" })
+
+antistealb = antisteal:Toggle({
+Title = "Anti-Steal",
+Default = false,
+Callback = function(state)
+antisteals = state
+end
+})

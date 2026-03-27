@@ -1,0 +1,149 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Steal a Labubu")
+r1_0:AddToggle({
+  text = "Instant Steals",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_1)
+    -- line: [0, 0] id: 1
+    _G.Steals = r0_1
+    print("Steals: ", r0_1)
+    if r0_1 then
+      Steals()
+    end
+  end,
+})
+function Steals()
+  -- line: [0, 0] id: 11
+  spawn(function()
+    -- line: [0, 0] id: 12
+    _G.Steals = true
+    while _G.Steals do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 13
+        for r3_13, r4_13 in pairs(workspace.Map.Plots:GetChildren()) do
+          if r4_13:GetAttribute("OwnerId") == game:GetService("Players").LocalPlayer.UserId then
+            for r8_13, r9_13 in pairs(r4_13:GetChildren()) do
+              if r9_13.Name == "CashMultiDisplay" then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r9_13, 0)
+                wait()
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r9_13, 1)
+              end
+            end
+          end
+        end
+        wait(0.2)
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Auto Lock",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_5)
+    -- line: [0, 0] id: 5
+    _G.Lock = r0_5
+    print("Lock: ", r0_5)
+    if r0_5 then
+      Lock()
+    end
+  end,
+})
+function Lock()
+  -- line: [0, 0] id: 6
+  spawn(function()
+    -- line: [0, 0] id: 7
+    _G.Lock = true
+    while _G.Lock do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 8
+        for r3_8, r4_8 in pairs(workspace.Map.Plots:GetChildren()) do
+          if r4_8:GetAttribute("OwnerId") == game:GetService("Players").LocalPlayer.UserId then
+            for r8_8, r9_8 in pairs(r4_8:GetChildren()) do
+              if r9_8.Name == "LockButton" and r9_8.Attachment.BillboardGui.TextLabel.Text == "Lock Base" then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r9_8, 0)
+                wait()
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, r9_8, 1)
+              end
+            end
+          end
+        end
+        wait(0.1)
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Collect Cash",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_14)
+    -- line: [0, 0] id: 14
+    _G.Cash = r0_14
+    print("Cash: ", r0_14)
+    if r0_14 then
+      Cash()
+    end
+  end,
+})
+function Cash()
+  -- line: [0, 0] id: 2
+  spawn(function()
+    -- line: [0, 0] id: 3
+    _G.Cash = true
+    while _G.Cash do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 4
+        for r3_4, r4_4 in pairs(workspace.Map.Plots:GetChildren()) do
+          if r4_4:GetAttribute("OwnerId") == game:GetService("Players").LocalPlayer.UserId then
+            for r8_4, r9_4 in pairs(r4_4.CharacterPads:GetChildren()) do
+              game:GetService("ReplicatedStorage").Modules.Shared.Utilitys.NetworkUtility.Events.CollectPad:FireServer(r9_4)
+              wait(0.5)
+            end
+          end
+        end
+        for r3_4, r4_4 in pairs(workspace:GetDescendants()) do
+          if r4_4.ClassName == "ProximityPrompt" then
+            r4_4.HoldDuration = 0
+          end
+        end
+        wait(3)
+      end)
+    end
+  end)
+end
+r1_0:AddButton({
+  text = "Remove Walls",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 10
+    for r3_10, r4_10 in pairs(workspace.Map.Plots:GetDescendants()) do
+      if r4_10.Name == "InviWall" then
+        r4_10:Destroy()
+      end
+    end
+    for r3_10, r4_10 in pairs(workspace.Map.Plots:GetDescendants()) do
+      if r4_10.Name == "Model" and r4_10.Parent.Parent.Name == "Details" then
+        r4_10:Destroy()
+      end
+    end
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()
+game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(r0_9)
+  -- line: [0, 0] id: 9
+  fireproximityprompt(r0_9)
+end)

@@ -1,0 +1,31 @@
+print ("leaked by @bu8f on discord")
+
+local plr = game.Players.LocalPlayer
+
+local function activateAntiDie()
+    local char = plr.Character or plr.CharacterAdded:Wait()
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    hum.BreakJointsOnDeath = false
+    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+
+    hum:GetPropertyChangedSignal("Health"):Connect(function()
+        if hum.Health <= 0 then
+            hum.Health = hum.MaxHealth
+        end
+    end)
+
+    hum.Died:Connect(function()
+        task.wait()
+        local newHum = Instance.new("Humanoid")
+        newHum.Name = "ReplacedHumanoid"
+        newHum.Parent = char
+        workspace.CurrentCamera.CameraSubject = newHum
+        hum:Destroy()
+    end)
+end
+
+activateAntiDie()
+
+print ("leaked by @bu8f on discord")

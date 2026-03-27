@@ -1,0 +1,298 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local Packages = game:GetService("ReplicatedStorage"):WaitForChild("Packages", 5)
+local Net_Module = require(Packages:WaitForChild("Net"))
+local UseItemEvent = Net_Module:RemoteEvent("UseItem")
+
+-- Create GUI
+local ThinkerHub = Instance.new("ScreenGui")
+ThinkerHub.Name = "ThinkerHub"
+ThinkerHub.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ThinkerHub.ResetOnSpawn = false
+
+-- Open button
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "OpenBtn"
+OpenBtn.Size = UDim2.new(0, 100, 0, 35)
+OpenBtn.Position = UDim2.new(0, 10, 0.45, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+OpenBtn.Text = "THINKER HUB"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.TextSize = 12
+OpenBtn.Parent = ThinkerHub
+
+local openCorner = Instance.new("UICorner")
+openCorner.Parent = OpenBtn
+openCorner.CornerRadius = UDim.new(0, 8)
+
+-- Main frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0.45, 0, 0.75, 0)
+MainFrame.Position = UDim2.new(0.275, 0, 0.125, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ThinkerHub
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.Parent = MainFrame
+mainCorner.CornerRadius = UDim.new(0, 15)
+
+-- Header
+local Header = Instance.new("TextLabel")
+Header.Name = "Header"
+Header.Size = UDim2.new(1, 0, 0.08, 0)
+Header.BackgroundTransparency = 1
+Header.Font = Enum.Font.GothamBold
+Header.Text = "THINKER HUB"
+Header.TextColor3 = Color3.fromRGB(0, 170, 255)
+Header.TextScaled = true
+Header.Parent = MainFrame
+
+-- Blue line under header
+local Glow = Instance.new("Frame")
+Glow.Name = "Glow"
+Glow.Size = UDim2.new(0.96, 0, 0, 2)
+Glow.Position = UDim2.new(0.02, 0, 0.08, 0)
+Glow.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+Glow.BorderSizePixel = 0
+Glow.Parent = MainFrame
+
+-- Scrolling container
+local Container = Instance.new("ScrollingFrame")
+Container.Name = "Container"
+Container.Size = UDim2.new(0.96, 0, 0.88, 0)
+Container.Position = UDim2.new(0.02, 0, 0.1, 0)
+Container.BackgroundTransparency = 1
+Container.BorderSizePixel = 0
+Container.ScrollBarThickness = 4
+Container.CanvasSize = UDim2.new(0, 0, 1.8, 0)
+Container.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = Container
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0.02, 0)
+
+-- Button creator
+local function createButton(text, sizeY)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.95, 0, sizeY, 0)
+    button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.GothamBold
+    button.TextScaled = true
+    button.Parent = Container
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = button
+    
+    return button
+end
+
+-- Textbox creator
+local function createTextBox(placeholder, default)
+    local textbox = Instance.new("TextBox")
+    textbox.Size = UDim2.new(0.95, 0, 0.08, 0)
+    textbox.PlaceholderText = placeholder
+    textbox.Text = default
+    textbox.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textbox.TextScaled = true
+    textbox.Parent = Container
+    
+    local corner = Instance.new("UICorner")
+    corner.Parent = textbox
+    
+    return textbox
+end
+
+-- Section label
+local function createSection(text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.95, 0, 0.04, 0)
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(0, 170, 255)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Parent = Container
+end
+
+-- Create UI elements
+createSection("--- MOVEMENT ---")
+
+local speedInput = createTextBox("Speed (20-30)", "25")
+local speedButton = createButton("SPEED: OFF", 0.12)
+local infJumpButton = createButton("INF JUMP: OFF", 0.12)
+local antiKnockButton = createButton("ANTI-KNOCKBACK: OFF", 0.12)
+
+createSection("--- COMBAT ---")
+
+local autoBatButton = createButton("AUTO BAT (X): ON", 0.12)
+autoBatButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local pbSpamButton = createButton("PAINTBALL SPAM: OFF", 0.12)
+
+createSection("--- HITBOX ---")
+
+local hitboxInput = createTextBox("Size (1-100)", "10")
+local hitboxButton = createButton("HITBOX EXPANDER: OFF", 0.12)
+
+-- Open/close menu
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Paintball spam
+pbSpamButton.MouseButton1Click:Connect(function()
+    pbSpamButton.Text = "PAINTBALL SPAM: ON"
+    pbSpamButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+    
+    RunService.Heartbeat:Connect(function()
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        local character = LocalPlayer.Character
+        
+        if backpack and character then
+            -- Put all tools in backpack
+            for _, tool in ipairs(character:GetChildren()) do
+                if tool:IsA("Tool") then
+                    tool.Parent = backpack
+                end
+            end
+            
+            -- Get paintball gun
+            local paintball = backpack:FindFirstChild("Paintball Gun")
+            if paintball then
+                paintball.Parent = character
+            end
+        end
+    end)
+end)
+
+-- Anti-knockback
+antiKnockButton.MouseButton1Click:Connect(function()
+    antiKnockButton.Text = "ANTI-KNOCKBACK: ON"
+    antiKnockButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+    
+    RunService.Heartbeat:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                -- Reset velocity for anti-knockback
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Velocity = Vector3.new(0, root.Velocity.Y, 0)
+                    root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+                end
+            end
+        end
+    end)
+end)
+
+-- Hitbox expander
+hitboxButton.MouseButton1Click:Connect(function()
+    hitboxButton.Text = "HITBOX EXPANDER: ON"
+    hitboxButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+    
+    local size = tonumber(hitboxInput.Text) or 10
+    
+    RunService.RenderStepped:Connect(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character and character ~= LocalPlayer.Character then
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Size = Vector3.new(size, size, size)
+                    root.Transparency = 0.7
+                    root.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+-- Reset hitbox size
+hitboxInput.FocusLost:Connect(function()
+    if hitboxInput.Text == "" then
+        hitboxInput.Text = "10"
+    end
+end)
+
+-- Speed hack
+speedButton.MouseButton1Click:Connect(function()
+    speedButton.Text = "SPEED: ON"
+    speedButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+    
+    local speed = tonumber(speedInput.Text) or 25
+    
+    RunService.Stepped:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = speed
+            end
+        end
+    end)
+end)
+
+-- Reset speed value
+speedInput.FocusLost:Connect(function()
+    if speedInput.Text == "" then
+        speedInput.Text = "25"
+    end
+end)
+
+-- Infinite jump
+infJumpButton.MouseButton1Click:Connect(function()
+    infJumpButton.Text = "INF JUMP: ON"
+    infJumpButton.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+    
+    UserInputService.JumpRequest:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+end)
+
+-- Auto bat toggle
+autoBatButton.MouseButton1Click:Connect(function()
+    if autoBatButton.Text == "AUTO BAT (X): ON" then
+        autoBatButton.Text = "AUTO BAT (X): OFF"
+        autoBatButton.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+    else
+        autoBatButton.Text = "AUTO BAT (X): ON"
+        autoBatButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    end
+end)
+
+-- Close menu when clicking outside
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local mousePos = UserInputService:GetMouseLocation()
+        local framePos = MainFrame.AbsolutePosition
+        local frameSize = MainFrame.AbsoluteSize
+        
+        if MainFrame.Visible then
+            if mousePos.X < framePos.X or mousePos.X > framePos.X + frameSize.X or
+               mousePos.Y < framePos.Y or mousePos.Y > framePos.Y + frameSize.Y then
+                MainFrame.Visible = false
+            end
+        end
+    end
+end)

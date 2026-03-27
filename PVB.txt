@@ -1,0 +1,1390 @@
+wait(2)
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local LP = Players.LocalPlayer
+
+-- Game-specific references
+local WeaponAttackRemote = ReplicatedStorage.Remotes.AttacksServer.WeaponAttack
+local BrainrotsFolder = workspace.ScriptedMap.Brainrots
+
+-- Configuration
+local Config = {
+    AutoFarm = false,
+    AttackDelay = 0.033,           -- 30 FPS (0.033 second delay)
+    AutoEquip = false,             -- Only enable with Kill Aura
+    MaxTargets = 1,                -- Single target
+    PreferredWeapon = "Basic Bat", -- Auto equip this weapon
+    
+    -- Movement
+    AutoMove = false,
+    AutoTeleport = false,          -- Auto teleport to single target
+    MoveSpeed = 80,
+    SafeDistance = 15,
+    TeleportRange = 70,            -- Range for teleport
+    
+    -- Safety
+    AntiVoid = true,
+    DeathLock = false,             -- Disable death lock for natural respawn
+    SafeY = -100,                  -- Y position considered as void
+    FloatHeight = 1,               -- Float height above ground (1 หน่วย)
+    -- Auto Buy System
+    AutoBuyGear = false,
+    AutoBuySeed = false,
+    AutoBuyAllGear = false,
+    AutoBuyAllSeed = false,
+    SelectedGears = {},
+    SelectedSeeds = {},
+    
+    -- Auto Plant System
+    AutoPlantSeeds = false,
+    SelectedPlantSeed = "Dragon Fruit Seed"
+}
+
+-- Auto Farm System
+local AutoFarm = {}
+AutoFarm.Connection = nil
+AutoFarm.LastAttack = 0
+AutoFarm.CurrentTargets = {}
+AutoFarm.EquippedWeapon = nil
+
+-- Advanced Brainrot Detection (DYHUB Style)
+local BrainrotsCache = {}
+local LastCacheUpdate = 0
+
+function AutoFarm:UpdateBrainrotsCache()
+    local currentTime = tick()
+    if currentTime - LastCacheUpdate < 1 then return end -- Update every 1 second
+    
+    LastCacheUpdate = currentTime
+    BrainrotsCache = {}
+    
+    local folder = BrainrotsFolder
+    if folder then
+        for _, brainrot in pairs(folder:GetChildren()) do
+            if brainrot:IsA("Model") and brainrot:FindFirstChild("BrainrotHitbox") then
+                table.insert(BrainrotsCache, brainrot)
+            end
+        end
+    end
+end
+
+function AutoFarm:GetNearestBrainrot()
+    local character = LP.Character
+    if not character then return nil end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, brainrot in pairs(BrainrotsCache) do
+        if brainrot and brainrot.Parent then
+            local hitbox = brainrot:FindFirstChild("BrainrotHitbox")
+            if hitbox then
+                local dist = (hrp.Position - hitbox.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    nearest = brainrot
+                end
+            end
+        end
+    end
+    
+    return nearest, minDist
+end
+
+function AutoFarm:InstantWarpToBrainrot(brainrot)
+    local character = LP.Character
+    if not character then return false end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    local hitbox = brainrot:FindFirstChild("BrainrotHitbox")
+    if not hitbox then return false end
+    
+    -- Warp behind target (safe position)
+    local offset = Vector3.new(0, 1, 3)
+    local targetPos = hitbox.Position + offset
+    hrp.CFrame = CFrame.new(targetPos, hitbox.Position)
+    
+    return true
+end
+
+-- Auto Buy System (Updated with correct names from Cobalt Spy)
+local GearList = {
+    {name = "Water Bucket", param = string.char(26)},
+    {name = "Frost Grenade", param = string.char(26)}, 
+    {name = "Banana Gun", param = string.char(26)},
+    {name = "Frost Blower", param = string.char(26)},
+    {name = "Carrot Launcher", param = string.char(26)}
+}
+
+local SeedList = {
+    "Cactus Seed",
+    "Strawberry Seed",
+    "Pumpkin Seed", 
+    "Sunflower Seed",
+    "Dragon Fruit Seed",
+    "Eggplant Seed",
+    "Watermelon Seed",
+    "Cocotank Seed",
+    "Carnivorous Plant Seed",
+    "Mr Carrot Seed",
+    "Tomatrio Seed"
+}
+
+function AutoFarm:AutoBuyGears()
+    if not Config.AutoBuyGear and not Config.AutoBuyAllGear then return end
+    
+    local itemsToBuy = {}
+    
+    if Config.AutoBuyAllGear then
+        itemsToBuy = GearList
+    elseif Config.AutoBuyGear and #Config.SelectedGears > 0 then
+        itemsToBuy = Config.SelectedGears
+    end
+    
+    for _, gearData in pairs(itemsToBuy) do
+        local gearName = type(gearData) == "table" and gearData.name or gearData
+        
+        pcall(function()
+            local Event = ReplicatedStorage:WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent")
+            Event:FireServer({
+                gearName,
+                string.char(26)  -- \x1A for gears
+            })
+        end)
+    end
+end
+
+function AutoFarm:AutoBuySeeds()
+    if not Config.AutoBuySeed and not Config.AutoBuyAllSeed then return end
+    
+    local itemsToBuy = {}
+    
+    if Config.AutoBuyAllSeed then
+        itemsToBuy = SeedList
+    elseif Config.AutoBuySeed and #Config.SelectedSeeds > 0 then
+        itemsToBuy = Config.SelectedSeeds
+    end
+    
+    for _, seed in pairs(itemsToBuy) do
+        pcall(function()
+            local Event = ReplicatedStorage:WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent")
+            Event:FireServer({
+                seed,
+                string.char(8)  -- \b for seeds
+            })
+        end)
+    end
+end
+
+-- Initialize global config
+getgenv().PvBConfig = getgenv().PvBConfig or Config
+
+
+-- Get player data
+function AutoFarm:GetPlayerData()
+    local char = LP.Character
+    if not char then return nil end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    
+    return char, hrp
+end
+
+-- Get equipped weapon
+function AutoFarm:GetEquippedWeapon()
+    local char = LP.Character
+    if not char then return nil end
+    
+    for _, tool in pairs(char:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            return tool
+        end
+    end
+    
+    return nil
+end
+
+-- Get weapon from backpack
+function AutoFarm:GetWeaponFromBackpack()
+    local backpack = LP.Backpack
+    if not backpack then return nil end
+    
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            return tool
+        end
+    end
+    
+    return nil
+end
+
+-- Auto Equip System (DYHUB Style - Simple & Effective) - TESTED & WORKING
+function AutoFarm:AutoEquipWeapon()
+    if not Config.AutoEquip then return false end
+    
+    local character = LP.Character
+    if not character then return false end
+    
+    -- Check if already equipped
+    local currentTool = character:FindFirstChild(Config.PreferredWeapon)
+    if currentTool then
+        self.EquippedWeapon = currentTool
+        return true -- Already equipped
+    end
+    
+    -- Find weapon in backpack
+    local backpack = LP.Backpack
+    if not backpack then return false end
+    
+    local weapon = backpack:FindFirstChild(Config.PreferredWeapon)
+    
+    if weapon then
+        -- Simple equip: move tool to character (TESTED METHOD)
+        weapon.Parent = character
+        self.EquippedWeapon = weapon
+        return true
+    else
+        -- Try to find any tool with "Bat" in the name
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and string.find(tool.Name:lower(), "bat") then
+                tool.Parent = character
+                self.EquippedWeapon = tool
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+
+-- Get brainrot targets using the game's exact method
+function AutoFarm:GetBrainrotTargetsExact()
+    local char, hrp = self:GetPlayerData()
+    if not char or not hrp then return {} end
+    
+    local weapon = self:GetEquippedWeapon()
+    if not weapon or not weapon:FindFirstChild("Handle") then return {} end
+    
+    local handle = weapon.Handle
+    local weaponPos = handle.Position
+    
+    -- Get weapon attributes (like the game does)
+    local hitboxMultiplier = weapon:GetAttribute("HITBOX_MULTIPLIER") or 1
+    local weaponSize = (handle.Size.X + handle.Size.Y + handle.Size.Z) * hitboxMultiplier
+    
+    local validTargets = {}
+    
+    for _, brainrot in pairs(BrainrotsFolder:GetChildren()) do
+        if brainrot:IsA("Model") and brainrot.PrimaryPart then
+            local distance = (brainrot:GetPivot().Position - weaponPos).Magnitude
+            
+            -- Use weapon's actual range calculation
+            if weaponSize >= distance then
+                table.insert(validTargets, {
+                    model = brainrot,
+                    distance = distance,
+                    name = brainrot.Name
+                })
+            end
+        end
+    end
+    
+    return validTargets
+end
+
+-- Initialize weapon state tracking
+AutoFarm.WeaponOnCooldown = false
+AutoFarm.WeaponActive = false
+AutoFarm.LastAttack = 0
+AutoFarm.LastSafePosition = Vector3.new(0, 50, 0)
+AutoFarm.SafetyConnections = {}
+
+-- Safety System - Anti Void, Death Lock & Super NoClip
+function AutoFarm:InitializeSafety()
+    local char = LP.Character
+    if not char then return end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChild("Humanoid")
+    
+    if hrp and humanoid then
+        -- Store safe position
+        if hrp.Position.Y > Config.SafeY then
+            self.LastSafePosition = hrp.Position
+        end
+        
+        -- Super NoClip System (Smart NoClip) - Disabled by default
+        -- if Config.SuperNoClip then
+        --     self.SafetyConnections.SuperNoClip = game:GetService("RunService").Heartbeat:Connect(function()
+        --         local currentChar = LP.Character
+        --         if currentChar then
+        --             -- Disable collision for all parts (except when walking normally)
+        --             for _, part in pairs(currentChar:GetChildren()) do
+        --                 if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+        --                     part.CanCollide = false
+        --                 end
+        --             end
+        --         end
+        --     end)
+        -- end
+        
+        -- Anti-Void System
+        if Config.AntiVoid then
+            self.SafetyConnections.AntiVoid = game:GetService("RunService").Heartbeat:Connect(function()
+                local currentChar = LP.Character
+                local currentHRP = currentChar and currentChar:FindFirstChild("HumanoidRootPart")
+                
+                if currentHRP then
+                    -- Update safe position if above safe height
+                    if currentHRP.Position.Y > Config.SafeY + 20 then
+                        self.LastSafePosition = currentHRP.Position
+                    end
+                    
+                    -- Check if falling into void
+                    if currentHRP.Position.Y < Config.SafeY then
+                        currentHRP.CFrame = CFrame.new(self.LastSafePosition)
+                    end
+                end
+            end)
+        end
+        
+        -- Death Detection (No Lock)
+        if Config.DeathLock then
+            self.SafetyConnections.DeathLock = humanoid.Died:Connect(function()
+                -- Just wait for respawn and re-initialize
+                task.spawn(function()
+                    LP.CharacterAdded:Wait()
+                    task.wait(1)
+                    self:InitializeSafety()
+                end)
+            end)
+        end
+    end
+end
+
+-- Clean up safety connections
+function AutoFarm:CleanupSafety()
+    for name, connection in pairs(self.SafetyConnections) do
+        if connection then
+            connection:Disconnect()
+        end
+    end
+    self.SafetyConnections = {}
+end
+
+-- Simple Kill Aura with Single Target Teleport
+function AutoFarm:SimpleKillAura()
+    if not WeaponAttackRemote then
+        return false
+    end
+    
+    if not BrainrotsFolder then
+        return false
+    end
+    
+    local char, hrp = self:GetPlayerData()
+    if not char or not hrp then
+        return false
+    end
+    
+    local playerPos = hrp.Position
+    local brainrots = {}
+    local maxRange = 100
+    
+    -- Get all brainrots within range (simple check)
+    for _, brainrot in pairs(BrainrotsFolder:GetChildren()) do
+        if brainrot:IsA("Model") and brainrot.PrimaryPart then
+            local distance = (brainrot.PrimaryPart.Position - playerPos).Magnitude
+            
+            -- Search in teleport range if teleport enabled, otherwise normal range
+            local searchRange = Config.AutoTeleport and Config.TeleportRange or maxRange
+            
+            if distance <= searchRange then
+                table.insert(brainrots, {
+                    model = brainrot,
+                    name = brainrot.Name,
+                    distance = distance,
+                    position = brainrot.PrimaryPart.Position
+                })
+            end
+        end
+    end
+    
+    if #brainrots == 0 then
+        return false
+    end
+    
+    -- Sort by distance (closest first)
+    table.sort(brainrots, function(a, b)
+        return a.distance < b.distance
+    end)
+    
+    local closestTarget = brainrots[1]
+    
+    -- Auto teleport to closest target if enabled (always teleport to closest)
+    if Config.AutoTeleport then
+        -- Teleport behind target (safe position)
+        local targetPos = closestTarget.position
+        local targetModel = closestTarget.model
+        
+        -- Calculate behind position
+        local behindDirection = Vector3.new(0, 0, 1) -- Default direction
+        if targetModel.PrimaryPart then
+            behindDirection = -targetModel.PrimaryPart.CFrame.LookVector
+        end
+        
+        local teleportPos = targetPos + (behindDirection * 1) + Vector3.new(0, 0, 0) -- 1 stud behind, same level (ระดับเดียวกัน)
+        
+        -- Disable character collision temporarily to prevent shaking
+        local character = hrp.Parent
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        
+        -- Teleport and face target properly (standing upright)
+        local lookAtPos = Vector3.new(targetPos.X, teleportPos.Y, targetPos.Z) -- Same Y level for upright stance
+        hrp.CFrame = CFrame.lookAt(teleportPos, lookAtPos)
+        
+        -- Ensure character is perfectly upright
+        local currentCFrame = hrp.CFrame
+        local uprightCFrame = CFrame.new(currentCFrame.Position, currentCFrame.Position + currentCFrame.LookVector)
+        hrp.CFrame = uprightCFrame
+        
+        -- Re-enable collision after short delay
+        task.spawn(function()
+            task.wait(0.2)
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.CanCollide = true
+                end
+            end
+        end)
+        
+        -- Small wait for teleport
+        task.wait(0.05)
+    end
+    
+    -- Attack closest target
+    local success = pcall(function()
+        WeaponAttackRemote:FireServer({closestTarget.name})
+    end)
+    
+    if success then
+        return true
+    else
+        return false
+    end
+end
+
+-- Enhanced Direct Target Kill with reward simulation
+function AutoFarm:DirectTargetKill(targetNames)
+    if not Config.ServerBypass then return false end
+    
+    local killedCount = 0
+    
+    for _, targetName in pairs(targetNames) do
+        local target = BrainrotsFolder:FindFirstChild(targetName)
+        if target then
+            -- Store original position for effect
+            local originalPos = target.PrimaryPart and target.PrimaryPart.Position or Vector3.new(0, 0, 0)
+            
+            -- Method 1: Instant health kill
+            local healthKilled = false
+            pcall(function()
+                if target:FindFirstChild("Humanoid") then
+                    local humanoid = target.Humanoid
+                    humanoid.Health = 0
+                    humanoid.MaxHealth = 0
+                    humanoid.PlatformStand = true
+                    healthKilled = true
+                    killedCount = killedCount + 1
+                end
+            end)
+            
+            -- Method 2: Physical destruction
+            pcall(function()
+                if target.PrimaryPart then
+                    target.PrimaryPart.Anchored = false
+                    target.PrimaryPart.CanCollide = false
+                    target.PrimaryPart.Transparency = 1
+                    -- Teleport far away
+                    target.PrimaryPart.Position = Vector3.new(math.random(-10000, 10000), -1000, math.random(-10000, 10000))
+                end
+            end)
+            
+            -- Method 3: Complete removal (delayed)
+            task.spawn(function()
+                task.wait(0.5)
+                pcall(function()
+                    if target and target.Parent then
+                        target.Parent = nil
+                    end
+                end)
+            end)
+            
+            -- Simulate reward effects
+            if healthKilled then
+                -- Try to fire normal remote for server-side rewards
+                pcall(function()
+                    WeaponAttackRemote:FireServer({targetName})
+                end)
+                
+                -- Create visual effect at kill location
+                task.spawn(function()
+                    local effect = Instance.new("Explosion")
+                    effect.Position = originalPos
+                    effect.BlastRadius = 10
+                    effect.BlastPressure = 0
+                    effect.Parent = workspace
+                end)
+            end
+        end
+    end
+    
+    if killedCount > 0 then
+        return true
+    end
+    
+    return false
+end
+
+-- Enhanced Attack Function with Auto Warp
+function AutoFarm:Attack()
+    if not Config.AutoFarm then return end
+    
+    -- Rate limiting
+    local currentTime = tick()
+    if currentTime - self.LastAttack < Config.AttackDelay then
+        return
+    end
+    
+    self.LastAttack = currentTime
+    
+    -- Update brainrot cache
+    self:UpdateBrainrotsCache()
+    
+    -- Get nearest brainrot
+    local nearest, distance = self:GetNearestBrainrot()
+    
+    if nearest then
+        -- Auto warp to target if enabled and target is far
+        if Config.AutoTeleport and distance > Config.TeleportRange then
+            local warpSuccess = self:InstantWarpToBrainrot(nearest)
+            if warpSuccess then
+                task.wait(0.05) -- Small delay after warp
+            end
+        end
+        
+        -- Use kill aura on nearest target
+        self:SimpleKillAura()
+    end
+end
+
+-- Smart Auto Move - Move to closest target
+function AutoFarm:MoveToTarget()
+    if not Config.AutoMove then return end
+    
+    local char, hrp = self:GetPlayerData()
+    if not char or not hrp then return end
+    
+    if not BrainrotsFolder then return end
+    
+    local playerPos = hrp.Position
+    local closestTarget = nil
+    local closestDistance = math.huge
+    
+    -- Find closest brainrot
+    for _, brainrot in pairs(BrainrotsFolder:GetChildren()) do
+        if brainrot:IsA("Model") and brainrot.PrimaryPart then
+            local distance = (brainrot.PrimaryPart.Position - playerPos).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestTarget = brainrot
+            end
+        end
+    end
+    
+    if closestTarget and closestDistance > Config.SafeDistance then
+        local targetPos = closestTarget.PrimaryPart.Position
+        local direction = (targetPos - playerPos).Unit
+        local movePos = targetPos - (direction * Config.SafeDistance)
+        
+        -- Instant teleport for fast movement
+        if closestDistance > 100 then
+            hrp.CFrame = CFrame.new(movePos)
+        else
+            -- Smooth movement for close targets
+            local TweenService = game:GetService("TweenService")
+            local tweenInfo = TweenInfo.new(
+                0.5, -- Fast movement
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            )
+            
+            local tween = TweenService:Create(hrp, tweenInfo, {
+                CFrame = CFrame.new(movePos)
+            })
+            
+            tween:Play()
+        end
+    end
+end
+
+-- Main update loop - Simple Kill Aura
+function AutoFarm:Update()
+    if not Config.AutoFarm then return end
+    
+    -- Auto move to targets if enabled
+    if Config.AutoMove then
+        self:MoveToTarget()
+    end
+    
+    -- Attack targets
+    self:Attack()
+end
+
+--- Initialize AutoFarm
+function AutoFarm:Initialize()
+    -- Initialize safety systems (no auto equip on startup)
+    self:InitializeSafety()
+    
+    -- Re-initialize safety when character respawns
+    LP.CharacterAdded:Connect(function(char)
+        task.wait(1) -- Wait for character to fully load
+        self:InitializeSafety()
+        -- Only auto equip if Kill Aura is active
+        if Config.AutoFarm and Config.AutoEquip then
+            task.wait(0.5) -- Wait a bit more for backpack to load
+            self:AutoEquipWeapon()
+        end
+    end)
+    
+    -- Start main loop at 30 FPS for high performance
+    game:GetService("RunService").Heartbeat:Connect(function()
+        self:Update()
+        
+        -- Keep character upright during combat
+        if Config.AutoFarm then
+            local char = LP.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local currentCFrame = hrp.CFrame
+                -- Ensure character stays upright (Y axis pointing up)
+                local upVector = Vector3.new(0, 1, 0)
+                local lookVector = currentCFrame.LookVector
+                lookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit -- Remove Y component
+                local rightVector = lookVector:Cross(upVector)
+                hrp.CFrame = CFrame.fromMatrix(currentCFrame.Position, rightVector, upVector, -lookVector)
+            end
+        end
+    end)
+    
+end
+-- Kapao Hub UI Integration
+local function CreateSimpleUI()
+    local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+    local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+    -- Initialize Config
+    getgenv().KapaoConfig = getgenv().KapaoConfig or {
+        KillAura_Enabled = false,
+        KillAura_Range = 100,
+        KillAura_MaxTargets = 1,
+        KillAura_AttackSpeed = 30,
+        AutoMove_Enabled = false,
+        AutoTeleport_Enabled = false,
+    }
+
+    -- Create Window
+    local Window = Fluent:CreateWindow({
+        Title = "Kapao Hub " .. Fluent.Version,
+        SubTitle = "Happy Burnout Syndrome ;w;",
+        TabWidth = 160,
+        Size = UDim2.fromOffset(580, 460),
+        Acrylic = true,
+        Theme = "Darker",
+        MinimizeKey = Enum.KeyCode.RightControl
+    })
+
+    -- Create Logo in top-left corner
+    spawn(function()
+        wait(0.5)
+        local screenGui = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("ScreenGui") or game:GetService("CoreGui"):FindFirstChildOfClass("ScreenGui")
+        local VirtualInputManager = game:GetService("VirtualInputManager")
+        
+        if screenGui then
+            -- Logo Frame (Make it a button)
+            local logoButton = Instance.new("TextButton")
+            logoButton.Name = "KapaoLogo"
+            logoButton.Size = UDim2.new(0, 160, 0, 160)
+            logoButton.Position = UDim2.new(0, 10, 0, 10)
+            logoButton.BackgroundTransparency = 1
+            logoButton.Text = ""
+            logoButton.Parent = screenGui
+            
+            -- Logo Image
+            local logoImage = Instance.new("ImageLabel")
+            logoImage.Name = "Logo"
+            logoImage.Size = UDim2.new(1, 0, 1, 0)
+            logoImage.Position = UDim2.new(0, 0, 0, 0)
+            logoImage.BackgroundTransparency = 1
+            logoImage.Image = "rbxassetid://129672522731097"
+            logoImage.ScaleType = Enum.ScaleType.Fit
+            logoImage.Parent = logoButton
+            
+            -- Add shadow/glow effect
+            local logoGlow = Instance.new("ImageLabel")
+            logoGlow.Name = "Glow"
+            logoGlow.Size = UDim2.new(1.2, 0, 1.2, 0)
+            logoGlow.Position = UDim2.new(-0.1, 0, -0.1, 0)
+            logoGlow.BackgroundTransparency = 1
+            logoGlow.Image = "rbxassetid://129672522731097"
+            logoGlow.ImageTransparency = 0.7
+            logoGlow.ScaleType = Enum.ScaleType.Fit
+            logoGlow.ZIndex = 0
+            logoGlow.Parent = logoButton
+            
+            -- Drag support for logo
+            local dragging = false
+            local dragStart
+            local startPos
+
+            local function clampToScreen(pos)
+                local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+                local x = math.clamp(pos.X, 0, vp.X - logoButton.AbsoluteSize.X)
+                local y = math.clamp(pos.Y, 0, vp.Y - logoButton.AbsoluteSize.Y)
+                return UDim2.fromOffset(x, y)
+            end
+
+            logoButton.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = logoButton.AbsolutePosition
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
+                end
+            end)
+
+            game:GetService("UserInputService").InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = input.Position - dragStart
+                    local newPos = Vector2.new(startPos.X + delta.X, startPos.Y + delta.Y)
+                    logoButton.Position = clampToScreen(newPos)
+                end
+            end)
+
+            -- Breathing animation for logo
+            local breatheTween = game:GetService("TweenService"):Create(
+                logoImage,
+                TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+                {Size = UDim2.new(1.05, 0, 1.05, 0), Position = UDim2.new(-0.025, 0, -0.025, 0)}
+            )
+            breatheTween:Play()
+            
+            -- Logo click to send Right Ctrl key
+            logoButton.MouseButton1Click:Connect(function()
+                -- Simulate Right Ctrl key press
+                if VirtualInputManager then
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+                    wait(0.05)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
+                end
+                
+                -- Animate logo on click
+                local clickTween = game:GetService("TweenService"):Create(
+                    logoImage,
+                    TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                    {Size = UDim2.new(0.9, 0, 0.9, 0), Position = UDim2.new(0.05, 0, 0.05, 0)}
+                )
+                clickTween:Play()
+                wait(0.1)
+                local releaseTween = game:GetService("TweenService"):Create(
+                    logoImage,
+                    TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                    {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0)}
+                )
+                releaseTween:Play()
+            end)
+            
+            -- Hover effect for logo
+            logoButton.MouseEnter:Connect(function()
+                game:GetService("TweenService"):Create(
+                    logoGlow,
+                    TweenInfo.new(0.2),
+                    {ImageTransparency = 0.5}
+                ):Play()
+            end)
+            
+            logoButton.MouseLeave:Connect(function()
+                game:GetService("TweenService"):Create(
+                    logoGlow,
+                    TweenInfo.new(0.2),
+                    {ImageTransparency = 0.7}
+                ):Play()
+            end)
+        end
+    end)
+
+    -- Create Tabs
+    local Tabs = {
+        Combat = Window:AddTab({ Title = "⚔️ Combat", Icon = "" }),
+        AutoFarm = Window:AddTab({ Title = "🌾 Auto Farm", Icon = "" }),
+        Shop = Window:AddTab({ Title = "🛒 Shop", Icon = "" }),
+        Settings = Window:AddTab({ Title = "⚙️ Settings", Icon = "" })
+    }
+
+    local Options = Fluent.Options
+
+    -- Combat Tab UI Elements
+    do
+        Tabs.Combat:AddParagraph({
+            Title = "Kill Aura",
+            Content = ""
+        })
+
+        -- Kill Aura Toggle (with Auto Equip)
+        local KillAuraToggle = Tabs.Combat:AddToggle("KillAuraEnabled", {
+            Title = "⚔️ Kill Aura",
+            Description = "Equip weapon",
+            Default = false
+        })
+
+        KillAuraToggle:OnChanged(function()
+            getgenv().KapaoConfig.KillAura_Enabled = Options.KillAuraEnabled.Value
+            Config.AutoFarm = Options.KillAuraEnabled.Value
+            Config.AutoEquip = Options.KillAuraEnabled.Value -- Auto enable equip with kill aura
+            
+            if Options.KillAuraEnabled.Value then
+                AutoFarm:AutoEquipWeapon()
+            end
+        end)
+
+        -- Auto Teleport Toggle
+        local AutoTeleportToggle = Tabs.Combat:AddToggle("AutoTeleport", {
+            Title = "🚀 Auto Teleport",
+            Description = "Teleport to targets",
+            Default = getgenv().KapaoConfig.AutoTeleport_Enabled
+        })
+
+        AutoTeleportToggle:OnChanged(function()
+            getgenv().KapaoConfig.AutoTeleport_Enabled = Options.AutoTeleport.Value
+            Config.AutoTeleport = Options.AutoTeleport.Value
+        end)
+    end
+
+    -- ═══════════════════════════════════════════════════════════════
+    -- AUTO PLANT SYSTEM - Smart Rarity-Based Planting
+    -- ═══════════════════════════════════════════════════════════════
+    
+    local AutoPlantSystem = {}
+    AutoPlantSystem.isPlanting = false
+    AutoPlantSystem.totalPlanted = 0
+    AutoPlantSystem.plantingDelay = 0.2
+    AutoPlantSystem.sessionStats = {successful = 0, failed = 0, startTime = 0}
+    
+    -- Seed Rarity (10 = rarest, 1 = common)
+    local seedRarity = {
+        ["Shroombino Seed"] = 10,
+        ["Tomatrio Seed"] = 10,
+        ["Mr Carrot Seed"] = 10,
+        ["Carnivorous Plant Seed"] = 9,
+        ["Cocotank Seed"] = 8,
+        ["Grape Seed"] = 7,
+        ["Watermelon Seed"] = 6,
+        ["Eggplant Seed"] = 5,
+        ["Dragon Fruit Seed"] = 4,
+        ["Pumpkin Seed"] = 3,
+        ["Sunflower Seed"] = 3,
+        ["Strawberry Seed"] = 2,
+        ["Cactus Seed"] = 1
+    }
+    
+    -- หาแปลงของผู้เล่น
+    local function findPlayerPlot()
+        if not workspace:FindFirstChild("Plots") then return nil end
+        for _, plot in pairs(workspace.Plots:GetChildren()) do
+            if plot:GetAttribute("Owner") == LP.Name then
+                return plot
+            end
+        end
+        return nil
+    end
+    
+    -- หาจุดปลูกทั้งหมด + Round-Robin Sorting
+    local function findAllAvailableSpots()
+        local plot = findPlayerPlot()
+        if not plot then return {} end
+        
+        local rowsFolder = plot:FindFirstChild("Rows")
+        if not rowsFolder then return {} end
+        
+        local availableSpots = {}
+        
+        for rowNum = 1, 7 do
+            local rowFolder = rowsFolder:FindFirstChild(tostring(rowNum))
+            if rowFolder then
+                local grassFolder = rowFolder:FindFirstChild("Grass")
+                if grassFolder then
+                    for grassIndex, grassPart in pairs(grassFolder:GetChildren()) do
+                        if grassPart:IsA("BasePart") and grassPart.Name ~= "Grass" then
+                            local hasPlant = grassPart:FindFirstChild("Plant") or grassPart:FindFirstChildOfClass("Model")
+                            if not hasPlant then
+                                table.insert(availableSpots, {
+                                    rowNum = rowNum,
+                                    grassIndex = grassIndex,
+                                    grassPart = grassPart,
+                                    cframe = grassPart.CFrame
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- Round-Robin: จัดกลุ่มตาม column
+        local columns = {}
+        for _, spot in ipairs(availableSpots) do
+            local key = spot.grassIndex
+            if not columns[key] then
+                columns[key] = {}
+            end
+            table.insert(columns[key], spot)
+        end
+        
+        -- เรียง spots ในแต่ละ column ตาม row
+        for _, columnSpots in pairs(columns) do
+            table.sort(columnSpots, function(a, b)
+                return a.rowNum < b.rowNum
+            end)
+        end
+        
+        -- รวม columns กลับเป็น list
+        local sortedSpots = {}
+        local maxIndex = 0
+        for idx, _ in pairs(columns) do
+            if idx > maxIndex then maxIndex = idx end
+        end
+        
+        for colIdx = 1, maxIndex do
+            if columns[colIdx] then
+                for _, spot in ipairs(columns[colIdx]) do
+                    table.insert(sortedSpots, spot)
+                end
+            end
+        end
+        
+        return sortedSpots
+    end
+    
+    -- หา Seeds และเรียงตาม Rarity
+    local function findAvailableSeeds()
+        local backpack = LP:WaitForChild("Backpack")
+        local seeds = {}
+        
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and string.find(tool.Name:lower(), "seed") then
+                local cleanName = tool.Name:gsub("%[x%d+%]%s*", "")
+                local rarity = seedRarity[cleanName] or 0
+                
+                table.insert(seeds, {
+                    name = tool.Name,
+                    tool = tool,
+                    id = tool:GetAttribute("ID"),
+                    rarity = rarity,
+                    cleanName = cleanName
+                })
+            end
+        end
+        
+        table.sort(seeds, function(a, b) return a.rarity > b.rarity end)
+        return seeds
+    end
+    
+    -- ปลูกด้วย Remote PlaceItem
+    local function plantAtSpot(spot, seedTool)
+        local char = LP.Character
+        if not char then return false end
+        
+        local humanoid = char:FindFirstChild("Humanoid")
+        if not humanoid then return false end
+        
+        local seedID = seedTool:GetAttribute("ID")
+        local plantName = seedTool.Name:gsub("%[x%d+%]%s*", ""):gsub(" Seed", "")
+        
+        if not seedID then return false end
+        
+        if seedTool.Parent ~= char then
+            humanoid:EquipTool(seedTool)
+            task.wait(0.5)
+        end
+        
+        local success = pcall(function()
+            ReplicatedStorage.Remotes.PlaceItem:FireServer({
+                ID = seedID,
+                CFrame = spot.cframe,
+                Item = plantName,
+                Floor = spot.grassPart
+            })
+            task.wait(0.3)
+        end)
+        
+        humanoid:UnequipTools()
+        return success
+    end
+    
+    -- เช็คแปลงเต็ม
+    local function isPlotFull()
+        local gui = LP:FindFirstChild("PlayerGui")
+        if not gui then return false end
+        
+        for _, obj in pairs(gui:GetDescendants()) do
+            if (obj:IsA("TextLabel") or obj:IsA("TextButton")) and obj.Visible then
+                local text = obj.Text:lower()
+                if text:find("too many plants") or text:find("35/35") then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    
+    function AutoPlantSystem:Start()
+        if self.isPlanting then return end
+        self.isPlanting = true
+        
+        task.spawn(function()
+            local spots = findAllAvailableSpots()
+            local seeds = findAvailableSeeds()
+            
+            if #spots == 0 or #seeds == 0 then
+                self.isPlanting = false
+                return
+            end
+            
+            local currentSeed = seeds[1]
+            local consecutiveFails = 0
+            
+            self.sessionStats.startTime = tick()
+            self.sessionStats.successful = 0
+            self.sessionStats.failed = 0
+            
+            for i, spot in ipairs(spots) do
+                if not self.isPlanting then break end
+                if isPlotFull() then break end
+                
+                if not currentSeed.tool or currentSeed.tool.Parent == nil then
+                    local newSeeds = findAvailableSeeds()
+                    if #newSeeds == 0 then break end
+                    currentSeed = newSeeds[1]
+                end
+                
+                local success = plantAtSpot(spot, currentSeed.tool)
+                
+                if success then
+                    self.sessionStats.successful = self.sessionStats.successful + 1
+                    self.totalPlanted = self.totalPlanted + 1
+                    consecutiveFails = 0
+                else
+                    self.sessionStats.failed = self.sessionStats.failed + 1
+                    consecutiveFails = consecutiveFails + 1
+                    if consecutiveFails >= 10 then break end
+                end
+                
+                task.wait(self.plantingDelay)
+            end
+            
+            self.isPlanting = false
+        end)
+    end
+    
+    function AutoPlantSystem:Stop()
+        self.isPlanting = false
+    end
+
+    -- Auto Farm Tab UI Elements
+    do
+        -- Smart Auto Plant Section
+        Tabs.AutoFarm:AddSection("🌱 Auto Plant")
+        
+        Tabs.AutoFarm:AddToggle("AutoPlantSeeds", {
+            Title = "🌱 Auto Plant",
+            Description = "Auto plant seeds with rarity priority",
+            Default = Config.AutoPlantSeeds or false,
+            Callback = function(Value)
+                Config.AutoPlantSeeds = Value
+                if Value then
+                    AutoPlantSystem:Start()
+                else
+                    AutoPlantSystem:Stop()
+                end
+            end
+        })
+        
+        Tabs.AutoFarm:AddParagraph({
+            Title = "📋 Seed Priority",
+            Content = "10: Shroombino/Tomatrio/Mr Carrot\n9: Carnivorous Plant\n8: Cocotank\n7: Grape\n6: Watermelon\n5: Eggplant\n...\n1: Cactus"
+        })
+    end
+
+    -- Shop Tab UI Elements
+    do
+        -- Header
+        Tabs.Shop:AddParagraph({
+            Title = "🛒 Auto Buy",
+            Content = "Purchase gears and seeds"
+        })
+
+        -- Gear Section
+        Tabs.Shop:AddSection("🔧 Gears")
+        
+        -- Create gear names list for dropdown
+        local GearNames = {}
+        for _, gear in pairs(GearList) do
+            table.insert(GearNames, gear.name)
+        end
+        
+        Tabs.Shop:AddDropdown("GearSelect", {
+            Title = "Select Gears",
+            Description = "Choose gears",
+            Values = GearNames,
+            Multi = true,
+            Default = Config.SelectedGears,
+            Callback = function(Value)
+                Config.SelectedGears = Value
+            end
+        })
+
+        Tabs.Shop:AddToggle("AutoBuyGear", {
+            Title = "🔧 Buy Selected",
+            Description = "Buy selected gears",
+            Default = Config.AutoBuyGear,
+            Callback = function(Value)
+                Config.AutoBuyGear = Value
+                if Value then
+                    task.spawn(function()
+                        while Config.AutoBuyGear do
+                            for _, gearName in pairs(Config.SelectedGears) do
+                                if not Config.AutoBuyGear then break end
+                                pcall(function()
+                                    ReplicatedStorage.Remotes.BuyGear:FireServer(gearName)
+                                end)
+                                task.wait(0.5)
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+        Tabs.Shop:AddToggle("AutoBuyAllGear", {
+            Title = "🔧 Buy All Gears",
+            Description = "Buy all gears",
+            Default = Config.AutoBuyAllGear,
+            Callback = function(Value)
+                Config.AutoBuyAllGear = Value
+                if Value then
+                    task.spawn(function()
+                        while Config.AutoBuyAllGear do
+                            for _, gear in pairs(GearList) do
+                                if not Config.AutoBuyAllGear then break end
+                                pcall(function()
+                                    ReplicatedStorage.Remotes.BuyGear:FireServer(gear.name)
+                                end)
+                                task.wait(0.5)
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+
+        -- Platform Section
+        Tabs.Shop:AddSection("🧠 Platforms")
+        
+        Tabs.Shop:AddToggle("AutoBuyPlatform", {
+            Title = "🧠 Auto Buy Platform",
+            Description = "Auto buy  platform slots",
+            Default = Config.AutoBuyPlatform or false,
+            Callback = function(Value)
+                Config.AutoBuyPlatform = Value
+                if Value then
+                    task.spawn(function()
+                        while Config.AutoBuyPlatform do
+                            -- Get PlayerData
+                            local PlayerDataModule = ReplicatedStorage:FindFirstChild("PlayerData")
+                            if not PlayerDataModule then
+                                task.wait(1)
+                                continue
+                            end
+                            
+                            local success, PlayerData = pcall(function()
+                                return require(PlayerDataModule):GetData()
+                            end)
+                            
+                            if not success or not PlayerData or not PlayerData.Data then
+                                task.wait(1)
+                                continue
+                            end
+                            
+                            local Data = PlayerData.Data
+                            
+                            if not Data.Platforms then
+                                task.wait(1)
+                                continue
+                            end
+                            
+                            -- หา Platform ที่ซื้อแล้ว
+                            local ownedPlatforms = {}
+                            for k, v in pairs(Data.Platforms) do
+                                local num = tonumber(k)
+                                if num then
+                                    table.insert(ownedPlatforms, num)
+                                end
+                            end
+                            
+                            -- หา Platform ที่ยังไม่ซื้อ
+                            local missingPlatforms = {}
+                            for i = 1, 20 do
+                                if not table.find(ownedPlatforms, i) then
+                                    table.insert(missingPlatforms, i)
+                                end
+                            end
+                            
+                            -- ซื้อเฉพาะที่ยังไม่มี
+                            if #missingPlatforms > 0 then
+                                for _, platformNum in pairs(missingPlatforms) do
+                                    if not Config.AutoBuyPlatform then break end
+                                    
+                                    pcall(function()
+                                        ReplicatedStorage.Remotes.BuyPlatform:FireServer(tostring(platformNum))
+                                    end)
+                                    
+                                    task.wait(0.1)
+                                end
+                            end
+                            
+                            task.wait(1)
+                        end
+                    end)
+                end
+            end
+        })
+
+        -- Seed Section
+        Tabs.Shop:AddSection("🌱 Seeds")
+        
+        Tabs.Shop:AddDropdown("SeedSelect", {
+            Title = "Select Seeds",
+            Description = "Choose seeds",
+            Values = SeedList,
+            Multi = true,
+            Default = Config.SelectedSeeds,
+            Callback = function(Value)
+                Config.SelectedSeeds = Value
+            end
+        })
+
+        Tabs.Shop:AddToggle("AutoBuySeed", {
+            Title = "🌱 Buy Selected",
+            Description = "Buy selected seeds",
+            Default = Config.AutoBuySeed,
+            Callback = function(Value)
+                Config.AutoBuySeed = Value
+                if Value then
+                    task.spawn(function()
+                        while Config.AutoBuySeed do
+                            for _, seedName in pairs(Config.SelectedSeeds) do
+                                if not Config.AutoBuySeed then break end
+                                pcall(function()
+                                    ReplicatedStorage.Remotes.BuyItem:FireServer(seedName)
+                                end)
+                                task.wait(0.5)
+                            end
+                        end
+                    end)
+                end
+            end
+        })
+
+        Tabs.Shop:AddToggle("AutoBuyAllSeed", {
+            Title = "🌱 Buy All Seeds",
+            Description = "Buy all seeds",
+            Default = Config.AutoBuyAllSeed,
+            Callback = function(Value)
+                Config.AutoBuyAllSeed = Value
+                if Value then
+                    -- Start buying immediately
+                    task.spawn(function()
+                        while Config.AutoBuyAllSeed do
+                            for _, seed in pairs(SeedList) do
+                                if not Config.AutoBuyAllSeed then break end
+                                pcall(function()
+                                    ReplicatedStorage.Remotes.BuyItem:FireServer(seed)
+                                end)
+                                task.wait(0.5)
+                            end
+                        end
+                    end)
+                    
+                end
+            end
+        })
+    end
+
+    -- Settings Tab Integration
+    SaveManager:SetLibrary(Fluent)
+    InterfaceManager:SetLibrary(Fluent)
+    SaveManager:IgnoreThemeSettings()
+    SaveManager:SetIgnoreIndexes({})
+    InterfaceManager:SetFolder("KapaoHub")
+    SaveManager:SetFolder("KapaoHub/PlantsVsBrainrots")
+
+    -- Add config info
+    Tabs.Settings:AddParagraph({
+        Title = "📁 Configuration",
+        Content = "Save and load your settings here"
+    })
+
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+    SaveManager:BuildConfigSection(Tabs.Settings)
+
+    -- Add credits
+    Tabs.Settings:AddSection("Credits")
+    Tabs.Settings:AddParagraph({
+        Title = "👑 Kapao Hub",
+        Content = "Version 1.0.1"
+    })
+
+    -- Select first tab and show notification
+    Window:SelectTab(1)
+
+
+    -- Auto load config if available
+    SaveManager:LoadAutoloadConfig()
+end
+-- Start the script
+AutoFarm:Initialize()
+CreateSimpleUI()

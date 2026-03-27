@@ -1,0 +1,179 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- Folder lưu ESP
+local ESP_FOLDER = Instance.new("Folder")
+ESP_FOLDER.Name = "ESP"
+ESP_FOLDER.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Folder lưu Beam
+local LINE_FOLDER = Instance.new("Folder")
+LINE_FOLDER.Name = "ESP_Lines"
+LINE_FOLDER.Parent = Workspace
+
+local currentESP
+local currentBeam
+local currentPetInfo
+local a0, a1
+
+-- Hàm parse $/s chính xác hơn
+local function parseMoneyPerSec(text)
+    text = text:match("^%s*(.-)%s*$") -- loại bỏ khoảng trắng
+    local number, suffix = text:match("%$([%d%.]+)%s*([kKmMbB]?)%s*/?s?")
+    number = tonumber(number) or 0
+    if suffix then
+        suffix = suffix:lower()
+        if suffix == "k" then number = number * 1000
+        elseif suffix == "m" then number = number * 1_000_000
+        elseif suffix == "b" then number = number * 1_000_000_000 end
+    end
+    return number
+end
+
+-- Tạo ESP cho pet
+local function createESP(petName, infoText, mutationText, targetPart)
+    if currentESP then currentESP:Destroy() end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 150, 0, 50)  --      giảm từ 200x70 xuống cho vừa chữ nhỏ
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = targetPart
+    billboard.Parent = ESP_FOLDER
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextScaled = false
+    textLabel.TextSize = 10
+    textLabel.RichText = true
+
+    textLabel.Text = string.format(
+        '<font color="rgb(255,0,0)">%s</font>\n<font color="rgb(0,255,0)">%s</font>\n<font color="rgb(255,255,0)">%s</font>',
+        petName, infoText, mutationText or ""
+    )
+
+    textLabel.Parent = billboard
+    currentESP = billboard
+end
+
+-- Tạo beam nối với player
+local function createBeam(targetPart)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") or not targetPart then return end
+
+    if currentBeam then
+        currentBeam:Destroy()
+        if a0 then a0:Destroy() end
+        if a1 then a1:Destroy() end
+    end
+
+    a0 = Instance.new("Attachment")
+    a0.Parent = char.HumanoidRootPart
+
+    a1 = Instance.new("Attachment")
+    a1.Parent = targetPart
+
+    local beam = Instance.new("Beam")
+    beam.Attachment0 = a0
+    beam.Attachment1 = a1
+    beam.Width0 = 0.35
+    beam.Width1 = 0.35
+    beam.FaceCamera = true
+    beam.LightInfluence = 0
+    beam.Parent = LINE_FOLDER
+
+    currentBeam = beam
+
+    task.spawn(function()
+        while beam.Parent do
+            local color = Color3.fromHSV((tick() % 5) / 5, 1, 1)
+            beam.Color = ColorSequence.new(color)
+            task.wait(0.05)
+        end
+    end)
+end
+
+-- Tìm con mạnh nhất
+local function findBestPet()
+    local PlotsFolder = Workspace:FindFirstChild("Plots")
+    if not PlotsFolder then return end
+
+    local bestValue = -1
+    local bestPet = nil
+
+    for _, plot in ipairs(PlotsFolder:GetChildren()) do
+        local podiums = plot:FindFirstChild("AnimalPodiums")
+        if podiums then
+            for _, podium in ipairs(podiums:GetChildren()) do
+                local spawnPart = podium:FindFirstChild("Base") and podium.Base:FindFirstChild("Spawn")
+                if spawnPart then
+                    local attachment = spawnPart:FindFirstChild("Attachment")
+                    local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
+                    if overhead then
+                        local nameLabel = overhead:FindFirstChild("DisplayName")
+                        local genLabel = overhead:FindFirstChild("Generation")
+                        local mutationLabel = overhead:FindFirstChild("Mutation")
+                        if genLabel then
+                            local petName = nameLabel and nameLabel.Text or "Unknown"
+                            local genText = genLabel.Text
+                            local mutationText = mutationLabel and mutationLabel.Text or ""
+                            local mps = parseMoneyPerSec(genText)
+                            local genNumber = tonumber(genText:match("%d+")) or 0
+                            local value = mps > 0 and mps or genNumber
+
+                            if value > bestValue then
+                                bestValue = value
+                                bestPet = {name = petName, info = genText, mutation = mutationText, part = spawnPart, value = value}
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return bestPet
+end
+
+-- Update ESP liên tục
+local function updateESP()
+    local pet = findBestPet()
+    if pet then
+        local needUpdate = false
+        if not currentESP then
+            needUpdate = true
+        elseif currentPetInfo then
+            if pet.value > currentPetInfo.value or pet.mutation ~= currentPetInfo.mutation then
+                needUpdate = true
+            end
+        end
+
+        if needUpdate then
+            currentPetInfo = pet
+            createESP(pet.name, pet.info, pet.mutation, pet.part)
+            createBeam(pet.part)
+        end
+    else
+        if currentESP then
+            currentESP:Destroy()
+            currentESP = nil
+            currentPetInfo = nil
+        end
+        if currentBeam then
+            currentBeam:Destroy()
+            currentBeam = nil
+        end
+    end
+end
+
+-- Loop update 0.3s
+task.spawn(function()
+    while task.wait(0.3) do
+        updateESP()
+    end
+end)

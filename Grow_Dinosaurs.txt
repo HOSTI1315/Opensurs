@@ -1,0 +1,267 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "MetroHub: Grow Dinosaurs Script",
+    SubTitle = "By @sigmadeude",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightControl -- Used when theres no MinimizeKeybind
+})
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local Options = Fluent.Options
+
+do
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Toggle = Tabs.Main:AddToggle("AutoPromptToggle", {
+    Title = "Auto Collect Dinosaurs",
+    Default = false
+})
+
+local runPromptLoop = false
+
+Toggle:OnChanged(function(value)
+    runPromptLoop = value
+    if runPromptLoop then
+        coroutine.wrap(function()
+            while runPromptLoop do
+                local character = LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                local animalsFolder = workspace:FindFirstChild("AllAnimals")
+
+                if hrp and animalsFolder then
+                    for _, model in ipairs(animalsFolder:GetChildren()) do
+                        if model:IsA("Model") and model:FindFirstChildWhichIsA("BasePart") then
+                            local distance = (hrp.Position - model:GetModelCFrame().Position).Magnitude
+                            if distance <= 55 then
+                                for _, descendant in ipairs(model:GetDescendants()) do
+                                    if descendant:IsA("ProximityPrompt") then
+                                        fireproximityprompt(descendant, 1)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
+                task.wait(0.01)
+            end
+        end)()
+    end
+end)
+
+Options.AutoPromptToggle:SetValue(false)
+
+
+local Toggle = Tabs.Main:AddToggle("AutoSellToggle", {
+    Title = "Auto Sell All",
+    Default = false
+})
+
+local autoSelling = false
+
+Toggle:OnChanged(function(value)
+    autoSelling = value
+    if autoSelling then
+        coroutine.wrap(function()
+            while autoSelling do
+                local args = {
+                    "SellAllDinosaurs"
+                }
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("RemoteEvents")
+                    :WaitForChild("PropertyMrgRemoteEvent")
+                    :FireServer(unpack(args))
+                task.wait(1)
+            end
+        end)()
+    end
+end)
+
+Options.AutoSellToggle:SetValue(false)
+
+
+local Toggle = Tabs.Main:AddToggle("AutoBuyToggle", {
+    Title = "Auto Buy Dinosaurs",
+    Default = false
+})
+
+local MultiDropdowne = Tabs.Main:AddDropdown("dinosaurdropdwn", {
+    Title = "Select Dinosaurs to Buy",
+    Values = {
+        "Quetzalcoatlus", "Brachiosaurus", "Spinosaurus", "Mosasaurus", "IRex",
+        "Giganotosaurus", "Parasaurolophus", "Nothosaurus", "Shonisaurus", "Elasmosaurus",
+        "Borealopelta", "Maiasaura", "Liopleurodon", "Cameroceras", "Anomalocaris", "Ankylosaurus",
+        "Diplodocus", "Tyrannosaurus", "Velociraptor", "Apatosaurus", "Mussaurus",
+        "Oviraptor", "Microraptor", "Stegosaurus", "Dimetrodon", "Styracosaurus",
+        "Carnotaurus", "Triceratops", "Therizinosaurus", "Pachycephalosaurus"
+    },
+    Multi = true,
+    Default = {}
+})
+
+local SelectedAnimals = {}
+MultiDropdowne:OnChanged(function(Value)
+    SelectedAnimals = {}
+    for animal, selected in pairs(Value) do
+        if selected then
+            table.insert(SelectedAnimals, animal)
+        end
+    end
+    print("Selected:", table.concat(SelectedAnimals, ", "))
+end)
+
+local buying = false
+Toggle:OnChanged(function(enabled)
+    buying = enabled
+    if buying then
+        coroutine.wrap(function()
+            while buying do
+                for _, animal in ipairs(SelectedAnimals) do
+                    local args = { "BuyWithCoins", animal }
+                    game:GetService("ReplicatedStorage")
+                        :WaitForChild("RemoteEvents")
+                        :WaitForChild("PropertyMrgRemoteEvent")
+                        :FireServer(unpack(args))
+                    task.wait(0.1)
+                end
+                task.wait(0.1)
+            end
+        end)()
+    end
+end)
+
+Options.AutoBuyToggle:SetValue(false)
+
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+local Toggle = Tabs.Main:AddToggle("AutoPlaceEggToggle", {
+    Title = "Auto Place Eggs",
+    Default = false
+})
+
+local placing = false
+
+local function getPlayerBaseNumber()
+    for _, model in ipairs(workspace.AllAnimals:GetChildren()) do
+        if model:IsA("Model") then
+            for _, folder in ipairs(model:GetChildren()) do
+                if folder:IsA("Folder") then
+                    local owner = folder:FindFirstChild("Owner")
+                    local baseVal = folder:FindFirstChild("BaseY")
+                    if owner and baseVal and owner:IsA("ObjectValue") and baseVal:IsA("NumberValue") then
+                        local ownerName = owner.Value and owner.Value.Name
+                        if ownerName == LocalPlayer.Name or ownerName == LocalPlayer.DisplayName then
+                            return baseVal.Value
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function placeEggAtPosition(position)
+    local args = {
+        "PlaceEgg",
+        position,
+        "Land"
+    }
+    local remote = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if not remote then return end
+    remote = remote:FindFirstChild("SceneMrgRemoteEvent")
+    if not remote then return end
+    remote:FireServer(unpack(args))
+end
+
+Toggle:OnChanged(function(value)
+    placing = value
+    if placing then
+        coroutine.wrap(function()
+            while placing do
+                local baseNumber = getPlayerBaseNumber()
+                if baseNumber then
+                    local baseNumInt = math.floor(baseNumber + 0.5)
+                    local baseName = "Base" .. tostring(baseNumInt)
+                    local baseScene = workspace:FindFirstChild("BaseScene")
+                    if baseScene then
+                        local baseFolder = baseScene:FindFirstChild(baseName)
+                        if baseFolder then
+                            local eggSpawn = baseFolder:FindFirstChild("EggSpawn")
+                            if eggSpawn then
+                                local foldersToCheck = {"Land", "Water"}
+                                for _, folderName in ipairs(foldersToCheck) do
+                                    local folder = eggSpawn:FindFirstChild(folderName)
+                                    if folder then
+                                        for _, part in ipairs(folder:GetChildren()) do
+                                            if part:IsA("BasePart") then
+                                                placeEggAtPosition(part.Position)
+                                                task.wait(0.5)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)()
+    end
+end)
+
+Options.AutoPlaceEggToggle:SetValue(false)
+
+
+
+
+
+
+-- Addons:
+-- SaveManager (Allows you to have a configuration system)
+-- InterfaceManager (Allows you to have a interface managment system)
+
+-- Hand the library over to our managers
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Ignore keys that are used by ThemeManager.
+-- (we dont want configs to save themes, do we?)
+SaveManager:IgnoreThemeSettings()
+
+-- You can add indexes of elements the save manager should ignore
+SaveManager:SetIgnoreIndexes({})
+
+-- use case for doing it this way:
+-- a script hub could have themes in a global folder
+-- and game configs in a separate folder per game
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+-- You can use the SaveManager:LoadAutoloadConfig() to load a config
+-- which has been marked to be one that auto loads!
+SaveManager:LoadAutoloadConfig()
+end

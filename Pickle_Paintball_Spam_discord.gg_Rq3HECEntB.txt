@@ -1,0 +1,116 @@
+-- Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Get the Net module and UseItem remote
+local NetModule = require(ReplicatedStorage:WaitForChild("Packages").Net)
+local UseItemRemote = NetModule:RemoteEvent("UseItem")
+
+-- Create the main GUI
+local PickleHubDelta = Instance.new("ScreenGui")
+PickleHubDelta.Name = "PickleHubDelta"
+PickleHubDelta.Parent = CoreGui
+PickleHubDelta.ResetOnSpawn = false
+
+-- Main frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 200, 0, 160)
+MainFrame.Position = UDim2.new(0.5, -100, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = PickleHubDelta
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = MainFrame
+MainStroke.Color = Color3.fromRGB(0, 255, 100)
+MainStroke.Thickness = 2
+
+-- Title
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 45)
+TitleLabel.Text = "PICKLE HUB"
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextSize = 20
+TitleLabel.Parent = MainFrame
+
+-- Spam button
+local SpamButton = Instance.new("TextButton")
+SpamButton.Size = UDim2.new(0.85, 0, 0, 50)
+SpamButton.Position = UDim2.new(0.075, 0, 0, 60)
+SpamButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SpamButton.Text = "SPAM: OFF"
+SpamButton.Font = Enum.Font.GothamSemibold
+SpamButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpamButton.TextSize = 14
+SpamButton.Parent = MainFrame
+
+local SpamButtonCorner = Instance.new("UICorner")
+SpamButtonCorner.Parent = SpamButton
+
+-- Status label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0, 30)
+StatusLabel.Position = UDim2.new(0, 0, 0, 115)
+StatusLabel.Text = "Equip Speed: INSTANT"
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextSize = 12
+StatusLabel.Parent = MainFrame
+
+-- Variables for spam functionality
+local isSpamming = false
+local spamConnection
+
+-- RunService connection (for future use)
+local steppedConnection = RunService.Stepped:Connect(function(time, deltaTime)
+    -- Add per-frame logic here if needed
+end)
+
+-- Spam button click handler
+SpamButton.MouseButton1Click:Connect(function()
+    isSpamming = not isSpamming
+    
+    if isSpamming then
+        SpamButton.Text = "SPAM: ON"
+        SpamButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+        
+        -- Start spamming
+        spamConnection = task.spawn(function()
+            while isSpamming do
+                -- Fire the remote (add your arguments here)
+                -- UseItemRemote:FireServer(itemId, arguments...)
+                
+                task.wait(0.01) -- Wait 10ms between fires
+            end
+        end)
+    else
+        SpamButton.Text = "SPAM: OFF"
+        SpamButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
+        -- Stop spamming
+        if spamConnection then
+            task.cancel(spamConnection)
+            spamConnection = nil
+        end
+    end
+end)
+
+-- Cleanup when GUI is destroyed
+PickleHubDelta.Destroying:Connect(function()
+    if steppedConnection then
+        steppedConnection:Disconnect()
+    end
+    if spamConnection then
+        task.cancel(spamConnection)
+    end
+end)

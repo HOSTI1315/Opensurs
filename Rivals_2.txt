@@ -1,0 +1,717 @@
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Connections = {}
+local Settings = {
+    SilentAim = false,
+    SilentAimRange = 100,
+    ShowSilentFOV = false,
+    
+    AutoAim = false,
+    AimStrength = 1,
+    
+    WalkSpeedEnabled = false,
+    WalkSpeed = 50,
+    
+    JumpPowerEnabled = false,
+    JumpPower = 50,
+    
+    InfiniteCashEnabled = false,
+    
+    ESPEnabled = false,
+    ShowWeaponESP = false,
+    ShowHealthBar = false,
+    ShowDistance = false,
+    
+    Fullbright = false,
+    NoFog = false,
+    FOV = 70
+}
+
+local UtilityModule
+pcall(function()
+    UtilityModule = require(ReplicatedStorage.ModuleFolder.UtilityModule)
+end)
+
+local function CreateConnection(name, connection)
+    if Connections[name] then
+        Connections[name]:Disconnect()
+    end
+    Connections[name] = connection
+    return connection
+end
+
+local function DisconnectConnection(name)
+    if Connections[name] then
+        Connections[name]:Disconnect()
+        Connections[name] = nil
+    end
+end
+
+local function GetCharacter()
+    return LocalPlayer.Character
+end
+
+local function GetHumanoid()
+    local char = GetCharacter()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function GetHumanoidRootPart()
+    local char = GetCharacter()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local SilentFOV = Drawing.new("Circle")
+SilentFOV.Color = Color3.fromRGB(255, 255, 255)
+SilentFOV.Thickness = 2
+SilentFOV.NumSides = 100
+SilentFOV.Filled = false
+SilentFOV.Visible = true
+
+local AutoAimFOV = Drawing.new("Circle")
+AutoAimFOV.Visible = true
+AutoAimFOV.Thickness = 2
+AutoAimFOV.Color = Color3.fromRGB(128, 0, 128)
+AutoAimFOV.Filled = false
+AutoAimFOV.Radius = 100
+
+if UtilityModule then
+    local originalRaycast = UtilityModule.Raycast
+    UtilityModule.Raycast = function(...)
+        if Settings.SilentAim then
+            local args = {...}
+            local closestPlayer = nil
+            local shortestDistance = Settings.SilentAimRange
+            
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    if hrp and humanoid and humanoid.Health > 0 then
+                        local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+                        if distance < shortestDistance then
+                            closestPlayer = player
+                            shortestDistance = distance
+                        end
+                    end
+                end
+            end
+            
+            if closestPlayer and closestPlayer.Character then
+                local head = closestPlayer.Character:FindFirstChild("Head")
+                if head then
+                    args[1] = head.Position
+                end
+            end
+            
+            return originalRaycast(unpack(args))
+        end
+        return originalRaycast(...)
+    end
+end
+
+CreateConnection("UpdateFOV", RunService.RenderStepped:Connect(function()
+    local screenSize = Camera.ViewportSize
+    SilentFOV.Position = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+    SilentFOV.Radius = Settings.SilentAimRange
+    SilentFOV.Visible = Settings.ShowSilentFOV
+    
+    AutoAimFOV.Position = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+end))
+
+local Window = Rayfield:CreateWindow({
+    Name = "Flash Hub | Rivals | Undetected",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "by Leakg0d!",
+    Icon = 0,
+    Theme = {
+        Shadow = Color3.fromRGB(5, 10, 20),
+        SliderProgress = Color3.fromRGB(100, 150, 255),
+        PlaceholderColor = Color3.fromRGB(140, 180, 255),
+        InputStroke = Color3.fromRGB(70, 110, 190),
+        ToggleDisabledStroke = Color3.fromRGB(60, 60, 60),
+        InputBackground = Color3.fromRGB(15, 25, 45),
+        ElementBackgroundHover = Color3.fromRGB(30, 45, 80),
+        DropdownUnselected = Color3.fromRGB(20, 30, 55),
+        SelectedTabTextColor = Color3.fromRGB(120, 170, 255),
+        NotificationBackground = Color3.fromRGB(20, 30, 55),
+        DropdownSelected = Color3.fromRGB(30, 45, 80),
+        SecondaryElementStroke = Color3.fromRGB(50, 90, 160),
+        Background = Color3.fromRGB(10, 15, 30),
+        ToggleDisabledOuterStroke = Color3.fromRGB(40, 40, 40),
+        TabStroke = Color3.fromRGB(50, 70, 120),
+        ElementBackground = Color3.fromRGB(20, 30, 55),
+        ToggleEnabledOuterStroke = Color3.fromRGB(50, 90, 160),
+        ToggleEnabled = Color3.fromRGB(100, 150, 255),
+        ToggleEnabledStroke = Color3.fromRGB(70, 120, 200),
+        ToggleDisabled = Color3.fromRGB(90, 90, 90),
+        SecondaryElementBackground = Color3.fromRGB(15, 25, 45),
+        ToggleBackground = Color3.fromRGB(20, 25, 45),
+        TabTextColor = Color3.fromRGB(170, 200, 255),
+        ElementStroke = Color3.fromRGB(70, 110, 180),
+        SliderBackground = Color3.fromRGB(40, 70, 120),
+        SliderStroke = Color3.fromRGB(70, 120, 200),
+        NotificationActionsBackground = Color3.fromRGB(35, 50, 80),
+        Topbar = Color3.fromRGB(15, 25, 45),
+        TabBackground = Color3.fromRGB(40, 60, 100),
+        TabBackgroundSelected = Color3.fromRGB(25, 40, 80),
+        TextColor = Color3.fromRGB(170, 200, 255),
+    },
+})
+
+local SilentAimTab = Window:CreateTab("Silent Aim")
+
+SilentAimTab:CreateSection("Silent Aim")
+
+SilentAimTab:CreateToggle({
+    Name = "Silent Aim",
+    Flag = "SilentAimToggle",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.SilentAim = enabled
+    end,
+})
+
+SilentAimTab:CreateSlider({
+    Name = "Silent Aim Range",
+    Flag = "SilentAimRange",
+    Suffix = "studs",
+    CurrentValue = 100,
+    Range = {50, 700},
+    Increment = 10,
+    Callback = function(value)
+        Settings.SilentAimRange = value
+    end,
+})
+
+SilentAimTab:CreateToggle({
+    Name = "Show Silent Aim FOV",
+    Flag = "ShowFOV",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.ShowSilentFOV = enabled
+    end,
+})
+
+SilentAimTab:CreateSection("Auto Aim")
+
+SilentAimTab:CreateToggle({
+    Name = "Auto Aim",
+    Flag = "AutoAimToggle",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.AutoAim = enabled
+        
+        if enabled then
+            CreateConnection("AutoAim", RunService.RenderStepped:Connect(function()
+                local closestPlayer = nil
+                local shortestDistance = math.huge
+                
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character then
+                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                        if hrp and humanoid and humanoid.Health > 0 then
+                            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                            if onScreen then
+                                local mousePos = UserInputService:GetMouseLocation()
+                                local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                                if distance < shortestDistance then
+                                    closestPlayer = player
+                                    shortestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                if closestPlayer and closestPlayer.Character then
+                    local head = closestPlayer.Character:FindFirstChild("Head")
+                    if head then
+                        local targetPos = head.Position
+                        Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPos), Settings.AimStrength * 0.1)
+                    end
+                end
+            end))
+        else
+            DisconnectConnection("AutoAim")
+        end
+    end,
+})
+
+SilentAimTab:CreateSlider({
+    Name = "Aim Strength",
+    Flag = "AimStrength",
+    Suffix = "strength",
+    CurrentValue = 1,
+    Range = {0, 5},
+    Increment = 0.5,
+    Callback = function(value)
+        Settings.AimStrength = value
+    end,
+})
+
+SilentAimTab:CreateLabel("More features next update!")
+
+local PlayerTab = Window:CreateTab("Player Configuration")
+
+PlayerTab:CreateSection("Walk Speed")
+
+PlayerTab:CreateToggle({
+    Name = "Enable Speed",
+    Flag = "WalkSpeedToggle",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.WalkSpeedEnabled = enabled
+        
+        if enabled then
+            CreateConnection("WalkSpeed", RunService.Heartbeat:Connect(function()
+                local humanoid = GetHumanoid()
+                if humanoid then
+                    humanoid.WalkSpeed = Settings.WalkSpeed
+                end
+            end))
+            
+            CreateConnection("CharacterAdded", LocalPlayer.CharacterAdded:Connect(function(char)
+                local humanoid = char:WaitForChild("Humanoid")
+                if humanoid and Settings.WalkSpeedEnabled then
+                    humanoid.WalkSpeed = Settings.WalkSpeed
+                end
+            end))
+        else
+            DisconnectConnection("WalkSpeed")
+            DisconnectConnection("CharacterAdded")
+            
+            local humanoid = GetHumanoid()
+            if humanoid then
+                humanoid.WalkSpeed = 16
+            end
+        end
+    end,
+})
+
+PlayerTab:CreateSlider({
+    Name = "Walk Speed Value",
+    Flag = "WalkSpeedValue",
+    Suffix = "speed",
+    CurrentValue = 50,
+    Range = {50, 200},
+    Increment = 10,
+    Callback = function(value)
+        Settings.WalkSpeed = value
+        
+        local humanoid = GetHumanoid()
+        if humanoid and Settings.WalkSpeedEnabled then
+            humanoid.WalkSpeed = value
+        end
+    end,
+})
+
+PlayerTab:CreateSection("Jump Power")
+
+PlayerTab:CreateToggle({
+    Name = "Enable Jump Power",
+    Flag = "JumpPowerToggle",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.JumpPowerEnabled = enabled
+        
+        if enabled then
+            CreateConnection("JumpPower", RunService.Heartbeat:Connect(function()
+                local humanoid = GetHumanoid()
+                if humanoid then
+                    humanoid.JumpPower = Settings.JumpPower
+                end
+            end))
+            
+            CreateConnection("CharacterAddedJump", LocalPlayer.CharacterAdded:Connect(function(char)
+                local humanoid = char:WaitForChild("Humanoid")
+                if humanoid and Settings.JumpPowerEnabled then
+                    humanoid.JumpPower = Settings.JumpPower
+                end
+            end))
+        else
+            DisconnectConnection("JumpPower")
+            DisconnectConnection("CharacterAddedJump")
+            
+            local humanoid = GetHumanoid()
+            if humanoid then
+                humanoid.JumpPower = 50
+            end
+        end
+    end,
+})
+
+PlayerTab:CreateSlider({
+    Name = "Jump Power Value",
+    Flag = "JumpPowerValue",
+    Suffix = "power",
+    CurrentValue = 50,
+    Range = {50, 200},
+    Increment = 10,
+    Callback = function(value)
+        Settings.JumpPower = value
+        
+        local humanoid = GetHumanoid()
+        if humanoid and Settings.JumpPowerEnabled then
+            humanoid.JumpPower = value
+        end
+    end,
+})
+
+PlayerTab:CreateSection("Infinite Cash")
+
+PlayerTab:CreateToggle({
+    Name = "Infinite Cash",
+    Flag = "InfiniteCash",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.InfiniteCashEnabled = enabled
+        
+        if enabled then
+            CreateConnection("InfiniteCash", RunService.Heartbeat:Connect(function()
+                pcall(function()
+                    local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                    if leaderstats then
+                        local cash = leaderstats:FindFirstChild("Cash")
+                        if cash then
+                            cash.Value = 999999999
+                        end
+                    end
+                end)
+            end))
+        else
+            DisconnectConnection("InfiniteCash")
+        end
+    end,
+})
+
+local ESPTab = Window:CreateTab("Game ESP")
+
+ESPTab:CreateSection("Player ESP")
+
+local ESPObjects = {}
+
+local function CreateESP(player)
+    if player == LocalPlayer or ESPObjects[player] then return end
+    
+    local esp = {
+        Name = Drawing.new("Text"),
+        Health = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+        Box = Drawing.new("Square"),
+    }
+    
+    esp.Name.Size = 14
+    esp.Name.Center = true
+    esp.Name.Outline = true
+    esp.Name.Color = Color3.fromRGB(255, 255, 255)
+    esp.Name.Font = 2
+    esp.Name.Visible = false
+    
+    esp.Health.Size = 12
+    esp.Health.Center = true
+    esp.Health.Outline = true
+    esp.Health.Color = Color3.fromRGB(0, 255, 0)
+    esp.Health.Font = 2
+    esp.Health.Visible = false
+    
+    esp.Distance.Size = 12
+    esp.Distance.Center = true
+    esp.Distance.Outline = true
+    esp.Distance.Color = Color3.fromRGB(200, 200, 200)
+    esp.Distance.Font = 2
+    esp.Distance.Visible = false
+    
+    esp.Box.Thickness = 2
+    esp.Box.Filled = false
+    esp.Box.Color = Color3.fromRGB(255, 0, 0)
+    esp.Box.Visible = false
+    
+    ESPObjects[player] = esp
+end
+
+local function UpdateESP()
+    if not Settings.ESPEnabled then return end
+    
+    for player, esp in pairs(ESPObjects) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local head = player.Character:FindFirstChild("Head")
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            
+            if onScreen and head and humanoid then
+                local headPos = Camera:WorldToViewportPoint(head.Position)
+                local legPos = Camera:WorldToViewportPoint((hrp.CFrame * CFrame.new(0, -3, 0)).Position)
+                
+                local height = math.abs(headPos.Y - legPos.Y)
+                local width = height / 2
+                
+                esp.Name.Text = player.Name
+                esp.Name.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 20)
+                esp.Name.Visible = true
+                
+                if Settings.ShowHealthBar then
+                    esp.Health.Text = math.floor(humanoid.Health) .. " HP"
+                    esp.Health.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 5)
+                    esp.Health.Visible = true
+                else
+                    esp.Health.Visible = false
+                end
+                
+                if Settings.ShowDistance then
+                    local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+                    esp.Distance.Text = math.floor(distance) .. " studs"
+                    esp.Distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 20)
+                    esp.Distance.Visible = true
+                else
+                    esp.Distance.Visible = false
+                end
+                
+                esp.Box.Size = Vector2.new(width, height)
+                esp.Box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
+                esp.Box.Visible = true
+            else
+                esp.Name.Visible = false
+                esp.Health.Visible = false
+                esp.Distance.Visible = false
+                esp.Box.Visible = false
+            end
+        else
+            esp.Name.Visible = false
+            esp.Health.Visible = false
+            esp.Distance.Visible = false
+            esp.Box.Visible = false
+        end
+    end
+end
+
+ESPTab:CreateToggle({
+    Name = "Enable ESP",
+    Flag = "EnableESP",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.ESPEnabled = enabled
+        
+        if enabled then
+            for _, player in pairs(Players:GetPlayers()) do
+                CreateESP(player)
+            end
+            
+            CreateConnection("ESPUpdate", RunService.RenderStepped:Connect(UpdateESP))
+        else
+            DisconnectConnection("ESPUpdate")
+            
+            for _, esp in pairs(ESPObjects) do
+                for _, obj in pairs(esp) do
+                    obj.Visible = false
+                end
+            end
+        end
+    end,
+})
+
+ESPTab:CreateToggle({
+    Name = "Show Health Bar",
+    Flag = "ShowHealthBar",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.ShowHealthBar = enabled
+    end,
+})
+
+ESPTab:CreateToggle({
+    Name = "Show Distance",
+    Flag = "ShowDistance",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.ShowDistance = enabled
+    end,
+})
+
+ESPTab:CreateSection("World")
+
+ESPTab:CreateToggle({
+    Name = "Fullbright",
+    Flag = "Fullbright",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.Fullbright = enabled
+        
+        local lighting = game:GetService("Lighting")
+        if enabled then
+            lighting.Brightness = 2
+            lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        else
+            lighting.Brightness = 1
+            lighting.Ambient = Color3.fromRGB(0, 0, 0)
+            lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+        end
+    end,
+})
+
+ESPTab:CreateToggle({
+    Name = "No Fog",
+    Flag = "NoFog",
+    CurrentValue = false,
+    Callback = function(enabled)
+        Settings.NoFog = enabled
+        
+        local lighting = game:GetService("Lighting")
+        if enabled then
+            lighting.FogEnd = 100000
+            lighting.FogStart = 0
+        else
+            lighting.FogEnd = 10000
+            lighting.FogStart = 100
+        end
+    end,
+})
+
+ESPTab:CreateSlider({
+    Name = "FOV",
+    Flag = "FOV",
+    Suffix = "°",
+    CurrentValue = 70,
+    Range = {60, 120},
+    Increment = 1,
+    Callback = function(value)
+        Settings.FOV = value
+        Camera.FieldOfView = value
+    end,
+})
+
+local TeleportTab = Window:CreateTab("Game Teleports")
+
+TeleportTab:CreateSection("Teleports")
+
+TeleportTab:CreateButton({
+    Name = "Teleport to Duels",
+    Callback = function()
+        local hrp = GetHumanoidRootPart()
+        if hrp then
+            hrp.CFrame = CFrame.new(-40, -678, 1118)
+            
+            Rayfield:Notify({
+                Title = "Teleport",
+                Content = "Teleported to Duels!",
+                Duration = 3,
+                Image = "rbxassetid://0",
+            })
+        end
+    end,
+})
+
+TeleportTab:CreateButton({
+    Name = "Teleport to Weapons",
+    Callback = function()
+        local hrp = GetHumanoidRootPart()
+        if hrp then
+            hrp.CFrame = CFrame.new(109, -678, 1118)
+            
+            Rayfield:Notify({
+                Title = "Teleport",
+                Content = "Teleported to Weapons!",
+                Duration = 3,
+                Image = "rbxassetid://0",
+            })
+        end
+    end,
+})
+
+TeleportTab:CreateButton({
+    Name = "Enter Shooting Range",
+    Callback = function()
+        pcall(function()
+            local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+            if remotes then
+                local misc = remotes:FindFirstChild("Misc")
+                if misc then
+                    local enterRange = misc:FindFirstChild("ShootingRangeEnter")
+                    if enterRange then
+                        enterRange:FireServer()
+                    end
+                end
+            end
+        end)
+        
+        Rayfield:Notify({
+            Title = "Shooting Range",
+            Content = "Successfully entered shooting range!",
+            Duration = 3,
+            Image = "rbxassetid://0",
+        })
+    end,
+})
+
+TeleportTab:CreateButton({
+    Name = "Leave Shooting Range",
+    Callback = function()
+        pcall(function()
+            local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+            if remotes then
+                local misc = remotes:FindFirstChild("Misc")
+                if misc then
+                    local leaveRange = misc:FindFirstChild("ShootingRangeLeave")
+                    if leaveRange then
+                        leaveRange:FireServer()
+                    end
+                end
+            end
+        end)
+        
+        Rayfield:Notify({
+            Title = "Shooting Range",
+            Content = "Successfully left the shooting range!",
+            Duration = 3,
+            Image = "rbxassetid://0",
+        })
+    end,
+})
+
+TeleportTab:CreateSection("Rival BETA")
+
+TeleportTab:CreateLabel("Dropdowns won't work currently so I will fix it when I can!")
+
+local InfoTab = Window:CreateTab("Information")
+
+InfoTab:CreateSection("Credits")
+
+InfoTab:CreateLabel("Credits to Leakg0d > Owner of Script!")
+
+InfoTab:CreateSection("Updates")
+
+InfoTab:CreateLabel("BETA Update we have > Silent Aim Tab, Player Tab, Game ESP tab, and Teleport Tab!")
+
+InfoTab:CreateLabel("Next update, we will have > Auto Farm, and a New Keybinds tab!")
+
+Players.PlayerAdded:Connect(function(player)
+    if Settings.ESPEnabled then
+        CreateESP(player)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if ESPObjects[player] then
+        for _, obj in pairs(ESPObjects[player]) do
+            obj:Remove()
+        end
+        ESPObjects[player] = nil
+    end
+end)
+
+Rayfield:LoadConfiguration()

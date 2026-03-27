@@ -1,0 +1,734 @@
+local SilentAimModule = {}
+
+local VSkillModule = loadstring(game:HttpGet("https://scriptprotector.vercel.app/api/raw/e7a35f39ed41124f879ab09a3dc2d0e5"))()
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local Character = player.Character or player.CharacterAdded:Wait()
+local UserInputService = game:GetService("UserInputService")  
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+local RS = game:GetService("ReplicatedStorage")
+local commE = RS:WaitForChild("Remotes"):WaitForChild("CommE")
+local MouseModule = RS:FindFirstChild("Mouse")
+
+local Services = setmetatable({}, {
+    __index = function(self, serviceName)
+        local good, service = pcall(game.GetService, game, serviceName);
+        if (good) then
+            self[serviceName] = service
+            return service;
+        end
+    end
+});
+
+local SilentAimPlayersEnabled = false
+local SilentAimNPCsEnabled = false
+local UserWantsplayerAim = false
+local UserWantsNPCAim = false
+local PredictionEnabled = false
+local HighlightEnabled = false 
+local AutoKen = false
+local ZSkillorM1= false
+local autoKenRunning = false
+
+local renderConnection = nil
+local currentTool = nil
+local playersaimbot = nil
+local PlayersPosition = nil
+local NPCaimbot = nil
+local NPCPosition = nil
+local currentHighlight = nil
+local currentTargetType = nil
+local Selectedplayer = nil
+local MiniPlayerState = nil
+local MiniNpcState = nil
+local MiniPlayerCreated = false
+local MiniNpcCreated = false
+local MiniPlayerGui, MiniNpcGui = nil, nil
+
+local characterConnections = {}
+local Skills = {"X"}
+local Booms = {"TAP"}
+
+local PredictionAmount = 0.1
+local maxRange = 1000
+
+local function getHRP(model)
+	if not model or not model:FindFirstChild("HumanoidRootPart") then return nil end
+	return model.HumanoidRootPart
+end
+
+local function clearConnections()
+	for _, conn in ipairs(characterConnections) do
+		pcall(function() conn:Disconnect() end)
+	end
+	characterConnections = {}
+end
+
+local function getPredictedPosition(hrp)
+	if not hrp then return nil end
+
+	local humanoid = hrp.Parent:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		return hrp.Position
+	end
+
+	if not PredictionEnabled or humanoid.WalkSpeed < 5 then
+		return hrp.Position
+	end
+
+	return hrp.Position + (hrp.Velocity * PredictionAmount)
+end
+
+local function createMiniToggle(name, position, stateVarRef, realVarSetter)
+	local playerGui = player:WaitForChild("PlayerGui")
+    if playerGui:FindFirstChild(name .. "MiniToggleGuiS") then
+        playerGui[name .. "MiniToggleGuiS"]:Destroy()
+    end
+    
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = name .. "MiniToggleGuiS"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 110, 0, 45)
+button.Position = position
+button.Text = name .. (stateVarRef.value and " ON" or " OFF")
+button.TextScaled = true
+button.Font = Enum.Font.GothamBold
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+button.BorderSizePixel = 0
+button.AutoButtonColor = false
+button.Parent = screenGui
+
+-- ROUND CORNERS
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = button
+
+-- OUTER GLOW
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Transparency = 0.15
+stroke.Color = Color3.fromRGB(0, 255, 150)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = button
+
+-- BACKGROUND GRADIENT
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 180, 255))
+}
+gradient.Rotation = 45
+gradient.Parent = button
+
+-- UPDATE VISUAL STATE
+local function updateUI(state)
+    button.Text = name .. (state and " ON" or " OFF")
+
+    if state then
+        gradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255))
+        }
+        stroke.Color = Color3.fromRGB(0, 255, 150)
+    else
+        gradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 140, 80))
+        }
+        stroke.Color = Color3.fromRGB(255, 100, 100)
+    end
+end
+
+-- CLICK EVENT
+button.MouseButton1Click:Connect(function()
+    stateVarRef.value = not stateVarRef.value
+    realVarSetter(stateVarRef.value)
+    updateUI(stateVarRef.value)
+end)
+
+-- HOVER ANIMATION
+button.MouseEnter:Connect(function()
+    button:TweenSize(UDim2.new(0, 120, 0, 50), "Out", "Quad", 0.15, true)
+end)
+
+button.MouseLeave:Connect(function()
+    button:TweenSize(UDim2.new(0, 110, 0, 45), "Out", "Quad", 0.15, true)
+end)
+
+-- INITIAL STATE APPLY
+updateUI(stateVarRef.value)
+
+
+    -- =========================
+    -- Dragging functionality
+    -- =========================
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    local function onInputBegan(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = button.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end
+
+    local function onInputChanged(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - dragStart
+            button.Position = UDim2.new(
+                0,
+                math.clamp(startPos.X.Offset + delta.X, 0, camera.ViewportSize.X - button.AbsoluteSize.X),
+                0,
+                math.clamp(startPos.Y.Offset + delta.Y, 0, camera.ViewportSize.Y - button.AbsoluteSize.Y)
+            )
+        end
+    end
+
+    button.InputBegan:Connect(onInputBegan)
+    button.InputChanged:Connect(onInputChanged)
+
+    updateUI(stateVarRef.value)
+    return screenGui
+end
+
+-- =========================
+-- Team Check
+-- =========================
+local function isAllyWithMe(targetplayer)
+	local myGui = player:FindFirstChild("PlayerGui")
+	if not myGui then return false end
+
+	local scrolling = myGui:FindFirstChild("Main")
+		and myGui.Main:FindFirstChild("Allies")
+		and myGui.Main.Allies:FindFirstChild("Container")
+		and myGui.Main.Allies.Container:FindFirstChild("Allies")
+		and myGui.Main.Allies.Container.Allies:FindFirstChild("ScrollingFrame")
+
+	if scrolling then
+		for _, frame in pairs(scrolling:GetDescendants()) do
+			if frame:IsA("ImageButton") and frame.Name == targetplayer.Name then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
+local function isEnemy(targetplayer)
+	if not targetplayer or targetplayer == player then
+		return false
+	end
+
+	local myTeam = player.Team
+	local targetTeam = targetplayer.Team
+
+	if myTeam and targetTeam then
+		if myTeam.Name == "Pirates" and targetTeam.Name == "Marines" then
+			return true
+		elseif myTeam.Name == "Marines" and targetTeam.Name == "Pirates" then
+			return true
+		end
+
+		if myTeam.Name == "Pirates" and targetTeam.Name == "Pirates" then
+			if isAllyWithMe(targetplayer) then
+				return false -- ally, not enemy
+			end
+			return true
+		end
+
+		if myTeam.Name == "Marines" and targetTeam.Name == "Marines" then
+			return false
+		end
+	end
+
+	return true
+end
+
+local function getClosestplayer(lpHRP)
+	if not lpHRP then return nil end
+	
+	local closest = nil
+	local closestDist = math.huge
+	for _, pl in ipairs(Players:GetPlayers()) do
+		if pl ~= player and isEnemy(pl) and pl.Character and pl.Character.Parent ~= nil then
+			local hum = pl.Character:FindFirstChildWhichIsA("Humanoid")
+			local hrp = getHRP(pl.Character)
+			if hum and hum.Health > 0 and hrp then
+				local dist = (hrp.Position - lpHRP.Position).Magnitude
+				if dist <= maxRange and dist < closestDist then
+					closestDist = dist
+					closest = pl
+				end
+			end
+		end
+	end
+	return closest
+end
+
+local function getClosestNPC(lpHRP)
+    if not lpHRP then return nil end
+
+    local enemiesFolder = workspace:FindFirstChild("Enemies")
+    if not enemiesFolder then return nil end
+
+    local closest = nil
+    local closestDist = math.huge
+    for _, npc in ipairs(enemiesFolder:GetChildren()) do
+        if npc:IsA("Model") then
+            local hum = npc:FindFirstChildWhichIsA("Humanoid")
+            local hrp = getHRP(npc)
+            if hum and hum.Health > 0 and hrp then
+                local dist = (hrp.Position - lpHRP.Position).Magnitude
+                if dist <= maxRange and dist < closestDist then
+                    closestDist = dist
+                    closest = npc
+                end
+            end
+        end
+    end
+    return closest
+end
+
+
+local function isSkillReadyForTool(toolName)
+    if not toolName then return false end
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if not playerGui then return false end
+    local skillsFolder = playerGui:FindFirstChild("Main") and playerGui.Main:FindFirstChild("Skills")
+    if not skillsFolder then return false end
+    local toolFrame = skillsFolder:FindFirstChild(toolName)
+    if not toolFrame then return false end
+
+    for _, skillKey in ipairs({"Z","X","C","V"}) do
+        local skill = toolFrame:FindFirstChild(skillKey)
+        if skill and skill:FindFirstChild("Cooldown") and skill.Cooldown:IsA("Frame") then
+            local cooldownSize = skill.Cooldown.Size.X.Scale
+            if cooldownSize == 1.0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function isNotDoughValidCondition()
+    return (currentTool and currentTool.Name == "Dough-Dough")
+end
+
+local function isNotValidCondition()
+    return (currentTool and currentTool.Name == "Lightning-Lightning")
+    or (currentTool and currentTool.Name == "Portal-Portal")
+end
+
+local function startRenderLoop()
+    if renderConnection then return end
+
+    renderConnection = RunService.RenderStepped:Connect(function()
+        local lpChar = player.Character
+        if not lpChar then return end
+        local lpHRP = lpChar:FindFirstChild("HumanoidRootPart")
+        if not lpHRP then return end
+
+        if not SilentAimPlayersEnabled and not SilentAimNPCsEnabled then
+            return
+        end
+
+        local targetModel = nil
+        local lookTargetPos = nil
+
+        if SilentAimPlayersEnabled then
+            local targetplayer = Selectedplayer or getClosestplayer(lpHRP)
+            if targetplayer and targetplayer ~= player and targetplayer.Character then
+                playersaimbot = targetplayer.Name
+                local hrp = getHRP(targetplayer.Character)
+                PlayersPosition = getPredictedPosition(hrp)
+                lookTargetPos = PlayersPosition
+                targetModel = targetplayer.Character
+            else
+                playersaimbot, PlayersPosition = nil, nil
+            end
+        elseif currentTargetType == "player" then
+            playersaimbot, PlayersPosition = nil, nil
+            clearHighlight()
+        end
+
+        if SilentAimNPCsEnabled then  
+            local closestNPC = getClosestNPC(lpHRP)  
+            if closestNPC then  
+                NPCaimbot = closestNPC.Name  
+                local hrp = getHRP(closestNPC)  
+                NPCPosition = getPredictedPosition(hrp)
+                lookTargetPos = NPCPosition
+                if not targetModel then  
+                    targetModel = closestNPC  
+                end  
+            else  
+                NPCaimbot, NPCPosition = nil, nil  
+            end
+        elseif currentTargetType == "NPC" then
+            NPCaimbot, NPCPosition = nil, nil  
+        end
+        if currentTool and lookTargetPos and isSkillReadyForTool(currentTool.Name) and not isNotDoughValidCondition() then
+	        local lookVector = (Vector3.new(lookTargetPos.X, lpHRP.Position.Y, lookTargetPos.Z) - lpHRP.Position).Unit
+	            lpHRP.CFrame = CFrame.new(lpHRP.Position, lpHRP.Position + lookVector)
+	    end
+    end)
+end
+
+local function stopRenderLoop()
+    if renderConnection then
+        renderConnection:Disconnect()
+        renderConnection = nil
+    end
+end
+
+local function hookTool(tool)
+    currentTool = tool
+    table.insert(characterConnections, tool.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            currentTool = nil
+        end
+    end))
+end
+
+local function isValidCondition()
+    return (currentTool and currentTool.Name == "Buddy Sword")
+end
+
+spawn(function()
+    local ok, hookMeta = pcall(getrawmetatable, game)
+    if ok and hookMeta then
+        setreadonly(hookMeta, false)
+        local OldHook
+        OldHook = hookmetamethod(game, "__namecall", function(self, V1, V2, ...)
+            local Method = (getnamecallmethod and getnamecallmethod():lower()) or ""
+
+            if tostring(self) == "RemoteEvent" and Method == "fireserver" then
+                if typeof(V1) == "Vector3" then
+                    if SilentAimPlayersEnabled and PlayersPosition then
+                        return OldHook(self, PlayersPosition, V2, ...)
+                    elseif SilentAimNPCsEnabled and NPCPosition then
+                        return OldHook(self, NPCPosition, V2, ...)
+                    end
+				end				
+				if type(V1) == "string" and table.find(Booms, V1) then
+					if ZSkillorM1 then 
+	                    if SilentAimPlayersEnabled and PlayersPosition then
+	                        return OldHook(self, V1, PlayersPosition, nil, ...)
+	                    elseif SilentAimNPCsEnabled and NPCPosition then
+	                        return OldHook(self, V1, NPCPosition, nil, ...)
+	                    end
+					end
+				end   
+            elseif Method == "invokeserver" then  
+	            if isValidCondition() then
+	                if type(V1) == "string" and table.find(Skills, V1) then  
+	                    if SilentAimPlayersEnabled and PlayersPosition then  
+	                        return OldHook(self, V1, PlayersPosition, nil, ...)
+	                    elseif SilentAimNPCsEnabled and NPCPosition then
+		                    return OldHook(self, V1, NPCPosition, nil, ...)
+	                    end  
+	                end    
+				end				
+			end
+            
+            return OldHook(self, V1, V2, ...)
+        end)
+        setreadonly(hookMeta, true)
+    end
+end)
+
+if not isNotValidCondition() then
+	if MouseModule and typeof(MouseModule) == "Instance" then
+        local ok2, okResult = pcall(function()
+            return require(MouseModule)
+        end)
+
+        if ok2 and okResult then  
+            if type(okResult) == "table" then  
+                Mouse = okResult  
+            else  
+                Mouse = nil  
+            end  
+        else  
+            Mouse = nil  
+        end  
+
+        if Mouse then  
+            local Character = player.Character or player.CharacterAdded:Wait()  
+            local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")  
+
+            if RootPart then  
+                pcall(function()  
+                    if type(Mouse) == "table" then  
+                        Mouse.Hit = CFrame.new(RootPart.Position)  
+                        Mouse.Target = RootPart  
+                    end  
+                end)  
+            else  
+                task.spawn(function()  
+                    local Character = player.Character or player.CharacterAdded:Wait()  
+                    local RootPart = Character:WaitForChild("HumanoidRootPart")  
+                    pcall(function()  
+                        if type(Mouse) == "table" then  
+                            Mouse.Hit = CFrame.new(RootPart.Position)  
+                            Mouse.Target = RootPart  
+                        end  
+                    end)  
+                end)  
+            end  
+        end  
+
+        RunService.Heartbeat:Connect(function()  	        
+		    if not ZSkillorM1 or (not SilentAimPlayersEnabled and not SilentAimNPCsEnabled) then
+		        return
+		    end
+		
+            if Mouse and ZSkillorM1 and (SilentAimPlayersEnabled or SilentAimNPCsEnabled) then  
+                local targetCFrame = nil  
+
+                if PlayersPosition then  
+                    targetCFrame = CFrame.new(PlayersPosition)  
+                elseif NPCPosition then  
+                    targetCFrame = CFrame.new(NPCPosition)  
+                end  
+
+                if targetCFrame then  
+                    pcall(function()  
+                        if type(Mouse) == "table" then  
+                            Mouse.Hit = targetCFrame  
+                            Mouse.Target = nil  
+                        end  
+                    end)  
+
+                    if MouseModule then  
+                        local ok, MouseData = pcall(require, MouseModule)  
+                        if ok and type(MouseData) == "table" then  
+                            MouseData.Hit = targetCFrame  
+                            MouseData.Target = nil  
+                        end  
+                    end  
+                end  
+            end  
+        end)
+    end
+end
+
+local HasTag = function(tagName)
+  local char = player.Character
+  if (not char) then return false; end
+  return Services.CollectionService:HasTag(char, tagName);
+end
+
+local function startAutoKenLoop()
+    if autoKenRunning then return end
+    autoKenRunning = true
+
+    task.spawn(function()
+        while AutoKen do
+            task.wait(0.1)
+
+            if HasTag("Ken") then
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if playerGui then
+                    local kenButton = playerGui:FindFirstChild("MobileContextButtons")
+                    and playerGui.MobileContextButtons.ContextButtonFrame:FindFirstChild("BoundActionKen")
+
+                    if kenButton and kenButton:GetAttribute("Selected") ~= true then
+                        kenButton:SetAttribute("Selected", true)
+                    end
+                end
+
+                local observationManager = getrenv()._G.OM
+                if observationManager and not observationManager.active then
+                    observationManager.radius = 0
+                    observationManager:setActive(true)
+                    commE:FireServer("Ken", true)
+                end
+            end
+        end
+        autoKenRunning = false
+    end)
+end
+
+local function onCharacterAdded(char)
+    clearConnections()
+
+    for _, child in ipairs(char:GetChildren()) do
+        if child:IsA("Tool") then
+            hookTool(child)
+        end
+    end
+
+    table.insert(characterConnections, char.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") then hookTool(child) end
+    end))
+
+    table.insert(characterConnections, char.ChildRemoved:Connect(function(child)
+        if child == currentTool then
+            currentTool = nil
+        end
+    end))
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then onCharacterAdded(player.Character) end
+
+function SilentAimModule:SetAutoKen(state)
+    AutoKen = state
+
+    if state then
+        startAutoKenLoop()
+    end
+end
+
+function SilentAimModule:SetZSkillorM1(state)
+    ZSkillorM1 = state
+end
+
+function SilentAimModule:Pause()
+	SilentAimPlayersEnabled = false
+	SilentAimNPCsEnabled = false
+end
+
+function SilentAimModule:Restore()
+	SilentAimPlayersEnabled = UserWantsplayerAim
+	SilentAimNPCsEnabled = UserWantsNPCAim
+end
+
+function SilentAimModule:IsplayerAimEnabled()
+    return SilentAimPlayersEnabled
+end
+
+function SilentAimModule:IsNPCAimEnabled()
+    return SilentAimNPCsEnabled
+end
+
+function SilentAimModule:SetDistanceLimit(num)
+	if typeof(num) == "number" then
+		maxRange = num
+	end
+end
+
+function SilentAimModule:SetSelectedPlayer(playerName)
+	if not playerName or playerName == "" then
+		Selectedplayer = nil
+		return
+	end
+
+	local found = Players:FindFirstChild(playerName)
+	if found then
+		Selectedplayer = found
+	end
+end
+
+function SilentAimModule:GetSelectedPlayer()
+	return Selectedplayer and Selectedplayer.Name or "None"
+end
+
+function SilentAimModule:SetPrediction(state)
+	PredictionEnabled = state
+end
+
+function SilentAimModule:SetHighlight(state)
+    HighlightEnabled = state
+    if not state then
+        clearHighlight()
+    end
+end
+
+function SilentAimModule:IsHighlightEnabled()
+    return HighlightEnabled
+end
+
+function SilentAimModule:SetPredictionAmount(num)
+	if typeof(num) == "number" then
+		PredictionAmount = num
+	end
+end
+
+function SilentAimModule:SetPlayerSilentAim(state)
+    UserWantsplayerAim = state
+    SilentAimPlayersEnabled = state
+
+    if state then
+        startRenderLoop()
+    else
+        if not SilentAimNPCsEnabled then
+            stopRenderLoop()
+        end
+    end
+end
+
+function SilentAimModule:SetNPCSilentAim(state)
+    UserWantsNPCAim = state
+    SilentAimNPCsEnabled = state
+
+    if state then
+        startRenderLoop()
+    else
+        if not SilentAimPlayersEnabled then
+            stopRenderLoop()
+        end
+    end
+end
+
+local function UpdateSilentAimState()
+    SilentAimPlayersEnabled = MiniPlayerState and MiniPlayerState.value or false
+    SilentAimNPCsEnabled    = MiniNpcState and MiniNpcState.value or false
+
+    UserWantsplayerAim = SilentAimPlayersEnabled
+    UserWantsNPCAim    = SilentAimNPCsEnabled
+
+    if SilentAimPlayersEnabled or SilentAimNPCsEnabled then
+        startRenderLoop()
+    else
+        stopRenderLoop()
+    end
+end
+
+function SilentAimModule:SetMiniTogglePlayerSilentAim(state)
+    if not MiniPlayerCreated and state then
+        MiniPlayerState = { value = SilentAimPlayersEnabled }
+        MiniPlayerGui = createMiniToggle("Player", UDim2.new(0,10,0,90), MiniPlayerState, function(val)
+            MiniPlayerState.value = val
+            UpdateSilentAimState()
+        end)
+        MiniPlayerCreated = true
+    elseif MiniPlayerCreated then
+        if MiniPlayerGui then
+            MiniPlayerGui.Enabled = state
+        end
+    end
+end
+
+function SilentAimModule:SetMiniToggleNpcSilentAim(state)
+    if not MiniNpcCreated and state then
+        MiniNpcState = { value = SilentAimNPCsEnabled }
+        MiniNpcGui = createMiniToggle("NPC", UDim2.new(0,10,0,50), MiniNpcState, function(val)
+            MiniNpcState.value = val
+            UpdateSilentAimState()
+        end)
+        MiniNpcCreated = true
+    elseif MiniNpcCreated then
+        if MiniNpcGui then
+            MiniNpcGui.Enabled = state
+        end
+    end
+end
+
+return SilentAimModule

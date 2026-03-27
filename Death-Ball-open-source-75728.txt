@@ -1,0 +1,57 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local Player = Players.LocalPlayer
+local BallShadow = nil
+local BallObject = nil
+local PreviousPosition = nil
+local LastParry = 0
+
+local function GetBallColor(target)
+	if not target then return Color3.new(1, 1, 1) end
+	local highlight = target:FindFirstChildOfClass("Highlight")
+	if highlight then return highlight.FillColor end
+	return target:IsA("Part") and target.Color or Color3.new(1, 1, 1)
+end
+
+local function GetVisualHeight(shadow)
+	if not shadow then return 0 end
+	return math.min(((math.max(0, shadow.Size.X - 5)) * 20) + 3, 100)
+end
+
+local function TriggerParry()
+	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+	VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	BallShadow = (BallShadow and BallShadow.Parent) and BallShadow or workspace.FX:FindFirstChild("BallShadow")
+	BallObject = (BallObject and BallObject.Parent) and BallObject or (workspace:FindFirstChild("Ball") or workspace:FindFirstChild("Part"))
+
+	if not BallShadow or not BallObject or not Player.Character or not Player.Character.PrimaryPart then
+		PreviousPosition = nil
+		return
+	end
+
+	local rootPart = Player.Character.PrimaryPart
+	local height = GetVisualHeight(BallShadow)
+	local currentPos = Vector3.new(BallShadow.Position.X, BallShadow.Position.Y + height, BallShadow.Position.Z)
+
+	if PreviousPosition then
+		local velocity = (currentPos - PreviousPosition).Magnitude / dt
+		local ping = Player:GetNetworkPing()
+		
+		local dynamicDistance = 15 + (velocity * ping * 0.3)
+		local flatDistance = (Vector3.new(rootPart.Position.X, 0, rootPart.Position.Z) - Vector3.new(currentPos.X, 0, currentPos.Z)).Magnitude
+
+		if GetBallColor(BallObject) ~= Color3.new(1, 1, 1) then
+			if flatDistance <= dynamicDistance and (tick() - LastParry) > 0.01 then
+				TriggerParry()
+				LastParry = tick()
+			end
+		end
+	end
+
+	PreviousPosition = currentPos
+end)

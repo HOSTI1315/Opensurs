@@ -1,0 +1,645 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local Net
+local hasNet = pcall(function()
+    Net = require(ReplicatedStorage.Packages.Net)
+end)
+
+local CastEvent, CancelEvent, MinigameClickEvent
+
+if hasNet and Net then
+    CastEvent = Net:RemoteEvent("FishingRod.Cast")
+    CancelEvent = Net:RemoteEvent("FishingRod.Cancel")
+    MinigameClickEvent = Net:RemoteEvent("FishingRod.MinigameClick")
+else
+    local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
+    CastEvent = remotes:FindFirstChild("FishingRod.Cast")
+    CancelEvent = remotes:FindFirstChild("FishingRod.Cancel")
+    MinigameClickEvent = remotes:FindFirstChild("FishingRod.MinigameClick")
+end
+
+local Config = {
+    FishingActive = false,
+    CastTiming = 0.3,
+    RecastDelay = 0.15
+}
+
+local State = {
+    isMinigameActive = false,
+    isCasted = false,
+    isAutoCasting = false,
+    currentRod = nil,
+    clickConnection = nil,
+    castLoopRunning = false,
+    connections = {},
+    lastCastTime = 0,
+    castCooldown = 0.5,
+    fishCaught = 0,
+    startTime = 0
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MoonFisherUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 160)
+MainFrame.Position = UDim2.new(0.5, -130, 0.5, -80)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 16)
+MainCorner.Parent = MainFrame
+
+local Glow = Instance.new("ImageLabel")
+Glow.Name = "Glow"
+Glow.Size = UDim2.new(1, 30, 1, 30)
+Glow.Position = UDim2.new(0, -15, 0, -15)
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+Glow.ImageColor3 = Color3.fromRGB(0, 170, 255)
+Glow.ImageTransparency = 0.85
+Glow.ScaleType = Enum.ScaleType.Slice
+Glow.SliceCenter = Rect.new(10, 10, 118, 118)
+Glow.ZIndex = 0
+Glow.Parent = MainFrame
+
+-- Accent line removed for cleaner look
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 34)
+TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 16)
+TopCorner.Parent = TopBar
+
+local TopBarFix = Instance.new("Frame")
+TopBarFix.Size = UDim2.new(1, 0, 0, 12)
+TopBarFix.Position = UDim2.new(0, 0, 1, -12)
+TopBarFix.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+TopBarFix.BorderSizePixel = 0
+TopBarFix.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 12, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "🌙 MOON FISHER"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Name = "MinimizeBtn"
+MinimizeBtn.Size = UDim2.new(0, 28, 0, 24)
+MinimizeBtn.Position = UDim2.new(1, -66, 0.5, -12)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MinimizeBtn.BorderSizePixel = 0
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.Text = "−"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.TextSize = 16
+MinimizeBtn.Parent = TopBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 16)
+MinCorner.Parent = MinimizeBtn
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Size = UDim2.new(0, 28, 0, 24)
+CloseBtn.Position = UDim2.new(1, -32, 0.5, -12)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 18
+CloseBtn.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 16)
+CloseCorner.Parent = CloseBtn
+
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -24, 1, -60)
+ContentFrame.Position = UDim2.new(0, 12, 0, 44)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+local StatusFrame = Instance.new("Frame")
+StatusFrame.Name = "StatusFrame"
+StatusFrame.Size = UDim2.new(1, 0, 0, 44)
+StatusFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+StatusFrame.BorderSizePixel = 0
+StatusFrame.Parent = ContentFrame
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 16)
+StatusCorner.Parent = StatusFrame
+
+local StatusIndicator = Instance.new("Frame")
+StatusIndicator.Name = "StatusIndicator"
+StatusIndicator.Size = UDim2.new(0, 12, 0, 12)
+StatusIndicator.Position = UDim2.new(0, 12, 0.5, -6)
+StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+StatusIndicator.BorderSizePixel = 0
+StatusIndicator.Parent = StatusFrame
+
+local IndicatorCorner = Instance.new("UICorner")
+IndicatorCorner.CornerRadius = UDim.new(1, 0)
+IndicatorCorner.Parent = StatusIndicator
+
+local StatusText = Instance.new("TextLabel")
+StatusText.Name = "StatusText"
+StatusText.Size = UDim2.new(1, -40, 0.5, 0)
+StatusText.Position = UDim2.new(0, 36, 0, 0)
+StatusText.BackgroundTransparency = 1
+StatusText.Font = Enum.Font.GothamBold
+StatusText.Text = "IDLE"
+StatusText.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusText.TextSize = 12
+StatusText.TextXAlignment = Enum.TextXAlignment.Left
+StatusText.Parent = StatusFrame
+
+local FishCountText = Instance.new("TextLabel")
+FishCountText.Name = "FishCountText"
+FishCountText.Size = UDim2.new(1, -40, 0.5, 0)
+FishCountText.Position = UDim2.new(0, 36, 0.5, 0)
+FishCountText.BackgroundTransparency = 1
+FishCountText.Font = Enum.Font.Gotham
+FishCountText.Text = "Fish: 0 | Time: 0s"
+FishCountText.TextColor3 = Color3.fromRGB(150, 150, 150)
+FishCountText.TextSize = 10
+FishCountText.TextXAlignment = Enum.TextXAlignment.Left
+FishCountText.Parent = StatusFrame
+
+local StartButton = Instance.new("TextButton")
+StartButton.Name = "StartButton"
+StartButton.Size = UDim2.new(1, 0, 0, 46)
+StartButton.Position = UDim2.new(0, 0, 0, 50)
+StartButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+StartButton.BorderSizePixel = 0
+StartButton.Font = Enum.Font.GothamBold
+StartButton.Text = "▶ START FISHING"
+StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartButton.TextSize = 13
+StartButton.AutoButtonColor = false
+StartButton.Parent = ContentFrame
+
+local StartCorner = Instance.new("UICorner")
+StartCorner.CornerRadius = UDim.new(0, 16)
+StartCorner.Parent = StartButton
+
+ScreenGui.Parent = playerGui
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+local isMinimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+
+    if isMinimized then
+        ContentFrame.Visible = false
+        Glow.Visible = false
+        TopBarFix.Visible = false
+    else
+        ContentFrame.Visible = true
+        Glow.Visible = true
+        TopBarFix.Visible = true
+    end
+
+    local targetSize = isMinimized and UDim2.new(0, 260, 0, 34) or UDim2.new(0, 260, 0, 160)
+    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.28, Enum.EasingStyle.Quint), {Size = targetSize})
+    tween:Play()
+
+    MinimizeBtn.Text = isMinimized and "+" or "−"
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    if Config.FishingActive then
+        Config.FishingActive = false
+    end
+
+    for i, conn in ipairs(State.connections) do
+        if conn then conn:Disconnect() end
+    end
+    if State.clickConnection then State.clickConnection:Disconnect() end
+
+    ScreenGui:Destroy()
+end)
+
+local function safeDisconnect(connection)
+    if connection and typeof(connection) == "RBXScriptConnection" then
+        connection:Disconnect()
+        return nil
+    end
+    return connection
+end
+
+local function getFishingRodFromBackpack()
+    local backpack = player:WaitForChild("Backpack")
+    
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and (tool.Name:lower():find("rod") or tool.Name:lower():find("fishing")) then
+            return tool
+        end
+    end
+    
+    return nil
+end
+
+local function getFishingRod()
+    local character = player.Character
+    if not character then return nil end
+
+    for _, tool in ipairs(character:GetChildren()) do
+        if tool:IsA("Tool") and (tool.Name:lower():find("rod") or tool.Name:lower():find("fishing")) then
+            return tool
+        end
+    end
+
+    return nil
+end
+
+local function equipFishingRod()
+    local rod = getFishingRod()
+    if rod then
+        return rod
+    end
+    
+    rod = getFishingRodFromBackpack()
+    if rod then
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid:EquipTool(rod)
+            task.wait(0.5)
+            return getFishingRod()
+        end
+    end
+    
+    return nil
+end
+
+local function updateUI()
+    if Config.FishingActive then
+        StartButton.Text = "■ STOP FISHING"
+        StartButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        StatusText.Text = "FISHING"
+        StatusIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+
+        local pulse = TweenService:Create(StatusIndicator, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+        })
+        pulse:Play()
+    else
+        StartButton.Text = "▶ START FISHING"
+        StartButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        StatusText.Text = "IDLE"
+        StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end
+
+local function performAutoCast()
+    local currentTime = tick()
+    if currentTime - State.lastCastTime < State.castCooldown then
+        return
+    end
+
+    if State.isAutoCasting or State.isCasted then return end
+
+    local rod = getFishingRod()
+    if not rod then return end
+
+    local hasCooldown = rod:GetAttribute("castCooldown")
+    local alreadyCasted = rod:GetAttribute("casted")
+
+    if hasCooldown or alreadyCasted then
+        return
+    end
+
+    State.isAutoCasting = true
+    State.lastCastTime = currentTime
+
+    local castSuccess = false
+
+    pcall(function()
+        rod:Activate()
+        task.wait(Config.CastTiming)
+        rod:Deactivate()
+        castSuccess = true
+    end)
+
+    if not castSuccess and CastEvent then
+        pcall(function()
+            if CastEvent:IsA("RemoteEvent") then
+                CastEvent:FireServer()
+                castSuccess = true
+            end
+        end)
+    end
+
+    task.wait(0.1)
+    State.isAutoCasting = false
+end
+
+local function autoCastLoop()
+    if State.castLoopRunning then return end
+    State.castLoopRunning = true
+
+    task.spawn(function()
+        while Config.FishingActive do
+            local rod = getFishingRod()
+
+            if rod and not State.isCasted and not State.isAutoCasting then
+                local hasCooldown = rod:GetAttribute("castCooldown")
+                local alreadyCasted = rod:GetAttribute("casted")
+
+                if not hasCooldown and not alreadyCasted then
+                    performAutoCast()
+                end
+            end
+
+            task.wait(Config.RecastDelay)
+        end
+        State.castLoopRunning = false
+    end)
+end
+
+local function autoClickMinigame()
+    State.clickConnection = safeDisconnect(State.clickConnection)
+
+    local function performClick(rod)
+        pcall(function()
+            rod:Activate()
+            rod:Deactivate()
+        end)
+
+        if MinigameClickEvent then
+            pcall(function()
+                MinigameClickEvent:FireServer()
+            end)
+        end
+    end
+
+    State.clickConnection = RunService.RenderStepped:Connect(function()
+        if not State.isMinigameActive or not Config.FishingActive then
+            State.clickConnection = safeDisconnect(State.clickConnection)
+            return
+        end
+
+        local rod = getFishingRod()
+
+        if not rod or not rod:GetAttribute("minigame") then
+            State.clickConnection = safeDisconnect(State.clickConnection)
+            State.isMinigameActive = false
+            return
+        end
+
+        for i = 1, 15 do
+            performClick(rod)
+        end
+    end)
+end
+
+local function setupRodMonitoring(rod)
+    if not rod then return end
+
+    State.currentRod = rod
+
+    for i, conn in ipairs(State.connections) do
+        safeDisconnect(conn)
+    end
+    State.connections = {}
+
+    local minigameConnection = rod:GetAttributeChangedSignal("minigame"):Connect(function()
+        local minigameState = rod:GetAttribute("minigame")
+
+        if minigameState and not State.isMinigameActive then
+            State.isMinigameActive = true
+            StatusText.Text = "MINIGAME!"
+            StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 50)
+            if Config.FishingActive then
+                task.spawn(autoClickMinigame)
+            end
+        elseif not minigameState and State.isMinigameActive then
+            State.isMinigameActive = false
+            State.fishCaught = State.fishCaught + 1
+            FishCountText.Text = string.format("Fish: %d | Time: %ds", State.fishCaught, math.floor(tick() - State.startTime))
+            StatusText.Text = "FISHING"
+            StatusIndicator.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+            State.clickConnection = safeDisconnect(State.clickConnection)
+        end
+    end)
+    table.insert(State.connections, minigameConnection)
+
+    local castConnection = rod:GetAttributeChangedSignal("casted"):Connect(function()
+        local wasCasted = State.isCasted
+        State.isCasted = rod:GetAttribute("casted") or false
+
+        if not State.isCasted and wasCasted then
+            if Config.FishingActive then
+                task.wait(Config.RecastDelay)
+                performAutoCast()
+            end
+        end
+    end)
+    table.insert(State.connections, castConnection)
+
+    local unequipConnection = rod.AncestryChanged:Connect(function()
+        if not rod:IsDescendantOf(player.Character) then
+            for i, conn in ipairs(State.connections) do
+                safeDisconnect(conn)
+            end
+            State.connections = {}
+            State.clickConnection = safeDisconnect(State.clickConnection)
+            State.isMinigameActive = false
+            State.isCasted = false
+            State.currentRod = nil
+            State.castLoopRunning = false
+        end
+    end)
+    table.insert(State.connections, unequipConnection)
+end
+
+local function onCharacterAdded(character)
+    for i, conn in ipairs(State.connections) do
+        safeDisconnect(conn)
+    end
+    State.connections = {}
+    State.clickConnection = safeDisconnect(State.clickConnection)
+
+    local childAddedConnection = character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") and (child.Name:lower():find("rod") or child.Name:lower():find("fishing")) then
+            task.wait(0.2)
+            setupRodMonitoring(child)
+
+            if Config.FishingActive then
+                task.wait(0.3)
+                autoCastLoop()
+            end
+        end
+    end)
+    table.insert(State.connections, childAddedConnection)
+
+    task.wait(0.2)
+    local rod = getFishingRod()
+    if rod then
+        setupRodMonitoring(rod)
+        if Config.FishingActive then
+            autoCastLoop()
+        end
+    end
+end
+
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
+StartButton.MouseButton1Click:Connect(function()
+    Config.FishingActive = not Config.FishingActive
+
+    if Config.FishingActive then
+        State.startTime = tick()
+        State.fishCaught = 0
+        FishCountText.Text = "Fish: 0 | Time: 0s"
+
+        local rod = equipFishingRod()
+        if rod then
+            setupRodMonitoring(rod)
+            task.wait(0.5)
+            autoCastLoop()
+        else
+            Config.FishingActive = false
+            StatusText.Text = "NO ROD FOUND"
+            StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 150, 50)
+            task.wait(2)
+            StatusText.Text = "IDLE"
+            StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    else
+        State.castLoopRunning = false
+        State.clickConnection = safeDisconnect(State.clickConnection)
+    end
+
+    updateUI()
+
+    local original = StartButton.BackgroundColor3
+    StartButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    task.wait(0.08)
+    StartButton.BackgroundColor3 = original
+end)
+
+local function addHoverEffect(button, normalColor)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.18), {BackgroundColor3 = button.BackgroundColor3:Lerp(Color3.fromRGB(255, 255, 255), 0.18)}):Play()
+    end)
+
+    button.MouseLeave:Connect(function()
+        local targetColor = normalColor
+        if button == StartButton then
+            targetColor = Config.FishingActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 170, 255)
+        end
+        TweenService:Create(button, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+    end)
+end
+
+addHoverEffect(StartButton, Color3.fromRGB(0, 170, 255))
+addHoverEffect(MinimizeBtn, Color3.fromRGB(30, 30, 40))
+addHoverEffect(CloseBtn, Color3.fromRGB(255, 50, 50))
+
+task.spawn(function()
+    while true do
+        if Config.FishingActive and State.startTime > 0 then
+            FishCountText.Text = string.format("Fish: %d | Time: %ds", State.fishCaught, math.floor(tick() - State.startTime))
+        end
+        task.wait(1)
+    end
+end)
+
+local function showNotification(text)
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.Size = UDim2.new(0, 240, 0, 42)
+    NotifFrame.Position = UDim2.new(1, -260, 1, -60)
+    NotifFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+    NotifFrame.BorderSizePixel = 0
+    NotifFrame.Parent = ScreenGui
+
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 16)
+    NotifCorner.Parent = NotifFrame
+
+    local NotifText = Instance.new("TextLabel")
+    NotifText.Size = UDim2.new(1, -20, 1, 0)
+    NotifText.Position = UDim2.new(0, 10, 0, 0)
+    NotifText.BackgroundTransparency = 1
+    NotifText.Font = Enum.Font.Gotham
+    NotifText.Text = text
+    NotifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NotifText.TextSize = 13
+    NotifText.Parent = NotifFrame
+
+    TweenService:Create(NotifFrame, TweenInfo.new(0.28), {Position = UDim2.new(1, -260, 1, -110)}):Play()
+
+    task.wait(2.6)
+
+    TweenService:Create(NotifFrame, TweenInfo.new(0.28), {Position = UDim2.new(1, -260, 1, 0)}):Play()
+    task.wait(0.28)
+    NotifFrame:Destroy()
+end
+
+showNotification("🌙 Fisher Loaded!")

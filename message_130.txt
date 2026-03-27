@@ -1,0 +1,1747 @@
+if getgenv().FischScriptLoaded then
+    WDIUWngfiuNFDJWKDNJNIKNI = true
+end
+
+--------------------------------------------------------------------------------
+-- ROBLOX SERVICES
+--------------------------------------------------------------------------------
+local AnalyticsService = game:GetService("AnalyticsService")
+local CollectionService = game:GetService("CollectionService")
+local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+local SoundService = game:GetService("SoundService")
+local StarterGui = game:GetService("StarterGui")
+local StarterPack = game:GetService("StarterPack")
+local StarterPlayer = game:GetService("StarterPlayer")
+local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
+local Teams = game:GetService("Teams")
+local VirtualUser = game:GetService("VirtualUser")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
+
+print("ClientMonsterTools.lua loaded")
+
+--------------------------------------------------------------------------------
+-- ANTI-AFK SYSTEM (Built-in)
+--------------------------------------------------------------------------------
+game.Players.LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+    print("Roblox Tried to kick you but we didn't let them kick you :D")
+end)
+warn("[Anti Afk] - loaded successfully")
+
+--------------------------------------------------------------------------------
+-- UI LIBRARY SETUP
+--------------------------------------------------------------------------------
+print("[Space Hub | Fisch]: loading...")
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "ktro | test",
+    SubTitle = "v1.0",
+    TabWidth = 150,
+    Size = UDim2.fromOffset(600, 400),
+    Acrylic = true,
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local isMinimized = false
+local Tabs = {}
+
+Tabs.Home = Window:AddTab({ Title = "Home", Icon = "home" })
+Tabs.Main = Window:AddTab({ Title = "Main", Icon = "code" })
+Tabs.Teleports = Window:AddTab({ Title = "Teleports", Icon = "compass" })
+Tabs.Misc = Window:AddTab({ Title = "Misc", Icon = "file-text" })
+Tabs.Player = Window:AddTab({ Title = "Player", Icon = "coffee" })
+Tabs.Premium = Window:AddTab({ Title = "Premium", Icon = "diamond" })
+Tabs.Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+
+local Options = Fluent.Options
+
+--------------------------------------------------------------------------------
+-- LOCATION DATA - PLACE TELEPORTS
+--------------------------------------------------------------------------------
+local PlaceLocations = {
+    Forsaken_Shores = CFrame.new(-2493.379, 133.1, 1550.709),
+    altar = CFrame.new(1296.320068359375, -808.5519409179688, -298.93817138671875),
+    arch = CFrame.new(998.966796875, 126.6849365234375, -1237.1434326171875),
+    birch = CFrame.new(1742.3203125, 138.25787353515625, -2502.23779296875),
+    brine = CFrame.new(-1794.10596, -145.849701, -3302.92358, -0.0000516176224, 3.10316682e-6, 0.99999994, 0.119907647, 0.992785037, 3.10316682e-6, -0.992785037, 0.119907647, -0.0000516176224),
+    deep = CFrame.new(-1510.88672, -237.695053, -2852.90674, 0.573604643, 0.000580655003, 0.81913209, -0.000340352941, 0.999999762, -0.000470530824, -0.819132209, -8.89541116e-6, 0.573604763),
+    deepshop = CFrame.new(-979.196411, -247.910156, -2699.87207, 0.587748766, 0, 0.809043527, 0, 1, 0, -0.809043527, 0, 0.587748766),
+    enchant = CFrame.new(1296.320068359375, -808.5519409179688, -298.93817138671875),
+    executive = CFrame.new(-29.836761474609375, -250.48486328125, 199.11614990234375),
+    keepers = CFrame.new(1296.320068359375, -808.5519409179688, -298.93817138671875),
+    mod_house = CFrame.new(-30.205902099609375, -249.40594482421875, 204.0529022216797),
+    moosewood = CFrame.new(383.10113525390625, 131.2406005859375, 243.93385314941406),
+    mushgrove = CFrame.new(2501.48583984375, 127.7583236694336, -720.699462890625),
+    roslit = CFrame.new(-1476.511474609375, 130.16842651367188, 671.685302734375),
+    snow = CFrame.new(2648.67578125, 139.06605529785156, 2521.29736328125),
+    snowcap = CFrame.new(2648.67578125, 139.06605529785156, 2521.29736328125),
+    spike = CFrame.new(-1254.800537109375, 133.88555908203125, 1554.2021484375),
+    statue = CFrame.new(72.8836669921875, 138.6964874267578, -1028.4193115234375),
+    sunstone = CFrame.new(-933.259705, 128.143951, -1119.52063, -0.342042685, 0, -0.939684391, 0, 1, 0, 0.939684391, 0, -0.342042685),
+    swamp = CFrame.new(2501.48583984375, 127.7583236694336, -720.699462890625),
+    terrapin = CFrame.new(-143.875244140625, 141.1676025390625, 1909.6070556640625),
+    trident = CFrame.new(-1479.48987, -228.710632, -2391.39307, 0.0435845852, 0, 0.999049723, 0, 1, 0, -0.999049723, 0, 0.0435845852),
+    vertigo = CFrame.new(-112.007278, -492.901093, 1040.32788, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    volcano = CFrame.new(-1888.52319, 163.847565, 329.238281, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    wilson = CFrame.new(2938.80591, 277.474762, 2567.13379, 0.4648332, 0, 0.885398269, 0, 1, 0, -0.885398269, 0, 0.4648332),
+    wilsons_rod = CFrame.new(2879.2085, 135.07663, 2723.64233, 0.970463336, -0.168695927, -0.172460333, 0.141582936, -0.180552125, 0.973321974, -0.195333466, -0.968990743, -0.151334763)
+}
+
+--------------------------------------------------------------------------------
+-- LOCATION DATA - FISHING ZONES
+--------------------------------------------------------------------------------
+local FishingZones = {
+    Forsaken_Shores = CFrame.new(-2827.479, 215.067459, 1518.38977, -0.0640091896, 0, -0.997949481, 0, 1, 0, 0.997949481, 0, -0.0640091896),
+    Roslit_Bay = CFrame.new(-1663.73889, 149.234116, 495.498016, 0.0380855016, 4.08820178e-8, -0.999274492, 5.74658472e-8, 1, 4.3101906e-8, 0.999274492, -5.90657123e-8, 0.0380855016),
+    Ocean = CFrame.new(7665.104, 125.444443, 2601.59351, 0.999966085, -0.000609769544, -0.00821684115, 0.000612694537, 0.999999762, 0.000353460142, 0.00821662322, -0.000358482561, 0.999966204),
+    Snowcap_Pond = CFrame.new(2778.09009, 283.283783, 2580.323, 1, 7.17688531e-9, -0.0000222843701, -7.17796267e-9, 1, -4.83369114e-8, 0.0000222843701, 4.83370712e-8, 1),
+    Moosewood_Docks = CFrame.new(343.2359924316406, 133.61595153808594, 267.0580139160156),
+    Deep_Ocean = CFrame.new(3569.07153, 125.480949, 6697.12695, 0.999980748, -0.00188910461, -0.00591362361, 0.00193980196, 0.999961317, 0.00857902411, 0.00589718809, -0.00859032944, 0.9999457),
+    Vertigo = CFrame.new(-137.697098, -736.86377, 1233.15271, 1, -1.61821543e-8, -0.0000201375751, 1.6184277e-8, 1, 1.05423091e-7, 0.0000201375751, -1.0542341e-7, 1),
+    Snowcap_Ocean = CFrame.new(3088.66699, 131.534332, 2587.11304, 1, 4.30694858e-9, -1.19097813e-14, -4.30694858e-9, 1, -2.80603398e-8, 1.17889275e-14, 2.80603398e-8, 1),
+    Harvesters_Spike = CFrame.new(-1234.61523, 125.228767, 1748.57166, 0.999991536, -0.000663080777, -0.00405627443, 0.000725277001, 0.999881923, 0.0153511297, 0.00404561637, -0.0153539423, 0.999873936),
+    SunStone = CFrame.new(-845.903992, 133.172211, -1163.57776, 1, -7.93465915e-9, -0.0000209446498, 7.93544608e-9, 1, 3.75741536e-8, 0.0000209446498, -3.75743205e-8, 1),
+    Roslit_Bay_Ocean = CFrame.new(-1708.09302, 155.000015, 384.928009, 1, -9.84460868e-9, -3.24939563e-15, 9.84460868e-9, 1, 4.66220271e-8, 2.79042003e-15, -4.66220271e-8, 1),
+    Moosewood_Pond = CFrame.new(509.735992, 152.000031, 302.173004, 1, -1.78487678e-8, -8.1329488e-14, 1.78487678e-8, 1, 8.45405168e-8, 7.98205428e-14, -8.45405168e-8, 1),
+    Terrapin_Ocean = CFrame.new(58.6469994, 135.499985, 2147.41699, 1, 2.09643041e-8, -5.6023784e-15, -2.09643041e-8, 1, -9.92988376e-8, 3.52064755e-15, 9.92988376e-8, 1),
+    Isonade = CFrame.new(-1060.99902, 121.164787, 953.996033, 0.999958456, 0.000633197487, -0.00909138657, -0.000568434712, 0.999974489, 0.00712434994, 0.00909566507, -0.00711888634, 0.999933302),
+    Moosewood_Ocean = CFrame.new(-167.642715, 125.19548, 248.009521, 0.999997199, -0.000432743778, -0.0023210498, 0.000467110571, 0.99988997, 0.0148265222, 0.00231437827, -0.0148275653, 0.999887407),
+    Roslit_Pond = CFrame.new(-1811.96997, 148.047089, 592.642517, 1, 1.12983072e-8, -0.0000216573972, -1.12998171e-8, 1, -6.97014357e-8, 0.0000216573972, 6.97016844e-8, 1),
+    Moosewood_Ocean_Mythical = CFrame.new(252.802994, 135.849625, 36.8839989, 1, -1.98115071e-8, -4.50667564e-15, 1.98115071e-8, 1, 1.22230617e-7, 2.08510289e-15, -1.22230617e-7, 1),
+    Terrapin_Olm = CFrame.new(22.0639992, 182.000015, 1944.36804, 1, 1.14953362e-8, -2.7011112e-15, -1.14953362e-8, 1, -7.09263972e-8, 1.88578841e-15, 7.09263972e-8, 1),
+    The_Arch = CFrame.new(1283.30896, 130.923569, -1165.29602, 1, -5.89772364e-9, -3.3183043e-15, 5.89772364e-9, 1, 3.63913486e-8, 3.10367822e-15, -3.63913486e-8, 1),
+    Scallop_Ocean = CFrame.new(23.2255898, 125.236847, 738.952271, 0.999990165, -0.00109633175, -0.00429760758, 0.00115595153, 0.999902785, 0.0138949333, 0.00428195624, -0.013899764, 0.999894202),
+    SunStone_Hidden = CFrame.new(-1139.55701, 134.62204, -1076.94324, 1, 3.9719481e-9, -0.000016278158, -3.97231048e-9, 1, -2.22651142e-8, 0.000016278158, 2.22651781e-8, 1),
+    Mushgrove_Stone = CFrame.new(2525.36011, 131.000015, -776.184021, 1, 1.90145943e-8, -3.24206519e-15, -1.90145943e-8, 1, -1.06596836e-7, 1.21516956e-15, 1.06596836e-7, 1),
+    Keepers_Altar = CFrame.new(1307.13599, -805.292236, -161.363998, 1, 2.40881981e-10, -3.25609947e-15, -2.40881981e-10, 1, -1.35044154e-9, 3.255774e-15, 1.35044154e-9, 1),
+    Lava = CFrame.new(-1959.86206, 193.144821, 271.960999, 1, -6.02453598e-9, -2.97388313e-15, 6.02453598e-9, 1, 3.37767716e-8, 2.77039384e-15, -3.37767716e-8, 1),
+    Roslit_Pond_Seaweed = CFrame.new(-1785.2869873046875, 148.15780639648438, 639.9299926757812)
+}
+
+--------------------------------------------------------------------------------
+-- LOCATION DATA - NPCs
+--------------------------------------------------------------------------------
+local NPCLocations = {
+    Merlin = CFrame.new(-930.9, 223.8, -988.3),
+    Quiet_Synph = CFrame.new(566.263245, 152.000031, 353.872101, -0.753558397, 0, -0.657381535, 0, 1, 0, 0.657381535, 0, -0.753558397),
+    Pierre = CFrame.new(391.38855, 135.348389, 196.712387, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    Phineas = CFrame.new(469.912292, 150.69342, 277.954987, 0.886104584, 0, -0.46348536, 0, 1, 0, 0.46348536, 0, 0.886104584),
+    Paul = CFrame.new(381.741882, 136.500031, 341.891022, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    Shipwright = CFrame.new(357.972595, 133.615967, 258.154541, 0, 0, -1, 0, 1, 0, 1, 0, 0),
+    Angler = CFrame.new(480.102478, 150.501053, 302.226898, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    Marc = CFrame.new(466.160034, 151.00206, 224.497086, -0.996853352, 0, -0.0792675018, 0, 1, 0, 0.0792675018, 0, -0.996853352),
+    Lucas = CFrame.new(449.33963, 181.999893, 180.689072, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+    Latern_Keeper = CFrame.new(-39.0456772, -246.599976, 195.644363, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    Latern_Keeper2 = CFrame.new(-17.4230175, -304.970276, -14.529892, -1, 0, 0, 0, 1, 0, 0, 0, -1),
+    Inn_Keeper = CFrame.new(487.458466, 150.800034, 231.498932, -0.564704418, 0, -0.825293183, 0, 1, 0, 0.825293183, 0, -0.564704418),
+    Roslit_Keeper = CFrame.new(-1512.37891, 134.500031, 631.24353, 0.738236904, 0, -0.674541533, 0, 1, 0, 0.674541533, 0, 0.738236904),
+    FishingNpc_1 = CFrame.new(-1429.04138, 134.371552, 686.034424, 0, 0.0168599077, -0.999857903, 0, 0.999857903, 0.0168599077, 1, 0, 0),
+    FishingNpc_2 = CFrame.new(-1778.55408, 149.791779, 648.097107, 0.183140755, 0.0223737024, -0.982832015, 0, 0.999741018, 0.0227586292, 0.983086705, -0.00416803267, 0.183093324),
+    FishingNpc_3 = CFrame.new(-1778.26807, 147.83165, 653.258606, -0.129575253, 0.501478612, 0.855411887, -0.0000244146213, 0.862683058, -0.505744994, -0.991569638, -0.0655529201, -0.111770131),
+    Henry = CFrame.new(483.539307, 152.383057, 236.296143, -0.789363742, 0, 0.613925934, 0, 1, 0, -0.613925934, 0, -0.789363742),
+    Daisy = CFrame.new(581.550049, 165.490753, 213.499969, -0.964885235, 0, -0.262671858, 0, 1, 0, 0.262671858, 0, -0.964885235),
+    Appraiser = CFrame.new(453.182373, 150.500031, 206.908783, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+    Merchant = CFrame.new(416.690521, 130.302628, 342.765289, -0.249025017, -0.0326484665, 0.967946589, -0.0040341015, 0.999457955, 0.0326734781, -0.968488574, 0.00423171744, -0.249021754),
+    Mod_Keeper = CFrame.new(-39.0905838, -245.141144, 195.837891, -0.948549569, -0.0898146331, -0.303623199, -0.197293222, 0.91766715, 0.34490931, 0.247647122, 0.387066364, -0.888172567),
+    Ashe = CFrame.new(-1709.94055, 149.862411, 729.399536, -0.92290163, 0.0273250472, -0.384064913, 0, 0.997478604, 0.0709675401, 0.385035753, 0.0654960647, -0.920574605),
+    Alfredrickus = CFrame.new(-1520.60632, 142.923264, 764.522034, 0.301733732, 0.390740901, -0.869642735, 0.0273988936, 0.908225596, 0.417582989, 0.952998459, -0.149826124, 0.26333645)
+}
+
+--------------------------------------------------------------------------------
+-- LOCATION DATA - RODS AND ITEMS
+--------------------------------------------------------------------------------
+local ItemLocations = {
+    Training_Rod = CFrame.new(457.693848, 148.357529, 230.414307, 1, 0, 0, 0, 0.975410998, 0.220393807, 0, -0.220393807, 0.975410998),
+    Plastic_Rod = CFrame.new(454.425385, 148.169739, 229.172424, 0.951755166, 0.0709736273, -0.298537821, -3.42726707e-7, 0.972884834, 0.231290117, 0.306858391, -0.220131472, 0.925948203),
+    Lucky_Rod = CFrame.new(446.085999, 148.253006, 222.160004, 0.974526405, -0.22305499, 0.0233404674, 0.196993902, 0.901088715, 0.386306256, -0.107199371, -0.371867687, 0.922075212),
+    Kings_Rod = CFrame.new(1375.57642, -810.201721, -303.509247, -0.7490201, 0.662445903, -0.0116144121, -0.0837960541, -0.0773290396, 0.993478119, 0.657227278, 0.745108068, 0.113431036),
+    Flimsy_Rod = CFrame.new(471.107697, 148.36171, 229.642441, 0.841614008, 0.0774728209, -0.534493923, 0.00678436086, 0.988063335, 0.153898612, 0.540036798, -0.13314943, 0.831042409),
+    Nocturnal_Rod = CFrame.new(-141.874237, -515.313538, 1139.04529, 0.161644459, -0.98684907, 0.0000187754631, 0.0000187754631, 0.0000221133232, 1, -0.98684907, -0.161644459, 0.0000221133232),
+    Fast_Rod = CFrame.new(447.183563, 148.225739, 220.187454, 0.981104493, 0.0000126492232, 0.193478703, -0.0522461236, 0.962867677, 0.264870107, -0.186291039, -0.269973755, 0.944674432),
+    Carbon_Rod = CFrame.new(454.083618, 150.590073, 225.328827, 0.985374212, -0.170404434, 1.41561031e-7, 1.41561031e-7, 1.7285347e-6, 1, -0.170404434, -0.985374212, 1.7285347e-6),
+    Long_Rod = CFrame.new(485.695038, 171.656326, 145.746109, -0.630167365, -0.776459217, -5.33461571e-6, 5.33461571e-6, -0.0000112056732, 1, -0.776459217, 0.630167365, 0.0000112056732),
+    Mythical_Rod = CFrame.new(389.716705, 132.588821, 314.042847, 0, 1, 0, 0, 0, -1, -1, 0, 0),
+    Midas_Rod = CFrame.new(401.981659, 133.258316, 326.325745, 0.16456604, 0.986365497, 0.00103566051, 0.00017541647, 0.00102066994, -0.999999464, -0.986366034, 0.1645661, -5.00679016e-6),
+    Trident_Rod = CFrame.new(-1484.34192, -222.325562, -2194.77002, -0.466092706, -0.536795318, 0.703284025, -0.319611132, 0.843386114, 0.43191275, -0.824988723, -0.0234660208, -0.56466186),
+    Enchated_Altar = CFrame.new(1310.54651, -799.469604, -82.7303467, 0.999973059, 0, 0.00733732153, 0, 1, 0, -0.00733732153, 0, 0.999973059),
+    Bait_Crate = CFrame.new(384.57513427734375, 135.3519287109375, 337.5340270996094),
+    Quality_Bait_Crate = CFrame.new(-177.876, 144.472, 1932.844),
+    Crab_Cage = CFrame.new(474.803589, 149.664566, 229.49469, -0.721874595, 0, 0.692023814, 0, 1, 0, -0.692023814, 0, -0.721874595),
+    GPS = CFrame.new(517.896729, 149.217636, 284.856842, 7.39097595e-6, -0.719539165, -0.694451928, -1, -7.39097595e-6, -3.01003456e-6, -3.01003456e-6, 0.694451928, -0.719539165),
+    Basic_Diving_Gear = CFrame.new(369.174774, 132.508835, 248.705368, 0.228398502, -0.158300221, -0.96061182, 0.0000158026814, 0.986692965, -0.162594408, 0.973567724, 0.037121132, 0.225361705),
+    Fish_Radar = CFrame.new(365.75177, 134.50499, 274.105804, 0.704499543, -0.111681774, -0.70086211, 0.0000132396817, 0.987542748, -0.157350808, 0.709704578, 0.110844307, 0.695724905)
+}
+
+--------------------------------------------------------------------------------
+-- LOCATION DATA - TOTEMS
+--------------------------------------------------------------------------------
+local TotemLocations = {
+    Aurora_Totem = CFrame.new(-1812.8, -136.9, -3281),
+    Sundial_Totem = CFrame.new(-1149.2, 136.9, -1077),
+    Smokescreen_Totem = CFrame.new(2791.8, 139.7, -629.9),
+    Tempest_Totem = CFrame.new(-930.9, 223.8, -988.3)
+}
+
+--------------------------------------------------------------------------------
+-- ZONE CAST POSITIONS (Premium)
+--------------------------------------------------------------------------------
+local ZoneCastPositions = {
+    ["FischFright24"] = CFrame.new(-1068, 126, -3108),
+    ["Isonade"] = CFrame.new(-1060.99902, 121.164787, 953.996033),
+    ["Deep Ocean"] = CFrame.new(-1664, -239, -3083),
+    ["1 Desolate"] = CFrame.new(-1068, 126, -3108),
+    ["2 Desolate"] = CFrame.new(1521, 126, -3543),
+    ["3 Desolate"] = CFrame.new(-1486, -239, -2870),
+    ["4 Desolate"] = CFrame.new(-1656, -239, -2775),
+    ["1 Harvesters Spike"] = CFrame.new(-1251, 126, 1760),
+    ["2 Harvesters Spike"] = CFrame.new(-1436, 126, 1766),
+    ["3 Harvesters Spike"] = CFrame.new(-1398, 126, 1596),
+    ["1 Forsaken Shores"] = CFrame.new(-3588, 126, 1605),
+    ["2 Forsaken Shores"] = CFrame.new(-3086, 126, 1498),
+    ["3 Forsaken Shores"] = CFrame.new(-2766, 230, 1693),
+    ["1 Forsaken Shores Ocean"] = CFrame.new(-2706, 160, 1743),
+    ["2 Forsaken Shores Ocean"] = CFrame.new(-2631, 126, 1428),
+    ["3 Forsaken Shores Ocean"] = CFrame.new(-2454, 126, 1448),
+    ["1 Forsaken Shores Pond"] = CFrame.new(-2595, 126, 1483),
+    ["2 Forsaken Shores Pond"] = CFrame.new(-2454, 126, 1448),
+    ["1 Moosewood Docks"] = CFrame.new(590, 126, -146),
+    ["2 Moosewood Docks"] = CFrame.new(418, 126, 612),
+    ["3 Moosewood Docks"] = CFrame.new(863, 126, 470),
+    ["1 Moosewood Ocean"] = CFrame.new(-167, 126, 248),
+    ["2 Moosewood Ocean"] = CFrame.new(252, 126, 36),
+    ["3 Moosewood Ocean"] = CFrame.new(509, 126, 302),
+    ["1 Moosewood Ocean Mythical"] = CFrame.new(252, 126, 36),
+    ["2 Moosewood Ocean Mythical"] = CFrame.new(252, 126, 36),
+    ["1 Moosewood Pond"] = CFrame.new(509, 126, 302),
+    ["2 Moosewood Pond"] = CFrame.new(509, 126, 302),
+    ["3 Moosewood Pond"] = CFrame.new(509, 126, 302),
+    ["4 Moosewood Pond"] = CFrame.new(509, 126, 302),
+    ["5 Moosewood Pond"] = CFrame.new(509, 126, 302),
+    ["1 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["2 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["3 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["4 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["5 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["6 Mushgrove Water"] = CFrame.new(2525, 131, -776),
+    ["1 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["2 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["3 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["4 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["5 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["6 Ocean"] = CFrame.new(7665, 126, 2601),
+    ["1 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["2 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["3 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["4 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["5 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["6 Roslit Bay"] = CFrame.new(-1663, 149, 495),
+    ["1 Roslit Pond"] = CFrame.new(-1811, 148, 592),
+    ["2 Roslit Pond"] = CFrame.new(-1811, 148, 592),
+    ["3 Roslit Pond"] = CFrame.new(-1811, 148, 592),
+    ["Roslit Pond Seaweed"] = CFrame.new(-1785, 148, 639),
+    ["Scallop Ocean"] = CFrame.new(23, 126, 738),
+    ["1 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["2 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["3 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["4 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["5 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["6 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["7 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["8 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["9 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["10 Snowcap Ocean"] = CFrame.new(3088, 131, 2587),
+    ["1 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["2 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["3 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["4 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["5 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["6 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["7 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["8 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["9 SunStone"] = CFrame.new(-845, 133, -1163),
+    ["SunStone Hidden"] = CFrame.new(-1139, 134, -1076),
+    ["1 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["2 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["3 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["4 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["5 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["6 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["7 Terrapin Ocean"] = CFrame.new(58, 135, 2147),
+    ["1 Terrapin Olm"] = CFrame.new(22, 182, 1944),
+    ["2 Terrapin Olm"] = CFrame.new(22, 182, 1944),
+    ["3 Terrapin Olm"] = CFrame.new(22, 182, 1944),
+    ["1 The Arch"] = CFrame.new(1283, 130, -1165),
+    ["2 The Arch"] = CFrame.new(1283, 130, -1165),
+    ["3 The Arch"] = CFrame.new(1283, 130, -1165),
+    ["1 Vertigo"] = CFrame.new(-137, -736, 1233),
+    ["2 Vertigo"] = CFrame.new(-137, -736, 1233),
+    ["3 Vertigo"] = CFrame.new(-137, -736, 1233)
+}
+
+--------------------------------------------------------------------------------
+-- PLAYER REFERENCES
+--------------------------------------------------------------------------------
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character
+local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+Workspace:FindFirstChild("active")
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+
+--------------------------------------------------------------------------------
+-- STATE VARIABLES
+--------------------------------------------------------------------------------
+local isRememberPositionEnabled = false
+local isMouseModeEnabled = false
+local isAutoFishEnabled = false
+local isPhantomModeEnabled = false
+local isPremiumModeEnabled = false
+local isZoneCastEnabled = false
+local shakeDelay = 0.3
+local isAutoReelEnabled = false
+local isAutoCastEnabled = false
+local isNoClipEnabled = false
+local isInfinityOxygenEnabled = false
+local isAutoSellEnabled = false
+local isAntiAfkEnabled = false
+local isAutoAppraiseEnabled = false
+local elementsDestroyed = false
+
+local CastMode = "Perfect"
+local ShakeMode = "Mouse"
+local selectedZoneCast = ""
+local selectedZoneCastFree = ""
+local AutoZoneCastFree = false
+local AutoSellDelay = 60
+local FpsCap = 90
+local AcceptFish = false
+local CharAddedAntiDrownCon = nil
+
+--------------------------------------------------------------------------------
+-- AUTO REEL EVENT HANDLER #1
+--------------------------------------------------------------------------------
+PlayerGui.ChildAdded:Connect(function(child)
+    local shouldReel = child:IsA("ScreenGui") and (child.Name == "reel" and isAutoReelEnabled) and ReplicatedStorage:WaitForChild("events"):WaitForChild("reelfinished")
+    if shouldReel then
+        while child do
+            task.wait(2)
+            shouldReel:FireServer(100, false)
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- FUNCTION: MousePrem - Premium Mouse Shake Handler
+--------------------------------------------------------------------------------
+function MousePrem()
+    task.spawn(function()
+        while isAutoFishEnabled do
+            local shakeUI = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("shakeui")
+            local safeZone = shakeUI and (shakeUI.Enabled and shakeUI:FindFirstChild("safezone"))
+            if safeZone then
+                local button = safeZone:FindFirstChild("button")
+                if button and (button:IsA("ImageButton") and button.Visible) then
+                    local pos = button.AbsolutePosition
+                    local size = button.AbsoluteSize
+                    task.wait()
+                    VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, true, Players.LocalPlayer, 0)
+                    VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, false, Players.LocalPlayer, 0)
+                end
+            end
+            task.wait(0.0001)
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: PhantomPrem - Premium Phantom Shake Handler
+--------------------------------------------------------------------------------
+function PhantomPrem()
+    if not elementsDestroyed then
+        local playerGui = Players.LocalPlayer.PlayerGui
+        local topbarStandard = playerGui:FindFirstChild("TopbarStandard")
+        if topbarStandard then
+            topbarStandard:Destroy()
+        end
+        local hudSafeZone = playerGui.hud:FindFirstChild("safezone")
+        local topbar = hudSafeZone and hudSafeZone:FindFirstChild("topbar")
+        if topbar then
+            topbar:Destroy()
+        end
+        elementsDestroyed = true
+    end
+    task.spawn(function()
+        while isAutoFishEnabled do
+            local shakeUI = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("shakeui")
+            local safeZone = shakeUI and (shakeUI.Enabled and shakeUI:FindFirstChild("safezone"))
+            if safeZone then
+                local button = safeZone:FindFirstChild("button")
+                if button and (button:IsA("ImageButton") and button.Visible) then
+                    GuiService.SelectedObject = button
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                end
+            end
+            task.wait()
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: MouseNoPrem - Non-Premium Mouse Shake Handler
+--------------------------------------------------------------------------------
+function MouseNoPrem()
+    task.spawn(function()
+        while isAutoFishEnabled do
+            task.wait(shakeDelay)
+            local shakeUI = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("shakeui")
+            local safeZone = shakeUI and (shakeUI.Enabled and shakeUI:FindFirstChild("safezone"))
+            if safeZone then
+                local button = safeZone:FindFirstChild("button")
+                if button and (button:IsA("ImageButton") and (button.Visible and isMouseModeEnabled)) then
+                    print("Mouse No Prem")
+                    local pos = button.AbsolutePosition
+                    local size = button.AbsoluteSize
+                    VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, true, Players.LocalPlayer, 0)
+                    VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, false, Players.LocalPlayer, 0)
+                end
+            end
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: PhantomNoPremium - Non-Premium Phantom Shake Handler
+--------------------------------------------------------------------------------
+function PhantomNoPremium()
+    task.spawn(function()
+        while isAutoFishEnabled do
+            task.wait(shakeDelay)
+            local shakeUI = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("shakeui")
+            local safeZone = shakeUI and (shakeUI.Enabled and shakeUI:FindFirstChild("safezone"))
+            if safeZone then
+                local button = safeZone:FindFirstChild("button")
+                if button and (button:IsA("ImageButton") and (button.Visible and isMouseModeEnabled)) then
+                    print("Phantom No Prem")
+                    GuiService.SelectedObject = button
+                    task.wait()
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                end
+            end
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: AutoFish5 - Main Auto Fish with Lure Display
+--------------------------------------------------------------------------------
+function AutoFish5()
+    if isAutoFishEnabled then
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+        local lureLabel = Instance.new("TextLabel", screenGui)
+        lureLabel.Size = UDim2.new(0, 200, 0, 50)
+        lureLabel.Position = UDim2.new(1, -210, 0, 10)
+        lureLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        lureLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        lureLabel.TextScaled = true
+        
+        spawn(function()
+            while wait(0.1) do
+                if character then
+                    local tool = character:FindFirstChildOfClass("Tool")
+                    if tool and tool:FindFirstChild("values") and tool.values:FindFirstChild("lure") then
+                        local lureValue = tool.values.lure.Value
+                        lureLabel.Text = "Lure - " .. string.format("%.2f", lureValue)
+                    else
+                        lureLabel.Text = "Lure - No Rod Found"
+                    end
+                else
+                    lureLabel.Text = "Lure - no player"
+                end
+            end
+        end)
+    else
+        local existingGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("ScreenGui")
+        if existingGui then
+            existingGui:Destroy()
+        end
+    end
+    
+    if isPremiumModeEnabled then
+        if isMouseModeEnabled then
+            print("Mouse prem")
+            MousePrem()
+        elseif isPhantomModeEnabled then
+            print("Phantom prem")
+            PhantomPrem()
+        end
+    else
+        task.spawn(function()
+            while isAutoFishEnabled do
+                task.wait(shakeDelay)
+                local shakeUI = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("shakeui")
+                local safeZone = shakeUI and (shakeUI.Enabled and shakeUI:FindFirstChild("safezone"))
+                if safeZone then
+                    local button = safeZone:FindFirstChild("button")
+                    if button and (button:IsA("ImageButton") and button.Visible) then
+                        if isMouseModeEnabled then
+                            local pos = button.AbsolutePosition
+                            local size = button.AbsoluteSize
+                            VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, true, Players.LocalPlayer, 0)
+                            VirtualInputManager:SendMouseButtonEvent(pos.X + size.X / 2, pos.Y + size.Y / 2, 0, false, Players.LocalPlayer, 0)
+                        elseif isPhantomModeEnabled then
+                            GuiService.SelectedObject = button
+                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                            task.wait()
+                            GuiService.SelectedObject = nil
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: ZoneCasting - Premium Zone Cast
+--------------------------------------------------------------------------------
+function ZoneCasting()
+    if WDIUWngfiuNFDJWKDNJNIKNI then
+        spawn(function()
+            while isZoneCastEnabled do
+                local character = game.Players.LocalPlayer.Character
+                if character then
+                    local tool = character:FindFirstChildOfClass("Tool")
+                    if tool then
+                        local bobber = tool:FindFirstChild("bobber")
+                        if bobber then
+                            local ropeConstraint = bobber:FindFirstChild("RopeConstraint")
+                            if ropeConstraint then
+                                ropeConstraint.Length = 20000000
+                            end
+                            local partSize = Vector3.new(10, 1, 10)
+                            local offset = Vector3.new(0, -4, 0)
+                            
+                            if selectedZoneCast == "Bluefin Tuna Abundance" then
+                                local zone = Workspace.zones.fishing:FindFirstChild("Harvesters Spike")
+                                if zone then
+                                    local abundance = zone:FindFirstChild("Abundance")
+                                    if abundance and abundance.Value == "Bluefin Tuna" then
+                                        bobber.CFrame = CFrame.new(zone.Position.X, 126.564, zone.Position.Z)
+                                    end
+                                end
+                            elseif selectedZoneCast == "Swordfish Abundance" then
+                                local zone = Workspace.zones.fishing:FindFirstChild("Ocean")
+                                if zone then
+                                    local abundance = zone:FindFirstChild("Abundance")
+                                    if abundance and abundance.Value == "Swordfish" then
+                                        bobber.CFrame = CFrame.new(zone.Position.X, 126.564, zone.Position.Z)
+                                    end
+                                end
+                            elseif selectedZoneCast == "Chinook Salmon Abundance" then
+                                local zone = Workspace.zones.fishing:FindFirstChild("Deep Ocean")
+                                if zone then
+                                    local abundance = zone:FindFirstChild("Abundance")
+                                    if abundance and abundance.Value == "Chinook Salmon" then
+                                        bobber.CFrame = CFrame.new(zone.Position.X, 126.564, zone.Position.Z)
+                                    end
+                                end
+                            else
+                                local targetCFrame = ZoneCastPositions[selectedZoneCast]
+                                if targetCFrame then
+                                    bobber.CFrame = targetCFrame
+                                    local visualPart = Instance.new("Part")
+                                    visualPart.Size = partSize
+                                    visualPart.Position = bobber.Position + offset
+                                    visualPart.Anchored = true
+                                    visualPart.Parent = bobber
+                                    visualPart.BrickColor = BrickColor.new("Bright blue")
+                                    visualPart.Transparency = 1
+                                else
+                                    local zone = Workspace.zones.fishing:FindFirstChild(selectedZoneCast)
+                                    if zone then
+                                        bobber.CFrame = CFrame.new(zone.Position.X, 126, zone.Position.Z)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(0.01)
+            end
+        end)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: ZoneCastingFree - Free Zone Cast
+--------------------------------------------------------------------------------
+function ZoneCastingFree()
+    spawn(function()
+        while AutoZoneCastFree do
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool then
+                    local bobber = tool:FindFirstChild("bobber")
+                    if bobber then
+                        local targetZone = Workspace.zones.fishing:FindFirstChild(selectedZoneCastFree)
+                        if targetZone then
+                            bobber.CFrame = CFrame.new(targetZone.Position.X, 126, targetZone.Position.Z)
+                            local visualPart = Instance.new("Part")
+                            visualPart.Size = Vector3.new(10, 1, 10)
+                            visualPart.Position = bobber.Position + Vector3.new(0, -4, 0)
+                            visualPart.Anchored = true
+                            visualPart.Parent = bobber
+                            visualPart.BrickColor = BrickColor.new("Bright blue")
+                            visualPart.Transparency = 1
+                        end
+                    else
+                        print("Bobber not found in the tool.")
+                    end
+                else
+                    print("No tool found in the character.")
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: AntiAfk2 - Anti-AFK via Server Events
+--------------------------------------------------------------------------------
+function AntiAfk2()
+    spawn(function()
+        while isAntiAfkEnabled do
+            ReplicatedStorage:WaitForChild("events"):WaitForChild("afk"):FireServer(false)
+            task.wait(0.01)
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- AUTO REEL EVENT HANDLER #2 (Randomized Timing)
+--------------------------------------------------------------------------------
+PlayerGui.ChildAdded:Connect(function(child)
+    if child:IsA("ScreenGui") then
+        return
+    else
+        local shouldReel = (child.Name == "reel" and isAutoReelEnabled and true or false) and ReplicatedStorage:WaitForChild("events"):WaitForChild("reelfinished")
+        if shouldReel then
+            while true do
+                local randomDelay = math.random(2, 6)
+                print(randomDelay)
+                task.wait(randomDelay)
+                shouldReel:FireServer(100, false)
+            end
+        else
+            return
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- FUNCTION: Pidoras - Auto Cast Function
+--------------------------------------------------------------------------------
+function Pidoras()
+    spawn(function()
+        while isAutoCastEnabled do
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool and not tool:FindFirstChild("bobber") then
+                    local events = tool:FindFirstChild("events")
+                    local castEvent = events and events:FindFirstChild("cast")
+                    if castEvent then
+                        if CastMode ~= "Legit" then
+                            if CastMode == "Perfect" then
+                                castEvent:FireServer(100)
+                            end
+                        else
+                            local randomPower = math.random() * 9 + 90
+                            local formattedPower = string.format("%.4f", randomPower)
+                            print(formattedPower)
+                            castEvent:FireServer(math.random(90, 99))
+                        end
+                        local hrp = character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            hrp.Anchored = false
+                        end
+                    end
+                end
+                task.wait(0.5)
+            end
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- NOCLIP CONNECTION
+--------------------------------------------------------------------------------
+local NoclipConnection = RunService.Stepped:Connect(function()
+    if isNoClipEnabled == true and Character ~= nil then
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide == true then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- FUNCTION: rememberPosition - Freeze Position and Rotation
+--------------------------------------------------------------------------------
+function rememberPosition()
+    spawn(function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        character:FindFirstChildOfClass("Humanoid")
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local savedCFrame = hrp.CFrame
+        
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bodyVelocity.Parent = hrp
+        
+        local bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bodyGyro.D = 100
+        bodyGyro.P = 10000
+        bodyGyro.CFrame = savedCFrame
+        bodyGyro.Parent = hrp
+        
+        while isRememberPositionEnabled do
+            hrp.CFrame = savedCFrame
+            task.wait(0.01)
+        end
+        
+        if bodyVelocity then
+            bodyVelocity:Destroy()
+        end
+        if bodyGyro then
+            bodyGyro:Destroy()
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: AutoSellz - Auto Sell Loop
+--------------------------------------------------------------------------------
+function AutoSellz()
+    spawn(function()
+        while isAutoSellEnabled do
+            SellFishAndReturnAll()
+            task.wait(AutoSellDelay)
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: Appraise - Auto Appraise Loop
+--------------------------------------------------------------------------------
+function Appraise()
+    spawn(function()
+        while isAutoAppraiseEnabled do
+            workspace:WaitForChild("world"):WaitForChild("npcs"):WaitForChild("Appraiser"):WaitForChild("appraiser"):WaitForChild("appraise"):InvokeServer()
+            task.wait(0.1)
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: SellFishAndReturnAll - Sell All Fish and Return
+--------------------------------------------------------------------------------
+function SellFishAndReturnAll()
+    local player = game.Players.LocalPlayer
+    local hrp = (player.Character or player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+    local originalCFrame = hrp.CFrame
+    local merchantCFrame = CFrame.new(464, 151, 232)
+    
+    local wasRemembering
+    if isRememberPositionEnabled then
+        wasRemembering = true
+        isRememberPositionEnabled = false
+    else
+        wasRemembering = false
+    end
+    
+    hrp.CFrame = merchantCFrame
+    task.wait(0.5)
+    workspace:WaitForChild("world"):WaitForChild("npcs"):WaitForChild("Marc Merchant"):WaitForChild("merchant"):WaitForChild("sellall"):InvokeServer()
+    task.wait(3)
+    hrp.CFrame = originalCFrame
+    
+    if wasRemembering then
+        isRememberPositionEnabled = true
+        rememberPosition()
+    end
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: SellFishAndReturnOne - Sell One Fish and Return
+--------------------------------------------------------------------------------
+function SellFishAndReturnOne()
+    local player = game.Players.LocalPlayer
+    local hrp = (player.Character or player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+    local originalCFrame = hrp.CFrame
+    local merchantCFrame = CFrame.new(464, 151, 232)
+    
+    local wasRemembering
+    if isRememberPositionEnabled then
+        wasRemembering = true
+        isRememberPositionEnabled = false
+    else
+        wasRemembering = false
+    end
+    
+    hrp.CFrame = merchantCFrame
+    task.wait(0.5)
+    workspace:WaitForChild("world"):WaitForChild("npcs"):WaitForChild("Marc Merchant"):WaitForChild("merchant"):WaitForChild("sell"):InvokeServer()
+    task.wait(3)
+    hrp.CFrame = originalCFrame
+    
+    if wasRemembering then
+        isRememberPositionEnabled = true
+        rememberPosition()
+    end
+end
+
+--------------------------------------------------------------------------------
+-- FUNCTION: Fisher412 - Auto Accept Fish Trades
+--------------------------------------------------------------------------------
+function Fisher412()
+    spawn(function()
+        while AcceptFish do
+            if Players.LocalPlayer.PlayerGui.hud.safezone.bodyannouncements:FindFirstChild("offer") then
+                local confirmButton = Players.LocalPlayer.PlayerGui.hud.safezone.bodyannouncements.offer.confirm
+                firesignal(confirmButton.MouseButton1Click, Players.LocalPlayer)
+                task.wait(0.1)
+            else
+                task.wait(0.1)
+            end
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- FLY SYSTEM
+--------------------------------------------------------------------------------
+local FlySystem = {
+    Enabled = false,
+    Speed = 1,
+    
+    Toggle = function(self, enabled)
+        self.Enabled = enabled
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if enabled then
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+                self:StartFlying()
+            else
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+                self:StopFlying()
+            end
+        end
+    end,
+    
+    StartFlying = function(self)
+        local character = game.Players.LocalPlayer.Character
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChild("Humanoid")
+        if hrp and humanoid then
+            humanoid.PlatformStand = true
+            local bodyGyro = Instance.new("BodyGyro")
+            bodyGyro.MaxTorque = Vector3.new(9000000000, 9000000000, 9000000000)
+            bodyGyro.P = 90000
+            bodyGyro.Parent = hrp
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(9000000000, 9000000000, 9000000000)
+            bodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+            bodyVelocity.Parent = hrp
+            spawn(function()
+                while self.Enabled do
+                    local camera = workspace.CurrentCamera
+                    local moveDirection = Vector3.new(0, 0, 0)
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                        moveDirection = moveDirection + camera.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                        moveDirection = moveDirection - camera.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                        moveDirection = moveDirection - camera.CFrame.RightVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                        moveDirection = moveDirection + camera.CFrame.RightVector
+                    end
+                    if moveDirection.Magnitude <= 0 then
+                        bodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+                    else
+                        bodyVelocity.Velocity = moveDirection * self.Speed * 10
+                        bodyGyro.CFrame = camera.CFrame
+                    end
+                    wait()
+                end
+                if hrp then
+                    bodyGyro:Destroy()
+                    bodyVelocity:Destroy()
+                    humanoid.PlatformStand = false
+                end
+            end)
+        end
+    end,
+    
+    StopFlying = function(self)
+        self.Enabled = false
+    end,
+    
+    SetSpeed = function(self, speed)
+        self.Speed = math.max(1, math.min(speed, 10))
+    end
+}
+
+--------------------------------------------------------------------------------
+-- ZONE CAST OPTIONS
+--------------------------------------------------------------------------------
+local ZoneCastOptions = {
+    "FischFright24", "Isonade", "Bluefin Tuna Abundance", "Chinook Salmon Abundance", "",
+    "Deep Ocean", "1 Desolate", "2 Desolate", "3 Desolate", "4 Desolate",
+    "1 Harvesters Spike", "2 Harvesters Spike", "3 Harvesters Spike",
+    "1 Forsaken Shores", "2 Forsaken Shores", "3 Forsaken Shores",
+    "1 Forsaken Shores Ocean", "2 Forsaken Shores Ocean", "3 Forsaken Shores Ocean",
+    "1 Forsaken Shores Pond", "2 Forsaken Shores Pond",
+    "1 Moosewood Docks", "2 Moosewood Docks", "3 Moosewood Docks",
+    "1 Moosewood Ocean", "2 Moosewood Ocean", "3 Moosewood Ocean",
+    "1 Moosewood Ocean Mythical", "2 Moosewood Ocean Mythical",
+    "1 Moosewood Pond", "2 Moosewood Pond", "3 Moosewood Pond", "4 Moosewood Pond", "5 Moosewood Pond",
+    "1 Mushgrove Water", "2 Mushgrove Water", "3 Mushgrove Water", "4 Mushgrove Water", "5 Mushgrove Water", "6 Mushgrove Water",
+    "1 Ocean", "2 Ocean", "3 Ocean", "4 Ocean", "5 Ocean", "6 Ocean",
+    "1 Roslit Bay", "2 Roslit Bay", "3 Roslit Bay", "4 Roslit Bay", "5 Roslit Bay", "6 Roslit Bay",
+    "1 Roslit Pond", "2 Roslit Pond", "3 Roslit Pond", "Roslit Pond Seaweed",
+    "Scallop Ocean",
+    "1 Snowcap Ocean", "2 Snowcap Ocean", "3 Snowcap Ocean", "4 Snowcap Ocean", "5 Snowcap Ocean",
+    "6 Snowcap Ocean", "7 Snowcap Ocean", "8 Snowcap Ocean", "9 Snowcap Ocean", "10 Snowcap Ocean",
+    "1 SunStone", "2 SunStone", "3 SunStone", "4 SunStone", "5 SunStone",
+    "6 SunStone", "7 SunStone", "8 SunStone", "9 SunStone", "SunStone Hidden",
+    "1 Terrapin Ocean", "2 Terrapin Ocean", "3 Terrapin Ocean", "4 Terrapin Ocean",
+    "5 Terrapin Ocean", "6 Terrapin Ocean", "7 Terrapin Ocean",
+    "1 Terrapin Olm", "2 Terrapin Olm", "3 Terrapin Olm",
+    "1 The Arch", "2 The Arch", "3 The Arch",
+    "1 Vertigo", "2 Vertigo", "3 Vertigo"
+}
+
+local ZoneCastFreeOptions = {
+    "Isonade", "Deep Ocean", "Desolate Deep", "Forsaken Shores", "Harvesters Spike",
+    "Moosewood Docks", "Moosewood Ocean", "Moosewood Ocean Mythical", "Moosewood Pond",
+    "Mushgrove Water", "Ocean", "Roslit Bay", "Roslit Bay Ocean", "Roslit Pond",
+    "Roslit Pond Seaweed", "Scallop Ocean", "Snowcap Ocean", "Snowcap Pond",
+    "Sunstone", "Terrapin Ocean", "The Arch", "Vertigo"
+}
+
+--------------------------------------------------------------------------------
+-- UI SETUP - HOME TAB (Change Log)
+--------------------------------------------------------------------------------
+Tabs.Home:AddSection("Change Log:")
+Tabs.Home:AddParagraph({ Title = "Information", Content = "[✓] - Added\n[☄] - Changed\n[❌] - Removed\n[⭐] - Premium Feature" })
+Tabs.Home:AddParagraph({ Title = "v1.9 - Byppass & Updates!", Content = "[⭐] - More Zones in Zone-Cast\n[✓] - More Zones in FREE Zone-Cast\n[✓] - Bypassed AC\n[✓] - Teleport new zone (fish and place)\n[✓] - Auto Upgrade + TP to treasure\n[☄] - Fixed spam fish after remove texture (mobile)\n[❌] - Webhook deleted sorry\n[❌] - Halloween tp (witch), item grabber" })
+Tabs.Home:AddParagraph({ Title = "v1.8 - Updates!", Content = "[✓] - Auto Zone-Cast (Free Version)\n[☄] - Fixed Shake (select)\n[☄] - Fixed Auto Cast (teleport to million cords)\n[☄] - Crab Cage place fixed" })
+Tabs.Home:AddParagraph({ Title = "v1.7 - Bug fixes & updates!", Content = "[⭐] - Updates Zone-Cast\n[⭐] - No Shake Delay updated (phantom and mouse)\n[✓] - Safe Zone\n[✓] - Auto Cast change (Legit/Perfect)\n[✓] - Crab Cages\n[☄] - Auto Shake mode fixed\n[☄] - Fixed Mobile toggle" })
+
+--------------------------------------------------------------------------------
+-- UI SETUP - PREMIUM TAB
+--------------------------------------------------------------------------------
+Tabs.Premium:AddSection("Fishing⭐")
+
+local NoShakeDelayToggle = Tabs.Premium:AddToggle("MyAutoShake3", {
+    Title = "No Shake Delay | Best",
+    Default = false
+})
+NoShakeDelayToggle:OnChanged(function()
+    if WDIUWngfiuNFDJWKDNJNIKNI ~= true then
+        warn("No Premium")
+    else
+        isPremiumModeEnabled = NoShakeDelayToggle.Value
+    end
+end)
+
+Tabs.Premium:AddDropdown("DropdownZoneCast", {
+    Title = "Select zone to cast anywhere",
+    Values = ZoneCastOptions,
+    Multi = false
+}):OnChanged(function(value)
+    print("Dropdown changed:", value)
+    selectedZoneCast = value
+end)
+
+Tabs.Premium:AddToggle("ToggleZoneCast1214", {
+    Title = "Enable cast selected zone",
+    Default = false
+}):OnChanged(function(value)
+    isZoneCastEnabled = value
+    if WDIUWngfiuNFDJWKDNJNIKNI ~= true then
+        print("No Premium")
+    elseif isZoneCastEnabled then
+        ZoneCasting()
+    end
+end)
+
+Tabs.Premium:AddSection("Zone-Helper")
+Tabs.Premium:AddParagraph({ Title = "Events", Content = "First 3 - Event zones\nFischFright24 - Fright Pool\nChinook Salmon - Squid Spot" })
+Tabs.Premium:AddParagraph({ Title = "Desolate", Content = "1 Desolate - default\n2 Desolate - banditifish\n3 Desolate - Cockatoo Squid\n4 Desolate - Phantom Ray" })
+Tabs.Premium:AddParagraph({ Title = "Harvesters Spike", Content = "1 Harvesters Spike - Bluefin Tuna\n2 Harvesters Spike - Sawfish\n3 Harvesters Spike - Bluefin Tuna" })
+Tabs.Premium:AddParagraph({ Title = "Moosewood Ocean", Content = "1 Moosewood Ocean - default\n2 Moosewood Ocean - Anchovy\n3 Moosewood Ocean - Barracuda" })
+Tabs.Premium:AddParagraph({ Title = "Ocean", Content = "1 Ocean - default\n2 Ocean - Haddock\n3 Ocean - AmberJack\n4 Ocean - Halibut\n5 Ocean - Sardine\n6 Ocean - Cod" })
+
+--------------------------------------------------------------------------------
+-- UI SETUP - MAIN TAB
+--------------------------------------------------------------------------------
+Tabs.Main:AddDropdown("DropdownCast", {
+    Title = "Select Cast Mode",
+    Values = { "Legit", "Perfect" },
+    Multi = false,
+    Default = 1
+}):OnChanged(function(value)
+    CastMode = value
+    print("Auto Cast Mode:", value)
+end)
+
+Tabs.Main:AddDropdown("DropdownShake", {
+    Title = "Select Auto Shake Mode:",
+    Description = "Mouse - Make sure to hide UI and toggle chat off in order for Auto Shake to work!",
+    Values = { "Mouse", "Phantom" },
+    Multi = false,
+    Default = 1
+}):OnChanged(function(value)
+    ShakeMode = value
+    print("Auto Shake Mode:", value)
+end)
+
+Tabs.Main:AddSlider("Slider", {
+    Title = "AutoShake Delay",
+    Description = "Change the delay between every shake",
+    Default = 2,
+    Min = 0.2,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(value)
+        shakeDelay = value
+    end
+}):SetValue(0.2)
+
+Tabs.Main:AddToggle("autoReelCastShakeT", {
+    Title = "Auto Fish",
+    Default = false
+}):OnChanged(function(value)
+    isAutoReelEnabled = value
+    isAutoCastEnabled = value
+    if isAutoCastEnabled then
+        Pidoras()
+    end
+    if ShakeMode ~= "Mouse" then
+        isMouseModeEnabled = false
+        isPhantomModeEnabled = value
+    else
+        isMouseModeEnabled = value
+        isPhantomModeEnabled = false
+    end
+    isAutoFishEnabled = value
+    AutoFish5()
+    if isAutoCastEnabled == true and Character:FindFirstChildOfClass("Tool") ~= nil then
+        local tool = Character:FindFirstChildOfClass("Tool")
+        if tool:FindFirstChild("events"):WaitForChild("cast") ~= nil then
+            local randomPower = math.random() * 9 + 90
+            print(string.format("%.4f", randomPower))
+            tool.events.cast:FireServer(math.random(90, 99))
+        end
+    end
+end)
+
+local FreezeToggle = Tabs.Main:AddToggle("MyFreeze", {
+    Title = "Freeze Position",
+    Description = "Freezes player position and rotation",
+    Default = false
+})
+FreezeToggle:OnChanged(function()
+    isRememberPositionEnabled = FreezeToggle.Value
+    if isRememberPositionEnabled then
+        rememberPosition()
+    end
+end)
+
+local AntiAfkToggle = Tabs.Main:AddToggle("AntiAfk3", {
+    Title = "Anti-AFK",
+    Description = "Prevents the player from being marked as AFK",
+    Default = false
+})
+AntiAfkToggle:OnChanged(function()
+    isAntiAfkEnabled = AntiAfkToggle.Value
+    AntiAfk2()
+end)
+
+local SaveZoneToggle = Tabs.Main:AddToggle("SaveZoneiifnwa", {
+    Title = "Save Zone",
+    Default = false
+})
+local savedPosition = nil
+local savedPlatform = nil
+SaveZoneToggle:OnChanged(function(value)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    character:FindFirstChildOfClass("Humanoid")
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    if value then
+        savedPosition = hrp.CFrame
+        savedPlatform = Instance.new("Part")
+        savedPlatform.Size = Vector3.new(10, 1, 10)
+        savedPlatform.Position = Vector3.new(-150, 2500, 400)
+        savedPlatform.Anchored = true
+        savedPlatform.Material = Enum.Material.ForceField
+        savedPlatform.Parent = workspace
+        character:MoveTo(savedPlatform.Position)
+    else
+        if savedPosition then
+            hrp.CFrame = savedPosition
+        end
+        if savedPlatform then
+            savedPlatform:Destroy()
+            savedPlatform = nil
+        end
+    end
+end)
+
+Tabs.Main:AddDropdown("DropdownZoneCastFree", {
+    Title = "Select zone to cast anywhere",
+    Values = ZoneCastFreeOptions,
+    Multi = false
+}):OnChanged(function(value)
+    print("Dropdown changed:", value)
+    selectedZoneCastFree = value
+end)
+
+Tabs.Main:AddToggle("ToggleZoneCast1214Free", {
+    Title = "Enable cast selected zone",
+    Default = false
+}):OnChanged(function(value)
+    AutoZoneCastFree = value
+    if AutoZoneCastFree then
+        ZoneCastingFree()
+    end
+end)
+
+Tabs.Main:AddSection("Crab Cage")
+
+Tabs.Main:AddToggle("AutoCrabCageUI", {
+    Title = "Auto-Collect Crab Cages",
+    Default = false
+}):OnChanged(function(value)
+    local AutoCrab = value
+    spawn(function()
+        while AutoCrab == true do
+            local activeCage = Workspace.active:FindFirstChild(LocalPlayer.Name)
+            if activeCage then
+                LocalPlayer.Character:SetPrimaryPartCFrame(activeCage.PrimaryPart.CFrame)
+                fireproximityprompt(activeCage.Prompt)
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+Tabs.Main:AddToggle("AutoPlaceCrabCageUI", {
+    Title = "Auto-Place Crab Cages",
+    Default = false
+}):OnChanged(function(value)
+    local PlaceCage = value
+    spawn(function()
+        while PlaceCage == true do
+            if LocalPlayer.Character:FindFirstChild("Crab Cage") then
+                LocalPlayer.Character["Crab Cage"].Deploy:FireServer({
+                    CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                })
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+Tabs.Main:AddSection("Additional")
+
+Tabs.Misc:AddButton({
+    Title = "Auto Map",
+    Description = "Must hold map",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local hrp = (player.Character or player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        hrp.CFrame = CFrame.new(-2827.479, 215.067459, 1518.38977, -0.0640091896, 0, -0.997949481, 0, 1, 0, 0.997949481, 0, -0.0640091896)
+        task.wait(1.5)
+        workspace:WaitForChild("world"):WaitForChild("npcs"):WaitForChild("Jack Marrow"):WaitForChild("treasure"):WaitForChild("repairmap"):InvokeServer()
+        task.wait(1)
+        local coordText = player.PlayerGui["Treasure Map"].Main.CoordinatesLabel.Text
+        local x, y, z = coordText:match("X ([%d%.%-]+), Y ([%d%.%-]+), Z ([%d%.%-]+)")
+        local xNum, yNum, zNum = tonumber(x), tonumber(y), tonumber(z)
+        if xNum and yNum and zNum then
+            hrp.CFrame = CFrame.new(xNum, yNum, zNum)
+        else
+            warn("Failed to extract coordinates from map text.")
+        end
+    end
+})
+
+local AutoSellToggle = Tabs.Main:AddToggle("AutoSellF", {
+    Title = "Auto Sell Fish",
+    Default = false
+})
+AutoSellToggle:OnChanged(function()
+    isAutoSellEnabled = AutoSellToggle.Value
+    AutoSellz()
+end)
+
+Tabs.Main:AddSlider("SliderSell", {
+    Title = "Selling All fish every ? seconds",
+    Description = "",
+    Default = 60,
+    Min = 1,
+    Max = 600,
+    Rounding = 1,
+    Callback = function(value)
+        AutoSellDelay = value
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Sell one fish",
+    Description = "Need to hold fish",
+    Callback = function()
+        SellFishAndReturnOne()
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Sell All fishs",
+    Description = "Selling all fish anywhere!",
+    Callback = function()
+        SellFishAndReturnAll()
+    end
+})
+
+--------------------------------------------------------------------------------
+-- UI SETUP - TELEPORTS TAB
+--------------------------------------------------------------------------------
+Tabs.Teleports:AddDropdown("DropdownPlace", {
+    Title = "Place teleport",
+    Values = { "Forsaken_Shores", "altar", "arch", "birch", "brine", "deep", "deepshop", "enchant", "keepers", "mod_house", "moosewood", "mushgrove", "roslit", "snow", "snowcap", "spike", "statue", "sunstone", "swamp", "terrapin", "trident", "vertigo", "volcano", "wilson", "wilsons_rod" },
+    Multi = false
+}):OnChanged(function(value)
+    if PlaceLocations ~= nil and HumanoidRootPart ~= nil then
+        local location = PlaceLocations[value]
+        if typeof(location) == "CFrame" then
+            HumanoidRootPart.CFrame = location
+        end
+    end
+end)
+
+Tabs.Teleports:AddDropdown("DropdownFishing", {
+    Title = "Fishing zone teleport",
+    Values = { "Forsaken_Shores", "Roslit_Bay", "Ocean", "Snowcap_Pond", "Moosewood_Docks", "Deep_Ocean", "Vertigo", "Snowcap_Ocean", "Harvesters_Spike", "SunStone", "Roslit_Bay_Ocean", "Moosewood_Pond", "Terrapin_Ocean", "Isonade", "Moosewood_Ocean", "Roslit_Pond", "Moosewood_Ocean_Mythical", "Terrapin_Olm", "The_Arch", "Scallop_Ocean", "SunStone_Hidden", "Mushgrove_Stone", "Keepers_Altar", "Lava", "Roslit_Pond_Seaweed" },
+    Multi = false
+}):OnChanged(function(value)
+    if FishingZones ~= nil and HumanoidRootPart ~= nil then
+        local location = FishingZones[value]
+        if typeof(location) == "CFrame" then
+            HumanoidRootPart.CFrame = location
+        end
+    end
+end)
+
+Tabs.Teleports:AddDropdown("DropdownNPC", {
+    Title = "NPC teleport",
+    Values = { "Merlin", "Quiet_Synph", "Pierre", "Phineas", "Paul", "Shipwright", "Angler", "Marc", "Lucas", "Latern_Keeper", "Latern_Keeper2", "Inn_Keeper", "Roslit_Keeper", "FishingNpc_1", "FishingNpc_2", "FishingNpc_3", "Henry", "Daisy", "Appraiser", "Merchant", "Mod_Keeper", "Ashe", "Alfredrickus" },
+    Multi = false
+}):OnChanged(function(value)
+    if NPCLocations ~= nil and HumanoidRootPart ~= nil then
+        local location = NPCLocations[value]
+        if typeof(location) == "CFrame" then
+            HumanoidRootPart.CFrame = location
+        end
+    end
+end)
+
+Tabs.Teleports:AddDropdown("DropdownItems", {
+    Title = "Rod/Item teleport",
+    Values = { "Training_Rod", "Plastic_Rod", "Lucky_Rod", "Kings_Rod", "Flimsy_Rod", "Nocturnal_Rod", "Fast_Rod", "Carbon_Rod", "Long_Rod", "Mythical_Rod", "Midas_Rod", "Trident_Rod", "Basic_Diving_Gear", "Fish_Radar", "Enchated_Altar", "Bait_Crate", "Quality_Bait_Crate", "Crab_Cage", "GPS" },
+    Multi = false
+}):OnChanged(function(value)
+    if ItemLocations ~= nil and HumanoidRootPart ~= nil then
+        local location = ItemLocations[value]
+        if typeof(location) == "CFrame" then
+            HumanoidRootPart.CFrame = location
+        end
+    end
+end)
+
+Tabs.Teleports:AddDropdown("DropdownTotems", {
+    Title = "Totem teleport",
+    Values = { "Aurora_Totem", "Sundial_Totem", "Smokescreen_Totem", "Tempest_Totem" },
+    Multi = false
+}):OnChanged(function(value)
+    if TotemLocations == nil or HumanoidRootPart == nil then
+        print("1")
+    elseif TotemLocations[value] and typeof(TotemLocations[value]) == "CFrame" then
+        HumanoidRootPart.CFrame = TotemLocations[value]
+    else
+        print("1")
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- UI SETUP - MISC TAB
+--------------------------------------------------------------------------------
+Tabs.Misc:AddToggle("ToggleTrade", {
+    Title = "Auto Accept Fish",
+    Default = false
+}):OnChanged(function(value)
+    AcceptFish = value
+    Fisher412()
+end)
+
+Tabs.Misc:AddSection("Water Jesus")
+
+local WaterPlatform = Instance.new("Part")
+WaterPlatform.Size = Vector3.new(15, 2, 15)
+WaterPlatform.Anchored = true
+WaterPlatform.CanCollide = true
+WaterPlatform.Material = Enum.Material.ForceField
+WaterPlatform.Parent = Workspace
+
+local waterYLevel = 126
+
+local WalkOnWaterToggle = Tabs.Misc:AddToggle("WalkOnWaterUI", {
+    Title = "Water Platform",
+    Default = false
+})
+WalkOnWaterToggle:OnChanged(function()
+    if Options.WalkOnWaterUI.Value ~= true then
+        if Options.WalkOnWaterUI.Value == false then
+            WaterPlatform.CanCollide = false
+            WaterPlatform.Transparency = 1
+        end
+    else
+        WaterPlatform.CanCollide = true
+        WaterPlatform.Transparency = 0
+        while Options.WalkOnWaterUI.Value == true do
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = LocalPlayer.Character.HumanoidRootPart.Position
+                WaterPlatform.Position = Vector3.new(pos.X, waterYLevel, pos.Z)
+            end
+            task.wait(0.1)
+        end
+    end
+end)
+
+Tabs.Misc:AddSlider("WalkOnWaterYAxisUI", {
+    Title = "Y-Height",
+    Description = "Change the Y-Axis of the Water Platform.",
+    Default = 126,
+    Min = 126,
+    Max = 130,
+    Rounding = 0.1,
+    Callback = function(value)
+        waterYLevel = value
+    end
+})
+
+Tabs.Misc:AddSection("Appraiser")
+
+local AutoAppraiseToggle = Tabs.Misc:AddToggle("ToggleAutoApprari", {
+    Title = "Auto Appraiser",
+    Description = "Need to hold fish and be in / near moosewood",
+    Default = false
+})
+AutoAppraiseToggle:OnChanged(function()
+    isAutoAppraiseEnabled = AutoAppraiseToggle.Value
+    Appraise()
+end)
+
+Tabs.Misc:AddSection("Fps Services")
+
+local FpsSlider = Tabs.Misc:AddSlider("Slider512", {
+    Title = "FPS Cap",
+    Default = 90,
+    Min = 1,
+    Max = 240,
+    Rounding = 1,
+    Callback = function(value)
+        FpsCap = value
+        print(value)
+    end
+})
+FpsSlider:OnChanged(function(value)
+    FpsCap = value
+    print(value)
+end)
+FpsSlider:SetValue(90)
+
+Tabs.Misc:AddButton({
+    Title = "Button to enable fps cap value",
+    Description = "",
+    Callback = function()
+        setfpscap(FpsCap)
+    end
+})
+
+-- Black Screen GUI
+local BlackGui = Instance.new("ScreenGui")
+BlackGui.Name = "BlackGui"
+BlackGui.ResetOnSpawn = false
+local BlackFrame = Instance.new("Frame")
+BlackFrame.Name = "BlackFrame"
+BlackFrame.Size = UDim2.new(1, 0, 1, 0)
+BlackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+BlackFrame.BackgroundTransparency = 1
+BlackFrame.Parent = BlackGui
+BlackGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- White Screen GUI
+local WhiteGui = Instance.new("ScreenGui")
+WhiteGui.Name = "WhiteGui"
+WhiteGui.ResetOnSpawn = false
+local WhiteFrame = Instance.new("Frame")
+WhiteFrame.Name = "WhiteFrame"
+WhiteFrame.Size = UDim2.new(1, 0, 1, 0)
+WhiteFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+WhiteFrame.BackgroundTransparency = 1
+WhiteFrame.Parent = WhiteGui
+WhiteGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local BlackScreenToggle = Tabs.Misc:AddToggle("BlackGui5", {
+    Title = "Black Screen",
+    Default = false
+})
+BlackScreenToggle:OnChanged(function()
+    if BlackScreenToggle.Value then
+        BlackFrame.BackgroundTransparency = 0
+    else
+        BlackFrame.BackgroundTransparency = 1
+    end
+end)
+
+local WhiteScreenToggle = Tabs.Misc:AddToggle("WhiteGui5", {
+    Title = "White Screen",
+    Default = false
+})
+WhiteScreenToggle:OnChanged(function()
+    if WhiteScreenToggle.Value then
+        WhiteFrame.BackgroundTransparency = 0
+    else
+        WhiteFrame.BackgroundTransparency = 1
+    end
+end)
+
+Tabs.Misc:AddButton({
+    Title = "Delete flags",
+    Callback = function()
+        local flags = workspace.active.flags
+        if flags then
+            flags:Destroy()
+        end
+    end
+})
+
+Tabs.Misc:AddButton({
+    Title = "Remove Textures",
+    Description = "Very sus button",
+    Callback = function()
+        Window:Dialog({
+            Title = "activate fps booster?",
+            Content = "Pro",
+            Buttons = {
+                {
+                    Title = "Confirm",
+                    Callback = function()
+                        Players.LocalPlayer.PlayerGui.hud.safezone.announcements:Destroy()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/ago106/ScriptsRoblox/refs/heads/main/FpS"))()
+                    end
+                },
+                {
+                    Title = "Cancel",
+                    Callback = function()
+                        print("Cancelled the dialog.")
+                    end
+                }
+            }
+        })
+    end
+})
+
+--------------------------------------------------------------------------------
+-- UI SETUP - PLAYER TAB
+--------------------------------------------------------------------------------
+Tabs.Player:AddButton({
+    Title = "Radio UI",
+    Description = "Chill",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/zv94NGMc"))()
+    end
+})
+
+Tabs.Player:AddSection("Player")
+
+local NoclipToggle = Tabs.Misc:AddToggle("ToggleNoclip", {
+    Title = "Noclip",
+    Default = false
+})
+NoclipToggle:OnChanged(function()
+    isNoClipEnabled = NoclipToggle.Value
+end)
+
+local InfinityOxygenToggle = Tabs.Misc:AddToggle("ToggleAntiDrown", {
+    Title = "Infinity Oxygen",
+    Default = false
+})
+InfinityOxygenToggle:OnChanged(function()
+    isInfinityOxygenEnabled = InfinityOxygenToggle.Value
+    if isInfinityOxygenEnabled ~= true then
+        if Character ~= nil and (Character:FindFirstChild("client"):WaitForChild("oxygen") ~= nil and Character:FindFirstChild("client"):WaitForChild("oxygen").Enabled == false) then
+            Character.client.oxygen.Enabled = true
+        end
+    else
+        if Character ~= nil and (Character:FindFirstChild("client"):WaitForChild("oxygen") ~= nil and Character:FindFirstChild("client"):WaitForChild("oxygen").Enabled == true) then
+            Character.client.oxygen.Enabled = false
+        end
+        CharAddedAntiDrownCon = LocalPlayer.CharacterAdded:Connect(function()
+            if Character ~= nil and (Character:FindFirstChild("client"):WaitForChild("oxygen") ~= nil and (Character:FindFirstChild("client"):WaitForChild("oxygen").Enabled == true and isInfinityOxygenEnabled == true)) then
+                Character.client.oxygen.Enabled = false
+            end
+        end)
+    end
+end)
+
+local originalWalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed
+local originalJumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower
+
+local WalkSpeedToggle = Tabs.Player:AddToggle("Walk Speed", {
+    Title = "Walk Speed",
+    Default = false
+})
+
+local WalkSpeedInput = Tabs.Player:AddInput("Speed", {
+    Title = "Speed",
+    Default = "16",
+    Placeholder = "Enter walk speed",
+    Numeric = true,
+    Finished = false,
+    Callback = function(_) end
+})
+
+function WalkSpeedInput.OnChanged()
+    if WalkSpeedToggle:Get() then
+        local speed = WalkSpeedInput.Value
+        if tonumber(speed) then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(speed)
+        end
+    end
+end
+
+WalkSpeedToggle:OnChanged(function(value)
+    if value then
+        local speed = WalkSpeedInput.Value
+        if speed and tonumber(speed) then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(speed)
+        else
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    else
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = originalWalkSpeed
+    end
+end)
+
+local JumpPowerToggle = Tabs.Player:AddToggle("Jump Power", {
+    Title = "Jump Power",
+    Default = false
+})
+
+local JumpPowerInput = Tabs.Player:AddInput("Power", {
+    Title = "Power",
+    Default = "50",
+    Placeholder = "Enter jump power",
+    Numeric = true,
+    Finished = false,
+    Callback = function(_) end
+})
+
+function JumpPowerInput.OnChanged()
+    if JumpPowerToggle:Get() then
+        local power = JumpPowerInput.Value
+        if tonumber(power) then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = tonumber(power)
+        end
+    end
+end
+
+JumpPowerToggle:OnChanged(function(value)
+    if value then
+        local power = JumpPowerInput.Value
+        if power and tonumber(power) then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = tonumber(power)
+        else
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    else
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = originalJumpPower
+    end
+end)
+
+local FlyToggle = Tabs.Player:AddToggle("MyToggle", {
+    Title = "Fly",
+    Default = false
+})
+FlyToggle:OnChanged(function()
+    FlySystem:Toggle(FlyToggle.Value)
+end)
+
+Tabs.Player:AddInput("Input", {
+    Title = "Fly Speed",
+    Default = "1",
+    Numeric = true,
+    Finished = true,
+    Callback = function(value)
+        local speed = tonumber(value)
+        if speed then
+            FlySystem:SetSpeed(speed)
+        end
+    end
+})
+
+Tabs.Player:AddKeybind("Keybind", {
+    Title = "Fly KeyBind",
+    Mode = "Toggle",
+    Default = "nil",
+    Callback = function(_)
+        FlyToggle.Value = not FlyToggle.Value
+        FlySystem:Toggle(FlyToggle.Value)
+    end,
+    ChangedCallback = function(_) end
+})
+
+--------------------------------------------------------------------------------
+-- SETTINGS TAB SETUP
+--------------------------------------------------------------------------------
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("SpaceHub")
+SaveManager:SetFolder("SpaceHub/Fisch")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+--------------------------------------------------------------------------------
+-- FINAL SETUP
+--------------------------------------------------------------------------------
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Space Hub",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+Fluent:Notify({
+    Title = "Anti Afk - ON",
+    Content = "meow",
+    Duration = 30
+})
+
+SaveManager:LoadAutoloadConfig()
+
+--------------------------------------------------------------------------------
+-- MOBILE SUPPORT
+--------------------------------------------------------------------------------
+local deviceType = UserInputService.TouchEnabled and "Mobile" or "PC"
+if deviceType == "Mobile" then
+    local mobileGui = Instance.new("ScreenGui")
+    local toggleButton = Instance.new("TextButton")
+    local corner = Instance.new("UICorner")
+    
+    mobileGui.Name = "SpaceToggle"
+    mobileGui.Parent = game.CoreGui
+    mobileGui.ResetOnSpawn = false
+    
+    toggleButton.Size = UDim2.new(0, 50, 0, 50)
+    toggleButton.Position = UDim2.new(0, 10, 1, -60)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
+    toggleButton.Text = "S"
+    toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    toggleButton.TextScaled = true
+    toggleButton.Transparency = 0.5
+    toggleButton.Parent = mobileGui
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        if isMinimized ~= false then
+            Window:Minimize()
+            isMinimized = false
+        else
+            Window:Minimize()
+            isMinimized = true
+        end
+    end)
+    
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = toggleButton
+end
+
+--------------------------------------------------------------------------------
+-- EXTERNAL SCRIPT LOAD
+--------------------------------------------------------------------------------
+loadstring(game:HttpGet("https://gist.githubusercontent.com/ago106/711b0de7b7da55057413b425c334c238/raw/"))()
+
+print("[Space Hub | Fisch]: Loaded successfully!")

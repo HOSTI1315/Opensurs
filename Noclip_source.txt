@@ -1,0 +1,193 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local plr = Players.LocalPlayer
+
+local fzjvGui = Instance.new("ScreenGui")
+fzjvGui.Name = "LiftToggleUI"
+fzjvGui.Parent = plr:WaitForChild("PlayerGui")
+fzjvGui.ResetOnSpawn = false
+
+local qlfrFrame = Instance.new("Frame")
+qlfrFrame.Size = UDim2.new(0, 180, 0, 110)
+qlfrFrame.Position = UDim2.new(0.5, -90, 0.8, 0)
+qlfrFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+qlfrFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+qlfrFrame.BorderSizePixel = 0
+qlfrFrame.Parent = fzjvGui
+qlfrFrame.Visible = true
+
+local rpxfCorner = Instance.new("UICorner")
+rpxfCorner.CornerRadius = UDim.new(0, 15)
+rpxfCorner.Parent = qlfrFrame
+
+local xgfbTitle = Instance.new("TextLabel")
+xgfbTitle.Size = UDim2.new(1, -10, 0, 25)
+xgfbTitle.Position = UDim2.new(0, 5, 0, 5)
+xgfbTitle.BackgroundTransparency = 1
+xgfbTitle.Text = "Noclip GUI"
+xgfbTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+xgfbTitle.Font = Enum.Font.SourceSansBold
+xgfbTitle.TextSize = 18
+xgfbTitle.TextXAlignment = Enum.TextXAlignment.Left
+xgfbTitle.Parent = qlfrFrame
+
+local bpqyButton = Instance.new("TextButton")
+bpqyButton.Size = UDim2.new(1, -20, 0, 35)
+bpqyButton.Position = UDim2.new(0, 10, 0, 30)
+bpqyButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+bpqyButton.BorderSizePixel = 0
+bpqyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+bpqyButton.Text = "Web"
+bpqyButton.Font = Enum.Font.SourceSansBold
+bpqyButton.TextSize = 16
+bpqyButton.Parent = qlfrFrame
+
+local lzoCorner = Instance.new("UICorner")
+lzoCorner.CornerRadius = UDim.new(0, 10)
+lzoCorner.Parent = bpqyButton
+
+local mtkaButton = Instance.new("TextButton")
+mtkaButton.Size = UDim2.new(1, -20, 0, 35)
+mtkaButton.Position = UDim2.new(0, 10, 0, 70)
+mtkaButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+mtkaButton.BorderSizePixel = 0
+mtkaButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mtkaButton.Text = "Noclip"
+mtkaButton.Font = Enum.Font.SourceSansBold
+mtkaButton.TextSize = 16
+mtkaButton.Parent = qlfrFrame
+
+local vkrcCorner = Instance.new("UICorner")
+vkrcCorner.CornerRadius = UDim.new(0, 10)
+vkrcCorner.Parent = mtkaButton
+
+bpqyButton.MouseEnter:Connect(function()
+    TweenService:Create(bpqyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+end)
+bpqyButton.MouseLeave:Connect(function()
+    TweenService:Create(bpqyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    qlfrFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+qlfrFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = qlfrFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+qlfrFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+mtkaButton.MouseEnter:Connect(function()
+    TweenService:Create(mtkaButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+end)
+mtkaButton.MouseLeave:Connect(function()
+    TweenService:Create(mtkaButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+
+local Net = require(ReplicatedStorage:WaitForChild("Packages").Net)
+local UseItem = Net:RemoteEvent("UseItem")
+
+local Humanoid, HumanoidRootPart, Backpack
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+local function getCharacterHRP()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    return hrp
+end
+
+mtkaButton.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
+
+    root.Anchored = true
+    root.CFrame = CFrame.new(0, -999999999999999993939383838383838383383888283883838383838383883838, 0)
+    task.wait(0.5)
+    root.CFrame = CFrame.new(0, 0, 0)
+    root.Anchored = false
+end)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+
+local function getClosest()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local targetChar = player.Character
+            local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                local distance = (targetHRP.Position - HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = player
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local backpack = player:WaitForChild("Backpack")
+
+bpqyButton.MouseButton1Click:Connect(function()
+    local target = getClosest()
+    if not target then return end
+
+    local targetHRP = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHRP then return end
+
+    local tool = backpack:FindFirstChild("Web Slinger") or character:FindFirstChild("Web Slinger")
+    if not tool then return end
+
+    if tool.Parent == backpack then
+        humanoid:EquipTool(tool)
+    end
+
+    UseItem:FireServer(targetHRP.Position, targetHRP)
+end)

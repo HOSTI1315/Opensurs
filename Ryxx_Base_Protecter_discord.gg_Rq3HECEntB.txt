@@ -1,0 +1,203 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Base protection system for Roblox
+getgenv().ProtectionEnabled = false
+
+-- Services
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+
+-- Player and workspace references
+local LocalPlayer = Players.LocalPlayer
+local Plots = workspace:WaitForChild("Plots")
+
+-- Activate protection function
+getgenv().activateProtection = function()
+    getgenv().ProtectionEnabled = true
+    
+    for i, plot in ipairs(Plots:GetChildren()) do
+        for i2, descendant in ipairs(plot:GetDescendants()) do
+            if descendant:IsA("TextLabel") then
+                local text = descendant.Text
+                local lowerText = text:lower()
+                lowerText:find("uhlfxkcd", 1, true)
+            end
+            
+            local Decorations = plot:FindFirstChild("Decorations")
+            if Decorations then
+                local Model2 = Decorations:FindFirstChild("Model")
+                if Model2 then
+                    for i3, part in ipairs(Model2:GetChildren()) do
+                        local protectionPart = Instance.new("Part")
+                        protectionPart.Anchored = true
+                        protectionPart.CanCollide = false
+                        protectionPart.Transparency = 1
+                        protectionPart.Size = Vector3.new(40, 40, 300)
+                        protectionPart.CFrame = part.CFrame
+                        protectionPart.Parent = workspace
+                        
+                        -- Monitor players
+                        task.spawn(function()
+                            for i4, player in ipairs(Players:GetPlayers()) do
+                                local character = player.Character
+                                if character then
+                                    local hrp = character:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        local position = hrp.Position
+                                        -- Position monitoring code would go here
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Deactivate protection function
+getgenv().deactivateProtection = function()
+    getgenv().ProtectionEnabled = false
+    -- Note: Need to store reference to created parts to destroy them
+end
+
+-- Create GUI
+local RyxxBaseProtectGUI = Instance.new("ScreenGui")
+RyxxBaseProtectGUI.Name = "RyxxBaseProtectGUI"
+RyxxBaseProtectGUI.Parent = game.CoreGui
+
+-- Main frame
+local Frame = Instance.new("Frame")
+Frame.Parent = RyxxBaseProtectGUI
+Frame.Size = UDim2.new(0, 180, 0, 130)
+Frame.Position = UDim2.new(0.05, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(180, 235, 255)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+
+-- Frame styling
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0, 12)
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = Frame
+UIStroke.Color = Color3.fromRGB(0, 200, 255)
+
+-- Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = Frame
+titleLabel.Position = UDim2.new(0, 0, 0, 5)
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Ryxx Base Protect (Free)"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 16
+titleLabel.TextColor3 = Color3.fromRGB(0, 120, 255)
+
+-- Status label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = Frame
+statusLabel.Position = UDim2.new(0, 0, 0, 30)
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: OFF"
+statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 14
+
+-- Toggle button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Parent = Frame
+toggleButton.Position = UDim2.new(0, 20, 0, 55)
+toggleButton.Size = UDim2.new(0, 140, 0, 30)
+toggleButton.Text = "ENABLE"
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 14
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.Parent = toggleButton
+buttonCorner.CornerRadius = UDim.new(0, 10)
+
+-- Discord link
+local discordLabel = Instance.new("TextLabel")
+discordLabel.Parent = Frame
+discordLabel.Position = UDim2.new(0, 0, 0, 105)
+discordLabel.Size = UDim2.new(1, 0, 0, 20)
+discordLabel.BackgroundTransparency = 1
+discordLabel.Text = "discord.gg/vjJHBhqN4"
+discordLabel.Font = Enum.Font.GothamBold
+discordLabel.TextSize = 14
+discordLabel.TextColor3 = Color3.fromRGB(0, 100, 255)
+
+-- Button click handler
+local Connection
+Connection = toggleButton.MouseButton1Click:Connect(function()
+    if getgenv().ProtectionEnabled then
+        -- Disable protection
+        getgenv().ProtectionEnabled = false
+        statusLabel.Text = "Status: OFF"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+        toggleButton.Text = "ENABLE"
+    else
+        -- Enable protection
+        getgenv().ProtectionEnabled = true
+        
+        StarterGui:SetCore("SendNotification", {
+            Text = "Player entering base = exit game",
+            Title = "Ryxx Base Protect (Free) ON",
+            Duration = 5,
+        })
+        
+        -- Update UI
+        statusLabel.Text = "Status: ON"
+        statusLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
+        toggleButton.Text = "DISABLE"
+        
+        -- Activate protection logic
+        getgenv().activateProtection()
+    end
+end)
+
+-- Animation particles (simplified version - original had 47 particles)
+local function createParticle(positionX, sizeX, sizeY, delay)
+    task.wait(delay)
+    local particle = Instance.new("Frame")
+    particle.Parent = Frame
+    particle.Size = UDim2.new(0, sizeX, 0, sizeY)
+    particle.Position = UDim2.new(0, positionX, 0, -sizeY)
+    particle.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    particle.BackgroundTransparency = 0.3
+    particle.BorderSizePixel = 0
+    
+    local particleCorner = Instance.new("UICorner")
+    particleCorner.Parent = particle
+    particleCorner.CornerRadius = UDim.new(1, 0)
+    
+    local tween = TweenService:Create(particle, TweenInfo.new(1.8, Enum.EasingStyle.Linear), {
+        Position = UDim2.new(0, positionX, 0, 1080)
+    })
+    tween:Play()
+    
+    tween.Completed:Connect(function()
+        particle:Destroy()
+    end)
+end
+
+-- Create animation particles
+task.spawn(function()
+    -- Create a few sample particles instead of 47
+    local positions = {8, 71, 1553, 1690, 33, 714, 763, 1759}
+    local sizes = {{6,9}, {8,12}, {6,12}, {7,11}, {6,10}, {9,6}, {9,7}, {6,8}}
+    
+    for i, pos in ipairs(positions) do
+        if i <= #sizes then
+            createParticle(pos, sizes[i][1], sizes[i][2], i * 0.08)
+        end
+    end
+end)

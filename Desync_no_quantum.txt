@@ -1,0 +1,38 @@
+local function runDesyncSequence()
+    desyncSequence = {}
+    desyncSequence.isStopped = false
+    desyncSequence.teleportIndices = { 2, 4 }
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    desyncSequence.randomTp = function()
+        local max = 20
+        hrp.CFrame *= CFrame.new(
+            math.random(-max, max),
+            0,
+            math.random(-max, max)
+        )
+    end
+
+    desyncSequence.sequence = {
+        { flag = "WorldStepsOffsetAdjustRate", value = "-1", delay = 0 },
+        { flag = "WorldStepsOffsetAdjustRate", value = "60", delay = 12.57 },
+        { flag = "WorldStepsOffsetAdjustRate", value = "-9999999999", delay = 52.14 },
+        { flag = "WorldStepsOffsetAdjustRate", value = "-9999999999", delay = 66.15 },
+        { flag = "WorldStepsOffsetAdjustRate", value = "-1", delay = 1447.19 },
+    }
+
+    task.spawn(function()
+        for i, entry in ipairs(desyncSequence.sequence) do
+            if desyncSequence.isStopped then break end
+            if entry.delay > 0 then
+                task.wait(entry.delay / 1000)
+            end
+            if desyncSequence.isStopped then break end
+            setfflag(entry.flag, entry.value)
+            if table.find(desyncSequence.teleportIndices, i) then
+                desyncSequence.randomTp()
+            end
+        end
+    end)
+end

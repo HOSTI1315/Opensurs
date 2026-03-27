@@ -1,0 +1,955 @@
+--[[
+                 . .  .     .          .  .             .
+          .       .  .  .     ..   .    .      .        .
+                   .   .     .             ...  .        
+.                  .       .    ..  .    .=*+-.         .
+       . .             .               .-*:..+:  .      .
+..      .               .+=:..        :*-.. .-+          
+.           ..        . :#-..-#=.   .#-      .*.         
+  .          .........:-=#=.  ..=*-==.       .*..   .    
+        . .:+#%%%%*#%%#%%=..      -+:.       .*.         
+         .-%#%*%%#****%%#=:.       ..     .. .*.      .  
+        ..=%%*@*******%%##+.           .    .==        . 
+       .  -%%%**********+--.   .  ..:*%=-. .:+:  .. . .  
+          .=#****#%@%**++**:.    .+#-.#..  .=-. .   .    
+      ..   :****#@@@@%*****-.=..-%@%-.--  :*=:..     .   
+     .     :*****#%@%******=-:+#@@@#:..=..:::+=          
+. .       .:##************=:. ..*@%=..... .:*-..         
+           :##**********+=++::..  ..:==-:.=*.      .     
+          .=##********##===+*+++:  ...-... :+:..  .    . 
+ ..  .    :+##********##===*-....  ...:++===*=.      .   
+    .     .-#%#%*****##@=-*= ....:=#%+.                  
+        .     :%%%%#%*%%#*..      .:+.                .  
+        . .   -@%#%#******+..   .  .-+.                  
+    .        :%%#******+-... .  .  ..+=.   .         .   
+            :%*%********+...  .    . .%.            .  . 
+       .   .*##%*********....        .:+.  .   .         
+          .-#*##*********+:..        ..*.    .           
+  .    .  .=#*%#********+::...     .  .=:  . .           
+    .     .+#*%#*******=.... ..       .--        .  ..   
+          .*#*%%********=.. .     . . .-=.    .    .     
+   .   .  .+#*#%*******-:..           .-=.         .   . 
+       .  .:--+*********+-...   .  .  ... .  .     .     
+        .     .........::::..            .  ..           
+                        .. .                     ..      
+             .            .           .               .  
+This file was generated on https://dsc.gg/decompiler | Pulsar v1.4.3
+Resolved: 203 identifiers | 45 functions | 0 Strings | Renamed: 45 functions | Connected: 12 callbacks | Dead Code Removed: 0 blocks | Inlined: 0 wrappers | Detected loop: 8 blocks
+[Renamer: ON] [Decompiler: ON]
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local ANIM_WALK = "121350640829746"
+local ANIM_WALK_ALT = "76931637880681"
+local ANIM_IDLE_1 = "75752382380063"
+local ANIM_IDLE_2 = "75752382380063"
+local ANIM_JUMP = "4211219390"
+local ANIM_FALL = "656115606"
+local ANIM_RUN = "121350640829746"
+local ANIM_SUPER_IDLE = "74386389774165"
+local ANIM_SUPER_RUN = "73980801925168"
+local ANIM_SUPER_WALK = "101291673584393"
+local ANIM_SPIN = "18537367238"
+local ANIM_SPIN_ALT = "18537367238"
+local ANIM_SUPER_SPIN = "98123440697886"
+
+local BASE_FOV = 70
+local MIN_FOV = 16
+local MAX_FOV = 120
+local FOV_LERP_SPEED = 0.08
+local NORMAL_SPEED_THRESHOLD = 100
+local SUPER_SPEED_THRESHOLD = 200
+local currentSpeedThreshold = NORMAL_SPEED_THRESHOLD
+local SPIN_ANIM_SPEED_NORMAL = 3
+local SPIN_ANIM_SPEED_SUPER = 1
+local FLASH_DURATION = 0.2
+local BOOST_FOV = 50
+local BOOST_FOV_DURATION = 0.2
+local MAX_CHARGE_TIME = 3
+local MAX_BOOST_SPEED_NORMAL = 100
+local MAX_BOOST_SPEED_SUPER = 200
+local MIN_BOOST_SPEED = 50
+
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+local loadedAnimations = {}
+local isAtMaxSpeed = false
+local isSpinDashing = false
+local spinDashBodyVelocity = nil
+local spinDashStartTime = 0
+local chargePercentage = 0
+local currentSpeed = 0
+local isMoving = false
+local isSuperSonic = false
+local savedIdleAnim1 = nil
+local savedIdleAnim2 = nil
+local savedWalkAnim = nil
+local savedWalkAltAnim = nil
+local savedRunAnim = nil
+local superSonicPlatform = nil
+local superSonicPlatformEnabled = false
+local superSonicTargetHeight = 0
+local platformRiseSpeed = 5
+
+local SOUND_JUMP = "6606602837"
+local SOUND_SUPER_SPIN = "9125516670"
+local SOUND_BOOST = "135557803"
+local SOUND_SUPER_BOOST = "2674547670"
+local SOUND_SPIN_RELEASE = "88921486254759"
+local PARTICLE_NORMAL = "11745241946"
+local PARTICLE_SUPER = "99126858715949"
+
+local stateChangedConnection = nil
+local moveDirectionConnection = nil
+
+local function stopAllAnimations()
+    if Humanoid then
+        for _, track in ipairs(Humanoid:GetPlayingAnimationTracks()) do
+            track:Stop(0)
+        end
+    end
+end
+
+local function forceFreefallState()
+    Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+end
+
+local function clearIdleAnimation()
+    stopAllAnimations()
+    pcall(function()
+        local animate = Character.Animate
+        animate.idle.Animation1.AnimationId = "http://www.roblox.com/asset/?id=0"
+        animate.idle.Animation2.AnimationId = "http://www.roblox.com/asset/?id=0"
+    end)
+end
+
+local function clearWalkAnimation()
+    stopAllAnimations()
+    pcall(function()
+        Character.Animate.walk.WalkAnim.AnimationId = "http://www.roblox.com/asset/?id=0"
+    end)
+end
+
+local function clearRunAnimation()
+    stopAllAnimations()
+    pcall(function()
+        Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=0"
+    end)
+end
+
+local function clearJumpAnimation()
+    stopAllAnimations()
+    pcall(function()
+        Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=0"
+    end)
+end
+
+local function clearFallAnimation()
+    stopAllAnimations()
+    pcall(function()
+        Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=0"
+    end)
+end
+
+local function freezeCharacter()
+    Humanoid.PlatformStand = true
+    task.spawn(function()
+        for _, part in ipairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") and not part.Anchored then
+                part.Anchored = true
+            end
+        end
+    end)
+end
+
+local function unfreezeCharacter()
+    Humanoid.PlatformStand = false
+    task.spawn(function()
+        for _, part in ipairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Anchored then
+                part.Anchored = false
+            end
+            if part:IsA("BodyVelocity") then
+                part:Destroy()
+            end
+        end
+    end)
+end
+
+function setAnimation(animationType, animationId)
+    if Character and Character:FindFirstChild("Animate") then
+        freezeCharacter()
+        task.wait(0.1)
+        pcall(function()
+            if animationType == "Idle" then
+                clearIdleAnimation()
+                local animate = Character.Animate
+                animate.idle.Animation1.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId[1]
+                animate.idle.Animation2.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId[2]
+                forceFreefallState()
+            elseif animationType == "Walk" then
+                clearWalkAnimation()
+                Character.Animate.walk.WalkAnim.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId
+                forceFreefallState()
+            elseif animationType == "Run" then
+                clearRunAnimation()
+                Character.Animate.run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId
+                forceFreefallState()
+            elseif animationType == "Jump" then
+                clearJumpAnimation()
+                Character.Animate.jump.JumpAnim.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId
+                forceFreefallState()
+            elseif animationType == "Fall" then
+                clearFallAnimation()
+                Character.Animate.fall.FallAnim.AnimationId = "http://www.roblox.com/asset/?id=" .. animationId
+                forceFreefallState()
+            end
+        end)
+        task.wait(0.1)
+        unfreezeCharacter()
+    end
+end
+
+local function applyAllAnimations()
+    if Character and Character:FindFirstChild("Animate") then
+        task.spawn(function()
+            setAnimation("Idle", {ANIM_IDLE_1, ANIM_IDLE_2})
+            task.wait(0.2)
+            setAnimation("Walk", ANIM_WALK)
+            task.wait(0.2)
+            setAnimation("Run", ANIM_RUN)
+            task.wait(0.2)
+            setAnimation("Jump", ANIM_JUMP)
+            task.wait(0.2)
+            setAnimation("Fall", ANIM_FALL)
+        end)
+    end
+end
+
+local function createSuperSonicPlatform()
+    if superSonicPlatform then
+        superSonicPlatform:Destroy()
+    end
+    superSonicPlatform = Instance.new("Part")
+    superSonicPlatform.Name = "SuperSonicPlatform"
+    superSonicPlatform.Size = Vector3.new(20, 1, 20)
+    superSonicPlatform.Transparency = 1
+    superSonicPlatform.Anchored = true
+    superSonicPlatform.CanCollide = true
+    superSonicPlatform.Material = Enum.Material.SmoothPlastic
+    superSonicPlatform.Parent = workspace
+    superSonicPlatform.Position = Vector3.new(HumanoidRootPart.Position.X, HumanoidRootPart.Position.Y - 3, HumanoidRootPart.Position.Z)
+end
+
+local function enableSuperSonicPlatform()
+    superSonicPlatformEnabled = true
+    if superSonicPlatform then
+        superSonicPlatform.CanCollide = true
+    end
+end
+
+local function disableSuperSonicPlatform()
+    superSonicPlatformEnabled = false
+    if superSonicPlatform then
+        superSonicPlatform.CanCollide = false
+    end
+end
+
+local function loadSpinAnimations()
+    loadedAnimations = {}
+    
+    local spinNormalAnim = Instance.new("Animation")
+    spinNormalAnim.AnimationId = "rbxassetid://" .. ANIM_SPIN
+    loadedAnimations.SpinNormal = Humanoid:LoadAnimation(spinNormalAnim)
+    loadedAnimations.SpinNormal:AdjustSpeed(SPIN_ANIM_SPEED_NORMAL)
+    
+    local spinSuperAnim = Instance.new("Animation")
+    spinSuperAnim.AnimationId = "rbxassetid://" .. ANIM_SUPER_SPIN
+    loadedAnimations.SpinSuper = Humanoid:LoadAnimation(spinSuperAnim)
+    loadedAnimations.SpinSuper:AdjustSpeed(SPIN_ANIM_SPEED_SUPER)
+    
+    local doubleJumpAnim = Instance.new("Animation")
+    doubleJumpAnim.AnimationId = "rbxassetid://" .. ANIM_SPIN_ALT
+    loadedAnimations.DoubleJump = Humanoid:LoadAnimation(doubleJumpAnim)
+end
+
+loadSpinAnimations()
+
+local Head = Character:FindFirstChild("Head") or HumanoidRootPart
+local jumpSound = Instance.new("Sound", Head)
+local doubleJumpSound = Instance.new("Sound", Head)
+local spinSound = Instance.new("Sound", Head)
+local spinReleaseSound = Instance.new("Sound", Head)
+local boostSound = Instance.new("Sound", Head)
+local transformSound = Instance.new("Sound", Head)
+
+local Torso = Character:FindFirstChild("Torso")
+if not Torso then
+    Torso = Character:FindFirstChild("UpperTorso") or HumanoidRootPart
+end
+
+local dustParticle = Instance.new("ParticleEmitter", HumanoidRootPart)
+
+local leftFootTrail = nil
+local rightFootTrail = nil
+local leftFootAttachment1 = nil
+local leftFootAttachment2 = nil
+local rightFootAttachment1 = nil
+local rightFootAttachment2 = nil
+
+local function setupFootTrails()
+    local leftFoot = Character:FindFirstChild("LeftFoot") or Character:FindFirstChild("Left Leg")
+    local rightFoot = Character:FindFirstChild("RightFoot") or Character:FindFirstChild("Right Leg")
+    
+    if leftFoot and rightFoot then
+        if leftFootTrail then leftFootTrail:Destroy() end
+        if rightFootTrail then rightFootTrail:Destroy() end
+        if leftFootAttachment1 then leftFootAttachment1:Destroy() end
+        if leftFootAttachment2 then leftFootAttachment2:Destroy() end
+        if rightFootAttachment1 then rightFootAttachment1:Destroy() end
+        if rightFootAttachment2 then rightFootAttachment2:Destroy() end
+        
+        leftFootAttachment1 = Instance.new("Attachment", leftFoot)
+        leftFootAttachment1.Position = Vector3.new(0, 0.2, 0.2)
+        leftFootAttachment2 = Instance.new("Attachment", leftFoot)
+        leftFootAttachment2.Position = Vector3.new(0, -0.2, -0.2)
+        
+        rightFootAttachment1 = Instance.new("Attachment", rightFoot)
+        rightFootAttachment1.Position = Vector3.new(0, 0.2, 0.2)
+        rightFootAttachment2 = Instance.new("Attachment", rightFoot)
+        rightFootAttachment2.Position = Vector3.new(0, -0.2, -0.2)
+        
+        leftFootTrail = Instance.new("Trail", leftFoot)
+        leftFootTrail.Attachment0 = leftFootAttachment1
+        leftFootTrail.Attachment1 = leftFootAttachment2
+        leftFootTrail.Lifetime = 0.25
+        leftFootTrail.LightEmission = 0.5
+        leftFootTrail.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.2),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+        leftFootTrail.Color = ColorSequence.new(Color3.fromRGB(135, 206, 235), Color3.fromRGB(0, 191, 255))
+        leftFootTrail.Enabled = false
+        
+        rightFootTrail = Instance.new("Trail", rightFoot)
+        rightFootTrail.Attachment0 = rightFootAttachment1
+        rightFootTrail.Attachment1 = rightFootAttachment2
+        rightFootTrail.Lifetime = 0.25
+        rightFootTrail.LightEmission = 0.5
+        rightFootTrail.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0.2),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+        rightFootTrail.Color = ColorSequence.new(Color3.fromRGB(135, 206, 235), Color3.fromRGB(0, 191, 255))
+        rightFootTrail.Enabled = false
+    end
+end
+
+local function setupNormalEffects()
+    jumpSound.SoundId = "rbxassetid://8620459552"
+    doubleJumpSound.SoundId = "rbxassetid://7699333859"
+    spinSound.SoundId = "rbxassetid://" .. SOUND_JUMP
+    spinReleaseSound.SoundId = "rbxassetid://" .. SOUND_SPIN_RELEASE
+    boostSound.SoundId = "rbxassetid://" .. SOUND_BOOST
+    transformSound.SoundId = "rbxassetid://8404814227"
+    
+    dustParticle.Texture = "rbxassetid://" .. PARTICLE_NORMAL
+    dustParticle.Parent = HumanoidRootPart
+    dustParticle.Rate = 0
+    dustParticle.Lifetime = NumberRange.new(0.3, 0.6)
+    dustParticle.Speed = NumberRange.new(10, 18)
+    dustParticle.Rotation = NumberRange.new(0, 360)
+    dustParticle.RotSpeed = NumberRange.new(80, 150)
+    dustParticle.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 2.5),
+        NumberSequenceKeypoint.new(0.5, 2),
+        NumberSequenceKeypoint.new(1, 0)
+    })
+    dustParticle.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.8, 0.4),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    dustParticle.Color = ColorSequence.new(Color3.fromRGB(200, 200, 200), Color3.fromRGB(255, 255, 255))
+    dustParticle.EmissionDirection = Enum.NormalId.Back
+    dustParticle.Orientation = Enum.ParticleOrientation.VelocityParallel
+    
+    if leftFootTrail and rightFootTrail then
+        leftFootTrail.Color = ColorSequence.new(Color3.fromRGB(135, 206, 235), Color3.fromRGB(0, 191, 255))
+        rightFootTrail.Color = ColorSequence.new(Color3.fromRGB(135, 206, 235), Color3.fromRGB(0, 191, 255))
+    end
+end
+
+local function setupSuperSonicEffects()
+    jumpSound.SoundId = "rbxassetid://8620459552"
+    doubleJumpSound.SoundId = "rbxassetid://7699333859"
+    spinSound.SoundId = "rbxassetid://" .. SOUND_SUPER_SPIN
+    boostSound.SoundId = "rbxassetid://" .. SOUND_SUPER_BOOST
+    transformSound.SoundId = "rbxassetid://8404814227"
+    
+    dustParticle.Texture = "rbxassetid://" .. PARTICLE_SUPER
+    dustParticle.Parent = Torso
+    dustParticle.Rate = 0
+    dustParticle.Lifetime = NumberRange.new(0.3, 0.6)
+    dustParticle.Speed = NumberRange.new(10, 18)
+    dustParticle.Rotation = NumberRange.new(0, 360)
+    dustParticle.RotSpeed = NumberRange.new(80, 150)
+    dustParticle.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 2.5),
+        NumberSequenceKeypoint.new(0.5, 2),
+        NumberSequenceKeypoint.new(1, 0)
+    })
+    dustParticle.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.8, 0.4),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    dustParticle.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0), Color3.fromRGB(255, 215, 0))
+    dustParticle.EmissionDirection = Enum.NormalId.Back
+    dustParticle.Orientation = Enum.ParticleOrientation.VelocityParallel
+    
+    if leftFootTrail and rightFootTrail then
+        leftFootTrail.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0), Color3.fromRGB(255, 215, 0))
+        rightFootTrail.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0), Color3.fromRGB(255, 215, 0))
+    end
+end
+
+local function stopAllSounds()
+    jumpSound:Stop()
+    doubleJumpSound:Stop()
+    spinSound:Stop()
+    spinReleaseSound:Stop()
+    boostSound:Stop()
+    transformSound:Stop()
+end
+
+local jumpCount = 0
+local maxJumps = 2
+local lastJumpTime = tick()
+
+local function setupHumanoidConnections()
+    if stateChangedConnection then
+        stateChangedConnection:Disconnect()
+    end
+    if moveDirectionConnection then
+        moveDirectionConnection:Disconnect()
+    end
+    
+    stateChangedConnection = Humanoid.StateChanged:Connect(function(_, newState)
+        if newState == Enum.HumanoidStateType.Landed then
+            jumpCount = 0
+            if loadedAnimations.DoubleJump and loadedAnimations.DoubleJump.IsPlaying then
+                loadedAnimations.DoubleJump:Stop()
+            end
+        end
+    end)
+    
+    moveDirectionConnection = Humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
+        isMoving = Humanoid.MoveDirection.Magnitude > 0
+    end)
+end
+
+UserInputService.JumpRequest:Connect(function()
+    if jumpCount < maxJumps and tick() - lastJumpTime > 0.2 then
+        lastJumpTime = tick()
+        jumpCount = jumpCount + 1
+        Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        
+        if jumpCount == 1 then
+            jumpSound:Play()
+        elseif jumpCount == 2 then
+            doubleJumpSound:Play()
+            if loadedAnimations.DoubleJump then
+                loadedAnimations.DoubleJump:Play()
+            end
+        end
+    end
+end)
+
+local function startSpinDash()
+    if not isSpinDashing then
+        isSpinDashing = true
+        spinDashStartTime = tick()
+        
+        if isSuperSonic then
+            if loadedAnimations.SpinSuper then
+                loadedAnimations.SpinSuper:Play()
+                loadedAnimations.SpinSuper:AdjustSpeed(SPIN_ANIM_SPEED_SUPER)
+            end
+        else
+            if loadedAnimations.SpinNormal then
+                loadedAnimations.SpinNormal:Play()
+                loadedAnimations.SpinNormal:AdjustSpeed(SPIN_ANIM_SPEED_NORMAL)
+            end
+        end
+        
+        spinSound:Play()
+        dustParticle.Enabled = true
+        dustParticle.Rate = 50
+        
+        spinDashBodyVelocity = Instance.new("BodyVelocity")
+        spinDashBodyVelocity.MaxForce = Vector3.new(100000, 0, 100000)
+        spinDashBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        spinDashBodyVelocity.P = 1250
+        spinDashBodyVelocity.Parent = HumanoidRootPart
+    end
+end
+
+local function releaseSpinDash()
+    if isSpinDashing then
+        isSpinDashing = false
+        local chargeTime = tick() - spinDashStartTime
+        chargePercentage = math.min(chargeTime / MAX_CHARGE_TIME, 1)
+        
+        local boostSpeed = MIN_BOOST_SPEED + ((isSuperSonic and MAX_BOOST_SPEED_SUPER or MAX_BOOST_SPEED_NORMAL) - MIN_BOOST_SPEED) * chargePercentage
+        
+        if isSuperSonic then
+            if loadedAnimations.SpinSuper then
+                loadedAnimations.SpinSuper:Stop()
+            end
+            spinSound:Stop()
+        else
+            if loadedAnimations.SpinNormal then
+                loadedAnimations.SpinNormal:Stop()
+            end
+            spinReleaseSound:Play()
+        end
+        
+        dustParticle.Enabled = false
+        dustParticle.Rate = 0
+        
+        if spinDashBodyVelocity then
+            spinDashBodyVelocity:Destroy()
+            spinDashBodyVelocity = nil
+        end
+        
+        currentSpeed = currentSpeed + boostSpeed
+        
+        if HumanoidRootPart then
+            local lookVector = HumanoidRootPart.CFrame.LookVector
+            local launchSpeed = 100 + chargePercentage * 40
+            HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(lookVector.X * launchSpeed, HumanoidRootPart.AssemblyLinearVelocity.Y, lookVector.Z * launchSpeed)
+        end
+    end
+end
+
+local function createSpeedFlash(flashColor)
+    local flashGui = Instance.new("ScreenGui")
+    flashGui.Name = "SpeedFlashGui"
+    flashGui.ResetOnSpawn = false
+    flashGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    flashGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    flashGui.IgnoreGuiInset = true
+    
+    local flashFrame = Instance.new("Frame", flashGui)
+    flashFrame.Size = UDim2.new(1, 0, 1, 0)
+    flashFrame.Position = UDim2.new(0, 0, 0, 0)
+    flashFrame.BackgroundColor3 = flashColor or Color3.fromRGB(255, 255, 255)
+    flashFrame.BackgroundTransparency = 1
+    flashFrame.BorderSizePixel = 0
+    
+    local tweenInfo = TweenInfo.new(FLASH_DURATION / 2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local fadeIn = TweenService:Create(flashFrame, tweenInfo, {BackgroundTransparency = 0.5})
+    local fadeOut = TweenService:Create(flashFrame, tweenInfo, {BackgroundTransparency = 1})
+    
+    fadeIn:Play()
+    fadeIn.Completed:Wait()
+    fadeOut:Play()
+    
+    task.spawn(function()
+        task.wait(FLASH_DURATION)
+        if flashGui then
+            flashGui:Destroy()
+        end
+    end)
+end
+
+local function activateSuperSonic()
+    if not isSuperSonic then
+        stopAllSounds()
+        dustParticle.Enabled = false
+        currentSpeedThreshold = SUPER_SPEED_THRESHOLD
+        superSonicTargetHeight = HumanoidRootPart.Position.Y + 10
+        
+        createSuperSonicPlatform()
+        enableSuperSonicPlatform()
+        
+        savedIdleAnim1 = ANIM_IDLE_1
+        savedIdleAnim2 = ANIM_IDLE_2
+        savedWalkAnim = ANIM_WALK
+        savedWalkAltAnim = ANIM_WALK_ALT
+        savedRunAnim = ANIM_RUN
+        
+        ANIM_IDLE_1 = ANIM_SUPER_IDLE
+        ANIM_IDLE_2 = ANIM_SUPER_IDLE
+        ANIM_WALK = ANIM_SUPER_RUN
+        ANIM_RUN = ANIM_SUPER_RUN
+        ANIM_WALK_ALT = ANIM_SUPER_WALK
+        
+        setupSuperSonicEffects()
+        applyAllAnimations()
+        createSpeedFlash(Color3.fromRGB(255, 255, 0))
+        transformSound:Play()
+        isSuperSonic = true
+    end
+end
+
+local function deactivateSuperSonic()
+    if isSuperSonic then
+        stopAllSounds()
+        dustParticle.Enabled = false
+        currentSpeedThreshold = NORMAL_SPEED_THRESHOLD
+        
+        disableSuperSonicPlatform()
+        if superSonicPlatform then
+            superSonicPlatform:Destroy()
+            superSonicPlatform = nil
+        end
+        
+        if savedIdleAnim1 then ANIM_IDLE_1 = savedIdleAnim1 end
+        if savedIdleAnim2 then ANIM_IDLE_2 = savedIdleAnim2 end
+        if savedWalkAnim then ANIM_WALK = savedWalkAnim end
+        if savedWalkAltAnim then ANIM_WALK_ALT = savedWalkAltAnim end
+        if savedRunAnim then ANIM_RUN = savedRunAnim end
+        
+        setupNormalEffects()
+        applyAllAnimations()
+        createSpeedFlash(Color3.fromRGB(0, 191, 255))
+        transformSound:Play()
+        isSuperSonic = false
+    end
+end
+
+local function toggleSuperSonic()
+    if isSuperSonic then
+        deactivateSuperSonic()
+    else
+        activateSuperSonic()
+    end
+end
+
+local isKeyboardEnabled = UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled
+local chargeBarFrame = nil
+local spinDashButton = nil
+
+if isKeyboardEnabled then
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed then
+            if input.KeyCode == Enum.KeyCode.C then
+                startSpinDash()
+            elseif input.KeyCode == Enum.KeyCode.V then
+                toggleSuperSonic()
+            end
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if not gameProcessed then
+            if input.KeyCode == Enum.KeyCode.C then
+                releaseSpinDash()
+            end
+        end
+    end)
+elseif UserInputService.TouchEnabled then
+    local mobileGui = Instance.new("ScreenGui")
+    mobileGui.Name = "SpinDashGui"
+    mobileGui.ResetOnSpawn = false
+    mobileGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    
+    spinDashButton = Instance.new("ImageButton")
+    spinDashButton.Name = "SpinDashButton"
+    spinDashButton.AnchorPoint = Vector2.new(1, 1)
+    spinDashButton.BackgroundTransparency = 1
+    spinDashButton.Image = "rbxassetid://131549024042077"
+    spinDashButton.Parent = mobileGui
+    
+    chargeBarFrame = Instance.new("Frame")
+    chargeBarFrame.Name = "ChargeBar"
+    chargeBarFrame.Size = UDim2.new(0, 20, 0, 0)
+    chargeBarFrame.Position = UDim2.new(0, -30, 1, 0)
+    chargeBarFrame.AnchorPoint = Vector2.new(0, 1)
+    chargeBarFrame.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    chargeBarFrame.BorderSizePixel = 0
+    chargeBarFrame.BackgroundTransparency = 1
+    chargeBarFrame.Parent = spinDashButton
+    Instance.new("UICorner", chargeBarFrame).CornerRadius = UDim.new(0, 8)
+    
+    local superSonicButton = Instance.new("ImageButton")
+    superSonicButton.Name = "SuperSonicButton"
+    superSonicButton.AnchorPoint = Vector2.new(1, 1)
+    superSonicButton.BackgroundTransparency = 1
+    superSonicButton.Image = "rbxassetid://100711260432231"
+    superSonicButton.Parent = mobileGui
+    
+    local showTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local hideTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+    local showChargeBar = TweenService:Create(chargeBarFrame, showTweenInfo, {BackgroundTransparency = 0.15})
+    local hideChargeBar = TweenService:Create(chargeBarFrame, hideTweenInfo, {BackgroundTransparency = 1})
+    
+    spinDashButton.MouseButton1Down:Connect(function()
+        if not isSpinDashing then
+            spinDashButton.Image = "rbxassetid://126068833364301"
+        end
+        startSpinDash()
+        showChargeBar:Play()
+    end)
+    
+    spinDashButton.MouseButton1Up:Connect(function()
+        spinDashButton.Image = "rbxassetid://131549024042077"
+        releaseSpinDash()
+        hideChargeBar:Play()
+    end)
+    
+    superSonicButton.MouseButton1Down:Connect(function()
+        superSonicButton.Image = "rbxassetid://109440344652504"
+    end)
+    
+    superSonicButton.MouseButton1Up:Connect(function()
+        superSonicButton.Image = "rbxassetid://100711260432231"
+        toggleSuperSonic()
+        if chargeBarFrame then
+            if isSuperSonic then
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+            else
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+            end
+        end
+    end)
+    
+    RunService.RenderStepped:Connect(function()
+        local touchGui = LocalPlayer.PlayerGui:FindFirstChild("TouchGui")
+        if touchGui then
+            local touchControlFrame = touchGui:FindFirstChild("TouchControlFrame")
+            if touchControlFrame then
+                local jumpButton = touchControlFrame:FindFirstChild("JumpButton")
+                if jumpButton and spinDashButton and superSonicButton then
+                    local jumpPos = jumpButton.AbsolutePosition
+                    local jumpSize = jumpButton.AbsoluteSize
+                    local rightEdge = jumpPos.X + jumpSize.X
+                    local bottomEdge = jumpPos.Y + jumpSize.Y
+                    
+                    spinDashButton.Position = UDim2.new(0, rightEdge - jumpSize.X - 10, 0, bottomEdge)
+                    spinDashButton.Size = UDim2.new(0, jumpSize.X, 0, jumpSize.Y)
+                    superSonicButton.Position = UDim2.new(0, rightEdge, 0, bottomEdge - jumpSize.Y - 10)
+                    superSonicButton.Size = UDim2.new(0, jumpSize.X, 0, jumpSize.Y)
+                end
+            end
+        end
+    end)
+end
+
+RunService.Heartbeat:Connect(function()
+    if isSpinDashing and chargeBarFrame and spinDashButton and not isKeyboardEnabled then
+        local chargeTime = tick() - spinDashStartTime
+        local chargePercent = math.min(chargeTime / MAX_CHARGE_TIME, 1)
+        local buttonHeight = spinDashButton.AbsoluteSize.Y
+        chargeBarFrame.Size = UDim2.new(0, 20, 0, buttonHeight * chargePercent)
+        
+        if isSuperSonic then
+            if chargePercent >= 0.95 then
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            else
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+            end
+        else
+            if chargePercent >= 0.95 then
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            else
+                chargeBarFrame.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+            end
+        end
+    end
+end)
+
+local wasAtMaxSpeed = false
+local platformRiseAmount = 0
+
+RunService.Heartbeat:Connect(function(deltaTime)
+    if isSuperSonic and superSonicPlatformEnabled and superSonicPlatform and HumanoidRootPart then
+        local platformY = superSonicPlatform.Position.Y
+        if platformY >= superSonicTargetHeight then
+            superSonicPlatform.Position = Vector3.new(HumanoidRootPart.Position.X, superSonicTargetHeight, HumanoidRootPart.Position.Z)
+        else
+            platformRiseAmount = platformRiseAmount + platformRiseSpeed * deltaTime
+            local newY = math.min(platformY + platformRiseSpeed * deltaTime, superSonicTargetHeight)
+            superSonicPlatform.Position = Vector3.new(HumanoidRootPart.Position.X, newY, HumanoidRootPart.Position.Z)
+        end
+    end
+    
+    if not isSpinDashing then
+        if isMoving then
+            currentSpeed = currentSpeed + (currentSpeed < 20 and 30 or 50) * deltaTime
+        else
+            currentSpeed = 0
+        end
+    end
+    
+    Humanoid.WalkSpeed = currentSpeed
+    
+    if isMoving then
+        if currentSpeed >= currentSpeedThreshold and not isAtMaxSpeed then
+            task.spawn(function()
+                setAnimation("Run", ANIM_WALK_ALT)
+            end)
+            isAtMaxSpeed = true
+        elseif currentSpeed < currentSpeedThreshold and isAtMaxSpeed then
+            task.spawn(function()
+                setAnimation("Run", ANIM_RUN)
+            end)
+            isAtMaxSpeed = false
+        end
+    elseif not isMoving and isAtMaxSpeed then
+        task.spawn(function()
+            setAnimation("Run", ANIM_RUN)
+        end)
+        isAtMaxSpeed = false
+    end
+    
+    if currentSpeed < currentSpeedThreshold then
+        wasAtMaxSpeed = false
+        boostSound:Stop()
+    elseif not wasAtMaxSpeed then
+        wasAtMaxSpeed = true
+        boostSound:Play()
+        createSpeedFlash(Color3.fromRGB(255, 255, 255))
+        
+        local originalFOV = Camera.FieldOfView
+        local boostTweenInfo = TweenInfo.new(BOOST_FOV_DURATION, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
+        local returnTweenInfo = TweenInfo.new(BOOST_FOV_DURATION * 2, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
+        
+        TweenService:Create(Camera, boostTweenInfo, {FieldOfView = BOOST_FOV}):Play()
+        task.delay(BOOST_FOV_DURATION, function()
+            TweenService:Create(Camera, returnTweenInfo, {FieldOfView = originalFOV}):Play()
+        end)
+    end
+    
+    if leftFootTrail and rightFootTrail then
+        leftFootTrail.Enabled = currentSpeed >= currentSpeedThreshold
+        rightFootTrail.Enabled = currentSpeed >= currentSpeedThreshold
+    end
+    
+    local speedRatio = math.clamp(currentSpeed / 100, 0, 1)
+    local targetFOV = BASE_FOV + (MAX_FOV - MIN_FOV) * speedRatio
+    Camera.FieldOfView = Camera.FieldOfView + (targetFOV - Camera.FieldOfView) * FOV_LERP_SPEED
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    Humanoid = Character:WaitForChild("Humanoid")
+    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    
+    unfreezeCharacter()
+    Camera.FieldOfView = BASE_FOV
+    disableSuperSonicPlatform()
+    
+    if superSonicPlatform then
+        superSonicPlatform:Destroy()
+        superSonicPlatform = nil
+    end
+    
+    Head = Character:FindFirstChild("Head") or HumanoidRootPart
+    jumpSound.Parent = Head
+    doubleJumpSound.Parent = Head
+    spinSound.Parent = Head
+    spinReleaseSound.Parent = Head
+    boostSound.Parent = Head
+    transformSound.Parent = Head
+    
+    Torso = Character:FindFirstChild("Torso") or Character:FindFirstChild("UpperTorso") or HumanoidRootPart
+    dustParticle.Parent = isSuperSonic and Torso or HumanoidRootPart
+    
+    loadSpinAnimations()
+    applyAllAnimations()
+    setupFootTrails()
+    
+    if isSuperSonic then
+        setupSuperSonicEffects()
+        currentSpeedThreshold = SUPER_SPEED_THRESHOLD
+        createSuperSonicPlatform()
+        enableSuperSonicPlatform()
+    else
+        setupNormalEffects()
+        currentSpeedThreshold = NORMAL_SPEED_THRESHOLD
+    end
+    
+    setupHumanoidConnections()
+    jumpCount = 0
+    currentSpeed = 0
+    isSpinDashing = false
+    chargePercentage = 0
+    platformRiseAmount = 0
+    
+    if spinDashBodyVelocity then
+        spinDashBodyVelocity:Destroy()
+    end
+    
+    wasAtMaxSpeed = false
+    isAtMaxSpeed = false
+    dustParticle.Enabled = false
+end)
+
+setupFootTrails()
+setupNormalEffects()
+applyAllAnimations()
+setupHumanoidConnections()
+
+local function createInstance(className, properties, children)
+    local instance = Instance.new(className)
+    for key, value in next, properties or {} do
+        instance[key] = value
+    end
+    for _, child in next, children or {} do
+        child.Parent = instance
+    end
+    return instance
+end
+
+(function(title, message, shouldYield)
+    if not getrenv then
+        return warn(message)
+    end
+    
+    local errorPrompt = getrenv().require(game.CoreGui:WaitForChild("RobloxGui"):WaitForChild("Modules"):WaitForChild("ErrorPrompt")).new("Default", {
+        HideErrorCode = true
+    })
+    
+    local promptGui = createInstance("ScreenGui", {
+        Parent = game.CoreGui,
+        ResetOnSpawn = false
+    })
+    
+    local runningCoroutine
+    if shouldYield then
+        runningCoroutine = coroutine.running()
+    end
+    
+    errorPrompt:setParent(promptGui)
+    errorPrompt:setErrorTitle(title)
+    errorPrompt:updateButtons({
+        {
+            Text = "OK",
+            Callback = function()
+                errorPrompt:_close()
+                promptGui:Destroy()
+                if runningCoroutine then
+                    coroutine.resume(runningCoroutine)
+                end
+            end,
+            Primary = true
+        }
+    }, "Default")
+    
+    errorPrompt:_open(message)
+    
+    if runningCoroutine then
+        coroutine.yield()
+    end
+end)("Creator Script: AzizAnz", "Subscribe to my Channel: @AzizAnzofficiall, ScriptBlox account: AzScripter", true)

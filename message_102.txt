@@ -1,0 +1,142 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("2 Player Steal Brainrot")
+r1_0:AddToggle({
+  text = "Instant Steals",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_6)
+    -- line: [0, 0] id: 6
+    _G.Steals = r0_6
+    print("Steals: ", r0_6)
+    if r0_6 then
+      Steals()
+    end
+  end,
+})
+function Steals()
+  -- line: [0, 0] id: 10
+  spawn(function()
+    -- line: [0, 0] id: 11
+    _G.Steals = true
+    while _G.Steals do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 12
+        if game:GetService("Players").LocalPlayer:GetAttribute("stealing") == true then
+          for r3_12, r4_12 in pairs(workspace.Map.Bases:GetDescendants()) do
+            if r4_12.Name == "BillboardGui" and r4_12.Enabled == true and r4_12.Parent.Name == "BillboardPart" then
+              game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
+              wait(4)
+              game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = r4_12.Parent.Parent.Parent.Parent.Parent.Parent.RootPart.CFrame * CFrame.new(0, -20, 0)
+              wait(2)
+            end
+          end
+        end
+        wait()
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Auto Lock",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_14)
+    -- line: [0, 0] id: 14
+    _G.Lock = r0_14
+    print("Lock: ", r0_14)
+    if r0_14 then
+      Lock()
+    end
+  end,
+})
+function Lock()
+  -- line: [0, 0] id: 1
+  spawn(function()
+    -- line: [0, 0] id: 2
+    _G.Lock = true
+    while _G.Lock do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 3
+        local r0_3 = game.Players.LocalPlayer
+        local r1_3 = r0_3.Character and r0_3.Character:FindFirstChild("HumanoidRootPart")
+        if r1_3 then
+          local r2_3 = r1_3.CFrame
+          for r6_3, r7_3 in pairs(workspace.Map.Bases:GetDescendants()) do
+            if r7_3.Name == "BillboardGui" and r7_3.Enabled == true and r7_3.Parent.Name == "BillboardPart" and r7_3.Parent:FindFirstAncestorWhichIsA("Model") and r7_3.Parent.Parent.Parent.Parent.Parent.Parent:FindFirstChild("Interactables") and r7_3.Parent.Parent.Parent.Parent.Parent.Parent.Interactables.Model.LaserButton.TouchPart:FindFirstChild("LockBillboard") and r7_3.Parent.Parent.Parent.Parent.Parent.Parent.Interactables.Model.LaserButton.TouchPart.LockBillboard.Frame.Lock.Text == "LOCK" then
+              r1_3.CFrame = r7_3.Parent.Parent.Parent.Parent.Parent.Parent.Interactables.Model.LaserButton.TouchPart.CFrame * CFrame.new(0, 10, 0)
+              wait(0.5)
+              r1_3.CFrame = r2_3
+            end
+          end
+        end
+        wait(0.5)
+      end)
+    end
+  end)
+end
+r1_0:AddToggle({
+  text = "Instant Press",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_5)
+    -- line: [0, 0] id: 5
+    _G.Press = r0_5
+    print("Press: ", r0_5)
+    if r0_5 then
+      Press()
+    end
+  end,
+})
+function Press()
+  -- line: [0, 0] id: 7
+  spawn(function()
+    -- line: [0, 0] id: 8
+    _G.Press = true
+    while _G.Press do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 9
+        for r3_9, r4_9 in pairs(workspace.Map.Bases:GetDescendants()) do
+          if r4_9.Name == "StealProximity" then
+            r4_9.Enabled = true
+          end
+        end
+        for r3_9, r4_9 in pairs(workspace.Map.Bases:GetDescendants()) do
+          if r4_9.ClassName == "ProximityPrompt" then
+            r4_9.HoldDuration = 0
+            r4_9.MaxActivationDistance = 20
+          end
+        end
+        wait(1)
+      end)
+    end
+  end)
+end
+r1_0:AddButton({
+  text = "Remove Walls",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 13
+    for r3_13, r4_13 in pairs(workspace.Map.Bases:GetDescendants()) do
+      if r4_13.Name == "Wall" or r4_13.Name == "BackWall" then
+        r4_13:Destroy()
+      end
+    end
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()
+game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(r0_4)
+  -- line: [0, 0] id: 4
+  fireproximityprompt(r0_4)
+end)

@@ -1,0 +1,2489 @@
+getgenv().scripttitle = "Unicore"
+getgenv().FolderName = "Unicore"
+loadstring(game:HttpGet('https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/JanLibModiferForUnicore.lua'))()
+-- [Legit Tab UI] ------------------------------------------------------------------------------------------------------------------------------------------------------------
+local LegitTab = library:AddTab("Visuals"); 
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Player")
+
+LegitMain:AddDivider("Player Esp");
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local flags = {}
+
+-- ====== UI Перемикачі ======
+LegitMain:AddToggle{ 
+    text = "Enable",
+    flag = "enable esp",
+    callback = function(state) flags["enable esp"] = state end
+}
+
+-- Звичайний BOX
+LegitMain:AddToggle{ 
+    text = "Box",
+    flag = "box",
+    callback = function(state) flags["box"] = state end
+}:AddColor({
+    flag = "color box",
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["color box"] = color end
+})
+
+-- Field Box
+LegitMain:AddToggle{ 
+    text = "Field Box", 
+    flag = "fbox", 
+    callback = function(state) flags["fbox"] = state end
+}:AddColor({
+    flag = "color fbox", 
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["color fbox"] = color end
+})
+
+-- Corner Box
+LegitMain:AddToggle{ 
+    text = "Corner Box", 
+    flag = "cbox", 
+    callback = function(state) flags["cbox"] = state end
+}:AddColor({
+    flag = "color cbox", 
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["color cbox"] = color end
+})
+
+LegitMain:AddToggle{ 
+    text = "Health Bar",
+    flag = "box bar",
+    callback = function(state) flags["box bar"] = state end
+}
+
+LegitMain:AddToggle{ 
+    text = "Name Player",
+    flag = "box name",
+    callback = function(state) flags["box name"] = state end
+}:AddColor({
+    flag = "color name",
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["color name"] = color end
+})
+
+LegitMain:AddToggle{ 
+    text = "Distance",
+    flag = "box discr",
+    callback = function(state) flags["box discr"] = state end
+}:AddColor({
+    flag = "distance",
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["distance"] = color end
+})
+
+LegitMain:AddToggle{ 
+    text = "Health Number",
+    flag = "box number hear",
+    callback = function(state) flags["box number hear"] = state end
+}:AddColor({
+    flag = "distance health",
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["distance health"] = color end
+})
+
+-- Tracer
+LegitMain:AddToggle{ 
+    text = "Tracer", 
+    flag = "tbox", 
+    callback = function(state) flags["tbox"] = state end
+}:AddColor({
+    flag = "color tracer", 
+    color = Color3.new(1, 1, 1),
+    callback = function(color) flags["color tracer"] = color end
+})
+
+-- Distance Check Slider
+LegitMain:AddSlider{
+    text = "Distance Check", 
+    flag = "dis chek", 
+    min = 1000,  
+    max = 10000,  
+    value = 5000, -- дефолтне значення
+    callback = function(val) 
+        flags["dis chek"] = val 
+    end
+}
+
+-- ====== Функція створення ESP елементів ======
+local function CreateESP()
+    local esp = {}
+
+    -- Box
+    esp.BoxOutline = Drawing.new("Square")
+    esp.BoxOutline.Visible = false
+    esp.BoxOutline.Color = Color3.new(0,0,0)
+    esp.BoxOutline.Thickness = 2
+
+    esp.Box = Drawing.new("Square")
+    esp.Box.Visible = false
+    esp.Box.Color = Color3.new(1,1,1)
+    esp.Box.Thickness = 1
+
+    -- Field Box (залитий)
+    esp.FieldBox = Drawing.new("Square")
+    esp.FieldBox.Visible = false
+    esp.FieldBox.Filled = true
+    esp.FieldBox.Transparency = 0.3
+
+    -- Corner Box
+    esp.CornerLines = {}
+    for i = 1, 8 do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        table.insert(esp.CornerLines, line)
+    end
+
+    -- Health bar
+    esp.HealthBarOutline = Drawing.new("Line")
+    esp.HealthBarOutline.Visible = false
+    esp.HealthBarOutline.Color = Color3.new(0,0,0)
+    esp.HealthBarOutline.Thickness = 2
+
+    esp.HealthBar = Drawing.new("Line")
+    esp.HealthBar.Visible = false
+    esp.HealthBar.Thickness = 1
+
+    -- Name
+    esp.NameText = Drawing.new("Text")
+    esp.NameText.Visible = false
+    esp.NameText.Outline = true
+    esp.NameText.Center = true
+    esp.NameText.Size = 16
+    esp.NameText.Font = 3
+
+    -- Distance
+    esp.DistanceText = Drawing.new("Text")
+    esp.DistanceText.Visible = false
+    esp.DistanceText.Outline = true
+    esp.DistanceText.Center = true
+    esp.DistanceText.Size = 14
+    esp.DistanceText.Font = 3
+
+    -- HP%
+    esp.HealthPercentText = Drawing.new("Text")
+    esp.HealthPercentText.Visible = false
+    esp.HealthPercentText.Outline = true
+    esp.HealthPercentText.Center = true
+    esp.HealthPercentText.Size = 14
+    esp.HealthPercentText.Font = 3
+
+    -- Tracer
+    esp.TracerLine = Drawing.new("Line")
+    esp.TracerLine.Visible = false
+    esp.TracerLine.Thickness = 1
+
+    return esp
+end
+
+local ESPTable = {}
+
+local function RemoveESP(player)
+    if ESPTable[player] then
+        for _, v in pairs(ESPTable[player]) do
+            if typeof(v) == "table" then
+                for _, line in ipairs(v) do pcall(line.Remove, line) end
+            else
+                pcall(v.Remove, v)
+            end
+        end
+        ESPTable[player] = nil
+    end
+end
+
+local function AddESP(player)
+    if player ~= LocalPlayer and not ESPTable[player] then
+        ESPTable[player] = CreateESP()
+    end
+end
+
+for _, p in ipairs(Players:GetPlayers()) do AddESP(p) end
+Players.PlayerAdded:Connect(AddESP)
+Players.PlayerRemoving:Connect(RemoveESP)
+
+RunService.RenderStepped:Connect(function()
+    if not flags["enable esp"] then
+        for _, esp in pairs(ESPTable) do
+            for _, v in pairs(esp) do
+                if typeof(v) == "table" then
+                    for _, l in ipairs(v) do l.Visible = false end
+                else
+                    v.Visible = false
+                end
+            end
+        end
+        return
+    end
+
+    local camPos = Camera.CFrame.Position
+    local maxDistance = flags["dis chek"] or 10000 -- макс дистанція
+
+    for player, esp in pairs(ESPTable) do
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hrp and hum and hum.Health > 0 then
+            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local distance = (camPos - hrp.Position).Magnitude
+
+            -- Distance Check
+            if not onScreen or distance > maxDistance then
+                for _, v in pairs(esp) do
+                    if typeof(v) == "table" then
+                        for _, l in ipairs(v) do l.Visible = false end
+                    else
+                        v.Visible = false
+                    end
+                end
+                continue
+            end
+
+            local scale = math.clamp(1 / distance * 100, 0, 300)
+            local sizeX, sizeY = 40 * scale, 60 * scale
+            local x, y = pos.X - sizeX/2, pos.Y - sizeY/2
+
+            -- BOX
+            if flags["box"] then
+                esp.Box.Size = Vector2.new(sizeX, sizeY)
+                esp.Box.Position = Vector2.new(x, y)
+                esp.Box.Color = flags["color box"] or Color3.new(1,1,1)
+                esp.Box.Visible = true
+
+                esp.BoxOutline.Size = Vector2.new(sizeX, sizeY)
+                esp.BoxOutline.Position = Vector2.new(x, y)
+                esp.BoxOutline.Visible = true
+            else
+                esp.Box.Visible = false
+                esp.BoxOutline.Visible = false
+            end
+
+            -- FIELD BOX
+            if flags["fbox"] then
+                esp.FieldBox.Size = Vector2.new(sizeX, sizeY)
+                esp.FieldBox.Position = Vector2.new(x, y)
+                esp.FieldBox.Color = flags["color fbox"] or Color3.new(1,1,1)
+                esp.FieldBox.Visible = true
+            else
+                esp.FieldBox.Visible = false
+            end
+
+            -- CORNER BOX
+            if flags["cbox"] then
+                local cornerLen = sizeX * 0.25
+                local color = flags["color cbox"] or Color3.new(1,1,1)
+                local lines = esp.CornerLines
+                local cx, cy, w, h = x, y, sizeX, sizeY
+                local corners = {
+                    {cx, cy, cx + cornerLen, cy},
+                    {cx, cy, cx, cy + cornerLen},
+                    {cx + w, cy, cx + w - cornerLen, cy},
+                    {cx + w, cy, cx + w, cy + cornerLen},
+                    {cx, cy + h, cx + cornerLen, cy + h},
+                    {cx, cy + h, cx, cy + h - cornerLen},
+                    {cx + w, cy + h, cx + w - cornerLen, cy + h},
+                    {cx + w, cy + h, cx + w, cy + h - cornerLen}
+                }
+                for i, c in ipairs(corners) do
+                    lines[i].From = Vector2.new(c[1], c[2])
+                    lines[i].To = Vector2.new(c[3], c[4])
+                    lines[i].Color = color
+                    lines[i].Visible = true
+                end
+            else
+                for _, l in ipairs(esp.CornerLines) do l.Visible = false end
+            end
+
+            -- TRACER
+            if flags["tbox"] then
+                esp.TracerLine.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                esp.TracerLine.To = Vector2.new(pos.X, pos.Y)
+                esp.TracerLine.Color = flags["color tracer"] or Color3.new(1,1,1)
+                esp.TracerLine.Visible = true
+            else
+                esp.TracerLine.Visible = false
+            end
+
+            -- HEALTH BAR
+            if flags["box bar"] then
+                local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                local barHeight = sizeY * healthPercent
+                local barX = x - 3
+                local barY1 = y + sizeY
+                local barY2 = barY1 - barHeight
+
+                esp.HealthBar.From = Vector2.new(barX, barY1)
+                esp.HealthBar.To = Vector2.new(barX, barY2)
+                esp.HealthBar.Color = Color3.fromRGB(255 - healthPercent * 255, healthPercent * 255, 0)
+                esp.HealthBar.Visible = true
+
+                esp.HealthBarOutline.From = esp.HealthBar.From
+                esp.HealthBarOutline.To = esp.HealthBar.To
+                esp.HealthBarOutline.Visible = true
+            else
+                esp.HealthBar.Visible = false
+                esp.HealthBarOutline.Visible = false
+            end
+
+            -- NAME
+            if flags["box name"] then
+                esp.NameText.Text = player.Name
+                esp.NameText.Position = Vector2.new(pos.X, y - 20)
+                esp.NameText.Color = flags["color name"] or Color3.new(1,1,1)
+                esp.NameText.Visible = true
+            else
+                esp.NameText.Visible = false
+            end
+
+            -- DISTANCE
+            if flags["box discr"] then
+                esp.DistanceText.Text = string.format("%.0f M", distance)
+                esp.DistanceText.Position = Vector2.new(pos.X, y + sizeY + 5)
+                esp.DistanceText.Color = flags["distance"] or Color3.new(1,1,1)
+                esp.DistanceText.Visible = true
+            else
+                esp.DistanceText.Visible = false
+            end
+
+                -- Health Percent Text
+                if flags["box number hear"] then
+                    local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                    local barHeight = sizeY * healthPercent
+                    local barX = x - 3
+                    local barY1 = y + sizeY
+                    local barY2 = barY1 - barHeight
+
+                    local healthPercentTextX = barX - 15
+                    local healthPercentTextY = (barY1 + barY2) / 2
+
+                    esp.HealthPercentText.Text = string.format("%.0f%%", healthPercent * 100)
+                    esp.HealthPercentText.Position = Vector2.new(healthPercentTextX, healthPercentTextY - esp.HealthPercentText.TextBounds.Y / 2)
+                    esp.HealthPercentText.Color = flags["distance health"] or Color3.new(1,1,1)
+                    esp.HealthPercentText.Visible = true
+                else
+                esp.HealthPercentText.Visible = false
+            end
+        else
+            for _, v in pairs(esp) do
+                if typeof(v) == "table" then
+                    for _, l in ipairs(v) do l.Visible = false end
+                else
+                    v.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+LegitMain:AddDivider("Player Chams")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local connections = {}
+
+local Storage = Instance.new("Folder")
+Storage.Name = "Highlight_Storage"
+Storage.Parent = CoreGui
+
+-- Початкові налаштування
+local FillColor = Color3.fromRGB(175, 25, 255)
+local OutlineColor = Color3.fromRGB(255, 255, 255)
+local FillTransparencySlider = 10
+local OutlineTransparencySlider = 10
+local ChamsEnabled = false
+
+local function ToTransparency(val)
+    return math.clamp(val / 20, 0, 1)
+end
+
+local function UpdateHighlight(h)
+    h.FillColor = FillColor
+    h.OutlineColor = OutlineColor
+    h.FillTransparency = ToTransparency(FillTransparencySlider)
+    h.OutlineTransparency = ToTransparency(OutlineTransparencySlider)
+end
+
+local function Highlight(plr)
+    if plr == lp then return end
+
+    if Storage:FindFirstChild(plr.Name) then
+        Storage[plr.Name]:Destroy()
+    end
+
+    local h = Instance.new("Highlight")
+    h.Name = plr.Name
+    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    h.Enabled = ChamsEnabled
+    h.Parent = Storage
+
+    local function ApplyToCharacter(char)
+        h.Adornee = char
+        UpdateHighlight(h)
+    end
+
+    if plr.Character then
+        ApplyToCharacter(plr.Character)
+    end
+
+    connections[plr] = plr.CharacterAdded:Connect(ApplyToCharacter)
+end
+
+Players.PlayerAdded:Connect(Highlight)
+for _, plr in ipairs(Players:GetPlayers()) do
+    Highlight(plr)
+end
+
+Players.PlayerRemoving:Connect(function(plr)
+    if Storage:FindFirstChild(plr.Name) then
+        Storage[plr.Name]:Destroy()
+    end
+    if connections[plr] then
+        connections[plr]:Disconnect()
+        connections[plr] = nil
+    end
+end)
+
+-- UI через LegitMain
+local Vis = LegitMain:AddToggle{
+    text = "Chams",
+    flag = "chams_toggle",
+    default = false,
+    callback = function(state)
+        ChamsEnabled = state
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.Enabled = ChamsEnabled
+        end
+    end,
+}
+
+Vis:AddColor{
+    flag = "chams_fill_color",
+    color = FillColor,
+    callback = function(color)
+        FillColor = color
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.FillColor = FillColor
+        end
+    end,
+}
+
+Vis:AddColor{
+    flag = "chams_outline_color",
+    color = OutlineColor,
+    callback = function(color)
+        OutlineColor = color
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.OutlineColor = OutlineColor
+        end
+    end,
+}
+
+LegitMain:AddSlider{
+    text = "Fill Transparency",
+    flag = "fill_transparency",
+    min = 0,
+    max = 20,
+    value = FillTransparencySlider,
+    decimals = 1,
+    callback = function(val)
+        FillTransparencySlider = val
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.FillTransparency = ToTransparency(val)
+        end
+    end,
+}
+
+LegitMain:AddSlider{
+    text = "Outline Transparency",
+    flag = "outline_transparency",
+    min = 0,
+    max = 20,
+    value = OutlineTransparencySlider,
+    decimals = 1,
+    callback = function(val)
+        OutlineTransparencySlider = val
+        for _, h in ipairs(Storage:GetChildren()) do
+            h.OutlineTransparency = ToTransparency(val)
+        end
+    end,
+}
+
+local LegitMain = LegitColunm1:AddSection("Corpse")
+LegitMain:AddDivider("Corpse Esp");
+
+local corpsesFolder = workspace:WaitForChild("Corpses")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- Змінні стану
+local corpseESPEnabled = false
+local showNames = false
+local showDistance = false
+local maxDistance = 10000
+
+local corpseHighlightColor = Color3.fromRGB(255, 0, 0)
+local corpseNameColor = Color3.new(1,1,1)
+local corpseDistanceColor = Color3.new(1,1,1)
+
+-- Ігнор заражених
+local function isIgnoredCorpse(model)
+    return model.Name:lower():find("infected") ~= nil
+end
+
+-- Видалення ESP
+local function removeESP(model)
+    local highlight = model:FindFirstChild("CorpseHighlight")
+    if highlight then highlight:Destroy() end
+    local espGui = model:FindFirstChild("CorpseESP")
+    if espGui then espGui:Destroy() end
+end
+
+-- Хайлайт
+local function createHighlight(model)
+    if isIgnoredCorpse(model) then return end
+    if not model:FindFirstChild("CorpseHighlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "CorpseHighlight"
+        highlight.FillColor = corpseHighlightColor
+        highlight.OutlineColor = Color3.new(1, 1, 1)
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+        highlight.Adornee = model
+        highlight.Parent = model
+    end
+end
+
+-- Білард
+local function createBillboard(model)
+    if isIgnoredCorpse(model) then return end
+    local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+    if not primary then return end
+    removeESP(model)
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "CorpseESP"
+    billboard.Adornee = primary
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = model
+
+    local nameLabel
+    if showNames then
+        nameLabel = Instance.new("TextLabel")
+        nameLabel.Name = "CorpseName"
+        nameLabel.Size = UDim2.new(1, 0, 0, 16)          -- точна висота
+        nameLabel.Position = UDim2.new(0, 0, 0, 0)       -- зверху
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.TextSize = 16
+        nameLabel.TextColor3 = corpseNameColor
+        nameLabel.TextStrokeTransparency = 0.5
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.Text = model.Name
+        nameLabel.Parent = billboard
+    end
+
+    local distanceLabel
+    if showDistance then
+        distanceLabel = Instance.new("TextLabel")
+        distanceLabel.Name = "CorpseDistance"
+        distanceLabel.Size = UDim2.new(1, 0, 0, 16)      -- така ж висота
+        distanceLabel.Position = UDim2.new(0, 0, 0, 16)  -- без проміжку
+        distanceLabel.BackgroundTransparency = 1
+        distanceLabel.TextSize = 16
+        distanceLabel.TextColor3 = corpseDistanceColor
+        distanceLabel.TextStrokeTransparency = 0.5
+        distanceLabel.Font = Enum.Font.GothamBold
+        distanceLabel.Text = "..."
+        distanceLabel.Parent = billboard
+    end
+
+    -- апдейт по дистанції
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not model or not model.Parent or not primary or not primary.Parent then
+            if connection then connection:Disconnect() end
+            return
+        end
+
+        local distance = (workspace.CurrentCamera.CFrame.Position - primary.Position).Magnitude
+        local inRange = distance <= maxDistance
+
+        -- Name
+        if nameLabel then
+            nameLabel.Visible = inRange
+        end
+
+        -- Distance
+        if distanceLabel then
+            if inRange then
+                distanceLabel.Text = tostring(math.floor(distance)) .. "м"
+                distanceLabel.Visible = true
+            else
+                distanceLabel.Visible = false
+            end
+        end
+    end)
+end
+
+-- Оновлення ESP
+local function updateCorpseESP(enabled)
+    for _, corpse in pairs(corpsesFolder:GetChildren()) do
+        if corpse:IsA("Model") and not isIgnoredCorpse(corpse) then
+            if enabled then
+                createHighlight(corpse)
+                if showNames or showDistance then
+                    createBillboard(corpse)
+                else
+                    removeESP(corpse)
+                end
+            else
+                removeESP(corpse)
+            end
+        else
+            removeESP(corpse)
+        end
+    end
+end
+
+-- Нові колбеки UI
+LegitMain:AddToggle{ 
+    text = "Enable", 
+    flag = "сorpse esp",  
+    callback = function(state)
+        corpseESPEnabled = state
+        updateCorpseESP(state)
+    end
+}
+
+LegitMain:AddToggle{ 
+    text = "Name",  
+    flag = "namec",  
+    callback = function(state)
+        showNames = state
+        if corpseESPEnabled then updateCorpseESP(true) end
+    end
+}
+
+:AddColor({
+    flag = "namecolor",  
+    color = corpseNameColor,
+    callback = function(color)
+        corpseNameColor = color
+        for _, corpse in pairs(corpsesFolder:GetChildren()) do
+            local espGui = corpse:FindFirstChild("CorpseESP")
+            if espGui then
+                local label = espGui:FindFirstChild("CorpseName")
+                if label then label.TextColor3 = color end
+            end
+        end
+    end
+})
+
+LegitMain:AddToggle{
+    text = "Distance",  
+    flag = "distancec",  
+    callback = function(state)
+        showDistance = state
+        if corpseESPEnabled then updateCorpseESP(true) end
+    end
+}
+
+:AddColor({
+    flag = "colordistance",  
+    color = corpseDistanceColor,
+    callback = function(color)
+        corpseDistanceColor = color
+        for _, corpse in pairs(corpsesFolder:GetChildren()) do
+            local espGui = corpse:FindFirstChild("CorpseESP")
+            if espGui then
+                local label = espGui:FindFirstChild("CorpseDistance")
+                if label then label.TextColor3 = color end
+            end
+        end
+    end
+})
+
+LegitMain:AddSlider{
+    text = "Distance Check", 
+    flag = "distancechekk",  
+    min = 1000, 
+    max = 10000,  
+    decimals = 1001, 
+    callback = function(val)
+        maxDistance = val
+    end
+}
+
+local LegitMain = LegitColunm1:AddSection("Vehicle")
+LegitMain:AddDivider("Vehicle Esp");
+
+local vehiclesFolder = workspace:WaitForChild("Vehicles")
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+-- Стани
+local vehicleESPEnabled = false
+local showNames = false
+local showDistance = false
+local maxDistance = 10000
+
+local vehicleNameColor = Color3.new(1,1,1)
+local vehicleDistanceColor = Color3.new(1,1,1)
+
+local espVehicles = {}
+
+-- Видалення ESP
+local function removeESP(model)
+    local espGui = model:FindFirstChild("VehicleESP")
+    if espGui then espGui:Destroy() end
+    espVehicles[model] = nil
+end
+
+-- Створення Billboard (Name + Distance)
+local function createBillboard(model)
+    local primary = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+    if not primary then return end
+    removeESP(model)
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "VehicleESP"
+    billboard.Adornee = primary
+    billboard.Size = UDim2.new(0, 150, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = model
+
+    local nameLabel
+    if showNames then
+        nameLabel = Instance.new("TextLabel")
+        nameLabel.Name = "VehicleName"
+        nameLabel.Size = UDim2.new(1, 0, 0, 16)
+        nameLabel.Position = UDim2.new(0, 0, 0, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.TextSize = 16
+        nameLabel.TextColor3 = vehicleNameColor
+        nameLabel.TextStrokeTransparency = 0.5
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.Text = model.Name
+        nameLabel.Parent = billboard
+    end
+
+    local distanceLabel
+    if showDistance then
+        distanceLabel = Instance.new("TextLabel")
+        distanceLabel.Name = "VehicleDistance"
+        distanceLabel.Size = UDim2.new(1, 0, 0, 16)
+        distanceLabel.Position = UDim2.new(0, 0, 0, 16)
+        distanceLabel.BackgroundTransparency = 1
+        distanceLabel.TextSize = 16
+        distanceLabel.TextColor3 = vehicleDistanceColor
+        distanceLabel.TextStrokeTransparency = 0.5
+        distanceLabel.Font = Enum.Font.GothamBold
+        distanceLabel.Text = "..."
+        distanceLabel.Parent = billboard
+    end
+
+    -- RenderStepped для кожного Vehicle
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not model or not model.Parent or not primary or not primary.Parent then
+            if connection then connection:Disconnect() end
+            return
+        end
+
+        local distance = (camera.CFrame.Position - primary.Position).Magnitude
+        local inRange = distance <= maxDistance
+
+        if nameLabel then
+            nameLabel.Visible = showNames and inRange
+        end
+
+        if distanceLabel then
+            if showDistance and inRange then
+                -- Фейкові метри як у Corpse ESP
+                 distanceLabel.Text = tostring(math.floor(distance)) .. "м"
+                distanceLabel.Visible = true
+            else
+                distanceLabel.Visible = false
+            end
+        end
+    end)
+
+    espVehicles[model] = {
+        model = model,
+        primary = primary,
+        billboard = billboard,
+        nameLabel = nameLabel,
+        distanceLabel = distanceLabel
+    }
+end
+
+-- Оновлення ESP
+local function updateVehicleESP(enabled)
+    for _, vehicle in pairs(vehiclesFolder:GetChildren()) do
+        if vehicle:IsA("Model") then
+            if enabled and (showNames or showDistance) then
+                createBillboard(vehicle)
+            else
+                removeESP(vehicle)
+            end
+        end
+    end
+end
+
+-- UI
+LegitMain:AddToggle{
+    text = "Enable Vehicle ESP",
+    flag = "EnableVehicleESP",
+    state = false,
+    callback = function(state)
+        vehicleESPEnabled = state
+        updateVehicleESP(state)
+    end
+}
+
+LegitMain:AddToggle{
+    text = "Names",
+    flag = "VehicleShowNames",
+    state = false,
+    callback = function(state)
+        showNames = state
+        if vehicleESPEnabled then updateVehicleESP(true) end
+    end
+}:AddColor({
+    flag = "VehicleNameColor",
+    color = vehicleNameColor,
+    callback = function(color)
+        vehicleNameColor = color
+        for _, data in pairs(espVehicles) do
+            if data.nameLabel then data.nameLabel.TextColor3 = color end
+        end
+    end
+})
+
+LegitMain:AddToggle{
+    text = "Distance",
+    flag = "VehicleShowDistance",
+    state = false,
+    callback = function(state)
+        showDistance = state
+        if vehicleESPEnabled then updateVehicleESP(true) end
+    end
+}:AddColor({
+    flag = "VehicleDistanceColor",
+    color = vehicleDistanceColor,
+    callback = function(color)
+        vehicleDistanceColor = color
+        for _, data in pairs(espVehicles) do
+            if data.distanceLabel then data.distanceLabel.TextColor3 = color end
+        end
+    end
+})
+
+LegitMain:AddSlider{
+    text = "Distance Check",
+    flag = "VehicleDistanceCheck",
+    min = 1000,
+    max = 10000,
+    decimals = 0,
+    value = maxDistance,
+    callback = function(val)
+        maxDistance = val
+        if vehicleESPEnabled then updateVehicleESP(true) end
+    end
+}
+
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("World")
+
+LegitMain:AddDivider("World");
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+local noFogConnection
+
+LegitMain:AddToggle{
+    text = "No Fog",
+    flag = "NoFog",
+    state = false,
+    callback = function(state)
+        if state then
+            if noFogConnection then
+                noFogConnection:Disconnect()
+                noFogConnection = nil
+            end
+
+            noFogConnection = RunService.RenderStepped:Connect(function()
+                Lighting.FogStart = 1e6
+                Lighting.FogEnd = 1e6
+
+                local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+                if atmosphere then
+                    atmosphere.Density = 0
+                    atmosphere.Haze = 0
+                    atmosphere.Glare = 0
+                    atmosphere.Offset = 0
+                end
+            end)
+        else
+            if noFogConnection then
+                noFogConnection:Disconnect()
+                noFogConnection = nil
+            end
+            Lighting.FogStart = 0
+            Lighting.FogEnd = 1000
+        end
+    end
+}
+
+local Lighting = game:GetService("Lighting")
+
+LegitMain:AddToggle{
+    text = "No Shadows",
+    flag = "NoShadows",
+    state = false,
+    callback = function(state)
+        Lighting.GlobalShadows = not state -- Вимикає тіні, коли state = true
+    end
+}
+
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local AmbientEnabled = false
+local AmbientColor = Color3.fromRGB(198, 92, 92) -- початковий колір як на скріні
+
+-- Функція постійного оновлення
+local function UpdateAmbient()
+    if AmbientEnabled then
+        RunService:BindToRenderStep("CustomAmbient", 1, function()
+            Lighting.Ambient = AmbientColor
+        end)
+    else
+        RunService:UnbindFromRenderStep("CustomAmbient")
+        Lighting.Ambient = Color3.new(1,1,1) -- стандартний білий
+    end
+end
+
+-- ================= UI =================
+
+LegitMain:AddToggle{
+    text = "Custom World Ambient",
+    flag = "ambient",
+    callback = function(state)
+        AmbientEnabled = state
+        UpdateAmbient()
+    end
+}
+:AddColor{
+    text = "Ambient Color",
+    flag = "ambient color",
+    color = AmbientColor,
+    callback = function(color)
+        AmbientColor = color
+        if AmbientEnabled then
+            Lighting.Ambient = AmbientColor
+        end
+    end
+}
+
+local Lighting = game:GetService("Lighting")
+
+local TechnologyEnabled = false
+local SelectedTechnology = "Voxel"
+
+-- Перемикач
+LegitMain:AddToggle{
+    text = "Custom Technology",
+    flag = "Visuals/TechnologyEnabled",
+    state = false,
+    callback = function(state)
+        TechnologyEnabled = state
+        if state then
+            -- Якщо ввімкнено → застосувати вибране
+            pcall(function()
+                Lighting.Technology = Enum.Technology[SelectedTechnology]
+            end)
+        else
+            -- Якщо викл → повертає дефолт (Future)
+            pcall(function()
+                Lighting.Technology = Enum.Technology.Future
+            end)
+        end
+    end
+}
+
+-- Дропдаун з вибором
+LegitMain:AddList{
+    text = "Technology Mode",
+    flag = "Visuals/Technology",
+    value = "Voxel",
+    values = {"Voxel", "ShadowMap", "Legacy", "Compatibility", "Future"},
+    callback = function(val)
+        SelectedTechnology = val
+        if TechnologyEnabled then
+            pcall(function()
+                Lighting.Technology = Enum.Technology[val]
+            end)
+        end
+    end
+}
+
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+local timeConnection
+local customTime = 12
+
+-- Тогл для вкл/викл кастомного часу
+LegitMain:AddToggle{
+    text = "Custom Time",
+    flag = "CustomTime",
+    state = false,
+    callback = function(state)
+        if state then
+            if timeConnection then
+                timeConnection:Disconnect()
+                timeConnection = nil
+            end
+            timeConnection = RunService.RenderStepped:Connect(function()
+                Lighting.ClockTime = customTime
+            end)
+        else
+            if timeConnection then
+                timeConnection:Disconnect()
+                timeConnection = nil
+            end
+            -- вертаємо стандартну систему (гра сама підставить)
+        end
+    end
+}
+
+-- Слайдер для вибору години
+LegitMain:AddSlider{
+    text = "Custom Time",
+    flag = "CustomTimeValue",
+    value = 12,
+    min = 0,
+    max = 24,
+    callback = function(val)
+        customTime = val
+    end
+}
+
+local Lighting = game:GetService("Lighting")
+
+-- Шукаємо або створюємо ColorCorrectionEffect
+local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+if not cc then
+    cc = Instance.new("ColorCorrectionEffect")
+    cc.Parent = Lighting
+end
+
+local customSaturation = 1
+local satEnabled = false
+
+-- Перемикач вкл/викл (зверху)
+LegitMain:AddToggle{
+    text = "Custom Saturation",
+    flag = "CustomSaturation",
+    state = false,
+    callback = function(state)
+        satEnabled = state
+        if satEnabled then
+            cc.Saturation = customSaturation
+            cc.Enabled = true
+        else
+            cc.Enabled = false
+        end
+    end
+}
+
+-- Слайдер знизу
+LegitMain:AddSlider{
+    text = "Saturation",
+    flag = "SaturationValue",
+    value = 1,
+    min = 0,
+    max = 3,
+    float = 0.1,
+    callback = function(val)
+        customSaturation = val
+        if satEnabled then
+            cc.Saturation = customSaturation
+        end
+    end
+}
+
+local LegitMain = LegitColunm1:AddSection("Clouds")
+
+LegitMain:AddDivider("Cloud Modification")
+
+local clouds = workspace:FindFirstChildOfClass("Clouds") or workspace.Terrain:FindFirstChildOfClass("Clouds")
+flags = flags or {}
+
+-- Ініціалізація значень
+local cloudColor = clouds and clouds.Color or Color3.fromRGB(255, 255, 255)
+local cloudCover = clouds and clouds.Cover or 0.5
+local cloudDensity = clouds and clouds.Density or 0.5
+local cloudsEnabled = clouds and clouds.Enabled or true
+flags.ModifyClouds = false -- стартовий стан
+
+-- Toggle Вкл/Викл Clouds
+LegitMain:AddToggle{
+    text = "Enable Clouds",
+    flag = "EnableClouds",
+    state = cloudsEnabled,
+    callback = function(state)
+        cloudsEnabled = state
+    end
+}:AddColor{
+    flag = "CloudsColor",
+    color = cloudColor,
+    callback = function(col)
+        cloudColor = col
+    end
+}
+
+-- Тумблер Modify Clouds
+LegitMain:AddToggle{
+    text = "Modify Clouds",
+    flag = "ModifyClouds",
+    state = false,
+    callback = function(state)
+        flags.ModifyClouds = state
+    end
+}
+
+-- Слайдер Cover
+LegitMain:AddSlider{
+    text = "Clouds Cover",
+    flag = "CloudsCover",
+    min = 0,
+    max = 1,
+    float = 0.01,
+    value = cloudCover,
+    callback = function(val)
+        cloudCover = val
+    end
+}
+
+-- Слайдер Density
+LegitMain:AddSlider{
+    text = "CloudsDensity",
+    flag = "CloudsDensity",
+    min = 0,
+    max = 1,
+    float = 0.01,
+    value = cloudDensity,
+    callback = function(val)
+        cloudDensity = val
+    end
+}
+
+-- Авто-оновлення тільки якщо Modify Clouds увімкнено
+game:GetService("RunService").RenderStepped:Connect(function()
+    if clouds and flags.ModifyClouds then
+        clouds.Enabled = cloudsEnabled
+        clouds.Color = cloudColor
+        clouds.Cover = cloudCover
+        clouds.Density = cloudDensity
+    end
+end)
+
+local LegitMain = LegitColunm1:AddSection("Sky Box")
+
+LegitMain:AddDivider("Custom Sky Box")
+
+local Lighting = game:GetService("Lighting")
+flags = flags or {}
+
+-- Функція очищення попереднього Skybox
+local function ClearSkybox()
+    for _, child in pairs(Lighting:GetChildren()) do
+        if child:IsA("Sky") then
+            child:Destroy()
+        end
+    end
+end
+
+-- Функція встановлення Skybox за назвою
+local function SetSkybox(name)
+    ClearSkybox()
+
+    local sky = Instance.new("Sky")
+    sky.Name = name
+
+    if name == "Galaxy" then
+        sky.SkyboxBk = "http://www.roblox.com/asset/?id=149397692"
+        sky.SkyboxDn = "http://www.roblox.com/asset/?id=149397686"
+        sky.SkyboxFt = "http://www.roblox.com/asset/?id=149397697"
+        sky.SkyboxLf = "http://www.roblox.com/asset/?id=149397684"
+        sky.SkyboxRt = "http://www.roblox.com/asset/?id=149397688"
+        sky.SkyboxUp = "http://www.roblox.com/asset/?id=149397702"
+    elseif name == "Galaxy 2" then
+        sky.SkyboxBk = "http://www.roblox.com/asset/?id=155441936"
+        sky.SkyboxDn = "http://www.roblox.com/asset/?id=155441802"
+        sky.SkyboxFt = "http://www.roblox.com/asset/?id=155441818"
+        sky.SkyboxLf = "http://www.roblox.com/asset/?id=155441777"
+        sky.SkyboxRt = "http://www.roblox.com/asset/?id=155441874"
+        sky.SkyboxUp = "http://www.roblox.com/asset/?id=155441905"
+    elseif name == "Galaxy 3" then
+        sky.SkyboxBk = "rbxassetid://135908594667929"
+        sky.SkyboxDn = "rbxassetid://139584143501514"
+        sky.SkyboxFt = "rbxassetid://92947876187368"
+        sky.SkyboxLf = "rbxassetid://72493016739936"
+        sky.SkyboxRt = "rbxassetid://81731245279712"
+        sky.SkyboxUp = "rbxassetid://88174897344210"
+    elseif name == "Saturne" then
+        sky.SkyboxBk = "rbxassetid://1898724755"
+        sky.SkyboxDn = "rbxassetid://1898727189"
+        sky.SkyboxFt = "rbxassetid://1898722814"
+        sky.SkyboxLf = "rbxassetid://1898729298"
+        sky.SkyboxRt = "rbxassetid://1898741025"
+        sky.SkyboxUp = "rbxassetid://1898736761"
+    elseif name == "Neptune" then
+        sky.SkyboxBk = "rbxassetid://218955819"
+        sky.SkyboxDn = "rbxassetid://218953419"
+        sky.SkyboxFt = "rbxassetid://218954524"
+        sky.SkyboxLf = "rbxassetid://218958493"
+        sky.SkyboxRt = "rbxassetid://218957134"
+        sky.SkyboxUp = "rbxassetid://218950090"
+    elseif name == "Redshift" then
+        sky.SkyboxBk = "rbxassetid://401664839"
+        sky.SkyboxDn = "rbxassetid://401664862"
+        sky.SkyboxFt = "rbxassetid://401664960"
+        sky.SkyboxLf = "rbxassetid://401664881"
+        sky.SkyboxRt = "rbxassetid://401664901"
+        sky.SkyboxUp = "rbxassetid://401664936"
+    elseif name == "Pink Daylights" then
+        sky.SkyboxBk = "rbxassetid://11555017034"
+        sky.SkyboxDn = "rbxassetid://11555013415"
+        sky.SkyboxFt = "rbxassetid://11555010145"
+        sky.SkyboxLf = "rbxassetid://11555006545"
+        sky.SkyboxRt = "rbxassetid://11555000712"
+        sky.SkyboxUp = "rbxassetid://11554996247"
+    elseif name == "Purple Night" then
+        sky.SkyboxBk = "rbxassetid://17279854976"
+        sky.SkyboxDn = "rbxassetid://17279856318"
+        sky.SkyboxFt = "rbxassetid://17279858447"
+        sky.SkyboxLf = "rbxassetid://17279860360"
+        sky.SkyboxRt = "rbxassetid://17279862234"
+        sky.SkyboxUp = "rbxassetid://17279864507"
+    elseif name == "Gray Night" then
+        sky.SkyboxBk = "rbxassetid://1618912481"
+        sky.SkyboxDn = "rbxassetid://1618913943"
+        sky.SkyboxFt = "rbxassetid://1618913244"
+        sky.SkyboxLf = "rbxassetid://1618912849"
+        sky.SkyboxRt = "rbxassetid://1618911568"
+        sky.SkyboxUp = "rbxassetid://1618913654"
+    elseif name == "Anime Sky" then
+        sky.SkyboxBk = "rbxassetid://18351376859"
+        sky.SkyboxDn = "rbxassetid://18351374919"
+        sky.SkyboxFt = "rbxassetid://18351376800"
+        sky.SkyboxLf = "rbxassetid://18351376469"
+        sky.SkyboxRt = "rbxassetid://18351376457"
+        sky.SkyboxUp = "rbxassetid://18351377189"
+    else
+        warn("Невідомий варіант Skybox: " .. tostring(name))
+        return
+    end
+
+    sky.Parent = Lighting
+end
+
+-- Стартові значення
+flags.CustomSkyEnabled = false
+flags.SelectedSky = "Galaxy"
+
+-- Toggle увімкнення кастомного неба
+LegitMain:AddToggle{
+    text = "Custom Sky",
+    flag = "CustomSky",
+    state = false,
+    callback = function(state)
+        flags.CustomSkyEnabled = state
+        if flags.CustomSkyEnabled then
+            SetSkybox(flags.SelectedSky)
+        else
+            ClearSkybox()
+        end
+    end
+}
+
+-- List для вибору Skybox
+LegitMain:AddList{
+    text = "Skybox Selector",
+    flag = "SkyboxChoice",
+    value = "Galaxy",
+    values = {
+        "Galaxy", "Galaxy 2", "Galaxy 3", "Saturne", "Neptune",
+        "Redshift", "Pink Daylights", "Purple Night", "Gray Night", "Anime Sky"
+    },
+    callback = function(selected)
+        flags.SelectedSky = selected
+        if flags.CustomSkyEnabled then
+            SetSkybox(flags.SelectedSky)
+        end
+    end
+}
+
+local LegitMain = LegitColunm1:AddSection("Streched Resolution")
+LegitMain:AddDivider("Stretched Resolution");
+getgenv().Resolution = {
+    [".gg/scripters"] = 0.5
+}
+
+local Camera = workspace.CurrentCamera
+local connection
+
+-- 🟢 Toggle: Stretched Resolution
+LegitMain:AddToggle{
+    text = "Stretched Resolution", 
+    flag = "Stretched Resolution",
+    callback = function(state)
+        if state then
+            if not connection then
+                connection = game:GetService("RunService").RenderStepped:Connect(function()
+                    Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, getgenv().Resolution[".gg/scripters"], 0, 0, 0, 1)
+                end)
+            end
+        else
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+        end
+    end
+}
+
+-- 🟡 Slider: Stretched Resolution Amount
+LegitMain:AddSlider{
+    text = "Resolution Slider", 
+    flag = "resol slider", 
+    min = 0, 
+    max = 1, 
+    value = 0.6,
+    float = 0.01,
+    callback = function(val)
+        getgenv().Resolution[".gg/scripters"] = val
+    end
+}
+
+local LegitMain = LegitColunm1:AddSection("Local Player")
+LegitMain:AddDivider("Self Chams");
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local enabled = false
+local color = Color3.fromRGB(255, 255, 255)
+local material = Enum.Material.ForceField -- дефолт
+
+-- Функція застосування чамсів
+local function applyChams(char)
+    task.wait(0)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Color = color
+            part.Material = material
+        end
+    end
+end
+
+-- Функція очистки
+local function clearChams(char)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Color = Color3.fromRGB(255, 255, 255)
+            part.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+-- === GUI елементи ===
+
+-- Toggle зверху
+LegitMain:AddToggle{
+    text = "Self Chams",
+    flag = "SelfChams",
+    state = false,
+    callback = function(state)
+        enabled = state
+        local char = player.Character
+        if char then
+            if enabled then
+                applyChams(char)
+            else
+                clearChams(char)
+            end
+        end
+    end
+}
+
+-- Color Picker знизу
+:AddColor{
+    flag = "ChamsColor",
+    color = Color3.fromRGB(255,255,255),
+    callback = function(c)
+        color = c
+        if enabled and player.Character then
+            applyChams(player.Character)
+        end
+    end
+}
+
+-- Dropdown у стилі AddList
+LegitMain:AddList{
+    text = "Chams Material",
+    flag = "ChamsMaterial",
+    value = "ForceField", -- дефолт
+    values = { "ForceField", "Plastic", "Glass" },
+    callback = function(val)
+        if val == "ForceField" then
+            material = Enum.Material.ForceField
+        elseif val == "Plastic" then
+            material = Enum.Material.Plastic
+        elseif val == "Glass" then
+            material = Enum.Material.Glass
+        end
+
+        if enabled and player.Character then
+            applyChams(player.Character)
+        end
+    end
+}
+
+-- Автоматичне застосування при спавні
+player.CharacterAdded:Connect(function(char)
+    task.wait(0)
+    if enabled then
+        applyChams(char)
+    end
+end)
+
+LegitMain:AddDivider("Equiped Item Chams");
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local gunChamsEnabled = false
+local chamColor = Color3.fromRGB(250, 250, 250)
+local chamMaterial = Enum.Material.Plastic
+
+local function ApplyGunChams(tool)
+    if not tool then return end
+    for _, obj in ipairs(tool:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+            obj.Material = chamMaterial
+            obj.Color = chamColor
+        end
+    end
+end
+
+-- Постійно слідкуємо за зброєю
+RunService.RenderStepped:Connect(function()
+    if gunChamsEnabled and LocalPlayer.Character then
+        local equipped = LocalPlayer.Character:FindFirstChild("Equipped")
+        if equipped then
+            ApplyGunChams(equipped)
+        end
+    end
+end)
+
+LegitMain:AddToggle{
+    text = "Equiped Item Chams",
+    flag = "Visuals/GunChams",
+    state = false,
+    callback = function(state)
+        gunChamsEnabled = state
+    end
+}
+:AddColor{
+    Default = Color3.fromRGB(250, 250, 250),
+    Flag = "Visuals/GunChamsColor",
+    Callback = function(c)
+        chamColor = c
+    end
+}
+
+LegitMain:AddList{
+    text = "Equiped Item Material",
+    flag = "Visuals/GunChamsMaterial",
+    values = {"Default", "ForceField", "Plastic", "SmoothPlastic", "Glass", "Neon"},
+    value = "Plastic",
+    callback = function(val)
+        if val == "Default" then
+            chamMaterial = Enum.Material.Plastic
+        elseif val == "ForceField" then
+            chamMaterial = Enum.Material.ForceField
+        elseif val == "Plastic" then
+            chamMaterial = Enum.Material.Plastic
+        elseif val == "SmoothPlastic" then
+            chamMaterial = Enum.Material.SmoothPlastic
+        elseif val == "Glass" then
+            chamMaterial = Enum.Material.Glass
+        elseif val == "Neon" then
+            chamMaterial = Enum.Material.Neon
+        end
+    end
+}
+
+local LegitTab = library:AddTab("Combat"); 
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Aim Bot")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Camera = Workspace.CurrentCamera
+local UIS = game:GetService("UserInputService")
+
+local LP = Players.LocalPlayer
+
+-- ================== VARIABLES ==================
+local aimbotEnabled = false
+local holding = false
+local smoothingFactor = 0.5
+local FOVRadius = 150
+local FovEnabled = false
+local FovColor = Color3.fromRGB(0, 255, 0)
+local selectedHitPart = "Head"
+local speed = 2200
+
+-- ================== FOV CIRCLE ==================
+local outlineCircle = Drawing.new("Circle")
+outlineCircle.Thickness = 4
+outlineCircle.NumSides = 100
+outlineCircle.Filled = false
+outlineCircle.Color = Color3.fromRGB(0,0,0)
+outlineCircle.Visible = false
+
+local mainCircle = Drawing.new("Circle")
+mainCircle.Thickness = 2
+mainCircle.NumSides = 100
+mainCircle.Filled = false
+mainCircle.Color = FovColor
+mainCircle.Visible = false
+
+-- ================== FUNCTIONS ==================
+local function is_in_fov(screen_pos)
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    return (screenCenter - Vector2.new(screen_pos.X, screen_pos.Y)).Magnitude <= FOVRadius
+end
+
+local function getTargetPart(character)
+    if not character then return nil end
+    local part = character:FindFirstChild(selectedHitPart)
+    if part and part:IsA("BasePart") then
+        return part
+    end
+    return nil
+end
+
+local function predict(pos, vel)
+    local dist = (pos - Camera.CFrame.Position).Magnitude
+    if dist < 1 then return pos end
+    local time = dist / speed
+    return pos + vel * time + Vector3.new(0, 50 * time^2, 0)
+end
+
+local function getSpeed()
+    local char = LP.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local bulletSpeedValue = tool:FindFirstChild("BulletSpeed") or tool:FindFirstChild("Speed")
+            if bulletSpeedValue and bulletSpeedValue:IsA("NumberValue") then
+                return bulletSpeedValue.Value
+            end
+        end
+    end
+    return 2200
+end
+
+local function getClosestPlayer()
+    local closestDist = math.huge
+    local targetPlayer = nil
+    local viewportSize = Camera.ViewportSize
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LP and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local part = getTargetPart(player.Character)
+            if part then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                if onScreen and screenPos.Z > 0 and is_in_fov(screenPos) then
+                    local center = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        targetPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return targetPlayer
+end
+
+local function moveMouseTowards(targetPos)
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local dx = targetPos.X - screenCenter.X
+    local dy = targetPos.Y - screenCenter.Y
+    local moveX = dx * smoothingFactor
+    local moveY = dy * smoothingFactor
+    if mousemoverel then
+        mousemoverel(moveX, moveY)
+    end
+end
+
+-- ================== INPUT ==================
+UIS.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        holding = true
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        holding = false
+    end
+end)
+
+-- ================== RENDER LOOP ==================
+RunService.RenderStepped:Connect(function()
+    speed = getSpeed()
+
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    -- FOV
+    if FovEnabled then
+        outlineCircle.Position = screenCenter
+        outlineCircle.Radius = FOVRadius
+        outlineCircle.Visible = true
+
+        mainCircle.Position = screenCenter
+        mainCircle.Radius = FOVRadius
+        mainCircle.Color = FovColor
+        mainCircle.Visible = true
+    else
+        outlineCircle.Visible = false
+        mainCircle.Visible = false
+    end
+
+    -- AIMBOT
+    if aimbotEnabled and holding then
+        local target = getClosestPlayer()
+        if target and target.Character then
+            local part = getTargetPart(target.Character)
+            if part then
+                local futurePos = predict(part.Position, part.Velocity or Vector3.new())
+                local screenPos, onScreen = Camera:WorldToViewportPoint(futurePos)
+                if onScreen and screenPos.Z > 0 then
+                    moveMouseTowards(Vector2.new(screenPos.X, screenPos.Y))
+                end
+            end
+        end
+    end
+end)
+
+-- ================== UI ==================
+LegitMain:AddToggle{
+    text = "Enable Aim Bot",
+    flag = "EnableAimbot",
+    state = false,
+    callback = function(state)
+        aimbotEnabled = state
+    end
+}
+
+LegitMain:AddSlider{
+    text = "Sensitivity",
+    flag = "Sensitivity",
+    min = 0.1,
+    max = 2,
+    value = 0.5,
+    float = 1,
+    callback = function(val)
+        smoothingFactor = val
+    end
+}
+
+LegitMain:AddDivider("FOV Aim Bot")
+
+LegitMain:AddToggle{
+    text = "Enable FOV",
+    flag = "EnableFOV",
+    state = false,
+    callback = function(val)
+        FovEnabled = val
+    end
+}
+:AddColor{
+    flag = "FovColor",
+    color = FovColor,
+    callback = function(c)
+        FovColor = c
+        mainCircle.Color = c
+    end
+}
+
+LegitMain:AddSlider{
+    text = "FOV Radius",
+    flag = "FOVRadiusSlider",
+    min = 50,
+    max = 500,
+    value = 150,
+    float = 1,
+    callback = function(val)
+        FOVRadius = val
+    end
+}
+
+local LegitMain = LegitColunm1:AddSection("Silent Aim")
+
+-- 🎯 Silent Aim + SnapLine + FOV з кастомним UI
+local SilentAimEnabled = false
+local SnapLineEnabled = false
+local FovEnabled = false
+local HitChance = 100
+local MaxDistance = 1000 -- максимум 1000 метрів
+local TargetHitbox = "Head"
+local FOVRadius = 150
+
+-- 🎨 Colors
+local SnapLineColor = Color3.fromRGB(255, 0, 0)
+local FovColor = Color3.fromRGB(0, 255, 0)
+
+-- 🔍 Roblox Services
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 📌 Drawing objects
+
+-- SnapLine (Outline + Main)
+local snapLineOutline = Drawing.new("Line")
+snapLineOutline.Thickness = 5 -- outline товщий
+snapLineOutline.Color = Color3.fromRGB(0, 0, 0)
+snapLineOutline.Transparency = 1
+snapLineOutline.Visible = false
+
+local snapLine = Drawing.new("Line")
+snapLine.Thickness = 3
+snapLine.Transparency = 1
+snapLine.Visible = false
+
+-- FOV Circle (Outline + Main)
+local outlineCircle = Drawing.new("Circle")
+outlineCircle.Thickness = 4
+outlineCircle.NumSides = 100
+outlineCircle.Transparency = 1
+outlineCircle.Filled = false
+outlineCircle.Color = Color3.fromRGB(0,0,0)
+outlineCircle.Visible = false
+
+local mainCircle = Drawing.new("Circle")
+mainCircle.Thickness = 2
+mainCircle.NumSides = 100
+mainCircle.Transparency = 1
+mainCircle.Filled = false
+mainCircle.Visible = false
+
+-- 🔎 Перевірка FOV
+local function is_in_fov(screen_pos, radius)
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    return (screenCenter - Vector2.new(screen_pos.X, screen_pos.Y)).Magnitude <= radius
+end
+
+-- 🔍 Найближчий гравець
+local function get_closest_player()
+    local closest_distance = MaxDistance
+    local closest_player = nil
+    local closest_screen_pos = nil
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(TargetHitbox) then
+            local part = player.Character[TargetHitbox]
+            local pos, on_screen = Camera:WorldToViewportPoint(part.Position)
+            if on_screen and is_in_fov(pos, FOVRadius) then
+                local distance = (Camera.CFrame.Position - part.Position).Magnitude
+                if distance < closest_distance then
+                    closest_distance = distance
+                    closest_player = player.Character
+                    closest_screen_pos = pos
+                end
+            end
+        end
+    end
+    return closest_player, closest_screen_pos
+end
+
+-- 🔫 Silent Aim Hook
+local old_fire
+local function silent_aim()
+    local framework
+    for _, v in pairs(getgc(true)) do
+        if typeof(v) == "table" and rawget(v, "Fire") and typeof(v.Fire) == "function" then
+            framework = v
+            break
+        end
+    end
+
+    if not framework then
+        warn("Silent Aim framework not found")
+        return
+    end
+
+    old_fire = hookfunction(framework.Fire, function(weapon_data, character_data, arg3, gun_data, origin, direction, ...)
+        if SilentAimEnabled and math.random(0, 100) <= HitChance then
+            local target = get_closest_player()
+            if target and target:FindFirstChild(TargetHitbox) then
+                local part = target[TargetHitbox]
+                direction = (part.Position - origin).Unit
+            end
+        end
+        return old_fire(weapon_data, character_data, arg3, gun_data, origin, direction, ...)
+    end)
+end
+silent_aim()
+
+-- 🎨 Render Loop
+RunService.RenderStepped:Connect(function()
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    -- FOV
+    if FovEnabled then
+        outlineCircle.Position = screenCenter
+        outlineCircle.Radius = FOVRadius
+        outlineCircle.Visible = true
+
+        mainCircle.Position = screenCenter
+        mainCircle.Radius = FOVRadius
+        mainCircle.Color = FovColor
+        mainCircle.Visible = true
+    else
+        outlineCircle.Visible = false
+        mainCircle.Visible = false
+    end
+
+    -- SnapLine
+    local target, pos = get_closest_player()
+    if SnapLineEnabled and target and pos then
+        local from = screenCenter
+        local to = Vector2.new(pos.X, pos.Y)
+
+        snapLineOutline.From = from
+        snapLineOutline.To = to
+        snapLineOutline.Visible = true
+
+        snapLine.From = from
+        snapLine.To = to
+        snapLine.Color = SnapLineColor
+        snapLine.Visible = true
+    else
+        snapLine.Visible = false
+        snapLineOutline.Visible = false
+    end
+end)
+
+-- 📌 ================== UI Bindings ==================
+
+-- Silent Aim Toggle
+LegitMain:AddToggle{
+    text = "Silent Aim",
+    flag = "SilentAimToggle",
+    state = false,
+    callback = function(val)
+        SilentAimEnabled = val
+    end
+}
+
+-- Snap Line Toggle
+LegitMain:AddToggle{
+    text = "Snap Line",
+    flag = "SnapLineToggle",
+    state = false,
+    callback = function(val)
+        SnapLineEnabled = val
+    end
+}
+:AddColor{
+    flag = "SnapLineColor",
+    color = Color3.fromRGB(255, 0, 0),
+    callback = function(c)
+        SnapLineColor = c
+    end
+}
+
+-- Hit Chance
+LegitMain:AddSlider{
+    text = "Hit Chance",
+    flag = "HitChanceSlider",
+    min = 1,
+    max = 100,
+    value = 100,
+    float = 1,
+    callback = function(val)
+        HitChance = val
+    end
+}
+
+-- Max Distance
+LegitMain:AddSlider{
+    text = "Max Distance",
+    flag = "MaxDistanceSlider",
+    min = 100,
+    max = 2000,
+    value = 1000,
+    float = 1,
+    callback = function(val)
+        MaxDistance = val
+    end
+}
+
+-- Target Hitbox Dropdown
+LegitMain:AddList{
+    text = "Target Hitbox",
+    flag = "TargetHitboxList",
+    value = "Head",
+    values = { "Head", "Torso", "HumanoidRootPart" },
+    callback = function(val)
+        TargetHitbox = val
+    end
+}
+
+LegitMain:AddDivider("Fov Silent Aim");
+
+-- Enable FOV
+LegitMain:AddToggle{
+    text = "Enable FOV",
+    flag = "EnableFOV",
+    state = false,
+    callback = function(val)
+        FovEnabled = val
+    end
+}
+:AddColor{
+    flag = "FovColor",
+    color = Color3.fromRGB(0, 255, 0),
+    callback = function(c)
+        FovColor = c
+    end
+}
+
+-- FOV Radius Slider
+LegitMain:AddSlider{
+    text = "FOV Radius",
+    flag = "FOVRadiusSlider",
+    min = 50,
+    max = 500,
+    value = 150,
+    float = 1,
+    callback = function(val)
+        FOVRadius = val
+    end
+}
+
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Head Expander")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Default values
+local ExpansionSize = Vector3.new(10, 10, 10)
+local Transparency = 0.5
+
+local OriginalSizes = {}
+
+-- Функція для розширення голови
+local function expandHead(char)
+    -- Перевірка, щоб не змінювало LocalPlayer
+    if char.Parent == LocalPlayer then return end
+
+    local head = char:FindFirstChild("Head")
+    if head and head:IsA("BasePart") then
+        if not OriginalSizes[head] then
+            OriginalSizes[head] = head.Size
+        end
+        head.Size = ExpansionSize
+        head.Transparency = Transparency
+        head.Material = Enum.Material.Neon
+    end
+end
+
+-- Підключення до гравця
+local function onPlayer(plr)
+    if plr == LocalPlayer then return end
+    if plr.Character then
+        expandHead(plr.Character)
+    end
+    plr.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Head")
+        expandHead(char)
+    end)
+end
+
+-- Контролювання включення/вимкнення
+local HeadExpandEnabled = false
+local Connections = {}
+
+local function enableExpander()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        onPlayer(plr)
+    end
+    Connections["PlayerAdded"] = Players.PlayerAdded:Connect(onPlayer)
+end
+
+local function disableExpander()
+    if Connections["PlayerAdded"] then
+        Connections["PlayerAdded"]:Disconnect()
+        Connections["PlayerAdded"] = nil
+    end
+    -- Відновлення оригінальних розмірів
+    for head, size in pairs(OriginalSizes) do
+        if head and head.Parent then
+            head.Size = size
+            head.Transparency = 0
+            head.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+-- JanLib UI інтеграція
+LegitMain:AddToggle{
+    text = "Enable Head Expander",  
+    flag = "EnableHeadExpander",
+    state = false,
+    callback = function(val)
+        HeadExpandEnabled = val
+        if val then
+            enableExpander()
+        else
+            disableExpander()
+        end
+    end
+}
+
+LegitMain:AddSlider{
+    text = "Head Size", 
+    flag = "HeadSizeSlider", 
+    min = 2, 
+    max = 40, 
+    value = 10, 
+    float = 1,
+    callback = function(val)
+        ExpansionSize = Vector3.new(val, val, val)
+        if HeadExpandEnabled then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                    expandHead(plr.Character)
+                end
+            end
+        end
+    end
+}
+
+LegitMain:AddSlider{
+    text = "Head Transparency",
+    flag = "HeadTransparencySlider",
+    min = 0, 
+    max = 1, 
+    value = 0.5, 
+    float = 0.05,
+    callback = function(val)
+        Transparency = val
+        if HeadExpandEnabled then
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Head") then
+                    expandHead(plr.Character)
+                end
+            end
+        end
+    end
+}
+
+-- Метаметатаблиця для маскування розміру
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+
+local oldIndex = mt.__index
+local oldNamecall = mt.__namecall
+
+mt.__index = newcclosure(function(self, key)
+    if key == "Size" and OriginalSizes[self] then
+        return OriginalSizes[self]
+    end
+    return oldIndex(self, key)
+end)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if method == "Size" and OriginalSizes[self] then
+        return OriginalSizes[self]
+    end
+
+    return oldNamecall(self, unpack(args))
+end)
+
+setreadonly(mt, true)
+
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Gun Mods")
+
+local LegitTab = library:AddTab("Misc"); 
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Character Speed")
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local walkingSpeed = 16
+local runningSpeed = 20
+local walkEnabled = false
+local runEnabled = false
+local isRunning = false -- чи затиснутий Shift
+
+-- :green_circle: Toggle Walking Speed
+LegitMain:AddToggle{
+    text = "Walking Speed",
+    flag = "WalkingSpeedToggle",
+    stats = "yellow",
+    state = false,
+    callback = function(state)
+        walkEnabled = state
+    end
+}
+
+-- :orange_circle: Slider Walking Speed
+LegitMain:AddSlider{
+    text = "Walking Speed",
+    flag = "WalkingSpeedSlider",
+    min = 16,
+    max = 21,
+    value = 16,
+    float = 1,
+    callback = function(val)
+        walkingSpeed = val
+    end
+}
+
+-- :blue_circle: Toggle Running Speed
+LegitMain:AddToggle{
+    text = "Running Speed",
+    flag = "RunningSpeedToggle",
+    stats = "yellow",
+    state = false,
+    callback = function(state)
+        runEnabled = state
+    end
+}
+
+-- :red_circle: Slider Running Speed
+LegitMain:AddSlider{
+    text = "Running Speed",
+    flag = "RunningSpeedSlider",
+    min = 20,
+    max = 30,
+    value = 20,
+    float = 1,
+    callback = function(val)
+        runningSpeed = val
+    end
+}
+
+-- :cyclone: Shift для бігу
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        isRunning = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.LeftShift then
+        isRunning = false
+    end
+end)
+
+-- :arrows_counterclockwise: постійно виставляємо потрібну швидкість
+RunService.Heartbeat:Connect(function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if runEnabled and isRunning then
+            hum.WalkSpeed = runningSpeed
+        elseif walkEnabled then
+            hum.WalkSpeed = walkingSpeed
+        end
+    end
+end)
+
+-- :cyclone: після респавну зберігає значення
+LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    task.wait(0.2)
+    if runEnabled and isRunning then
+        hum.WalkSpeed = runningSpeed
+    elseif walkEnabled then
+        hum.WalkSpeed = walkingSpeed
+    end
+end)
+
+local LegitColunm1 = LegitTab:AddColumn();
+local LegitMain = LegitColunm1:AddSection("Zombie")
+LegitMain:AddDivider("Anti Zombie");
+
+-- 🔍 Автопошук папки зомбі
+local zombiesFolder
+for _, obj in ipairs(workspace:GetChildren()) do
+    if obj:IsA("Folder") and obj.Name:lower():find("zombie") then
+        zombiesFolder = obj
+        warn("", obj.Name)
+        break
+    end
+end
+
+if not zombiesFolder then
+    warn("❌")
+    return
+end
+
+-- 🧊 Freeze System
+local isFreezeEnabled = true
+
+local function freezeZombie(zombie)
+    local humanoid = zombie:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid:SetAttribute("DefaultWalkSpeed", humanoid.WalkSpeed)
+        humanoid:SetAttribute("DefaultJumpPower", humanoid.JumpPower)
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
+    end
+    for _, part in ipairs(zombie:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = true
+        end
+    end
+end
+
+local function unfreezeZombie(zombie)
+    local humanoid = zombie:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = humanoid:GetAttribute("DefaultWalkSpeed") or 16
+        humanoid.JumpPower = humanoid:GetAttribute("DefaultJumpPower") or 50
+    end
+    for _, part in ipairs(zombie:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = false
+        end
+    end
+end
+
+LegitMain:AddToggle{
+    text = "Freeze Zombies",
+    flag = "FreezeZombie",
+    state = false,
+    callback = function(enabled)
+        isFreezeEnabled = enabled
+        for _, zombie in pairs(zombiesFolder:GetChildren()) do
+            if zombie:IsA("Model") then
+                if isFreezeEnabled then
+                    freezeZombie(zombie)
+                else
+                    unfreezeZombie(zombie)
+                end
+            end
+        end
+    end
+}
+
+-- 🌀 Zombie Circle
+local zombieCircleEnabled = false
+local zombieCircleDistance = 10
+local zombieCircleSpeed = 5
+
+local function makeZombiesCircle()
+    task.spawn(function()
+        while zombieCircleEnabled do
+            local localPlayer = game:GetService("Players").LocalPlayer
+            local rootPart = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if rootPart then
+                local count = #zombiesFolder:GetChildren()
+                local angleStep = math.pi * 2 / math.max(count, 1)
+
+                for i, zombie in ipairs(zombiesFolder:GetChildren()) do
+                    local root = zombie:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        local angle = tick() * zombieCircleSpeed + (i * angleStep)
+                        local offset = Vector3.new(
+                            math.cos(angle) * zombieCircleDistance,
+                            0,
+                            math.sin(angle) * zombieCircleDistance
+                        )
+                        root.CFrame = CFrame.new(rootPart.Position + offset)
+                    end
+                end
+            end
+
+            task.wait()
+        end
+    end)
+end
+
+LegitMain:AddToggle{
+    text = "Zombie Circle",
+    flag = "ZombieCircle",
+    state = false,
+    callback = function(enabled)
+        zombieCircleEnabled = enabled
+        if enabled then
+            makeZombiesCircle()
+        end
+    end
+}
+
+LegitMain:AddSlider{
+    text = "Zombie Circle Distance",
+    flag = "ZombieCircleDistance",
+    min = 5,
+    max = 50,
+    value = 10,
+    float = 1,
+    callback = function(value)
+        zombieCircleDistance = value
+    end
+}
+
+LegitMain:AddSlider{
+    text = "Zombie Circle Speed",
+    flag = "ZombieCircleSpeed",
+    min = 1,
+    max = 20,
+    value = 5,
+    float = 1,
+    callback = function(value)
+        zombieCircleSpeed = value
+    end
+}
+
+-- [Library Settings UI] -----------------------------------------------------------------------------------------------------------------------------------------------------
+local SettingsTab = library:AddTab("Settings"); 
+local SettingsColumn = SettingsTab:AddColumn(); 
+local SettingsColumn2 = SettingsTab:AddColumn(); 
+local SettingSection = SettingsColumn:AddSection("Menu"); 
+local ConfigSection = SettingsColumn2:AddSection("Configs");
+local Warning = library:AddWarning({type = "confirm"});
+
+SettingSection:AddBind({text = "Open / Close", flag = "UI Toggle", nomouse = true, key = "End", callback = function()
+    library:Close();
+end});
+SettingSection:AddButton({text = "Unload UI", callback = function()
+    local r, g, b = library.round(library.flags["Menu Accent Color"]);
+    Warning.text = "<font color='rgb(" .. r .. "," .. g .. "," .. b .. ")'>" .. 'Are you sure you wana unload the UI?' .. "</font>";
+    if Warning:Show() then
+     library:Unload()
+    end
+end});
+SettingSection:AddColor({text = "Accent Color", flag = "Menu Accent Color", color = Color3.fromRGB(130,181,255), callback = function(color)
+    if library.currentTab then
+        library.currentTab.button.TextColor3 = color;
+    end
+    for i,v in pairs(library.theme) do
+        v[(v.ClassName == "TextLabel" and "TextColor3") or (v.ClassName == "ImageLabel" and "ImageColor3") or "BackgroundColor3"] = color;
+    end
+end});
+
+-- [Background List]
+local backgroundlist = {
+    Unicore = "rbxassetid://138776308416930",
+    WhiteGirl = "rbxassetid://135266995881100"
+};
+
+-- [Background List]
+local back = SettingSection:AddList({text = "Background", max = 5, flag = "background", values = {"WhiteGirl", "Unicore"}, value = "Unicore", callback = function(v)
+    if library.main then
+        library.main.Image = backgroundlist[v];
+    end
+end});
+
+-- [Tile Size Slider]
+SettingSection:AddSlider({text = "Tile Size", min = 500, max = 500, value = 50, callback = function(size)
+    if library.main then
+        library.main.TileSize = UDim2.new(0, size, 0, size);
+    end
+end});
+
+-- [Discord Button]
+SettingSection:AddButton({text = "Discord", callback = function()
+    local r, g, b = library.round(library.flags["Menu Accent Color"]);
+    Warning.text = "<font color='rgb(" .. r .. "," .. g .. "," .. b .. ")'>" .. 'Discord invite copied to clip board!' .. "</font>";
+    if Warning:Show() then
+     setclipboard('discord.gg/awakenkn-gg')
+    end
+end});
+
+-- [Config Box]
+ConfigSection:AddBox({text = "Config Name", skipflag = true});
+
+-- [Config List]
+ConfigSection:AddList({text = "Configs", skipflag = true, value = "", flag = "Config List", values = library:GetConfigs()});
+
+-- [Create Button]
+ConfigSection:AddButton({text = "Create", callback = function()
+    library:GetConfigs();
+    writefile(library.foldername .. "/" .. library.flags["Config Name"] .. library.fileext, "{}");
+    library.options["Config List"]:AddValue(library.flags["Config Name"]);
+end});
+
+-- [Save Button]
+ConfigSection:AddButton({text = "Save", callback = function()
+    local r, g, b = library.round(library.flags["Menu Accent Color"]);
+    Warning.text = "Are you sure you want to save the current settings to config <font color='rgb(" .. r .. "," .. g .. "," .. b .. ")'>" .. library.flags["Config List"] .. "</font>?";
+    if Warning:Show() then
+        library:SaveConfig(library.flags["Config List"]);
+    end
+end});
+
+-- [Load Button]
+ConfigSection:AddButton({text = "Load", callback = function()
+    local r, g, b = library.round(library.flags["Menu Accent Color"]);
+    Warning.text = "Are you sure you want to load config <font color='rgb(" .. r .. "," .. g .. "," .. b .. ")'>" .. library.flags["Config List"] .. "</font>?";
+    if Warning:Show() then
+        library:LoadConfig(library.flags["Config List"]);
+    end
+end});
+
+-- [Delete Button]
+ConfigSection:AddButton({text = "Delete", callback = function()
+    local r, g, b = library.round(library.flags["Menu Accent Color"]);
+    Warning.text = "Are you sure you want to delete then config <font color='rgb(" .. r .. "," .. g .. "," .. b .. ")'>" .. library.flags["Config List"] .. "</font>?";
+    if Warning:Show() then
+        local config = library.flags["Config List"];
+        if table.find(library:GetConfigs(), config) and isfile(library.foldername .. "/" .. config .. library.fileext) then
+            library.options["Config List"]:RemoveValue(config);
+            delfile(library.foldername .. "/" .. config .. library.fileext);
+        end
+    end
+end});
+
+-- [Init] --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+library:Init();
+library:selectTab(library.tabs[1]);

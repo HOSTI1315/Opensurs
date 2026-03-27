@@ -1,0 +1,266 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "legends Of Speed Script" .. Fluent.Version,
+    SubTitle = "By Solrate",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightControl -- Used when theres no MinimizeKeybind
+})
+
+--Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "home" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "" })
+}
+
+local Options = Fluent.Options
+
+do
+    Fluent:Notify({
+        Title = "legends Of Speed Script",
+        Content = "by Solrate",
+        SubContent = "", -- Optional
+        Duration = 7 -- Set to nil to make the notification not disappear
+    })
+
+
+    
+ 
+local BlueOrbToggle = Tabs.Main:AddToggle("BlueOrbToggle", {Title = "Auto Collect Blue Orb", Default = false})
+BlueOrbToggle:OnChanged(function()
+    while Options.BlueOrbToggle.Value do
+        for _, location in ipairs({"City", "Magma City", "Snow City"}) do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer("collectOrb", "Blue Orb", location)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local RedOrbToggle = Tabs.Main:AddToggle("RedOrbToggle", {Title = "Auto Collect Red Orb", Default = false})
+RedOrbToggle:OnChanged(function()
+    while Options.RedOrbToggle.Value do
+        for _, location in ipairs({"City", "Magma City", "Snow City"}) do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer("collectOrb", "Red Orb", location)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local YellowOrbToggle = Tabs.Main:AddToggle("YellowOrbToggle", {Title = "Auto Collect Yellow Orb", Default = false})
+YellowOrbToggle:OnChanged(function()
+    while Options.YellowOrbToggle.Value do
+        for _, location in ipairs({"City", "Magma City", "Snow City"}) do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer("collectOrb", "Yellow Orb", location)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local OrangeOrbToggle = Tabs.Main:AddToggle("OrangeOrbToggle", {Title = "Auto Collect Orange Orb", Default = false})
+OrangeOrbToggle:OnChanged(function()
+    while Options.OrangeOrbToggle.Value do
+        for _, location in ipairs({"City", "Magma City", "Snow City"}) do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer("collectOrb", "Orange Orb", location)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local GemOrbToggle = Tabs.Main:AddToggle("GemOrbToggle", {Title = "Auto Collect Gem Orb", Default = false})
+GemOrbToggle:OnChanged(function()
+    while Options.GemOrbToggle.Value do
+        for _, location in ipairs({"City", "Magma City", "Snow City"}) do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer("collectOrb", "Gem", location)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local AutoGoldenChestToggle = Tabs.Misc:AddToggle("AutoGoldenChestToggle", {Title = "Auto Collect Golden Chest", Default = false})
+AutoGoldenChestToggle:OnChanged(function()
+    while Options.AutoGoldenChestToggle.Value do
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("checkChestRemote"):InvokeServer("Golden Chest")
+        wait(0.1)
+    end
+end)
+
+
+
+
+local AutoRebirthToggle = Tabs.Misc:AddToggle("AutoRebirthToggle", {Title = "Auto Rebirth", Default = false})
+AutoRebirthToggle:OnChanged(function()
+    while Options.AutoRebirthToggle.Value do
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthEvent"):FireServer("rebirthRequest")
+        wait(0.1)
+    end
+end)
+
+
+
+
+local AutoClaimGiftsToggle = Tabs.Misc:AddToggle("AutoClaimGiftsToggle", {Title = "Auto Claim Free Gifts", Default = false})
+AutoClaimGiftsToggle:OnChanged(function()
+    while Options.AutoClaimGiftsToggle.Value do
+        for i = 1, 8 do
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("freeGiftClaimRemote"):InvokeServer("claimGift", i)
+        end
+        wait(0.1)
+    end
+end)
+
+
+
+
+local AutoSpinToggle = Tabs.Misc:AddToggle("AutoSpinToggle", {Title = "Auto Spin", Default = false})
+AutoSpinToggle:OnChanged(function()
+    while Options.AutoSpinToggle.Value do
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openFortuneWheelRemote"):InvokeServer("openFortuneWheel", game:GetService("ReplicatedStorage"):WaitForChild("fortuneWheelChances"):WaitForChild("Fortune Wheel"))
+        wait(0.1)
+    end
+end)
+
+
+
+
+local Toggle = Tabs.Main:AddToggle("HoopTeleport", {Title = "Bring All Hoops - Laggy", Default = false})
+
+Toggle:OnChanged(function()
+    if Options.HoopTeleport.Value then
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+
+        local function teleportHoops()
+            local allObjects = workspace:GetDescendants()
+
+            for _, object in pairs(allObjects) do
+                if object.Name:lower() == "hoop" or object.Name:lower() == "hoops" then
+                    if object:IsA("Model") and object:FindFirstChild("PrimaryPart") then
+                        object:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
+                    elseif object:IsA("BasePart") then
+                        object.CFrame = character.HumanoidRootPart.CFrame
+                    end
+                end
+            end
+        end
+
+        local connection
+        connection = game:GetService("RunService").Heartbeat:Connect(function()
+            if not Options.HoopTeleport.Value then
+                connection:Disconnect()
+            else
+                teleportHoops()
+            end
+        end)
+    end
+end)
+
+Options.HoopTeleport:SetValue(false)
+
+
+
+
+local args = {
+    [1] = "swiftjungle1000"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("codeRemote"):InvokeServer(unpack(args))
+
+-- Button code
+
+Tabs.Misc:AddButton({
+    Title = "Redeem All Codes",
+    Description = "redeems codes",
+    Callback = function()
+
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("codeRemote"):InvokeServer(unpack(args))
+
+        Window:Dialog({
+            Title = "Codes Redeemed",
+            Content = "Redeemed Codes",
+            Buttons = {
+                {
+                    Title = "Confirm",
+                    Callback = function()
+                        print("Confirmed the dialog.")
+                    end
+                },
+                {
+                    Title = "Cancel",
+                    Callback = function()
+                        print("Cancelled the dialog.")
+                    end
+                }
+            }
+        })
+    end
+})
+
+
+
+
+
+
+
+
+
+
+
+
+-- Addons:
+-- SaveManager (Allows you to have a configuration system)
+-- InterfaceManager (Allows you to have a interface managment system)
+
+-- Hand the library over to our managers
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Ignore keys that are used by ThemeManager.
+-- (we dont want configs to save themes, do we?)
+SaveManager:IgnoreThemeSettings()
+
+-- You can add indexes of elements the save manager should ignore
+SaveManager:SetIgnoreIndexes({})
+
+-- use case for doing it this way:
+-- a script hub could have themes in a global folder
+-- and game configs in a separate folder per game
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+-- You can use the SaveManager:LoadAutoloadConfig() to load a config
+-- which has been marked to be one that auto loads!
+SaveManager:LoadAutoloadConfig()
+end

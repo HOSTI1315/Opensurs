@@ -1,0 +1,198 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+local TS = game:GetService("TweenService")
+local RS = game:GetService("RunService")
+local PPS = game:GetService("ProximityPromptService")
+local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+local Window = WindUI:CreateWindow({
+    Title = "kkkks",
+    Folder = "ekekke",
+    Size = UDim2.fromOffset(400, 400),
+    Transparent = true,
+    SideBarWidth = 170,
+    HasOutline = true,
+    Topbar = { Height = 44, ButtonsType = "Mac" },
+})
+
+Window:Tag({ Title = "v1.1.0", Icon = "github", Color = Color3.fromHex("#1c1c1c") })
+
+local welcome = Window:Tab({ Title = "Welcome", Icon = "info-square-bold" })
+local main = Window:Tab({ Title = "Main", Icon = "compass" })
+welcome:Select()
+
+welcome:Paragraph({
+    Title = "t/cript",
+    Desc = "Thanks for using! Click yellow circle to minimize.",
+    Buttons = {{ Icon = "github", Title = "Copy Telegram", Callback = function() setclipboard("httpscript") end }}
+})
+
+local gapEn = false
+local curGap = nil
+local instantTakeEnabled = false
+local autoUpgradesEnabled = false
+local geniusEnabled = false
+local geniusSpeed = 70
+local selectedUpgrades = {}
+local gaps = {}
+
+local function setupGaps()
+    local folder = workspace:WaitForChild("Misc"):WaitForChild("Gaps")
+    for i = 1, 9 do
+        local g = folder:FindFirstChild("Gap" .. i)
+        if g then
+            if i == 6 then
+                gaps[i] = g:FindFirstChild("Mud")
+            else
+                local children = g:GetChildren()
+                if #children >= 2 then gaps[i] = children[2] end
+            end
+        end
+    end
+end
+setupGaps()
+
+local function move(target, from)
+    if not gapEn or not target then return end
+    local char = player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    for _, v in char:GetDescendants() do if v:IsA("BasePart") then v.CanCollide = false end end
+    
+    local targetPos = target.CFrame + Vector3.new(0, 5, 0)
+    local dist = (targetPos.Position - hrp.Position).Magnitude
+    local speed = (from <= 5) and 400 or 500
+    
+    local t = TS:Create(hrp, TweenInfo.new(dist/speed, Enum.EasingStyle.Linear), {CFrame = targetPos})
+    t:Play()
+    t.Completed:Connect(function()
+        if player.Character then
+            for _, v in player.Character:GetDescendants() do if v:IsA("BasePart") then v.CanCollide = true end end
+        end
+        hrp.AssemblyLinearVelocity = Vector3.zero
+    end)
+end
+
+local SG = player.PlayerGui:FindFirstChild("GapUI_Stable") or Instance.new("ScreenGui", player.PlayerGui)
+SG.Name = "GapUI_Stable"
+SG.ResetOnSpawn = false 
+SG.Enabled = false
+
+local F = SG:FindFirstChild("Frame") or Instance.new("Frame", SG)
+F.Name = "Frame"
+F.Size, F.Position, F.BackgroundColor3 = UDim2.new(0, 110, 0, 95), UDim2.new(1, -130, 0.5, -45), Color3.fromRGB(15, 15, 20)
+Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", F).Color = Color3.fromRGB(55, 55, 60)
+
+-- Drag Logic
+local dragging, ds, sp
+UIS.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - ds
+        F.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X, sp.Y.Scale, sp.Y.Offset + delta.Y)
+    end
+end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+
+local function createBtn(txt, y, clr)
+    local b = Instance.new("TextButton", F)
+    b.Size, b.Position, b.BackgroundColor3 = UDim2.new(1, -12, 0, 30), UDim2.new(0, 6, 0, y), clr
+    b.Text, b.Font, b.TextColor3, b.TextSize = txt, "GothamBold", Color3.new(1, 1, 1), 10
+    Instance.new("UICorner", b)
+    return b
+end
+
+local U = createBtn("GAP UP", 28, Color3.fromRGB(0, 110, 255))
+local D = createBtn("GAP DOWN", 60, Color3.fromRGB(220, 50, 50))
+
+
+U.MouseButton1Click:Connect(function() if curGap and curGap < 9 then move(gaps[curGap+1], curGap) end end)
+D.MouseButton1Click:Connect(function() if curGap and curGap > 1 then move(gaps[curGap-1], curGap) end end)
+
+-- // WIND UI //
+
+main:Toggle({Title = "Gap Teleport", Default = false, Callback = function(s) gapEn = s SG.Enabled = s end})
+
+main:Toggle({Title = "Instant Take", Default = false, Callback = function(s) instantTakeEnabled = s end})
+PPS.PromptButtonHoldBegan:Connect(function(p)
+    if instantTakeEnabled and p.Name == "TakePrompt" then
+        fireproximityprompt(p) -- Самый быстрый способ
+    end
+end)
+
+
+
+main:Dropdown({
+    Title = "Auto Upgrades",
+    Values = { "Carry", "Base", "Speed x1", "Speed x5", "Speed x10" },
+    Multi = true,
+    Callback = function(o) selectedUpgrades = o end
+})
+
+main:Toggle({
+    Title = "Auto Upgrades",
+    Default = false,
+    Callback = function(state)
+        autoUpgradesEnabled = state
+        if state then
+            task.spawn(function()
+                while autoUpgradesEnabled do
+                    for _, upgrade in ipairs(selectedUpgrades) do
+                        if not autoUpgradesEnabled then break end
+                        local RF = game:GetService("ReplicatedStorage"):FindFirstChild("RemoteFunctions")
+                        local Net = game:GetService("ReplicatedStorage"):FindFirstChild("Packages") and game:GetService("ReplicatedStorage").Packages:FindFirstChild("Net")
+                        
+                        if upgrade == "Carry" and RF then RF.UpgradeCarry:InvokeServer()
+                        elseif upgrade == "Base" and Net then Net["RE/Plot. UpgradeBase"]:FireServer()
+                        elseif upgrade:find("Speed") and RF then
+                            local val = tonumber(upgrade:match("%d+"))
+                            RF.UpgradeSpeed:InvokeServer(val)
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+        end
+    end
+})
+
+main:Slider({
+    Title = "Speed Value",
+    Step = 1,
+    Value = { Min = 18, Max = 1000, Default = 70 },
+    Callback = function(v) geniusSpeed = v end
+})
+
+main:Toggle({
+    Title = "Speed",
+    Default = false,
+    Callback = function(state)
+        geniusEnabled = state
+        task.spawn(function()
+            while geniusEnabled do
+                if player.Character and player.Character:FindFirstChild("Humanoid") then
+                    player:SetAttribute("CurrentSpeed", geniusSpeed)
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+})
+
+RS.Heartbeat:Connect(function()
+    if not gapEn then return end
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    curGap = nil
+    if hrp then
+        for i, p in pairs(gaps) do
+            if p and (p.Position - hrp.Position).Magnitude < 45 then
+                curGap = i break
+            end
+        end
+    end
+    local a = curGap ~= nil
+    U.BackgroundTransparency = a and 0 or 0.7
+    D.BackgroundTransparency = a and 0 or 0.7
+end)

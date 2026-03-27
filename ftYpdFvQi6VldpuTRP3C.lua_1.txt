@@ -1,0 +1,47 @@
+local Moveset = "Saitama"
+
+local Characters = {
+    ["Saitama"] = "Bald",
+    ["Garou"] = "Hunter",
+    ["Monster Garou"] = "Monster",
+    ["Suiryu"] = "Purple",
+    ["Genos"] = "Cyborg",
+    ["Sonic"] = "Ninja",
+    ["Metal Bat"] = "Batter",
+    ["Atomic Samurai"] = "Blade",
+    ["Tatsumaki"] = "Esper",
+    ["Child Emperor"] = "Tech",
+    ["Lightning Max"] = "Lightning",
+    ["Gojo"] = "Sorcerer",
+    ["KJ"] = "KJ"
+}
+
+local Character = game:GetService("Players").LocalPlayer.Character
+local Event = game:GetService("Players").LocalPlayer.Character.Communicate
+local StarterCharacter = game:GetService("StarterPlayer").StarterCharacter
+
+spawn(function()
+    local oldTick = tick()
+    repeat
+        task.wait()
+        Character.PrimaryPart.CFrame = StarterCharacter.PrimaryPart.CFrame * CFrame.new(0, 0, 5)
+    until tick() - oldTick >= 3
+    local args = {
+        {
+            Goal = "Change Character",
+            Character = Characters[Moveset]
+        }
+    }
+    Event:FireServer(unpack(args))
+end)
+
+task.wait(0.5)
+
+Event:FireServer(table.unpack({
+    {
+        Goal = "Console Move",
+        CrushingPull = StarterCharacter,
+        Tool = game:GetService("Players").LocalPlayer.Backpack["Crushing Pull"],
+        ToolName = "Crushing Pull"
+    }
+}))

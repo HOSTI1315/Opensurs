@@ -1,0 +1,226 @@
+local P=game:GetService("Players")
+local S=game:GetService("ProximityPromptService")
+local RS=game:GetService("ReplicatedStorage")
+local L=P.LocalPlayer
+local f1,f2=Vector3.new(-372.33,-7.01,94.31),Vector3.new(-368.43,-7.01,24.36)
+local pos=f1
+local TP=false
+local ExecuteCommand=nil
+
+task.spawn(function()
+	while not ExecuteCommand do
+		pcall(function()
+			local p=RS:WaitForChild("Packages",3)
+			if not p then return end
+			local n=p:WaitForChild("Net",3)
+			if not n then return end
+			local r=n:FindFirstChild("RE/AdminPanelService/ExecuteCommand",true)
+			if r then ExecuteCommand=r end
+		end)
+		task.wait(1)
+	end
+end)
+
+local g=Instance.new("ScreenGui",L:WaitForChild("PlayerGui"))
+g.ResetOnSpawn=false
+local fr=Instance.new("Frame",g)
+fr.Size=UDim2.new(0,270,0,160)
+fr.Position=UDim2.new(0.5,-135,0.3,0)
+fr.BackgroundColor3=Color3.fromRGB(20,20,25)
+fr.Active=true
+fr.Draggable=true
+Instance.new("UICorner",fr).CornerRadius=UDim.new(0,18)
+
+local st=Instance.new("UIStroke",fr)
+st.Color=Color3.fromRGB(0,170,255)
+st.Thickness=3
+st.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+
+task.spawn(function()
+	while true do
+		for i=0,25 do st.Thickness=3+i*0.04 task.wait(0.02) end
+		for i=0,25 do st.Thickness=5-i*0.04 task.wait(0.02) end
+	end
+end)
+
+local t=Instance.new("TextLabel",fr)
+t.Size=UDim2.new(1,0,0,32)
+t.BackgroundTransparency=1
+t.Text="Script Heaven (free) "
+t.TextColor3=Color3.fromRGB(0,180,255)
+t.TextSize=22
+t.Font=Enum.Font.GothamBlack
+
+local jb=Instance.new("TextButton",fr)
+jb.Size=UDim2.new(1,-20,0,40)
+jb.Position=UDim2.new(0,10,0,45)
+jb.BackgroundColor3=Color3.fromRGB(30,30,40)
+jb.TextColor3=Color3.new(1,1,1)
+jb.Text="1st Joined Selected"
+jb.Font=Enum.Font.GothamBold
+jb.TextSize=18
+Instance.new("UICorner",jb).CornerRadius=UDim.new(0,10)
+
+local tb=Instance.new("TextButton",fr)
+tb.Size=UDim2.new(1,-20,0,40)
+tb.Position=UDim2.new(0,10,0,95)
+tb.BackgroundColor3=Color3.fromRGB(30,30,40)
+tb.TextColor3=Color3.new(1,1,1)
+tb.Text="TP: OFF"
+tb.Font=Enum.Font.GothamBold
+tb.TextSize=18
+Instance.new("UICorner",tb).CornerRadius=UDim.new(0,10)
+
+jb.MouseButton1Click:Connect(function()
+	if pos==f1 then pos=f2 jb.Text="2nd Joined Selected" else pos=f1 jb.Text="1st Joined Selected" end
+end)
+
+tb.MouseButton1Click:Connect(function()
+	TP=not TP
+	tb.Text=TP and "TP: ON" or "TP: OFF"
+end)
+
+local function r()
+	local c=L.Character or L.CharacterAdded:Wait()
+	return c:WaitForChild("HumanoidRootPart"),c
+end
+
+local function equipCarpet()
+	local b=L:WaitForChild("Backpack")
+	local c=L.Character or L.CharacterAdded:Wait()
+	for _,v in ipairs(b:GetChildren()) do
+		if v:IsA("Tool") and string.find(string.lower(v.Name),"carpet") then
+			v.Parent=c
+			repeat task.wait() until v.Parent==c
+			return
+		end
+	end
+end
+
+local function runOnceAll()
+	for _,plr in pairs(P:GetPlayers()) do
+		if plr~=L and ExecuteCommand then
+			pcall(function()
+				ExecuteCommand:FireServer(plr,"balloon")
+				ExecuteCommand:FireServer(plr,"rocket")
+				ExecuteCommand:FireServer(plr,"tiny")
+				ExecuteCommand:FireServer(plr,"inverse")
+			end)
+		end
+	end
+	if ExecuteCommand then
+		pcall(function()
+			ExecuteCommand:FireServer(L,"ragdoll")
+		end)
+	end
+end
+
+local h=false
+local used=false
+
+S.PromptButtonHoldBegan:Connect(function(p)
+	if not TP or p.ActionText~="Steal" then return end
+	h=true
+	used=false
+	local s=tick()
+	local equipDone=false
+	local done=false
+
+	task.spawn(function()
+		while h and not done do
+			task.wait()
+			local e=tick()-s
+
+			if e>=1.3 and not used then
+				used=true
+				runOnceAll()
+			end
+
+			if not equipDone and e>=1.49 then
+				equipCarpet()
+				equipDone=true
+			end
+
+			if e>=1.5 then
+				local hrp=r()
+				hrp.CFrame=CFrame.new(pos)
+				done=true
+			end
+		end
+	end)
+end)
+
+S.PromptButtonHoldEnded:Connect(function(p)
+	if p.ActionText~="Steal" then return end
+	h=false
+end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LP = Players.LocalPlayer
+local PS = LP:WaitForChild("PlayerScripts")
+
+local NORMAL_SPEED = 16
+local NORMAL_JUMP = 50
+local MAX_SAFE_SPEED = 55
+local MAX_UPWARD_Y = 60
+local MAX_DOWNWARD_Y = -120
+
+local function getControls()
+    local pm = PS:FindFirstChild("PlayerModule")
+    if not pm then return nil end
+    return require(pm):GetControls()
+end
+
+local function clearRagdoll(char)
+    for _,v in ipairs(char:GetDescendants()) do
+        if v:IsA("BallSocketConstraint") or v:IsA("HingeConstraint") then
+            v:Destroy()
+        elseif v:IsA("Motor6D") then
+            v.Enabled = true
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    local char = LP.Character
+    if not char then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    local controls = getControls()
+    if controls then controls:Enable() end
+
+    hum.PlatformStand = false
+    hum.AutoRotate = true
+    hum.Sit = false
+
+    if hum.WalkSpeed < NORMAL_SPEED then hum.WalkSpeed = NORMAL_SPEED end
+    if hum.JumpPower < NORMAL_JUMP then hum.JumpPower = NORMAL_JUMP end
+
+    hum:ChangeState(Enum.HumanoidStateType.Running)
+
+    clearRagdoll(char)
+
+    local vel = root.AssemblyLinearVelocity
+    local y = vel.Y
+
+    if y > MAX_UPWARD_Y then
+        y = MAX_UPWARD_Y
+    elseif y < MAX_DOWNWARD_Y then
+        y = MAX_DOWNWARD_Y
+    end
+
+    if Vector3.new(vel.X,0,vel.Z).Magnitude > MAX_SAFE_SPEED then
+        local mv = hum.MoveDirection
+        root.AssemblyLinearVelocity = Vector3.new(
+            mv.X * hum.WalkSpeed,
+            y,
+            mv.Z * hum.WalkSpeed
+        )
+    else
+        root.AssemblyLinearVelocity = Vector3.new(vel.X, y, vel.Z)
+    end
+end)

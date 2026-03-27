@@ -1,0 +1,59 @@
+local Moveset = 'Saitama'
+local Target = 'UsernameHere'
+local SoftlockInstead = false
+
+local Characters = {
+    ['Saitama'] = 'Bald',
+    ['Garou'] = 'Hunter',
+    ['Monster Garou'] = 'Monster',
+    ['Suiryu'] = 'Purple',
+    ['Genos'] = 'Cyborg',
+    ['Sonic'] = 'Ninja',
+    ['Metal Bat'] = 'Batter',
+    ['Atomic Samurai'] = 'Blade',
+    ['Tatsumaki'] = 'Esper',
+    ['Child Emperor'] = 'Tech',
+    ['Lightning Max'] = 'Lightning',
+    ['Gojo'] = 'Sorcerer',
+    ['KJ'] = 'KJ',
+}
+
+local Players = game:GetService('Players')
+local lp = Players.LocalPlayer
+
+local Character = lp.Character
+local Event = Character.Communicate
+
+local TCharacter = Players[Target].Character
+local THumanoid = TCharacter.Humanoid
+local StarterCharacter = game:GetService('StarterPlayer').StarterCharacter
+
+repeat
+    task.wait()
+until THumanoid.Health <= 0
+
+task.spawn(function()
+    local oldTick = tick()
+    repeat
+        Character.PrimaryPart.CFrame = StarterCharacter.PrimaryPart.CFrame
+        task.wait()
+    until tick() - oldTick >= 7 -- set this to 5 to give yourself godmode too
+    local args = {
+        {
+            Goal = 'Change Character',
+            Character = Characters[Moveset],
+        },
+    }
+    Event:FireServer(unpack(args))
+end)
+
+task.wait(SoftlockInstead and 4.625 or 3)
+
+Event:FireServer(table.unpack({
+    {
+        Goal = 'Console Move',
+        CrushingPull = StarterCharacter,
+        Tool = game:GetService('Players').LocalPlayer.Backpack['Crushing Pull'],
+        ToolName = 'Crushing Pull',
+    },
+}))

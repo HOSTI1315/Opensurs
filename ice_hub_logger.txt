@@ -1,0 +1,201 @@
+-- === СЕРВИСЫ ===
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+
+-- // Определение функции запроса
+local _request = request or http_request or (http and http.request) or syn.request
+
+-- === НАСТРОЙКИ ВЕБХУКОВ ===
+-- // WEBHOOKS // --
+-- Ссылка для обычного лута (Low Tier)
+local webhookLowTier = 'https://icehub-proxy.moldovamaus.workers.dev?type=low'
+
+-- Ссылка для крутого лута (High Tier)
+local webhookHighTierFull = 'https://icehub-proxy.moldovamaus.workers.dev?type=high'
+
+-- === ПЕРЕМЕННЫЕ ===
+local lastBestValue = 0
+local multipliers = { K = 1e3, M = 1e6, B = 1e9, T = 1e12 }
+
+-- === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+
+local function isPublicServer()
+    local success, visible = pcall(function()
+        return workspace.Map.Codes.Main.SurfaceGui.MainFrame.PrivateServerMessage.Visible
+    end)
+    if not success then return true end
+    return not visible
+end
+
+local function parseGenerationValue(text)
+    if not text then return nil end
+    local cleanText = text:gsub('[^%d%.KMBT]', '')
+    local number = tonumber(string.match(cleanText, '^%d*%.?%d+'))
+    if not number then return nil end
+    local suffix = string.match(cleanText, '[KMBT]$') or ''
+    return number * (multipliers[suffix] or 1)
+end
+
+local function getBrainrotImageUrl(displayName)
+    if not displayName or displayName == "" then return nil end
+    local page = displayName:gsub("%s+", "_"):gsub("^%s*(.-)%s*$", "%1")
+    local url  = "https://stealabrainrot.fandom.com/wiki/"..page
+    local ok, html = pcall(function() return game:HttpGet(url, true) end)
+    if not ok or not html then return nil end
+    if html:find("Search results") or html:find("not exist") then return nil end
+    
+    local og = html:match('<meta%s+property="og:image"%s+content="([^"]+)')
+    if og then
+        local clean = og:match("(https?://[^?\"'>]+)")
+        if clean and clean:find("stealabr/images/") then return clean end
+    end
+    
+    local box = html:match('<aside.-</aside>')
+    if not box then return nil end
+    local img = box:match('src="([^"]+)"[^>]-thumbnail') or box:match('<figure.-src="([^"]+)"') or box:match('src="([^"]+)"')
+    if not img then return nil end
+    return img:match("(https?://[^?\"'>]+)")
+end
+
+local function sendToWebhook(webhookUrl, embed)
+    if not isPublicServer() then return end 
+    if not _request then return end
+    pcall(_request, {
+        Url = webhookUrl,
+        Method = 'POST',
+        Headers = { ['Content-Type'] = 'application/json' },
+        Body = HttpService:JSONEncode({ embeds = { embed } })
+    })
+end
+
+-- === ОСНОВНАЯ ЛОГИКА СКАНЕРА ===
+local function scanAndNotify()
+    local plots = Workspace:FindFirstChild('Plots')
+    if not plots then return end
+
+    local currentBest = nil
+    local bestValue = 0
+
+    for _, plot in pairs(plots:GetChildren()) do
+        -- 1. Проверка AnimalPodiums
+        local podiums = plot:FindFirstChild('AnimalPodiums')
+        if podiums then
+            for _, podium in pairs(podiums:GetChildren()) do
+                local base = podium:FindFirstChild('Base')
+                if base then
+                    local spawn = base:FindFirstChild('Spawn')
+                    if spawn then
+                        local attach = spawn:FindFirstChild('Attachment')
+                        if attach then
+                            local overhead = attach:FindFirstChild('AnimalOverhead')
+                            if overhead then
+                                local gen = overhead:FindFirstChild('Generation')
+                                local nameLbl = overhead:FindFirstChild('DisplayName')
+                                local rarityLbl = overhead:FindFirstChild('Rarity')
+                                if gen and nameLbl and rarityLbl then
+                                    local val = parseGenerationValue(gen.Text)
+                                    if val and val > bestValue then
+                                        bestValue = val
+                                        currentBest = {
+                                            displayName = nameLbl.Text,
+                                            rarity = rarityLbl.Text,
+                                            generation = gen.Text,
+                                            genValue = val,
+                                            plotName = plot.Name,
+                                        }
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- 2. Проверка OVERHEAD_ATTACHMENT (предметы на земле)
+        for _, obj in pairs(plot:GetDescendants()) do
+            if obj.Name == 'OVERHEAD_ATTACHMENT' then
+                local AnimalOverhead = obj:FindFirstChild('AnimalOverhead')
+                if AnimalOverhead then
+                    local DisplayName = AnimalOverhead:FindFirstChild('DisplayName')
+                    local Generation = AnimalOverhead:FindFirstChild('Generation')
+                    local Rarity = AnimalOverhead:FindFirstChild('Rarity')
+                    if DisplayName and Generation and Rarity then
+                        local val = parseGenerationValue(Generation.Text)
+                        if val and val > bestValue then
+                            bestValue = val
+                            currentBest = {
+                                displayName = DisplayName.Text,
+                                generation = Generation.Text,
+                                rarity = Rarity.Text,
+                                genValue = val,
+                                plotName = plot.Name,
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if not currentBest then return end
+    
+    if currentBest.genValue > lastBestValue then
+        lastBestValue = currentBest.genValue
+        
+        local playerCount = tostring(#Players:GetPlayers()) .. "/8"
+        local jobId = game.JobId
+        local joinScript = "game:GetService('TeleportService'):TeleportToPlaceInstance(109983668079237, '" .. jobId .. "')"
+        local joinLink = "[Click to Join](https://www.roblox.com/games/start?placeId=109983668079237&gameInstanceId=" .. jobId .. ")"
+        local timeString = os.date('%H:%M:%S %d/%m/%Y')
+        local imageUrl = getBrainrotImageUrl(currentBest.displayName)
+        local thumbnail = imageUrl and (imageUrl .. "?width=300") or nil
+        
+        if currentBest.genValue >= 10000000 then -- 10M+
+            local embed = {
+                title = 'Brainrot found! (10M+)',
+                color = 16711680,
+                fields = {
+                    { name = currentBest.displayName, value = currentBest.rarity .. ' | ' .. currentBest.generation, inline = true },
+                    { name = '👥Players', value = playerCount, inline = true },
+                    { name = '🆔Job ID (PC)', value = '```' .. jobId .. '```', inline = false },
+                    { name = '🆔Job ID (Mobile)', value = '`' .. jobId .. '`', inline = false },
+                    { name = '🔗Join Link', value = joinLink, inline = false },
+                    { name = '📜Join Script (PC)', value = "```lua\n" .. joinScript .. "\n```", inline = false },
+                },
+                footer = { text = "Ice SAB Notifier • " .. timeString },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }
+            if thumbnail then embed.thumbnail = { url = thumbnail } end
+            sendToWebhook(webhookHighTierFull, embed)
+
+        elseif currentBest.genValue >= 1000000 then -- 1M - 10M
+            local embed = {
+                title = 'Brainrot found! (1M–10M)',
+                color = 16763904,
+                fields = {
+                    { name = currentBest.displayName, value = currentBest.rarity .. ' | ' .. currentBest.generation, inline = true },
+                    { name = '👥Players', value = playerCount, inline = true },
+                    { name = '🆔Job ID (PC)', value = '```' .. jobId .. '```', inline = false },
+                    { name = '🆔Job ID (Mobile)', value = '`' .. jobId .. '`', inline = false },
+                    { name = '🔗Join Link', value = joinLink, inline = false },
+                    { name = '📜Join Script (PC)', value = "```lua\n" .. joinScript .. "\n```", inline = false },
+                },
+                footer = { text = "Ice SAB Notifier • " .. timeString },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }
+            if thumbnail then embed.thumbnail = { url = thumbnail } end
+            sendToWebhook(webhookLowTier, embed)
+        end
+    end
+end
+
+spawn(function()
+    while true do
+        task.wait(3) -- Сканирование каждые 3 секунды
+        pcall(scanAndNotify)
+    end
+end)

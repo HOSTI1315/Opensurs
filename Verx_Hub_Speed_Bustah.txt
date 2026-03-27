@@ -1,0 +1,254 @@
+-- deobsfucated by cxyro deobsfucater
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Remove all accessories from character (hats, etc.)
+local function RemoveAccessories(character)
+    if not character then return end
+
+    for _, accessory in ipairs(character:GetDescendants()) do
+        if accessory:IsA("Accessory") then
+            accessory:Destroy()
+        end
+    end
+
+    character.DescendantAdded:Connect(function(child)
+        if child:IsA("Accessory") then
+            child:Destroy()
+        end
+    end)
+
+    -- Extra safety loop
+    RunService.Heartbeat:Connect(function()
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Accessory") then
+                item:Destroy()
+            end
+        end
+    end)
+end
+
+-- Apply to current and future characters
+if LocalPlayer.Character then
+    RemoveAccessories(LocalPlayer.Character)
+end
+LocalPlayer.CharacterAdded:Connect(RemoveAccessories)
+
+-- Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Verx_Toggles"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "SpeedBooster"
+MainFrame.Size = UDim2.new(0, 221, 0, 121)
+MainFrame.Position = UDim2.new(0, 510, 0, 144)
+MainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner", MainFrame)
+
+-- Title
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(0, 162, 0, 20)
+TitleLabel.Position = UDim2.new(0, 13, 0, 8)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Verx Booster"
+TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+TitleLabel.Font = Enum.Font.Gotham
+TitleLabel.TextSize = 22
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.TextScaled = true
+TitleLabel.Parent = MainFrame
+
+-- Speed Label
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0, 162, 0, 20)
+SpeedLabel.Position = UDim2.new(0, 13, 0, 42)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "Speed"
+SpeedLabel.TextColor3 = Color3.new(1, 1, 1)
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.TextSize = 22
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.TextScaled = true
+SpeedLabel.Parent = MainFrame
+
+-- Speed Input Box
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Name = "SpeedBox"
+SpeedBox.Size = UDim2.new(0, 104, 0, 29)
+SpeedBox.Position = UDim2.new(0, 101, 0, 38)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+SpeedBox.Text = "22.5"
+SpeedBox.TextColor3 = Color3.new(1, 1, 1)
+SpeedBox.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.TextSize = 22
+SpeedBox.TextScaled = true
+SpeedBox.ClearTextOnFocus = false
+SpeedBox.Parent = MainFrame
+
+Instance.new("UICorner", SpeedBox)
+
+-- Jump Label
+local JumpLabel = Instance.new("TextLabel")
+JumpLabel.Size = UDim2.new(0, 162, 0, 20)
+JumpLabel.Position = UDim2.new(0, 13, 0, 82)
+JumpLabel.BackgroundTransparency = 1
+JumpLabel.Text = "Jump"
+JumpLabel.TextColor3 = Color3.new(1, 1, 1)
+JumpLabel.Font = Enum.Font.Gotham
+JumpLabel.TextSize = 22
+JumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+JumpLabel.TextScaled = true
+JumpLabel.Parent = MainFrame
+
+-- Jump Input Box
+local JumpBox = Instance.new("TextBox")
+JumpBox.Name = "JumpBox"
+JumpBox.Size = UDim2.new(0, 104, 0, 29)
+JumpBox.Position = UDim2.new(0, 101, 0, 77)
+JumpBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+JumpBox.Text = "35"
+JumpBox.TextColor3 = Color3.new(1, 1, 1)
+JumpBox.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
+JumpBox.Font = Enum.Font.Gotham
+JumpBox.TextSize = 22
+JumpBox.TextScaled = true
+JumpBox.ClearTextOnFocus = false
+JumpBox.Parent = MainFrame
+
+Instance.new("UICorner", JumpBox)
+
+-- Toggle Button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleBooster"
+ToggleButton.Size = UDim2.new(0, 50, 0, 20)
+ToggleButton.Position = UDim2.new(0, 155, 0, 8)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 101, 104) -- Red = off
+ToggleButton.Text = " "
+ToggleButton.AutoButtonColor = false
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner", ToggleButton)
+ToggleCorner.CornerRadius = UDim.new(10, 0)
+
+-- Toggle Knob
+local Knob = Instance.new("Frame")
+Knob.Name = "ToggleShow"
+Knob.Size = UDim2.new(0, 20, 0, 20)
+Knob.Position = UDim2.new(0, 5, 0.5, 0) -- Left = off
+Knob.AnchorPoint = Vector2.new(0, 0.5)
+Knob.BackgroundColor3 = Color3.new(1, 1, 1)
+Knob.Parent = ToggleButton
+
+local KnobCorner = Instance.new("UICorner", Knob)
+KnobCorner.CornerRadius = UDim.new(10, 0)
+
+-- Aspect ratios & constraints
+local GuiConstraint = Instance.new("UIAspectRatioConstraint", ScreenGui)
+GuiConstraint.AspectRatio = 2.024
+
+local FrameConstraint = Instance.new("UIAspectRatioConstraint", MainFrame)
+FrameConstraint.AspectRatio = 1.797
+
+-- Booster State
+local BoosterEnabled = false
+local SpeedValue = 22.5
+local JumpValue = 35
+
+local TweenInfoSmooth = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- Toggle Logic
+ToggleButton.MouseButton1Click:Connect(function()
+    BoosterEnabled = not BoosterEnabled
+
+    local targetColor = BoosterEnabled and Color3.fromRGB(101, 255, 104) or Color3.fromRGB(255, 101, 104)
+    local targetPos = BoosterEnabled and UDim2.new(1, -5, 0.5, 0) or UDim2.new(0, 5, 0.5, 0)
+
+    TweenService:Create(ToggleButton, TweenInfoSmooth, { BackgroundColor3 = targetColor }):Play()
+    TweenService:Create(Knob, TweenInfoSmooth, { Position = targetPos }):Play()
+end)
+
+-- Update values when typing
+SpeedBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local num = tonumber(SpeedBox.Text)
+        if num and num > 0 then
+            SpeedValue = num
+        else
+            SpeedBox.Text = tostring(SpeedValue)
+        end
+    end
+end)
+
+JumpBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local num = tonumber(JumpBox.Text)
+        if num and num > 0 then
+            JumpValue = num
+        else
+            JumpBox.Text = tostring(JumpValue)
+        end
+    end
+end)
+
+-- Main Booster Loop
+RunService.Heartbeat:Connect(function()
+    if not BoosterEnabled then return end
+
+    local character = LocalPlayer.Character
+    if not character then return end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not rootPart then return end
+
+    -- Speed Boost
+    if humanoid.MoveDirection.Magnitude > 0 then
+        rootPart.Velocity = Vector3.new(
+            humanoid.MoveDirection.X * SpeedValue,
+            rootPart.Velocity.Y,
+            humanoid.MoveDirection.Z * SpeedValue
+        )
+    end
+
+    -- Jump Power Boost
+    humanoid.UseJumpPower = true
+    humanoid.JumpPower = JumpValue
+end)
+
+-- Optional: Make GUI draggable
+local dragging = false
+local dragInput, dragStart, startPos
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)

@@ -1,0 +1,1705 @@
+local core_gui = cloneref(game:GetService('CoreGui'))
+local fonts = {
+    {"ProggyClean.ttf", "ProggyClean.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/ProggyClean.txt"},
+    {"ProggyTiny.ttf", "ProggyTiny.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/ProggyTiny.txt"},
+    {"Minecraftia.ttf", "Minecraftia.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/Minecraftia.txt"},
+    {"SmallestPixel7.ttf", "SmallestPixel7.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/SmallestPixel7.txt"},
+    {"Verdana.ttf", "Verdana.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/Verdana.txt"},
+    {"VerdanaBold.ttf", "VerdanaBold.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/VerdanaBold.txt"},
+    {"Tahoma.ttf", "Tahoma.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/Tahoma.txt"},
+    {"TahomaBold.ttf", "TahomaBold.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/TahomaBold.txt"},
+    {"CSGO.ttf", "CSGO.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/CSGO.txt"},
+    {"WindowsXPTahoma.ttf", "WindowsXPTahoma.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/WindowsXPTahoma.txt"},
+    {"Stratum2.ttf", "Stratum2.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/Stratum2.txt"},
+    {"Visitor.ttf", "Visitor.json", "https://raw.githubusercontent.com/suspendthread/uwu/refs/heads/main/dependencies/assets/fonts/Visitor.txt"},
+}
+
+for _, font in pairs(fonts) do
+    local ttf, json, url = font[1], font[2], font[3]
+    if not isfile(ttf) then writefile(ttf, base64_decode(game:HttpGet(url))) end
+    if not isfile(json) then
+        writefile(json, game:GetService('HttpService'):JSONEncode({name = ttf:match("([^%.]+)"), faces = {{name = "Regular", weight = 200, style = "normal", assetId = getcustomasset(ttf)}}}))
+    end
+end
+
+local Enumed = {}
+for _, font in pairs(fonts) do
+    Enumed[font[1]:match("([^%.]+)")] = Font.new(getcustomasset(font[2]), Enum.FontWeight.Regular)
+end
+
+function getfontfromname(fontName) return Enumed[fontName] end
+local uis = cloneref(game:GetService('UserInputService'))
+local run_service = cloneref(game:GetService('RunService'))
+local players = cloneref(game:GetService("Players"))
+local gui = cloneref(game:GetService('GuiService'))
+local Default = {
+        Box = {
+        Properties = {On = true, Type = 'Quad', Mode = '2D', Color = Color3.fromRGB(255, 255, 255), CornerTransparency = 0, Transparency = 0.65, Visible = true},
+        Outline = {On = true, Color = Color3.fromRGB(0, 0, 0), Thickness = 1, Visible = true},
+        Inline = {On = true, Color = Color3.fromRGB(255, 255, 255), Thickness = 1, Transparency = 0, Visible = true},
+        InlineOutline = {On = true, Color = Color3.fromRGB(0, 0, 0), Thickness = 1, Visible = true},
+    },
+    Text = {
+        Display = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Font = 'WindowsXPTahoma', Color = Color3.fromRGB(255, 255, 255), Size = 12, Visible = true},
+            Outline = {Color = Color3.fromRGB(0, 0, 0), Transparency = 0},
+        },
+        Tool = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Font = 'WindowsXPTahoma', Color = Color3.fromRGB(255, 255, 255), Size = 12, Tranparency = 0},
+            Outline = {Color = Color3.fromRGB(0, 0, 0), Transparency = 0},
+        },
+        Studs = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Font = 'WindowsXPTahoma', Color = Color3.fromRGB(255, 255, 255), Size = 12, Visible = true},
+            Outline = {Color = Color3.fromRGB(0, 0, 0), Transparency = 0},
+        },
+        Health = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Font = 'WindowsXPTahoma', Color = Color3.fromRGB(0, 255, 0), Size = 12, Visible = true},
+            Outline = {Color = Color3.fromRGB(0, 0, 0), Transparency = 0},
+        },
+        Armor = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Font = 'WindowsXPTahoma', Color = Color3.fromRGB(0, 0, 255), Size = 12, Visible = true},
+            Outline = {Color = Color3.fromRGB(0, 0, 0), Transparency = 0},
+        }
+    },
+    Chams = {
+        Properties = {On = false, Material = "Neon", Breath = true, Visible = true, Color = {Fill = Color3.fromRGB(204, 46, 107), Outline = Color3.fromRGB(204, 46, 107)}, Transparency = {Fill = 100, Outline = 100}}
+    },
+        Trail = {
+        Properties = {
+            On = true,
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 58, 134)), 
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+            },
+            Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0), 
+                NumberSequenceKeypoint.new(1, 0)
+            },
+            Lifetime = 0.1,
+            WidthScale = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0.1), 
+                NumberSequenceKeypoint.new(1, 0.1) 
+            },
+            Size = {
+                MinLength = 0,
+                MaxLength = 15
+            },
+            Visible = true
+        }
+    },
+    Icon = {
+        WeaponIcon = {
+            Alignment = {Horizontal = 'Center', Vertical = 'Bottom'},
+            Properties = {On = true, Color = Color3.fromRGB(255, 0, 0), Weapon = '', Visible = true}
+        }
+    },
+    Aura = {
+        Visible = false,
+        Type = 'Lightning',
+        Color = {
+            ['1'] = Color3.fromRGB(255, 58, 134),
+            ['2'] = Color3.fromRGB(0, 0, 0)
+        },
+        Transparency = {
+            ['1'] = 0,
+            ['2'] = 0
+        },
+        Breath = true
+    },
+    FOV = {
+        Properties = {On = true, Mode = 'Mouse', Type = '', Color = Color3.fromRGB(255,255,255), Radius = 150, Transparency = 0.55},
+        Outline = {On = true, Color = Color3.fromRGB(255,255,255), Transparency = 0, Thickness = 1}
+    },
+    Skeleton = {
+        Properties = { On = true, Color = Color3.fromRGB(255, 255, 255), Thickness = 2 },
+        Outline = { On = true, Color = Color3.fromRGB(0, 0, 0), Thickness = 1, Transparency = 0.5 }
+    },
+    Tracer = { 
+        Properties = { 
+            On = true, 
+            Color = Color3.fromRGB(255, 255, 255), 
+            Transparency = 0.1, 
+            Mode = 'From Screen', 
+            SelectedPart = '' 
+        }, 
+        Outline = { 
+            On = true, 
+            Color = Color3.fromRGB(0, 0, 0), 
+            Thickness = 1
+        }, 
+        Targets = {} 
+    },
+    Crosshair = {
+        On = true,
+        Color = Color3.fromRGB(255, 255, 255),
+        Outline = {
+            Visible = true,
+            Thickness = 1,
+            Color = Color3.new(0, 0, 0),
+        },
+        Lines = 4,
+        Width = 2,
+        Length = 55, 
+        Radius = 85,
+        ClipToTarget = true,
+        Mode = 'mouse',
+        Position = Vector2.new(0, 0),
+        ['Animation'] = {
+            Enable = true,
+            ['Rotate'] = {
+                Enable = true,
+                Speed = 150,
+                Style = 'Circular',
+                Direction = 'InOut',
+                MaxRotation = 360,
+            },
+            ['Pulse'] = {
+                Enable = true,
+                Interval = 0.5,
+                Resize = {
+                    Enable = true,
+                    Speed = 150,
+                    MinSize = 30,
+                    MaxSize = 55 
+                }
+            }
+        },
+        RefreshRate = 0
+    },
+    HealthBar = {
+        Properties = {On = true, Position = 'Right', Color = Color3.fromRGB(0, 255, 0), Thickness = 2, Visible = true},
+        Outline = {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, Visible = true}
+    },
+    ArmorBar = {
+        Properties = {On = true, Position = 'Left', Color = Color3.fromRGB(0, 0, 255), Thickness = 2, Visible = true},
+        Outline = {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, Visible = true}
+    },
+    Gradient = {
+        Box = {
+            On = true,
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(211, 211, 211)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+            },
+            Rotation = {
+                Static = 90,
+                Auto = false,
+                Speed = 120
+            }
+        },
+        FOV = {
+            On = true,
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(211, 211, 211)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+            },
+            Rotation = {
+                Static = 90,
+                Auto = true,
+                Speed = 120
+            }
+        },
+        ['FOV Outline'] = {
+            On = true,
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(211, 211, 211)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+            },
+            Rotation = {
+                Static = 90,
+                Auto = true,
+                Speed = 120
+            }
+        },
+        Inline = {
+            On = false,
+            Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 58, 134)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))},
+            Rotation = {
+                Static = 90,
+                Auto = false,
+                Speed = 120
+            }
+        },
+        Health = {
+            On = true,
+            Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(2, 255, 40)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 101, 15))},
+            Rotation = {
+                Static = 90,
+                Auto = true,
+                Speed = 120
+            }
+        },
+        WeaponIcon = {
+            On = true,
+            Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 58, 134)), ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 60, 60))},
+            Rotation = {
+                Static = 90,
+                Auto = true,
+                Speed = 120
+            }
+        },
+        Armor = {
+            On = true,
+            Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 137, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 66, 122))},
+            Rotation = {
+                Static = 90,
+                Auto = true,
+                Speed = 120
+            }
+        }
+    }
+}
+local function stringed(length)
+local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+local result = ""
+for i = 1, length do
+    local rand_index = math.random(1, #chars)
+    result = result .. chars:sub(rand_index, rand_index)
+end
+return result
+end
+local modules = {}
+
+function modules:new(className, properties)
+local instance = Instance.new(className)
+for property, value in pairs(properties) do
+    instance[property] = value
+end
+return instance
+end
+local rotating_gradients = {}
+local function add_rotating_gradient(gradient, rotation_settings)
+table.insert(rotating_gradients, {gradient = gradient, settings = rotation_settings})
+end
+
+local function create_bounding(Type, Parent, Settings)
+if Type == '2D' then
+    local box_elements = {};
+    local inline
+    local main
+    local inline_outline
+    local inlineoutline
+    local inlineol_outline
+    if Settings.Box.Properties.On then
+        main = Instance.new('Frame', Parent);
+        main.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+        main.Size = UDim2.new(0, 220, 0, 220);
+        main.Position = UDim2.new(0.5, 0, 0.5, 0);
+        main.Name = tostring(stringed(32));
+        main.BackgroundTransparency = Settings.Box.Properties.Transparency or 0.65;
+        main.Visible = false;
+    end
+    if Settings.Gradient.Box.On then
+        local box_gradient = Instance.new("UIGradient", main)
+        box_gradient.Color = Settings.Gradient.Box.Color
+        if Settings.Gradient.Box.Rotation.Auto then
+            add_rotating_gradient(box_gradient, Settings.Gradient.Box.Rotation)
+        else
+            box_gradient.Rotation = Settings.Gradient.Box.Rotation.Static or 90
+        end
+    end
+    box_elements.main = main;
+
+    if Settings.Box.Outline.Visible then
+        local outline = Instance.new('UIStroke', main);
+        outline.Thickness = Settings.Box.Outline.Thickness or 1;
+        outline.Color = Settings.Box.Outline.Color or Color3.fromRGB(0,0,0);
+        box_elements.outline = outline;
+    end
+    if Settings.Box.Inline.On then
+        inline = Instance.new('Frame', main);
+        inline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        inline.Size = UDim2.new(1, -2, 1, -2);
+        inline.Position = UDim2.new(0, 1, 0, 1);
+        inline.BackgroundTransparency = 1;
+        inline.Name = tostring(stringed(32));
+        inline.Visible = Settings.Box.Inline.Visible or false;
+    end
+    if Settings.Box.Inline.Visible then
+        inline_outline = Instance.new('UIStroke', inline);
+        inline_outline.Thickness = Settings.Box.Inline.Thickness or 1;
+        inline_outline.Color = Settings.Box.Inline.Color or Color3.fromRGB(255,255,255);
+    end
+    if Settings.Gradient.Inline.On then
+        local inline_outline_gradient = Instance.new("UIGradient", inline_outline)
+        inline_outline_gradient.Color = Settings.Gradient.Inline.Color
+        if Settings.Gradient.Inline.Rotation.Auto then
+            add_rotating_gradient(inline_outline_gradient, Settings.Gradient.Inline.Rotation)
+        else
+            inline_outline_gradient.Rotation = Settings.Gradient.Inline.Rotation.Static or 90
+        end
+    end
+    box_elements.inline = inline;
+    if Settings.Box.InlineOutline.On then
+        inlineoutline = Instance.new('Frame', inline);
+        inlineoutline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        inlineoutline.Size = UDim2.new(1, -2, 1, -2);
+        inlineoutline.Position = UDim2.new(0, 1, 0, 1);
+        inlineoutline.BackgroundTransparency = 1;
+        inlineoutline.Name = tostring(stringed(32));
+        inlineoutline.Visible = Settings.Box.Inline.Visible or false;
+    end
+    if Settings.Box.InlineOutline.Visible then
+        inlineol_outline = Instance.new('UIStroke', inlineoutline);
+        inlineol_outline.Thickness = Settings.Box.InlineOutline.Thickness or 1;
+        inlineol_outline.Color = Settings.Box.InlineOutline.Color or Color3.fromRGB(0,0,0);
+    end
+    box_elements.inlineoutline = inlineoutline;
+
+    if Settings.Text.Display.Properties.On then
+        local display = Instance.new("TextLabel", Parent);
+        display.Size = UDim2.new(0, 50, 0, 20);
+        display.Position = UDim2.new(0, 110, 0, -10);
+        display.BackgroundTransparency = 1;
+        display.AnchorPoint = Vector2.new(0.5, 1)
+        display.TextColor3 = Settings.Text.Display.Properties.Color or Color3.fromRGB(255, 255, 255);
+        display.TextStrokeTransparency = Settings.Text.Display.Outline.Transparency or 0;
+        display.TextStrokeColor3 = Settings.Text.Display.Outline.Color or Color3.fromRGB(0, 0, 0);
+        display.TextScaled = false;
+        display.Text = "display";
+        display.Name = tostring(stringed(32));
+        display.FontFace = getfontfromname(Settings.Text.Display.Properties.Font);
+        display.TextSize = Settings.Text.Display.Properties.Size or 14;
+        display.Visible = Settings.Text.Display.Properties.Visible or false;
+
+        box_elements.display = display;
+    end
+
+    if Settings.Text.Tool.Properties.On then
+        local tool = Instance.new("TextLabel", Parent);
+        tool.Size = UDim2.new(0, 100, 0, 20);
+        tool.Position = UDim2.new(0, 110, 1, 15);
+        tool.AnchorPoint = Vector2.new(0.5, 0)
+        tool.BackgroundTransparency = 1;
+        tool.TextColor3 = Settings.Text.Tool.Properties.Color or Color3.fromRGB(255, 255, 255);
+        tool.TextStrokeTransparency = Settings.Text.Tool.Outline.Transparency or 0;
+        tool.TextStrokeColor3 = Settings.Text.Tool.Outline.Color or Color3.fromRGB(0, 0, 0);
+        tool.TextScaled = false;
+        tool.Text = 'none';
+        tool.Name = tostring(stringed(32));
+        tool.FontFace = getfontfromname(Settings.Text.Tool.Properties.Font);
+        tool.TextSize = Settings.Text.Tool.Properties.Size or 14;
+        tool.Visible = Settings.Text.Tool.Properties.Visible or false;
+
+        box_elements.tool = tool;
+    end
+
+    if Settings.Text.Studs.Properties.On then
+        local studs = Instance.new("TextLabel", Parent);
+        studs.Size = UDim2.new(0, 100, 0, 20);
+        studs.Position = UDim2.new(0, 110, 1, 40);
+        studs.BackgroundTransparency = 1;
+        studs.AnchorPoint = Vector2.new(0.5, 0)
+        studs.TextColor3 = Settings.Text.Studs.Properties.Color or Color3.fromRGB(255, 255, 255);
+        studs.TextStrokeTransparency = Settings.Text.Studs.Outline.Transparency or 1;
+        studs.TextStrokeColor3 = Settings.Text.Studs.Outline.Color or Color3.fromRGB(0, 0, 0);
+        studs.TextScaled = false;
+        studs.Text = "studs";
+        studs.FontFace = getfontfromname(Settings.Text.Studs.Properties.Font);
+        studs.Name = tostring(stringed(32));
+        studs.TextSize = Settings.Text.Studs.Properties.Size or 14;
+        studs.Visible = Settings.Text.Studs.Properties.Visible or false;
+        box_elements.studs = studs;
+    end
+    if Settings.Text.Health.Properties.On then
+        local health_text = Instance.new("TextLabel", Parent);
+        health_text.Size = UDim2.new(0, 50, 0, 20);
+        health_text.Position = UDim2.new(0, 110, 1, 40);
+        health_text.BackgroundTransparency = 1;
+        health_text.AnchorPoint = Vector2.new(0.5, 0)
+        health_text.TextColor3 = Settings.Text.Health.Properties.Color or Color3.fromRGB(255, 255, 255);
+        health_text.TextStrokeTransparency = Settings.Text.Health.Outline.Transparency or 1;
+        health_text.TextStrokeColor3 = Settings.Text.Health.Outline.Color or Color3.fromRGB(0, 0, 0);
+        health_text.TextScaled = false;
+        health_text.Text = "";
+        health_text.FontFace = getfontfromname(Settings.Text.Health.Properties.Font);
+        health_text.Name = tostring(stringed(32));
+        health_text.TextSize = Settings.Text.Health.Properties.Size or 14;
+        health_text.Visible = Settings.Text.Health.Properties.Visible or false;
+        box_elements.health_text = health_text;
+    end
+    if Settings.Text.Armor.Properties.On then
+        local armor_text = Instance.new("TextLabel", Parent);
+        armor_text.Size = UDim2.new(0, 50, 0, 20);
+        armor_text.Position = UDim2.new(0, 110, 1, 40);
+        armor_text.BackgroundTransparency = 1;
+        armor_text.AnchorPoint = Vector2.new(0.5, 0)
+        armor_text.TextColor3 = Settings.Text.Armor.Properties.Color or Color3.fromRGB(255, 255, 255);
+        armor_text.TextStrokeTransparency = Settings.Text.Armor.Outline.Transparency or 1;
+        armor_text.TextStrokeColor3 = Settings.Text.Armor.Outline.Color or Color3.fromRGB(0, 0, 0);
+        armor_text.TextScaled = false;
+        armor_text.Text = "";
+        armor_text.FontFace = getfontfromname(Settings.Text.Armor.Properties.Font);
+        armor_text.Name = tostring(stringed(32));
+        armor_text.TextSize = Settings.Text.Armor.Properties.Size or 14;
+        armor_text.Visible = Settings.Text.Armor.Properties.Visible or false;
+        box_elements.armor_text = armor_text;
+    end
+    if Settings.HealthBar.Properties.On then
+        local healthbar_bg = Instance.new('Frame', Parent)
+        healthbar_bg.BackgroundColor3 = Color3.fromRGB(21, 21, 21)
+        healthbar_bg.Size = UDim2.new(0, 4, 0, 461);
+        healthbar_bg.Position = UDim2.new(0, -0.029, 0, 0);
+        healthbar_bg.BackgroundTransparency = 0.45
+        healthbar_bg.Name = tostring(stringed(32));
+        healthbar_bg.Visible = Settings.HealthBar.Properties.Visible or false
+        healthbar_bg.ZIndex = -1
+        local healthbar = Instance.new('Frame', Parent);
+        healthbar.BackgroundColor3 = Settings.HealthBar.Properties.Color or Color3.fromRGB(0, 255, 0);
+        healthbar.Size = UDim2.new(0, 4, 0, 461);
+        healthbar.Position = UDim2.new(0, -0.029, 0, 0);
+        healthbar.BackgroundTransparency = 0;
+        healthbar.Name = tostring(stringed(32));
+        healthbar.Visible = Settings.HealthBar.Properties.Visible or false;
+        if Settings.HealthBar.Outline.Visible then
+            local healthbar_ol = Instance.new('UIStroke', healthbar);
+            healthbar_ol.Thickness = Settings.HealthBar.Outline.Thickness or 1;
+            healthbar_ol.Color = Settings.HealthBar.Outline.Color or Color3.fromRGB(0,0,0);
+        end
+        box_elements.healthbar = healthbar;
+        box_elements.healthbar_bg = healthbar_bg;
+    end
+
+    if Settings.ArmorBar.Properties.On then
+        local armorbar = Instance.new('Frame', Parent);
+        armorbar.BackgroundColor3 = Settings.ArmorBar.Properties.Color or Color3.fromRGB(0, 255, 0);
+        armorbar.Size = UDim2.new(0, 4, 0, 461);
+        armorbar.Position = UDim2.new(0, 0, 0, 0);
+        armorbar.BackgroundTransparency = 0;
+        armorbar.Name = tostring(stringed(32));
+        armorbar.Visible = Settings.ArmorBar.Properties.Visible or false;
+        if Settings.ArmorBar.Outline.Visible then
+            local armorbar_ol = Instance.new('UIStroke', armorbar);
+            armorbar_ol.Thickness = Settings.ArmorBar.Outline.Thickness or 1;
+            armorbar_ol.Color = Settings.ArmorBar.Outline.Color or Color3.fromRGB(0,0,0);
+        end
+        box_elements.armorbar = armorbar;
+    end
+    if Settings.Icon.WeaponIcon.Properties.On then
+        local weapon_icon = Instance.new('ImageLabel', Parent);
+        weapon_icon.BackgroundColor3 = Settings.Icon.WeaponIcon.Properties.Color or Color3.new(0, 0, 0);
+        weapon_icon.Size = UDim2.new(0, 40, 0, 40);
+        weapon_icon.Position = UDim2.new(0, 1, 0, 1);
+        weapon_icon.BackgroundTransparency = 1;
+        weapon_icon.Name = tostring(stringed(32));
+        weapon_icon.Visible = Settings.Icon.WeaponIcon.Properties.Visible or false;
+        weapon_icon.ScaleType = Enum.ScaleType.Fit;
+
+        if Settings.Gradient.WeaponIcon.On then
+            local weapon_gradient = Instance.new("UIGradient", weapon_icon)
+            weapon_gradient.Color = Settings.Gradient.WeaponIcon.Color
+            if Settings.Gradient.WeaponIcon.Rotation.Auto then
+                add_rotating_gradient(weapon_gradient, Settings.Gradient.WeaponIcon.Rotation)
+            else
+                weapon_gradient.Rotation = Settings.Gradient.WeaponIcon.Rotation.Static or 90
+            end
+        end
+        box_elements.weapon_icon = weapon_icon;
+    end
+    return box_elements;
+elseif Type == '2D Corner' then
+    local box_elements = {};
+    local inline
+    local main
+    local inline_outline
+    if Settings.Box.Properties.On then
+        local positions = {
+            "left_top", "left_side", "right_top", "right_side",
+            "bottom_side", "bottom_down", "bottom_right_side", "bottom_right_down"
+        }
+    
+        for _, name in pairs(positions) do
+            local frame = Instance.new("Frame", Parent)
+            frame.BackgroundColor3 = Settings.Box.Properties.Color
+            frame.Position = UDim2.new(0, 0, 0, 0)
+            box_elements[name] = frame
+        end
+    end
+
+    if Settings.Box.Inline.On then
+        inline = Instance.new('Frame', Parent);
+        inline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        inline.Size = UDim2.new(1, -2, 1, -2);
+        inline.Position = UDim2.new(0, 1, 0, 1);
+        inline.BackgroundTransparency = Settings.Box.Inline.Transparency or 0.65;
+        inline.Name = tostring(stringed(32));
+        inline.ZIndex = -1
+        inline.Visible = Settings.Box.Inline.Visible or false;
+    end
+    if Settings.Gradient.Inline.On then
+        local inline_gradient = Instance.new("UIGradient", inline)
+        inline_gradient.Color = Settings.Gradient.Inline.Color
+        if Settings.Gradient.Inline.Rotation.Auto then
+            add_rotating_gradient(inline_gradient, Settings.Gradient.Inline.Rotation)
+        else
+            inline_gradient.Rotation = Settings.Gradient.Inline.Rotation.Static or 90
+        end
+    end
+
+    box_elements.inline = inline;
+
+    if Settings.Text.Display.Properties.On then
+        local display = Instance.new("TextLabel", Parent);
+        display.Size = UDim2.new(0, 50, 0, 20);
+        display.Position = UDim2.new(0, 110, 0, -10);
+        display.BackgroundTransparency = 1;
+        display.AnchorPoint = Vector2.new(0.5, 1)
+        display.TextColor3 = Settings.Text.Display.Properties.Color or Color3.fromRGB(255, 255, 255);
+        display.TextStrokeTransparency = Settings.Text.Display.Outline.Transparency or 0;
+        display.TextStrokeColor3 = Settings.Text.Display.Outline.Color or Color3.fromRGB(0, 0, 0);
+        display.TextScaled = false;
+        display.Text = "display";
+        display.Name = tostring(stringed(32));
+        display.FontFace = getfontfromname(Settings.Text.Display.Properties.Font);
+        display.TextSize = Settings.Text.Display.Properties.Size or 14;
+        display.Visible = Settings.Text.Display.Properties.Visible or false;
+
+        box_elements.display = display;
+    end
+
+    if Settings.Text.Tool.Properties.On then
+        local tool = Instance.new("TextLabel", Parent);
+        tool.Size = UDim2.new(0, 100, 0, 20);
+        tool.Position = UDim2.new(0, 110, 1, 15);
+        tool.AnchorPoint = Vector2.new(0.5, 0)
+        tool.BackgroundTransparency = 1;
+        tool.Text = 'none';
+        tool.TextColor3 = Settings.Text.Tool.Properties.Color or Color3.fromRGB(255, 255, 255);
+        tool.TextStrokeTransparency = Settings.Text.Tool.Outline.Transparency or 0;
+        tool.TextStrokeColor3 = Settings.Text.Tool.Outline.Color or Color3.fromRGB(0, 0, 0);
+        tool.TextScaled = false;
+        tool.Name = tostring(stringed(32));
+        tool.FontFace = getfontfromname(Settings.Text.Tool.Properties.Font);
+        tool.TextSize = Settings.Text.Tool.Properties.Size or 14;
+        tool.Visible = Settings.Text.Tool.Properties.Visible or false;
+        box_elements.tool = tool;
+    end
+
+    if Settings.Text.Studs.Properties.On then
+        local studs = Instance.new("TextLabel", Parent);
+        studs.Size = UDim2.new(0, 100, 0, 20);
+        studs.Position = UDim2.new(0, 110, 1, 40);
+        studs.BackgroundTransparency = 1;
+        studs.AnchorPoint = Vector2.new(0.5, 0)
+        studs.TextColor3 = Settings.Text.Studs.Properties.Color or Color3.fromRGB(255, 255, 255);
+        studs.TextStrokeTransparency = Settings.Text.Studs.Outline.Transparency or 1;
+        studs.TextStrokeColor3 = Settings.Text.Studs.Outline.Color or Color3.fromRGB(0, 0, 0);
+        studs.TextScaled = false;
+        studs.Text = "studs";
+        studs.FontFace = getfontfromname(Settings.Text.Studs.Properties.Font);
+        studs.Name = tostring(stringed(32));
+        studs.TextSize = Settings.Text.Studs.Properties.Size or 14;
+        studs.Visible = Settings.Text.Studs.Properties.Visible or false;
+        box_elements.studs = studs;
+    end
+    if Settings.Text.Health.Properties.On then
+        local health_text = Instance.new("TextLabel", Parent);
+        health_text.Size = UDim2.new(0, 50, 0, 20);
+        health_text.Position = UDim2.new(0, 110, 1, 40);
+        health_text.BackgroundTransparency = 1;
+        health_text.AnchorPoint = Vector2.new(0.5, 0)
+        health_text.TextColor3 = Settings.Text.Health.Properties.Color or Color3.fromRGB(255, 255, 255);
+        health_text.TextStrokeTransparency = Settings.Text.Health.Outline.Transparency or 1;
+        health_text.TextStrokeColor3 = Settings.Text.Health.Outline.Color or Color3.fromRGB(0, 0, 0);
+        health_text.TextScaled = false;
+        health_text.Text = "";
+        health_text.FontFace = getfontfromname(Settings.Text.Health.Properties.Font);
+        health_text.Name = tostring(stringed(32));
+        health_text.TextSize = Settings.Text.Health.Properties.Size or 14;
+        health_text.Visible = Settings.Text.Health.Properties.Visible or false;
+        box_elements.health_text = health_text;
+    end
+    if Settings.Text.Armor.Properties.On then
+        local armor_text = Instance.new("TextLabel", Parent);
+        armor_text.Size = UDim2.new(0, 50, 0, 20);
+        armor_text.Position = UDim2.new(0, 110, 1, 40);
+        armor_text.BackgroundTransparency = 1;
+        armor_text.AnchorPoint = Vector2.new(0.5, 0)
+        armor_text.TextColor3 = Settings.Text.Armor.Properties.Color or Color3.fromRGB(255, 255, 255);
+        armor_text.TextStrokeTransparency = Settings.Text.Armor.Outline.Transparency or 1;
+        armor_text.TextStrokeColor3 = Settings.Text.Armor.Outline.Color or Color3.fromRGB(0, 0, 0);
+        armor_text.TextScaled = false;
+        armor_text.Text = "";
+        armor_text.FontFace = getfontfromname(Settings.Text.Armor.Properties.Font);
+        armor_text.Name = tostring(stringed(32));
+        armor_text.TextSize = Settings.Text.Armor.Properties.Size or 14;
+        armor_text.Visible = Settings.Text.Armor.Properties.Visible or false;
+        box_elements.armor_text = armor_text;
+    end
+
+    if Settings.HealthBar.Properties.On then
+        local healthbar_bg = Instance.new('Frame', Parent)
+        healthbar_bg.BackgroundColor3 = Color3.fromRGB(21, 21, 21)
+        healthbar_bg.Size = UDim2.new(0, 4, 0, 461);
+        healthbar_bg.Position = UDim2.new(0, -0.029, 0, 0);
+        healthbar_bg.BackgroundTransparency = 0.45
+        healthbar_bg.Name = tostring(stringed(32));
+        healthbar_bg.Visible = Settings.HealthBar.Properties.Visible or false
+        healthbar_bg.ZIndex = -1
+
+        local healthbar = Instance.new('Frame', Parent);
+        healthbar.BackgroundColor3 = Settings.HealthBar.Properties.Color or Color3.fromRGB(0, 255, 0);
+        healthbar.Size = UDim2.new(0, 4, 0, 461);
+        healthbar.Position = UDim2.new(0, -0.029, 0, 0);
+        healthbar.BackgroundTransparency = 0;
+        healthbar.Name = tostring(stringed(32));
+        healthbar.Visible = Settings.HealthBar.Properties.Visible or false;
+        if Settings.HealthBar.Outline.Visible then
+            local healthbar_ol = Instance.new('UIStroke', healthbar);
+            healthbar_ol.Thickness = Settings.HealthBar.Outline.Thickness or 1;
+            healthbar_ol.Color = Settings.HealthBar.Outline.Color or Color3.fromRGB(0,0,0);
+        end
+        box_elements.healthbar = healthbar;
+        box_elements.healthbar_bg = healthbar_bg;
+    end
+
+    if Settings.ArmorBar.Properties.On then
+        local armorbar = Instance.new('Frame', Parent);
+        armorbar.BackgroundColor3 = Settings.ArmorBar.Properties.Color or Color3.fromRGB(0, 255, 0);
+        armorbar.Size = UDim2.new(0, 4, 0, 461);
+        armorbar.Position = UDim2.new(0, 0, 0, 0);
+        armorbar.BackgroundTransparency = 0;
+        armorbar.Name = tostring(stringed(32));
+        armorbar.Visible = Settings.ArmorBar.Properties.Visible or false;
+        if Settings.ArmorBar.Outline.Visible then
+            local armorbar_ol = Instance.new('UIStroke', armorbar);
+            armorbar_ol.Thickness = Settings.ArmorBar.Outline.Thickness or 1;
+            armorbar_ol.Color = Settings.ArmorBar.Outline.Color or Color3.fromRGB(0,0,0);
+        end
+        box_elements.armorbar = armorbar;
+    end
+    if Settings.Icon.WeaponIcon.Properties.On then
+        local weapon_icon = Instance.new('ImageLabel', Parent);
+        weapon_icon.BackgroundColor3 = Settings.Icon.WeaponIcon.Properties.Color or Color3.new(0, 0, 0);
+        weapon_icon.Size = UDim2.new(0, 40, 0, 40);
+        weapon_icon.Position = UDim2.new(0, 1, 0, 1);
+        weapon_icon.BackgroundTransparency = 1;
+        weapon_icon.Name = tostring(stringed(32));
+        weapon_icon.Visible = Settings.Icon.WeaponIcon.Properties.Visible or false;
+        weapon_icon.ScaleType = Enum.ScaleType.Fit;
+
+        if Settings.Gradient.WeaponIcon.On then
+            local weapon_gradient = Instance.new("UIGradient", weapon_icon)
+            weapon_gradient.Color = Settings.Gradient.WeaponIcon.Color
+            if Settings.Gradient.WeaponIcon.Rotation.Auto then
+                add_rotating_gradient(weapon_gradient, Settings.Gradient.WeaponIcon.Rotation)
+            else
+                weapon_gradient.Rotation = Settings.Gradient.WeaponIcon.Rotation.Static or 90
+            end
+        end
+        box_elements.weapon_icon = weapon_icon;
+    end
+    return box_elements;
+end
+end
+local function create_aura(Type, Parent, Settings)
+local aura
+local root_part
+if Parent and Parent.Character then
+    root_part = Parent.Character:FindFirstChild('HumanoidRootPart') or Parent.Character:WaitForChild('HumanoidRootPart')
+end
+if Type == 'juju' then
+    if not root_part then
+        return nil
+    end
+
+    local attachment = modules:new('Attachment', { Parent = root_part })
+
+    aura = modules:new('ParticleEmitter', {
+        ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume,
+        FlipbookFramerate = NumberRange.new(1, 1),
+        LightInfluence = 0,
+        Lifetime = NumberRange.new(0.25, 0.25),
+        FlipbookLayout = Enum.ParticleFlipbookLayout.Grid2x2,
+        SpreadAngle = Vector2.new(-360, 360),
+        LockedToPart = true,
+        Transparency = NumberSequence.new(0, 1, 0, 0.25, 0, 0, 1, 1, 0),
+        LightEmission = 1,
+        Parent = attachment;
+        WindAffectsDrag = false,
+        Drag = 0,
+        FlipbookStartRandom = false,
+        TimeScale = 1,
+        Squash = NumberSequence.new(0, 0, 0, 1, 0, 0),
+        Speed = NumberRange.new(0.001, 0.001),
+        Brightness = 1,
+        Archivable = true,
+        Size = NumberSequence.new(0, 6, 1, 1, 6, 1),
+        Enabled = true,
+        FlipbookIncompatible = "Particle texture must be 1024 by 1024 to use flipbooks.",
+        RotSpeed = NumberRange.new(500, 1000),
+        ZOffset = 1,
+        VelocityInheritance = 0,
+        ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+        Rate = 25,
+        Texture = "rbxassetid://11189077263",
+        EmissionDirection = Enum.NormalId.Top,
+        ShapePartial = 1,
+        Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+        FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+        Rotation = NumberRange.new(-360, 360),
+        Shape = Enum.ParticleEmitterShape.Box,
+        Acceleration = Vector3.new(0, 0, 0),
+        Parent = attachment
+    })
+elseif Type == 'Lightning' then
+    if not root_part then
+        return nil
+    end
+    local attachment = modules:new('Attachment', { Parent = root_part })
+    aura = modules:new('ParticleEmitter', {
+        ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume;
+        LightInfluence = 0;
+        Lifetime = NumberRange.new(0.5, 1);
+        FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4;
+        SpreadAngle = Vector2.new(360, 360);
+        LockedToPart = true;
+        Transparency = NumberSequence.new(0, 0.5, 0.1, 1);
+        LightEmission = 1;
+        WindAffectsDrag = false;
+        Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0, 0.517647, 1)), ColorSequenceKeypoint.new(1, Color3.new(0, 0.517647, 1))});
+        Drag = 0;
+        FlipbookStartRandom = false;
+        Squash = NumberSequence.new(0, 0, 0, 1, 0, 0);
+        Speed = NumberRange.new(0.5, 1);
+        Brightness = 10;
+        Parent = attachment;
+        Size = NumberSequence.new(0, 6, 0, 3, 2, 0);
+        FlipbookIncompatible = "Particle texture must be 1024 by 1024 to use flipbooks.";
+        RotSpeed = NumberRange.new(0, 0),
+        ZOffset = 1;
+        VelocityInheritance = 0;
+        ShapeInOut = Enum.ParticleEmitterShapeInOut.Inward;
+        Rate = 50;
+        Texture = "rbxassetid://16664675233";
+        EmissionDirection = Enum.NormalId.Top;
+        ShapePartial = 1;
+        Name = "Lighting1";
+        Orientation = Enum.ParticleOrientation.FacingCamera;
+        FlipbookMode = Enum.ParticleFlipbookMode.OneShot;
+        Rotation = NumberRange.new(-360, 360);
+        Shape = Enum.ParticleEmitterShape.Box;
+        Acceleration = Vector3.new(0, 0, 0);
+    })
+elseif Type == 'Swirl' then
+    if not root_part then
+        return nil
+    end
+    local attachment = modules:new('Attachment', { Parent = root_part })
+    aura = modules:new('ParticleEmitter', {
+        ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume;
+        FlipbookFramerate = NumberRange.new(1, 1);
+        LightInfluence = 0;
+        Lifetime = NumberRange.new(0.1, 1);
+        FlipbookLayout = Enum.ParticleFlipbookLayout.None;
+        SpreadAngle = Vector2.new(360, -360);
+        LockedToPart = true;
+        Transparency = NumberSequence.new(0, 0, 0, 1, 0, 0);
+        LightEmission = 0;
+        WindAffectsDrag = false;
+        Drag = 0;
+        FlipbookStartRandom = false;
+        TimeScale = 1;
+        Parent = attachment;
+        Squash = NumberSequence.new(0, 0, 0, 1, 0, 0);
+        Speed = NumberRange.new(0.01, 0.01);
+        Brightness = 0;
+        Archivable = true;
+        Size = NumberSequence.new(0, 7, 0, 1, 7, 0);
+        Enabled = true;
+        FlipbookIncompatible = "Particle texture must be 1024 by 1024 to use flipbooks.";
+        RotSpeed = NumberRange.new(360, 360);
+        ZOffset = 0.20000000298023224;
+        VelocityInheritance = 0;
+        ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+        Rate = 5;
+        Texture = "rbxassetid://14477910720";
+        EmissionDirection = Enum.NormalId.Top;
+        ShapePartial = 1;
+        Orientation = Enum.ParticleOrientation.VelocityPerpendicular;
+        FlipbookMode = Enum.ParticleFlipbookMode.Loop;
+        Rotation = NumberRange.new(-180, 180);
+        Shape = Enum.ParticleEmitterShape.Box;
+        Acceleration = Vector3.new(0, 0, 0);
+    });
+else
+    aura = modules:new('ParticleEmitter', { Parent = Parent })
+end
+
+aura.Enabled = Settings.Aura.Visible or false
+
+if Settings.Aura.Color then
+    aura.Color = ColorSequence.new(Settings.Aura.Color['1'], Settings.Aura.Color['2'])
+end
+
+if Settings.Aura.Transparency then
+    aura.Transparency = NumberSequence.new(
+        Settings.Aura.Transparency['1'],
+        Settings.Aura.Transparency['2']
+    )
+end
+
+return aura
+end
+
+local function create_fov(mode, parent, settings)
+    local fov
+    local outline
+    local fov_gradient
+    local ol_gradient
+
+    if settings.FOV.Properties.On then
+        fov = Instance.new("Frame", parent)
+        fov.AnchorPoint = Vector2.new(0.5, 0.5)
+        fov.Position = UDim2.new(0.5, 0, 0.5, 0)
+        fov.BackgroundTransparency = 1
+        fov.Visible = true
+
+        if settings.FOV.Properties.Type == "dotted" or settings.FOV.Properties.Type == "lined" then
+            for i = 1, 36 do
+                local segment = Instance.new("Frame", fov)
+                local seg_outline
+                local segol_gradient
+                local ol_gradient
+                segment.Size = UDim2.new(0, 5, 0, 5)
+                segment.BackgroundColor3 = settings.FOV.Properties.Color or Color3.fromRGB(255, 255, 255)
+                segment.BackgroundTransparency = settings.FOV.Properties.Transparency or 0.65
+                segment.AnchorPoint = Vector2.new(0.5, 0.5)
+
+                local angle = math.rad((i - 1) * (360 / 36))
+                local radius = settings.FOV.Properties.Radius or 75
+                local x = math.cos(angle) * radius
+                local y = math.sin(angle) * radius
+                segment.Position = UDim2.new(0.5, x, 0.5, y)
+
+                if settings.FOV.Properties.Type == "dotted" then
+                    local corner = Instance.new("UICorner", segment)
+                    corner.CornerRadius = UDim.new(1, 0)
+                elseif settings.FOV.Properties.Type == "lined" then
+                    segment.Size = UDim2.new(0, 10, 0, 2)
+                    segment.Rotation = math.deg(angle)
+                end
+
+                if settings.FOV.Outline.On then
+                    seg_outline = Instance.new("UIStroke", segment)
+                    seg_outline.Color = settings.FOV.Outline.Color or Color3.fromRGB(0, 0, 0)
+                    seg_outline.Transparency = settings.FOV.Outline.Transparency or 0
+                    seg_outline.Thickness = settings.FOV.Outline.Thickness or 1
+                end
+
+                if settings.Gradient['FOV Outline'].On then
+                    segol_gradient = Instance.new("UIGradient", seg_outline)
+                    segol_gradient.Color = settings.Gradient['FOV Outline'].Color or ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0))
+                    segol_gradient.Rotation = settings.Gradient['FOV Outline'].Rotation.Static or 90
+                end
+
+                if settings.Gradient.FOV.On then
+                    local seg_gradient = Instance.new("UIGradient", segment)
+                    seg_gradient.Color = settings.Gradient.FOV.Color or ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0))
+                    seg_gradient.Rotation = settings.Gradient.FOV.Rotation.Static or 90
+                end
+            end
+        elseif settings.FOV.Properties.Type == "square" then
+            fov.Size = UDim2.new(0, settings.FOV.Properties.Radius * 2, 0, settings.FOV.Properties.Radius * 2)
+            fov.BackgroundColor3 = settings.FOV.Properties.Color or Color3.fromRGB(255, 255, 255)
+            fov.BackgroundTransparency = settings.FOV.Properties.Transparency or 0.65
+
+            outline = Instance.new("UIStroke", fov)
+            outline.Color = settings.FOV.Outline.Color or Color3.fromRGB(0, 0, 0)
+            outline.Transparency = settings.FOV.Outline.Transparency or 0
+            outline.Thickness = settings.FOV.Outline.Thickness or 1
+
+            if settings.Gradient['FOV Outline'].On then
+                ol_gradient = Instance.new("UIGradient", outline)
+                ol_gradient.Color = settings.Gradient.FOV.Color or Color3.fromRGB(0, 0, 0)
+                ol_gradient.Rotation = settings.Gradient.FOV.Rotation.Static or 90
+            end
+            if settings.Gradient.FOV.On then
+                fov_gradient = Instance.new("UIGradient", fov)
+                fov_gradient.Color = settings.Gradient.FOV.Color or Color3.fromRGB(0, 0, 0)
+                fov_gradient.Rotation = settings.Gradient.FOV.Rotation.Static or 90
+            end
+            
+        else
+            fov.Size = UDim2.new(0, settings.FOV.Properties.Radius * 2, 0, settings.FOV.Properties.Radius * 2)
+            fov.BackgroundColor3 = settings.FOV.Properties.Color or Color3.fromRGB(255, 255, 255)
+            fov.BackgroundTransparency = settings.FOV.Properties.Transparency or 0.65
+            local corner = Instance.new("UICorner", fov)
+            corner.CornerRadius = UDim.new(0.5, 0)
+            outline = Instance.new("UIStroke", fov)
+            outline.Color = settings.FOV.Outline.Color or Color3.fromRGB(0, 0, 0)
+            outline.Transparency = settings.FOV.Outline.Transparency or 0
+            outline.Thickness = settings.FOV.Outline.Thickness or 1
+            
+            if settings.Gradient['FOV Outline'].On then
+                ol_gradient = Instance.new("UIGradient", outline)
+                ol_gradient.Color = settings.Gradient.FOV.Color or Color3.fromRGB(0, 0, 0)
+                ol_gradient.Rotation = settings.Gradient.FOV.Rotation.Static or 90
+            end
+            if settings.Gradient.FOV.On then
+                fov_gradient = Instance.new("UIGradient", fov)
+                fov_gradient.Color = settings.Gradient.FOV.Color or Color3.fromRGB(0, 0, 0)
+                fov_gradient.Rotation = settings.Gradient.FOV.Rotation.Static or 90
+            end
+        end
+
+        if settings.Gradient.FOV.Rotation.Auto then
+            if fov_gradient then
+                add_rotating_gradient(fov_gradient, settings.Gradient['FOV'].Rotation)
+                fov_gradient.Rotation = settings.Gradient.FOV.Rotation.Static
+            end
+            if seg_gradient then
+                add_rotating_gradient(seg_gradient, settings.Gradient['FOV'].Rotation)
+                seg_gradient.Rotation = settings.Gradient.FOV.Rotation.Static
+            end
+        end
+
+        if settings.Gradient['FOV Outline'].Rotation.Auto then
+            add_rotating_gradient(ol_gradient, settings.Gradient['FOV Outline'].Rotation)
+        else
+            ol_gradient.Rotation = settings.Gradient['FOV Outline'].Rotation.Static or 90
+        end
+
+        if settings.Gradient['FOV Outline'].Segmented then
+            segol_gradient = Instance.new("UIGradient", segol)
+            segol_gradient.Color = settings.Gradient['FOV Outline'].Color
+            if settings.Gradient['FOV Outline'].Rotation.Auto then
+                add_rotating_gradient(segol_gradient, settings.Gradient['FOV Outline'].Rotation)
+            else
+                segol_gradient.Rotation = settings.Gradient['FOV Outline'].Rotation.Static or 90
+            end
+        end
+    end
+
+    return fov
+end
+
+local skeleton_cache = {}
+local connections = {
+    { "UpperTorso", "LowerTorso" },
+    { "UpperTorso", "LeftUpperArm" },
+    { "LeftUpperArm", "LeftHand" },
+    { "UpperTorso", "RightUpperArm" },
+    { "RightUpperArm", "RightHand" },
+    { "LowerTorso", "LeftUpperLeg" },
+    { "LeftUpperLeg", "LeftLowerLeg" },
+    { "LeftLowerLeg", "LeftFoot" },
+    { "LowerTorso", "RightUpperLeg" },
+    { "RightUpperLeg", "RightLowerLeg" },
+    { "RightLowerLeg", "RightFoot" }
+}
+
+local function create_line(parent, start_pos, end_pos, settings)
+    local line = Instance.new("Frame")
+    line.AnchorPoint = Vector2.new(0.5, 0.5)
+    line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    line.BorderSizePixel = 0
+
+    local length = (end_pos - start_pos).magnitude
+    line.Size = UDim2.new(0, length, 0, 2)
+    line.Position = UDim2.new(0, (start_pos.X + end_pos.X) / 2, 0, (start_pos.Y + end_pos.Y) / 2)
+    line.Rotation = math.deg(math.atan2(end_pos.Y - start_pos.Y, end_pos.X - start_pos.X))
+    line.Visible = settings.Skeleton.Properties.On
+    line.ZIndex = -2
+    line.Parent = parent
+
+    if settings.Skeleton.Outline.On then
+        local ui_stroke = Instance.new("UIStroke", line)
+        ui_stroke.Thickness = settings.Skeleton.Outline.Thickness
+        ui_stroke.Color = settings.Skeleton.Outline.Color
+    end
+
+    return line
+end
+
+local function create_skeleton(parent, settings, player)
+    local skeleton_lines = {}
+    for _, joint in pairs(connections) do
+        skeleton_lines[joint[1] .. joint[2]] = create_line(parent, Vector2.new(0, 0), Vector2.new(0, 0), settings)
+    end
+    local connection = player.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            for _, line in pairs(skeleton_lines) do
+                line:Destroy()
+            end
+            skeleton_lines = {}
+            if connection then
+                connection:Disconnect()
+            end
+            skeleton_cache[player] = nil
+        end
+    end)
+
+    skeleton_cache[player] = { lines = skeleton_lines, settings = settings, player = player }
+end
+local function update_skeletons()
+    for _, skeleton_data in pairs(skeleton_cache) do
+        local player = skeleton_data.player
+        local skeleton_lines = skeleton_data.lines
+        local settings = skeleton_data.settings
+
+        if player.Character then
+            for _, joint in ipairs(connections) do
+                local part1 = player.Character:FindFirstChild(joint[1])
+                local part2 = player.Character:FindFirstChild(joint[2])
+                if part1 and part2 then
+                    local screen_point1 = workspace.CurrentCamera:WorldToScreenPoint(part1.Position)
+                    local screen_point2 = workspace.CurrentCamera:WorldToScreenPoint(part2.Position)
+
+                    if screen_point1.Z > 0 and screen_point2.Z > 0 then
+                        local line = skeleton_lines[joint[1] .. joint[2]]
+                        local length = (screen_point2 - screen_point1).magnitude
+                        line.Size = UDim2.new(0, length, 0, 2)
+                        line.Position = UDim2.new(0, (screen_point1.X + screen_point2.X) / 2, 0, (screen_point1.Y + screen_point2.Y) / 2)
+                        line.Rotation = math.deg(math.atan2(screen_point2.Y - screen_point1.Y, screen_point2.X - screen_point1.X))
+                    end
+                end
+            end
+        end
+    end
+end
+local camera = workspace.CurrentCamera
+local local_player = players.LocalPlayer
+
+local function get_mouse_position()
+    local mouse = local_player:GetMouse()
+    return Vector2.new(mouse.X, mouse.Y)
+end
+
+local function set_line(line, width, color, origin, destination)
+    local position = (origin + destination) / 2
+    local length = (origin - destination).Magnitude
+    local rotation = math.deg(math.atan2(destination.Y - origin.Y, destination.X - origin.X))
+
+    line.Position = UDim2.new(0, position.X, 0, position.Y)
+    line.Size = UDim2.new(0, length, 0, width)
+    line.Rotation = rotation
+    line.BackgroundColor3 = color
+end
+
+local function create_tracer(type, parent, settings)
+    local lines = {}
+
+    local function update_lines()
+        local mouse_position = get_mouse_position()
+        local targets = {}
+
+        for _, player in pairs(players:GetPlayers()) do
+            if player ~= local_player then
+                local char = player.Character
+                if char then
+                    local target_part = char:FindFirstChild('HumanoidRootPart')
+                    if target_part then
+                        local screen_point, on_screen = camera:WorldToScreenPoint(target_part.Position)
+                        if on_screen then
+                            local target_position
+                            if settings.Tracer.Properties.Mode == "From Mouse" then
+                                target_position = Vector2.new(screen_point.X, screen_point.Y)
+                            elseif settings.Tracer.Properties.Mode == "Over Head" then
+                                target_position = Vector2.new(screen_point.X, screen_point.Y - 50)
+                            elseif settings.Tracer.Properties.Mode == "From Screen" then
+                                target_position = Vector2.new(screen_point.X, screen_point.Y)
+                            end
+                            table.insert(targets, { target_position, settings.Tracer.Properties.Color })
+                        end
+                    end
+                end
+            end
+        end
+        for i = 1, #targets do
+            local target_data = targets[i]
+            if #lines < i then
+                local new_line = Instance.new("Frame")
+                new_line.Name = "_T" .. i
+                new_line.Visible = settings.Tracer.Properties.On
+                new_line.AnchorPoint = Vector2.new(0.5, 0.5)
+                new_line.BorderSizePixel = 0
+                new_line.Parent = parent
+                new_line.ZIndex = -3
+                new_line.BackgroundColor3 = settings.Tracer.Properties.Color or Color3.fromRGB(255, 255, 255)
+
+                if settings.Tracer.Outline.On then
+                    local outline = Instance.new('UIStroke', new_line)
+                    outline.Color = settings.Tracer.Outline.Color or Color3.fromRGB(0, 0, 0)
+                    outline.Thickness = settings.Tracer.Outline.Thickness or 1
+                end
+                table.insert(lines, new_line)
+            end
+
+            local origin_position = Vector2.new(0, 0)
+            if settings.Tracer.Properties.Mode == "From Client" and local_player.Character and local_player.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoid_root_part = local_player.Character.HumanoidRootPart
+                local screen_point, on_screen = camera:WorldToScreenPoint(humanoid_root_part.Position)
+
+                if on_screen then
+                    origin_position = Vector2.new(screen_point.X, screen_point.Y)
+                end
+            elseif settings.Tracer.Properties.Mode == "From Screen" then
+                origin_position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+            elseif settings.Tracer.Properties.Mode == "From Mouse" then
+                origin_position = mouse_position
+            else
+                origin_position = mouse_position
+            end
+
+            if target_data then
+                set_line(lines[i], settings.Tracer.Outline.Thickness, target_data[2], origin_position, target_data[1])
+            end
+        end
+
+        for i = #targets + 1, #lines do
+            if lines[i] then
+                lines[i]:Destroy()
+                table.remove(lines, i)
+            end
+        end
+    end
+
+    return update_lines
+end
+local tween_service = cloneref(game:GetService("TweenService"))
+local crosshair_cache = {}
+
+local function create_crosshair(type, parent, settings)
+    local ch_frames = {}
+    local last_render = 0
+
+    for idx = 1, settings.Crosshair.Lines do
+        local frame = Instance.new("Frame", parent)
+        frame.BackgroundColor3 = settings.Crosshair.Color
+        frame.Size = UDim2.new(0, settings.Crosshair.Width, 0, settings.Crosshair.Length)
+        frame.AnchorPoint = Vector2.new(0.5, 0.5)
+        frame.Visible = false
+
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Thickness = settings.Crosshair.Outline.Thickness
+        stroke.Color = settings.Crosshair.Outline.Color
+
+        ch_frames[idx] = frame
+    end
+
+    crosshair_cache[#crosshair_cache + 1] = {
+        ch_frames = ch_frames,
+        settings = settings,
+        type = type,
+        last_render = last_render
+    }
+end
+
+local function solve(angle, radius)
+    return Vector2.new(
+        math.sin(math.rad(angle)) * radius,
+        math.cos(math.rad(angle)) * radius
+    )
+end
+
+local active_highlights = {}
+
+local function create_highlight(Settings, part)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = part
+    highlight.Enabled = Settings.Chams.Properties.On
+    highlight.FillColor = Settings.Chams.Properties.Color.Fill
+    highlight.OutlineColor = Settings.Chams.Properties.Color.Outline
+    highlight.FillTransparency = Settings.Chams.Properties.Transparency.Fill
+    highlight.OutlineTransparency = Settings.Chams.Properties.Transparency.Outline
+    highlight.DepthMode = "AlwaysOnTop"
+    highlight.Parent = Instance.new("ScreenGui", core_gui)
+
+    if Settings.Chams.Properties.Breath then
+        table.insert(active_highlights, {
+            highlight = highlight,
+            fill_transparency = Settings.Chams.Properties.Transparency.Fill,
+            outline_transparency = Settings.Chams.Properties.Transparency.Outline
+        })
+    end
+
+    return highlight
+end
+local function create_watermark(text, parent, settings)
+    local watermark = Instance.new("TextLabel")
+    watermark.Parent = parent
+    watermark.Text = text
+    watermark.BackgroundTransparency = 1
+    watermark.TextColor3 = Color3.fromRGB(255, 255, 255)
+    watermark.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    watermark.TextStrokeTransparency = 0
+    watermark.FontFace = getfontfromname("SmallestPixel7")
+    watermark.TextSize = 16
+    watermark.AnchorPoint = Vector2.new(0.5, 0.5)
+    watermark.Visible = true
+    watermark.ZIndex = 2
+
+    local tween_info = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true)
+    local tween1 = game:GetService("TweenService"):Create(watermark, tween_info, {TextColor3 = Color3.fromRGB(211, 211, 211)})
+    local tween2 = game:GetService("TweenService"):Create(watermark, tween_info, {TextColor3 = Color3.fromRGB(255, 255, 255)})
+
+    tween1:Play()
+    tween1.Completed:Connect(function()
+        tween2:Play()
+    end)
+
+    return watermark
+end
+local Cam = workspace.CurrentCamera
+local ESP = { MaxDistance = math.huge, Lerp = true }
+local box_cache = {}
+local players = game.Players
+local LocalPlayer = players.LocalPlayer
+local _index = _index or Instance.new('ScreenGui', core_gui)
+
+local function clear_box_elements(elements)
+    for _, elem in pairs(elements) do
+        if elem and elem.Parent then
+            elem:Destroy()
+        end
+    end
+end
+
+local function hide_elements(elements)
+    for _, elem in pairs(elements) do
+        if elem:IsA("Frame") or elem:IsA("TextLabel") or elem:IsA("ImageLabel") then
+            elem.Visible = false
+        end
+    end
+end
+local function create_3d(settings, player)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    local adornment = Instance.new("CylinderHandleAdornment")
+    adornment.Radius = settings.Radius or 5
+    adornment.InnerRadius = (settings.Radius or 5) - 0.1
+    adornment.Height = settings.Height or 0.1
+    adornment.Color3 = settings.Color or Color3.new(255, 255, 255)
+    adornment.AlwaysOnTop = settings.AlwaysOnTop or false
+    adornment.AdornCullingMode = Enum.AdornCullingMode.Never
+    adornment.Adornee = hrp
+    adornment.ZIndex = 5
+    adornment.Parent = char
+
+    return adornment
+end
+local function create_esp(player)
+local box_elements = create_bounding(Default.Box.Properties.Mode, _index, Default)
+local current_mode, current_type = Default.Box.Properties.Mode, Default.Box.Properties.Type
+local connection
+connection = run_service.RenderStepped:Connect(function()
+    local character = game.PlaceId == 9825515356 and workspace.Players.Characters or player.Character
+    local UpperTorso = character and character:FindFirstChild("UpperTorso")
+    local HRP = character and character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = character and character:FindFirstChild("Humanoid")
+    local BodyEffects = character and character:FindFirstChild("BodyEffects")
+    local isKO = BodyEffects and BodyEffects:FindFirstChild("K.O") and BodyEffects["K.O"].Value
+    if Humanoid then
+        Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    end
+    local target_part = isKO and UpperTorso or HRP
+    if target_part then
+        local Pos, OnScreen = Cam:WorldToScreenPoint(target_part.Position)
+        local Dist = (LocalPlayer.Character.HumanoidRootPart.CFrame.Position - target_part.Position).Magnitude / 3.5714285714
+
+        if OnScreen and Dist <= ESP.MaxDistance then
+            local Size = target_part.Size.Y
+            if Default.Box.Properties.Type == "Square" then
+                local character_width = LocalPlayer.Character.HumanoidRootPart.Size.X
+                scale_factor = (character_width * Cam.ViewportSize.Y) / (Pos.Z * 1.6)
+            else
+                scale_factor = (Size * Cam.ViewportSize.Y) / (Pos.Z * 2)
+            end
+            local w, h
+            if Default.Box.Properties.Type == "Square" then
+                w, h = 2.5 * scale_factor, 2.5 * scale_factor
+            else
+                w, h = 3 * scale_factor, 4.5 * scale_factor
+            end
+
+            if Default.Box.Properties.Mode ~= current_mode or Default.Box.Properties.Type ~= current_type then
+                clear_box_elements(box_elements)
+                box_elements = create_bounding(Default.Box.Properties.Mode, _index, Default)
+                current_mode, current_type = Default.Box.Properties.Mode, Default.Box.Properties.Type
+            end
+
+            if not box_elements.main then
+                if Default.Box.Inline.On then
+                    box_elements.inline.Size = UDim2.new(0, w, 0, h)
+                    box_elements.inline.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y - h / 2)
+                    box_elements.left_top.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y - h / 2)
+                    box_elements.left_top.Size = UDim2.new(0, w / 5, 0, 1)
+                end
+                box_elements.left_side.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y - h / 2)
+                box_elements.left_side.Size = UDim2.new(0, 1, 0, h / 5)
+
+                box_elements.bottom_side.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2)
+                box_elements.bottom_side.Size = UDim2.new(0, 1, 0, h / 5)
+                box_elements.bottom_side.AnchorPoint = Vector2.new(0, 5)
+
+                box_elements.bottom_down.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2)
+                box_elements.bottom_down.Size = UDim2.new(0, w / 5, 0, 1)
+                box_elements.bottom_down.AnchorPoint = Vector2.new(0, 1)
+
+                box_elements.right_top.Position = UDim2.new(0, Pos.X + w / 2, 0, Pos.Y - h / 2)
+                box_elements.right_top.Size = UDim2.new(0, w / 5, 0, 1)
+                box_elements.right_top.AnchorPoint = Vector2.new(1, 0)
+
+                box_elements.right_side.Position = UDim2.new(0, Pos.X + w / 2 - 1, 0, Pos.Y - h / 2)
+                box_elements.right_side.Size = UDim2.new(0, 1, 0, h / 5)
+                box_elements.right_side.AnchorPoint = Vector2.new(0, 0)
+
+                box_elements.bottom_right_side.Position = UDim2.new(0, Pos.X + w / 2, 0, Pos.Y + h / 2)
+                box_elements.bottom_right_side.Size = UDim2.new(0, 1, 0, h / 5)
+                box_elements.bottom_right_side.AnchorPoint = Vector2.new(1, 1)
+
+                box_elements.bottom_right_down.Position = UDim2.new(0, Pos.X + w / 2, 0, Pos.Y + h / 2)
+                box_elements.bottom_right_down.Size = UDim2.new(0, w / 5, 0, 1)
+                box_elements.bottom_right_down.AnchorPoint = Vector2.new(1, 1)
+            else
+                box_elements.main.Size = UDim2.new(0, w, 0, h)
+                box_elements.main.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y - h / 2)
+                box_elements.main.Visible = true
+            end
+
+            box_elements.display.Position = UDim2.new(0, Pos.X, 0, Pos.Y - h / 2)
+            local function update_display(player)
+                local is_teammate = player.Team == game.Players.LocalPlayer.Team
+                local all_teammates = true
+            
+                for _, p in pairs(game.Players:GetPlayers()) do
+                    if p ~= game.Players.LocalPlayer and p.Team ~= game.Players.LocalPlayer.Team then
+                        all_teammates = false
+                        break
+                    end
+                end
+            
+                local indicator
+            
+                if player == game.Players.LocalPlayer then
+                    indicator = '[<font color="rgb(255, 58, 134)">C</font>] '
+                elseif all_teammates then
+                    indicator = '[<font color="rgb(0,255,0)">N</font>] '
+                elseif is_teammate then
+                    indicator = '[<font color="rgb(0,0,255)">T</font>] '
+                elseif player.Team == nil then
+                    indicator = '[<font color="rgb(0,255,0)">N</font>] '
+                else
+                    indicator = '[<font color="rgb(255,0,0)">E</font>] '
+                end
+            
+                box_elements.display.RichText = true
+                box_elements.display.Text = indicator .. tostring(player.DisplayName)
+            end                    
+            
+            update_display(player)
+            local health
+            if Humanoid then
+                health = Humanoid.Health / Humanoid.MaxHealth
+            end
+            if health then
+                box_elements.healthbar.Size = UDim2.new(0, 2, 0, h * health)
+                box_elements.healthbar.Position = UDim2.new(0, Pos.X - w / 2 - 6, 0, Pos.Y - h / 2 + h * (1 - health))
+                box_elements.healthbar_bg.Size = UDim2.new(0, 4, 0, h)
+                box_elements.healthbar_bg.Position = UDim2.new(0, Pos.X - w / 2 - 6, 0, Pos.Y - h / 2)
+
+                local health_per = math.floor(health * 100)
+                box_elements.health_text.Position = UDim2.new(0, Pos.X - w / 2 - 20, 0, Pos.Y - h / 2 + h * (1 - health_per / 100) + 3)
+                box_elements.health_text.Text = tostring(health_per)
+                box_elements.health_text.Visible = Humanoid.Health < Humanoid.MaxHealth
+
+                if ESP.Lerp then
+                    local color = health >= 0.75 and Color3.fromRGB(0, 255, 0) or
+                                health >= 0.5 and Color3.fromRGB(255, 255, 0) or
+                                health >= 0.25 and Color3.fromRGB(255, 170, 0) or
+                                Color3.fromRGB(255, 0, 0)
+                    box_elements.health_text.TextColor3 = color
+                    box_elements.healthbar.BackgroundColor3 = color
+                else
+                    box_elements.health_text.TextColor3 = box_elements.healthbar.Color
+                end
+            end
+
+            box_elements.tool.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 + 8)
+            local tool = character and character:FindFirstChildOfClass("Tool")
+
+            box_cache[player].last_tool = box_cache[player].last_tool or nil
+            local last_tool = box_cache[player].last_tool
+            local weapon_map = {
+                ["AK47"] = 0,
+                ["AR"] = 1,
+                ["AUG"] = 2,
+                ["Double-Barrel SG"] = 3,
+                ["Flame"] = 4,
+                ["Glock"] = 5,
+                ["Knife"] = 6,
+                ["LMG"] = 7,
+                ["P90"] = 8,
+                ["Revolver"] = 9,
+                ["Rifle"] = 10,
+                ["Shotgun"] = 11,
+                ["SMG"] = 12,
+                ["TacticalShotgun"] = 13,
+                ["SilencerAR"] = 14
+            };
+            
+            if tool ~= last_tool then
+                box_cache[player].last_tool = tool;
+                local function update_tool_display()
+                    if tool then
+                        local tool_index, formatted_name;
+                        local tool_name = tool.Name;
+                        for name, index in pairs(weapon_map) do
+                            if tool_name:match("%[" .. name .. "%]") or
+                            tool_name:match(name) or
+                            (name == "Double-Barrel SG" and (tool_name:match("Double") or tool_name:match("SG"))) then
+                                tool_index = index;
+                                formatted_name = name;
+                                break;
+                            end
+                        end 
+                        if not tool_index then
+                            box_elements.weapon_icon.Image = "";
+                            box_elements.tool.Text = "none";
+                            return;
+                        end
+                        
+                        if formatted_name == "Double-Barrel SG" then
+                            formatted_name = "Double Barrel";
+                            box_elements.weapon_icon.Image = DrawingImagesEnum[3];
+                        else
+                            box_elements.weapon_icon.Image = DrawingImagesEnum[tool_index];
+                        end
+                        
+                        local ammo = tonumber(tool:FindFirstChild("Ammo") and tool.Ammo.Value) or 0;
+                        local max_ammo = tonumber(tool:FindFirstChild("MaxAmmo") and tool.MaxAmmo.Value) or 0;
+                        
+                        box_elements.tool.RichText = true;
+                        if formatted_name == "Knife" then
+                            box_elements.tool.Text = string.format('<font color="rgb(255, 58, 134)">%s</font>', formatted_name);
+                        else
+                            box_elements.tool.Text = string.format('<font color="rgb(255, 58, 134)">%s</font> : %d / %d', formatted_name, ammo, max_ammo);
+                        end
+                    else
+                        box_elements.weapon_icon.Image = "";
+                        box_elements.tool.Text = "none";
+                    end
+                end
+                update_tool_display();
+            end              
+            box_elements.weapon_icon.Size = UDim2.new(0, w, 0, h / 4)
+            box_elements.weapon_icon.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2 + 34)
+
+            box_elements.studs.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 + 20)
+            box_elements.studs.Text = string.format("%d ms", math.floor(Dist))
+
+            local body_effects = character:FindFirstChild('BodyEffects')
+            if body_effects then
+                local armor = body_effects:FindFirstChild("Armor")
+                local armor_int = armor and armor.Value or 0
+                local max_armor = armor_int / 130
+
+                box_elements.armorbar.Size = UDim2.new(0, w * max_armor, 0, 2)
+                box_elements.armorbar.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2 + 2)
+                if max_armor < 0 then
+                    box_elements.armorbar.BackgroundTransparency = 1
+                else
+                    box_elements.armorbar.BackgroundTransparency = 0
+                end
+                if Default.Text.Armor.Properties.On then
+                    box_elements.armorbar.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2 + 6)
+                    box_elements.armor_text.Position = UDim2.new(0, Pos.X - w / 2 + (6 + w * max_armor) + 6, 0, Pos.Y + h / 2 - 3)
+                    box_elements.armor_text.Text = string.format("%d", armor_int)
+                else
+                    box_elements.studs.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 - 28)
+                    box_elements.tool.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 - 12)
+                    box_elements.weapon_icon.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2 + 30)
+                    box_elements.studs.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 - 28)
+                    box_elements.tool.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 - 12)
+                end
+            else
+                box_elements.studs.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 + 10)
+                box_elements.tool.Position = UDim2.new(0, Pos.X, 0, Pos.Y + h / 2 - 2)
+                box_elements.weapon_icon.Position = UDim2.new(0, Pos.X - w / 2, 0, Pos.Y + h / 2 + 28)
+                box_elements.armorbar.Position = UDim2.new(0,9e9,0,0)
+                box_elements.armor_text.Position = UDim2.new(0, 9e9, 0, 0)
+                box_elements.armorbar.Size = UDim2.new(0,0,0,0)
+                box_elements.armor_text.Size = UDim2.new(0,0,0,0)
+            end
+            for _, elem in pairs(box_elements) do
+                if elem:IsA("Frame") or elem:IsA("TextLabel") or elem:IsA("ImageLabel") then
+                    elem.Visible = true
+            end
+        end
+        else
+            hide_elements(box_elements)
+        end
+    else
+        for _, elem in pairs(box_elements) do
+            if elem:IsA("Frame") or elem:IsA("TextLabel") or elem:IsA("ImageLabel") then
+                elem.Visible = false
+            end
+        end
+    end
+    for _, data in pairs(rotating_gradients) do
+        local gradient = data.gradient
+        if gradient then
+            gradient.Rotation = (tick() * (data.settings.Speed or 1)) % 360
+        end
+    end
+end)
+create_aura(Default.Aura.Type, player, Default)
+create_skeleton(_index, Default, player)
+create_highlight(Default, character)
+end
+
+function create_trail(Parent, Settings)
+        local trail = Instance.new("Trail")
+        local character = game.PlaceId == 9825515356 and workspace.Players.Characters or Parent.Character
+        trail.Parent = character:FindFirstChild('HumanoidRootPart')
+        trail.Color = Settings.Trail.Properties.Color or Color3.fromRGB(255, 0, 0)
+        trail.Transparency = Settings.Trail.Properties.Transparency or 0.5
+        trail.Lifetime = Settings.Trail.Properties.Length or 10
+        trail.WidthScale = Settings.Trail.Properties.WidthScale or 2
+        trail.Enabled = Settings.Trail.Properties.On or false
+        trail.MinLength = Settings.Trail.Properties.Size.MinLength or 0.1
+        trail.MaxLength = Settings.Trail.Properties.Size.MaxLength or 0.1
+        trail.FaceCamera = true
+
+        local attachment0 = Instance.new("Attachment")
+        attachment0.Parent = Parent.Character:FindFirstChild('HumanoidRootPart')
+        attachment0.Position = Vector3.new(.5, 0, 0)
+        local attachment1 = Instance.new("Attachment")
+        attachment1.Parent = Parent.Character:FindFirstChild('HumanoidRootPart')
+        attachment1.Position = Vector3.new(-.5, 0, 0)
+
+        trail.Attachment0 = attachment0
+        trail.Attachment1 = attachment1
+    return trail
+end
+local DefaultSettings = {
+    Radius = 3,
+    Height = 0.1,
+    Color = Color3.new(255, 255, 255),
+    AlwaysOnTop = false
+}
+
+create_trail(LocalPlayer, Default)
+local update_lines_fn = create_tracer(Default.Tracer.Properties.Mode, _index, Default)
+create_crosshair(Default.Crosshair.Mode, _index, Default)
+local fov = create_fov(Default.FOV.Properties.Mode, _index, Default)
+
+local watermark = create_watermark("Talkingband", _index, nil)
+
+local adornments = {}
+
+for _, player in pairs(game:GetService('Players'):GetPlayers()) do
+    if player ~= LocalPlayer then
+        create_esp(player)
+        local adornment = create_3d(DefaultSettings, player)
+        adornments[player] = adornment
+        box_cache[player] = {elements = box_elements, connection = connection}
+    end
+end
+
+game:GetService('Players').PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if player ~= LocalPlayer then
+            create_esp(player)
+            local adornment = create_3d(DefaultSettings, player)
+            adornments[player] = adornment
+            box_cache[player] = {elements = box_elements, connection = connection}
+        end
+    end)
+end)
+
+game:GetService('Players').PlayerRemoving:Connect(function(player)
+    local cache = box_cache[player]
+    if cache then
+        if cache.connection then
+            cache.connection:Disconnect()
+        end
+        if cache.elements then
+            for _, element in pairs(cache.elements) do
+                element:Destroy()
+            end
+        end
+        box_cache[player] = nil
+    end
+end)
+local function update_fov_position(fov, mode)
+    if mode == 'Mouse' then
+        local gui_inset = gui:GetGuiInset()
+        local mouse_pos = uis:GetMouseLocation()
+        fov.Position = UDim2.new(0, mouse_pos.X - gui_inset.X, 0, mouse_pos.Y - gui_inset.Y)
+    elseif mode == 'Center' then
+        fov.Position = UDim2.new(0.5, 0, 0.5, 0)
+    end
+end
+run_service.RenderStepped:Connect(function()
+    for player, adornment in pairs(adornments) do
+        if adornment then
+            local offset = 11 + (math.sin(tick() * 1.5) * 1.5)
+            adornment.CFrame = CFrame.new(0, offset - 11, 0) * CFrame.Angles(math.pi / 2, 0, 0)
+        end
+    end
+    update_fov_position(fov, Default.FOV.Properties.Mode)
+    local mouse_location = uis:GetMouseLocation()
+    local gui_inset = gui:GetGuiInset()
+    watermark.Position = UDim2.new(0, mouse_location.X - gui_inset.X, 0, mouse_location.Y - gui_inset.Y + 30)
+    
+    local breathe_effect = (math.atan(math.sin(tick() * 2)) + math.pi / 2) / math.pi
+    for _, data in pairs(active_highlights) do
+        data.highlight.FillTransparency = data.fill_transparency * breathe_effect * 0.01
+        data.highlight.OutlineTransparency = data.outline_transparency * breathe_effect * 0.01
+    end
+    update_lines_fn()
+    update_skeletons()
+    local _tick = tick()
+    for _, crosshair_data in pairs(crosshair_cache) do
+        local settings = crosshair_data.settings
+        local ch_frames = crosshair_data.ch_frames
+        local type = crosshair_data.type
+        
+        if _tick - crosshair_data.last_render > settings.Crosshair.RefreshRate then
+            crosshair_data.last_render = _tick
+            local position = (
+                type == 'center' and workspace.CurrentCamera.ViewportSize / 2 or
+                type == 'mouse' and uis:GetMouseLocation() or
+                settings.Crosshair.Position
+            )
+
+            if settings.Crosshair.On then
+                for idx = 1, settings.Crosshair.Lines do
+                    local frame = ch_frames[idx]
+                    local angle = (idx - 1) * 90
+                    local length = settings.Crosshair.Length
+
+                    if settings.Crosshair.Animation.Rotate.Enable then
+                        local spin_angle = -_tick * settings.Crosshair.Animation.Rotate.Speed % settings.Crosshair.Animation.Rotate.MaxRotation
+                        angle = angle + tween_service:GetValue(spin_angle / 360, Enum.EasingStyle[settings.Crosshair.Animation.Rotate.Style] or Enum.EasingStyle.Sine, Enum.EasingDirection[settings.Crosshair.Animation.Rotate.Direction] or Enum.EasingDirection.InOut) * 360
+                    end
+
+                    if settings.Crosshair.Animation.Pulse.Resize.Enable then
+                        local resize_length = _tick * settings.Crosshair.Animation.Pulse.Resize.Speed % 180
+                        length = settings.Crosshair.Animation.Pulse.Resize.MinSize + math.sin(math.rad(resize_length)) * settings.Crosshair.Animation.Pulse.Resize.MaxSize
+                    end
+
+                    local frame_pos = position + solve(angle, settings.Crosshair.Radius)
+                    local gui_inset = gui:GetGuiInset()
+                    frame.Visible = true
+                    frame.Size = UDim2.new(0, settings.Crosshair.Width, 0, length)
+                    frame.Position = UDim2.new(0, frame_pos.X - gui_inset.X, 0, frame_pos.Y - gui_inset.Y)
+                    frame.Rotation = -angle
+                    frame.BackgroundColor3 = settings.Crosshair.Color
+                end
+            else
+                for _, frame in pairs(ch_frames) do
+                    frame.Visible = false
+                end
+            end
+        end
+    end
+end)

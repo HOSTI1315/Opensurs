@@ -1,0 +1,102 @@
+print("[Script Lynx] Gameloader Loaded")
+local PlaceId = game.PlaceId
+
+local NormalScripts = {
+    -- SAB
+    [96342491571673] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    [128762245270197] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    [109983668079237] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    -- GAG
+    [126884695634066] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    [124977557560410] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    [91867617264223] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    -- ADM
+    [920587237] = "https://lynx-visuals.vercel.app/api/adm.lua",
+    --MM2
+    [335132309] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [80469437126309] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [636649648] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [73210641948512] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [142823291] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    -- BF
+    [2753915549] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    [4442272183] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    [7449423635] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    --PVB
+    [127742093697776] = "https://lynx-visuals.vercel.app/api/pvb.lua",
+}
+
+local DeltaScripts = {
+    -- SAB
+    [96342491571673] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    [128762245270197] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    [109983668079237] = "https://lynx-visuals.vercel.app/api/sab.lua",
+    -- GAG
+    [126884695634066] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    [124977557560410] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    [91867617264223] = "https://lynx-visuals.vercel.app/api/gag.lua",
+    -- ADM
+    [920587237] = "https://lynx-visuals.vercel.app/api/adm.lua",
+    --MM2
+    [335132309] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [80469437126309] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [636649648] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [73210641948512] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    [142823291] = "https://lynx-visuals.vercel.app/api/mm2.lua",
+    -- BF
+    [2753915549] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    [4442272183] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    [7449423635] = "https://lynx-visuals.vercel.app/api/bf.lua",
+    --PVB
+    [127742093697776] = "https://lynx-visuals.vercel.app/api/pvb.lua",
+}
+
+-- Detect if running on Delta Executor
+local isDelta = (identifyexecutor and identifyexecutor() == "Delta") or
+                (getexecutorname and getexecutorname():lower():find("delta")) or
+                false
+
+local Scripts = isDelta and DeltaScripts or NormalScripts
+local Url = Scripts[PlaceId]
+
+if not Url then
+    game.Players.LocalPlayer:Kick("[Script Lynx] Join a Supported Game..")
+    return
+end
+
+print(isDelta and "[Script Lynx] Loading Delta Scripts.." or "[Script Lynx] Loading Scripts..")
+
+-- Universal HTTP request
+local Req =
+    syn and syn.request or
+    request or
+    http_request or
+    fluxus and fluxus.request or
+    http and http.request or
+    (getgenv and getgenv().request) or
+    nil
+
+if not Req then
+    warn("[Script Lynx] No HTTP function found! Your executor is too old or unsupported.")
+    return
+end
+
+local Success, Response = pcall(Req, {
+    Url = Url,
+    Method = "GET",
+    Headers = {
+        ["X-Auth"] = "scriptssmscripts",
+        ["User-Agent"] = "Roblox/WinInet",
+        ["Origin"] = "https://roblox.com",
+        ["Referer"] = "https://roblox.com/"
+    }
+})
+
+if Success and Response and Response.StatusCode == 200 then
+    print("[Script Lynx] Script downloaded & executed successfully!")
+    loadstring(Response.Body)()
+else
+    warn("[Script Lynx] Failed to download script!")
+    warn("[Script Lynx] Status Code:", Response and Response.StatusCode or "N/A")
+    warn("[Script Lynx] Response:", Response and Response.Body or "Connection failed")
+end

@@ -1,0 +1,588 @@
+repeat task.wait() until game:IsLoaded() and task.wait(1.5)
+
+if game:GetService("CoreGui"):FindFirstChild("Plus") then
+return warn("Script already running")
+elseif tostring(game.GameId) == "5819852418" then
+Instance.new("BoolValue",game:GetService("CoreGui")).Name = "Plus"
+else
+return warn("Incorrect game")
+end
+
+game:GetService("Players").LocalPlayer.Idled:connect(function()
+	game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
+
+if type(readfile) == nil or type(writefile) == nil then
+warn("YOUR EXECUTOR POSSIBLY DOES NOT SUPPORT LOCAL DATA SAVING MEANING THIS SCRIPT WILL NOT WORK PLEASE GET A EXECUTOR THAT SUPPORT THESE FUNCTIONS : readfile,writefile")
+print("If your executor does support local data saving and this pops up please contact the creator of the script")
+print("Contact or get support in the discord server")
+warn("https://discord.gg/vAWJMYJYcR")
+local suc,err = pcall(function()
+setclipboard("https://discord.gg/vAWJMYJYcR")
+end)
+if suc == true then
+print("The invite link has been copied")
+end
+game.StarterGui:SetCore("DevConsoleVisible", true)
+task.wait()
+return 
+end
+
+-- General variables --
+
+local LocalPlayer = game.Players.LocalPlayer
+local Char = LocalPlayer.Character
+local RunService = game:GetService("RunService")
+local Sounds = game:GetService("SoundService")
+local Camera = workspace.CurrentCamera
+local Humanoid = Char:WaitForChild("Humanoid",15)
+local PlayerUI = LocalPlayer.PlayerGui.ScreenGui
+local Buttons = PlayerUI.Buttons
+local UserType = 0
+local CurrentlyAutofarming = false
+local LuckPlace = game:GetService("Workspace").Luck
+local LuckCount = game:GetService("Workspace").Luck.BillboardGui.Count
+local Tween = game:GetService("TweenService")
+local Version = 1.3
+
+-- Data --
+
+function DefaultData(Path,Option)
+if isfile("NaikoScript/PlayerRngPlus/" .. Path) ~= false then
+return warn("Option already exists")
+else
+writefile("NaikoScript/PlayerRngPlus/" .. Path,Option)
+return print("Set default data")
+end
+end
+
+function ChangeData(Path,Option,WithFolder)
+if WithFolder == false then
+if isfile(Path) ~= false then
+return writefile(Path,Option)
+end
+else 
+if isfile("NaikoScript/PlayerRngPlus/" .. Path) ~= false then
+return writefile("NaikoScript/PlayerRngPlus/" .. Path,Option)
+end
+end
+end
+
+function ReturnData(Path,WithFolder)
+if WithFolder == false then
+if isfile(Path) ~= false then
+return readfile(Path)
+end
+else
+if isfile("NaikoScript/PlayerRngPlus/" .. Path) ~= false then
+return readfile("NaikoScript/PlayerRngPlus/" .. Path)
+end
+end
+end
+
+if not isfolder("NaikoScript") and not isfolder("NaikoScript/PlayerRngPlus") then
+print("This is a new user to naiko exploit scripts")
+makefolder("NaikoScript")
+makefolder("NaikoScript/PlayerRngPlus")
+DefaultData("LuckyArea.txt","Path")
+DefaultData("AutoExecute.txt","true")
+DefaultData("AutoServerHop.txt","false")
+DefaultData("ServerIdTarget.JobId","None")
+UserType = 1
+elseif isfolder("NaikoScript") and not isfolder("NaikoScript/PlayerRngPlus") then
+UserType = 2
+print("This user has not executed this before but has used other naiko exploit script projects")
+makefolder("NaikoScript/PlayerRngPlus")
+DefaultData("LuckyArea.txt","Path")
+DefaultData("AutoExecute.txt","true")
+DefaultData("AutoServerHop.txt","false")
+DefaultData("ServerIdTarget.JobId","None")
+elseif isfolder("NaikoScript") and isfolder("NaikoScript/PlayerRngPlus") then
+UserType = 3
+DefaultData("LuckyArea.txt","Path")
+DefaultData("AutoExecute.txt","true")
+DefaultData("AutoServerHop.txt","false")
+DefaultData("ServerIdTarget.JobId","None")
+print("This script has been executed before")
+end
+local ValueUser = Instance.new("NumberValue")
+ValueUser.Parent = game:GetService("CoreGui")
+ValueUser.Name = "UserType"
+ValueUser.Value = UserType
+
+-- Script functions --
+
+function CheckLuckCount(Count)
+local Amount = Count:split("/")
+local Minimum = Amount[1]
+local Maximum = Amount[2]
+return {Minimum,Maximum}
+end
+
+function SetHitbox() 
+if LuckPlace ~= nil then
+LuckPlace.Size = Vector3.new(400,275,400)
+LuckPlace.Position = Vector3.new(0, -22, 0)
+else
+	error("Failed to get the luck part")
+end
+end
+
+function TeleportLuck() 
+if LocalPlayer.Character ~= nil and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LuckPlace ~= nil then
+local Root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+Root.CFrame = CFrame.new(187.5, 60, -185)
+else
+	error("Failed to get the character or the luck part")
+end
+end
+
+function GoToLuck()
+local Char = LocalPlayer.Character
+local PFS = game:GetService("PathfindingService")
+local function getPath(destination)
+local path = PFS:CreatePath()
+	path:ComputeAsync(Char.HumanoidRootPart.Position, destination)
+	return path
+end
+
+local function pathFindTo(destination)
+	local path = getPath(destination)
+	
+		for i,waypoint in pairs(path:GetWaypoints()) do
+
+			if waypoint.Action == Enum.PathWaypointAction.Jump then
+				Humanoid.Jump = true
+			end
+			Humanoid:MoveTo(waypoint.Position)
+			local Cooldown = true
+			task.spawn(function()
+				task.wait(0.2)
+				Cooldown = false
+			end)
+			local Connection = RunService.Stepped:Connect(function()
+				print(game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Magnitude < 15.25)
+			if 	game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Magnitude < 15.25 and Cooldown == false then
+				Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			end
+			end)
+			Humanoid.MoveToFinished:Wait()
+			Connection:Disconnect()
+		end
+		end
+
+	pathFindTo(Vector3.new(0, -22, 0))
+	pathFindTo(Vector3.new(105, 6.25, -181))
+	Humanoid:MoveTo(Vector3.new(120, 35, -181))
+	Humanoid.MoveToFinished:Wait()
+	pathFindTo(Vector3.new(173, 52.5, -188.5))
+	task.wait()
+	Humanoid:ChangeState(3)
+	Humanoid:MoveTo(Vector3.new(187.5, 60, -185))
+end
+
+function ServerHop()
+if ReturnData("AutoServerHop.txt") == "true" then
+local lower, upper, Sfind, split, sub, format, len, match, gmatch, gsub, byte;
+do
+    local string = string
+    lower, upper, Sfind, split, sub, format, len, match, gmatch, gsub, byte = 
+        string.lower,
+        string.upper,
+        string.find,
+        string.split, 
+        string.sub,
+        string.format,
+        string.len,
+        string.match,
+        string.gmatch,
+        string.gsub,
+        string.byte
+end
+         local   order = "Desc"
+        local Servers = {};
+        local url = format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=%s&limit=100", game.PlaceId, order);
+        local starting = tick();
+        repeat
+            local good, result = pcall(function()
+                return game:HttpGet(url);
+            end);
+            if (not good) then
+                wait(2);
+                continue;
+            end
+            local decoded = game:GetService("HttpService"):JSONDecode(result);
+            if (#decoded.data ~= 0) then
+                Servers = decoded.data
+                for i, v in pairs(Servers) do
+                    if (v.maxPlayers and v.playing and v.maxPlayers - 1 > v.playing and v.id ~= game.JobId) then
+                        Server = v
+                        break;
+                    end
+                end
+                if (Server) then
+                    break;
+                end
+            end
+            url = format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=%s&limit=100&cursor=%s", game.PlaceId, order, decoded.nextPageCursor);
+        until tick() - starting >= 600;
+        if (not Server or #Servers == 0) then
+            return 
+        end
+		if ReturnData("AutoExecute.txt") == "true" then
+			local queue_on_teleport = syn and syn.queue_on_teleport or queue_on_teleport
+			if queue_on_teleport ~= nil then
+    		queue_on_teleport("loadstring(game:HttpGet(('https://raw.githubusercontent.com/NaikoScript/Player-RNG-Plus/main/Script')))()")
+			task.wait()
+    		else
+     		end
+		end
+		ChangeData("ServerIdTarget.JobId",tostring(Server.id),true)
+		task.wait()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Server.id);    
+        
+    end
+    end
+
+-- UI Creation --
+
+local Main = PlayerUI:FindFirstChild("Find"):Clone()
+local Title = Instance.new("TextLabel")
+local Padding = Instance.new("UIPadding")
+local Frame = Instance.new("Frame")
+local Layout = Instance.new("UIListLayout")
+local Padding2 = Instance.new("UIPadding")
+local CloseButton = Main.Preview2.Top.Close
+local Open = false
+
+function CreateButton()
+local Button = Instance.new("TextButton")
+local Corner = Instance.new("UICorner")
+local Stroke = Instance.new("UIStroke")
+Button.BackgroundColor3 = Color3.new(0,0,0)
+Button.TextColor3 = Color3.new(1,1,1)
+Button.TextScaled = true
+Button.Size = UDim2.new(0.75,0,0.15,0)
+Button.Name = "Button"
+Corner.CornerRadius = UDim.new(0,18)
+Corner.Parent = Button
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Color = Color3.fromRGB(60,60,60)
+Stroke.Thickness = 1.5
+Stroke.Parent = Button
+return Button
+end
+
+Main.Name = "Plus"
+Title.Name = "Title"
+Title.Parent = Main.Preview2.Top.Buttons
+Title.Text = "Player RNG plus"
+Title.Size = UDim2.new(0.65,0,0.9,0)
+Title.TextScaled = true
+Title.BackgroundTransparency = 1
+Title.LayoutOrder = 2
+Title.TextColor3 = Color3.new(1,1,1)
+Frame.Parent = Main.Preview2
+Frame.Size = UDim2.new(1,0,0.65,0)
+Frame.BackgroundTransparency = 1
+Layout.Parent = Frame
+Layout.Padding = UDim.new(0,10)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Padding2.Parent = Frame
+Padding2.PaddingTop = UDim.new(0,10)
+Main.UIScale.Scale = 1
+Main.Preview2.Top.Buttons.Position = UDim2.new(0,0,0.5,0)
+Main.Preview2.Top.Buttons.Size = UDim2.new(0,0,0,0) -- idk
+Main.Preview2.Top.Buttons.ImageButton.Size = UDim2.new(0,40,0,40)
+Main.Preview2.Top.Buttons.ImageButton.Image = "rbxassetid://12072054746"
+Main.Preview2.Top.Buttons.ImageButton.Visible = true
+Padding.Parent = Main.Preview2.Top.Buttons
+Padding.PaddingLeft = UDim.new(0,0)
+Main.Preview2.Top.Buttons.UIListLayout.Padding = UDim.new(0,10)
+Main.Preview2.Top.Buttons.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+Main.Preview2.Top.Buttons.UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+Main.Parent = PlayerUI
+Main.Visible = false
+Main.Preview:Destroy()
+Main.Size = UDim2.new(0,350,0,350)
+Main.Preview2.Size = UDim2.new(1,0,1,0)
+Main.Preview2.Find:Destroy()
+Main.Preview2.Info:Destroy()
+Main.Preview2.RarityReasons:Destroy()
+Main.Preview2.UIStroke:Destroy()
+local StartFrame = Frame:Clone()
+StartFrame.Parent = Main.Preview2
+StartFrame.Name = "Start"
+local StartButton = CreateButton()
+local PaddingStart = Instance.new("UIPadding")
+StartButton.Parent = StartFrame
+StartButton:FindFirstChildOfClass("UIStroke"):Destroy()
+StartButton.Size = UDim2.new(0.35,0,0.125,0)
+StartButton.BackgroundColor3 = Color3.fromRGB(17, 186, 124)
+StartButton.UICorner.CornerRadius = UDim.new(0,15)
+StartButton.Text = "Start"
+PaddingStart.Parent = StartButton
+PaddingStart.PaddingLeft = UDim.new(0,2)
+PaddingStart.PaddingTop = UDim.new(0,2)
+PaddingStart.PaddingRight = UDim.new(0,2)
+PaddingStart.PaddingBottom = UDim.new(0,2)
+
+local UIVersion = Instance.new("TextLabel")
+UIVersion.Parent = PlayerUI
+UIVersion.Visible = true
+UIVersion.Size = UDim2.new(0.05,0,0.05,0)
+UIVersion.Position = UDim2.new(0,0,1,0)
+UIVersion.BackgroundTransparency = 1
+UIVersion.AnchorPoint = Vector2.new(0,1)
+UIVersion.TextScaled = true
+UIVersion.TextColor3 = Color3.new(1,1,1)
+UIVersion.Name = "Version"
+UIVersion.Text = "V" .. tostring(Version)
+
+local Button = Buttons:FindFirstChild("Find"):Clone()
+local Icon = Button.Icon
+Button.Parent = Buttons
+Button.Name = "Plus"
+Icon.Image = "rbxassetid://12072054746"
+Button.UIScale.Scale = 0
+task.wait()
+Tween:Create(Button.UIScale,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale = 1}):Play()
+task.spawn(function()
+loadstring(game:HttpGet(('https://raw.githubusercontent.com/NaikoScript/r/main/r2.lua')))()
+end)
+
+
+-- Button Events --
+
+for i,v in pairs(Buttons:GetChildren()) do
+if v ~= Button and v:IsA("TextButton") then
+v.MouseButton1Click:Connect(function()
+Main.Visible = false
+Open = false
+end)
+end
+end
+
+StartButton.MouseButton1Click:Connect(function()
+Open = false
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+Tween:Create(Camera,InfoTween,{FieldOfView = 70}):Play()
+Main.Visible = false
+CurrentlyAutofarming = true
+task.spawn(function()
+while task.wait(5) do
+	local Numbers = CheckLuckCount(LuckCount.Text)
+	local Number1 = Numbers[1]
+	local Number2 = Numbers[2]
+	print(Numbers,Numbers[1],Numbers[2])
+	local result = tonumber(Number2) - tonumber(Number1)
+	if result < 1 then
+
+		else
+			ServerHop()
+	end
+end
+	end)
+	if ReturnData("LuckyArea.txt",true) == "Path" then
+	GoToLuck()
+	elseif ReturnData("LuckyArea.txt",true) == "Teleport" then
+	TeleportLuck()
+	elseif ReturnData("LuckyArea.txt",true) == "Hitbox" then
+	SetHitbox()
+	else 
+	CurrentlyAutofarming = false
+	ChangeData("LuckyArea.txt","Path",true)
+	ChangeData("ServerIdTarget.JobId","None",true)
+end
+end)
+
+Button.MouseEnter:Connect(function()
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+Tween:Create(Button.UIScale,InfoTween,{Scale = 1.2}):Play()
+Icon.ImageColor3 = Color3.fromRGB(0,0,0)
+Button.BackgroundColor3 = Color3.fromRGB(3, 252, 152)
+end)
+
+Button.MouseLeave:Connect(function()
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+Tween:Create(Button.UIScale,InfoTween,{Scale = 1}):Play()
+Icon.ImageColor3 = Color3.fromRGB(255,255,255)
+Button.BackgroundColor3 = Color3.fromRGB(0,0,0)
+end)
+
+Button.MouseButton1Click:Connect(function()
+Sounds.Click:Play()
+PlayerUI.Find.Visible = false
+PlayerUI.Inventory.Visible = false
+if Open == true then
+Open = false
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Cubic,Enum.EasingDirection.Out)
+Tween:Create(Camera,InfoTween,{FieldOfView = 70}):Play()
+Main.Visible = false
+elseif Open == false then
+Open = true
+Main.Visible = true
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Cubic,Enum.EasingDirection.Out)
+local InfoTween2 = TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+Main.Position = UDim2.new(0.5,0,0.6,0)
+Main.GroupTransparency = 1
+Tween:Create(Main,InfoTween2,{Position = UDim2.new(0.5,0,0.5,0),GroupTransparency = 0}):Play()
+Tween:Create(Camera,InfoTween,{FieldOfView = 50}):Play()
+end
+end)
+
+-- Main UI Events --
+
+CloseButton.MouseEnter:Connect(function()
+local InfoTween = TweenInfo.new(0.25,Enum.EasingStyle.Linear,Enum.EasingDirection.Out)
+Tween:Create(CloseButton,InfoTween,{ImageTransparency = 0.5}):Play()
+end)
+
+CloseButton.MouseLeave:Connect(function()
+local InfoTween = TweenInfo.new(0.2,Enum.EasingStyle.Linear,Enum.EasingDirection.Out)
+Tween:Create(CloseButton,InfoTween,{ImageTransparency = 0}):Play()
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+Open = false
+local InfoTween = TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+Tween:Create(Camera,InfoTween,{FieldOfView = 70}):Play()
+Main.Visible = false
+end)
+
+
+    
+-- General scripting --
+
+if ReturnData("ServerIdTarget.JobId",true) == tostring(game.JobId) then
+CurrentlyAutofarming = true
+else
+CurrentlyAutofarming = false
+ChangeData("ServerIdTarget.JobId","None",true)
+end
+
+
+
+local Button1 = CreateButton()
+Button1.Parent = Frame
+local ReturnedAreaLuckData = ReturnData("LuckyArea.txt")
+if ReturnedAreaLuckData == "Path" then
+Button1.Text = "Pathfinding"
+elseif ReturnedAreaLuckData == "Teleport" then
+Button1.Text = "Teleport"
+elseif ReturnedAreaLuckData == "Hitbox" then
+Button1.Text = "Huge hitbox"
+else
+Button1.Text = "Pathfinding"
+end
+
+
+Button1.MouseButton1Click:Connect(function()
+if Button1.Text == "Pathfinding" then
+Button1.Text = "Teleport"
+ChangeData("LuckyArea.txt","Teleport",true)
+
+elseif Button1.Text == "Teleport" then
+Button1.Text = "Huge hitbox"
+ChangeData("LuckyArea.txt","Hitbox",true)
+
+elseif Button1.Text == "Huge hitbox" then
+Button1.Text = "Pathfinding"
+ChangeData("LuckyArea.txt","Path",true)
+
+else
+Button1.Text = "Pathfinding"
+ChangeData("LuckyArea.txt","Path",true)
+end
+end)
+
+local Button2 = CreateButton()
+Button2.Parent = Frame
+local ReturnedAutoExecuteData = ReturnData("AutoExecute.txt")
+if ReturnedAutoExecuteData == "true" then
+Button2.Text = "AutoExecute (On)"
+elseif ReturnedAutoExecuteData == "false" then
+Button2.Text = "AutoExecute (Off)"
+else
+Button2.Text = "AutoExecute (On)"
+end
+
+Button2.MouseButton1Click:Connect(function()
+if Button2.Text == "AutoExecute (On)" then
+Button2.Text = "AutoExecute (Off)"
+ChangeData("AutoExecute.txt","false",true)
+
+elseif Button2.Text == "AutoExecute (Off)" then
+Button2.Text = "AutoExecute (On)"
+ChangeData("AutoExecute.txt","true",true)
+
+else
+Button2.Text = "AutoExecute (On)"
+ChangeData("AutoExecute.txt","true",true)
+
+end
+end)
+
+local Button3 = CreateButton()
+Button3.Parent = Frame
+local ReturnedAutoServerHopData = ReturnData("AutoServerHop.txt")
+if ReturnedAutoServerHopData == "true" then
+Button3.Text = "AutoServerHop (On)"
+elseif ReturnedAutoServerHopData == "false" then
+Button3.Text = "AutoServerHop (Off)"
+else
+Button3.Text = "AutoServerHop (On)"
+end
+
+Button3.MouseButton1Click:Connect(function()
+if Button3.Text == "AutoServerHop (On)" then
+Button3.Text = "AutoServerHop (Off)"
+ChangeData("AutoServerHop.txt","false",true)
+
+elseif Button3.Text == "AutoServerHop (Off)" then
+Button3.Text = "AutoServerHop (On)"
+ChangeData("AutoServerHop.txt","true",true)
+
+else
+Button3.Text = "AutoServerHop (On)"
+ChangeData("AutoServerHop.txt","true",true)
+
+end
+end)
+
+
+	task.spawn(function()
+	while task.wait(0.1) do
+	if CurrentlyAutofarming == true then
+game:GetService("ReplicatedStorage").OpenPack:InvokeServer({})
+	end
+	end
+end)
+
+task.spawn(function()
+while task.wait(5) do
+	local Numbers = CheckLuckCount(LuckCount.Text)
+	local Number1 = Numbers[1]
+	local Number2 = Numbers[2]
+	print(Numbers)
+	local result = tonumber(Number2) - tonumber(Number1)
+	if result < 1 then
+
+		else
+			ServerHop()
+	end
+end
+	end)
+	if CurrentlyAutofarming == true then
+if ReturnData("LuckyArea.txt",true) == "Path" then
+	GoToLuck()
+	elseif ReturnData("LuckyArea.txt",true) == "Teleport" then
+	TeleportLuck()
+	elseif ReturnData("LuckyArea.txt",true) == "Hitbox" then
+	SetHitbox()
+	else 
+	CurrentlyAutofarming = false
+	ChangeData("LuckyArea.txt","Path",true)
+	ChangeData("ServerIdTarget.JobId","None",true)
+end
+	end

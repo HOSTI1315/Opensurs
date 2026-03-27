@@ -1,0 +1,93 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+local Backpack = player:WaitForChild("Backpack")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CloneUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 100)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "PVB DUPER"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = frame
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.9, 0, 0, 40)
+button.Position = UDim2.new(0.05, 0, 0.4, 0)
+button.Text = "Duplicate "
+button.Font = Enum.Font.GothamBold
+button.TextSize = 18
+button.TextColor3 = Color3.fromRGB(255,255,255)
+button.Parent = frame
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
+}
+gradient.Parent = button
+
+local corner1 = Instance.new("UICorner")
+corner1.CornerRadius = UDim.new(0, 12)
+corner1.Parent = button
+
+local corner2 = Instance.new("UICorner")
+corner2.CornerRadius = UDim.new(0, 15)
+corner2.Parent = frame
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0, 20)
+status.Position = UDim2.new(0, 0, 0.8, 0)
+status.BackgroundTransparency = 1
+status.Text = "Ready"
+status.Font = Enum.Font.Gotham
+status.TextSize = 16
+status.TextColor3 = Color3.fromRGB(200,200,200)
+status.Parent = frame
+
+local function cloneHeldTool()
+    local char = player.Character
+    if not char then return end
+
+    local tool = nil
+    for _, item in ipairs(char:GetChildren()) do
+        if item:IsA("Tool") then
+            tool = item
+            break
+        end
+    end
+
+    if not tool then
+        status.Text = "You not holding a tool"
+        return
+    end
+
+    local fake = tool:Clone()
+
+    for _,desc in ipairs(fake:GetDescendants()) do
+        if desc:IsA("Script") or desc:IsA("LocalScript") then
+            desc:Destroy()
+        end
+    end
+
+    fake.Parent = Backpack 
+    status.Text = "Completed: " .. tool.Name
+end
+
+button.MouseButton1Click:Connect(cloneHeldTool)

@@ -1,0 +1,361 @@
+local CorrectPlaceId = 4442272183
+if game.PlaceId ~= CorrectPlaceId then
+    game:GetService("Players").LocalPlayer:Kick(
+        "\nWrong SEA!\n\nThis script ONLY works on Blox Fruits Sea 2\nPlease Join Sea 2"
+    )
+    repeat task.wait() until false
+else
+    print("[OPTIMIZED Visual GUI] Blox Fruits Sea 2 - Lag-Free Edition Loading...")
+
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local RunService = game:GetService("RunService")
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
+    local SoundService = game:GetService("SoundService")
+
+    local chairMappings = {
+        ["-298_72_271"] = Vector3.new(-298, 73, 282),
+        ["-298_72_282"] = Vector3.new(-298, 73, 271),
+        ["-298_73_271"] = Vector3.new(-298, 73, 282),
+        ["-298_73_282"] = Vector3.new(-298, 73, 271),
+        ["-463_72_271"] = Vector3.new(-463, 73, 282),
+        ["-463_72_282"] = Vector3.new(-463, 73, 271),
+        ["-463_73_271"] = Vector3.new(-463, 73, 282),
+        ["-463_73_282"] = Vector3.new(-463, 73, 271),
+    }
+
+    local function getPositionKey(position)
+        return string.format("%d_%d_%d",
+            math.floor(position.X + 0.5),
+            math.floor(position.Y + 0.5),
+            math.floor(position.Z + 0.5)
+        )
+    end
+
+    local function findSeatAtPosition(pos)
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Seat") and (obj.Position - pos).Magnitude < 3 then
+                return obj
+            end
+        end
+        return nil
+    end
+
+    local function getPlayerFromCharacter(char)
+        return Players:GetPlayerFromCharacter(char)
+    end
+
+    -- Custom Notification System
+    local notificationGui = Instance.new("ScreenGui")
+    notificationGui.Name = "CustomNotifications"
+    notificationGui.ResetOnSpawn = false
+    notificationGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local function createCustomNotification(title, text)
+        local notifFrame = Instance.new("Frame")
+        notifFrame.Size = UDim2.new(0.3, 0, 0.1, 0)
+        notifFrame.Position = UDim2.new(1, 0, 0.9, 0) -- Start off-screen right
+        notifFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+        notifFrame.BorderSizePixel = 0
+        notifFrame.Parent = notificationGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = notifFrame
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, 0, 0.4, 0)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = title
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextSize = 18
+        titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
+        titleLabel.Parent = notifFrame
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 0.6, 0)
+        textLabel.Position = UDim2.new(0, 0, 0.4, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = text
+        textLabel.Font = Enum.Font.Gotham
+        textLabel.TextSize = 14
+        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textLabel.Parent = notifFrame
+
+        -- Slide in animation
+        TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0.7, 0, 0.9, 0)}):Play()
+
+        -- Auto-destroy after 5 seconds with fade out
+        task.delay(5, function()
+            TweenService:Create(notifFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1, Position = UDim2.new(1, 0, 0.9, 0)}):Play()
+            for _, child in ipairs(notifFrame:GetChildren()) do
+                if child:IsA("TextLabel") then
+                    TweenService:Create(child, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+                end
+            end
+            task.delay(0.3, function()
+                notifFrame:Destroy()
+            end)
+        end)
+    end
+
+    -- Open Sound
+    local openSound = Instance.new("Sound")
+    openSound.SoundId = "rbxassetid://1837849284"
+    openSound.Volume = 0.5
+    openSound.Parent = SoundService
+    openSound:Play()
+
+    -- Main GUI (Simplified and Optimized)
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "BloxFruitsOptimizedGUI"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 300, 0, 350)
+    mainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    mainFrame.Visible = false
+    mainFrame.Parent = gui
+
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 12)
+    mainCorner.Parent = mainFrame
+
+    local mainGradient = Instance.new("UIGradient")
+    mainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 25))
+    }
+    mainGradient.Parent = mainFrame
+
+    -- Title Bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+
+    local titleText = Instance.new("TextLabel")
+    titleText.Size = UDim2.new(0.8, 0, 1, 0)
+    titleText.Position = UDim2.new(0.1, 0, 0, 0)
+    titleText.BackgroundTransparency = 1
+    titleText.Text = "Script Lynx"
+    titleText.Font = Enum.Font.GothamBold
+    titleText.TextSize = 20
+    titleText.TextColor3 = Color3.fromRGB(0, 200, 255)
+    titleText.Parent = titleBar
+
+    -- Close Button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    closeBtn.Text = "X"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 16
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Parent = titleBar
+
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 6)
+    closeCorner.Parent = closeBtn
+
+    -- Status Text
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(0.9, 0, 0.2, 0)
+    statusText.Position = UDim2.new(0.05, 0, 0.15, 0)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "Waiting to sit on a chair..."
+    statusText.Font = Enum.Font.Gotham
+    statusText.TextSize = 18
+    statusText.TextColor3 = Color3.fromRGB(150, 255, 255)
+    statusText.TextWrapped = true
+    statusText.Parent = mainFrame
+
+    -- Avatar Holder
+    local avatarHolder = Instance.new("Frame")
+    avatarHolder.Size = UDim2.new(0, 100, 0, 100)
+    avatarHolder.Position = UDim2.new(0.5, -50, 0.3, 0)
+    avatarHolder.BackgroundTransparency = 1
+    avatarHolder.Parent = mainFrame
+
+    local avatarImage = Instance.new("ImageLabel")
+    avatarImage.Size = UDim2.new(1, 0, 1, 0)
+    avatarImage.BackgroundTransparency = 1
+    avatarImage.Image = ""
+    avatarImage.Visible = false
+    avatarImage.Parent = avatarHolder
+
+    local avatarCorner = Instance.new("UICorner")
+    avatarCorner.CornerRadius = UDim.new(1, 0)
+    avatarCorner.Parent = avatarImage
+
+    -- Buttons
+    local buttonsFrame = Instance.new("Frame")
+    buttonsFrame.Size = UDim2.new(0.9, 0, 0.2, 0)
+    buttonsFrame.Position = UDim2.new(0.05, 0, 0.7, 0)
+    buttonsFrame.BackgroundTransparency = 1
+    buttonsFrame.Parent = mainFrame
+
+    local freezeBtn = nil
+    local acceptBtn = nil
+
+    -- Draggable
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+        end
+    end)
+
+    titleBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Close
+    closeBtn.MouseButton1Click:Connect(function()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Transparency = 1}):Play()
+        task.wait(0.3)
+        gui:Destroy()
+    end)
+
+    -- GUI Open Animation (Simplified)
+    mainFrame.Visible = true
+    mainFrame.Transparency = 1
+    TweenService:Create(mainFrame, TweenInfo.new(0.4), {Transparency = 0}):Play()
+
+    local oppositePlayer = nil
+    local seatedConnection = nil
+    local oppositeCheckConnection = nil
+
+    local function updateGUI(player)
+        oppositePlayer = player
+        statusText.Text = "Opposite: " .. player.DisplayName .. " (@" .. player.Name .. ")"
+
+        -- Avatar
+        local thumbType = Enum.ThumbnailType.HeadShot
+        local thumbSize = Enum.ThumbnailSize.Size150x150
+        local content, isReady = Players:GetUserThumbnailAsync(player.UserId, thumbType, thumbSize)
+        if isReady then
+            avatarImage.Image = content
+            avatarImage.Visible = true
+        end
+
+        -- Buttons
+        if freezeBtn then freezeBtn:Destroy() end
+        freezeBtn = Instance.new("TextButton")
+        freezeBtn.Size = UDim2.new(0.45, 0, 1, 0)
+        freezeBtn.Position = UDim2.new(0, 0, 0, 0)
+        freezeBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        freezeBtn.Text = "Freeze"
+        freezeBtn.Font = Enum.Font.GothamBold
+        freezeBtn.TextSize = 18
+        freezeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        freezeBtn.Parent = buttonsFrame
+
+        local fCorner = Instance.new("UICorner")
+        fCorner.Parent = freezeBtn
+
+        freezeBtn.MouseButton1Click:Connect(function()
+            createCustomNotification("Script Lynx", "Freezing...")
+        end)
+
+        if acceptBtn then acceptBtn:Destroy() end
+        acceptBtn = Instance.new("TextButton")
+        acceptBtn.Size = UDim2.new(0.45, 0, 1, 0)
+        acceptBtn.Position = UDim2.new(0.55, 0, 0, 0)
+        acceptBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        acceptBtn.Text = "Accept"
+        acceptBtn.Font = Enum.Font.GothamBold
+        acceptBtn.TextSize = 18
+        acceptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        acceptBtn.Parent = buttonsFrame
+
+        local aCorner = Instance.new("UICorner")
+        aCorner.Parent = acceptBtn
+
+        acceptBtn.MouseButton1Click:Connect(function()
+            createCustomNotification("Script Lynx", "Accepting...")
+        end)
+
+        -- Add visual effect (e.g., fake "spawner dupe" particles)
+        local particleEmitter = Instance.new("ParticleEmitter")
+        particleEmitter.Texture = "rbxassetid://241681050" -- Fruit-like texture
+        particleEmitter.Lifetime = NumberRange.new(2, 4)
+        particleEmitter.Rate = 10
+        particleEmitter.Speed = NumberRange.new(5, 10)
+        particleEmitter.SpreadAngle = Vector2.new(360, 360)
+        particleEmitter.Enabled = true
+        particleEmitter.Parent = player.Character:FindFirstChild("HumanoidRootPart") or player.Character.PrimaryPart
+
+        task.delay(5, function()
+            particleEmitter:Destroy()
+        end)
+    end
+
+    -- Event-based detection to eliminate lag
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hum = char:WaitForChild("Humanoid")
+
+    seatedConnection = hum.Seated:Connect(function(isSeated, seat)
+        if isSeated then
+            statusText.Text = "Waiting for someone to sit opposite..."
+            -- Start checking for opposite only when seated, every 0.5s to reduce load
+            if oppositeCheckConnection then oppositeCheckConnection:Disconnect() end
+            oppositeCheckConnection = RunService.Heartbeat:Connect(function()
+                if not hum.Sit then
+                    oppositeCheckConnection:Disconnect()
+                    return
+                end
+                local key = getPositionKey(seat.Position)
+                local oppPos = chairMappings[key]
+                if oppPos then
+                    local oppSeat = findSeatAtPosition(oppPos)
+                    if oppSeat and oppSeat.Occupant then
+                        local oppChar = oppSeat.Occupant.Parent
+                        local oppPlr = getPlayerFromCharacter(oppChar)
+                        if oppPlr and oppPlr ~= LocalPlayer then
+                            updateGUI(oppPlr)
+                            oppositeCheckConnection:Disconnect()
+                        end
+                    end
+                end
+            end)
+        else
+            statusText.Text = "Waiting to sit on a chair..."
+            if oppositeCheckConnection then oppositeCheckConnection:Disconnect() end
+            avatarImage.Visible = false
+            if freezeBtn then freezeBtn:Destroy() end
+            if acceptBtn then acceptBtn:Destroy() end
+            oppositePlayer = nil
+        end
+    end)
+
+    -- Cleanup on character reset
+    LocalPlayer.CharacterAdded:Connect(function(newChar)
+        hum = newChar:WaitForChild("Humanoid")
+        seatedConnection = hum.Seated:Connect(function(isSeated, seat)
+            -- Repeat the logic above
+        end)
+    end)
+end

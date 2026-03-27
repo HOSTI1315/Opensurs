@@ -1,0 +1,177 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local r0_0 = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local r1_0 = r0_0:CreateWindow("Survive on a Raft")
+r1_0:AddButton({
+  text = "Goto Spawn",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 3
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(workspace.SpawnLocation.Position)
+    game.Players.LocalPlayer.Character.Humanoid.Jump = true
+  end,
+})
+r1_0:AddToggle({
+  text = "Collect Box",
+  flag = "toggle",
+  state = false,
+  callback = function(r0_16)
+    -- line: [0, 0] id: 16
+    _G.Box = r0_16
+    print("Box: ", r0_16)
+    if r0_16 then
+      Box()
+    end
+  end,
+})
+function Box()
+  -- line: [0, 0] id: 5
+  spawn(function()
+    -- line: [0, 0] id: 6
+    _G.Box = true
+    while _G.Box do
+      wait()
+      pcall(function()
+        -- line: [0, 0] id: 7
+        for r3_7, r4_7 in pairs(workspace.World.Items:GetDescendants()) do
+          if string.find(r4_7.Name, "Box") and r4_7:GetAttribute("Water") == true or string.find(r4_7.Name, "Chest") and r4_7:GetAttribute("Water") == true then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(r4_7.Position) * CFrame.new(0, 5, 0)
+            game:GetService("ReplicatedStorage").Action:InvokeServer(unpack({
+              [1] = "Collect",
+              [2] = r4_7,
+            }))
+            break
+          end
+        end
+        wait()
+      end)
+    end
+  end)
+end
+local r3_0 = game:GetService("Players").LocalPlayer
+local r4_0 = 20
+local r5_0 = {}
+local function r6_0(r0_2)
+  -- line: [0, 0] id: 2
+  if r3_0.Character and r3_0.Character:FindFirstChildWhichIsA("Humanoid") then
+    r3_0.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = r0_2
+  end
+end
+r1_0:AddButton({
+  text = "Upgrade Crafting Table",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 1
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3422310969, true)
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3422310972, true)
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3422310970, true)
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3422310971, true)
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3422310967, true)
+  end,
+})
+r1_0:AddButton({
+  text = "Starter Pistol",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 8
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3428925716, true)
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3435174070, true)
+  end,
+})
+r1_0:AddButton({
+  text = "Inf Revive",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 9
+    game.MarketplaceService:SignalPromptProductPurchaseFinished(game.Players.LocalPlayer.UserId, 3421071079, true)
+  end,
+})
+r1_0:AddSlider({
+  text = "Walk Speed",
+  flag = "slider1",
+  value = 20,
+  min = 20,
+  max = 200,
+  callback = function(r0_12)
+    -- line: [0, 0] id: 12
+    r4_0 = r0_12
+    r6_0(r4_0)
+    if r5_0.wsLoop then
+      r5_0.wsLoop:Disconnect()
+      r5_0.wsLoop = nil
+    end
+    if r5_0.wsCA then
+      r5_0.wsCA:Disconnect()
+      r5_0.wsCA = nil
+    end
+    local r1_12 = r3_0.Character
+    local r2_12 = r1_12 and r1_12:FindFirstChildWhichIsA("Humanoid")
+    local function r3_12()
+      -- line: [0, 0] id: 15
+      if r2_12 and r2_12.WalkSpeed ~= r4_0 then
+        r2_12.WalkSpeed = r4_0
+      end
+    end
+    if r2_12 then
+      r5_0.wsLoop = r2_12:GetPropertyChangedSignal("WalkSpeed"):Connect(r3_12)
+    end
+    r5_0.wsCA = r3_0.CharacterAdded:Connect(function(r0_13)
+      -- line: [0, 0] id: 13
+      local r1_13 = r0_13:WaitForChild("Humanoid")
+      r1_13.WalkSpeed = r4_0
+      if r5_0.wsLoop then
+        r5_0.wsLoop:Disconnect()
+      end
+      r5_0.wsLoop = r1_13:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        -- line: [0, 0] id: 14
+        if r1_13.WalkSpeed ~= r4_0 then
+          r1_13.WalkSpeed = r4_0
+        end
+      end)
+    end)
+  end,
+})
+r1_0:AddButton({
+  text = "Inf Jump",
+  flag = "button",
+  callback = function()
+    -- line: [0, 0] id: 17
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+      -- line: [0, 0] id: 18
+      game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end)
+  end,
+})
+r1_0:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+r0_0:Init()
+local r7_0 = nil
+local r8_0 = nil
+function noclip()
+  -- line: [0, 0] id: 10
+  r8_0 = false
+  r7_0 = game:GetService("RunService").Stepped:Connect(function()
+    -- line: [0, 0] id: 11
+    if r8_0 == false and game.Players.LocalPlayer.Character ~= nil then
+      for r3_11, r4_11 in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+        if r4_11:IsA("BasePart") and r4_11.CanCollide and r4_11.Name ~= floatName then
+          r4_11.CanCollide = false
+        end
+      end
+    end
+    wait(0.21)
+  end)
+end
+function clip()
+  -- line: [0, 0] id: 4
+  if r7_0 then
+    r7_0:Disconnect()
+  end
+  r8_0 = true
+end
+noclip()

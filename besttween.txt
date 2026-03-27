@@ -1,0 +1,141 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local PathfindingService = game:GetService("PathfindingService")
+local workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+
+local plr = Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local flying = true
+local _speed, _stopDist, _fallSpeed, _smooth, _visOffset, _visThick = 28.8, 3, 50, 5, 0.5, 0.2
+
+local function doNothing()
+    local useless = 42
+    local fuckLoop = 0
+    fuckLoop = fuckLoop + 1
+    local lol = "lxncepro"
+end
+
+local function totallyImportant()
+    local x = math.random(1,10) * 0
+    local msg = "tweentuff"
+    local y = x + 0
+end
+
+local function secretMultiplier()
+    local secret = 7
+    local hidden = secret * 0
+    local vibe = hidden + 0
+    return vibe
+end
+
+local function drawPath(wp)
+    for i = 1, #wp-1 do
+        local a = wp[i] + Vector3.new(0, _visOffset, 0)
+        local b = wp[i+1] + Vector3.new(0, _visOffset, 0)
+        local dist = (b - a).Magnitude
+        local p = Instance.new("Part")
+        p.Size = Vector3.new(_visThick, _visThick, dist)
+        p.Anchored = true
+        p.CanCollide = false
+        p.Material = Enum.Material.Neon
+        p.Color = Color3.fromRGB(0, 255, 0)
+        p.CFrame = CFrame.lookAt((a + b)/2, b) * CFrame.new(0,0,-dist/2)
+        p.Parent = workspace
+        Debris:AddItem(p, 10)
+    end
+    doNothing()
+    totallyImportant()
+    secretMultiplier()
+end
+
+local function getExits()
+    local t = {}
+    local plots = workspace:FindFirstChild("Plots")
+    if plots then
+        for _, p in pairs(plots:GetChildren()) do
+            local s = p:FindFirstChild("PlotSign")
+            local b = p:FindFirstChild("DeliveryHitbox")
+            if s and s:FindFirstChild("YourBase") and s.YourBase.Enabled and b then
+                table.insert(t, b.Position)
+            end
+        end
+    end
+    doNothing()
+    totallyImportant()
+    return t
+end
+
+local function closestExit()
+    local exits = getExits()
+    if #exits == 0 then return nil end
+    local c = exits[1]
+    local minD = (Vector3.new(hrp.Position.X,0,hrp.Position.Z) - Vector3.new(c.X,0,c.Z)).Magnitude
+    for i = 2, #exits do
+        local d = (Vector3.new(hrp.Position.X,0,hrp.Position.Z) - Vector3.new(exits[i].X,0,exits[i].Z)).Magnitude
+        if d < minD then c = exits[i] minD = d end
+    end
+    totallyImportant()
+    secretMultiplier()
+    return c
+end
+
+local function smartPath(target)
+    local path = PathfindingService:CreatePath({AgentRadius=2, AgentHeight=5, AgentCanJump=true, AgentJumpHeight=10, AgentMaxSlope=45})
+    path:ComputeAsync(hrp.Position, target)
+    if path.Status ~= Enum.PathStatus.Success then
+        for _, off in pairs({Vector3.new(5,0,5), Vector3.new(-5,0,5), Vector3.new(5,0,-5)}) do
+            path:ComputeAsync(hrp.Position, target + off)
+            if path.Status == Enum.PathStatus.Success then break end
+        end
+        if path.Status ~= Enum.PathStatus.Success then return {target} end
+    end
+    local raw = path:GetWaypoints()
+    local smoothWP = {}
+    for i = 1, #raw-1 do
+        local s, f = raw[i].Position, raw[i+1].Position
+        table.insert(smoothWP, s)
+        for t = 1, _smooth do
+            table.insert(smoothWP, s:Lerp(f, t/(_smooth+1)))
+        end
+    end
+    table.insert(smoothWP, raw[#raw].Position)
+    doNothing()
+    return smoothWP
+end
+
+local function flyWP(wp)
+    drawPath(wp)
+    for _, tgt in ipairs(wp) do
+        while flying and (Vector3.new(hrp.Position.X,0,hrp.Position.Z)-Vector3.new(tgt.X,0,tgt.Z)).Magnitude > _stopDist do
+            local hDir = (Vector3.new(tgt.X,0,tgt.Z)-Vector3.new(hrp.Position.X,0,hrp.Position.Z)).Unit
+            local hVel = hDir * _speed
+            local vDiff = tgt.Y - hrp.Position.Y
+            local vVel = math.clamp(vDiff, -_fallSpeed, _fallSpeed)
+            hrp.AssemblyLinearVelocity = Vector3.new(hVel.X, vVel, hVel.Z)
+            RunService.RenderStepped:Wait()
+            totallyImportant()
+            secretMultiplier()
+        end
+    end
+    hrp.AssemblyLinearVelocity = Vector3.zero
+    hrp.CFrame = CFrame.new(wp[#wp]+Vector3.new(0,3,0))
+end
+
+task.spawn(function()
+    while flying do
+        local exit = closestExit()
+        if exit then
+            local wp = smartPath(exit)
+            flyWP(wp)
+            flying = false
+        else
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            RunService.RenderStepped:Wait()
+        end
+        local _ = secretMultiplier()
+        task.wait(0.1)
+    end
+end)

@@ -1,0 +1,151 @@
+local Players = game:GetService("Players")
+local alreadySent = false
+
+local segmentSystem = workspace:WaitForChild("segmentSystem")
+local segmentsFolder = segmentSystem:WaitForChild("Segments")
+
+local processedSegments = {}
+
+local function colorirVidros()
+    for i = 1, 55 do
+        local segmentName = "Segment"..i
+        if not processedSegments[segmentName] then
+            local segment = segmentsFolder:FindFirstChild(segmentName)
+            
+            if segment then
+                for _, part in pairs(segment:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        if part:FindFirstChild("breakable") then
+                            part.BrickColor = BrickColor.new("Bright red")
+                            
+                            part.CanCollide = true
+                            part.Transparency = 0
+                            part.Anchored = true
+                            
+                            local breakableScript = part:FindFirstChildOfClass("Script")
+                            if breakableScript then
+                                breakableScript:Destroy()
+                            end
+                            
+                            for _, child in pairs(part:GetChildren()) do
+                                if child:IsA("TouchTransmitter") or 
+                                   child:IsA("TouchInterest") or 
+                                   child:IsA("Script") or 
+                                   child:IsA("LocalScript") or
+                                   child.Name == "breakable" then
+                                    child:Destroy()
+                                end
+                            end
+                        else
+                            part.BrickColor = BrickColor.new("Bright green")
+                        end
+                    end
+                end
+                processedSegments[segmentName] = true
+            end
+        end
+    end
+end
+
+local function substituirVidrosVermelhos()
+    for i = 1, 55 do
+        local segmentName = "Segment"..i
+        local segment = segmentsFolder:FindFirstChild(segmentName)
+        
+        if segment then
+            for _, part in pairs(segment:GetDescendants()) do
+                if part:IsA("BasePart") and part.BrickColor == BrickColor.new("Bright red") then
+                    
+                    local safePart = Instance.new("Part")
+                    safePart.Name = "SafeGlass"
+                    safePart.Size = part.Size
+                    safePart.Position = part.Position
+                    safePart.Orientation = part.Orientation
+                    safePart.BrickColor = BrickColor.new("Bright red")
+                    safePart.Material = part.Material
+                    safePart.Transparency = part.Transparency
+                    safePart.Reflectance = part.Reflectance
+                    safePart.Anchored = true
+                    safePart.CanCollide = true
+                    safePart.Parent = part.Parent
+                    
+                    part:Destroy()
+                end
+            end
+        end
+    end
+end
+
+local function modificarScriptsDeQuebra()
+    for i = 1, 55 do
+        local segmentName = "Segment"..i
+        local segment = segmentsFolder:FindFirstChild(segmentName)
+        
+        if segment then
+            for _, part in pairs(segment:GetDescendants()) do
+                if part:IsA("BasePart") and part.BrickColor == BrickColor.new("Bright red") then
+                    
+                    part.CanCollide = true
+                    part.Transparency = 0
+                    part.Anchored = true
+                    
+                    for _, script in pairs(part:GetDescendants()) do
+                        if script:IsA("LocalScript") then
+                            script.Disabled = true
+                        end
+                    end
+                    
+                    for _, child in pairs(part:GetChildren()) do
+                        if child:IsA("TouchTransmitter") or 
+                           child:IsA("TouchInterest") or
+                           child.Name:lower():find("touch") or
+                           child.Name:lower():find("break") then
+                            child:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function setupJumpListener(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    local debounce = false
+    humanoid.Jumping:Connect(function()
+        if not debounce then
+            debounce = true
+            colorirVidros()
+            modificarScriptsDeQuebra()
+            task.wait(1)
+            substituirVidrosVermelhos()
+            task.wait(0.5) 
+            debounce = false
+        end
+    end)
+end
+
+colorirVidros()
+modificarScriptsDeQuebra()
+task.wait(2)
+substituirVidrosVermelhos()
+
+Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    setupJumpListener(character)
+    task.wait(3)
+    colorirVidros()
+    modificarScriptsDeQuebra()
+    task.wait(1)
+    substituirVidrosVermelhos()
+end)
+
+if Players.LocalPlayer.Character then
+    setupJumpListener(Players.LocalPlayer.Character)
+end
+
+while true do
+    modificarScriptsDeQuebra()
+    substituirVidrosVermelhos()
+    task.wait(2)
+end

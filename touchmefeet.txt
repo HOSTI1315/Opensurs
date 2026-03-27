@@ -1,0 +1,127 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local Mouse = player:GetMouse()
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+for _, thing in pairs(playerGui:GetChildren()) do
+    if thing.Name == "FloaterGui" then
+        thing:Destroy()
+    end
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "FloaterGui"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local button = Instance.new("TextButton")
+button.Name = "FloatButton"
+button.Text = "Start Floating"
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0, 15, 0, 15)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.BackgroundTransparency = 0.4
+button.TextColor3 = Color3.new(1, 1, 1)
+button.TextScaled = true
+button.Font = Enum.Font.Gotham
+button.Parent = gui
+
+local floor = nil
+local floating = false
+local lastUpdate = tick()
+local char = nil
+local heartbeatConn = nil
+
+local function makeFloor()
+    if floor then
+        return
+    end
+    
+    floor = Instance.new("Part")
+    floor.Name = "FloatingPlatform"
+    floor.Size = Vector3.new(12, 0.3, 12)
+    floor.Material = Enum.Material.Neon
+    floor.BrickColor = BrickColor.new("Really white")
+    floor.Anchored = true
+    floor.CanCollide = true
+    floor.CastShadow = false
+    floor.Transparency = 0
+    floor.CFrame = CFrame.new(0, -1000, 0)
+    
+    local tex = Instance.new("Decal")
+    tex.Name = "CoolTexture"
+    tex.Texture = "rbxassetid://14650903579"
+    tex.Parent = floor
+    
+    floor.Parent = workspace
+end
+
+local function toggleFloat()
+    floating = not floating
+    
+    if floating then
+        char = player.Character or player.CharacterAdded:Wait()
+        makeFloor()
+        button.Text = "Stop Floating"
+        
+        local function updateFloorPos()
+            local now = tick()
+            if now - lastUpdate >= 0.1 then
+                if floor and char then
+                    local root = char:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        floor.CFrame = CFrame.new(root.Position.X, root.Position.Y - 0.3, root.Position.Z)
+                    end
+                end
+                lastUpdate = now
+            end
+        end
+        
+        heartbeatConn = RunService.Heartbeat:Connect(updateFloorPos)
+        
+        RunService.Heartbeat:Connect(function()
+            if not floating then
+                if heartbeatConn then
+                    heartbeatConn:Disconnect()
+                end
+            end
+        end)
+        
+    else
+        button.Text = "Start Floating"
+        if floor then
+            floor:Destroy()
+            floor = nil
+        end
+    end
+end
+
+local dragging = false
+local dragStart = Vector2.new()
+local dragOffset = Vector2.new()
+
+button.MouseButton1Down:Connect(function()
+    dragging = true
+    dragStart = Mouse.Hit.p
+    dragOffset = button.AbsolutePosition - Vector2.new(0, 0)
+end)
+
+button.MouseButton1Up:Connect(function()
+    dragging = false
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local mousePos = Mouse.Hit.p
+        local delta = mousePos - dragStart
+        button.Position = UDim2.new(
+            0,
+            dragOffset.X + delta.X,
+            0,
+            dragOffset.Y + delta.Y
+        )
+    end
+end)
+
+button.MouseButton1Click:Connect(toggleFloat)

@@ -1,0 +1,566 @@
+-- Waits until the game is loaded to run the script
+repeat task.wait() until game:IsLoaded()
+
+if setfpscap then
+    setfpscap(240)
+else
+    warn("Your exploit does not support setfpscap.")
+end
+
+-- Library
+local l = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+
+-- Settings
+local AutoEquipBest = false
+local AutoFarm = false
+local AutoEquipDelay = 10
+local ClickInterval = 0.25
+local HeldToolName = "Basic Bat"
+local SellPlant = false
+local SellBrainrot = false
+local SellEverything = false
+local CurrentStickyTarget = nil
+
+-- Cooldowns for Auto Attack
+local Cooldowns = {
+    LastAttack = 0,
+    AttackCooldown = 0.15
+}
+
+-- Shop items
+local shop = {
+    seedList = {
+        "Cactus Seed",
+        "Strawberry Seed",
+        "Pumpkin Seed",
+        "Sunflower Seed",
+        "Dragon Seed",
+        "Eggplant Seed",
+        "Watermelon Seed",
+        "Cocotank Seed",
+        "Carnivorous Plant Seed",
+        "Mr Carrot Seed",
+        "Tomatrio Seed",
+        "Shroombino Seed"
+    },
+    gearList = {
+        "Water Bucket",
+        "Frost Grenade",
+        "Banana Gun",
+        "Frost Blower",
+        "Carrot Launcher"
+    }
+}
+
+-- Variables
+local selectedSeeds = {}
+local selectedGears = {}
+local AutoBuySelectedSeed = false
+local AutoBuySelectedGear = false
+local AutoBuyAllSeed = false
+local AutoBuyAllGear = false
+
+-- Plot Utils
+local PlotUtils = {
+    CachedPlot = nil,
+
+    GetPlot = function(self)
+        if (self.CachedPlot) then return self.CachedPlot end
+        for i,v in pairs(Workspace.Plots:GetChildren()) do
+            if (v:GetAttribute("Owner") == LocalPlayer.Name) then
+                self.CachedPlot = v
+                return v
+            end
+        end
+    end,
+
+    IsWithinPlot = function(self, entity)
+        local plot = self:GetPlot()
+        if not plot then return false end
+        local plotname = plot.Name
+        local entityplot = entity:GetAttribute("Plot")
+
+        entityplot = tonumber(entityplot)
+        plotname = tonumber(plotname)
+
+        if (entityplot == plotname) then
+            return true
+        end
+
+        return false
+    end,
+
+    GetClosestChild = function(self, folder)
+        if (HumanoidRootPart == nil) then return nil end
+        local closestentity = nil
+        local closestdist = math.huge
+        for i,v in pairs(folder:GetChildren()) do
+            if (self:IsWithinPlot(v) == false) then continue end
+            local hitbox = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Hitbox") or v.PrimaryPart
+            if not hitbox then continue end
+            local dist = (hitbox.Position - HumanoidRootPart.Position).Magnitude
+            if (dist < closestdist) then
+                closestdist = dist
+                closestentity = v
+            end
+        end
+
+        return closestentity
+    end,
+
+    GetClosestMissionChild = function(self, folder)
+        if (HumanoidRootPart == nil) then return nil end
+        local closestentity = nil
+        local closestdist = math.huge
+        for i,v in pairs(folder:GetChildren()) do
+            if (self:IsWithinPlot(v) == false) then continue end
+            local hitbox = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Hitbox") or v.PrimaryPart
+            if not hitbox then continue end
+            local dist = (hitbox.Position - HumanoidRootPart.Position).Magnitude
+            if (dist < closestdist) then
+                closestdist = dist
+                closestentity = v
+            end
+        end
+
+        return closestentity
+    end,
+}
+
+-- Helper functions
+local function GetMyPlot()
+    for _, plot in ipairs(Workspace.Plots:GetChildren()) do
+        local playerSign = plot:FindFirstChild("PlayerSign")
+        if playerSign then
+            local bg = playerSign:FindFirstChild("BillboardGui")
+            local textLabel = bg and bg:FindFirstChild("TextLabel")
+            if textLabel and (textLabel.Text == LocalPlayer.Name or textLabel.Text == LocalPlayer.DisplayName) then
+                return plot
+            end
+        end
+    end
+    return nil
+end
+
+local function GetMyPlotName()
+    local plot = GetMyPlot()
+    return plot and plot.Name or "No Plot"
+end
+
+local function GetMoney()
+    local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+    return leaderstats and leaderstats:FindFirstChild("Money") and leaderstats.Money.Value or 0
+end
+
+local function GetRebirth()
+    local gui = LocalPlayer.PlayerGui:FindFirstChild("Main")
+    if gui and gui:FindFirstChild("Rebirth") then
+        local text = gui.Rebirth.Frame.Title.Text or "Rebirth 0"
+        local n = tonumber(text:match("%d+")) or 0
+        return math.max(0, n - 1)
+    end
+    return 0
+end
+
+local function FormatTime(sec)
+    local h = math.floor(sec / 3600)
+    local m = math.floor((sec % 3600) / 60)
+    local s = sec % 60
+    return string.format("%02d:%02d:%02d", h, m, s)
+end
+
+-- Safe remote getters
+local function GetRemotesFolder()
+    return ReplicatedStorage:FindFirstChild("Remotes")
+end
+
+local function GetNearestBrainrot()
+    local target = PlotUtils:GetClosestChild(Workspace.ScriptedMap.Brainrots)
+    if target then
+        return target
+    end
+    return PlotUtils:GetClosestMissionChild(Workspace.ScriptedMap.MissionBrainrots)
+end
+
+-- Utility
+local function EquipBat()
+    for _, tool in ipairs(Backpack:GetChildren()) do
+        if tool:IsA("Tool") and string.find(tool.Name:lower(), "bat") then
+            HeldToolName = tool.Name
+            Humanoid:EquipTool(tool)
+            return true
+        end
+    end
+    for _, tool in ipairs(Character:GetChildren()) do
+        if tool:IsA("Tool") and string.find(tool.Name:lower(), "bat") then
+            HeldToolName = tool.Name
+            return true
+        end
+    end
+    return false
+end
+
+-- FIXED: Teleport to hitbox 0,0,0
+local function StickyTeleportToBrainrot(brainrot)
+    local hitbox = brainrot and (brainrot:FindFirstChild("HumanoidRootPart") or brainrot:FindFirstChild("Hitbox") or brainrot.PrimaryPart)
+    if hitbox and hitbox:IsA("BasePart") then
+        -- Teleport to exact hitbox position (0,0,0 relative to hitbox)
+        local targetCFrame = CFrame.new(hitbox.Position)
+        HumanoidRootPart.CFrame = targetCFrame
+        return true
+    end
+    return false
+end
+
+-- Auto Attack function
+local function AttackEntity()
+    local target = GetNearestBrainrot()
+    if target then
+        EquipBat()
+        local args
+        if PlotUtils:GetClosestChild(Workspace.ScriptedMap.Brainrots) == target then
+            args = { {NormalBrainrots = {target.Name}, MissionBrainrots = {}} }
+        elseif target:GetAttribute("ID") then
+            args = { {NormalBrainrots = {}, MissionBrainrots = {target:GetAttribute("ID")}} }
+        end
+        if args then
+            local combatEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("AttacksServer"):WaitForChild("WeaponAttack")
+            combatEvent:FireServer(unpack(args))
+        end
+        return true
+    end
+    return false
+end
+
+-- Window
+local Window = l:CreateWindow({
+    Title = "Skidzz - Plants vs Brainrots",
+    Author = "Skidzz",
+    Size = UDim2.fromOffset(500, 390),
+    Transparent = true,
+    Theme = "Sky",
+    Resizable = true,
+    SideBarWidth = 150,
+    BackgroundImageTransparency = 0.8,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+    User = {
+        Enabled = false,
+        Anonymous = false,
+        Callback = function() end,
+    },
+})
+
+-- Tabs
+local Main = Window:Tab({Title = "Main", Icon = "house"})
+local Sell = Window:Tab({Title = "Sell", Icon = "dollar-sign"})
+local Shop = Window:Tab({Title = "Shop", Icon = "shopping-cart"})
+local Collect = Window:Tab({Title = "Auto", Icon = "crown"})
+
+Window:SelectTab(1)
+
+Main:Section({Title = "Auto Farm", Icon = "crown"})
+Main:Section({Title = "Use on PRIVATE SERVERS only!", Icon = "badge-alert"})
+
+-- Auto Farm
+Main:Toggle({
+    Title = "Auto Farm",
+    Desc = "Teleports to exact 0,0,0 of hitbox and attacks the nearest Brainrot/Mission Brainrot in your plot",
+    Default = false,
+    Callback = function(v)
+        AutoFarm = v
+        CurrentStickyTarget = nil
+        PlotUtils.CachedPlot = nil -- Reset plot cache
+
+        if v then
+            if not EquipBat() then
+                l:Notify({
+                    Title = "Error",
+                    Description = "No bat tool found in inventory!",
+                    Duration = 5
+                })
+                AutoFarm = false
+                return
+            end
+
+            -- Auto Equip
+            task.spawn(function()
+                while AutoFarm do
+                    if Character and not Character:FindFirstChild(HeldToolName) then
+                        if not EquipBat() then
+                            l:Notify({
+                                Title = "Error",
+                                Description = "No bat tool found in inventory!",
+                                Duration = 5
+                            })
+                            AutoFarm = false
+                            break
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+
+            -- CONSTANT STICKY TELEPORT LOOP - EXACT HITBOX POSITION
+            task.spawn(function()
+                while AutoFarm do
+                    if not Character or not HumanoidRootPart or not Humanoid or Humanoid.Health <= 0 then
+                        CurrentStickyTarget = nil
+                        task.wait(0.1)
+                        continue
+                    end
+
+                    -- Update target if current is invalid
+                    if not CurrentStickyTarget or not CurrentStickyTarget.Parent or not PlotUtils:IsWithinPlot(CurrentStickyTarget) then
+                        CurrentStickyTarget = GetNearestBrainrot()
+                    end
+
+                    -- Constantly teleport to current target - EXACT POSITION
+                    if CurrentStickyTarget then
+                        StickyTeleportToBrainrot(CurrentStickyTarget)
+                    end
+                    task.wait()
+                end
+            end)
+
+            -- Auto Attack Loop
+            task.spawn(function()
+                while AutoFarm do
+                    if not Character or not HumanoidRootPart or not Humanoid or Humanoid.Health <= 0 then
+                        CurrentStickyTarget = nil
+                        task.wait(0.5)
+                        continue
+                    end
+
+                    local currentTime = tick()
+                    if currentTime - Cooldowns.LastAttack >= Cooldowns.AttackCooldown then
+                        Cooldowns.AttackCooldown = math.random(0.15, 0.23)
+                        Cooldowns.LastAttack = currentTime
+                        AttackEntity()
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        else
+            CurrentStickyTarget = nil
+            if Character and Humanoid then
+                Humanoid:UnequipTools()
+            end
+        end
+    end
+})
+
+-- Auto Equip Best
+Collect:Section({Title = "Auto Equip", Icon = "star"})
+
+Collect:Slider({
+    Title = "Auto Equip Delay (sec)",
+    Description = "Set delay time between equipping best brainrots",
+    Value = {Min = 5, Max = 60, Default = 10},
+    Step = 1,
+    Callback = function(val)
+        AutoEquipDelay = val
+    end
+})
+
+Collect:Toggle({
+    Title = "Auto Equip Best Brainrots",
+    Description = "Automatically equips the best brainrots",
+    Default = false,
+    Callback = function(state)
+        AutoEquipBest = state
+        if state then
+            task.spawn(function()
+                while AutoEquipBest do
+                    pcall(function()
+                        local equipRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("EquipBestBrainrots")
+                        equipRemote:FireServer()
+                    end)
+                    task.wait(AutoEquipDelay)
+                end
+            end)
+        end
+    end
+})
+
+-- Sell
+Sell:Section({Title = "Auto Sell", Icon = "dollar-sign"})
+
+Sell:Toggle({
+    Title = "Sell Brainrot All",
+    Default = false,
+    Callback = function(state)
+        SellBrainrot = state
+    end
+})
+
+Sell:Toggle({
+    Title = "Sell Plants All",
+    Default = false,
+    Callback = function(state)
+        SellPlant = state
+    end
+})
+
+Sell:Section({Title = "Sell Everything", Icon = "gem"})
+
+Sell:Toggle({
+    Title = "Sell Both All",
+    Default = false,
+    Callback = function(state)
+        SellEverything = state
+    end
+})
+
+-- Shop UI
+Shop:Section({Title = "Buy Seed", Icon = "leaf"})
+
+Shop:Dropdown({
+    Title = "Select Seed",
+    Values = shop.seedList,
+    Multi = true,
+    Callback = function(values)
+        selectedSeeds = values
+    end
+})
+
+Shop:Toggle({
+    Title = "Auto Buy Seed (Selected)",
+    Default = false,
+    Callback = function(state)
+        AutoBuySelectedSeed = state
+        if state then
+            task.spawn(function()
+                while AutoBuySelectedSeed do
+                    for _, seed in ipairs(selectedSeeds) do
+                        pcall(function()
+                            local buyRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("BuyItem")
+                            buyRemote:FireServer(seed, true)
+                        end)
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+Shop:Toggle({
+    Title = "Auto Buy Seed (All)",
+    Default = false,
+    Callback = function(state)
+        AutoBuyAllSeed = state
+        if state then
+            task.spawn(function()
+                while AutoBuyAllSeed do
+                    for _, seed in ipairs(shop.seedList) do
+                        pcall(function()
+                            local buyRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("BuyItem")
+                            buyRemote:FireServer(seed, true)
+                        end)
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+Shop:Section({Title = "Buy Gear", Icon = "package"})
+
+Shop:Dropdown({
+    Title = "Select Gear",
+    Values = shop.gearList,
+    Multi = true,
+    Callback = function(values)
+        selectedGears = values
+    end
+})
+
+Shop:Toggle({
+    Title = "Auto Buy Gear (Selected)",
+    Default = false,
+    Callback = function(state)
+        AutoBuySelectedGear = state
+        if state then
+            task.spawn(function()
+                while AutoBuySelectedGear do
+                    for _, gear in ipairs(selectedGears) do
+                        pcall(function()
+                            local buyRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("BuyGear")
+                            buyRemote:FireServer(gear, true)
+                        end)
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+Shop:Toggle({
+    Title = "Auto Buy Gear (All)",
+    Default = false,
+    Callback = function(state)
+        AutoBuyAllGear = state
+        if state then
+            task.spawn(function()
+                while AutoBuyAllGear do
+                    for _, gear in ipairs(shop.gearList) do
+                        pcall(function()
+                            local buyRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("BuyGear")
+                            buyRemote:FireServer(gear, true)
+                        end)
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+-- Selling loop
+task.spawn(function()
+    while task.wait(0.69) do
+        if SellBrainrot or SellPlant or SellEverything then
+            pcall(function()
+                local sellRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ItemSell")
+                sellRemote:FireServer()
+            end)
+        end
+    end
+end)
+
+-- Handle character respawn
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    HumanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+    Humanoid = newChar:WaitForChild("Humanoid")
+    Backpack = LocalPlayer:WaitForChild("Backpack")
+    PlotUtils.CachedPlot = nil
+    CurrentStickyTarget = nil
+end)
+
+-- Notify loaded
+l:Notify({
+    Title = "Skidzz Hub Loaded!",
+    Description = "Plants vs Brainrots script loaded! Skidzz",
+    Duration = 3
+})

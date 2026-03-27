@@ -1,0 +1,450 @@
+-- Load Kavo UI Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IAmJamal10/Library/refs/heads/main/New"))()
+local Window = Library.CreateLib("Mugen | LH", "DarkTheme")
+
+-- Tabs and Sections
+local MainTab = Window:NewTab("Main")
+local MainSection = MainTab:NewSection("Main Controls")
+
+local ESPTab = Window:NewTab("ESP")
+local ESPSection = ESPTab:NewSection("ESP Controls")
+
+-- Rollback Button
+MainSection:NewButton("Rollback", "Loads previous version", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Youifpg/Mugen/refs/heads/main/Mugen.lua"))()
+end)
+
+-- AutoFarm Toggle + Slider
+local autofarmActive = false
+local farmDistance = 12
+
+MainSection:NewSlider("AutoFarm Y Offset", "Adjust vertical farm distance", 20, 1, function(value)
+    farmDistance = value
+end)
+
+MainSection:NewToggle("AutoFarm Nearest", "AutoFarm closest NPC", function(Value)
+    autofarmActive = Value
+
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local char_root = char:WaitForChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+    local originalSize = char_root.Size
+    local originalCanCollide = char_root.CanCollide
+
+    if humanoid then humanoid.PlatformStand = autofarmActive end
+    if autofarmActive then
+        char_root.Size = Vector3.new(10, 10, 10)
+        char_root.CanCollide = false
+    else
+        char_root.Size = originalSize
+        char_root.CanCollide = originalCanCollide
+    end
+
+    task.spawn(function()
+        while autofarmActive do
+            task.wait(0.03)
+            pcall(function()
+                char = player.Character or player.CharacterAdded:Wait()
+                char_root = char:FindFirstChild("HumanoidRootPart")
+                humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not char_root then return end
+
+                local function findNearestHumanoid()
+                    local nearestDist = math.huge
+                    local target_root, target_hum
+
+                    for _, v in pairs(workspace["Characters"]:GetDescendants()) do
+                        if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
+                            local root = v:FindFirstChild("HumanoidRootPart")
+                            local hum = v:FindFirstChildOfClass("Humanoid")
+
+                            if root and hum and v ~= char then
+                                local dist = (char_root.Position - root.Position).Magnitude
+                                if dist < 150 and dist < nearestDist then
+                                    nearestDist = dist
+                                    target_root = root
+                                    target_hum = hum
+                                end
+                            end
+                        end
+                    end
+
+                    return target_root, target_hum
+                end
+
+                local target_root, target_hum = findNearestHumanoid()
+                if target_root and target_hum then
+                    local offset = Vector3.new(2, farmDistance, 2)
+                    local above = target_root.Position + offset
+                    char_root.CFrame = CFrame.new(above) * CFrame.Angles(-math.rad(90), 0, 0)
+                    char_root.Velocity = Vector3.zero
+                    char_root.RotVelocity = Vector3.zero
+                end
+            end)
+        end
+
+        if humanoid then humanoid.PlatformStand = false end
+        char_root.Size = originalSize
+        char_root.CanCollide = originalCanCollide
+    end)
+end)
+
+-- Kill Aura
+MainSection:NewToggle("Kill Aura", "Auto attack", function(Value)
+    a = Value
+    while a do
+        task.wait(1)
+        pcall(function()
+            local args = {true, [3] = false}
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Attack"):FireServer(unpack(args))
+        end)
+    end
+end)
+
+-- Walkspeed
+MainSection:NewToggle("Walkspeed", "Set WalkSpeed to 200", function(Value)
+    local Player = game.Players.LocalPlayer
+    getgenv().WalkSpeedValue = Value and 200 or 100
+    Player.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue
+    Player.Character.Humanoid:GetPropertyChangedSignal('WalkSpeed'):Connect(function()
+        Player.Character.Humanoid.WalkSpeed = getgenv().WalkSpeedValue
+    end)
+end)
+
+-- Fly
+MainSection:NewButton("Fly", "Enable flying", function()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt')))()
+end)
+
+-- Invisible
+MainSection:NewButton("Invisible", "Become invisible to others", function()
+    local offset = 1100
+    local LocalPlayer = game.Players.LocalPlayer
+    local Backpack = LocalPlayer.Backpack
+    local Character = LocalPlayer.Character
+    local invisible = false
+    local grips = {}
+    local heldTool
+    local gripChanged
+    local handle
+    local weld
+
+    function setDisplayDistance(distance)
+        for _,player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChildWhichIsA("Humanoid") then
+                local hum = player.Character:FindFirstChildWhichIsA("Humanoid")
+                hum.NameDisplayDistance = distance
+                hum.HealthDisplayDistance = distance
+            end
+        end
+    end
+
+    local tool = Instance.new("Tool", Backpack)
+    tool.Name = "Ghostify [Disabled]"
+    tool.RequiresHandle = false
+    tool.CanBeDropped = false
+    tool.Equipped:Connect(function() wait()
+        if not invisible then
+            invisible = true
+            tool.Name = "Ghostify [Enabled]"
+            if handle then handle:Destroy() end
+            if weld then weld:Destroy() end
+            handle = Instance.new("Part", workspace)
+            handle.Name = "Handle"
+            handle.Transparency = 1
+            handle.CanCollide = false
+            handle.Size = Vector3.new(2, 1, 1)
+            weld = Instance.new("Weld", handle)
+            weld.Part0 = handle
+            weld.Part1 = Character.HumanoidRootPart
+            weld.C0 = CFrame.new(0, offset-1.5, 0)
+            setDisplayDistance(offset+100)
+            workspace.CurrentCamera.CameraSubject = handle
+            Character.HumanoidRootPart.CFrame = Character.HumanoidRootPart.CFrame * CFrame.new(0, offset, 0)
+            Character.Humanoid.HipHeight = offset
+            Character.Humanoid:ChangeState(11)
+            for _,child in pairs(Backpack:GetChildren()) do
+                if child:IsA("Tool") and child ~= tool then
+                    grips[child] = child.Grip
+                end
+            end
+        else
+            invisible = false
+            tool.Name = "Ghostify [Disabled]"
+            if handle then handle:Destroy() end
+            if weld then weld:Destroy() end
+            for _,child in pairs(Character:GetChildren()) do
+                if child:IsA("Tool") then
+                    child.Parent = Backpack
+                end
+            end
+            for tool,grip in pairs(grips) do
+                if tool then tool.Grip = grip end
+            end
+            heldTool = nil
+            setDisplayDistance(100)
+            workspace.CurrentCamera.CameraSubject = Character.Humanoid
+            Character.Animate.Disabled = false
+            Character.HumanoidRootPart.CFrame = Character.HumanoidRootPart.CFrame * CFrame.new(0, -offset, 0)
+            Character.Humanoid.HipHeight = 0
+            Character.Humanoid:ChangeState(11)
+        end
+        tool.Parent = Backpack
+    end)
+
+    Character.ChildAdded:Connect(function(child) wait()
+        if invisible and child:IsA("Tool") and child ~= heldTool and child ~= tool then
+            heldTool = child
+            local lastGrip = heldTool.Grip
+            if not grips[heldTool] then grips[heldTool] = lastGrip end
+            for _,track in pairs(Character.Humanoid:GetPlayingAnimationTracks()) do track:Stop() end
+            Character.Animate.Disabled = true
+            heldTool.Grip = heldTool.Grip*(CFrame.new(0, offset-1.5, 1.5) * CFrame.Angles(math.rad(-90), 0, 0))
+            heldTool.Parent = Backpack
+            heldTool.Parent = Character
+            if gripChanged then gripChanged:Disconnect() end
+            gripChanged = heldTool:GetPropertyChangedSignal("Grip"):Connect(function() wait()
+                if not invisible then gripChanged:Disconnect() end
+                if heldTool.Grip ~= lastGrip then
+                    lastGrip = heldTool.Grip*(CFrame.new(0, offset-1.5, 1.5) * CFrame.Angles(math.rad(-90), 0, 0))
+                    heldTool.Grip = lastGrip
+                    heldTool.Parent = Backpack
+                    heldTool.Parent = Character
+                end
+            end)
+        end
+    end)
+end)
+
+-- ESP Code
+local nametagESPEnabled = false
+local boxESPEnabled = false
+
+local function createNametagESP(player)
+    if player == game.Players.LocalPlayer then return end
+    if not player.Character or not player.Character:FindFirstChild("Head") then return end
+    if player.Character:FindFirstChild("NameTagESP") then return end
+
+    local tag = Instance.new("BillboardGui")
+    tag.Name = "NameTagESP"
+    tag.Adornee = player.Character.Head
+    tag.Size = UDim2.new(0, 100, 0, 40)
+    tag.StudsOffset = Vector3.new(0, 2.5, 0)
+    tag.AlwaysOnTop = true
+    tag.Parent = player.Character
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextScaled = true
+    nameLabel.Parent = tag
+end
+
+local function createBoxESP(player)
+    if player == game.Players.LocalPlayer then return end
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = player.Character.HumanoidRootPart
+    local surfaces = {"Front", "Back", "Top", "Bottom", "Left", "Right"}
+
+    for _, face in ipairs(surfaces) do
+        if hrp:FindFirstChild("BoxESP_" .. face) then continue end
+
+        local surfGui = Instance.new("SurfaceGui")
+        surfGui.Name = "BoxESP_" .. face
+        surfGui.Face = Enum.NormalId[face]
+        surfGui.AlwaysOnTop = true
+        surfGui.Adornee = hrp
+        surfGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        surfGui.PixelsPerStud = 30
+        surfGui.Parent = hrp
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1.05, 0, 1.05, 0)
+        frame.Position = UDim2.new(-0.025, 0, -0.025, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        frame.BorderSizePixel = 0
+        frame.BackgroundTransparency = 0.3
+        frame.Parent = surfGui
+    end
+end
+
+local function removeESP(player)
+    if player.Character then
+        if player.Character:FindFirstChild("NameTagESP") then
+            player.Character.NameTagESP:Destroy()
+        end
+
+        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            for _, child in ipairs(hrp:GetChildren()) do
+                if child:IsA("SurfaceGui") and child.Name:match("^BoxESP_") then
+                    child:Destroy()
+                end
+            end
+        end
+    end
+end
+
+local function updateESPForPlayer(player)
+    if player == game.Players.LocalPlayer then return end
+    task.defer(function()
+        if player.Character then
+            if nametagESPEnabled then createNametagESP(player) end
+            if boxESPEnabled then createBoxESP(player) end
+        end
+    end)
+end
+
+local function updateAllPlayers()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            updateESPForPlayer(player)
+        end
+    end
+end
+
+ESPSection:NewToggle("Nametag ESP", "Toggle nametags", function(Value)
+    nametagESPEnabled = Value
+    if Value then updateAllPlayers() else
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            removeESP(player)
+        end
+    end
+end)
+
+ESPSection:NewToggle("Box ESP", "Toggle boxes", function(Value)
+    boxESPEnabled = Value
+    if Value then updateAllPlayers() else
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            removeESP(player)
+        end
+    end
+end)
+
+-- ESP On Join
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player ~= game.Players.LocalPlayer then
+        player.CharacterAdded:Connect(function()
+            task.wait(1)
+            updateESPForPlayer(player)
+        end)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        updateESPForPlayer(player)
+    end)
+end)
+
+wait(0.1)
+local player = game.Players.LocalPlayer
+
+local function createTutorialGui()
+    -- Create the GUI
+    local Turtorial = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local JoinButton = Instance.new("TextButton")
+    local UICorner_Join = Instance.new("UICorner")
+    local shadow = Instance.new("Frame")
+
+    Turtorial.Name = "Turtorial"
+    Turtorial.Parent = player:WaitForChild("PlayerGui")
+    Turtorial.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    main.Name = "main"
+    main.Parent = Turtorial
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.AnchorPoint = Vector2.new(0, 0)
+
+    -- Function to position the GUI just below the top-left corner of the screen
+    local function setPositionBelowTopLeft()
+        local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+        main.Position = UDim2.new(0, 10, 0, 10)  -- Just below the top-left with a slight offset
+        main.Size = UDim2.new(0.15, 0, 0.10, 0)  -- Standard size for both devices
+    end
+
+    setPositionBelowTopLeft()
+
+    main.Active = true
+    main.Draggable = true
+
+    -- Shadow effect for main frame
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    JoinButton.Name = "JoinButton"
+    JoinButton.Parent = main
+    JoinButton.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+    -- Adjust button size based on device type
+    if game:GetService("UserInputService").TouchEnabled then
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    else
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    end
+
+    JoinButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+    JoinButton.Font = Enum.Font.Highway
+    JoinButton.Text = "Toggle Gui"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = 25
+    JoinButton.TextStrokeTransparency = 0.7
+    JoinButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    UICorner_Join.CornerRadius = UDim.new(0.15, 0)
+    UICorner_Join.Parent = JoinButton
+
+    -- Toggle the visibility of ScreenGuis
+    JoinButton.MouseButton1Down:Connect(function()
+        local CoreGui = game:GetService("CoreGui")
+        local function containsNumber(name)
+            return name:match("%d") ~= nil
+        end
+
+        local function toggleScreenGuisWithNumbers()
+            for _, gui in ipairs(CoreGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and containsNumber(gui.Name) and gui.Name ~= "Turtorial" then
+                    gui.Enabled = not gui.Enabled
+                    print((gui.Enabled and "Enabled" or "Disabled") .. " ScreenGui:", gui.Name)
+                end
+            end
+        end
+
+        toggleScreenGuisWithNumbers()
+
+        CoreGui.ChildAdded:Connect(function(child)
+            if child:IsA("ScreenGui") then
+                task.wait(0.1)
+                if containsNumber(child.Name) and child.Name ~= "Turtorial" then
+                    child.Enabled = false
+                    print("Disabled new ScreenGui:", child.Name)
+                end
+            end
+        end)
+    end)
+end
+
+-- Connect to CharacterAdded to ensure GUI is created again after respawn
+player.CharacterAdded:Connect(function()
+    -- Wait for the PlayerGui to load in case it's reset
+    player:WaitForChild("PlayerGui")
+    -- Create the GUI again after respawn
+    createTutorialGui()
+end)
+
+-- Initial creation of the GUI when the player first joins
+createTutorialGui()

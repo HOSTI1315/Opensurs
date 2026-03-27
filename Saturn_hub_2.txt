@@ -1,0 +1,757 @@
+--[[
+                 . .  .     .          .  .             .
+          .       .  .  .     ..   .    .      .        .
+                   .   .     .             ...  .        
+.                  .       .    ..  .    .=*+-.         .
+       . .             .               .-*:..+:  .      .
+..      .               .+=:..        :*-.. .-+          
+.           ..        . :#-..-#=.   .#-      .*.         
+  .          .........:-=#=.  ..=*-==.       .*..   .    
+        . .:+#%%%%*#%%#%%=..      -+:.       .*.         
+         .-%#%*%%#****%%#=:.       ..     .. .*.      .  
+        ..=%%*@*******%%##+.           .    .==        . 
+       .  -%%%**********+--.   .  ..:*%=-. .:+:  .. . .  
+          .=#****#%@%**++**:.    .+#-.#..  .=-. .   .    
+      ..   :****#@@@@%*****-.=..-%@%-.--  :*=:..     .   
+     .     :*****#%@%******=-:+#@@@#:..=..:::+=          
+. .       .:##************=:. ..*@%=..... .:*-..         
+           :##**********+=++::..  ..:==-:.=*.      .     
+          .=##********##===+*+++:  ...-... :+:..  .    . 
+ ..  .    :+##********##===*-....  ...:++===*=.      .   
+    .     .-#%#%*****##@=-*= ....:=#%+.                  
+        .     :%%%%#%*%%#*..      .:+.                .  
+        . .   -@%#%#******+..   .  .-+.                  
+    .        :%%#******+-... .  .  ..+=.   .         .   
+            :%*%********+...  .    . .%.            .  . 
+       .   .*##%*********....        .:+.  .   .         
+          .-#*##*********+:..        ..*.    .           
+  .    .  .=#*%#********+::...     .  .=:  . .           
+    .     .+#*%#*******=.... ..       .--        .  ..   
+          .*#*%%********=.. .     . . .-=.    .    .     
+   .   .  .+#*#%*******-:..           .-=.         .   . 
+       .  .:--+*********+-...   .  .  ... .  .     .     
+        .     .........::::..            .  ..           
+                        .. .                     ..      
+             .            .           .               .  
+]]
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local ToggleStates = {
+	["EspDoor"] = false,
+	["SpeedBoost"] = false,
+	["EspHidingSpots"] = false,
+	["EspItems"] = false,
+	["EspCoins"] = false,
+	["MonsterSpawnAlert"] = false,
+	["NoCooldownPrompt"] = false,
+	["FullBright"] = false,
+	["ModifiedFieldOfView"] = false,
+	["EspChest"] = false,
+	["EspBooks"] = false,
+	["EspMonster"] = false,
+	["EspTimerLever"] = false,
+	["EspGen"] = false,
+	["AutoInteract"] = false,
+	["CanJump"] = false,
+	["InfOxygen"] = false,
+	["BigPrompt"] = false,
+	["DistanceEsp"] = false,
+	["NoEyes"] = false,
+	["NoScreech"] = false,
+	["NoDupe"] = false
+}
+local Settings = {
+	["LimitRangerEsp"] = 100,
+	["DisableLimitRangerEsp"] = false,
+	["ValueSpeed"] = 16,
+	["ValueFieldOfView"] = 80
+}
+local MonsterAlertList = {}
+local Window = Rayfield:CreateWindow({
+	["Name"] = "Saturn Hub (.gg/6UaRDjBY42)",
+	["Icon"] = 108632720139222,
+	["LoadingTitle"] = "Saturn Hub Loading...",
+	["LoadingSubtitle"] = "Credit: JScripter",
+	["Theme"] = "Default",
+	["DisableRayfieldPrompts"] = false,
+	["DisableBuildWarnings"] = false,
+	["ConfigurationSaving"] = {
+		["Enabled"] = true,
+		["FolderName"] = "SaturnHub",
+		["FileName"] = "DoorsConfig"
+	}
+})
+local InfoTab = Window:CreateTab("Info", "info")
+local PlayerTab = Window:CreateTab("Player", "user-round")
+local GameTab = Window:CreateTab("Game", "sword")
+local ESPTab = Window:CreateTab("ESP", "eye")
+local MonstersTab = Window:CreateTab("Monsters", "angry")
+local SettingsTab = Window:CreateTab("Settings", "bolt")
+local function notifyMonsterSpawn(monsterName, duration)
+	Rayfield:Notify({
+		["Title"] = "Monster Spawned!",
+		["Content"] = monsterName .. " has spawned!",
+		["Duration"] = duration or 3,
+		["Image"] = 108632720139222
+	})
+end
+local function createESP(model, color, labelText, adorneePart)
+	if model and adorneePart then
+		if not (model:FindFirstChild("ESP") and model:FindFirstChildOfClass("Highlight")) then
+			local highlight = model:FindFirstChildOfClass("Highlight") or Instance.new("Highlight")
+			highlight.Name = "ESP_Highlight"
+			highlight.Adornee = model
+			highlight.FillColor = color
+			highlight.FillTransparency = 1
+			highlight.OutlineColor = color
+			highlight.OutlineTransparency = 0
+			highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			highlight.Enabled = false
+			highlight.Parent = model
+			local billboardGui = model:FindFirstChild("ESP") or Instance.new("BillboardGui")
+			billboardGui.Name = "ESP"
+			billboardGui.Size = UDim2.new(0, 50, 0, 25)
+			billboardGui.AlwaysOnTop = true
+			billboardGui.StudsOffset = Vector3.new(0, -2, 0)
+			billboardGui.Adornee = adorneePart
+			billboardGui.Enabled = false
+			billboardGui.Parent = adorneePart
+			local textLabel = billboardGui:FindFirstChildOfClass("TextLabel") or Instance.new("TextLabel")
+			textLabel.Size = UDim2.new(1, 0, 1, 0)
+			textLabel.BackgroundTransparency = 1
+			textLabel.Text = labelText
+			textLabel.TextColor3 = color
+			textLabel.TextScaled = true
+			textLabel.Parent = billboardGui
+			task.spawn(function()
+				local camera = Workspace.CurrentCamera
+				while highlight and billboardGui and adorneePart and adorneePart.Parent do
+					local cameraPosition = camera and camera.CFrame.Position
+					if cameraPosition and adorneePart and adorneePart:IsA("BasePart") then
+						local distance = (cameraPosition - adorneePart.Position).Magnitude
+						if ToggleStates.DistanceEsp then
+							textLabel.Text = labelText .. " (" .. math.floor(distance + 0.5) .. " m)"
+						else
+							textLabel.Text = labelText
+						end
+						if Settings.DisableLimitRangerEsp then
+							billboardGui.Enabled = true
+							highlight.Enabled = true
+						else
+							local inRange = distance <= Settings.LimitRangerEsp
+							highlight.Enabled = inRange
+							billboardGui.Enabled = inRange
+						end
+					end
+					RunService.Heartbeat:Wait()
+				end
+			end)
+		end
+	else
+		return
+	end
+end
+local function removeESP(model, adorneePart)
+	if model and model:FindFirstChildOfClass("Highlight") and adorneePart:FindFirstChildOfClass("BillboardGui") then
+		model:FindFirstChildOfClass("Highlight"):Destroy()
+		adorneePart:FindFirstChildOfClass("BillboardGui"):Destroy()
+	end
+end
+local function triggerPrompt(prompt)
+	if prompt and prompt.MaxActivationDistance > 0 then
+		prompt:InputHoldBegin()
+		task.wait(prompt.HoldDuration or 0)
+		prompt:InputHoldEnd()
+	end
+end
+InfoTab:CreateParagraph({
+	["Title"] = "Join Discord (https://discord.gg/6UaRDjBY42)",
+	["Content"] = "Please join server :["
+})
+InfoTab:CreateParagraph({
+	["Title"] = "Saturn Hub",
+	["Content"] = "Welcome to Saturn Hub! This script provides various features for Doors including ESP, speed modifications, and monster alerts."
+})
+InfoTab:CreateParagraph({
+	["Title"] = "Version",
+	["Content"] = "Current Version: V.1.0 Reworked"
+})
+InfoTab:CreateParagraph({
+	["Title"] = "Credit",
+	["Content"] = "Script by: JScripter |"
+})
+PlayerTab:CreateSlider({
+	["Name"] = "Player Speed",
+	["Range"] = { 0, 21 },
+	["Increment"] = 1,
+	["Suffix"] = "Speed",
+	["CurrentValue"] = 16,
+	["Flag"] = "PlayerSpeed",
+	["Callback"] = function(value)
+		Settings.ValueSpeed = value
+	end
+})
+PlayerTab:CreateToggle({
+	["Name"] = "Speed Boost",
+	["CurrentValue"] = false,
+	["Flag"] = "SpeedBoost",
+	["Callback"] = function(enabled)
+		ToggleStates.SpeedBoost = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.SpeedBoost do
+					if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+						LocalPlayer.Character.Humanoid.WalkSpeed = Settings.ValueSpeed
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+PlayerTab:CreateSlider({
+	["Name"] = "Field of View",
+	["Range"] = { 80, 120 },
+	["Increment"] = 1,
+	["Suffix"] = "FOV",
+	["CurrentValue"] = 80,
+	["Flag"] = "FOV",
+	["Callback"] = function(value)
+		Settings.ValueFieldOfView = value
+	end
+})
+PlayerTab:CreateToggle({
+	["Name"] = "Modify FOV",
+	["CurrentValue"] = false,
+	["Flag"] = "ModifyFOV",
+	["Callback"] = function(enabled)
+		ToggleStates.ModifiedFieldOfView = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.ModifiedFieldOfView do
+					if Workspace.Camera then
+						Workspace.Camera.FieldOfView = Settings.ValueFieldOfView
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+PlayerTab:CreateToggle({
+	["Name"] = "Can Jump",
+	["CurrentValue"] = false,
+	["Flag"] = "CanJump",
+	["Callback"] = function(enabled)
+		ToggleStates.CanJump = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.CanJump do
+					if LocalPlayer.Character then
+						LocalPlayer.Character:SetAttribute("CanJump", true)
+					end
+					task.wait(0.1)
+				end
+				if LocalPlayer.Character then
+					LocalPlayer.Character:SetAttribute("CanJump", false)
+				end
+			end)
+		end
+	end
+})
+PlayerTab:CreateToggle({
+	["Name"] = "Infinite Oxygen",
+	["CurrentValue"] = false,
+	["Flag"] = "InfOxygen",
+	["Callback"] = function(enabled)
+		ToggleStates.InfOxygen = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.InfOxygen do
+					if LocalPlayer.Character then
+						LocalPlayer.Character:SetAttribute("Oxygen", 99999)
+					end
+					task.wait(0.1)
+				end
+				if LocalPlayer.Character then
+					LocalPlayer.Character:SetAttribute("Oxygen", 100)
+				end
+			end)
+		end
+	end
+})
+GameTab:CreateToggle({
+	["Name"] = "Full Bright",
+	["CurrentValue"] = false,
+	["Flag"] = "FullBright",
+	["Callback"] = function(enabled)
+		ToggleStates.FullBright = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.FullBright do
+					if Lighting then
+						Lighting.Brightness = 5
+						Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+					end
+					task.wait(0.01)
+				end
+			end)
+		end
+	end
+})
+GameTab:CreateToggle({
+	["Name"] = "Instant Prompt",
+	["CurrentValue"] = false,
+	["Flag"] = "InstantPrompt",
+	["Callback"] = function(enabled)
+		ToggleStates.NoCooldownPrompt = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.NoCooldownPrompt do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("ProximityPrompt") and descendant.HoldDuration ~= 0 then
+							descendant:SetAttribute("HoldDurationOld", descendant.HoldDuration)
+							descendant.HoldDuration = 0
+						end
+					end
+					task.wait(0.1)
+				end
+				for _, descendant in pairs(Workspace:GetDescendants()) do
+					if descendant:IsA("ProximityPrompt") and descendant:GetAttribute("HoldDurationOld") then
+						descendant.HoldDuration = descendant:GetAttribute("HoldDurationOld")
+					end
+				end
+			end)
+		end
+	end
+})
+GameTab:CreateToggle({
+	["Name"] = "Auto Interact",
+	["CurrentValue"] = false,
+	["Flag"] = "AutoInteract",
+	["Callback"] = function(enabled)
+		ToggleStates.AutoInteract = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.AutoInteract do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("ProximityPrompt") and descendant.Name ~= "HidePrompt" then
+							task.spawn(function()
+								triggerPrompt(descendant)
+							end)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+GameTab:CreateToggle({
+	["Name"] = "Big Prompt Distance",
+	["CurrentValue"] = false,
+	["Flag"] = "BigPrompt",
+	["Callback"] = function(enabled)
+		ToggleStates.BigPrompt = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.BigPrompt do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("ProximityPrompt") and descendant.MaxActivationDistance ~= 13 then
+							descendant:SetAttribute("MaxActivationDistanceOld", descendant.MaxActivationDistance)
+							descendant.MaxActivationDistance = 13
+						end
+					end
+					task.wait(0.1)
+				end
+				for _, descendant in pairs(Workspace:GetDescendants()) do
+					if descendant:IsA("ProximityPrompt") and descendant:GetAttribute("MaxActivationDistanceOld") then
+						descendant.MaxActivationDistance = descendant:GetAttribute("MaxActivationDistanceOld")
+					end
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Door ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "DoorESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspDoor = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspDoor do
+					if Workspace:FindFirstChild("CurrentRooms") then
+						for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+							if room:IsA("Model") and room:FindFirstChild("Door") then
+								local door = room.Door
+								if not door:FindFirstChildOfClass("Highlight") and door.PrimaryPart then
+									local doorLabel = "Door"
+									if door:FindFirstChild("Sign") then
+										local sign = door.Sign
+										if sign:FindFirstChild("Stinker") and sign.Stinker.Text ~= "" then
+											doorLabel = sign.Stinker.Text
+										elseif sign:FindFirstChild("SignText") then
+											doorLabel = sign.SignText.Text
+										end
+									end
+									local assets = room:FindFirstChild("Assets")
+									if assets then
+										assets = room.Assets:FindFirstChild("KeyObtain")
+									end
+									local displayText = "Door " .. doorLabel .. (assets and " (Locked)" or "")
+									createESP(door, Color3.fromRGB(0, 255, 0), displayText, door.PrimaryPart)
+								end
+							end
+						end
+					end
+					task.wait(0.1)
+				end
+				if Workspace:FindFirstChild("CurrentRooms") then
+					for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+						if room:IsA("Model") and room:FindFirstChild("Door") then
+							removeESP(room.Door, room.Door.PrimaryPart)
+						end
+					end
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Hiding Spots ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "HidingSpotsESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspHidingSpots = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspHidingSpots do
+					if Workspace:FindFirstChild("CurrentRooms") then
+						for _, room in pairs(Workspace.CurrentRooms:GetChildren()) do
+							if room:IsA("Model") and room:FindFirstChild("Assets") then
+								for _, asset in pairs(room.Assets:GetChildren()) do
+									local hidingSpots = {"Bed", "Wardrobe", "Backdoor_Wardrobe", "Locker_Large", "Rooms_Locker"}
+									if asset:IsA("Model") and table.find(hidingSpots, asset.Name) and not asset:FindFirstChildOfClass("Highlight") and asset.PrimaryPart then
+										createESP(asset, Color3.fromRGB(0, 255, 255), asset.Name, asset.PrimaryPart)
+									end
+								end
+							end
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Items ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "ItemsESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspItems = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspItems do
+					local itemNames = {"KeyObtain", "LeverForGate", "Battery", "Flashlight", "Lighter", "Bandage", "Crucifix", "Vitamins", "Lockpick", "Candle", "AlarmClock", "LibraryHintPaper", "Smoothie", "FuseObtain", "BatteryPack", "Glowsticks", "StarVial", "Shakelight", "SkeletonKey"}
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and table.find(itemNames, descendant.Name) and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(255, 255, 0), descendant.Name, descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Coins ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "CoinsESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspCoins = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspCoins do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and descendant.Name == "GoldPile" and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(255, 215, 0), "Gold", descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Chest ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "ChestESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspChest = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspChest do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and (descendant.Name == "ChestBoxLocked" or descendant.Name == "ChestBox") and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(255, 255, 0), descendant.Name, descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Books ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "BooksESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspBooks = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspBooks do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and descendant.Name == "LiveHintBook" and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(0, 150, 150), "Book", descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Monsters ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "MonstersESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspMonster = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspMonster do
+					local monsterNames = {"FigureRig", "SallyMoving", "RushMoving", "Eyes", "SeekMovingNewClone", "BackdoorLookman", "BackdoorRush", "GloombatSwarm", "GiggleCeiling", "AmbushMoving", "A60", "A120"}
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and table.find(monsterNames, descendant.Name) and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							descendant.PrimaryPart.Transparency = 0
+							createESP(descendant, Color3.fromRGB(255, 0, 0), descendant.Name, descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Timer Lever ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "TimerLeverESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspTimerLever = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspTimerLever do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and descendant.Name == "TimerLever" and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(0, 150, 150), "Timer Lever", descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+ESPTab:CreateToggle({
+	["Name"] = "Generator ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "GeneratorESP",
+	["Callback"] = function(enabled)
+		ToggleStates.EspGen = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.EspGen do
+					for _, descendant in pairs(Workspace:GetDescendants()) do
+						if descendant:IsA("Model") and descendant.Name == "MinesGenerator" and not descendant:FindFirstChildOfClass("Highlight") and descendant.PrimaryPart then
+							createESP(descendant, Color3.fromRGB(255, 255, 0), "Generator", descendant.PrimaryPart)
+						end
+					end
+					task.wait(0.1)
+				end
+			end)
+		end
+	end
+})
+MonstersTab:CreateDropdown({
+	["Name"] = "Monster Spawn Alerts",
+	["Options"] = {"Rush", "Seek", "Figure", "Sally", "Eyes", "LookMan", "BackdoorRush", "Giggle", "GloombatSwarm", "Ambush", "A-60", "A-120"},
+	["CurrentOption"] = {},
+	["MultipleOptions"] = true,
+	["Flag"] = "MonsterAlerts",
+	["Callback"] = function(selected)
+		MonsterAlertList = {}
+		local monsterMapping = {
+			["Rush"] = "RushMoving",
+			["Seek"] = "SeekMovingNewClone",
+			["Figure"] = "FigureRig",
+			["Sally"] = "SallyMoving",
+			["Eyes"] = "Eyes",
+			["LookMan"] = "BackdoorLookman",
+			["BackdoorRush"] = "BackdoorRush",
+			["Giggle"] = "GiggleCeiling",
+			["GloombatSwarm"] = "GloombatSwarm",
+			["Ambush"] = "AmbushMoving",
+			["A-60"] = "A60",
+			["A-120"] = "A120"
+		}
+		for _, monsterName in pairs(selected) do
+			if monsterMapping[monsterName] then
+				table.insert(MonsterAlertList, monsterMapping[monsterName])
+			end
+		end
+	end
+})
+MonstersTab:CreateToggle({
+	["Name"] = "Monster Spawn Alert",
+	["CurrentValue"] = false,
+	["Flag"] = "MonsterSpawnAlert",
+	["Callback"] = function(enabled)
+		ToggleStates.MonsterSpawnAlert = enabled
+	end
+})
+MonstersTab:CreateToggle({
+	["Name"] = "No Eyes",
+	["CurrentValue"] = false,
+	["Flag"] = "NoEyes",
+	["Callback"] = function(enabled)
+		ToggleStates.NoEyes = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.NoEyes do
+					if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableEyes") then
+						ReplicatedStorage.GameData.EntityDisableEyes.Value = true
+					end
+					task.wait(0.1)
+				end
+				if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableEyes") then
+					ReplicatedStorage.GameData.EntityDisableEyes.Value = false
+				end
+			end)
+		end
+	end
+})
+MonstersTab:CreateToggle({
+	["Name"] = "No Screech",
+	["CurrentValue"] = false,
+	["Flag"] = "NoScreech",
+	["Callback"] = function(enabled)
+		ToggleStates.NoScreech = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.NoScreech do
+					if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableScreech") then
+						ReplicatedStorage.GameData.EntityDisableScreech.Value = true
+					end
+					task.wait(0.1)
+				end
+				if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableScreech") then
+					ReplicatedStorage.GameData.EntityDisableScreech.Value = false
+				end
+			end)
+		end
+	end
+})
+MonstersTab:CreateToggle({
+	["Name"] = "No Dupe",
+	["CurrentValue"] = false,
+	["Flag"] = "NoDupe",
+	["Callback"] = function(enabled)
+		ToggleStates.NoDupe = enabled
+		if enabled then
+			task.spawn(function()
+				while ToggleStates.NoDupe do
+					if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableDupe") then
+						ReplicatedStorage.GameData.EntityDisableDupe.Value = true
+					end
+					task.wait(0.1)
+				end
+				if ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("EntityDisableDupe") then
+					ReplicatedStorage.GameData.EntityDisableDupe.Value = false
+				end
+			end)
+		end
+	end
+})
+SettingsTab:CreateSlider({
+	["Name"] = "ESP Range Limit",
+	["Range"] = { 25, 1000 },
+	["Increment"] = 1,
+	["Suffix"] = "Range",
+	["CurrentValue"] = 100,
+	["Flag"] = "ESPRange",
+	["Callback"] = function(value)
+		Settings.LimitRangerEsp = value
+	end
+})
+SettingsTab:CreateToggle({
+	["Name"] = "Disable ESP Range Limit",
+	["CurrentValue"] = false,
+	["Flag"] = "DisableESPRange",
+	["Callback"] = function(enabled)
+		Settings.DisableLimitRangerEsp = enabled
+	end
+})
+SettingsTab:CreateToggle({
+	["Name"] = "Show Distance in ESP",
+	["CurrentValue"] = false,
+	["Flag"] = "ShowDistance",
+	["Callback"] = function(enabled)
+		ToggleStates.DistanceEsp = enabled
+	end
+})
+SettingsTab:CreateDropdown({
+	["Name"] = "Theme",
+	["Options"] = {"Default", "AmberGlow", "Amethyst", "Bloom", "DarkBlue", "Green", "Light", "Ocean", "Serenity"},
+	["CurrentOption"] = { "Default" },
+	["Flag"] = "Theme",
+	["Callback"] = function(selected)
+		Window:SetTheme(selected[1])
+	end
+})
+Workspace.ChildAdded:Connect(function(child)
+	if ToggleStates.MonsterSpawnAlert and table.find(MonsterAlertList, child.Name) then
+		local monsterDisplayNames = {
+			["RushMoving"] = "Rush",
+			["SeekMovingNewClone"] = "Seek",
+			["FigureRig"] = "Figure",
+			["SallyMoving"] = "Sally",
+			["Eyes"] = "Eyes",
+			["BackdoorLookman"] = "LookMan",
+			["BackdoorRush"] = "Blitz",
+			["GloombatSwarm"] = "Gloombat Swarm",
+			["GiggleCeiling"] = "Giggle",
+			["AmbushMoving"] = "Ambush",
+			["A60"] = "A-60",
+			["A120"] = "A-120"
+		}
+		notifyMonsterSpawn(monsterDisplayNames[child.Name] or child.Name, 3)
+	end
+end)
+Rayfield:Notify({
+	["Title"] = "Saturn Hub",
+	["Content"] = "Successfully loaded! Version 1.0",
+	["Duration"] = 12,
+	["Image"] = 108632720139222
+})

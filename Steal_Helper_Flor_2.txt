@@ -1,0 +1,177 @@
+-- Bersihkan GUI lama
+pcall(function()
+	game.CoreGui:FindFirstChild("StealHelper"):Destroy()
+end)
+
+-- GUI Utama
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "StealHelper"
+gui.ResetOnSpawn = false
+
+-- Frame (ukuran 20% lebih kecil)
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 176, 0, 104)
+frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 25)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Steal Helper 2"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+
+local garis = Instance.new("Frame", frame)
+garis.Size = UDim2.new(1, -20, 0, 1)
+garis.Position = UDim2.new(0, 10, 0, 25)
+garis.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+garis.BorderSizePixel = 0
+--
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(0.90, 0, 0, 34) -- Dibesar 20%
+button.Position = UDim2.new(0.05, 0, 0, 42) -- Disesuaikan agar tetap rata tengah
+button.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamSemibold
+button.TextSize = 14
+button.Text = "▶ Start"
+button.AutoButtonColor = false
+--
+local btnCorner = Instance.new("UICorner", button)
+btnCorner.CornerRadius = UDim.new(0, 6)
+
+button.MouseEnter:Connect(function()
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+end)
+button.MouseLeave:Connect(function()
+	button.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+end)
+
+-- Variabel
+local active = false
+local moveConn, touchConn = nil, nil
+
+-- Fungsi cari semua part target
+local function getAllTargetParts()
+	local parts = {}
+	local size1 = Vector3.new(17, 10.00002670288086, 2)
+	local size2 = Vector3.new(17, 9.99996566772461, 2)
+
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("BasePart") and obj.Name == "structure base home" then
+			if (obj.Size - size1).Magnitude < 0.01 or (obj.Size - size2).Magnitude < 0.01 then
+				table.insert(parts, obj)
+			end
+		end
+	end
+	return parts
+end
+
+-- Buat 1 JMJ paling dekat
+local function buatJMJTerdekat()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Name == "jmj" then
+			v:Destroy()
+		end
+	end
+
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	local targetParts = getAllTargetParts()
+	local nearestPart = nil
+	local shortestDistance = math.huge
+
+	for _, part in ipairs(targetParts) do
+		local dist = (part.Position - hrp.Position).Magnitude
+		if dist < shortestDistance then
+			shortestDistance = dist
+			nearestPart = part
+		end
+	end
+
+	if not nearestPart then return nil end
+
+	local jmj = Instance.new("Part", workspace)
+	jmj.Name = "jmj"
+	jmj.Size = nearestPart.Size
+	jmj.Anchored = true
+	jmj.CanCollide = false
+	jmj.Transparency = 1
+	jmj.BrickColor = BrickColor.new("Bright yellow")
+	jmj.Position = nearestPart.Position + Vector3.new(0, nearestPart.Size.Y, 0) - Vector3.new(0, 0.5, 0)
+
+	return jmj
+end
+
+-- Dorong ke 1 JMJ
+local function dorongKeJMJ(jmj)
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local humanoid = char:WaitForChild("Humanoid")
+
+	if not jmj then return end
+
+	local direction = (jmj.Position - hrp.Position).Unit
+	local move = true
+
+	moveConn = game:GetService("RunService").Heartbeat:Connect(function()
+		if not move or not hrp then return end
+		local newVel = direction * 43
+		hrp.Velocity = Vector3.new(newVel.X, hrp.Velocity.Y, newVel.Z)
+	end)
+
+	touchConn = jmj.Touched:Connect(function(hit)
+		if hit and hit:IsDescendantOf(char) then
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			hrp.Velocity = Vector3.new(0, 160, 0)
+			move = false
+			button.Text = "▶ Start"
+			active = false
+			if moveConn then moveConn:Disconnect() end
+			if touchConn then touchConn:Disconnect() end
+
+			if jmj and jmj:IsDescendantOf(workspace) then
+				jmj:Destroy()
+			end
+		end
+	end)
+end
+
+-- Tombol Klik
+button.MouseButton1Click:Connect(function()
+	active = not active
+	button.Text = active and "■ Stop" or "▶ Start"
+
+	if moveConn then moveConn:Disconnect() end
+	if touchConn then touchConn:Disconnect() end
+
+	for _, p in pairs(workspace:GetDescendants()) do
+		if p:IsA("BasePart") and p.Name == "jmj" then
+			p:Destroy()
+		end
+	end
+
+	if not active then return end
+
+	local jmj = buatJMJTerdekat()
+	dorongKeJMJ(jmj)
+end)
+
+
+    task.wait(1) -- beri jeda biar GUI keburu siap
+game:GetService("StarterGui"):SetCore("SendNotification", {
+	Title = "Tips Message!",
+	Text = "For Base Flor 2",
+	Duration = 4
+})

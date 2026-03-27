@@ -1,0 +1,354 @@
+getgenv().Settings = {
+    TargetHealth = 50,
+    CharacterHeight = 8,
+    ResetStreak = true,
+    AntiDC = true
+}
+local vu1 = game:GetService("Players")
+local vu2 = vu1.LocalPlayer
+local vu3 = game:GetService("RunService")
+local vu4 = workspace:WaitForChild("Map"):WaitForChild("Trash")
+local vu5 = vu2.Character or vu2.CharacterAdded:Wait()
+local v6 = vu5
+local vu7 = vu5.WaitForChild(v6, "HumanoidRootPart")
+local v8 = vu5
+local vu9 = vu5.WaitForChild(v8, "Communicate")
+local vu10 = nil
+local vu11 = 0
+local vu12 = nil
+local vu13 = false
+local vu14 = "rbxassetid://11343250001"
+local vu15 = Vector3.new(1000, - 499, 1000)
+local vu16 = nil
+local vu17 = nil
+local function vu21()
+    if getgenv().Settings.ResetStreak then
+        local v18 = workspace:FindFirstChild("Live")
+        if v18 then
+            local v19 = v18:FindFirstChild(vu2.Name)
+            if v19 then
+                if (v19:GetAttribute("CurrentStreak") or 0) >= 9 then
+                    local v20 = vu2.Character
+                    if v20 then
+                        v20 = v20:FindFirstChildOfClass("Humanoid")
+                    end
+                    if v20 then
+                        v20.Health = 0
+                    end
+                end
+            end
+        else
+            return
+        end
+    else
+        return
+    end
+end
+local function vu22()
+    if vu17 then
+        vu17:Disconnect()
+        vu17 = nil
+    end
+    vu16 = nil
+    vu13 = false
+end
+local function vu27(p23)
+    local v24 = p23:FindFirstChild("HumanoidRootPart")
+    if v24 then
+        local v25 = v24.Position
+        local v26 = Vector3.new(0, 1, 0)
+        v24.CFrame = CFrame.new(v25, v25 + v26)
+    end
+end
+local function vu30()
+    if getgenv().Settings.AntiDC then
+        local vu28 = vu5:FindFirstChild("HumanoidRootPart")
+        if vu28 then
+            vu13 = true
+            vu16 = vu28.CFrame
+            local vu29 = tick()
+            if vu17 then
+                vu17:Disconnect()
+            end
+            vu17 = vu3.Heartbeat:Connect(function()
+                if getgenv().Settings.AntiDC then
+                    if tick() - vu29 > 3 then
+                        vu17:Disconnect()
+                        vu28.CFrame = vu16
+                        task.wait(1)
+                        vu28.CFrame = vu16
+                        vu2.CameraMode = Enum.CameraMode.Custom
+                        vu13 = false
+                    else
+                        vu28.CFrame = CFrame.new(vu15)
+                        vu27(vu5)
+                    end
+                else
+                    vu17:Disconnect()
+                    vu28.CFrame = vu16
+                    vu13 = false
+                end
+            end)
+        end
+    else
+        return
+    end
+end
+local function vu33()
+    local v31 = vu5:FindFirstChildOfClass("Humanoid")
+    if v31 then
+        v31.AnimationPlayed:Connect(function(p32)
+            if getgenv().Settings.AntiDC and (p32.Animation and p32.Animation.AnimationId == vu14) then
+                vu30()
+            end
+        end)
+    end
+end
+local v34, v35, v36 = ipairs(vu4:GetChildren())
+local vu37 = vu13
+local vu38 = vu5
+while true do
+    local v39, v40 = v34(v35, v36)
+    if v39 == nil then
+        break
+    end
+    v36 = v39
+    if v40:IsA("Model") then
+        local v41, v42, v43 = ipairs(v40:GetDescendants())
+        while true do
+            local v44, v45 = v41(v42, v43)
+            if v44 == nil then
+                break
+            end
+            v43 = v44
+            if v45:IsA("BasePart") then
+                v45.CanCollide = false
+            end
+        end
+    end
+end
+local function vu47()
+    if vu37 then
+        return false
+    end
+    local v46 = workspace:FindFirstChild("Live")
+    if v46 then
+        v46 = workspace.Live:FindFirstChild(vu2.Name)
+    end
+    if v46 then
+        v46 = v46:FindFirstChild("Trash Can") ~= nil
+    end
+    return v46
+end
+local function vu54()
+    if not vu37 then
+        local v48 = vu4
+        local v49, v50, v51 = ipairs(v48:GetChildren())
+        local v52 = {}
+        while true do
+            local v53
+            v51, v53 = v49(v50, v51)
+            if v51 == nil then
+                break
+            end
+            if v53:IsA("Model") and (v53:FindFirstChildWhichIsA("BasePart") and not v53:GetAttribute("Broken")) then
+                table.insert(v52, v53)
+            end
+        end
+        if # v52 > 0 then
+            vu10 = v52[math.random(1, # v52)]
+            vu11 = tick()
+        end
+    end
+end
+local function vu58()
+    if not vu37 then
+        if not (vu10 and vu10.Parent) or (vu10:GetAttribute("Broken") or tick() - vu11 > 3) then
+            vu54()
+        end
+        local v55 = vu10 and (vu10.PrimaryPart or vu10:FindFirstChildWhichIsA("BasePart"))
+        if v55 then
+            local v56 = v55.Position
+            local v57 = v56 + (vu7.Position - v56).Unit * 3
+            vu7.CFrame = CFrame.new(v57, v56)
+            vu9:FireServer(unpack({
+                {
+                    Goal = "LeftClick",
+                    Mobile = true
+                }
+            }))
+            task.wait(0)
+            vu9:FireServer(unpack({
+                {
+                    Goal = "LeftClickRelease",
+                    Mobile = true
+                }
+            }))
+        end
+    end
+end
+local function vu67()
+    if vu37 then
+        return nil
+    end
+    local v59 = getgenv().Settings.TargetHealth
+    local v60, v61, v62 = pairs(workspace.Live:GetChildren())
+    local v63 = nil
+    while true do
+        local v64
+        v62, v64 = v60(v61, v62)
+        if v62 == nil then
+            break
+        end
+        if vu1:GetPlayerFromCharacter(v64) and v64 ~= vu38 then
+            local v65 = v64:FindFirstChildOfClass("Humanoid")
+            local v66 = v64:FindFirstChild("HumanoidRootPart")
+            if v65 and (v66 and (v65.Health > 0 and v65.Health <= v59)) then
+                v59 = v65.Health
+                v63 = v66
+            end
+        end
+    end
+    return v63
+end
+local function vu68()
+    if not vu37 then
+        if vu12 and vu47() then
+            vu9:FireServer(unpack({
+                {
+                    Goal = "LeftClick",
+                    Mobile = true
+                }
+            }))
+            vu9:FireServer(unpack({
+                {
+                    Goal = "LeftClickRelease",
+                    Mobile = true
+                }
+            }))
+        end
+    end
+end
+task.spawn(function()
+    while true do
+        vu21()
+        if not vu37 then
+            if vu47() then
+                vu12 = vu67()
+                if vu12 then
+                    local v69 = vu12.Position
+                    local v70 = v69 + Vector3.new(0, getgenv().Settings.CharacterHeight, 0)
+                    vu7.CFrame = CFrame.new(v70, v69)
+                    vu68()
+                else
+                    vu7.CFrame = CFrame.new(150, 505, 30)
+                end
+            else
+                vu58()
+            end
+        end
+        task.wait()
+    end
+end)
+vu2.CharacterAdded:Connect(function(p71)
+    task.wait(1)
+    vu38 = p71
+    vu7 = p71:WaitForChild("HumanoidRootPart")
+    vu9 = p71:WaitForChild("Communicate")
+    local v72 = p71:FindFirstChildOfClass("Humanoid")
+    if v72 then
+        v72.Died:Connect(vu22)
+        vu33()
+    end
+end)
+vu3.RenderStepped:Connect(function()
+    vu21()
+end)
+vu33()
+local v73 = vu38:FindFirstChildOfClass("Humanoid")
+if v73 then
+    v73.Died:Connect(vu22)
+end
+local v74 = game:GetService("Players")
+local v75 = game:GetService("RunService")
+local vu76 = v74.LocalPlayer
+local vu77 = "rbxassetid://136370737633649"
+local vu78 = "rbxassetid://136370737633649"
+local vu79 = 4.56
+local vu80 = 0
+local vu81 = nil
+local vu82 = nil
+local vu83 = nil
+local vu84 = nil
+local function vu85()
+    vu81 = vu76.Character or vu76.CharacterAdded:Wait()
+    vu82 = vu81:WaitForChild("Humanoid")
+    vu83 = vu82:FindFirstChildOfClass("Animator")
+end
+vu85()
+vu76.CharacterAdded:Connect(function()
+    vu85()
+end)
+local function vu87()
+    if vu83 then
+        if vu84 then
+            vu84:Stop()
+            vu84:Destroy()
+        end
+        local v86 = Instance.new("Animation")
+        v86.AnimationId = vu78
+        vu84 = vu83:LoadAnimation(v86)
+        vu84:Play()
+        vu84.TimePosition = vu79
+        vu84:AdjustSpeed(vu80)
+    end
+end
+v75.RenderStepped:Connect(function()
+    if vu83 then
+        local v88 = vu83
+        local v89, v90, v91 = pairs(v88:GetPlayingAnimationTracks())
+        while true do
+            local v92
+            v91, v92 = v89(v90, v91)
+            if v91 == nil then
+                break
+            end
+            if v92.Animation.AnimationId == vu77 then
+                v92:Stop()
+            end
+        end
+    end
+end)
+v75.Heartbeat:Connect(function()
+    vu87()
+end)
+local v93 = game:GetService("Players").LocalPlayer
+local function vu99(p94)
+    local v95, v96, v97 = ipairs(p94:GetDescendants())
+    while true do
+        local v98
+        v97, v98 = v95(v96, v97)
+        if v97 == nil then
+            break
+        end
+        if v98:IsA("BasePart") then
+            v98.Transparency = 0.5
+            v98.CanCollide = false
+        elseif v98:IsA("Decal") then
+            v98.Transparency = 0.5
+        end
+    end
+end
+local function vu101(p100)
+    task.wait(0.5)
+    while p100 and p100.Parent do
+        vu99(p100)
+        task.wait(0.5)
+    end
+end
+if v93.Character then
+    coroutine.wrap(vu101)(v93.Character)
+end
+v93.CharacterAdded:Connect(function(p102)
+    coroutine.wrap(vu101)(p102)
+end)

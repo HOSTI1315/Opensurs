@@ -1,0 +1,136 @@
+-- DEOBSUFCATED BY CATNAP LOGGER V2
+
+
+loadstring([[
+
+local Players = game:GetService("Players")
+
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+local character = player.Character or player.CharacterAdded:Wait()
+
+local humanoid = nil
+
+local gui = Instance.new("ScreenGui")
+
+gui.Name = "NoclipGUI"
+
+gui.ResetOnSpawn = false
+
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Buttons
+
+local enableBtn = Instance.new("TextButton")
+
+enableBtn.Size = UDim2.new(0, 100, 0, 30)
+
+enableBtn.Position = UDim2.new(0, 50, 0, 50)
+
+enableBtn.Text = "Enable Noclip"
+
+enableBtn.Parent = gui
+
+local disableBtn = Instance.new("TextButton")
+
+disableBtn.Size = UDim2.new(0, 100, 0, 30)
+
+disableBtn.Position = UDim2.new(0, 50, 0, 90)
+
+disableBtn.Text = "Disable Noclip"
+
+disableBtn.Parent = gui
+
+local noclip = false
+
+local function updateCharacter()
+
+character = player.Character
+
+if character then
+
+humanoid = character:FindFirstChildOfClass("Humanoid")
+
+end
+
+end
+
+updateCharacter()
+
+player.CharacterAdded:Connect(function(char)
+
+character = char
+
+wait(1)
+
+updateCharacter()
+
+end)
+
+local function enableNoclip()
+
+noclip = true
+
+if humanoid then
+
+humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+
+end
+
+print("Noclip enabled")
+
+end
+
+local function disableNoclip()
+
+noclip = false
+
+if character then
+
+for _, part in pairs(character:GetDescendants()) do
+
+if part:IsA("BasePart") then
+
+part.CanCollide = true
+
+end
+
+end
+
+if humanoid then
+
+humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+end
+
+end
+
+print("Noclip disabled")
+
+end
+
+enableBtn.MouseButton1Click:Connect(enableNoclip)
+
+disableBtn.MouseButton1Click:Connect(disableNoclip)
+
+RunService.Stepped:Connect(function()
+
+if noclip and character then
+
+for _, part in pairs(character:GetDescendants()) do
+
+if part:IsA("BasePart") and part.CanCollide then
+
+part.CanCollide = false
+
+end
+
+end
+
+end
+
+end)
+
+]])()

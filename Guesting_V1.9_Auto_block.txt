@@ -1,0 +1,543 @@
+-- Forsaken Auto-Block System - Mobile & PC Compatible - PART 1
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
+
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- Detect if mobile
+local isMobile = UserInputService.TouchEnabled
+
+-- Auto-block system
+local autoBlock = {
+    Enabled = false,
+    BlockKey = "F",
+    BlockButton = nil, -- For mobile button
+    ActivationDelay = 0.2,
+    BlockDuration = 0.5,
+    LastHitTime = 0,
+    IsBlocking = false,
+    RangeDistance = 15,
+    PingChecked = true
+}
+
+-- Create main GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GuestingHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Frame (responsive sizing for mobile/PC)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = isMobile and UDim2.new(0, 300, 0, 450) or UDim2.new(0, 350, 0, 500)
+mainFrame.Position = isMobile and UDim2.new(0, 10, 0.5, -225) or UDim2.new(0, 20, 0.5, -250)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = mainFrame
+
+-- Header
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 50)
+header.Position = UDim2.new(0, 0, 0, 0)
+header.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+header.BorderSizePixel = 0
+header.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 8)
+headerCorner.Parent = header
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -20, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Guesting Hub v1.9"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = isMobile and 16 or 18
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+-- By Veux text
+local creator = Instance.new("TextLabel")
+creator.Name = "Creator"
+creator.Size = UDim2.new(0, 60, 0, 20)
+creator.Position = UDim2.new(1, -70, 0.5, -10)
+creator.BackgroundTransparency = 1
+creator.Text = "By Veux"
+creator.TextColor3 = Color3.fromRGB(200, 200, 200)
+creator.TextSize = isMobile and 12 or 14
+creator.Font = Enum.Font.Gotham
+creator.Parent = header
+
+-- Navigation Buttons Frame
+local navFrame = Instance.new("Frame")
+navFrame.Name = "Navigation"
+navFrame.Size = UDim2.new(1, -20, 0, 70)
+navFrame.Position = UDim2.new(0, 10, 0, 60)
+navFrame.BackgroundTransparency = 1
+navFrame.Parent = mainFrame
+
+-- Navigation buttons grid
+local navButtons = {"Search", "Updates", "Suggestions", "Auto Block", "Player", "Almbots", "Exploits/Fun", "ESP"}
+local buttonSize = isMobile and UDim2.new(0, 75, 0, 28) or UDim2.new(0, 85, 0, 30)
+
+for i, buttonName in ipairs(navButtons) do
+    local button = Instance.new("TextButton")
+    button.Name = buttonName
+    button.Size = buttonSize
+    button.Position = UDim2.new(0, ((i-1) % 4) * (buttonSize.X.Offset + 5), 0, math.floor((i-1) / 4) * 35)
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Text = buttonName
+    button.TextSize = isMobile and 10 or 11
+    button.Font = Enum.Font.Gotham
+    button.Parent = navFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 4)
+    buttonCorner.Parent = button
+end
+
+-- Auto Block Section
+local autoBlockFrame = Instance.new("Frame")
+autoBlockFrame.Name = "AutoBlockSection"
+autoBlockFrame.Size = UDim2.new(1, -20, 0, 180)
+autoBlockFrame.Position = UDim2.new(0, 10, 0, 140)
+autoBlockFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+autoBlockFrame.Parent = mainFrame
+
+local autoBlockCorner = Instance.new("UICorner")
+autoBlockCorner.CornerRadius = UDim.new(0, 6)
+autoBlockCorner.Parent = autoBlockFrame
+
+-- Auto Block Title
+local autoBlockTitle = Instance.new("TextLabel")
+autoBlockTitle.Name = "AutoBlockTitle"
+autoBlockTitle.Size = UDim2.new(1, 0, 0, 30)
+autoBlockTitle.Position = UDim2.new(0, 0, 0, 0)
+autoBlockTitle.BackgroundTransparency = 1
+autoBlockTitle.Text = "Auto Block"
+autoBlockTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoBlockTitle.TextSize = isMobile and 16 or 18
+autoBlockTitle.Font = Enum.Font.GothamBold
+autoBlockTitle.Parent = autoBlockFrame
+
+-- Range Distance
+local rangeText = Instance.new("TextLabel")
+rangeText.Name = "RangeText"
+rangeText.Size = UDim2.new(0.6, 0, 0, 25)
+rangeText.Position = UDim2.new(0, 10, 0, 35)
+rangeText.BackgroundTransparency = 1
+rangeText.Text = "Range Distance to Detect"
+rangeText.TextColor3 = Color3.fromRGB(200, 200, 200)
+rangeText.TextSize = isMobile and 12 or 13
+rangeText.Font = Enum.Font.Gotham
+rangeText.TextXAlignment = Enum.TextXAlignment.Left
+rangeText.Parent = autoBlockFrame
+
+local rangeValue = Instance.new("TextLabel")
+rangeValue.Name = "RangeValue"
+rangeValue.Size = UDim2.new(0.3, 0, 0, 25)
+rangeValue.Position = UDim2.new(0.7, 0, 0, 35)
+rangeValue.BackgroundTransparency = 1
+rangeValue.Text = "15"
+rangeValue.TextColor3 = Color3.fromRGB(0, 255, 0)
+rangeValue.TextSize = isMobile and 12 or 13
+rangeValue.Font = Enum.Font.GothamBold
+rangeValue.Parent = autoBlockFrame
+
+-- Ping Checker
+local pingFrame = Instance.new("Frame")
+pingFrame.Name = "PingChecker"
+pingFrame.Size = UDim2.new(1, -20, 0, 25)
+pingFrame.Position = UDim2.new(0, 10, 0, 65)
+pingFrame.BackgroundTransparency = 1
+pingFrame.Parent = autoBlockFrame
+
+local pingText = Instance.new("TextLabel")
+pingText.Name = "PingText"
+pingText.Size = UDim2.new(0.7, 0, 1, 0)
+pingText.Position = UDim2.new(0, 0, 0, 0)
+pingText.BackgroundTransparency = 1
+pingText.Text = "Ping checker"
+pingText.TextColor3 = Color3.fromRGB(200, 200, 200)
+pingText.TextSize = isMobile and 12 or 13
+pingText.Font = Enum.Font.Gotham
+pingText.TextXAlignment = Enum.TextXAlignment.Left
+pingText.Parent = pingFrame
+
+local pingToggle = Instance.new("TextButton")
+pingToggle.Name = "PingToggle"
+pingToggle.Size = UDim2.new(0, 40, 0, 20)
+pingToggle.Position = UDim2.new(0.8, 0, 0.1, 0)
+pingToggle.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+pingToggle.Text = ""
+pingToggle.Parent = pingFrame
+
+local pingCorner = Instance.new("UICorner")
+pingCorner.CornerRadius = UDim.new(0, 10)
+pingCorner.Parent = pingToggle
+
+-- ESP Section
+local espFrame = Instance.new("Frame")
+espFrame.Name = "ESPSection"
+espFrame.Size = UDim2.new(1, -20, 0, 150)
+espFrame.Position = UDim2.new(0, 10, 0, 330)
+espFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+espFrame.Parent = mainFrame
+
+local espCorner = Instance.new("UICorner")
+espCorner.CornerRadius = UDim.new(0, 6)
+espCorner.Parent = espFrame
+
+-- ESP Title
+local espTitle = Instance.new("TextLabel")
+espTitle.Name = "ESPTitle"
+espTitle.Size = UDim2.new(1, 0, 0, 30)
+espTitle.Position = UDim2.new(0, 0, 0, 0)
+espTitle.BackgroundTransparency = 1
+espTitle.Text = "ESP Settings"
+espTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+espTitle.TextSize = isMobile and 16 or 18
+espTitle.Font = Enum.Font.GothamBold
+espTitle.Parent = espFrame
+
+-- ESP Toggle
+local espToggleFrame = Instance.new("Frame")
+espToggleFrame.Name = "ESPToggle"
+espToggleFrame.Size = UDim2.new(1, -20, 0, 25)
+espToggleFrame.Position = UDim2.new(0, 10, 0, 35)
+espToggleFrame.BackgroundTransparency = 1
+espToggleFrame.Parent = espFrame
+
+local espToggleText = Instance.new("TextLabel")
+espToggleText.Name = "ESPToggleText"
+espToggleText.Size = UDim2.new(0.7, 0, 1, 0)
+espToggleText.Position = UDim2.new(0, 0, 0, 0)
+espToggleText.BackgroundTransparency = 1
+espToggleText.Text = "ESP Enabled"
+espToggleText.TextColor3 = Color3.fromRGB(200, 200, 200)
+espToggleText.TextSize = isMobile and 12 or 13
+espToggleText.Font = Enum.Font.Gotham
+espToggleText.TextXAlignment = Enum.TextXAlignment.Left
+espToggleText.Parent = espToggleFrame
+
+local espToggleButton = Instance.new("TextButton")
+espToggleButton.Name = "ESPToggleButton"
+espToggleButton.Size = UDim2.new(0, 40, 0, 20)
+espToggleButton.Position = UDim2.new(0.8, 0, 0.1, 0)
+espToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+espToggleButton.Text = ""
+espToggleButton.Parent = espToggleFrame
+
+local espToggleCorner = Instance.new("UICorner")
+espToggleCorner.CornerRadius = UDim.new(0, 10)
+espToggleCorner.Parent = espToggleButton
+
+-- ESP Style Selection
+local espStyleFrame = Instance.new("Frame")
+espStyleFrame.Name = "ESPStyle"
+espStyleFrame.Size = UDim2.new(1, -20, 0, 40)
+espStyleFrame.Position = UDim2.new(0, 10, 0, 70)
+espStyleFrame.BackgroundTransparency = 1
+espStyleFrame.Parent = espFrame
+
+local espStyleText = Instance.new("TextLabel")
+espStyleText.Name = "ESPStyleText"
+espStyleText.Size = UDim2.new(1, 0, 0, 20)
+espStyleText.Position = UDim2.new(0, 0, 0, 0)
+espStyleText.BackgroundTransparency = 1
+espStyleText.Text = "ESP Style:"
+espStyleText.TextColor3 = Color3.fromRGB(200, 200, 200)
+espStyleText.TextSize = isMobile and 12 or 13
+espStyleText.Font = Enum.Font.Gotham
+espStyleText.TextXAlignment = Enum.TextXAlignment.Left
+espStyleText.Parent = espStyleFrame
+
+-- Skeleton ESP Button
+local skeletonButton = Instance.new("TextButton")
+skeletonButton.Name = "SkeletonButton"
+skeletonButton.Size = UDim2.new(0, 80, 0, 25)
+skeletonButton.Position = UDim2.new(0, 0, 0, 20)
+skeletonButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+skeletonButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+skeletonButton.Text = "Skeleton"
+skeletonButton.TextSize = isMobile and 11 or 12
+skeletonButton.Font = Enum.Font.Gotham
+skeletonButton.Parent = espStyleFrame
+
+local skeletonCorner = Instance.new("UICorner")
+skeletonCorner.CornerRadius = UDim.new(0, 4)
+skeletonCorner.Parent = skeletonButton
+
+-- Box ESP Button
+local boxButton = Instance.new("TextButton")
+boxButton.Name = "BoxButton"
+boxButton.Size = UDim2.new(0, 80, 0, 25)
+boxButton.Position = UDim2.new(0, 90, 0, 20)
+boxButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+boxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+boxButton.Text = "Box"
+boxButton.TextSize = isMobile and 11 or 12
+boxButton.Font = Enum.Font.Gotham
+boxButton.Parent = espStyleFrame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 4)
+boxCorner.Parent = boxButton
+
+-- ESP System
+local esp = {
+    Enabled = false,
+    Style = "Skeleton", -- "Skeleton" or "Box"
+    Objects = {},
+    Highlights = {}
+}
+
+-- Function to create ESP for player
+function esp:CreateESP(player, character)
+    if not character then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = player.Name .. "_ESP"
+    highlight.Adornee = character
+    highlight.Parent = character
+    
+    -- Set color based on player role (you'll need to detect this)
+    if player.Team then
+        highlight.FillColor = player.TeamColor.Color
+    else
+        -- Default colors for different roles
+        if string.find(player.Name:lower(), "killer") then
+            highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Red for killer
+        else
+            highlight.FillColor = Color3.fromRGB(0, 255, 0) -- Green for survivor
+        end
+    end
+    
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.3
+    highlight.OutlineTransparency = 0
+    
+    -- Set style
+    if self.Style == "Skeleton" then
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    else -- Box style
+        highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+    end
+    
+    self.Highlights[player] = highlight
+end
+
+-- Function to update all ESP
+function esp:UpdateAllESP()
+    for player, highlight in pairs(self.Highlights) do
+        if highlight and highlight.Parent then
+            if self.Style == "Skeleton" then
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            else
+                highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+            end
+        end
+    end
+end
+
+-- Function to toggle ESP
+function esp:ToggleESP(enabled)
+    self.Enabled = enabled
+    espToggleButton.BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(60, 60, 60)
+    
+    if enabled then
+        -- Create ESP for all players
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer and player.Character then
+                self:CreateESP(player, player.Character)
+            end
+        end
+    else
+        -- Remove all ESP
+        for player, highlight in pairs(self.Highlights) do
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+        self.Highlights = {}
+    end
+end
+
+-- ESP Button Functions
+skeletonButton.MouseButton1Click:Connect(function()
+    esp.Style = "Skeleton"
+    skeletonButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+    boxButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    esp:UpdateAllESP()
+end)
+
+boxButton.MouseButton1Click:Connect(function()
+    esp.Style = "Box"
+    boxButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+    skeletonButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    esp:UpdateAllESP()
+end)
+
+espToggleButton.MouseButton1Click:Connect(function()
+    esp:ToggleESP(not esp.Enabled)
+end)
+
+-- Auto Block Functions
+function autoBlock:TogglePingChecker()
+    self.PingChecked = not self.PingChecked
+    pingToggle.BackgroundColor3 = self.PingChecked and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+end
+
+function autoBlock:ChangeRange(increase)
+    if increase then
+        self.RangeDistance = math.min(50, self.RangeDistance + 1)
+    else
+        self.RangeDistance = math.max(1, self.RangeDistance - 1)
+    end
+    rangeValue.Text = tostring(self.RangeDistance)
+end
+
+-- Range adjustment buttons (adding them now)
+local rangePlus = Instance.new("TextButton")
+rangePlus.Name = "RangePlus"
+rangePlus.Size = UDim2.new(0, 25, 0, 25)
+rangePlus.Position = UDim2.new(0.85, 0, 0, 35)
+rangePlus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+rangePlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+rangePlus.Text = "+"
+rangePlus.TextSize = 16
+rangePlus.Parent = autoBlockFrame
+
+local rangeMinus = Instance.new("TextButton")
+rangeMinus.Name = "RangeMinus"
+rangeMinus.Size = UDim2.new(0, 25, 0, 25)
+rangeMinus.Position = UDim2.new(0.85, 30, 0, 35)
+rangeMinus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+rangeMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+rangeMinus.Text = "-"
+rangeMinus.TextSize = 16
+rangeMinus.Parent = autoBlockFrame
+
+-- Add corners to range buttons
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 4)
+plusCorner.Parent = rangePlus
+
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(0, 4)
+minusCorner.Parent = rangeMinus
+
+-- Connect range buttons
+rangePlus.MouseButton1Click:Connect(function()
+    autoBlock:ChangeRange(true)
+end)
+
+rangeMinus.MouseButton1Click:Connect(function()
+    autoBlock:ChangeRange(false)
+end)
+
+-- Connect ping toggle
+pingToggle.MouseButton1Click:Connect(function()
+    autoBlock:TogglePingChecker()
+end)
+
+-- Mobile Block Button (for touch devices)
+if isMobile then
+    local mobileBlockButton = Instance.new("TextButton")
+    mobileBlockButton.Name = "MobileBlockButton"
+    mobileBlockButton.Size = UDim2.new(0, 80, 0, 80)
+    mobileBlockButton.Position = UDim2.new(1, -100, 1, -100)
+    mobileBlockButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    mobileBlockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    mobileBlockButton.Text = "BLOCK"
+    mobileBlockButton.TextSize = 16
+    mobileBlockButton.Visible = false
+    mobileBlockButton.Parent = screenGui
+    
+    local mobileCorner = Instance.new("UICorner")
+    mobileCorner.CornerRadius = UDim.new(0, 40)
+    mobileCorner.Parent = mobileBlockButton
+    
+    autoBlock.BlockButton = mobileBlockButton
+end
+
+-- Auto Block Core Function
+function autoBlock:SimulateBlock()
+    if self.IsBlocking then return end
+    
+    self.IsBlocking = true
+    
+    if isMobile and self.BlockButton then
+        -- Visual feedback for mobile
+        self.BlockButton.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        wait(self.BlockDuration)
+        self.BlockButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    else
+        -- Simulate F key press for PC
+        keypress(0x46) -- F key
+        wait(0.1)
+        keyrelease(0x46)
+    end
+    
+    self.IsBlocking = false
+end
+
+-- Damage detection (you'll need to adapt this to Forsaken's damage system)
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    humanoid.HealthChanged:Connect(function()
+        if autoBlock.Enabled and humanoid.Health < humanoid.MaxHealth then
+            -- Player took damage, auto block
+            autoBlock:SimulateBlock()
+        end
+    end)
+end
+
+-- Initialize for current character
+if localPlayer.Character then
+    onCharacterAdded(localPlayer.Character)
+end
+
+localPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+-- Navigation button functionality
+for _, button in pairs(navFrame:GetChildren()) do
+    if button:IsA("TextButton") then
+        button.MouseButton1Click:Connect(function()
+            -- Show/hide sections based on button clicked
+            if button.Name == "Auto Block" then
+                autoBlockFrame.Visible = true
+                espFrame.Visible = false
+            elseif button.Name == "ESP" then
+                autoBlockFrame.Visible = false
+                espFrame.Visible = true
+            else
+                -- For other buttons, you can add functionality later
+                print("Button clicked:", button.Name)
+            end
+        end)
+    end
+end
+
+-- Show Auto Block by default
+autoBlockFrame.Visible = true
+espFrame.Visible = false
+
+print("Guesting Hub v1.9 loaded successfully!")
+print("Auto Block Range: " .. autoBlock.RangeDistance)
+print("Mobile Mode: " .. tostring(isMobile))

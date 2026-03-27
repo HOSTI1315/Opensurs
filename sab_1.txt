@@ -1,0 +1,71 @@
+-- Final Auto-Enabled Anti Trap + Web Slinger + Anti Bawa
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local atsOn = true
+
+local blacklistNames = {"trap", "kill", "lava", "spike", "damage", "void", "web", "slinger"}
+local constraintTypes = {
+    "RopeConstraint",
+    "AlignPosition",
+    "AlignOrientation",
+    "VectorForce",
+    "LinearVelocity",
+    "BodyPosition",
+    "BodyVelocity",
+    "BodyForce",
+    "BodyGyro",
+}
+
+local function isTrap(obj)
+    local name = tostring(obj.Name):lower()
+    for _, word in ipairs(blacklistNames) do
+        if name:find(word) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Loop 1: Bersihkan jebakan dan constraint di karakter
+task.spawn(function()
+    while atsOn do
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and isTrap(obj) then
+                pcall(function() obj:Destroy() end)
+            end
+            if table.find(constraintTypes, obj.ClassName) then
+                if obj:IsDescendantOf(LocalPlayer.Character or {}) then
+                    pcall(function() obj:Destroy() end)
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Loop 2: Paksa karakter tetap bisa berdiri dan bergerak
+task.spawn(function()
+    while atsOn do
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if humanoid and hrp then
+                humanoid.PlatformStand = false
+                humanoid.Sit = false
+                humanoid.Health = humanoid.MaxHealth
+                hrp.Anchored = false
+
+                for _, v in ipairs(hrp:GetChildren()) do
+                    if table.find(constraintTypes, v.ClassName) then
+                        pcall(function() v:Destroy() end)
+                    end
+                end
+
+                hrp.Velocity = Vector3.new(0, hrp.Velocity.Y, 0)
+                hrp.RotVelocity = Vector3.zero
+            end
+        end
+        task.wait(0.5)
+    end
+end)

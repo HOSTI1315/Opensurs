@@ -1,0 +1,2043 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+if _G.game.Players.LocalPlayer.PlayerGui:FindFirstChild("LoadingUI") and _G.game.Players.LocalPlayer.PlayerGui.LoadingUI.Enabled == true then
+  repeat
+    _G.task.wait()
+  until _G.game.Players.LocalPlayer.PlayerGui.LoadingUI.Enabled == false
+end
+_G.AutoUseCrouch = false
+_G.ClutchHeart = false
+_G.Screech = false
+local r0_0 = nil
+r0_0 = _G.hookmetamethod(_G.game, "__namecall", _G.newcclosure(function(r0_23, ...)
+  -- line: [0, 0] id: 23
+  local r2_23 = {
+    ...
+  }
+  local r3_23 = _G.getnamecallmethod()
+  if _G.tostring(r0_23) == "Screech" and r3_23 == "FireServer" and _G.Screech == true then
+    r2_23[1] = true
+    return r0_0(r0_23, _G.unpack(r2_23))
+  end
+  if _G.tostring(r0_23) == "ClutchHeartbeat" and r3_23 == "FireServer" and _G.ClutchHeart == true then
+    r2_23[2] = true
+    return r0_0(r0_23, _G.unpack(r2_23))
+  end
+  if r0_23.Name == "Crouch" and r3_23 == "FireServer" and _G.AutoUseCrouch == true then
+    r2_23[1] = true
+    return r0_0(r0_23, _G.unpack(r2_23))
+  end
+  return r0_0(r0_23, ...)
+end))
+_G.workspace.DescendantAdded:Connect(function(r0_29)
+  -- line: [0, 0] id: 29
+  if r0_29:IsA("Model") and r0_29.Name == "Screech" then
+    r0_29:Destroy()
+  end
+end)
+local r1_0 = _G.game:GetService("ReplicatedStorage").ModulesClient.EntityModules
+local r3_0 = _G.game.ReplicatedStorage:WaitForChild("GameData"):WaitForChild("Floor")
+local r4_0 = r3_0.Value == "Mines"
+local r5_0 = r3_0.Value == "Hotel"
+local r6_0 = r3_0.Value == "Backdoor"
+local r7_0 = r3_0.Value == "Garden"
+function _G.Distance(r0_49)
+  -- line: [0, 0] id: 49
+  if _G.game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    return (_G.game.Players.LocalPlayer.Character.HumanoidRootPart.Position - r0_49).Magnitude
+  end
+end
+_G._G.GetOldBright = {
+  Brightness = _G.game.Lighting.Brightness,
+  ClockTime = _G.game.Lighting.ClockTime,
+  FogEnd = _G.game.Lighting.FogEnd,
+  GlobalShadows = _G.game.Lighting.GlobalShadows,
+  OutdoorAmbient = _G.game.Lighting.OutdoorAmbient,
+}
+local r8_0 = _G.loadstring(_G.game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local r9_0 = r8_0:CreateWindow({
+  Title = "VexonHub",
+  Icon = "door-open",
+  IconThemed = true,
+  Author = "Doors",
+  Folder = "vexonhub",
+  Size = _G.UDim2.fromOffset(500, 350),
+  Transparent = true,
+  Theme = "Dark",
+  SideBarWidth = 200,
+  ScrollBarEnabled = true,
+})
+r9_0:EditOpenButton({
+  Title = "Open VexonHub",
+  Icon = "monitor",
+  CornerRadius = _G.UDim.new(0, 6),
+  StrokeThickness = 2,
+  Color = _G.ColorSequence.new(_G.Color3.fromRGB(30, 30, 30), _G.Color3.fromRGB(255, 255, 255)),
+  Draggable = true,
+})
+_G.Tabs = {
+  Tab = r9_0:Tab({
+    Title = "Main",
+  }),
+  Tab1 = r9_0:Tab({
+    Title = "Misc",
+  }),
+  Tab2 = r9_0:Tab({
+    Title = "Esp",
+  }),
+  Info = r9_0:Tab({
+    Title = "Information",
+  }),
+}
+local r10_0 = _G.Tabs.Tab
+r10_0:Toggle({
+  Title = "Fullbright",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_81)
+    -- line: [0, 0] id: 81
+    _G._G.FullBright = r0_81
+    while _G._G.FullBright do
+      _G.game.Lighting.Brightness = 2
+      _G.game.Lighting.ClockTime = 14
+      _G.game.Lighting.FogEnd = 100000
+      _G.game.Lighting.GlobalShadows = false
+      _G.game.Lighting.OutdoorAmbient = _G.Color3.fromRGB(128, 128, 128)
+      _G.task.wait()
+    end
+    for r4_81, r5_81 in _G.pairs(_G._G.GetOldBright) do
+      _G.game.Lighting[r4_81] = r5_81
+    end
+  end,
+})
+r10_0:Toggle({
+  Title = "No Fog",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_37)
+    -- line: [0, 0] id: 37
+    _G._G.Nofog = r0_37
+    while _G._G.Nofog do
+      _G.game:GetService("Lighting").FogStart = 100000
+      _G.game:GetService("Lighting").FogEnd = 200000
+      local r1_37 = _G.pairs
+      for r4_37, r5_37 in r1_37(_G.game:GetService("Lighting"):GetChildren()) do
+        if r5_37.ClassName == "Atmosphere" then
+          r5_37.Density = 0
+          r5_37.Haze = 0
+        end
+      end
+      _G.task.wait()
+    end
+    _G.game:GetService("Lighting").FogStart = 0
+    _G.game:GetService("Lighting").FogEnd = 1000
+    for r4_37, r5_37 in _G.pairs(_G.game:GetService("Lighting"):GetChildren()) do
+      if r5_37.ClassName == "Atmosphere" then
+        r5_37.Density = 0.3
+        r5_37.Haze = 1
+      end
+    end
+  end,
+})
+r10_0:Toggle({
+  Title = "Instant Prompt",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_74)
+    -- line: [0, 0] id: 74
+    _G._G.NoCooldownProximity = r0_74
+    if _G._G.NoCooldownProximity == true then
+      for r4_74, r5_74 in _G.pairs(_G.workspace:GetDescendants()) do
+        if r5_74.ClassName == "ProximityPrompt" then
+          r5_74.HoldDuration = 0
+        end
+      end
+      _G.CooldownProximity = _G.workspace.DescendantAdded:Connect(function(r0_75)
+        -- line: [0, 0] id: 75
+        if _G._G.NoCooldownProximity == true and r0_75:IsA("ProximityPrompt") then
+          r0_75.HoldDuration = 0
+        end
+      end)
+    elseif _G.CooldownProximity then
+      _G.CooldownProximity:Disconnect()
+      _G.CooldownProximity = nil
+    end
+  end,
+})
+r10_0:Section({
+  Title = "Misc Main",
+  TextXAlignment = "Left",
+  TextSize = 17,
+})
+r10_0:Toggle({
+  Title = "Anti Screech",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_47)
+    -- line: [0, 0] id: 47
+    _G._G.AntiScreech = r0_47
+    _G.Screech = r0_47
+  end,
+})
+r10_0:Toggle({
+  Title = "Auto Clutch Heart Win",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_38)
+    -- line: [0, 0] id: 38
+    _G.ClutchHeart = r0_38
+  end,
+})
+r10_0:Toggle({
+  Title = "Anti Halt",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_76)
+    -- line: [0, 0] id: 76
+    _G._G.NoHalt = r0_76
+    local r1_76 = r1_0:FindFirstChild("Shade") or r1_0:FindFirstChild("_Shade")
+    if r1_76 then
+      local r2_76 = _G._G.NoHalt
+      if r2_76 then
+        r2_76 = "_Shade" or "Shade"
+      else
+        goto label_21	-- block#5 is visited secondly
+      end
+      r1_76.Name = r2_76
+    end
+  end,
+})
+r10_0:Toggle({
+  Title = "Anti Eyes / Lookman",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_8)
+    -- line: [0, 0] id: 8
+    _G._G.NoEyes = r0_8
+    while _G._G.NoEyes do
+      local r1_8 = _G.workspace:FindFirstChild("Eyes")
+      if not r1_8 then
+        r1_8 = _G.workspace:FindFirstChild("BackdoorLookman")
+        if r1_8 then
+          ::label_18::
+          r1_8 = _G.game:GetService("ReplicatedStorage")
+          r1_8 = r1_8:FindFirstChild("RemotesFolder")
+          if r1_8 then
+            r1_8 = _G.game:GetService("ReplicatedStorage")
+            r1_8 = r1_8:WaitForChild("RemotesFolder")
+            r1_8 = r1_8:WaitForChild("MotorReplication")
+            r1_8:FireServer(-649)
+          end
+        end
+      else
+        goto label_18	-- block#4 is visited secondly
+      end
+      _G.task.wait()
+    end
+  end,
+})
+if r4_0 then
+  r10_0:Toggle({
+    Title = "Anti Egg Gloom",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(r0_22)
+      -- line: [0, 0] id: 22
+      _G._G.AntiEggGloom = r0_22
+      while _G._G.AntiEggGloom do
+        local r1_22 = _G.pairs
+        for r4_22, r5_22 in r1_22(_G.workspace.CurrentRooms:GetChildren()) do
+          if r5_22:IsA("Model") then
+            for r9_22, r10_22 in _G.pairs(r5_22:GetChildren()) do
+              if r10_22.Name:find("GloomPile") and r10_22:FindFirstChild("GloomEgg") and r10_22.GloomEgg:FindFirstChild("Egg") then
+                r10_22.GloomEgg.Egg.CanTouch = false
+              end
+            end
+          end
+        end
+        _G.task.wait()
+      end
+    end,
+  })
+end
+r10_0:Toggle({
+  Title = "Auto Use Crouch",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_59)
+    -- line: [0, 0] id: 59
+    _G.AutoUseCrouch = r0_59
+  end,
+})
+r10_0:Toggle({
+  Title = "Get Jump Button",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_40)
+    -- line: [0, 0] id: 40
+    _G._G.JumpButton = r0_40
+    while _G._G.JumpButton do
+      local r1_40 = _G.game.Players.LocalPlayer.Character:GetAttribute("CanJump")
+      if r1_40 then
+        _G.game.Players.LocalPlayer.Character:SetAttribute("CanJump", true)
+      end
+      _G.task.wait()
+    end
+    if _G.game.Players.LocalPlayer.Character:GetAttribute("CanJump") then
+      _G.game.Players.LocalPlayer.Character:SetAttribute("CanJump", false)
+    end
+  end,
+})
+r10_0:Toggle({
+  Title = "Inf Oxygen",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_48)
+    -- line: [0, 0] id: 48
+    _G._G.ActiveInfOxygen = r0_48
+    while _G._G.ActiveInfOxygen do
+      local r1_48 = _G.game.Players.LocalPlayer.Character:GetAttribute("Oxygen")
+      if r1_48 then
+        _G.game.Players.LocalPlayer.Character:SetAttribute("Oxygen", 99999)
+      end
+      _G.task.wait()
+    end
+    if _G.game.Players.LocalPlayer.Character:GetAttribute("Oxygen") then
+      _G.game.Players.LocalPlayer.Character:SetAttribute("Oxygen", 100)
+    end
+  end,
+})
+local r11_0 = _G.Tabs.Tab1
+local r12_0 = r11_0:Dropdown({
+  Title = "Choose Entity",
+  Values = {
+    "Rush",
+    "Seek",
+    "Eyes",
+    "Window",
+    "LookMan",
+    "Gloombat",
+    "Ambush",
+    "A-60",
+    "A-120"
+  },
+  Value = {
+    "Rush"
+  },
+  Multi = true,
+  AllowNone = true,
+  Callback = function(r0_65)
+    -- line: [0, 0] id: 65
+    _G._G.EntityChoose = r0_65
+  end,
+})
+r11_0:Toggle({
+  Title = "Notification Entity",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_1)
+    -- line: [0, 0] id: 1
+    _G._G.NotifyEntity = r0_1
+    if _G._G.NotifyEntity then
+      _G.EntityChild = _G.workspace.ChildAdded:Connect(function(r0_2)
+        -- line: [0, 0] id: 2
+        for r4_2, r5_2 in _G.ipairs(_G._G.EntityChoose) do
+          if r0_2:IsA("Model") and r0_2.Name:find(r5_2) then
+            while true do
+              _G.task.wait()
+              if r0_2:IsDescendantOf(_G.workspace) then
+                local r6_2 = _G.game.Players.LocalPlayer:DistanceFromCharacter(r0_2:GetPivot().Position)
+                if r6_2 < 1000 then
+                  break
+                end
+              else
+                break
+              end
+            end
+            if r0_2:IsDescendantOf(_G.workspace) then
+              r8_0:Notify({
+                Title = r5_2 .. " Spawn!!",
+                Duration = 5,
+              })
+              if _G._G.NotifyEntityChat then
+                _G.game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync((_G._G.ChatNotify or "") .. r5_2 .. " Spawn!!")
+              end
+            end
+          end
+        end
+      end)
+    elseif _G.EntityChild then
+      _G.EntityChild:Disconnect()
+      _G.EntityChild = nil
+    end
+  end,
+})
+if r5_0 then
+  r11_0:Toggle({
+    Title = "Auto Get Code Library",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(r0_77)
+      -- line: [0, 0] id: 77
+      _G._G.NotifyEntity = r0_77
+      local r1_77 = _G._G.NotifyEntity
+      if r1_77 then
+        function r1_77(r0_80)
+          -- line: [0, 0] id: 80
+          local r1_80 = _G.game.Players.LocalPlayer.PlayerGui:WaitForChild("PermUI"):WaitForChild("Hints")
+          local r2_80 = {
+            [1] = "_",
+            [2] = "_",
+            [3] = "_",
+            [4] = "_",
+            [5] = "_",
+          }
+          for r6_80, r7_80 in _G.pairs(r0_80:WaitForChild("UI"):GetChildren()) do
+            if r7_80:IsA("ImageLabel") and r7_80.Name ~= "Image" then
+              for r11_80, r12_80 in _G.pairs(r1_80:GetChildren()) do
+                if r12_80:IsA("ImageLabel") and r12_80.Visible and r7_80.ImageRectOffset == r12_80.ImageRectOffset then
+                  r2_80[_G.tonumber(r7_80.Name)] = r12_80:FindFirstChild("TextLabel").Text
+                end
+              end
+            end
+          end
+          return r2_80
+        end
+        local function r2_77(r0_79)
+          -- line: [0, 0] id: 79
+          if r0_79:IsA("Tool") and r0_79.Name == "LibraryHintPaper" then
+            local r1_79 = _G.table.concat(r1_77(r0_79))
+            if r1_79 then
+              r8_0:Notify({
+                Title = "Code: " .. r1_79,
+                Duration = 15,
+              })
+              if _G._G.NotifyEntityChat then
+                if not _G._G.ChatNotify then
+                  _G.TextChat = ""
+                else
+                  _G.TextChat = _G._G.ChatNotify
+                end
+                if _G.TextChat then
+                  _G.game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(_G.TextChat .. r1_79)
+                end
+              end
+            end
+          end
+        end
+        _G.Getpaper = _G.game.Players.LocalPlayer.Character.ChildAdded:Connect(function(r0_78)
+          -- line: [0, 0] id: 78
+          r2_77(r0_78)
+        end)
+        -- close: r1_77
+      else
+        r1_77 = _G.Getpaper
+        if r1_77 then
+          r1_77 = _G.Getpaper
+          r1_77:Disconnect()
+          r1_77 = nil
+          _G.Getpaper = r1_77
+        end
+      end
+    end,
+  })
+end
+r11_0:Input({
+  Title = "Input Chat",
+  Value = "",
+  InputIcon = "speaker",
+  Type = "Input",
+  Placeholder = "Your Chat...",
+  Callback = function(r0_73)
+    -- line: [0, 0] id: 73
+    _G._G.ChatNotify = r0_73
+  end,
+})
+r11_0:Toggle({
+  Title = "Notification Chat",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_36)
+    -- line: [0, 0] id: 36
+    _G._G.NotifyEntityChat = r0_36
+  end,
+})
+r11_0:Slider({
+  Title = "Hiding Transparency",
+  Step = 0.1,
+  Value = {
+    Min = 0,
+    Max = 1,
+    Default = 0.5,
+  },
+  Callback = function(r0_58)
+    -- line: [0, 0] id: 58
+    _G._G.TransparencyHide = r0_58
+  end,
+})
+r11_0:Toggle({
+  Title = "Transparency Hiding",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_39)
+    -- line: [0, 0] id: 39
+    _G._G.HidingTransparency = r0_39
+    while _G._G.HidingTransparency do
+      local r1_39 = _G.game.Players.LocalPlayer.Character:GetAttribute("Hiding")
+      if r1_39 then
+        r1_39 = _G.pairs
+        for r4_39, r5_39 in r1_39(_G.workspace.CurrentRooms:GetDescendants()) do
+          if r5_39:IsA("ObjectValue") and r5_39.Name == "HiddenPlayer" and r5_39.Value == _G.game.Players.LocalPlayer.Character then
+            local r6_39 = {}
+            for r10_39, r11_39 in _G.pairs(r5_39.Parent:GetChildren()) do
+              if r11_39:IsA("BasePart") then
+                r11_39.Transparency = _G._G.TransparencyHide or 0.5
+                _G.table.insert(r6_39, r11_39)
+              end
+            end
+            while true do
+              _G.task.wait()
+              for r10_39, r11_39 in _G.pairs(r6_39) do
+                r11_39.Transparency = _G._G.TransparencyHide or 0.5
+                _G.task.wait()
+              end
+              if _G.game.Players.LocalPlayer.Character:GetAttribute("Hiding") and _G._G.HidingTransparency then
+                goto label_89	-- block#19 is visited secondly
+              else
+                break
+              end
+            end
+            for r10_39, r11_39 in _G.pairs(r6_39) do
+              r11_39.Transparency = 0
+              _G.task.wait()
+            end
+            break
+          end
+        end
+      end
+      _G.task.wait()
+    end
+  end,
+})
+_G._G.Aura = {
+  "ActivateEventPrompt",
+  "AwesomePrompt",
+  "FusesPrompt",
+  "HerbPrompt",
+  "LeverPrompt",
+  "LootPrompt",
+  "ModulePrompt",
+  "SkullPrompt",
+  "UnlockPrompt",
+  "ValvePrompt"
+}
+r11_0:Toggle({
+  Title = "Auto Loot",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_16)
+    -- line: [0, 0] id: 16
+    _G._G.AutoLoot = r0_16
+    local r1_16 = _G._G.AutoLoot
+    if r1_16 then
+      _G.lootables = {}
+      function r1_16(r0_19)
+        -- line: [0, 0] id: 19
+        if r0_19:IsA("ProximityPrompt") and _G.table.find(_G._G.Aura, r0_19.Name) then
+          _G.table.insert(_G.lootables, r0_19)
+        end
+      end
+      for r5_16, r6_16 in _G.ipairs(_G.workspace:GetDescendants()) do
+        r1_16(r6_16)
+      end
+      _G.ChildAllNext = _G.workspace.DescendantAdded:Connect(function(r0_18)
+        -- line: [0, 0] id: 18
+        r1_16(r0_18)
+      end)
+      _G.RemoveChild = _G.workspace.DescendantRemoving:Connect(function(r0_17)
+        -- line: [0, 0] id: 17
+        for r4_17 = #_G.lootables, 1, -1 do
+          if _G.lootables[r4_17] == r0_17 then
+            _G.table.remove(_G.lootables, r4_17)
+            break
+          end
+        end
+      end)
+      -- close: r1_16
+    else
+      r1_16 = _G.ChildAllNext
+      if r1_16 then
+        r1_16 = _G.ChildAllNext
+        r1_16:Disconnect()
+        r1_16 = nil
+        _G.ChildAllNext = r1_16
+      end
+      r1_16 = _G.RemoveChild
+      if r1_16 then
+        r1_16 = _G.RemoveChild
+        r1_16:Disconnect()
+        r1_16 = nil
+        _G.RemoveChild = r1_16
+      end
+    end
+    while true do
+      r1_16 = _G._G
+      r1_16 = r1_16.AutoLoot
+      if r1_16 then
+        r1_16 = _G.pairs
+        for r4_16, r5_16 in r1_16(_G.lootables) do
+          if r5_16:IsA("ProximityPrompt") and _G.table.find(_G._G.Aura, r5_16.Name) and r5_16:GetAttribute("Interactions" .. _G.game.Players.LocalPlayer.Name) == nil then
+            if r5_16.Parent.Name:find("Mandrake") then
+              return 
+            end
+            if _G.Distance(r5_16.Parent:GetPivot().Position) <= 12 then
+              _G.fireproximityprompt(r5_16)
+            end
+          end
+        end
+        r1_16 = _G.task
+        r1_16 = r1_16.wait
+        r1_16(0.1)
+      else
+        break
+      end
+    end
+  end,
+})
+r11_0:Slider({
+  Title = "Walkspeed",
+  Step = 1,
+  Value = {
+    Min = 16,
+    Max = 21,
+    Default = 16,
+  },
+  Callback = function(r0_30)
+    -- line: [0, 0] id: 30
+    _G._G.WalkSpeedTp = r0_30
+  end,
+})
+r11_0:Toggle({
+  Title = "WalkSpeed",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_24)
+    -- line: [0, 0] id: 24
+    _G._G.SpeedWalk = r0_24
+    while _G._G.SpeedWalk do
+      local r1_24 = _G.game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+      if r1_24 then
+        r1_24 = _G.game.Players.LocalPlayer.Character.Humanoid
+        r1_24.WalkSpeed = _G._G.WalkSpeedTp
+      end
+      _G.task.wait()
+    end
+  end,
+})
+local r13_0 = _G.Tabs.Tab2
+local r14_0 = "Esp"
+if not r7_0 then
+  local r17_0 = {}
+  if r5_0 or r6_0 then
+    local r18_0 = "Esp Key / Lever" or r4_0 and "Esp Fuse"
+  else
+    goto label_423	-- block#23 is visited secondly
+  end
+  r17_0.Title = r18_0
+  r17_0.Type = "Toggle"
+  r17_0.Default = false
+  function r17_0.Callback(r0_31)
+    -- line: [0, 0] id: 31
+    _G._G.EspKey = r0_31
+    local r1_31 = _G._G.EspKey
+    if r1_31 == false then
+      _G._G.KeyAdd = {}
+      r1_31 = _G.KeySpawn
+      if r1_31 then
+        _G.KeySpawn:Disconnect()
+        r1_31 = nil
+        _G.KeySpawn = r1_31
+      end
+      r1_31 = _G.KeyRemove
+      if r1_31 then
+        _G.KeyRemove:Disconnect()
+        r1_31 = nil
+        _G.KeyRemove = r1_31
+      end
+      r1_31 = _G.pairs
+      for r4_31, r5_31 in r1_31(_G.workspace:GetDescendants()) do
+        if r5_31.Name:find("Key") or r5_31.Name == "LeverForGate" or r5_31.Name:find("FuseObtain") then
+          for r9_31, r10_31 in _G.pairs(r5_31:GetChildren()) do
+            if r10_31.Name:find("Esp_") then
+              r10_31:Destroy()
+            end
+          end
+        end
+      end
+    else
+      function _G.Keys(r0_35)
+        -- line: [0, 0] id: 35
+        if (r0_35.Name:find("Key") or r0_35.Name:find("FuseObtain")) and r0_35:FindFirstChild("Hitbox") or r0_35.Name == "LeverForGate" and r0_35.PrimaryPart then
+          if r0_35:FindFirstChild("Esp_Highlight") then
+            r0_35:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            r0_35:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+          end
+          if _G._G.EspHighlight == true and r0_35:FindFirstChild("Esp_Highlight") == nil then
+            local r1_35 = _G.Instance.new("Highlight")
+            r1_35.Name = "Esp_Highlight"
+            r1_35.FillColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_35.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_35.FillTransparency = 0.5
+            r1_35.OutlineTransparency = 0
+            r1_35.Adornee = r0_35
+            r1_35.Parent = r0_35
+          elseif _G._G.EspHighlight == false and r0_35:FindFirstChild("Esp_Highlight") then
+            r0_35:FindFirstChild("Esp_Highlight"):Destroy()
+          end
+          if r0_35:FindFirstChild("Esp_Gui") and r0_35.Esp_Gui:FindFirstChild("TextLabel") then
+            local r1_35 = r0_35.Esp_Gui:FindFirstChild("TextLabel")
+            local r2_35 = _G._G.EspName
+            if r2_35 == true then
+              r2_35 = r0_35.Name
+              if r2_35 == "LeverForGate" then
+                r2_35 = "Lever"
+                if not r2_35 then
+                  ::label_128::
+                  r2_35 = r0_35.Name:find("Key")
+                  if r2_35 then
+                    r2_35 = "Key" or r0_35.Name:find("FuseObtain") and ("Fuse" or "")
+                  else
+                    goto label_137	-- block#24 is visited secondly
+                  end
+                end
+              else
+                goto label_128	-- block#22 is visited secondly
+              end
+            else
+              goto label_146	-- block#26 is visited secondly
+            end
+            local r3_35 = _G._G.EspDistance
+            if r3_35 == true then
+              r3_35 = "\nDistance ("
+              local r4_35 = _G.string.format
+              local r5_35 = "%.0f"
+              local r6_35 = _G.Distance
+              local r7_35 = r0_35.Name
+              if r7_35 == "LeverForGate" then
+                r7_35 = r0_35.PrimaryPart.Position
+                if not r7_35 then
+                  ::label_163::
+                  r7_35 = r0_35.Name:find("Key")
+                  if not r7_35 then
+                    r7_35 = r0_35.Name:find("FuseObtain") and r0_35.Hitbox.Position
+                  else
+                    goto label_175	-- block#32 is visited secondly
+                  end
+                end
+              else
+                goto label_163	-- block#30 is visited secondly
+              end
+              r3_35 = r3_35 .. r4_35(r5_35, r6_35(r7_35)) .. "m)" or ""
+            else
+              goto label_183	-- block#34 is visited secondly
+            end
+            r1_35.Text = r2_35 .. r3_35
+            r0_35.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+            r0_35.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspGui == true and r0_35:FindFirstChild("Esp_Gui") == nil then
+            _G.GuiEsp = _G.Instance.new("BillboardGui", r0_35)
+            _G.GuiEsp.Adornee = r0_35
+            _G.GuiEsp.Name = "Esp_Gui"
+            _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+            _G.GuiEsp.AlwaysOnTop = true
+            _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+            _G.GuiEspText.BackgroundTransparency = 1
+            _G.GuiEspText.Font = _G.Enum.Font.Code
+            _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+            _G.GuiEspText.TextSize = 15
+            _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+            _G.GuiEspText.TextStrokeTransparency = 0.5
+            _G.GuiEspText.Text = ""
+            local r1_35 = _G.Instance.new("UIStroke")
+            r1_35.Color = _G.Color3.new(0, 0, 0)
+            r1_35.Thickness = 1.5
+            r1_35.Parent = _G.GuiEspText
+          elseif _G._G.EspGui == false and r0_35:FindFirstChild("Esp_Gui") then
+            r0_35:FindFirstChild("Esp_Gui"):Destroy()
+          end
+        end
+      end
+      function r1_31(r0_34)
+        -- line: [0, 0] id: 34
+        if not _G.table.find(_G._G.KeyAdd, r0_34) and (r0_34.Name:find("Key") or r0_34.Name:find("FuseObtain")) and r0_34:FindFirstChild("Hitbox") or r0_34.Name == "LeverForGate" and r0_34.PrimaryPart then
+          _G.table.insert(_G._G.KeyAdd, r0_34)
+        end
+      end
+      for r5_31, r6_31 in _G.ipairs(_G.workspace:GetDescendants()) do
+        r1_31(r6_31)
+      end
+      _G.KeySpawn = _G.workspace.DescendantAdded:Connect(function(r0_33)
+        -- line: [0, 0] id: 33
+        r1_31(r0_33)
+      end)
+      _G.KeyRemove = _G.workspace.DescendantRemoving:Connect(function(r0_32)
+        -- line: [0, 0] id: 32
+        for r4_32 = #_G._G.KeyAdd, 1, -1 do
+          if _G._G.KeyAdd[r4_32] == r0_32 then
+            _G.table.remove(_G._G.KeyAdd, r4_32)
+            break
+          end
+        end
+      end)
+      -- close: r1_31
+    end
+    while true do
+      r1_31 = _G._G
+      r1_31 = r1_31.EspKey
+      if r1_31 then
+        r1_31 = _G.pairs
+        for r4_31, r5_31 in r1_31(_G._G.KeyAdd) do
+          if r5_31:IsA("Model") then
+            _G.Keys(r5_31)
+          end
+        end
+        r1_31 = _G.task
+        r1_31 = r1_31.wait
+        r1_31()
+      else
+        break
+      end
+    end
+  end
+  r13_0:Toggle(r17_0)
+end
+r13_0:Toggle({
+  Title = "Esp Door",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_57)
+    -- line: [0, 0] id: 57
+    _G._G.EspDoor = r0_57
+    if _G._G.EspDoor == false then
+      for r4_57, r5_57 in _G.pairs(_G.game.Workspace:FindFirstChild("CurrentRooms"):GetChildren()) do
+        if r5_57:isA("Model") then
+          for r9_57, r10_57 in _G.pairs(r5_57:GetChildren()) do
+            if r10_57.Name:find("Esp_") then
+              r10_57:Destroy()
+            end
+          end
+        end
+      end
+    end
+    while _G._G.EspDoor do
+      local r1_57 = _G.pairs
+      for r4_57, r5_57 in r1_57(_G.game.Workspace:FindFirstChild("CurrentRooms"):GetChildren()) do
+        if r5_57:IsA("Model") and r5_57:FindFirstChild("Door") and r5_57.Door:FindFirstChild("Door") then
+          if r5_57:FindFirstChild("Esp_Highlight") then
+            r5_57:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            r5_57:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+          end
+          if _G._G.EspHighlight == true and r5_57:FindFirstChild("Esp_Highlight") == nil then
+            local r6_57 = _G.Instance.new("Highlight")
+            r6_57.Name = "Esp_Highlight"
+            r6_57.FillColor = _G.Color3.fromRGB(255, 255, 255)
+            r6_57.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+            r6_57.FillTransparency = 0.5
+            r6_57.OutlineTransparency = 0
+            r6_57.Adornee = r5_57.Door
+            r6_57.Parent = r5_57
+          elseif _G._G.EspHighlight == false and r5_57:FindFirstChild("Esp_Highlight") then
+            r5_57:FindFirstChild("Esp_Highlight"):Destroy()
+          end
+          if r5_57:FindFirstChild("Esp_Gui") and r5_57.Esp_Gui:FindFirstChild("TextLabel") then
+            local r6_57 = r5_57.Esp_Gui:FindFirstChild("TextLabel")
+            local r7_57 = _G._G.EspName
+            if r7_57 == true then
+              r7_57 = "Door "
+              local r8_57 = r5_57.Door:FindFirstChild("Sign")
+              if r8_57 then
+                r8_57 = r5_57.Door.Sign:FindFirstChild("Stinker") and (r5_57.Door.Sign.Stinker.Text or r5_57.Door.Sign:FindFirstChild("SignText") and r5_57.Door.Sign.SignText.Text)
+              else
+                goto label_188	-- block#31 is visited secondly
+              end
+              r8_57 = r8_57:gsub("^0+", "")
+              local r9_57 = r5_57.Door:FindFirstChild("Lock")
+              if r9_57 then
+                r9_57 = " (lock)" or ""
+              else
+                goto label_212	-- block#35 is visited secondly
+              end
+              r7_57 = r7_57 .. r8_57 .. r9_57 or ""
+            else
+              goto label_216	-- block#37 is visited secondly
+            end
+            local r8_57 = _G._G.EspDistance
+            if r8_57 == true then
+              r8_57 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r5_57.Door.Door.Position)) .. "m)" or ""
+            else
+              goto label_235	-- block#40 is visited secondly
+            end
+            r6_57.Text = r7_57 .. r8_57
+            r5_57.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+            r5_57.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspGui == true and r5_57:FindFirstChild("Esp_Gui") == nil then
+            _G.GuiEsp = _G.Instance.new("BillboardGui", r5_57)
+            _G.GuiEsp.Adornee = r5_57.Door
+            _G.GuiEsp.Name = "Esp_Gui"
+            _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+            _G.GuiEsp.AlwaysOnTop = true
+            _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+            _G.GuiEspText.BackgroundTransparency = 1
+            _G.GuiEspText.Font = _G.Enum.Font.Code
+            _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+            _G.GuiEspText.TextSize = 15
+            _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+            _G.GuiEspText.TextStrokeTransparency = 0.5
+            _G.GuiEspText.Text = ""
+            local r6_57 = _G.Instance.new("UIStroke")
+            r6_57.Color = _G.Color3.new(0, 0, 0)
+            r6_57.Thickness = 1.5
+            r6_57.Parent = _G.GuiEspText
+          elseif _G._G.EspGui == false and r5_57:FindFirstChild("Esp_Gui") then
+            r5_57:FindFirstChild("Esp_Gui"):Destroy()
+          end
+        end
+      end
+      _G.task.wait()
+    end
+  end,
+})
+if r6_0 then
+  r13_0:Toggle({
+    Title = "Esp Time Lever",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(r0_9)
+      -- line: [0, 0] id: 9
+      _G._G.EspLeverTime = r0_9
+      local r1_9 = _G._G.EspLeverTime
+      if r1_9 == false then
+        _G._G.TimeLeverAdd = {}
+        r1_9 = _G.TimeLeverSpawn
+        if r1_9 then
+          _G.TimeLeverSpawn:Disconnect()
+          r1_9 = nil
+          _G.TimeLeverSpawn = r1_9
+        end
+        r1_9 = _G.TimeLeverRemove
+        if r1_9 then
+          _G.TimeLeverRemove:Disconnect()
+          r1_9 = nil
+          _G.TimeLeverRemove = r1_9
+        end
+        r1_9 = _G.pairs
+        for r4_9, r5_9 in r1_9(_G.workspace:GetDescendants()) do
+          if r5_9.Name:find("TimerLever") then
+            for r9_9, r10_9 in _G.pairs(r5_9:GetChildren()) do
+              if r10_9.Name:find("Esp_") then
+                r10_9:Destroy()
+              end
+            end
+          end
+        end
+      else
+        function _G.LeverTimes(r0_11)
+          -- line: [0, 0] id: 11
+          if r0_11.Name:find("TimerLever") and r0_11.PrimaryPart then
+            if r0_11:FindFirstChild("Esp_Highlight") then
+              r0_11:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+              r0_11:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            end
+            if _G._G.EspHighlight == true and r0_11:FindFirstChild("Esp_Highlight") == nil then
+              local r1_11 = _G.Instance.new("Highlight")
+              r1_11.Name = "Esp_Highlight"
+              r1_11.FillColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_11.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_11.FillTransparency = 0.5
+              r1_11.OutlineTransparency = 0
+              r1_11.Adornee = r0_11
+              r1_11.Parent = r0_11
+            elseif _G._G.EspHighlight == false and r0_11:FindFirstChild("Esp_Highlight") then
+              r0_11:FindFirstChild("Esp_Highlight"):Destroy()
+            end
+            if r0_11:FindFirstChild("Esp_Gui") and r0_11.Esp_Gui:FindFirstChild("TextLabel") then
+              local r1_11 = r0_11.Esp_Gui:FindFirstChild("TextLabel")
+              local r2_11 = _G._G.EspName
+              if r2_11 == true then
+                r2_11 = "Lever Time" or ""
+              else
+                goto label_111	-- block#18 is visited secondly
+              end
+              local r3_11 = _G._G.EspDistance
+              if r3_11 == true then
+                r3_11 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r0_11.PrimaryPart.Position)) .. "m)" or ""
+              else
+                goto label_129	-- block#21 is visited secondly
+              end
+              r1_11.Text = r2_11 .. r3_11
+              r0_11.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+              r0_11.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+            end
+            if _G._G.EspGui == true and r0_11:FindFirstChild("Esp_Gui") == nil then
+              _G.GuiEsp = _G.Instance.new("BillboardGui", r0_11)
+              _G.GuiEsp.Adornee = r0_11
+              _G.GuiEsp.Name = "Esp_Gui"
+              _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+              _G.GuiEsp.AlwaysOnTop = true
+              _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+              _G.GuiEspText.BackgroundTransparency = 1
+              _G.GuiEspText.Font = _G.Enum.Font.Code
+              _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+              _G.GuiEspText.TextSize = 15
+              _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+              _G.GuiEspText.TextStrokeTransparency = 0.5
+              _G.GuiEspText.Text = ""
+              local r1_11 = _G.Instance.new("UIStroke")
+              r1_11.Color = _G.Color3.new(0, 0, 0)
+              r1_11.Thickness = 1.5
+              r1_11.Parent = _G.GuiEspText
+            elseif _G._G.EspGui == false and r0_11:FindFirstChild("Esp_Gui") then
+              r0_11:FindFirstChild("Esp_Gui"):Destroy()
+            end
+          end
+        end
+        function r1_9(r0_12)
+          -- line: [0, 0] id: 12
+          if not _G.table.find(_G._G.TimeLeverAdd, r0_12) and r0_12.Name == "TimerLever" then
+            _G.table.insert(_G._G.TimeLeverAdd, r0_12)
+          end
+        end
+        for r5_9, r6_9 in _G.ipairs(_G.workspace:GetDescendants()) do
+          r1_9(r6_9)
+        end
+        _G.TimeLeverSpawn = _G.workspace.DescendantAdded:Connect(function(r0_10)
+          -- line: [0, 0] id: 10
+          r1_9(r0_10)
+        end)
+        _G.TimeLeverRemove = _G.workspace.DescendantRemoving:Connect(function(r0_13)
+          -- line: [0, 0] id: 13
+          for r4_13 = #_G._G.TimeLeverAdd, 1, -1 do
+            if _G._G.TimeLeverAdd[r4_13] == r0_13 then
+              _G.table.remove(_G._G.TimeLeverAdd, r4_13)
+              break
+            end
+          end
+        end)
+        -- close: r1_9
+      end
+      while true do
+        r1_9 = _G._G
+        r1_9 = r1_9.EspLeverTime
+        if r1_9 then
+          r1_9 = _G.pairs
+          for r4_9, r5_9 in r1_9(_G._G.TimeLeverAdd) do
+            if r5_9:IsA("Model") then
+              _G.LeverTimes(r5_9)
+            end
+          end
+          r1_9 = _G.task
+          r1_9 = r1_9.wait
+          r1_9()
+        else
+          break
+        end
+      end
+    end,
+  })
+end
+if r5_0 then
+  r13_0:Toggle({
+    Title = "Esp Book",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(r0_3)
+      -- line: [0, 0] id: 3
+      _G._G.EspBook = r0_3
+      local r1_3 = _G._G.EspBook
+      if r1_3 == false then
+        _G._G.BookAdd = {}
+        r1_3 = _G.BookSpawn
+        if r1_3 then
+          _G.BookSpawn:Disconnect()
+          r1_3 = nil
+          _G.BookSpawn = r1_3
+        end
+        r1_3 = _G.BookRemove
+        if r1_3 then
+          _G.BookRemove:Disconnect()
+          r1_3 = nil
+          _G.BookRemove = r1_3
+        end
+        r1_3 = _G.pairs
+        for r4_3, r5_3 in r1_3(_G.workspace:GetDescendants()) do
+          if r5_3.Name:find("LiveHintBook") then
+            for r9_3, r10_3 in _G.pairs(r5_3:GetChildren()) do
+              if r10_3.Name:find("Esp_") then
+                r10_3:Destroy()
+              end
+            end
+          end
+        end
+      else
+        function _G.Books(r0_7)
+          -- line: [0, 0] id: 7
+          if r0_7.Name:find("LiveHintBook") and r0_7.PrimaryPart then
+            if r0_7:FindFirstChild("Esp_Highlight") then
+              r0_7:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+              r0_7:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            end
+            if _G._G.EspHighlight == true and r0_7:FindFirstChild("Esp_Highlight") == nil then
+              local r1_7 = _G.Instance.new("Highlight")
+              r1_7.Name = "Esp_Highlight"
+              r1_7.FillColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_7.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_7.FillTransparency = 0.5
+              r1_7.OutlineTransparency = 0
+              r1_7.Adornee = r0_7
+              r1_7.Parent = r0_7
+            elseif _G._G.EspHighlight == false and r0_7:FindFirstChild("Esp_Highlight") then
+              r0_7:FindFirstChild("Esp_Highlight"):Destroy()
+            end
+            if r0_7:FindFirstChild("Esp_Gui") and r0_7.Esp_Gui:FindFirstChild("TextLabel") then
+              local r1_7 = r0_7.Esp_Gui:FindFirstChild("TextLabel")
+              local r2_7 = _G._G.EspName
+              if r2_7 == true then
+                r2_7 = "Book" or ""
+              else
+                goto label_111	-- block#18 is visited secondly
+              end
+              local r3_7 = _G._G.EspDistance
+              if r3_7 == true then
+                r3_7 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r0_7.PrimaryPart.Position)) .. "m)" or ""
+              else
+                goto label_129	-- block#21 is visited secondly
+              end
+              r1_7.Text = r2_7 .. r3_7
+              r0_7.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+              r0_7.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+            end
+            if _G._G.EspGui == true and r0_7:FindFirstChild("Esp_Gui") == nil then
+              _G.GuiEsp = _G.Instance.new("BillboardGui", r0_7)
+              _G.GuiEsp.Adornee = r0_7
+              _G.GuiEsp.Name = "Esp_Gui"
+              _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+              _G.GuiEsp.AlwaysOnTop = true
+              _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+              _G.GuiEspText.BackgroundTransparency = 1
+              _G.GuiEspText.Font = _G.Enum.Font.Code
+              _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+              _G.GuiEspText.TextSize = 15
+              _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+              _G.GuiEspText.TextStrokeTransparency = 0.5
+              _G.GuiEspText.Text = ""
+              local r1_7 = _G.Instance.new("UIStroke")
+              r1_7.Color = _G.Color3.new(0, 0, 0)
+              r1_7.Thickness = 1.5
+              r1_7.Parent = _G.GuiEspText
+            elseif _G._G.EspGui == false and r0_7:FindFirstChild("Esp_Gui") then
+              r0_7:FindFirstChild("Esp_Gui"):Destroy()
+            end
+          end
+        end
+        function r1_3(r0_6)
+          -- line: [0, 0] id: 6
+          if not _G.table.find(_G._G.BookAdd, r0_6) and r0_6.Name == "LiveHintBook" then
+            _G.table.insert(_G._G.BookAdd, r0_6)
+          end
+        end
+        for r5_3, r6_3 in _G.ipairs(_G.workspace:GetDescendants()) do
+          r1_3(r6_3)
+        end
+        _G.BookSpawn = _G.workspace.DescendantAdded:Connect(function(r0_5)
+          -- line: [0, 0] id: 5
+          r1_3(r0_5)
+        end)
+        _G.BookRemove = _G.workspace.DescendantRemoving:Connect(function(r0_4)
+          -- line: [0, 0] id: 4
+          for r4_4 = #_G._G.BookAdd, 1, -1 do
+            if _G._G.BookAdd[r4_4] == r0_4 then
+              _G.table.remove(_G._G.BookAdd, r4_4)
+              break
+            end
+          end
+        end)
+        -- close: r1_3
+      end
+      while true do
+        r1_3 = _G._G
+        r1_3 = r1_3.EspBook
+        if r1_3 then
+          r1_3 = _G.pairs
+          for r4_3, r5_3 in r1_3(_G._G.BookAdd) do
+            if r5_3:IsA("Model") then
+              _G.Books(r5_3)
+            end
+          end
+          r1_3 = _G.task
+          r1_3 = r1_3.wait
+          r1_3()
+        else
+          break
+        end
+      end
+    end,
+  })
+  r13_0:Toggle({
+    Title = "Esp Breaker",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(r0_50)
+      -- line: [0, 0] id: 50
+      _G._G.EspBreaker = r0_50
+      local r1_50 = _G._G.EspBreaker
+      if r1_50 == false then
+        _G._G.BreakerAdd = {}
+        r1_50 = _G.BreakerSpawn
+        if r1_50 then
+          _G.BreakerSpawn:Disconnect()
+          r1_50 = nil
+          _G.BreakerSpawn = r1_50
+        end
+        r1_50 = _G.BreakerRemove
+        if r1_50 then
+          _G.BreakerRemove:Disconnect()
+          r1_50 = nil
+          _G.BreakerRemove = r1_50
+        end
+        r1_50 = _G.pairs
+        for r4_50, r5_50 in r1_50(_G.workspace:GetDescendants()) do
+          if r5_50.Name:find("LiveBreakerPolePickup") then
+            for r9_50, r10_50 in _G.pairs(r5_50:GetChildren()) do
+              if r10_50.Name:find("Esp_") then
+                r10_50:Destroy()
+              end
+            end
+          end
+        end
+      else
+        function _G.Breakers(r0_53)
+          -- line: [0, 0] id: 53
+          if r0_53.Name == "LiveBreakerPolePickup" and r0_53:FindFirstChildOfClass("ProximityPrompt") then
+            if r0_53:FindFirstChild("Esp_Highlight") then
+              r0_53:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+              r0_53:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            end
+            if _G._G.EspHighlight == true and r0_53:FindFirstChild("Esp_Highlight") == nil then
+              local r1_53 = _G.Instance.new("Highlight")
+              r1_53.Name = "Esp_Highlight"
+              r1_53.FillColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_53.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+              r1_53.FillTransparency = 0.5
+              r1_53.OutlineTransparency = 0
+              r1_53.Adornee = r0_53
+              r1_53.Parent = r0_53
+            elseif _G._G.EspHighlight == false and r0_53:FindFirstChild("Esp_Highlight") then
+              r0_53:FindFirstChild("Esp_Highlight"):Destroy()
+            end
+            if r0_53:FindFirstChild("Esp_Gui") and r0_53.Esp_Gui:FindFirstChild("TextLabel") then
+              local r1_53 = r0_53.Esp_Gui:FindFirstChild("TextLabel")
+              local r2_53 = _G._G.EspName
+              if r2_53 == true then
+                r2_53 = "Breaker" or ""
+              else
+                goto label_110	-- block#18 is visited secondly
+              end
+              local r3_53 = _G._G.EspDistance
+              if r3_53 == true then
+                r3_53 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r0_53.PrimaryPart.Position)) .. "m)" or ""
+              else
+                goto label_128	-- block#21 is visited secondly
+              end
+              r1_53.Text = r2_53 .. r3_53
+              r0_53.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+              r0_53.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+            end
+            if _G._G.EspGui == true and r0_53:FindFirstChild("Esp_Gui") == nil then
+              _G.GuiEsp = _G.Instance.new("BillboardGui", r0_53)
+              _G.GuiEsp.Adornee = r0_53
+              _G.GuiEsp.Name = "Esp_Gui"
+              _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+              _G.GuiEsp.AlwaysOnTop = true
+              _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+              _G.GuiEspText.BackgroundTransparency = 1
+              _G.GuiEspText.Font = _G.Enum.Font.Code
+              _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+              _G.GuiEspText.TextSize = 15
+              _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+              _G.GuiEspText.TextStrokeTransparency = 0.5
+              _G.GuiEspText.Text = ""
+              local r1_53 = _G.Instance.new("UIStroke")
+              r1_53.Color = _G.Color3.new(0, 0, 0)
+              r1_53.Thickness = 1.5
+              r1_53.Parent = _G.GuiEspText
+            elseif _G._G.EspGui == false and r0_53:FindFirstChild("Esp_Gui") then
+              r0_53:FindFirstChild("Esp_Gui"):Destroy()
+            end
+          end
+        end
+        function r1_50(r0_51)
+          -- line: [0, 0] id: 51
+          if not _G.table.find(_G._G.BreakerAdd, r0_51) and r0_51.Name == "LiveBreakerPolePickup" then
+            _G.table.insert(_G._G.BreakerAdd, r0_51)
+          end
+        end
+        for r5_50, r6_50 in _G.ipairs(_G.workspace:GetDescendants()) do
+          r1_50(r6_50)
+        end
+        _G.BreakerSpawn = _G.workspace.DescendantAdded:Connect(function(r0_54)
+          -- line: [0, 0] id: 54
+          r1_50(r0_54)
+        end)
+        _G.BreakerRemove = _G.workspace.DescendantRemoving:Connect(function(r0_52)
+          -- line: [0, 0] id: 52
+          for r4_52 = #_G._G.BreakerAdd, 1, -1 do
+            if _G._G.BreakerAdd[r4_52] == r0_52 then
+              _G.table.remove(_G._G.BreakerAdd, r4_52)
+              break
+            end
+          end
+        end)
+        -- close: r1_50
+      end
+      while true do
+        r1_50 = _G._G
+        r1_50 = r1_50.EspBreaker
+        if r1_50 then
+          r1_50 = _G.pairs
+          for r4_50, r5_50 in r1_50(_G._G.BreakerAdd) do
+            if r5_50.Name == "LiveBreakerPolePickup" then
+              _G.Breakers(r5_50)
+            end
+          end
+          r1_50 = _G.task
+          r1_50 = r1_50.wait
+          r1_50()
+        else
+          break
+        end
+      end
+    end,
+  })
+end
+r13_0:Toggle({
+  Title = "Esp Item",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_67)
+    -- line: [0, 0] id: 67
+    _G._G.EspItem = r0_67
+    local r1_67 = _G._G.EspItem
+    if r1_67 == false then
+      _G._G.ItemAdd = {}
+      r1_67 = _G.ItemSpawn
+      if r1_67 then
+        _G.ItemSpawn:Disconnect()
+        r1_67 = nil
+        _G.ItemSpawn = r1_67
+      end
+      r1_67 = _G.ItemRemove
+      if r1_67 then
+        _G.ItemRemove:Disconnect()
+        r1_67 = nil
+        _G.ItemRemove = r1_67
+      end
+      r1_67 = _G.pairs
+      for r4_67, r5_67 in r1_67(_G.workspace:GetDescendants()) do
+        if r5_67.Name:find("Handle") then
+          for r9_67, r10_67 in _G.pairs(r5_67:GetChildren()) do
+            if r10_67.Name:find("Esp_") then
+              r10_67:Destroy()
+            end
+          end
+        end
+      end
+    else
+      function _G.Items(r0_69)
+        -- line: [0, 0] id: 69
+        if r0_69.Name == "Handle" and r0_69.Parent:FindFirstChildOfClass("ProximityPrompt") then
+          if r0_69:FindFirstChild("Esp_Highlight") then
+            r0_69:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            r0_69:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+          end
+          if _G._G.EspHighlight == true and r0_69:FindFirstChild("Esp_Highlight") == nil then
+            local r1_69 = _G.Instance.new("Highlight")
+            r1_69.Name = "Esp_Highlight"
+            r1_69.FillColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_69.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_69.FillTransparency = 0.5
+            r1_69.OutlineTransparency = 0
+            r1_69.Adornee = r0_69.Parent
+            r1_69.Parent = r0_69
+          elseif _G._G.EspHighlight == false and r0_69:FindFirstChild("Esp_Highlight") then
+            r0_69:FindFirstChild("Esp_Highlight"):Destroy()
+          end
+          if r0_69:FindFirstChild("Esp_Gui") and r0_69.Esp_Gui:FindFirstChild("TextLabel") then
+            local r1_69 = r0_69.Esp_Gui:FindFirstChild("TextLabel")
+            local r2_69 = _G._G.EspName
+            if r2_69 == true then
+              r2_69 = r0_69.Parent.Name or ""
+            else
+              goto label_113	-- block#18 is visited secondly
+            end
+            local r3_69 = _G._G.EspDistance
+            if r3_69 == true then
+              r3_69 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r0_69.Position)) .. "m)" or ""
+            else
+              goto label_130	-- block#21 is visited secondly
+            end
+            r1_69.Text = r2_69 .. r3_69
+            r0_69.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+            r0_69.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspGui == true and r0_69:FindFirstChild("Esp_Gui") == nil then
+            _G.GuiEsp = _G.Instance.new("BillboardGui", r0_69)
+            _G.GuiEsp.Adornee = r0_69.Parent
+            _G.GuiEsp.Name = "Esp_Gui"
+            _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+            _G.GuiEsp.AlwaysOnTop = true
+            _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+            _G.GuiEspText.BackgroundTransparency = 1
+            _G.GuiEspText.Font = _G.Enum.Font.Code
+            _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+            _G.GuiEspText.TextSize = 15
+            _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+            _G.GuiEspText.TextStrokeTransparency = 0.5
+            _G.GuiEspText.Text = ""
+            local r1_69 = _G.Instance.new("UIStroke")
+            r1_69.Color = _G.Color3.new(0, 0, 0)
+            r1_69.Thickness = 1.5
+            r1_69.Parent = _G.GuiEspText
+          elseif _G._G.EspGui == false and r0_69:FindFirstChild("Esp_Gui") then
+            r0_69:FindFirstChild("Esp_Gui"):Destroy()
+          end
+        end
+      end
+      function r1_67(r0_68)
+        -- line: [0, 0] id: 68
+        if not _G.table.find(_G._G.ItemAdd, r0_68) and r0_68.Name == "Handle" then
+          _G.table.insert(_G._G.ItemAdd, r0_68)
+        end
+      end
+      for r5_67, r6_67 in _G.ipairs(_G.workspace:GetDescendants()) do
+        r1_67(r6_67)
+      end
+      _G.ItemSpawn = _G.workspace.DescendantAdded:Connect(function(r0_70)
+        -- line: [0, 0] id: 70
+        r1_67(r0_70)
+      end)
+      _G.ItemRemove = _G.workspace.DescendantRemoving:Connect(function(r0_71)
+        -- line: [0, 0] id: 71
+        for r4_71 = #_G._G.ItemAdd, 1, -1 do
+          if _G._G.ItemAdd[r4_71] == r0_71 then
+            _G.table.remove(_G._G.ItemAdd, r4_71)
+            break
+          end
+        end
+      end)
+      -- close: r1_67
+    end
+    while true do
+      r1_67 = _G._G
+      r1_67 = r1_67.EspItem
+      if r1_67 then
+        r1_67 = _G.pairs
+        for r4_67, r5_67 in r1_67(_G.game.Players.LocalPlayer.Character:GetChildren()) do
+          if r5_67:IsA("Tool") then
+            for r9_67, r10_67 in _G.pairs(r5_67:GetChildren()) do
+              if r10_67.Name:find("Esp_") then
+                r10_67:Destroy()
+              end
+            end
+          end
+        end
+        r1_67 = _G.pairs
+        for r4_67, r5_67 in r1_67(_G._G.ItemAdd) do
+          if r5_67.Name == "Handle" then
+            _G.Items(r5_67)
+          end
+        end
+        r1_67 = _G.task
+        r1_67 = r1_67.wait
+        r1_67()
+      else
+        break
+      end
+    end
+  end,
+})
+_G._G.EspEntityNameDis = {
+  FigureRig = "Figure",
+  SallyMoving = "Window",
+  RushMoving = "Rush",
+  Eyes = "Eyes",
+  Groundskeeper = "Skeeper",
+  BackdoorLookman = "Lookman",
+  BackdoorRush = "Blitz",
+  MandrakeLive = "Mandrake",
+  GloomPile = "Egg",
+  Snare = "Snare",
+  GrumbleRig = "Grumble",
+  GiggleCeiling = "Giggle",
+  AmbushMoving = "Ambush",
+}
+r13_0:Toggle({
+  Title = "Esp Entity",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_25)
+    -- line: [0, 0] id: 25
+    _G._G.EspEntity = r0_25
+    local r1_25 = _G._G.EspEntity
+    if r1_25 == false then
+      _G._G.EntityAdd = {}
+      r1_25 = _G.EntitySpawn
+      if r1_25 then
+        _G.EntitySpawn:Disconnect()
+        r1_25 = nil
+        _G.EntitySpawn = r1_25
+      end
+      r1_25 = _G.EntityRemove
+      if r1_25 then
+        _G.EntityRemove:Disconnect()
+        r1_25 = nil
+        _G.EntityRemove = r1_25
+      end
+      r1_25 = _G.pairs
+      for r4_25, r5_25 in r1_25(_G.workspace:GetDescendants()) do
+        for r9_25, r10_25 in _G.pairs(_G._G.EspEntityNameDis) do
+          if r5_25:IsA("Model") and r5_25.Name == r9_25 then
+            if r5_25.PrimaryPart then
+              r5_25.PrimaryPart.Transparency = 1
+            end
+            for r14_25, r15_25 in _G.pairs(r5_25:GetChildren()) do
+              if r15_25.Name:find("Esp_") then
+                r15_25:Destroy()
+              end
+            end
+          end
+        end
+      end
+    else
+      function r1_25(r0_26)
+        -- line: [0, 0] id: 26
+        for r4_26, r5_26 in _G.pairs(_G._G.EspEntityNameDis) do
+          if r0_26:IsA("Model") and r0_26.Name == r4_26 then
+            if r0_26.Name == "Snare" and r0_26.Parent and r0_26.Parent:IsA("Model") and r0_26.Parent.Name == "Snare" then
+              return 
+            end
+            if not _G.table.find(_G._G.EntityAdd, r0_26) then
+              _G.table.insert(_G._G.EntityAdd, r0_26)
+            end
+          end
+        end
+      end
+      for r5_25, r6_25 in _G.ipairs(_G.workspace:GetDescendants()) do
+        r1_25(r6_25)
+      end
+      _G.EntitySpawn = _G.workspace.DescendantAdded:Connect(function(r0_27)
+        -- line: [0, 0] id: 27
+        r1_25(r0_27)
+      end)
+      _G.EntityRemove = _G.workspace.DescendantRemoving:Connect(function(r0_28)
+        -- line: [0, 0] id: 28
+        for r4_28 = #_G._G.EntityAdd, 1, -1 do
+          if _G._G.EntityAdd[r4_28] == r0_28 then
+            _G.table.remove(_G._G.EntityAdd, r4_28)
+            break
+          end
+        end
+      end)
+      -- close: r1_25
+    end
+    while true do
+      r1_25 = _G._G
+      r1_25 = r1_25.EspEntity
+      if r1_25 then
+        r1_25 = _G.pairs
+        for r4_25, r5_25 in r1_25(_G._G.EntityAdd) do
+          for r9_25, r10_25 in _G.pairs(_G._G.EspEntityNameDis) do
+            if r5_25:IsA("Model") and r5_25.Name == r9_25 then
+              local r11_25 = true
+              for r15_25, r16_25 in _G.ipairs(r5_25:GetChildren()) do
+                if r16_25:IsA("BasePart") and r16_25.Transparency < 1 then
+                  r11_25 = false
+                  break
+                end
+              end
+              if r11_25 and r5_25.PrimaryPart then
+                r5_25.PrimaryPart.Transparency = 1
+              end
+              if r5_25:FindFirstChild("Esp_Highlight") then
+                r5_25:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+                r5_25:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+              end
+              if _G._G.EspHighlight == true and r5_25:FindFirstChild("Esp_Highlight") == nil then
+                local r12_25 = _G.Instance.new("Highlight")
+                r12_25.Name = "Esp_Highlight"
+                r12_25.FillColor = _G.Color3.fromRGB(255, 255, 255)
+                r12_25.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+                r12_25.FillTransparency = 0.5
+                r12_25.OutlineTransparency = 0
+                r12_25.Adornee = r5_25
+                r12_25.Parent = r5_25
+              elseif _G._G.EspHighlight == false and r5_25:FindFirstChild("Esp_Highlight") then
+                r5_25:FindFirstChild("Esp_Highlight"):Destroy()
+              end
+              if r5_25:FindFirstChild("Esp_Gui") and r5_25.Esp_Gui:FindFirstChild("TextLabel") then
+                local r12_25 = r5_25.Esp_Gui:FindFirstChild("TextLabel")
+                local r13_25 = _G._G.EspName
+                if r13_25 == true then
+                  r13_25 = _G._G.EspEntityNameDis[r5_25.Name] or ""
+                else
+                  goto label_247	-- block#51 is visited secondly
+                end
+                local r14_25 = _G._G.EspDistance
+                if r14_25 == true then
+                  r14_25 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r5_25.PrimaryPart.Position)) .. "m)" or ""
+                else
+                  goto label_265	-- block#54 is visited secondly
+                end
+                r12_25.Text = r13_25 .. r14_25
+                r5_25.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+                r5_25.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+              end
+              if _G._G.EspGui == true and r5_25:FindFirstChild("Esp_Gui") == nil then
+                _G.GuiEsp = _G.Instance.new("BillboardGui", r5_25)
+                _G.GuiEsp.Adornee = r5_25
+                _G.GuiEsp.Name = "Esp_Gui"
+                _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+                _G.GuiEsp.AlwaysOnTop = true
+                _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+                _G.GuiEspText.BackgroundTransparency = 1
+                _G.GuiEspText.Font = _G.Enum.Font.Code
+                _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+                _G.GuiEspText.TextSize = 15
+                _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+                _G.GuiEspText.TextStrokeTransparency = 0.5
+                _G.GuiEspText.Text = ""
+                local r12_25 = _G.Instance.new("UIStroke")
+                r12_25.Color = _G.Color3.new(0, 0, 0)
+                r12_25.Thickness = 1.5
+                r12_25.Parent = _G.GuiEspText
+              elseif _G._G.EspGui == false and r5_25:FindFirstChild("Esp_Gui") then
+                r5_25:FindFirstChild("Esp_Gui"):Destroy()
+              end
+            end
+          end
+        end
+        r1_25 = _G.task
+        r1_25 = r1_25.wait
+        r1_25()
+      else
+        break
+      end
+    end
+  end,
+})
+r13_0:Toggle({
+  Title = "Esp Hiding Spots",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_41)
+    -- line: [0, 0] id: 41
+    _G._G.EspHiding = r0_41
+    local r1_41 = _G._G.EspHiding
+    if r1_41 == false then
+      _G._G.HidingAdd = {}
+      r1_41 = _G.HidingSpawn
+      if r1_41 then
+        _G.HidingSpawn:Disconnect()
+        r1_41 = nil
+        _G.HidingSpawn = r1_41
+      end
+      r1_41 = _G.HidingRemove
+      if r1_41 then
+        _G.HidingRemove:Disconnect()
+        r1_41 = nil
+        _G.HidingRemove = r1_41
+      end
+      r1_41 = _G.pairs
+      for r4_41, r5_41 in r1_41(_G.workspace:GetDescendants()) do
+        if r5_41.Name == "Bed" or r5_41.Name == "Wardrobe" or r5_41.Name == "Backdoor_Wardrobe" or r5_41.Name == "Locker_Large" or r5_41.Name == "Rooms_Locker" then
+          for r9_41, r10_41 in _G.pairs(r5_41:GetChildren()) do
+            if r10_41.Name:find("Esp_") then
+              r10_41:Destroy()
+            end
+          end
+        end
+      end
+    else
+      function _G.Hidings(r0_45)
+        -- line: [0, 0] id: 45
+        if (r0_45.Name == "Bed" or r0_45.Name == "Wardrobe" or r0_45.Name == "Backdoor_Wardrobe" or r0_45.Name == "Locker_Large" or r0_45.Name == "Rooms_Locker") and r0_45.PrimaryPart then
+          if r0_45:FindFirstChild("Esp_Highlight") then
+            r0_45:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+            r0_45:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.fromRGB(255, 255, 255)
+          end
+          if _G._G.EspHighlight == true and r0_45:FindFirstChild("Esp_Highlight") == nil then
+            local r1_45 = _G.Instance.new("Highlight")
+            r1_45.Name = "Esp_Highlight"
+            r1_45.FillColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_45.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+            r1_45.FillTransparency = 0.5
+            r1_45.OutlineTransparency = 0
+            r1_45.Adornee = r0_45
+            r1_45.Parent = r0_45
+          elseif _G._G.EspHighlight == false and r0_45:FindFirstChild("Esp_Highlight") then
+            r0_45:FindFirstChild("Esp_Highlight"):Destroy()
+          end
+          if r0_45:FindFirstChild("Esp_Gui") and r0_45.Esp_Gui:FindFirstChild("TextLabel") then
+            local r1_45 = r0_45.Esp_Gui:FindFirstChild("TextLabel")
+            local r2_45 = _G._G.EspName
+            if r2_45 == true then
+              r2_45 = r0_45.Name or ""
+            else
+              goto label_120	-- block#22 is visited secondly
+            end
+            local r3_45 = _G._G.EspDistance
+            if r3_45 == true then
+              r3_45 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r0_45.PrimaryPart.Position)) .. "m)" or ""
+            else
+              goto label_138	-- block#25 is visited secondly
+            end
+            r1_45.Text = r2_45 .. r3_45
+            r0_45.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+            r0_45.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspGui == true and r0_45:FindFirstChild("Esp_Gui") == nil then
+            _G.GuiEsp = _G.Instance.new("BillboardGui", r0_45)
+            _G.GuiEsp.Adornee = r0_45
+            _G.GuiEsp.Name = "Esp_Gui"
+            _G.GuiEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+            _G.GuiEsp.AlwaysOnTop = true
+            _G.GuiEspText = _G.Instance.new("TextLabel", _G.GuiEsp)
+            _G.GuiEspText.BackgroundTransparency = 1
+            _G.GuiEspText.Font = _G.Enum.Font.Code
+            _G.GuiEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+            _G.GuiEspText.TextSize = 15
+            _G.GuiEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+            _G.GuiEspText.TextStrokeTransparency = 0.5
+            _G.GuiEspText.Text = ""
+            local r1_45 = _G.Instance.new("UIStroke")
+            r1_45.Color = _G.Color3.new(0, 0, 0)
+            r1_45.Thickness = 1.5
+            r1_45.Parent = _G.GuiEspText
+          elseif _G._G.EspGui == false and r0_45:FindFirstChild("Esp_Gui") then
+            r0_45:FindFirstChild("Esp_Gui"):Destroy()
+          end
+        end
+      end
+      function r1_41(r0_44)
+        -- line: [0, 0] id: 44
+        if not _G.table.find(_G._G.HidingAdd, r0_44) and r0_44.Name == "Bed" or r0_44.Name == "Wardrobe" or r0_44.Name == "Backdoor_Wardrobe" or r0_44.Name == "Locker_Large" or r0_44.Name == "Rooms_Locker" then
+          _G.table.insert(_G._G.HidingAdd, r0_44)
+        end
+      end
+      for r5_41, r6_41 in _G.ipairs(_G.workspace:GetDescendants()) do
+        r1_41(r6_41)
+      end
+      _G.BookSpawn = _G.workspace.DescendantAdded:Connect(function(r0_43)
+        -- line: [0, 0] id: 43
+        r1_41(r0_43)
+      end)
+      _G.BookRemove = _G.workspace.DescendantRemoving:Connect(function(r0_42)
+        -- line: [0, 0] id: 42
+        for r4_42 = #_G._G.HidingAdd, 1, -1 do
+          if _G._G.HidingAdd[r4_42] == r0_42 then
+            _G.table.remove(_G._G.HidingAdd, r4_42)
+            break
+          end
+        end
+      end)
+      -- close: r1_41
+    end
+    while true do
+      r1_41 = _G._G
+      r1_41 = r1_41.EspHiding
+      if r1_41 then
+        r1_41 = _G.pairs
+        for r4_41, r5_41 in r1_41(_G._G.HidingAdd) do
+          if r5_41:IsA("Model") then
+            _G.Hidings(r5_41)
+          end
+        end
+        r1_41 = _G.task
+        r1_41 = r1_41.wait
+        r1_41()
+      else
+        break
+      end
+    end
+  end,
+})
+r13_0:Toggle({
+  Title = "Esp Player",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_14)
+    -- line: [0, 0] id: 14
+    _G._G.EspPlayer = r0_14
+    if _G._G.EspPlayer == false then
+      for r4_14, r5_14 in _G.pairs(_G.game.Players:GetChildren()) do
+        if r5_14 ~= _G.game.Players.LocalPlayer and r5_14.Character and r5_14.Character:FindFirstChild("Head") and r5_14.Character:FindFirstChild("HumanoidRootPart") and r5_14.Character:FindFirstChild("Humanoid") then
+          for r9_14, r10_14 in _G.pairs(r5_14.Character:GetChildren()) do
+            if r10_14.Name:find("Esp_") then
+              r10_14:Destroy()
+            end
+          end
+        end
+      end
+    end
+    while _G._G.EspPlayer do
+      local r1_14 = _G.pairs
+      for r4_14, r5_14 in r1_14(_G.game.Players:GetChildren()) do
+        if r5_14 ~= _G.game.Players.LocalPlayer and r5_14.Character and r5_14.Character:FindFirstChild("Head") and r5_14.Character:FindFirstChild("HumanoidRootPart") and r5_14.Character:FindFirstChild("Humanoid") then
+          if r5_14.Character:FindFirstChild("Esp_Highlight") then
+            r5_14.Character:FindFirstChild("Esp_Highlight").FillColor = _G._G.ColorLight or _G.Color3.new(255, 255, 255)
+            r5_14.Character:FindFirstChild("Esp_Highlight").OutlineColor = _G._G.ColorLight or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspHighlight == true and r5_14.Character:FindFirstChild("Esp_Highlight") == nil then
+            local r6_14 = _G.Instance.new("Highlight")
+            r6_14.Name = "Esp_Highlight"
+            r6_14.FillColor = _G.Color3.fromRGB(255, 255, 255)
+            r6_14.OutlineColor = _G.Color3.fromRGB(255, 255, 255)
+            r6_14.FillTransparency = 0.5
+            r6_14.OutlineTransparency = 0
+            r6_14.Adornee = r5_14.Character
+            r6_14.Parent = r5_14.Character
+          elseif _G._G.EspHighlight == false and r5_14.Character:FindFirstChild("Esp_Highlight") then
+            r5_14.Character:FindFirstChild("Esp_Highlight"):Destroy()
+          end
+          if r5_14.Character:FindFirstChild("Esp_Gui") and r5_14.Character.Esp_Gui:FindFirstChild("TextLabel") then
+            local r6_14 = r5_14.Character.Esp_Gui:FindFirstChild("TextLabel")
+            local r7_14 = _G._G.EspName
+            if r7_14 == true then
+              r7_14 = r5_14.Name or ""
+            else
+              goto label_207	-- block#35 is visited secondly
+            end
+            local r8_14 = _G._G.EspDistance
+            if r8_14 == true then
+              r8_14 = "\nDistance (" .. _G.string.format("%.0f", _G.Distance(r5_14.Character.HumanoidRootPart.Position)) .. "m)" or ""
+            else
+              goto label_226	-- block#38 is visited secondly
+            end
+            local r9_14 = _G._G.EspHealth
+            if r9_14 == true then
+              r9_14 = "\nHealth [ "
+              local r10_14 = r5_14.Character.Humanoid.Health
+              if r10_14 <= 0 then
+                r10_14 = "Dead" or _G.string.format("%.0f", r5_14.Character.Humanoid.Health)
+              else
+                goto label_240	-- block#42 is visited secondly
+              end
+              r9_14 = r9_14 .. r10_14 .. " ]" or ""
+            else
+              goto label_251	-- block#44 is visited secondly
+            end
+            r6_14.Text = r7_14 .. r8_14 .. r9_14
+            r5_14.Character.Esp_Gui:FindFirstChild("TextLabel").TextSize = _G._G.EspGuiTextSize or 15
+            r5_14.Character.Esp_Gui:FindFirstChild("TextLabel").TextColor3 = _G._G.EspGuiTextColor or _G.Color3.new(255, 255, 255)
+          end
+          if _G._G.EspGui == true and r5_14.Character:FindFirstChild("Esp_Gui") == nil then
+            _G.GuiPlayerEsp = _G.Instance.new("BillboardGui", r5_14.Character)
+            _G.GuiPlayerEsp.Adornee = r5_14.Character.Head
+            _G.GuiPlayerEsp.Name = "Esp_Gui"
+            _G.GuiPlayerEsp.Size = _G.UDim2.new(0, 100, 0, 150)
+            _G.GuiPlayerEsp.AlwaysOnTop = true
+            _G.GuiPlayerEsp.StudsOffset = _G.Vector3.new(0, 3, 0)
+            _G.GuiPlayerEspText = _G.Instance.new("TextLabel", _G.GuiPlayerEsp)
+            _G.GuiPlayerEspText.BackgroundTransparency = 1
+            _G.GuiPlayerEspText.Font = _G.Enum.Font.Code
+            _G.GuiPlayerEspText.Size = _G.UDim2.new(0, 100, 0, 100)
+            _G.GuiPlayerEspText.TextSize = 15
+            _G.GuiPlayerEspText.TextColor3 = _G.Color3.new(0, 0, 0)
+            _G.GuiPlayerEspText.TextStrokeTransparency = 0.5
+            _G.GuiPlayerEspText.Text = ""
+            local r6_14 = _G.Instance.new("UIStroke")
+            r6_14.Color = _G.Color3.new(0, 0, 0)
+            r6_14.Thickness = 1.5
+            r6_14.Parent = _G.GuiPlayerEspText
+          elseif _G._G.EspGui == false and r5_14.Character:FindFirstChild("Esp_Gui") then
+            r5_14.Character:FindFirstChild("Esp_Gui"):Destroy()
+          end
+        end
+      end
+      _G.task.wait()
+    end
+  end,
+})
+r13_0:Section({
+  Title = "Settings Esp",
+  TextXAlignment = "Left",
+  TextSize = 17,
+})
+r13_0:Toggle({
+  Title = "Esp Gui",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_46)
+    -- line: [0, 0] id: 46
+    _G._G.EspGui = r0_46
+  end,
+})
+r13_0:Toggle({
+  Title = "Esp HightLight",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_55)
+    -- line: [0, 0] id: 55
+    _G._G.EspHighlight = r0_55
+  end,
+})
+r13_0:Section({
+  Title = "Settings Color",
+  TextXAlignment = "Left",
+  TextSize = 17,
+})
+r13_0:Colorpicker({
+  Title = "Color Gui",
+  Default = _G.Color3.fromRGB(255, 255, 255),
+  Transparency = 0,
+  Locked = false,
+  Callback = function(r0_56)
+    -- line: [0, 0] id: 56
+    _G._G.EspGuiTextColor = r0_56
+  end,
+})
+r13_0:Colorpicker({
+  Title = "Color HightLight",
+  Default = _G.Color3.fromRGB(255, 255, 255),
+  Transparency = 0,
+  Locked = false,
+  Callback = function(r0_72)
+    -- line: [0, 0] id: 72
+    _G._G.ColorLight = r0_72
+  end,
+})
+r13_0:Slider({
+  Title = "Text Size [ Gui ]",
+  Step = 1,
+  Value = {
+    Min = 5,
+    Max = 50,
+    Default = 10,
+  },
+  Callback = function(r0_15)
+    -- line: [0, 0] id: 15
+    _G._G.EspGuiTextSize = r0_15
+  end,
+})
+r13_0:Section({
+  Title = "Settings Text",
+  TextXAlignment = "Left",
+  TextSize = 17,
+})
+r13_0:Toggle({
+  Title = "Esp Name",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_66)
+    -- line: [0, 0] id: 66
+    _G._G.EspName = r0_66
+  end,
+})
+r13_0:Toggle({
+  Title = "Esp Distance",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_20)
+    -- line: [0, 0] id: 20
+    _G._G.EspDistance = r0_20
+  end,
+})
+r13_0:Toggle({
+  Title = "Esp Health",
+  Type = "Toggle",
+  Default = false,
+  Callback = function(r0_21)
+    -- line: [0, 0] id: 21
+    _G._G.EspHealth = r0_21
+  end,
+})
+_G.Info = _G.Tabs.Info
+local r15_0 = "Xm5sThnfsP"
+local r16_0 = "https://discord.com/api/v10/invites/" .. r15_0 .. "?with_counts=true&with_expiration=true"
+(function()
+  -- line: [0, 0] id: 60
+  local r0_60, r1_60 = _G.pcall(function()
+    -- line: [0, 0] id: 61
+    return _G.game:GetService("HttpService"):JSONDecode(r8_0.Creator.Request({
+      Url = r16_0,
+      Method = "GET",
+      Headers = {
+        ["User-Agent"] = "RobloxBot/1.0",
+        Accept = "application/json",
+      },
+    }).Body)
+  end)
+  local r2_60 = nil	-- notice: implicit variable refs by block#[4]
+  if r0_60 and r1_60 then
+    r2_60 = r1_60.guild
+    if r2_60 then
+      r2_60 = _G.Info:Paragraph({
+        Title = r1_60.guild.name,
+        Desc = " <font color=\"#52525b\">�</font> Member Count : " .. _G.tostring(r1_60.approximate_member_count) .. "\n <font color=\"#16a34a\">�</font> Online Count : " .. _G.tostring(r1_60.approximate_presence_count),
+        Image = "https://cdn.discordapp.com/icons/" .. r1_60.guild.id .. "/" .. r1_60.guild.icon .. ".png?size=1024",
+        ImageSize = 42,
+      })
+      _G.Info:Button({
+        Title = "Update Info",
+        Callback = function()
+          -- line: [0, 0] id: 62
+          local r0_62, r1_62 = _G.pcall(function()
+            -- line: [0, 0] id: 63
+            return _G.game:GetService("HttpService"):JSONDecode(r8_0.Creator.Request({
+              Url = r16_0,
+              Method = "GET",
+            }).Body)
+          end)
+          if r0_62 and r1_62 and r1_62.guild then
+            r2_60:SetDesc(" <font color=\"#52525b\">�</font> Member Count : " .. _G.tostring(r1_62.approximate_member_count) .. "\n <font color=\"#16a34a\">�</font> Online Count : " .. _G.tostring(r1_62.approximate_presence_count))
+          end
+        end,
+      })
+      _G.Info:Button({
+        Title = "Copy Discord Invite",
+        Callback = function()
+          -- line: [0, 0] id: 64
+          _G.setclipboard("https://discord.gg/" .. r15_0)
+        end,
+      })
+      -- close: r2_60
+    end
+  else
+    r2_60 = _G.Info
+    r2_60:Paragraph({
+      Title = "Error fetching Discord Info",
+      Desc = _G.game:GetService("HttpService"):JSONEncode(r1_60),
+      Image = "triangle-alert",
+      ImageSize = 26,
+      Color = "Red",
+    })
+  end
+end)()
+_G.Info:Divider()
+_G.Info:Section({
+  Title = "VexonHub",
+  TextXAlignment = "Center",
+  TextSize = 17,
+})
+_G.Info:Divider()
+local r18_0 = _G.Info:Paragraph({
+  Title = "TheVex0n/Vexon",
+  Desc = "Owner Of VexonHub",
+  Image = "rbxassetid://84519376661277",
+  ImageSize = 30,
+  Thumbnail = "",
+  ThumbnailSize = 0,
+  Locked = false,
+})

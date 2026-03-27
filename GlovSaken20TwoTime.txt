@@ -1,0 +1,285 @@
+-- Services declaration
+local playersService = game:GetService("Players")
+local lightingService = game:GetService("Lighting")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local materialService = game:GetService("MaterialService")
+local workspaceService = game:GetService("Workspace")
+local statsService = game:GetService("Stats")
+local debrisService = game:GetService("Debris")
+local textChatService = game:GetService("TextChatService")
+
+-- Client references
+local clientPlayer = playersService.LocalPlayer
+local PlayerGui = clientPlayer:WaitForChild("PlayerGui", 10)
+
+-- Load WindUI library
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- Create main window
+local Window = WindUI:CreateWindow({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    Author = "By GlovDev",
+    Folder = "GlovSakenScript",
+    Size = UDim2.fromOffset(350, 300),
+    Transparent = false,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+-- Window toggle key
+Window:SetToggleKey(Enum.KeyCode.K)
+
+-- Window text font
+WindUI:SetFont("rbxasset://fonts/families/AccanthisADFStd.json")
+
+-- Mobile open button configuration
+Window:EditOpenButton({
+    Title = "GlovSaken",
+    Icon = "sparkle",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 0,
+    Color = ColorSequence.new(
+        Color3.fromHex("000000"), 
+        Color3.fromHex("000000")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+----------------------------------------------------------------
+-- Sentinel Tab
+----------------------------------------------------------------
+local SentinelTab = Window:Tab({
+    Title = "Sentinel",
+    Icon = "shield",
+})
+
+----------------------------------------------------------------
+-- TwoTime Section
+----------------------------------------------------------------
+local TwoTimeSection = SentinelTab:Section({
+    Title = "TwoTime",
+    Opened = true,
+})
+
+-- Variables
+local twoTimeEnabled = false
+local twoTimeMatchFacing = false
+local twoTimeDaggerMode = "LookVector"
+local twoTimeRange = 4
+local twoTimeRangeSq = twoTimeRange * twoTimeRange
+local twoTimeKillerNames = {"Slasher", "c00lkidd", "JohnDoe", "1x1x1x1", "Noli", "Sixer", "Nosferatu"}
+local twoTimeKillersFolder = workspaceService:WaitForChild("Players"):WaitForChild("Killers")
+local twoTimeCacheGui = playersService.LocalPlayer:WaitForChild("PlayerGui")
+local twoTimeDaggerBtn, twoTimeCooldownLabel = nil, nil
+local twoTimeBehindDistance = 2.5
+local twoTimeAimRefCount = 0
+
+-- RemoteEvent
+local twoTimeRemoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent")
+
+-- Fire dagger
+local function twoTimeFireDagger()
+    twoTimeRemoteEvent:FireServer("UseActorAbility", { buffer.fromstring("\"Dagger\"") })
+end
+
+-- Refresh UI references
+local function twoTimeRefreshUI()
+    local mainUi = twoTimeCacheGui:FindFirstChild("MainUI")
+    if not mainUi then return false end
+    local container = mainUi:FindFirstChild("AbilityContainer")
+    if not container then return false end
+
+    twoTimeDaggerBtn = container:FindFirstChild("Dagger")
+    if not twoTimeDaggerBtn then
+        for _, child in ipairs(container:GetChildren()) do
+            if child:IsA("ImageButton") or child:IsA("TextButton") then
+                twoTimeDaggerBtn = child
+                break
+            end
+        end
+    end
+
+    if twoTimeDaggerBtn then
+        twoTimeCooldownLabel = twoTimeDaggerBtn:FindFirstChild("CooldownTime")
+        return true
+    end
+    twoTimeDaggerBtn, twoTimeCooldownLabel = nil, nil
+    return false
+end
+
+-- Distance check
+local function twoTimeInRange(hrp, targetHrp)
+    if not hrp or not targetHrp then return false end
+    return (hrp.Position - targetHrp.Position).Magnitude^2 <= twoTimeRangeSq
+end
+
+-- Position behind killer (TPBack mode)
+local function twoTimePositionBehind(killer)
+    local char = playersService.LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildWhichIsA("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local khrp = killer and killer:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp or not khrp then return end
+
+    twoTimeAimRefCount += 1
+    if twoTimeAimRefCount == 1 then humanoid.AutoRotate = false end
+
+    local behindPos = khrp.Position - khrp.CFrame.LookVector * twoTimeBehindDistance
+    behindPos = Vector3.new(behindPos.X, khrp.Position.Y, behindPos.Z)
+    hrp.CFrame = CFrame.lookAt(behindPos, khrp.Position)
+
+    local start = tick()
+    local conn
+    conn = runService.RenderStepped:Connect(function()
+        if tick() - start >= 0.6 then
+            conn:Disconnect()
+            twoTimeAimRefCount = math.max(0, twoTimeAimRefCount - 1)
+            if twoTimeAimRefCount == 0 then humanoid.AutoRotate = true end
+            return
+        end
+        local look = khrp.CFrame.LookVector
+        hrp.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + look)
+    end)
+end
+
+-- Apply aiming mode
+local function twoTimeApplyAim(killer, khrp, hrp)
+    local humanoid = playersService.LocalPlayer.Character and playersService.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+    if not humanoid then return end
+
+    if twoTimeDaggerMode == "LookVector" then
+        twoTimeAimRefCount += 1
+        if twoTimeAimRefCount == 1 then humanoid.AutoRotate = false end
+
+        hrp.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + khrp.CFrame.LookVector)
+
+        local start = tick()
+        local conn
+        conn = runService.RenderStepped:Connect(function()
+            if tick() - start >= 0.6 then
+                conn:Disconnect()
+                twoTimeAimRefCount = math.max(0, twoTimeAimRefCount - 1)
+                if twoTimeAimRefCount == 0 then humanoid.AutoRotate = true end
+                return
+            end
+            hrp.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + khrp.CFrame.LookVector)
+        end)
+
+    elseif twoTimeDaggerMode == "TPBack" then
+        twoTimePositionBehind(killer)
+    end
+end
+
+-- Main dagger logic
+local function twoTimeAttemptDagger()
+    if not twoTimeEnabled then return end
+
+    if not twoTimeDaggerBtn or not twoTimeCooldownLabel then
+        twoTimeRefreshUI()
+    end
+
+    if twoTimeCooldownLabel and twoTimeCooldownLabel.Text ~= "" then return end
+
+    local char = playersService.LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    for _, name in ipairs(twoTimeKillerNames) do
+        local killer = twoTimeKillersFolder:FindFirstChild(name)
+        local khrp = killer and killer:FindFirstChild("HumanoidRootPart")
+        if khrp and twoTimeInRange(hrp, khrp) then
+            if twoTimeMatchFacing then
+                twoTimeApplyAim(killer, khrp, hrp)
+            end
+            twoTimeFireDagger()
+            break
+        end
+    end
+end
+
+-- UI & character monitoring
+twoTimeRefreshUI()
+twoTimeCacheGui.ChildAdded:Connect(function(child)
+    if child.Name == "MainUI" then
+        task.delay(0.02, twoTimeRefreshUI)
+    end
+end)
+
+playersService.LocalPlayer.CharacterAdded:Connect(function()
+    twoTimeAimRefCount = 0
+    task.delay(0.5, twoTimeRefreshUI)
+end)
+
+runService.Heartbeat:Connect(twoTimeAttemptDagger)
+
+-- UI Controls
+TwoTimeSection:Toggle({
+    Title = "Auto Dagger",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        twoTimeEnabled = state
+    end
+})
+
+TwoTimeSection:Toggle({
+    Title = "Aim Dagger",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        twoTimeMatchFacing = state
+    end
+})
+
+TwoTimeSection:Dropdown({
+    Title = "Aim Dagger Mode",
+    Values = {"LookVector", "TPBack"},
+    Value = "LookVector",
+    Callback = function(value)
+        twoTimeDaggerMode = value
+    end
+})
+
+TwoTimeSection:Slider({
+    Title = "Auto Dagger Radius",
+    Step = 1,
+    Value = { Min = 1, Max = 20, Default = 4 },
+    Callback = function(value)
+        twoTimeRange = value
+        twoTimeRangeSq = value * value
+    end
+})
+
+----------------------------------------------------------------
+-- Interface Tab
+----------------------------------------------------------------
+local InterfaceTab = Window:Tab({
+    Title = "Interface",
+    Icon = "scan",
+    Locked = false,
+})
+
+----------------------------------------------------------------
+-- UI Functions Section
+----------------------------------------------------------------
+local UIFunctionsSection = InterfaceTab:Section({ 
+    Title = "UI Functions",
+    Opened = true,
+})
+
+-- Close UI
+InterfaceTab:Button({
+    Title = "Close UI",
+    Locked = false,
+    Callback = function()
+        Window:Destroy()
+    end
+})

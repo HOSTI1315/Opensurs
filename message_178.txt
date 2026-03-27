@@ -1,0 +1,192 @@
+local __HookRegistry = setmetatable({}, { __mode = "k" })
+local __OldDebugInfo = debug.info
+local __OldHookFunction = hookfunction
+local __OldHookMetamethod = hookmetamethod
+local __G = getgenv()
+local __ExploitPatterns = {
+    "hookmetamethod", "hookfunction", "HttpGet", "newcclosure", "getrawmetatable",
+    "setrawmetatable", "getnamecallmethod", "setnamecallmethod", "gethui", "isreadonly",
+    "setreadonly", "isfile", "writefile", "appendfile", "delfile", "readfile", "loadfile",
+    "makefolder", "delfolder", "listfiles", "secure_call", "getsynasset", "getcustomasset",
+    "cloneref", "getspecialinfo", "saveinstance", "protect_gui", "unprotect_gui",
+    "rconsoleprint", "rconsoleinfo", "rconsolewarn", "rconsoleerr", "rconsoleclear",
+    "rconsolename", "rconsoleinput", "checkcaller", "islclosure", "getscriptclosure",
+    "getscripthash", "getcallingscript", "getgenv", "getsenv", "getrenv", "getmenv",
+    "gettenv", "identifyexecutor", "getnilinstances", "getconnections", "getloadedmodules",
+    "firesignal", "fireproximityprompt", "firetouchinterest", "setsimulationradius",
+    "getsimulationradius", "sethiddenproperty", "gethiddenproperty", "setscriptable",
+    "setclipboard", "getconstants", "getconstant", "setconstant", "getupvalues",
+    "getupvalue", "setupvalue", "getprotos", "getproto", "setproto", "getstack",
+    "setstack", "getregistry", "cache_replace", "cache_invalidate", "get_thread_identity",
+    "set_thread_identity", "setthreadcontext", "write_clipboard", "replicatesignal",
+    "hooksignal", "queue_on_teleport", "create_secure_function", "run_secure_function",
+    "current identity is", "tetanus reloaded", "reviz admin", "infinite yield",
+    "iy_debug", "shattervast", "HookMT", "UNC Environment Check"
+}
+local function __ContainsExploitPattern(str)
+    if typeof(str) ~= "string" then return false end
+    local lowerStr = str:lower()
+    for _, pattern in ipairs(__ExploitPatterns) do
+        if lowerStr:find(pattern:lower(), 1, true) then
+            return true
+        end
+    end
+    return false
+end
+pcall(function()
+    local LogService = game:GetService("LogService")
+    for _, connection in ipairs(getconnections(LogService.MessageOut)) do
+        local oldFunc = connection.Function
+        if oldFunc then
+            connection.Function = function(message, messageType)
+                if __ContainsExploitPattern(message) then return end
+                return oldFunc(message, messageType)
+            end
+        end
+    end
+end)
+pcall(function()
+    local ScriptContext = game:GetService("ScriptContext")
+    for _, connection in ipairs(getconnections(ScriptContext.Error)) do
+        local oldFunc = connection.Function
+        if oldFunc then
+            connection.Function = function(message, stackTrace, scriptObj)
+                if __ContainsExploitPattern(message) or __ContainsExploitPattern(stackTrace) then return end
+                return oldFunc(message, stackTrace, scriptObj)
+            end
+        end
+    end
+end)
+pcall(function()
+    local OldLoadstring = loadstring
+    __G.loadstring = newcclosure(function(code, chunkname)
+        if not checkcaller() then return nil end
+        return OldLoadstring(code, chunkname)
+    end)
+end)
+pcall(function()
+    local OldGetGC = getgc
+    __G.getgc = newcclosure(function(includeTables)
+        local gc = OldGetGC(includeTables)
+        local filtered = {}
+        for i, v in ipairs(gc) do
+            if typeof(v) == "table" then
+                local isAdonis = rawget(v, "Detected") or rawget(v, "Anti") or 
+                                 rawget(v, "ACLI") or rawget(v, "MainDetection")
+                if not isAdonis then table.insert(filtered, v) end
+            else
+                table.insert(filtered, v)
+            end
+        end
+        return filtered
+    end)
+end)
+pcall(function()
+    local OldPrint = print
+    local OldWarn = warn
+    __G.print = newcclosure(function(...)
+        local args = {...}
+        for _, arg in ipairs(args) do if __ContainsExploitPattern(tostring(arg)) then return end end
+        return OldPrint(...)
+    end)
+    __G.warn = newcclosure(function(...)
+        local args = {...}
+        for _, arg in ipairs(args) do if __ContainsExploitPattern(tostring(arg)) then return end end
+        return OldWarn(...)
+    end)
+end)
+local __ProxyDebugInfo
+__ProxyDebugInfo = newcclosure(function(...)
+    local __Args = {...}
+    if #__Args >= 1 and typeof(__Args[1]) == "function" then if __HookRegistry[__Args[1]] then __Args[1] = __HookRegistry[__Args[1]] end end
+    if #__Args >= 2 and typeof(__Args[1]) == "thread" and typeof(__Args[2]) == "function" then if __HookRegistry[__Args[2]] then __Args[2] = __HookRegistry[__Args[2]] end end
+    return __OldDebugInfo(unpack(__Args))
+end)
+pcall(function() __G.debug.info = __ProxyDebugInfo end)
+local __SafeHookFunction = function(__TargetFunction, __ReplacementFunction)
+    local __Original = __OldHookFunction(__TargetFunction, __ReplacementFunction)
+    if __HookRegistry[__TargetFunction] then __HookRegistry[__ReplacementFunction] = __HookRegistry[__TargetFunction] else __HookRegistry[__ReplacementFunction] = __Original end
+    return __Original
+end
+pcall(function() __G.hookfunction = newcclosure(__SafeHookFunction) end)
+if __OldHookMetamethod then
+    local __SafeHookMetamethod = function(__Object, __MethodName, __ReplacementFunction)
+        local __Original = __OldHookMetamethod(__Object, __MethodName, __ReplacementFunction)
+        if __HookRegistry[__Original] then __HookRegistry[__ReplacementFunction] = __HookRegistry[__Original] else __HookRegistry[__ReplacementFunction] = __Original end
+        return __Original
+    end
+    pcall(function() __G.hookmetamethod = newcclosure(__SafeHookMetamethod) end)
+end
+local __OldNamecall
+__OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if not checkcaller() then
+        local self_str = tostring(self):lower()
+        if method == "FireServer" and (self_str == "skidevent" or self_str:find("detect") or self_str:find("check") or self_str:find("ban") or self_str:find("anticheat")) then return end
+        if method == "GetAttribute" or method == "GetAttributeChangedSignal" then
+            local attr = ...
+            if typeof(attr) == "string" then
+                local attr_lower = attr:lower()
+                if attr_lower:find("detect") or attr_lower:find("cheat") or attr_lower:find("ban") then return nil end
+            end
+        end
+        if method == "GetPropertyChangedSignal" or method == "Changed" then
+             local prop = ...
+             if typeof(prop) == "string" and (prop:lower():find("walkspeed") or prop:lower():find("jumppower")) then return nil end
+        end
+    end
+    if __OldNamecall then return __OldNamecall(self, ...) end
+end))
+pcall(function()
+    task.spawn(function()
+        local gc = getgc(true)
+        local __NamecallInstanceDetector = nil
+        for i, v in ipairs(gc) do
+            if typeof(v) == "table" then
+                local detected = rawget(v, "Detected")
+                local kill = rawget(v, "Kill")
+                local aclis = rawget(v, "ACLI")
+                if typeof(detected) == "function" then hookfunction(detected, function() return true end) end
+                if rawget(v, "Variables") and rawget(v, "Process") and typeof(kill) == "function" then hookfunction(kill, function() return end end)
+                if typeof(aclis) == "table" then
+                    pcall(function()
+                        setreadonly(aclis, false)
+                        table.clear(aclis)
+                        local logFunc = rawget(v, "AddLog")
+                        if typeof(logFunc) == "function" then hookfunction(logFunc, function() return end end)
+                    end)
+                end
+                if rawget(v, "namecallInstance") then
+                    for _, container in pairs(v) do
+                        if typeof(container) == "table" then
+                            for idx, val in pairs(container) do
+                                if val == "kick" and typeof(container[idx + 1]) == "function" then
+                                    local func = container[idx + 1]
+                                    for _, const in ipairs(getconstants(func)) do if const == "namecallInstance" then __NamecallInstanceDetector = func break end end
+                                end
+                            end
+                        end
+                    end
+                end
+                if pcall(function() return rawget(v, "indexInstance") end) then
+                    local idx = rawget(v, "indexInstance")
+                    if type(idx) == "table" and idx[1] == "kick" then
+                        setreadonly(v, false)
+                        v.tvk = {"kick", function() return game.Workspace:WaitForChild("") end}
+                    end
+                end
+                if pcall(function() return rawget(v, "newindexInstance") end) then
+                    local nidx = rawget(v, "newindexInstance")
+                    if type(nidx) == "table" and nidx[1] == "kick" then
+                        pcall(function()
+                            setreadonly(v, false)
+                            v.newindexInstance = {"kick", function() return game.Workspace:WaitForChild("") end}
+                        end)
+                    end
+                end
+            end
+            if i % 250 == 0 then task.wait() end
+        end
+        if __NamecallInstanceDetector then hookfunction(__NamecallInstanceDetector, function() return false end) end
+    end)
+end)

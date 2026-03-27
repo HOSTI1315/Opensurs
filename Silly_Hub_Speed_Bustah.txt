@@ -1,0 +1,98 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create main ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "SillyBoosterGUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = PlayerGui
+
+-- Main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 140, 0, 95)
+mainFrame.Position = UDim2.new(1, -153, 0.29, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = false
+mainFrame.Parent = gui
+
+-- Frame styling
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = mainFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(90, 170, 255)
+stroke.Parent = mainFrame
+
+-- Title label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -10, 0, 26)
+title.Position = UDim2.new(0, 5, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "SILLY BOOSTER"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 14
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.Parent = mainFrame
+
+-- Input textbox (probably for speed multiplier / value)
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(1, -24, 0, 26)
+speedInput.Position = UDim2.new(0, 12, 0, 36)
+speedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+speedInput.Text = "25"
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.TextSize = 14
+speedInput.Font = Enum.Font.Gotham
+speedInput.ClearTextOnFocus = false
+speedInput.Parent = mainFrame
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = UDim.new(0, 6)
+inputCorner.Parent = speedInput
+
+local inputStroke = Instance.new("UIStroke")
+inputStroke.Color = Color3.fromRGB(90, 170, 255)
+inputStroke.Parent = speedInput
+
+-- Toggle button area (bottom)
+local toggleContainer = Instance.new("Frame")
+toggleContainer.Size = UDim2.new(0, 50, 0, 22)
+toggleContainer.Position = UDim2.new(0.5, -25, 1, -30)
+toggleContainer.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleContainer.Parent = mainFrame
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0) -- fully rounded
+toggleCorner.Parent = toggleContainer
+
+-- The actual toggle "circle"
+local toggleCircle = Instance.new("Frame")
+toggleCircle.Size = UDim2.new(0, 18, 0, 18)
+toggleCircle.Position = UDim2.new(0, 2, 0.5, -9)
+toggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleCircle.Parent = toggleContainer
+
+local circleCorner = Instance.new("UICorner")
+circleCorner.CornerRadius = UDim.new(1, 0)
+circleCorner.Parent = toggleCircle
+
+-- Connections (currently empty logic)
+local textChangedConnection = speedInput:GetPropertyChangedSignal("Text"):Connect(function()
+    -- Add your value validation / number conversion logic here
+end)
+
+local toggleConnection = toggleContainer.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    -- Add toggle ON/OFF logic here
+    -- Example: check current state and tween the circle left/right
+end)

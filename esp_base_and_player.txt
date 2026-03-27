@@ -1,0 +1,157 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Plots = Workspace:WaitForChild("Plots")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local ownBasePos
+local function getOwnBasePosition()
+    for _, plot in ipairs(Plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        local base = plot:FindFirstChild("DeliveryHitbox")
+        if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled and base then
+            return base.Position
+        end
+    end
+    return nil
+end
+ownBasePos = getOwnBasePosition()
+
+local ESPFolder = PlayerGui:FindFirstChild("PlayerESP") or Instance.new("Folder")
+ESPFolder.Name = "PlayerESP"
+ESPFolder.Parent = PlayerGui
+
+local function createOrUpdatePlayerESP(player)
+    if player == LocalPlayer then return end
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = player.Character.HumanoidRootPart
+
+    local highlight = ESPFolder:FindFirstChild(player.Name.."_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = player.Name.."_Highlight"
+        highlight.FillColor = Color3.fromRGB(0, 0, 255)
+        highlight.FillTransparency = 0.7
+        highlight.OutlineColor = Color3.fromRGB(0, 0, 255)
+        highlight.OutlineTransparency = 0
+        highlight.Parent = ESPFolder
+    end
+    highlight.Adornee = player.Character
+
+    local billboard = ESPFolder:FindFirstChild(player.Name)
+    local textLabel
+    if not billboard then
+        billboard = Instance.new("BillboardGui")
+        billboard.Name = player.Name
+        billboard.Adornee = hrp
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = ESPFolder
+
+        textLabel = Instance.new("TextLabel")
+        textLabel.Name = "Label"
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+        textLabel.TextStrokeTransparency = 0
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextScaled = true
+        textLabel.Parent = billboard
+    else
+        textLabel = billboard:FindFirstChild("Label")
+        billboard.Adornee = hrp
+    end
+    textLabel.Text = player.Name
+end
+
+Players.PlayerRemoving:Connect(function(player)
+    local esp = ESPFolder:FindFirstChild(player.Name)
+    if esp then esp:Destroy() end
+    local highlight = ESPFolder:FindFirstChild(player.Name.."_Highlight")
+    if highlight then highlight:Destroy() end
+end)
+
+local function createOrUpdatePlotESP(plot)
+    local purchases = plot:FindFirstChild("Purchases")
+    if not purchases then return end
+    local plotBlock = purchases:FindFirstChild("PlotBlock")
+    if not plotBlock or not plotBlock:FindFirstChild("Main") then return end
+    local main = plotBlock.Main
+    local remainingTimeGui = main:FindFirstChild("BillboardGui") and main.BillboardGui:FindFirstChild("RemainingTime")
+    local base = plot:FindFirstChild("DeliveryHitbox")
+    if base and ownBasePos and (base.Position - ownBasePos).Magnitude < 1 then return end
+
+    local billboard = main:FindFirstChild("ESP_Billboard")
+    local textLabel
+    if not billboard then
+        billboard = Instance.new("BillboardGui")
+        billboard.Name = "ESP_Billboard"
+        billboard.Adornee = main
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = main
+
+        textLabel = Instance.new("TextLabel")
+        textLabel.Name = "Label"
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = Color3.fromRGB(1,1,1)
+        textLabel.TextStrokeTransparency = 0
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextScaled = true
+        textLabel.Text = "Loading..."
+        textLabel.Parent = billboard
+    else
+        textLabel = billboard:FindFirstChild("Label")
+    end
+
+    if remainingTimeGui then
+        if remainingTimeGui:IsA("TextLabel") then
+            local text = remainingTimeGui.Text
+            if text == "0s" or text == "0" then
+                textLabel.Text = "Unlocked"
+                textLabel.TextColor3 = Color3.fromRGB(0,255,0)
+            else
+                textLabel.Text = text
+                textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+            end
+        elseif remainingTimeGui:IsA("NumberValue") then
+            if remainingTimeGui.Value <= 0 then
+                textLabel.Text = "Unlocked"
+                textLabel.TextColor3 = Color3.fromRGB(0,255,0)
+            else
+                textLabel.Text = "Time Remaining: "..remainingTimeGui.Value.."s"
+                textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+            end
+        else
+            textLabel.Text = "Unknown"
+        end
+    end
+end
+
+task.spawn(function()
+    while true do
+        ownBasePos = getOwnBasePosition()
+        for _, plot in pairs(Plots:GetChildren()) do
+            pcall(function()
+                createOrUpdatePlotESP(plot)
+            end)
+        end
+        for _, player in pairs(Players:GetPlayers()) do
+            pcall(function()
+                createOrUpdatePlayerESP(player)
+            end)
+        end
+        task.wait(0.5)
+    end
+end)
+
+Plots.ChildAdded:Connect(function(plot)
+    task.wait(0.8)
+    pcall(function()
+        createOrUpdatePlotESP(plot)
+    end)
+end)

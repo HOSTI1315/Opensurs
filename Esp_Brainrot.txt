@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local function parseNumber(str)
+    if not str then return 0 end
+    local num = tonumber(str:match("%d+%.?%d*"))
+    if not num then return 0 end
+    if str:lower():find("k") then
+        num = num * 1e3
+    elseif str:lower():find("m") then
+        num = num * 1e6
+    elseif str:lower():find("b") then
+        num = num * 1e9
+    end
+    return num
+end
+
+local function safeValue(obj)
+    if not obj then return "nil" end
+    if obj:IsA("TextLabel") or obj:IsA("TextBox") then
+        return obj.Text
+    elseif obj:IsA("StringValue") then
+        return obj.Value
+    elseif obj:IsA("IntValue") or obj:IsA("NumberValue") then
+        return tostring(obj.Value)
+    end
+    return "?"
+end
+
+local function createBillboard(overhead, text)
+    local existing = PlayerGui:FindFirstChild("HighestGenESP")
+    if existing then existing:Destroy() end
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "HighestGenESP"
+    billboard.Adornee = overhead.Parent
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = PlayerGui
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.TextColor3 = Color3.new(0, 1, 0)
+    label.TextStrokeTransparency = 0
+    label.Text = text
+    label.Font = Enum.Font.SourceSansBold
+    label.Parent = billboard
+end
+
+local function getOwnBasePosition()
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then return nil end
+    for _, plot in ipairs(plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        local base = plot:FindFirstChild("DeliveryHitbox")
+        if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled and base then
+            return base.Position
+        end
+    end
+    return nil
+end
+
+local function updateHighestGen()
+    local ownBasePos = getOwnBasePosition()
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then return end
+    local highestGen = 0
+    local topOverhead = nil
+    for _, plot in ipairs(plots:GetChildren()) do
+        local base = plot:FindFirstChild("DeliveryHitbox")
+        if base and (not ownBasePos or (base.Position - ownBasePos).Magnitude > 1) then
+            local podiums = plot:FindFirstChild("AnimalPodiums")
+            if podiums then
+                for _, podium in pairs(podiums:GetChildren()) do
+                    local attachment = podium:FindFirstChild("Base") and podium.Base:FindFirstChild("Spawn") and podium.Base.Spawn:FindFirstChild("Attachment")
+                    if attachment then
+                        local overhead = attachment:FindFirstChild("AnimalOverhead")
+                        if overhead then
+                            local generationNum = parseNumber(safeValue(overhead:FindFirstChild("Generation")))
+                            if generationNum > highestGen then
+                                highestGen = generationNum
+                                topOverhead = overhead
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if topOverhead then
+        local name = safeValue(topOverhead:FindFirstChild("DisplayName"))
+        local generation = safeValue(topOverhead:FindFirstChild("Generation"))
+        createBillboard(topOverhead, string.format("%s\nGen: %s", name, generation))
+    end
+end
+
+while true do
+    pcall(updateHighestGen)
+    task.wait(2)
+end

@@ -1,0 +1,146 @@
+task.wait(1)
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+
+-- Imposta qualità grafica al minimo
+pcall(function()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+end)
+
+pcall(function()
+    local gameSettings = UserSettings().GameSettings
+    gameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+    gameSettings.GraphicsQualityLevel = 1
+end)
+
+-- Disabilita effetti di illuminazione
+Lighting.GlobalShadows = false
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+-- Disabilita PostEffects
+for _, v in ipairs(Lighting:GetChildren()) do
+    if v:IsA("PostEffect") then
+        v.Enabled = false
+    end
+end
+
+-- Disabilita ParticleEmitters
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("ParticleEmitter") then
+        v.Enabled = false
+    end
+end
+
+-- Funzione per rimuovere accessori
+local function removeAccessories(parent)
+    if not parent then return end
+    
+    for _, child in ipairs(parent:GetChildren()) do
+        if child:IsA("Accessory") then
+            child:Destroy()
+        end
+    end
+    
+    parent.ChildAdded:Connect(function(child)
+        if child:IsA("Accessory") then
+            child:Destroy()
+        end
+    end)
+end
+
+-- Rimuovi accessori dagli Humanoid esistenti
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("Humanoid") then
+        removeAccessories(v.Parent)
+    end
+end
+
+-- Rimuovi accessori dai nuovi Humanoid
+workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Humanoid") then
+        removeAccessories(descendant.Parent)
+    end
+end)
+
+-- Crea UI
+local TigyFPSDevourUI = Instance.new("ScreenGui")
+TigyFPSDevourUI.Name = "TigyFPSDevourUI"
+TigyFPSDevourUI.Parent = CoreGui
+TigyFPSDevourUI.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Parent = TigyFPSDevourUI
+Frame.Size = UDim2.new(0, 340, 0, 160)
+Frame.Position = UDim2.new(0.5, -170, 0.5, -80)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0, 18)
+
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = Frame
+TextLabel.Size = UDim2.new(1, -20, 0, 40)
+TextLabel.Position = UDim2.new(0, 10, 0, 10)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "Tigy's FPS Devour"
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.TextSize = 20
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.TextColor3 = Color3.new(1, 1, 1)
+
+local TextButton = Instance.new("TextButton")
+TextButton.Parent = Frame
+TextButton.Size = UDim2.new(1, -40, 0, 54)
+TextButton.Position = UDim2.new(0, 20, 0, 80)
+TextButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TextButton.Text = "FPS Devour (need auras)"
+TextButton.Font = Enum.Font.GothamBold
+TextButton.TextSize = 15
+TextButton.TextColor3 = Color3.new(1, 1, 1)
+TextButton.BorderSizePixel = 0
+TextButton.AutoButtonColor = true
+
+local UICorner2 = Instance.new("UICorner")
+UICorner2.Parent = TextButton
+UICorner2.CornerRadius = UDim.new(0, 14)
+
+TextButton.MouseButton1Click:Connect(function()
+    TextButton.Text = "WORKING..."
+    TextButton.AutoButtonColor = false
+    
+    local Character = LocalPlayer.Character
+    if not Character then return end
+    
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if not Humanoid then return end
+    
+    local QuantumCloner = Backpack:FindFirstChild("Quantum Cloner")
+    if not QuantumCloner then return end
+    
+    Humanoid:EquipTool(QuantumCloner)
+    task.wait()
+    
+    for _, tool in ipairs(Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = Character
+        end
+    end
+    
+    task.wait()
+    QuantumCloner:Activate()
+    
+    task.delay(0.5, function()
+        TextButton.Text = "FPS Devour (need auras)"
+        TextButton.AutoButtonColor = true
+    end)
+end)

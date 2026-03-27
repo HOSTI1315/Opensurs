@@ -1,0 +1,1414 @@
+--// Melon Decompiler v1.3 | Decompiled on http://dsc.gg/decompiler | If you need help, discord: @melon.uwu
+--// Resolved: 89 identifiers | 42 functions | 0 strings
+--// Renamed: 42 functions | Connected: 24 callbacks | Dead Code Removed: 156 blocks
+--// [Renamer: ON] [Decompiler: ON]
+
+local Globals = getgenv()
+local Environment = getfenv()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local TextService = game:GetService("TextService")
+local Camera = game:GetService("Workspace").CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local MainWindow = WindUI:CreateWindow({
+    SideBarWidth = 190,
+    Author = "by Leakg0d",
+    Resizable = true,
+    OpenButton = {
+        StrokeThickness = 3,
+        Title = "Flash Hub - Open",
+        Enabled = true,
+        Color = ColorSequence.new(Color3.fromHex("#30FF6A"), Color3.fromHex("#e7ff2f")),
+        Draggable = true,
+        OnlyMobile = false,
+        CornerRadius = UDim.new(1, 0),
+    },
+    Folder = "MVSG",
+    ScrollBarEnabled = false,
+    Title = "Flash Hub | Murders Vs Sherrifs",
+    Transparent = true,
+    HideSearchBar = true,
+    Theme = "Midnight",
+    Icon = "square-function",
+    Size = UDim2.fromOffset(700, 100),
+})
+
+local DefaultConfig = MainWindow.ConfigManager:CreateConfig("default")
+
+local VirtualUser = game:GetService("VirtualUser")
+
+Globals.aimConfig = {
+    VELOCITY_FACTOR = 1.2,
+    AUTO_EQUIP = true,
+    CAMERA_CAST = true,
+    RAYCAST_DISTANCE = 1000,
+    ACTION_TIME = 0.3,
+    MAX_VELOCITY = 40,
+    ACCURACY_BUILDUP = 0.8,
+    MIN_DEVIATION = 1,
+    EQUIP_LOOP = 0.3,
+    VISIBLE_PARTS = 4,
+    MAX_DISTANCE = 250,
+    BASE_DEVIATION = 2.1,
+    DISTANCE_FACTOR = 0.8,
+    DEVIATION_ENABLED = true,
+    REACTION_TIME = 0.18,
+    NATIVE_UI = true,
+    FOV_CHECK = true,
+}
+
+Environment.loadModule = function(moduleName)
+    local repository = Environment.Repository
+    loadstring(game:HttpGet(repository .. moduleName))()
+end
+
+Environment.lockToggle = function(toggle, state) end
+
+local ShooterTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Shooter",
+    Icon = "focus",
+})
+
+ShooterTab:Toggle({
+    Callback = function(value)
+        Globals.autoShootEnabled = value
+    end,
+    Title = "Auto Shoot status",
+    Desc = "Enable/Disable the auto shoot",
+})
+
+local NativeRaycastToggle = ShooterTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.aimConfig.CAMERA_CAST = value
+    end,
+    Title = "Native Raycast Method",
+    Desc = "Whether or not to check player visibility in the same way that the game does, if enabled doubles the amount of work the script has to do per check",
+})
+
+local FOVCheckToggle = ShooterTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.aimConfig.FOV_CHECK = value
+    end,
+    Title = "FOV Check",
+    Desc = "Whether or not to check if the target is in the current fov before selecting it",
+})
+
+ShooterTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.aimConfig.AUTO_EQUIP = value
+    end,
+    Title = "Auto Equip",
+    Desc = "Whether or not the script should automatically switch or equip the best available weapon",
+})
+
+ShooterTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.aimConfig.NATIVE_UI = value
+    end,
+    Title = "Native User Interface",
+    Desc = "Whether or not the script should render the gun cooldown and tool equip highlights",
+})
+
+ShooterTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.aimConfig.DEVIATION_ENABLED = value
+    end,
+    Title = "Aim Deviation",
+    Desc = "Whether or not the script should sometimes misfire when using the gun",
+})
+
+ShooterTab:Slider({
+    Value = {
+        Min = 50,
+        Default = 250,
+        Max = 1000,
+    },
+    Callback = function(value)
+        Globals.aimConfig.MAX_DISTANCE = value
+    end,
+    Title = "Maximum distance",
+    Desc = "The maximum distance at which the script will no longer target enemies",
+})
+
+local MaxVelocitySlider = ShooterTab:Slider({
+    Value = {
+        Min = 20,
+        Default = 40,
+        Max = 200,
+    },
+    Callback = function(value)
+        Globals.aimConfig.MAX_VELOCITY = value
+    end,
+    Title = "Maximum velocity",
+    Desc = "The maximum target velocity at which the script will no longer attempt to shoot a target",
+})
+
+local VisiblePartsSlider = ShooterTab:Slider({
+    Value = {
+        Min = 1,
+        Default = 4,
+        Max = 18,
+    },
+    Callback = function(value)
+        Globals.aimConfig.VISIBLE_PARTS = value
+    end,
+    Title = "Required Visible Parts",
+    Desc = "The amount of visible player parts the script will require before selecting a target",
+})
+
+local ReactionTimeSlider = ShooterTab:Slider({
+    Title = "Reaction Time",
+    Value = {
+        Min = 0.01,
+        Default = 0.18,
+        Max = 1,
+    },
+    Callback = function(value)
+        Globals.aimConfig.REACTION_TIME = value
+    end,
+    Step = 0.01,
+    Desc = "The amount of time the script will wait before attacking a given target, is not applied when 'Switch Weapons' is toggled",
+})
+
+local ActionTimeSlider = ShooterTab:Slider({
+    Title = "Action Time",
+    Value = {
+        Min = 0.2,
+        Default = 0.32,
+        Max = 4,
+    },
+    Callback = function(value)
+        Globals.aimConfig.ACTION_TIME = value
+    end,
+    Step = 0.01,
+    Desc = "The amount of time the script will wait after switching or equipping a weapon before attacking a given target, is not applied when 'Switch Weapons' is not toggled",
+})
+
+local EquipTimeSlider = ShooterTab:Slider({
+    Title = "Equip Time",
+    Value = {
+        Min = 0.1,
+        Default = 0.3,
+        Max = 4,
+    },
+    Callback = function(value)
+        Globals.aimConfig.EQUIP_LOOP = value
+    end,
+    Step = 0.1,
+    Desc = "The amount of time the script will wait before checking what is the best weapon to equip again.",
+})
+
+local BaseDeviationSlider = ShooterTab:Slider({
+    Title = "Base Deviation",
+    Value = {
+        Min = 0.5,
+        Default = 2.1,
+        Max = 5,
+    },
+    Callback = function(value)
+        Globals.aimConfig.BASE_DEVIATION = value
+    end,
+    Step = 0.1,
+    Desc = "Base aim inaccuracy in degrees, controls how much the aim naturally deviates",
+})
+
+local DistanceFactorSlider = ShooterTab:Slider({
+    Title = "Distance Factor",
+    Value = {
+        Min = 0,
+        Default = 0.8,
+        Max = 2,
+    },
+    Callback = function(value)
+        Globals.aimConfig.DISTANCE_FACTOR = value
+    end,
+    Step = 0.1,
+    Desc = "Additional deviation penalty for distance - higher values make long shots less accurate",
+})
+
+local VelocityFactorSlider = ShooterTab:Slider({
+    Title = "Velocity Factor",
+    Value = {
+        Min = 0,
+        Default = 1.2,
+        Max = 2,
+    },
+    Callback = function(value)
+        Globals.aimConfig.VELOCITY_FACTOR = value
+    end,
+    Step = 0.1,
+    Desc = "Additional deviation penalty for moving targets - higher values make moving targets harder to hit",
+})
+
+local AccuracyBuildupSlider = ShooterTab:Slider({
+    Title = "Accuracy Buildup",
+    Value = {
+        Min = 0,
+        Default = 0.8,
+        Max = 2,
+    },
+    Callback = function(value)
+        Globals.aimConfig.ACCURACY_BUILDUP = value
+    end,
+    Step = 0.01,
+    Desc = "How much accuracy improves with consecutive shots - higher values = faster improvement",
+})
+
+ShooterTab:Slider({
+    Title = "Min Deviation",
+    Value = {
+        Min = 0.1,
+        Default = 1,
+        Max = 3,
+    },
+    Callback = function(value)
+        Globals.aimConfig.MIN_DEVIATION = value
+    end,
+    Step = 0.1,
+    Desc = "Minimum deviation that always remains - prevents perfect accuracy",
+})
+
+local CrasherTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Crasher",
+    Icon = "settings",
+})
+
+CrasherTab:Section({
+    Title = "Match Lagger",
+})
+
+local MatchLaggerButton = CrasherTab:Button({
+    Title = "Execute Match Lagger (By Flash Hub)",
+    Callback = function()
+        WindUI:Notify({
+            Icon = "download",
+            Duration = 3,
+            Title = "Match Lagger V2",
+            Content = "Loading script...",
+        })
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/scripture2025/FlashHub/refs/heads/main/MatchLaggerV2"))()
+        WindUI:Notify({
+            Icon = "check-circle",
+            Duration = 5,
+            Title = "Match Lagger V2",
+            Content = "Script executed successfully!",
+        })
+    end,
+})
+
+CrasherTab:Paragraph({
+    Title = "Match Lagger V2",
+    Desc = "Only working lagger in MVSD!",
+})
+
+DefaultConfig:Register("MatchLaggerButton", MatchLaggerButton)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ActivateShroud = ReplicatedStorage:WaitForChild("Ability"):WaitForChild("ActivateShroud")
+
+CrasherTab:Section({
+    Title = "Blind All",
+})
+
+local BlindAllEnabled = false
+
+local BlindAllToggle = CrasherTab:Toggle({
+    Callback = function(value)
+        BlindAllEnabled = value
+        if value then
+            WindUI:Notify({
+                Icon = "eye-off",
+                Duration = 3,
+                Title = "Blind All Started",
+                Content = "Blinding all enemies...",
+            })
+        end
+    end,
+    Title = "Loop Blind All",
+    Desc = "Loop Blind all enemies instantly",
+})
+
+CrasherTab:Paragraph({
+    Title = "Blind All Information",
+    Desc = "Equip your Shroud Tool, then Enable the loop blind all toggle, and you are done!",
+})
+
+DefaultConfig:Register("BlindAllToggle", BlindAllToggle)
+
+local CombatTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Combat",
+    Icon = "swords",
+})
+
+local StreakFarmTab = MainWindow:Tab({
+    Title = "Streak Farm",
+    Icon = "user-check",
+})
+
+StreakFarmTab:Section({
+    Title = "Information",
+})
+
+StreakFarmTab:Paragraph({
+    Title = "Read This Message",
+    Desc = "Streak farm account is for the account you want the Streak farm, the 2nd Account is the one that helps the streak farm account get a High streak!",
+})
+
+StreakFarmTab:Section({
+    Title = "Streak Farm Account",
+})
+
+local MainWhitelistInput = StreakFarmTab:Input({
+    Callback = function(text) end,
+    Placeholder = "Enter username...",
+    Title = "Whitelist User",
+    Desc = "Enter part or full username...",
+})
+
+local MainWhitelistTarget = nil
+
+local MainAddWhitelistButton = StreakFarmTab:Button({
+    Callback = function()
+        local inputText = MainWhitelistInput:Get()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local playerNameLower = player.Name:lower()
+                local displayNameLower = player.DisplayName:lower()
+                if playerNameLower:find(inputText:lower(), 1, true) or displayNameLower:find(inputText:lower(), 1, true) then
+                    MainWhitelistTarget = player
+                    WindUI:Notify({
+                        Icon = "check",
+                        Duration = 3,
+                        Title = "Whitelist",
+                        Content = "Whitelisted: " .. player.Name,
+                    })
+                    break
+                end
+            end
+        end
+    end,
+    Title = "Add Player Whitelist",
+    Desc = "Whitelist the specified player",
+})
+
+local MainAutoTeleportEnabled = false
+
+local MainAutoTeleportToggle = StreakFarmTab:Toggle({
+    Callback = function(value)
+        MainAutoTeleportEnabled = value
+        if value and MainWhitelistTarget then
+            RunService.Heartbeat:Connect(function()
+                if not MainAutoTeleportEnabled then return end
+                if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+                if not MainWhitelistTarget.Character or not MainWhitelistTarget.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local targetRoot = MainWhitelistTarget.Character:FindFirstChild("HumanoidRootPart")
+                myRoot.CFrame = CFrame.new(targetRoot.Position - ((targetRoot.Position - myRoot.Position).Unit * 2))
+            end)
+        end
+    end,
+    Title = "Auto Gamemode Teleport",
+    Desc = "Spam teleports to gamemode position - Must Toggle ON",
+})
+
+StreakFarmTab:Toggle({
+    Callback = function(value)
+        Globals.autoShootEnabled = value
+    end,
+    Title = "Auto Shoot status",
+    Desc = "This is needed for the Streak Farm, only on Main Account Farm!",
+})
+
+Environment.enableAntiAFK = function()
+    for _, connection in pairs(getconnections(Players.LocalPlayer.Idled)) do
+        connection:Disable()
+    end
+end
+
+Environment.disableAntiAFK = function()
+    local virtualUser = game:GetService("VirtualUser")
+    Players.LocalPlayer.Idled:Connect(function()
+        virtualUser:CaptureController()
+        virtualUser:ClickButton2(Vector2.new())
+    end)
+end
+
+local AntiAfkToggleTwo = StreakFarmTab:Toggle({
+    Callback = function(value)
+        if value then
+            Players.LocalPlayer.Idled:Connect(function()
+                game:GetService("VirtualUser"):CaptureController()
+                game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+            end)
+            WindUI:Notify({
+                Icon = "timer-off",
+                Duration = 3,
+                Title = "Anti-AFK",
+                Content = "Anti-AFK enabled!",
+            })
+        end
+    end,
+    Title = "Anti-AFK",
+    Desc = "Avoids any Disconnection (Must Toggle ON)",
+})
+
+StreakFarmTab:Divider()
+
+StreakFarmTab:Section({
+    Title = "2nd Account Settings",
+})
+
+local SecondWhitelistInput = StreakFarmTab:Input({
+    Callback = function(text) end,
+    Placeholder = "Enter username...",
+    Title = "Whitelist User",
+    Desc = "Enter part or full username...",
+})
+
+local SecondWhitelistTarget = nil
+
+local SecondAddWhitelistButton = StreakFarmTab:Button({
+    Callback = function()
+        local inputText = SecondWhitelistInput:Get()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local playerNameLower = player.Name:lower()
+                local displayNameLower = player.DisplayName:lower()
+                if playerNameLower:find(inputText:lower(), 1, true) or displayNameLower:find(inputText:lower(), 1, true) then
+                    SecondWhitelistTarget = player
+                    WindUI:Notify({
+                        Icon = "check",
+                        Duration = 3,
+                        Title = "Whitelist",
+                        Content = "Whitelisted: " .. player.Name,
+                    })
+                    break
+                end
+            end
+        end
+    end,
+    Title = "Add Player Whitelist",
+    Desc = "Whitelist the specified player",
+})
+
+local SecondAutoTeleportEnabled = false
+
+local SecondAutoTeleportToggle = StreakFarmTab:Toggle({
+    Callback = function(value)
+        SecondAutoTeleportEnabled = value
+        if value and SecondWhitelistTarget then
+            RunService.Heartbeat:Connect(function()
+                if not SecondAutoTeleportEnabled then return end
+                if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+                if not SecondWhitelistTarget.Character or not SecondWhitelistTarget.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local targetRoot = SecondWhitelistTarget.Character:FindFirstChild("HumanoidRootPart")
+                myRoot.CFrame = CFrame.new(targetRoot.Position - ((targetRoot.Position - myRoot.Position).Unit * 2))
+            end)
+        end
+    end,
+    Title = "Auto Gamemode Teleport",
+    Desc = "Spam teleports to gamemode position - Must Toggle ON",
+})
+
+local AntiAfkToggle = StreakFarmTab:Toggle({
+    Callback = function(value)
+        if value then
+            Players.LocalPlayer.Idled:Connect(function()
+                game:GetService("VirtualUser"):CaptureController()
+                game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+            end)
+            WindUI:Notify({
+                Icon = "timer-off",
+                Duration = 3,
+                Title = "Anti-AFK",
+                Content = "Anti-AFK enabled!",
+            })
+        end
+    end,
+    Title = "Anti-AFK",
+    Desc = "Avoids any Disconnection (Must Toggle ON)",
+})
+
+StreakFarmTab:Divider()
+
+StreakFarmTab:Section({
+    Title = "Current Whitelist Status",
+})
+
+local ClearWhitelistButton = StreakFarmTab:Button({
+    Callback = function()
+        MainWhitelistInput:Set("")
+        SecondWhitelistInput:Set("")
+        MainWhitelistTarget = nil
+        SecondWhitelistTarget = nil
+        WindUI:Notify({
+            Icon = "trash",
+            Duration = 3,
+            Title = "Whitelist",
+            Content = "All whitelists cleared!",
+        })
+    end,
+    Title = "Clear All Whitelists",
+    Desc = "Remove all whitelisted players",
+})
+
+DefaultConfig:Register("MainWhitelistInput", MainWhitelistInput)
+DefaultConfig:Register("MainAddWhitelistButton", MainAddWhitelistButton)
+DefaultConfig:Register("MainAutoTeleportToggle", MainAutoTeleportToggle)
+DefaultConfig:Register("SecondWhitelistInput", SecondWhitelistInput)
+DefaultConfig:Register("SecondAddWhitelistButton", SecondAddWhitelistButton)
+DefaultConfig:Register("SecondAutoTeleportToggle", SecondAutoTeleportToggle)
+DefaultConfig:Register("ClearWhitelistButton", ClearWhitelistButton)
+DefaultConfig:Register("AntiAfkToggle", AntiAfkToggle)
+DefaultConfig:Register("AntiAfkToggleTwo", AntiAfkToggleTwo)
+
+local RenderTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Render",
+    Icon = "eye",
+})
+
+local PlayerTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Player",
+    Icon = "move",
+})
+
+local ExploitTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Exploit",
+    Icon = "zap",
+})
+
+MainWindow:Tab({
+    Locked = false,
+    Title = "Kill All",
+    Icon = "target",
+})
+
+local UtilityTab = MainWindow:Tab({
+    Locked = false,
+    Title = "Utility",
+    Icon = "settings",
+})
+
+CombatTab:Section({
+    Title = "Player Attach",
+})
+
+local BehindDistance = 3
+
+CombatTab:Toggle({
+    Callback = function(value)
+        if value then
+            RunService.RenderStepped:Connect(function()
+                if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                local myCharacter = LocalPlayer.Character
+                local myRoot = myCharacter:FindFirstChild("HumanoidRootPart")
+                
+                for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        for _, equippedTool in ipairs(myCharacter:GetChildren()) do
+                            if equippedTool:IsA("Tool") then
+                                for _, player in ipairs(Players:GetPlayers()) do
+                                    if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Team and player.Character then
+                                        local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                                        if targetRoot then
+                                            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                                            if humanoid and humanoid.Health > 0 then
+                                                local direction = (myRoot.Position - targetRoot.Position).Unit
+                                                myRoot.CFrame = CFrame.new(targetRoot.Position + direction * BehindDistance)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+    Title = "Player Attach (VERY BUGGY)",
+    Desc = "Automatically position behind enemies",
+})
+
+local BehindDistanceSlider = CombatTab:Slider({
+    Value = {
+        Min = 1,
+        Default = 3,
+        Max = 10,
+    },
+    Callback = function(value)
+        BehindDistance = value
+    end,
+    Title = "Behind Distance",
+    Desc = "Distance to maintain behind targets",
+})
+
+CombatTab:Section({
+    Title = "Knife Reach",
+})
+
+local KnifeReachSize = 10
+
+CombatTab:Toggle({
+    Callback = function(value)
+        if value then
+            RunService.RenderStepped:Connect(function()
+                if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool") and tool.Name:lower():find("knife") then
+                        local handle = tool:FindFirstChild("Handle")
+                        if handle then
+                            handle.Size = Vector3.new(KnifeReachSize, handle.Size.Y, handle.Size.Z)
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+    Title = "Knife Reach",
+    Desc = "Extend knife attack range",
+})
+
+local KnifeReachSlider = CombatTab:Slider({
+    Value = {
+        Min = 5,
+        Default = 10,
+        Max = 20,
+    },
+    Callback = function(value)
+        KnifeReachSize = value
+    end,
+    Title = "Knife Reach Distance",
+    Desc = "Extended reach distance for knives",
+})
+
+CombatTab:Section({
+    Title = "Silent Aim",
+})
+
+CombatTab:Toggle({
+    Callback = function(value)
+        Globals.silentAimEnabled = value
+    end,
+    Title = "Silent Aim",
+    Desc = "Enable silent aim functionality",
+})
+
+RenderTab:Section({
+    Title = "MVSD ESPs",
+})
+
+local ESPHighlights = {}
+
+RenderTab:Toggle({
+    Callback = function(value)
+        if value then
+            local function CreateESP(player)
+                if player == LocalPlayer then return end
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                local character = player.Character
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ESP_Highlight"
+                highlight.FillTransparency = 0.3
+                highlight.OutlineTransparency = 0
+                highlight.Adornee = character
+                highlight.Parent = character
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                
+                if player.Team == LocalPlayer.Team then
+                    highlight.FillColor = Color3.fromRGB(85, 255, 85)
+                    highlight.OutlineColor = Color3.fromRGB(0, 200, 0)
+                else
+                    highlight.FillColor = Color3.fromRGB(255, 85, 85)
+                    highlight.OutlineColor = Color3.fromRGB(200, 0, 0)
+                end
+                
+                ESPHighlights[player.UserId] = highlight
+                
+                character:FindFirstChildOfClass("Humanoid").Died:Once(function()
+                    ESPHighlights[player.UserId] = nil
+                end)
+            end
+            
+            for _, player in ipairs(Players:GetPlayers()) do
+                CreateESP(player)
+                player.CharacterAdded:Connect(function(character)
+                    character:WaitForChild("HumanoidRootPart", 5)
+                    task.wait(0.1)
+                    CreateESP(player)
+                end)
+            end
+            
+            Players.PlayerAdded:Connect(function(player)
+                CreateESP(player)
+                player.CharacterAdded:Connect(function(character)
+                    character:WaitForChild("HumanoidRootPart", 5)
+                    task.wait(0.1)
+                    CreateESP(player)
+                end)
+            end)
+            
+            Players.PlayerRemoving:Connect(function(player)
+                ESPHighlights[player.UserId] = nil
+            end)
+        else
+            for userId, highlight in pairs(ESPHighlights) do
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+            ESPHighlights = {}
+        end
+    end,
+    Title = "ESP",
+    Desc = "Enable ESP for players",
+})
+
+RenderTab:Toggle({
+    Callback = function(value)
+        if value then
+            local function CreateChams(player, character)
+                if player == LocalPlayer then return end
+                if player.Team == LocalPlayer.Team then return end
+                
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ChamsHighlight"
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.OutlineColor = Color3.fromRGB(255, 100, 100)
+                highlight.FillTransparency = 0.3
+                highlight.OutlineTransparency = 0
+                highlight.Adornee = character
+                highlight.Parent = character
+            end
+            
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player.Character then
+                    CreateChams(player, player.Character)
+                end
+            end
+            
+            Players.PlayerAdded:Connect(function(player)
+                player.CharacterAdded:Connect(function(character)
+                    CreateChams(player, character)
+                end)
+            end)
+            
+            WindUI:Notify({
+                Icon = "eye",
+                Duration = 3,
+                Title = "Chams",
+                Content = "Chams enabled! Enemy players highlighted in red.",
+            })
+        end
+    end,
+    Title = "Chams",
+    Desc = "Enable chams for enemies",
+})
+
+local NametagsEnabled = false
+
+RenderTab:Toggle({
+    Callback = function(value)
+        NametagsEnabled = value
+        
+        if value then
+            local function CreateNametag(player)
+                if player == LocalPlayer then return end
+                if not player.Character then return end
+                
+                local character = player.Character
+                local rootPart = character:WaitForChild("HumanoidRootPart")
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "Nametag"
+                billboard.AlwaysOnTop = true
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.StudsOffset = Vector3.new(0, 3, 0)
+                billboard.Adornee = rootPart
+                billboard.Parent = rootPart
+                
+                local frame = Instance.new("Frame")
+                frame.Size = UDim2.new(1, 0, 1, 0)
+                frame.BackgroundTransparency = 1
+                frame.Parent = billboard
+                
+                local nameLabel = Instance.new("TextLabel")
+                nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                nameLabel.Position = UDim2.new(0, 0, 0, 0)
+                nameLabel.BackgroundTransparency = 1
+                nameLabel.Text = player.DisplayName .. " (@" .. player.Name .. ")"
+                nameLabel.TextColor3 = player.Team == LocalPlayer.Team and Color3.fromRGB(85, 255, 85) or Color3.fromRGB(255, 0, 0)
+                nameLabel.TextSize = 14
+                nameLabel.Font = Enum.Font.GothamBold
+                nameLabel.Parent = frame
+                
+                local infoLabel = Instance.new("TextLabel")
+                infoLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                infoLabel.Position = UDim2.new(0, 0, 0.5, 0)
+                infoLabel.BackgroundTransparency = 1
+                infoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                infoLabel.TextSize = 12
+                infoLabel.Font = Enum.Font.Gotham
+                infoLabel.Parent = frame
+                
+                spawn(function()
+                    while NametagsEnabled and billboard.Parent and rootPart.Parent do
+                        local health = math.floor(humanoid.Health)
+                        local maxHealth = math.floor(humanoid.MaxHealth)
+                        local distance = math.floor((rootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude)
+                        infoLabel.Text = "HP: " .. health .. "/" .. maxHealth .. " | " .. distance .. " studs"
+                        wait(0.1)
+                    end
+                end)
+            end
+            
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player.Character then
+                    CreateNametag(player)
+                end
+            end
+        end
+    end,
+    Title = "Nametags",
+    Desc = "Show player nametags with info",
+})
+
+RenderTab:Section({
+    Title = "Match ESPs",
+})
+
+Globals.espTeamMates = true
+Globals.espEnemies = true
+
+local MatchESPToggle = RenderTab:Toggle({
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/goose-birb/lua-buffoonery/master/mvsd/esp.lua"))()
+        end
+    end,
+    Title = "ESP Status (Only Works In a Match)",
+    Desc = "Enable match-specific ESP",
+})
+
+RenderTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.espTeamMates = value
+    end,
+    Title = "Display Team",
+    Desc = "Show teammates in ESP",
+})
+
+local DisplayEnemiesToggle = RenderTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        Globals.espEnemies = value
+    end,
+    Title = "Display Enemies",
+    Desc = "Show enemies in ESP",
+})
+
+RenderTab:Paragraph({
+    Title = "ESP Info",
+    Desc = "If any ESP don't work notify Flash Hub discord!",
+})
+
+PlayerTab:Section({
+    Title = "WalkSpeed Configuration",
+})
+
+local SpeedEnabled = false
+local CustomWalkSpeed = 50
+
+local SpeedToggle = PlayerTab:Toggle({
+    Callback = function(value)
+        SpeedEnabled = value
+        if value then
+            RunService.Heartbeat:Connect(function()
+                if not SpeedEnabled then return end
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.WalkSpeed = CustomWalkSpeed
+                    end
+                end
+            end)
+        end
+    end,
+    Title = "Enable Speed",
+    Desc = "Enable custom walk speed",
+})
+
+PlayerTab:Slider({
+    Value = {
+        Min = 16,
+        Default = 50,
+        Max = 100,
+    },
+    Callback = function(value)
+        CustomWalkSpeed = value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = value
+            end
+        end
+    end,
+    Title = "Walk Speed",
+    Desc = "Custom walk speed value",
+})
+
+PlayerTab:Section({
+    Title = "Jump Configuration",
+})
+
+local InfiniteJumpEnabled = false
+local CustomJumpPower = 50
+
+PlayerTab:Toggle({
+    Callback = function(value)
+        InfiniteJumpEnabled = value
+        if value then
+            game:GetService("UserInputService").JumpRequest:Connect(function()
+                if not InfiniteJumpEnabled then return end
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+            
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = CustomJumpPower
+            end
+        end
+    end,
+    Title = "Infinite Jump",
+    Desc = "Enable infinite jumping",
+})
+
+local JumpPowerSlider = PlayerTab:Slider({
+    Value = {
+        Min = 50,
+        Default = 50,
+        Max = 200,
+    },
+    Callback = function(value)
+        CustomJumpPower = value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = value
+        end
+    end,
+    Title = "Jump Power",
+    Desc = "Custom jump power value",
+})
+
+ExploitTab:Section({
+    Title = "MVSD Exploits",
+})
+
+local HitboxSize = 8
+
+ExploitTab:Toggle({
+    Callback = function(value)
+        if value then
+            RunService.RenderStepped:Connect(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                        rootPart.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+                        rootPart.Transparency = 0.6
+                        rootPart.BrickColor = BrickColor.new("Really blue")
+                        rootPart.Material = Enum.Material.ForceField
+                        rootPart.CanCollide = false
+                    end
+                end
+            end)
+        end
+    end,
+    Title = "Hitbox Expander",
+    Desc = "Expand player hitboxes",
+})
+
+ExploitTab:Slider({
+    Value = {
+        Min = 2,
+        Default = 8,
+        Max = 20,
+    },
+    Callback = function(value)
+        HitboxSize = value
+    end,
+    Title = "Hitbox Size",
+    Desc = "Size of expanded hitboxes",
+})
+
+local ZeroCooldownToggle = ExploitTab:Toggle({
+    Callback = function(value)
+        if value then
+            RunService.Heartbeat:Connect(function()
+                for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and tool:GetAttribute("Cooldown") then
+                        tool:SetAttribute("Cooldown", 0)
+                    end
+                end
+                
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+                        if tool:IsA("Tool") and tool:GetAttribute("Cooldown") then
+                            tool:SetAttribute("Cooldown", 0)
+                        end
+                    end
+                end
+            end)
+        end
+    end,
+    Title = "Zero Cooldown",
+    Desc = "Remove weapon cooldowns",
+})
+
+ExploitTab:Section({
+    Title = "Controllers",
+})
+
+local DeleteControllersToggle = ExploitTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/goose-birb/lua-buffoonery/master/mvsd/controllers/init.lua"))()
+        end
+    end,
+    Title = "Delete Old Controllers",
+    Desc = "Remove old controller scripts",
+})
+
+local CustomKnifeToggle = ExploitTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/goose-birb/lua-buffoonery/master/mvsd/controllers/knife.lua"))()
+        end
+    end,
+    Title = "Custom Knife Controller",
+    Desc = "Use custom knife controller",
+})
+
+local CustomGunToggle = ExploitTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/goose-birb/lua-buffoonery/master/mvsd/controllers/gun.lua"))()
+        end
+    end,
+    Title = "Custom Gun Controller",
+    Desc = "Use custom gun controller",
+})
+
+ExploitTab:Section({
+    Title = "Miscellaneous",
+})
+
+local AntiCrashToggle = ExploitTab:Toggle({
+    Value = true,
+    Callback = function(value)
+        if value then
+            LocalPlayer.CharacterAdded:Connect(function(character)
+                local shroudController = ReplicatedStorage.Ability:WaitForChild("ShroudProjectileController", 5)
+                if shroudController then
+                    local newModule = Instance.new("ModuleScript")
+                    newModule.Name = "ShroudProjectileController"
+                    newModule.Parent = shroudController.Parent
+                    shroudController:Destroy()
+                end
+            end)
+        end
+    end,
+    Title = "Anti Crash",
+    Desc = "Prevent game crashes",
+})
+
+local LowPolyToggle = ExploitTab:Toggle({
+    Callback = function(value)
+        local updateSetting = ReplicatedStorage.Settings:WaitForChild("UpdateSetting", 4)
+        updateSetting:FireServer("LowGraphics", value)
+        updateSetting:FireServer("KillEffectsDisabled", value)
+        updateSetting:FireServer("LobbyMusicDisabled", value)
+    end,
+    Title = "Low Poly",
+    Desc = "Enable low graphics mode",
+})
+
+ExploitTab:Toggle({
+    Callback = function(value)
+        Globals.autoSpin = value
+        if value then
+            spawn(function()
+                while Globals.autoSpin do
+                    if not LocalPlayer:GetAttribute("Match") then
+                        ReplicatedStorage.Dailies.Spin:InvokeServer()
+                    end
+                    wait(0.1)
+                end
+            end)
+        end
+    end,
+    Title = "Auto Spin",
+    Desc = "Automatically spin modifier wheel",
+})
+
+ExploitTab:Paragraph({
+    Title = "Feature Request",
+    Desc = "What other exploits should we add?",
+})
+
+UtilityTab:Section({
+    Title = "MVSD Utilities",
+})
+
+local AntiAFKUtilityToggle = UtilityTab:Toggle({
+    Callback = function(value)
+        if value then
+            Players.LocalPlayer.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+            
+            WindUI:Notify({
+                Icon = "timer-off",
+                Duration = 3,
+                Title = "AntiAFK",
+                Content = "Anti Afk Might Trigger Anticheat",
+            })
+        end
+    end,
+    Title = "Anti AFK",
+    Desc = "Prevent being kicked for AFK",
+})
+
+local StaffIDs = {}
+
+local StaffDetectorToggle = UtilityTab:Toggle({
+    Callback = function(value)
+        if value then
+            local function CheckForStaff(player)
+                if StaffIDs[player.UserId] then
+                    WindUI:Notify({
+                        Icon = "alert-triangle",
+                        Duration = 10,
+                        Title = "Staff Detected!",
+                        Content = player.Name .. " is a staff member!",
+                    })
+                end
+            end
+            
+            for _, player in ipairs(Players:GetPlayers()) do
+                CheckForStaff(player)
+            end
+            
+            Players.PlayerAdded:Connect(function(player)
+                CheckForStaff(player)
+            end)
+        end
+    end,
+    Title = "Staff Detector",
+    Desc = "Detect and warn about staff members",
+})
+
+UtilityTab:Toggle({
+    Callback = function(value)
+        if value then
+            WindUI:Notify({
+                Icon = "shield-off",
+                Duration = 5,
+                Title = "Anti-Cheat Disabler",
+                Content = "Disabling Anti-Cheat Measures...",
+            })
+        end
+    end,
+    Title = "Anti-Cheat Disabler",
+    Desc = "Attempt to disable anti-cheat measures",
+})
+
+local RejoinButton = UtilityTab:Button({
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end,
+    Title = "Rejoin Server",
+    Desc = "Rejoin the current server",
+})
+
+UtilityTab:Section({
+    Title = "Shaders",
+})
+
+local OriginalLighting = {}
+
+local EnableShadersButton = UtilityTab:Button({
+    Callback = function()
+        local Lighting = game:GetService("Lighting")
+        
+        OriginalLighting = {
+            Brightness = Lighting.Brightness,
+            GlobalShadows = Lighting.GlobalShadows,
+            ShadowSoftness = Lighting.ShadowSoftness,
+            ExposureCompensation = Lighting.ExposureCompensation,
+            Ambient = Lighting.Ambient,
+            OutdoorAmbient = Lighting.OutdoorAmbient,
+            ColorShift_Top = Lighting.ColorShift_Top,
+            ColorShift_Bottom = Lighting.ColorShift_Bottom,
+            FogColor = Lighting.FogColor,
+            FogStart = Lighting.FogStart,
+            FogEnd = Lighting.FogEnd,
+            ClockTime = Lighting.ClockTime,
+            GeographicLatitude = Lighting.GeographicLatitude,
+        }
+        
+        Lighting.Brightness = 2.5
+        Lighting.GlobalShadows = true
+        Lighting.ShadowSoftness = 0.5
+        Lighting.ExposureCompensation = 0.3
+        Lighting.Ambient = Color3.fromRGB(40, 40, 50)
+        Lighting.OutdoorAmbient = Color3.fromRGB(120, 120, 140)
+        Lighting.ColorShift_Top = Color3.fromRGB(255, 220, 180)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(100, 150, 255)
+        Lighting.FogColor = Color3.fromRGB(140, 160, 255)
+        Lighting.FogStart = 100
+        Lighting.FogEnd = 500
+        Lighting.ClockTime = 14
+        Lighting.GeographicLatitude = 45
+        
+        for _, light in pairs(workspace:GetDescendants()) do
+            if light:IsA("PointLight") then
+                light.Brightness = light.Brightness * 1.5
+                light.Range = light.Range * 1.2
+            end
+        end
+        
+        WindUI:Notify({
+            Icon = "monitor",
+            Duration = 3,
+            Title = "Shaders",
+            Content = "Cool Shaders Enabled",
+        })
+    end,
+    Title = "Enable Shaders",
+    Desc = "Amazing shaders for MVSD",
+})
+
+local ResetShadersButton = UtilityTab:Button({
+    Callback = function()
+        local Lighting = game:GetService("Lighting")
+        
+        if OriginalLighting.Brightness then
+            Lighting.Brightness = OriginalLighting.Brightness
+            Lighting.GlobalShadows = OriginalLighting.GlobalShadows
+            Lighting.ShadowSoftness = OriginalLighting.ShadowSoftness
+            Lighting.ExposureCompensation = OriginalLighting.ExposureCompensation
+            Lighting.Ambient = OriginalLighting.Ambient
+            Lighting.OutdoorAmbient = OriginalLighting.OutdoorAmbient
+            Lighting.ColorShift_Top = OriginalLighting.ColorShift_Top
+            Lighting.ColorShift_Bottom = OriginalLighting.ColorShift_Bottom
+            Lighting.FogColor = OriginalLighting.FogColor
+            Lighting.FogStart = OriginalLighting.FogStart
+            Lighting.FogEnd = OriginalLighting.FogEnd
+            Lighting.ClockTime = OriginalLighting.ClockTime
+            Lighting.GeographicLatitude = OriginalLighting.GeographicLatitude
+        end
+        
+        if Lighting:FindFirstChild("EnhancedSkybox") then
+            Lighting:FindFirstChild("EnhancedSkybox"):Destroy()
+        end
+        if Lighting:FindFirstChild("BloomEffect") then
+            Lighting:FindFirstChild("BloomEffect"):Destroy()
+        end
+        if Lighting:FindFirstChild("ColorCorrection") then
+            Lighting:FindFirstChild("ColorCorrection"):Destroy()
+        end
+        if Lighting:FindFirstChild("DepthOfField") then
+            Lighting:FindFirstChild("DepthOfField"):Destroy()
+        end
+        
+        for _, light in pairs(workspace:GetDescendants()) do
+            if light:IsA("PointLight") then
+                light.Brightness = light.Brightness / 1.5
+                light.Range = light.Range / 1.2
+            end
+        end
+        
+        WindUI:Notify({
+            Icon = "monitor",
+            Duration = 2,
+            Title = "Shaders Reset",
+            Content = "Graphics reset to default",
+        })
+    end,
+    Title = "Reset Shaders",
+    Desc = "Reset graphics back to default",
+})
+
+UtilityTab:Paragraph({
+    Title = "Status",
+    Desc = "Utilities have been loaded!",
+})
+
+DefaultConfig:Register(DistanceFactorSlider.Title, DistanceFactorSlider)
+DefaultConfig:Register(KnifeReachSlider.Title, KnifeReachSlider)
+DefaultConfig:Register(BehindDistanceSlider.Title, BehindDistanceSlider)
+DefaultConfig:Register(VisiblePartsSlider.Title, VisiblePartsSlider)
+DefaultConfig:Register(BaseDeviationSlider.Title, BaseDeviationSlider)
+DefaultConfig:Register(DisplayEnemiesToggle.Title, DisplayEnemiesToggle)
+DefaultConfig:Register(AccuracyBuildupSlider.Title, AccuracyBuildupSlider)
+DefaultConfig:Register(MainAutoTeleportToggle.Title, MainAutoTeleportToggle)
+DefaultConfig:Register(NativeRaycastToggle.Title, NativeRaycastToggle)
+DefaultConfig:Register(ResetShadersButton.Title, ResetShadersButton)
+DefaultConfig:Register(FOVCheckToggle.Title, FOVCheckToggle)
+DefaultConfig:Register(EnableShadersButton.Title, EnableShadersButton)
+DefaultConfig:Register(RejoinButton.Title, RejoinButton)
+DefaultConfig:Register(AntiAFKUtilityToggle.Title, AntiAFKUtilityToggle)
+DefaultConfig:Register(EquipTimeSlider.Title, EquipTimeSlider)
+DefaultConfig:Register(StaffDetectorToggle.Title, StaffDetectorToggle)
+DefaultConfig:Register(JumpPowerSlider.Title, JumpPowerSlider)
+DefaultConfig:Register(ActionTimeSlider.Title, ActionTimeSlider)
+DefaultConfig:Register(SecondAutoTeleportToggle.Title, SecondAutoTeleportToggle)
+DefaultConfig:Register(ClearWhitelistButton.Title, ClearWhitelistButton)
+DefaultConfig:Register(LowPolyToggle.Title, LowPolyToggle)
+DefaultConfig:Register(MainWhitelistInput.Title, MainWhitelistInput)
+DefaultConfig:Register(BlindAllToggle.Title, BlindAllToggle)
+DefaultConfig:Register(MainAddWhitelistButton.Title, MainAddWhitelistButton)
+DefaultConfig:Register(SecondAddWhitelistButton.Title, SecondAddWhitelistButton)
+DefaultConfig:Register(DeleteControllersToggle.Title, DeleteControllersToggle)
+DefaultConfig:Register(MaxVelocitySlider.Title, MaxVelocitySlider)
+DefaultConfig:Register(VelocityFactorSlider.Title, VelocityFactorSlider)
+DefaultConfig:Register(CustomGunToggle.Title, CustomGunToggle)
+DefaultConfig:Register(CustomKnifeToggle.Title, CustomKnifeToggle)
+DefaultConfig:Register(MatchESPToggle.Title, MatchESPToggle)
+DefaultConfig:Register(AntiCrashToggle.Title, AntiCrashToggle)
+DefaultConfig:Register(SecondWhitelistInput.Title, SecondWhitelistInput)
+DefaultConfig:Register(SpeedToggle.Title, SpeedToggle)
+DefaultConfig:Register(ZeroCooldownToggle.Title, ZeroCooldownToggle)

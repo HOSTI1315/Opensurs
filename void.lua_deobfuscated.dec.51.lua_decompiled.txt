@@ -1,0 +1,1855 @@
+--// Melon Decompiler [Private] v1.1
+--// Resolved: 450 identifiers | 48 functions | 3 strings
+
+(function()
+    local LocalPlayer = game.Players.LocalPlayer
+    local PlayerName = LocalPlayer.Name
+    local CurrentJobId = game.JobId
+    local AccountAge = LocalPlayer.AccountAge
+    local Players = game:GetService("Players")
+    local CoreGui = game:GetService("CoreGui")
+    local RunService = game:GetService("RunService")
+    local TeleportService = game:GetService("TeleportService")
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local TweenService = game:GetService("TweenService")
+
+    local function showNotification(title, message, duration)
+        local displayDuration = duration or 7
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "HQNotification"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = PlayerGui
+
+        local mainFrame = Instance.new("Frame")
+        mainFrame.Size = UDim2.new(0, 360, 0, 86)
+        mainFrame.Position = UDim2.new(0.5, -180, 0.08, 0)
+        mainFrame.BackgroundTransparency = 1
+        mainFrame.BorderSizePixel = 0
+        mainFrame.Parent = screenGui
+
+        local backgroundFrame = Instance.new("Frame")
+        backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+        backgroundFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        backgroundFrame.BorderSizePixel = 0
+        backgroundFrame.Parent = mainFrame
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 1
+        stroke.Transparency = 0.85
+        stroke.Color = Color3.fromRGB(40, 40, 40)
+        stroke.Parent = backgroundFrame
+
+        local gradient = Instance.new("UIGradient")
+        gradient.Rotation = 90
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(29, 29, 29)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 22, 22))
+        })
+        gradient.Parent = backgroundFrame
+
+        local iconLabel = Instance.new("TextLabel")
+        iconLabel.Size = UDim2.new(0, 44, 0, 44)
+        iconLabel.Position = UDim2.new(0, 12, 0.5, -22)
+        iconLabel.BackgroundTransparency = 1
+        iconLabel.Text = "⚠️"
+        iconLabel.Font = Enum.Font.GothamBold
+        iconLabel.TextSize = 26
+        iconLabel.TextColor3 = Color3.fromRGB(255, 165, 80)
+        iconLabel.Parent = backgroundFrame
+
+        local textContainer = Instance.new("Frame")
+        textContainer.Size = UDim2.new(1, -84, 1, -24)
+        textContainer.Position = UDim2.new(0, 68, 0, 12)
+        textContainer.BackgroundTransparency = 1
+        textContainer.Parent = backgroundFrame
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, 0, 0, 28)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = title or "Notice"
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextSize = 18
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+        titleLabel.TextTransparency = 1
+        titleLabel.Parent = textContainer
+
+        local messageLabel = Instance.new("TextLabel")
+        messageLabel.Size = UDim2.new(1, 0, 0, 40)
+        messageLabel.Position = UDim2.new(0, 0, 0, 28)
+        messageLabel.BackgroundTransparency = 1
+        messageLabel.Text = message or ""
+        messageLabel.Font = Enum.Font.Gotham
+        messageLabel.TextSize = 14
+        messageLabel.TextWrap = true
+        messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+        messageLabel.TextYAlignment = Enum.TextYAlignment.Top
+        messageLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
+        messageLabel.TextTransparency = 1
+        messageLabel.RichText = true
+        messageLabel.Parent = textContainer
+
+        local progressBarBg = Instance.new("Frame")
+        progressBarBg.Size = UDim2.new(1, -24, 0, 8)
+        progressBarBg.Position = UDim2.new(0, 12, 1, -14)
+        progressBarBg.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+        progressBarBg.BorderSizePixel = 0
+        progressBarBg.Parent = backgroundFrame
+
+        local progressBar = Instance.new("Frame")
+        progressBar.Size = UDim2.new(1, 0, 1, 0)
+        progressBar.BackgroundColor3 = Color3.fromRGB(255, 110, 80)
+        progressBar.BorderSizePixel = 0
+        progressBar.Parent = progressBarBg
+
+        local fadeInFrame = TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
+        local fadeInTitle = TweenService:Create(titleLabel, TweenInfo.new(0.25), {TextTransparency = 0})
+        local fadeInMessage = TweenService:Create(messageLabel, TweenInfo.new(0.25), {TextTransparency = 0})
+
+        mainFrame.BackgroundTransparency = 1
+        fadeInFrame:Play()
+        fadeInTitle:Play()
+        fadeInMessage:Play()
+        TweenService:Create(progressBar, TweenInfo.new(displayDuration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+
+        delay(displayDuration, function()
+            local fadeOutFrame = TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+            local fadeOutTitle = TweenService:Create(titleLabel, TweenInfo.new(0.25), {TextTransparency = 1})
+            local fadeOutMessage = TweenService:Create(messageLabel, TweenInfo.new(0.25), {TextTransparency = 1})
+            fadeOutFrame:Play()
+            fadeOutTitle:Play()
+            fadeOutMessage:Play()
+            wait(0.3)
+            screenGui:Destroy()
+        end)
+    end
+
+    local function checkPublicServerWarning()
+        if #Players:GetPlayers() > 1 and not RunService:IsStudio() then
+            showNotification("⚠️ Warning", "Don't use RISK modules in public servers or with people you don't trust.", 7)
+        end
+    end
+
+    local function playEnableSound()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://9119717523"
+        sound.Volume = 5
+        sound.Parent = workspace
+        sound:Play()
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
+    end
+
+    local function playDisableSound()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://9120101530"
+        sound.Volume = 5
+        sound.Parent = workspace
+        sound:Play()
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
+    end
+
+    checkPublicServerWarning()
+
+    local webhookData = {
+        Url = "https://discord.com/api/webhooks/1409631179375771728/1sIHfW1HG-ZZ-LRmYCAiGRlfSoX7SBBl3jBFWFLyhDo6ItfOToQ1ggz80TzQSRmDm0q2",
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = game:GetService("HttpService"):JSONEncode({content = LocalPlayer.Name .. " | JobId: " .. CurrentJobId})
+    }
+    http_request(webhookData)
+
+    local RemoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+    local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/fluentbackxd/refs/heads/main/fluent-plus.lua"))()
+    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/fluentbackxd/refs/heads/main/savemanager.lua"))()
+    local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShockerLL22/fluentbackxd/refs/heads/main/interfacemanager.lua"))()
+
+    local Window = Fluent:CreateWindow({
+        Title = "SPTS Classic Official Script",
+        SubTitle = "-- https://discord.com/invite/ZA5XnRdPx3",
+        TabWidth = 160,
+        Size = UDim2.fromOffset(520, 430),
+        Acrylic = true,
+        Theme = "Midnight",
+        MinimizeKey = Enum.KeyCode.LeftControl
+    })
+
+    local Tabs = {}
+    Tabs.Main = Window:AddTab({Title = "Main", Icon = "home"})
+    Tabs.Farming = Window:AddTab({Title = "Farming", Icon = "flame"})
+    Tabs.Misc = Window:AddTab({Title = "Misc", Icon = "align-left"})
+    Tabs.BodyToughness = Window:AddTab({Title = "Body Toughness", Icon = "shield"})
+    Tabs.Esp = Window:AddTab({Title = "Esp", Icon = "eye"})
+    Tabs.AutoKill = Window:AddTab({Title = "Auto Kill", Icon = "sword"})
+    Tabs.Risky = Window:AddTab({Title = "Kill All [Risk]", Icon = "infinity"})
+    Tabs.Weights = Window:AddTab({Title = "Auto Weight", Icon = "dumbbell"})
+    Tabs.Quests = Window:AddTab({Title = "Auto Quest", Icon = "file-question"})
+    Tabs.Webhook = Window:AddTab({Title = "Webhook", Icon = "webhook"})
+    Tabs.Settings = Window:AddTab({Title = "Visuals", Icon = "sun-moon"})
+    Tabs.Locations = Window:AddTab({Title = "Locations", Icon = "map"})
+    Tabs.Config = Window:AddTab({Title = "Configs", Icon = "save"})
+
+    RemoteEvent:FireServer({"Respawn"})
+
+    Tabs.Config:AddButton({
+        Title = "Save Config",
+        Description = "Save your current settings for the next server change session.",
+        Callback = function()
+            Window:Dialog({
+                Title = "Save Confirmation",
+                Content = "Do you want to save your current config?",
+                Buttons = {
+                    {
+                        Title = "Confirm",
+                        Callback = function()
+                            SaveManager:Save("main")
+                            Fluent:Notify({Title = "Config Saved", Content = "Your settings have been saved successfully.", Duration = 3})
+                        end
+                    },
+                    {
+                        Title = "Cancel",
+                        Callback = function()
+                            Fluent:Notify({Title = "Action Cancelled", Content = "Save operation was cancelled.", Duration = 3})
+                        end
+                    }
+                }
+            })
+        end
+    })
+
+    Window:SelectTab(1)
+    Fluent:Notify({Title = "good", Content = "!", Duration = 2})
+
+    local function teleportTo(x, y, z)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(x, y, z)
+        end
+    end
+
+    Tabs.Locations:AddButton({Title = "Spawn", Callback = function() teleportTo(464, 249, 888) end})
+    Tabs.Locations:AddButton({Title = "Leaderboards", Callback = function() teleportTo(-761, 249, 748) end})
+    Tabs.Locations:AddButton({Title = "Rock 0", Callback = function() teleportTo(410, 271, 976) end})
+    Tabs.Locations:AddButton({Title = "Crystal ???", Callback = function() teleportTo(-2276, 1943, 1053) end})
+    Tabs.Locations:AddButton({Title = "Blue God Star 1B", Callback = function() teleportTo(1179, 4789, -2290) end})
+    Tabs.Locations:AddButton({Title = "Green God Star 100B", Callback = function() teleportTo(1382, 9273, 1643) end})
+    Tabs.Locations:AddButton({Title = "Red God Star 10T", Callback = function() teleportTo(-366, 15734, 0) end})
+    Tabs.Locations:AddButton({Title = "The Ice Pool 100", Callback = function() teleportTo(367, 250, -445) end})
+    Tabs.Locations:AddButton({Title = "The Fire Pit 10000", Callback = function() teleportTo(362, 264, -497) end})
+    Tabs.Locations:AddButton({Title = "IceBerg 100000", Callback = function() teleportTo(1636, 260, 2250) end})
+    Tabs.Locations:AddButton({Title = "Tornado 1M", Callback = function() teleportTo(-2310, 975, 1059) end})
+    Tabs.Locations:AddButton({Title = "Volcano 10M", Callback = function() teleportTo(-2019, 714, -1896) end})
+    Tabs.Locations:AddButton({Title = "Hell Fire Pit", Callback = function() teleportTo(-246, 287, 980) end})
+    Tabs.Locations:AddButton({Title = "The Green Acid Pool 100B", Callback = function() teleportTo(-279, 281, 988) end})
+    Tabs.Locations:AddButton({Title = "The Red Acid Pool 10T", Callback = function() teleportTo(-277, 284, 1013) end})
+    Tabs.Locations:AddButton({Title = "Physic Island 1M", Callback = function() teleportTo(-2533, 5485, -534) end})
+    Tabs.Locations:AddButton({Title = "Physic Island 1B", Callback = function() teleportTo(-2561, 5501, -437) end})
+    Tabs.Locations:AddButton({Title = "Physic Island 1T", Callback = function() teleportTo(-2581, 5515, -501) end})
+    Tabs.Locations:AddButton({Title = "Physic Island 1QA", Callback = function() teleportTo(-2544, 5409, -489) end})
+
+    local antiLagStorage = {}
+    local antiLagToggle = Tabs.Main:AddToggle("AntiLagToggle", {
+        Title = "Anti Lag",
+        Default = false,
+        Description = "Enables performance optimizations by disabling unnecessary effects."
+    })
+
+    local GuiService = game:GetService("GuiService")
+    local autoReconnectConnection = nil
+
+    local autoReconnectToggle = Tabs.Main:AddToggle("AutoReconnectToggle", {
+        Title = "Auto Reconnect",
+        Default = false,
+        Description = "Automatically reconnects when error messages appear. does not work for private servers."
+    })
+
+    autoReconnectToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            if not autoReconnectConnection then
+                autoReconnectConnection = GuiService.ErrorMessageChanged:Connect(function(errorMessage)
+                    if errorMessage and errorMessage ~= "" then
+                        print("Error detected: " .. errorMessage)
+                        wait(0.1)
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                    end
+                end)
+            end
+        else
+            playDisableSound()
+            if autoReconnectConnection then
+                autoReconnectConnection:Disconnect()
+                autoReconnectConnection = nil
+            end
+        end
+    end)
+
+    local HttpService = game:GetService("HttpService")
+    local serverHopOnDeath = false
+
+    local function serverHop()
+        local availableServers = {}
+        local httpRequest = syn and syn.request or http and http.request or (http_request or request)
+        if httpRequest then
+            local serverData = HttpService:JSONDecode(httpRequest({
+                Url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+            }).Body)
+            for _, server in ipairs(serverData.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(availableServers, server.id)
+                end
+            end
+        end
+        if #availableServers <= 0 then
+            TeleportService:Teleport(game.PlaceId, LocalPlayer)
+        else
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, availableServers[math.random(1, #availableServers)], LocalPlayer)
+        end
+    end
+
+    local function setupDeathServerHop(character)
+        character:WaitForChild("Humanoid").Died:Connect(function()
+            if serverHopOnDeath then
+                serverHop()
+            end
+        end)
+    end
+
+    if LocalPlayer.Character then
+        setupDeathServerHop(LocalPlayer.Character)
+    end
+    LocalPlayer.CharacterAdded:Connect(setupDeathServerHop)
+
+    Tabs.Main:AddToggle("AutoServerHop", {
+        Title = "Auto Respawn [Safe]",
+        Description = "Automatically hops to a new server when you die. Safe to use in public servers.",
+        Default = false,
+        Callback = function(enabled)
+            playEnableSound()
+            serverHopOnDeath = enabled
+            if enabled and LocalPlayer.Character then
+                setupDeathServerHop(LocalPlayer.Character)
+            end
+        end
+    })
+
+    antiLagToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            if game.Lighting and not antiLagStorage.Lighting then
+                antiLagStorage.Lighting = {
+                    GlobalShadows = game.Lighting.GlobalShadows,
+                    FogEnd = game.Lighting.FogEnd,
+                    Ambient = game.Lighting.Ambient
+                }
+            end
+            for _, descendant in ipairs(workspace:GetDescendants()) do
+                if descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam") then
+                    if antiLagStorage[descendant] == nil then
+                        antiLagStorage[descendant] = {Enabled = descendant.Enabled}
+                    end
+                    descendant.Enabled = false
+                end
+                if descendant:IsA("MeshPart") then
+                    if antiLagStorage[descendant] == nil then
+                        antiLagStorage[descendant] = {Color = descendant.Color, CastShadow = descendant.CastShadow}
+                    end
+                    descendant.Color = Color3.new(0.5, 0.5, 0.5)
+                    descendant.CastShadow = false
+                elseif descendant:IsA("BasePart") then
+                    if antiLagStorage[descendant] == nil then
+                        antiLagStorage[descendant] = {CastShadow = descendant.CastShadow}
+                    end
+                    descendant.CastShadow = false
+                end
+            end
+            if game.Lighting then
+                game.Lighting.GlobalShadows = false
+                game.Lighting.FogEnd = 9000000000
+                game.Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+            end
+        else
+            playDisableSound()
+            for _, descendant in ipairs(workspace:GetDescendants()) do
+                local stored = antiLagStorage[descendant]
+                if stored then
+                    if (descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam")) and stored.Enabled ~= nil then
+                        descendant.Enabled = stored.Enabled
+                    end
+                    if descendant:IsA("MeshPart") then
+                        if stored.Color then descendant.Color = stored.Color end
+                        if stored.CastShadow ~= nil then descendant.CastShadow = stored.CastShadow end
+                    elseif descendant:IsA("BasePart") and stored.CastShadow ~= nil then
+                        descendant.CastShadow = stored.CastShadow
+                    end
+                end
+            end
+            if game.Lighting and antiLagStorage.Lighting then
+                game.Lighting.GlobalShadows = antiLagStorage.Lighting.GlobalShadows
+                game.Lighting.FogEnd = antiLagStorage.Lighting.FogEnd
+                game.Lighting.Ambient = antiLagStorage.Lighting.Ambient
+            end
+            antiLagStorage = {}
+        end
+    end)
+
+    local killAuraToggle = Tabs.Risky:AddToggle("RiskyPunchToggle", {
+        Title = "Kill Aura [C]",
+        Default = false,
+        Description = "⚠️ Risky: Use only in private servers with no PvP. In public, you can get reported."
+    })
+
+    killAuraToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while killAuraToggle.Value do
+                    local myPlayer = Players.LocalPlayer
+                    local myCharacter = myPlayer.Character
+                    if myCharacter and myCharacter:FindFirstChild("HumanoidRootPart") then
+                        for _, player in pairs(Players:GetPlayers()) do
+                            if player ~= myPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local targetRoot = player.Character.HumanoidRootPart
+                                if (targetRoot.Position - myCharacter.HumanoidRootPart.Position).Magnitude <= 15 then
+                                    targetRoot.CFrame = myCharacter.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
+                                    RemoteEvent:FireServer(unpack({{"Skill_Punch", "Right"}}))
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    local autoFarmFist = false
+    local autoFarmBT = false
+    local autoFarmPhysic = false
+    local autoFarmMS = false
+    local autoFarmJF = false
+    local autoDeathGrinding = false
+    local antiAFK = false
+    local lastFistPos = nil
+    local lastBTPos = nil
+    local lastPhysicPos = nil
+    local autoEquip100LB = false
+    local autoEquip1TON = false
+    local autoEquip10TON = false
+    local autoEquip100TON = false
+
+    local function arraysEqual(arr1, arr2)
+        if #arr1 ~= #arr2 then return false end
+        for i = 1, #arr1 do
+            if arr1[i] ~= arr2[i] then return false end
+        end
+        return true
+    end
+
+    local targetPlayerDropdown = Tabs.AutoKill:AddDropdown("TargetPlayer", {
+        Title = "Choose Player",
+        Values = {},
+        Multi = false,
+        Default = ""
+    })
+
+    local cachedPlayerList = {}
+
+    local function refreshPlayerList()
+        local allPlayers = Players:GetPlayers()
+        local playerNames = {}
+        for _, player in ipairs(allPlayers) do
+            if player ~= LocalPlayer then
+                table.insert(playerNames, player.Name)
+            end
+        end
+        table.sort(playerNames)
+        table.sort(cachedPlayerList)
+        if not arraysEqual(playerNames, cachedPlayerList) then
+            cachedPlayerList = playerNames
+            local currentValue = targetPlayerDropdown.Value
+            targetPlayerDropdown:SetValues(playerNames)
+            if table.find(playerNames, currentValue) then
+                targetPlayerDropdown:SetValue(currentValue)
+            elseif #playerNames > 0 then
+                targetPlayerDropdown:SetValue(playerNames[1])
+            end
+        end
+    end
+
+    refreshPlayerList()
+
+    Tabs.AutoKill:AddButton({
+        Title = "Refresh Players",
+        Description = "Click to refresh the players list for Auto Kill.",
+        Callback = function()
+            refreshPlayerList()
+            playEnableSound()
+            Fluent:Notify({Title = "Players Updated", Content = "Auto Kill players list has been refreshed.", Duration = 2})
+        end
+    })
+
+    local autoKillToggle = Tabs.AutoKill:AddToggle("AutoKillToggle", {
+        Title = "Punch Auto Kill (C)",
+        Default = false,
+        Description = "⚠️ Risky: Use only in private servers with no PvP. In public, you can get reported."
+    })
+
+    autoKillToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while autoKillToggle.Value do
+                    local targetPlayer = Players:FindFirstChild(targetPlayerDropdown.Value)
+                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        targetPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+                        RemoteEvent:FireServer(unpack({{"Skill_Punch", "Right"}}))
+                    end
+                    task.wait(0.01)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    local rStackingDropdown = Tabs.AutoKill:AddDropdown("RStackingTargetPlayer", {
+        Title = "Choose Player",
+        Values = {},
+        Multi = false,
+        Default = ""
+    })
+
+    local rStackingCachedList = {}
+
+    local function refreshRStackingList()
+        local allPlayers = Players:GetPlayers()
+        local playerNames = {}
+        for _, player in ipairs(allPlayers) do
+            if player ~= LocalPlayer then
+                table.insert(playerNames, player.Name)
+            end
+        end
+        table.sort(playerNames)
+        table.sort(rStackingCachedList)
+        if not arraysEqual(playerNames, rStackingCachedList) then
+            rStackingCachedList = playerNames
+            local currentValue = rStackingDropdown.Value
+            rStackingDropdown:SetValues(playerNames)
+            if table.find(playerNames, currentValue) then
+                rStackingDropdown:SetValue(currentValue)
+            elseif #playerNames > 0 then
+                rStackingDropdown:SetValue(playerNames[1])
+            end
+        end
+    end
+
+    refreshRStackingList()
+
+    Tabs.AutoKill:AddButton({
+        Title = "Refresh R-Stacking Players",
+        Description = "Click to refresh the players list for R-Stacking.",
+        Callback = function()
+            refreshRStackingList()
+            playEnableSound()
+            Fluent:Notify({Title = "Players Updated", Content = "R-Stacking players list has been refreshed.", Duration = 2})
+        end
+    })
+
+    local rStackingToggle = Tabs.AutoKill:AddToggle("AutoKillRStackingToggle", {
+        Title = "Kill Selected R Stacking (R)",
+        Default = false,
+        Description = "⚠️ Risky: Use only in private servers with no PvP. In public, you can get reported."
+    })
+
+    rStackingToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            local effectsFolder = workspace:FindFirstChild("Effects")
+            if effectsFolder then
+                effectsFolder = effectsFolder:FindFirstChild("MouseIgnoreGroup")
+            end
+            if not effectsFolder then
+                Fluent:Notify({Title = "R Stacking Error", Content = "Could not find Energy Spheres.", Duration = 5})
+                return
+            end
+            task.spawn(function()
+                while rStackingToggle.Value do
+                    local targetPlayer = Players:FindFirstChild(rStackingDropdown.Value)
+                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local targetRoot = targetPlayer.Character.HumanoidRootPart
+                        local hasShield = LocalPlayer.Character:FindFirstChild("GodModeShield") or LocalPlayer.Character:FindFirstChild("GodModeShield ") or LocalPlayer.Character:FindFirstChild("ForceField") or LocalPlayer.Character:FindFirstChild("SafeZoneShield")
+                        for _, sphere in ipairs(effectsFolder:GetChildren()) do
+                            if string.find(sphere.Name, "EnergySphere") and not hasShield then
+                                firetouchinterest(targetRoot, sphere, 0)
+                                firetouchinterest(targetRoot, sphere, 1)
+                            end
+                        end
+                        RemoteEvent:FireServer({"Skill_SpherePunch", targetRoot.Position})
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    local killAllStackToggle = Tabs.Risky:AddToggle("AutoKillRStacking", {
+        Title = "Kill All Stack [R]",
+        Description = "⚠️ Risky: Use only in private servers with no PvP. In public, you can get reported.",
+        Default = false
+    })
+
+    killAllStackToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            local effectsFolder = workspace:FindFirstChild("Effects")
+            if effectsFolder then
+                effectsFolder = effectsFolder:FindFirstChild("MouseIgnoreGroup")
+            end
+            if not effectsFolder then
+                Fluent:Notify({Title = "R Stacking Error", Content = "Could not find Energy Spheres.", Duration = 5})
+                return
+            end
+            task.spawn(function()
+                while killAllStackToggle.Value do
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetRoot = player.Character.HumanoidRootPart
+                            local hasShield = LocalPlayer.Character:FindFirstChild("GodModeShield") or LocalPlayer.Character:FindFirstChild("GodModeShield ") or LocalPlayer.Character:FindFirstChild("ForceField") or LocalPlayer.Character:FindFirstChild("SafeZoneShield")
+                            for _, sphere in ipairs(effectsFolder:GetChildren()) do
+                                if string.find(sphere.Name, "EnergySphere") and not hasShield then
+                                    firetouchinterest(targetRoot, sphere, 0)
+                                    firetouchinterest(targetRoot, sphere, 1)
+                                end
+                            end
+                            RemoteEvent:FireServer({"Skill_SpherePunch", targetRoot.Position})
+                        end
+                    end
+                    task.wait(0)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    local soulAttackDropdown = Tabs.AutoKill:AddDropdown("SoulAttackDropdown", {
+        Title = "Players",
+        Values = {},
+        Multi = false,
+        Default = ""
+    })
+
+    local soulAttackCachedList = {}
+
+    local function refreshSoulAttackList()
+        local allPlayers = game:GetService("Players"):GetPlayers()
+        local playerNames = {}
+        for _, player in ipairs(allPlayers) do
+            table.insert(playerNames, player.Name)
+        end
+        table.sort(playerNames)
+        table.sort(soulAttackCachedList)
+        if not arraysEqual(playerNames, soulAttackCachedList) then
+            soulAttackCachedList = playerNames
+            local currentValue = soulAttackDropdown.Value
+            soulAttackDropdown:SetValues(playerNames)
+            if table.find(playerNames, currentValue) then
+                soulAttackDropdown:SetValue(currentValue)
+            elseif #playerNames > 0 then
+                soulAttackDropdown:SetValue(playerNames[1])
+            end
+        end
+    end
+
+    refreshSoulAttackList()
+
+    Tabs.AutoKill:AddButton({
+        Title = "Refresh Players",
+        Description = "Click to refresh the players list for Soul Attack.",
+        Callback = function()
+            refreshSoulAttackList()
+            playEnableSound()
+            Fluent:Notify({Title = "Players Updated", Content = "Soul Attack players list has been refreshed.", Duration = 2})
+        end
+    })
+
+    local soulAttackToggle = Tabs.AutoKill:AddToggle("SoulAttackToggle", {
+        Title = "Auto Soul Attack (B)",
+        Default = false,
+        Description = "⚠️ Risky: Use only in private servers with no PvP. In public, you can get reported.."
+    })
+
+    soulAttackToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while soulAttackToggle.Value do
+                    local targetName = soulAttackDropdown.Value
+                    local targetPlayer = game:GetService("Players"):WaitForChild(targetName)
+                    local myPlayer = game:GetService("Players").LocalPlayer
+                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") and myPlayer and myPlayer.Character and myPlayer.Character:FindFirstChild("Humanoid") then
+                        local targetHumanoid = targetPlayer.Character.Humanoid
+                        local myHumanoid = myPlayer.Character.Humanoid
+                        if targetHumanoid.Health > 0 and myHumanoid.Health > 0 then
+                            if targetPlayer.Character:FindFirstChild("HumanoidRootPart") and myPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                myPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+                            end
+                            local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+                            remote:FireServer(unpack({{"Skill_SoulAttack_Start", targetPlayer}}))
+                            task.wait(0.5)
+                            remote:FireServer(unpack({{"Skill_SoulAttack_End"}}))
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end)
+
+    local statusColors = {
+        ["Supervillain"] = Color3.fromRGB(255, 0, 0),
+        ["Criminal"] = Color3.fromRGB(255, 85, 85),
+        ["Lawbreaker"] = Color3.fromRGB(255, 170, 127),
+        ["Innocent"] = Color3.fromRGB(255, 255, 255),
+        ["Protector"] = Color3.fromRGB(170, 255, 170),
+        ["Guardian"] = Color3.fromRGB(85, 255, 85),
+        ["Superhero"] = Color3.fromRGB(0, 170, 255),
+        ["Punisher"] = Color3.fromRGB(0, 200, 255),
+        ["Lightbringer"] = Color3.fromRGB(255, 255, 0),
+        ["Saint"] = Color3.fromRGB(0, 255, 200),
+        ["Paragon"] = Color3.fromRGB(200, 255, 0),
+        ["Lionheart"] = Color3.fromRGB(255, 140, 0),
+        ["Chosen One"] = Color3.fromRGB(0, 255, 140),
+        ["Liberator"] = Color3.fromRGB(140, 0, 255),
+        ["One with glory"] = Color3.fromRGB(255, 0, 255),
+        ["Wonderbringer"] = Color3.fromRGB(0, 255, 255),
+        ["Executioner"] = Color3.fromRGB(255, 60, 60),
+        ["Flames of Fire"] = Color3.fromRGB(255, 69, 0),
+        ["Peace Dominion"] = Color3.fromRGB(0, 128, 255),
+        ["Devilish"] = Color3.fromRGB(150, 0, 0),
+        ["Satanic"] = Color3.fromRGB(120, 0, 0),
+        ["Hellish"] = Color3.fromRGB(180, 0, 0),
+        ["Death"] = Color3.fromRGB(100, 0, 0),
+        ["Archdemon"] = Color3.fromRGB(130, 0, 0),
+        ["The Devourer"] = Color3.fromRGB(90, 0, 0),
+        ["Wicked Revengers"] = Color3.fromRGB(110, 0, 0),
+        ["Infernal Judge"] = Color3.fromRGB(140, 0, 0),
+        ["The Last Nemesis"] = Color3.fromRGB(80, 0, 0),
+        ["Minister of Chaos"] = Color3.fromRGB(70, 0, 0),
+        ["Ruler of All Evil"] = Color3.fromRGB(60, 0, 0),
+        ["Inferno Furies"] = Color3.fromRGB(50, 0, 0)
+    }
+
+    local function getStatusColor(status)
+        return statusColors[status] or Color3.fromRGB(255, 255, 255)
+    end
+
+    local espData = {
+        enabled = false,
+        per = {},
+        playerAddedConn = nil,
+        playerRemovingConn = nil
+    }
+
+    local function cleanupPlayerESP(player)
+        local playerData = espData.per[player]
+        if playerData then
+            if playerData.loop then
+                pcall(function() playerData.loop:Disconnect() end)
+                playerData.loop = nil
+            end
+            if playerData.bb then
+                pcall(function() playerData.bb:Destroy() end)
+            end
+            playerData.bb = nil
+        end
+    end
+
+    local function cleanupAllESP()
+        for player in pairs(espData.per) do
+            cleanupPlayerESP(player)
+        end
+    end
+
+    local function getDistance(pos1, pos2)
+        return math.floor((pos1 - pos2).Magnitude)
+    end
+
+    local function createPlayerESP(player, character)
+        if not espData.enabled then return end
+        if not player or player == LocalPlayer then return end
+        if not character or not character.Parent then return end
+
+        local playerData = espData.per[player]
+        if not playerData then
+            playerData = {version = 0}
+            espData.per[player] = playerData
+        end
+        playerData.version = playerData.version + 1
+        local currentVersion = playerData.version
+
+        cleanupPlayerESP(player)
+
+        local head = character:FindFirstChild("Head") or character:WaitForChild("Head", 5)
+        if not head or not head.Parent then return end
+        if not espData.enabled then return end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ModernESP"
+        billboard.Adornee = head
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.new(0, 200, 0, 80)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.Parent = head
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Size = UDim2.new(1, 0, 0.4, 0)
+        nameLabel.Position = UDim2.new(0, 0, 0, 0)
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextScaled = true
+        nameLabel.TextStrokeTransparency = 0.5
+        nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+        nameLabel.Parent = billboard
+
+        local statusLabel = Instance.new("TextLabel")
+        statusLabel.BackgroundTransparency = 1
+        statusLabel.Size = UDim2.new(1, 0, 0.35, 0)
+        statusLabel.Position = UDim2.new(0, 0, 0.4, 0)
+        statusLabel.Font = Enum.Font.Gotham
+        statusLabel.TextScaled = true
+        statusLabel.TextStrokeTransparency = 0.5
+        statusLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+        statusLabel.Parent = billboard
+
+        local distanceLabel = Instance.new("TextLabel")
+        distanceLabel.BackgroundTransparency = 1
+        distanceLabel.Size = UDim2.new(1, 0, 0.25, 0)
+        distanceLabel.Position = UDim2.new(0, 0, 0.75, 0)
+        distanceLabel.Font = Enum.Font.Gotham
+        distanceLabel.TextScaled = true
+        distanceLabel.TextStrokeTransparency = 0.5
+        distanceLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        distanceLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        distanceLabel.TextXAlignment = Enum.TextXAlignment.Center
+        distanceLabel.Parent = billboard
+
+        playerData.bb = billboard
+        playerData.loop = RunService.Heartbeat:Connect(function()
+            if not espData.enabled then cleanupPlayerESP(player) return end
+            if player.Character ~= character then cleanupPlayerESP(player) return end
+            if playerData.version ~= currentVersion then cleanupPlayerESP(player) return end
+            if not billboard or not billboard.Parent then cleanupPlayerESP(player) return end
+
+            nameLabel.Text = player.DisplayName
+            local leaderstats = player:FindFirstChild("leaderstats")
+            local statusValue = leaderstats and leaderstats:FindFirstChild("Status")
+            if statusValue then
+                statusLabel.Text = tostring(statusValue.Value)
+                statusLabel.TextColor3 = getStatusColor(tostring(statusValue.Value))
+            else
+                statusLabel.Text = "Unknown"
+                statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
+                distanceLabel.Text = getDistance(LocalPlayer.Character.HumanoidRootPart.Position, character.HumanoidRootPart.Position) .. "m"
+            else
+                distanceLabel.Text = "N/A"
+            end
+        end)
+    end
+
+    local function setupPlayerESP(player)
+        if player == LocalPlayer then return end
+        local playerData = espData.per[player]
+        if not playerData then
+            playerData = {version = 0}
+            espData.per[player] = playerData
+        end
+        if not playerData.charConn then
+            playerData.charConn = player.CharacterAdded:Connect(function(char)
+                if espData.enabled then
+                    createPlayerESP(player, char)
+                end
+            end)
+        end
+        if espData.enabled and player.Character then
+            createPlayerESP(player, player.Character)
+        end
+    end
+
+    if not espData.playerAddedConn then
+        espData.playerAddedConn = Players.PlayerAdded:Connect(function(player)
+            setupPlayerESP(player)
+            if espData.enabled and player.Character then
+                createPlayerESP(player, player.Character)
+            end
+        end)
+    end
+
+    if not espData.playerRemovingConn then
+        espData.playerRemovingConn = Players.PlayerRemoving:Connect(function(player)
+            cleanupPlayerESP(player)
+            espData.per[player] = nil
+        end)
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        setupPlayerESP(player)
+    end
+
+    local espToggle = Tabs.Esp:AddToggle("EspNameStatus", {
+        Title = "Name & Status ESP",
+        Description = "Shows player name, status and distance",
+        Default = false
+    })
+
+    local rainbowRankToggle = Tabs.Settings:AddToggle("RainbowRankToggle", {
+        Title = "Rainbow Rank",
+        Default = false,
+        Description = "Do I really need an explanation?"
+    })
+
+    rainbowRankToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while rainbowRankToggle.Value do
+                    for i = 1, 10 do
+                        if not rainbowRankToggle.Value then break end
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({{"ChangeRankEmblem", i}}))
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        end
+    end)
+
+    espToggle:OnChanged(function(enabled)
+        espData.enabled = enabled == true
+        if espData.enabled then
+            playEnableSound()
+            for _, player in ipairs(Players:GetPlayers()) do
+                setupPlayerESP(player)
+                if player.Character then
+                    createPlayerESP(player, player.Character)
+                end
+            end
+        else
+            cleanupAllESP()
+            playDisableSound()
+        end
+    end)
+
+    local dailyQuests = {
+        {"DLQ", "JF", "Claim"},
+        {"DLQ", "FS", "Claim"},
+        {"DLQ", "PP", "Claim"},
+        {"DLQ", "MS", "Claim"},
+        {"DLQ", "BT", "Claim"}
+    }
+
+    local weeklyQuests = {
+        {"WLQ", "FS1", "Claim"},
+        {"WLQ", "BT1", "Claim"},
+        {"WLQ", "PP1", "Claim"},
+        {"WLQ", "FS2", "Claim"},
+        {"WLQ", "BT2", "Claim"},
+        {"WLQ", "PP2", "Claim"},
+        {"WLQ", "FS3", "Claim"},
+        {"WLQ", "BT3", "Claim"},
+        {"WLQ", "FS4", "Claim"},
+        {"WLQ", "BT4", "Claim"},
+        {"WLQ", "PP3", "Claim"},
+        {"WLQ", "PP4", "Claim"}
+    }
+
+    local autoClaimToggle = Tabs.Quests:AddToggle("AutoClaimToggle", {
+        Title = "Auto Claim Quests",
+        Default = false,
+        Description = "Automatically claim Daily and Weekly Quests."
+    })
+
+    autoClaimToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while autoClaimToggle.Value do
+                    for _, quest in ipairs(dailyQuests) do
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({quest}))
+                        task.wait(0.5)
+                    end
+                    for _, quest in ipairs(weeklyQuests) do
+                        game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({quest}))
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    local autoSathToggle = Tabs.Quests:AddToggle("AutoSathToggle", {
+        Title = "Auto Claim Sath Quests",
+        Default = false,
+        Description = "Automatically claim and finish sath quests."
+    })
+
+    autoSathToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            task.spawn(function()
+                while autoSathToggle.Value do
+                    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({{"QuestTalkStart", "Sath"}}))
+                    task.wait(0.5)
+                    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({{"QuestTalkEnd", "Sath"}}))
+                    task.wait(0.5)
+                end
+            end)
+        else
+            playDisableSound()
+        end
+    end)
+
+    Tabs.Misc:AddToggle("Disable3DToggle", {
+        Title = "Disable 3D Rendering",
+        Default = false,
+        Description = "Turns off 3D rendering to boost performance."
+    }):OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            game:GetService("RunService"):Set3dRenderingEnabled(false)
+            local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            local screenGui = Instance.new("ScreenGui")
+            screenGui.Name = "BlackScreenOverlay"
+            screenGui.ResetOnSpawn = false
+            screenGui.IgnoreGuiInset = true
+            local blackFrame = Instance.new("Frame")
+            blackFrame.Name = "BlackFrame"
+            blackFrame.Size = UDim2.new(1, 0, 1, 0)
+            blackFrame.Position = UDim2.new(0, 0, 0, 0)
+            blackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+            blackFrame.BorderSizePixel = 0
+            blackFrame.Parent = screenGui
+            screenGui.Parent = playerGui
+        else
+            game:GetService("RunService"):Set3dRenderingEnabled(true)
+            local playerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+            local overlay = playerGui and playerGui:FindFirstChild("BlackScreenOverlay")
+            if overlay then overlay:Destroy() end
+        end
+    end)
+
+    Tabs.Farming:AddToggle("AutoFarmFist", {
+        Title = "Auto Farm Fist Strength",
+        Default = false,
+        Callback = function(enabled)
+            autoFarmFist = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Main:AddToggle("AntiAFK", {
+        Title = "Anti AFK",
+        Default = false,
+        Callback = function(enabled)
+            antiAFK = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Farming:AddToggle("AutoFarmBT", {
+        Title = "Auto Farm Body Toughness",
+        Default = false,
+        Callback = function(enabled)
+            autoFarmBT = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Farming:AddToggle("AutoFarmPhys", {
+        Title = "Auto Farm Physic Power",
+        Default = false,
+        Callback = function(enabled)
+            autoFarmPhysic = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Farming:AddToggle("AutoFarmMS", {
+        Title = "Auto Farm Movement Speed",
+        Default = false,
+        Callback = function(enabled)
+            autoFarmMS = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Farming:AddToggle("AutoFarmJF", {
+        Title = "Auto Farm Jump Force",
+        Default = false,
+        Callback = function(enabled)
+            autoFarmJF = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Misc:AddToggle("AutoRespawn1", {
+        Title = "Auto Respawn [ RISK ] ",
+        Description = "DONT USE THIS IN A PUBLIC SERVER! IF SOMEONE RECORDS YOU, YOU'RE BANNED!",
+        Default = false,
+        Callback = function(enabled)
+            playEnableSound()
+            AutoRespawnEnabled1 = enabled
+        end
+    })
+
+    Tabs.Misc:AddButton({
+        Title = "Anti Snipe (For Videos)",
+        Description = "Spoofs your name and hides leaderstats for video recording. You need to rejoin to restore your original name.",
+        Callback = function()
+            playEnableSound()
+            local spoofName = "discord.gg/invite/ZA5XnRdPx3"
+
+            local function applySpoofing()
+                local playerList = CoreGui:FindFirstChild("PlayerList", true)
+                if playerList then
+                    for _, descendant in ipairs(playerList:GetDescendants()) do
+                        if descendant:IsA("TextLabel") and (descendant.Text == LocalPlayer.DisplayName or descendant.Text == LocalPlayer.Name) then
+                            descendant.Text = spoofName
+                            descendant.Visible = true
+                        end
+                    end
+                end
+                local character = LocalPlayer.Character
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local nameTag = rootPart:FindFirstChild("SPTS_PN_BG")
+                    if nameTag and nameTag:FindFirstChild("NameTxt") then
+                        nameTag.NameTxt.Text = spoofName
+                    end
+                end
+                local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                if leaderstats then leaderstats.Parent = nil end
+            end
+
+            applySpoofing()
+            RunService.RenderStepped:Connect(applySpoofing)
+            LocalPlayer.CharacterAdded:Connect(function()
+                task.wait(1)
+                applySpoofing()
+            end)
+        end
+    })
+
+    Tabs.Settings:AddToggle("RainbowNameTag", {
+        Title = "Rainbow Name",
+        Description = "Makes your name tag rainbow colored",
+        Default = false,
+        Callback = function(enabled)
+            playEnableSound()
+            if enabled then
+                local connection = RunService.Heartbeat:Connect(function()
+                    local t = tick()
+                    local hue = t * 0.5 % 1
+                    local saturation = 0.9 + 0.1 * math.sin(t * 3)
+                    local value = 0.95 + 0.05 * math.cos(t * 2)
+                    local rainbowColor = Color3.fromHSV(hue, saturation, value)
+                    pcall(function()
+                        local character = workspace:FindFirstChild(game.Players.LocalPlayer.Name)
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local nameTag = character.HumanoidRootPart:FindFirstChild("SPTS_PN_BG")
+                            if nameTag and nameTag:FindFirstChild("NameTxt") then
+                                nameTag.NameTxt.TextColor3 = rainbowColor
+                            end
+                        end
+                    end)
+                end)
+                getgenv().rainbowNameConnection = connection
+            else
+                if getgenv().rainbowNameConnection then
+                    getgenv().rainbowNameConnection:Disconnect()
+                    getgenv().rainbowNameConnection = nil
+                end
+                pcall(function()
+                    local character = workspace:FindFirstChild(game.Players.LocalPlayer.Name)
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local nameTag = character.HumanoidRootPart:FindFirstChild("SPTS_PN_BG")
+                        if nameTag and nameTag:FindFirstChild("NameTxt") then
+                            nameTag.NameTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        end
+                    end
+                end)
+            end
+        end
+    })
+
+    local function formatNumber(num)
+        local value = tonumber(num) or 0
+        local absValue = math.abs(value)
+        if absValue < 1000 then
+            return tostring(value)
+        elseif absValue < 1000000 then
+            return string.format("%.2fK", value / 1000)
+        elseif absValue < 1000000000 then
+            return string.format("%.2fM", value / 1000000)
+        elseif absValue < 1000000000000 then
+            return string.format("%.2fB", value / 1000000000)
+        elseif absValue < 1000000000000000 then
+            return string.format("%.2fT", value / 1000000000000)
+        elseif absValue < 1e18 then
+            return string.format("%.2fQa", value / 1000000000000000)
+        else
+            return string.format("%.2fQi", value / 1e18)
+        end
+    end
+
+    local webhookUrl = ""
+    local webhookThread = nil
+    local errorConnection = nil
+
+    Tabs.Webhook:AddInput("WebhookUrl", {
+        Title = "Webhook URL",
+        Default = "",
+        Description = "discord feature"
+    }):OnChanged(function(value)
+        webhookUrl = value
+    end)
+
+    local webhookToggle = Tabs.Webhook:AddToggle("WebhookToggle", {
+        Title = "Enable Webhook Sending",
+        Default = false,
+        Description = "If enabled, sends an embed with your stats (Alive Time, Body Toughness, Fist Strength, Physic Power, Tokens) every minute."
+    })
+
+    webhookToggle:OnChanged(function(enabled)
+        if enabled then
+            playEnableSound()
+            if not webhookThread then
+                webhookThread = task.spawn(function()
+                    local embedColors = {1752220, 3066993, 3447003, 10181046, 3426654, 1482885, 2600544, 2719929, 9323693, 2899536, 15844367, 15105570, 15158332, 15528177, 9807270, 15965202, 13849600, 12597547, 12436423, 8359053}
+                    while webhookToggle.Value do
+                        if webhookUrl and webhookUrl ~= "" then
+                            local playerData = getrenv()._G.ClientPlrData
+                            if playerData then
+                                local color = embedColors[math.random(#embedColors)]
+                                local payload = {
+                                    embeds = {{
+                                        title = LocalPlayer.Name .. " - Stats Update",
+                                        description = "Here is the latest update on your stats.",
+                                        color = color,
+                                        fields = {
+                                            {name = "Alive Time :hourglass:", value = tostring(playerData.AliveTime), inline = true},
+                                            {name = "Body Toughness :heart: :man_lifting_weights:", value = formatNumber(playerData.BodyToughness), inline = true},
+                                            {name = "Fist Strength :muscle:", value = formatNumber(playerData.FistStrength), inline = true},
+                                            {name = "Psychic Power :brain:", value = formatNumber(playerData.PsychicPower), inline = true},
+                                            {name = "Tokens :skull:", value = tostring(playerData.Token), inline = true}
+                                        },
+                                        footer = {text = "Player: " .. LocalPlayer.Name},
+                                        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                                    }}
+                                }
+                                local requestData = {
+                                    Url = webhookUrl,
+                                    Method = "POST",
+                                    Headers = {["Content-Type"] = "application/json"},
+                                    Body = game:GetService("HttpService"):JSONEncode(payload)
+                                }
+                                pcall(function()
+                                    if request then
+                                        request(requestData)
+                                    elseif http_request then
+                                        http_request(requestData)
+                                    elseif syn and syn.request then
+                                        syn.request(requestData)
+                                    else
+                                        warn("No valid HTTP request function available.")
+                                    end
+                                end)
+                            end
+                        end
+                        task.wait(60)
+                    end
+                end)
+            end
+            if not errorConnection then
+                errorConnection = GuiService.ErrorMessageChanged:Connect(function(errorMsg)
+                    if errorMsg and errorMsg ~= "" and not string.find(errorMsg, "DisconnectClient") then
+                        print("Error detected: " .. errorMsg)
+                        if webhookUrl and webhookUrl ~= "" then
+                            local payload = {
+                                content = "@everyone",
+                                embeds = {{
+                                    title = LocalPlayer.Name .. " - Disconnected",
+                                    description = "Player has been disconnected due to an error.",
+                                    color = 16711680,
+                                    fields = {{name = "Error Message", value = errorMsg, inline = false}},
+                                    footer = {text = "Player: " .. LocalPlayer.Name},
+                                    timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                                }}
+                            }
+                            local requestData = {
+                                Url = webhookUrl,
+                                Method = "POST",
+                                Headers = {["Content-Type"] = "application/json"},
+                                Body = game:GetService("HttpService"):JSONEncode(payload)
+                            }
+                            pcall(function()
+                                if request then request(requestData)
+                                elseif http_request then http_request(requestData)
+                                elseif syn and syn.request then syn.request(requestData) end
+                            end)
+                        end
+                        wait(0.1)
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                    end
+                end)
+            end
+        else
+            playDisableSound()
+            if webhookThread then
+                task.cancel(webhookThread)
+                webhookThread = nil
+                print("Webhook sending disconnected")
+            end
+            if errorConnection then
+                errorConnection:Disconnect()
+                errorConnection = nil
+            end
+        end
+    end)
+
+    local chromaticEnabled = false
+    local chromaticConnections = {}
+    local chromaticSpheres = {}
+
+    local function applyChromaticEffect(part, t)
+        pcall(function()
+            part.Material = Enum.Material.Neon
+            part.Color = Color3.fromHSV(t * 0.2 % 1, 1, 1)
+        end)
+    end
+
+    local function removeChromaticEffect(part)
+        pcall(function()
+            part.Material = Enum.Material.SmoothPlastic
+            part.Color = Color3.fromRGB(255, 255, 255)
+        end)
+    end
+
+    local function trackSphere(sphere)
+        if not chromaticSpheres[sphere] then
+            chromaticSpheres[sphere] = true
+        end
+    end
+
+    local function untrackSphere(sphere)
+        chromaticSpheres[sphere] = nil
+    end
+
+    local function toggleChromaticSpheres(enabled)
+        for _, conn in ipairs(chromaticConnections) do
+            conn:Disconnect()
+        end
+        chromaticConnections = {}
+        chromaticSpheres = {}
+
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            if descendant:IsA("BasePart") and descendant.Name:find("EnergySphere") then
+                if enabled then
+                    trackSphere(descendant)
+                else
+                    removeChromaticEffect(descendant)
+                end
+            end
+        end
+
+        if enabled then
+            local heartbeatConn = RunService.Heartbeat:Connect(function()
+                local t = tick()
+                for sphere in pairs(chromaticSpheres) do
+                    if sphere.Parent then
+                        applyChromaticEffect(sphere, t)
+                    else
+                        untrackSphere(sphere)
+                    end
+                end
+            end)
+
+            local addedConn = workspace.DescendantAdded:Connect(function(descendant)
+                if descendant:IsA("BasePart") and descendant.Name:find("EnergySphere") then
+                    trackSphere(descendant)
+                end
+            end)
+
+            local removingConn = workspace.DescendantRemoving:Connect(function(descendant)
+                if chromaticSpheres[descendant] then
+                    untrackSphere(descendant)
+                end
+            end)
+
+            table.insert(chromaticConnections, heartbeatConn)
+            table.insert(chromaticConnections, addedConn)
+            table.insert(chromaticConnections, removingConn)
+        end
+    end
+
+    Tabs.Settings:AddToggle("VisualsSpheres", {
+        Title = "Chromatic Spheres",
+        Description = "Makes every EnergySphere glow rainbow",
+        Default = false,
+        Callback = function(enabled)
+            chromaticEnabled = enabled
+            playEnableSound()
+            toggleChromaticSpheres(enabled)
+        end
+    })
+
+    Tabs.Misc:AddToggle("AutoRespawn2", {
+        Title = "Auto Respawn",
+        Description = "Safer version of auto respawn. by respawning more slowly",
+        Default = false,
+        Callback = function(enabled)
+            AutoRespawnEnabled2 = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.BodyToughness:AddToggle("AutoDeathGrindingBT", {
+        Title = "Auto Body Toughness (Death Grinding)",
+        Default = false,
+        Callback = function(enabled)
+            autoDeathGrinding = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Weights:AddToggle("AutoEquip_100LB", {
+        Title = "Auto Equip 100 LB",
+        Default = false,
+        Description = "Automatically equips the 100 LB weight.",
+        Callback = function(enabled)
+            autoEquip100LB = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Weights:AddToggle("AutoEquip_1TON", {
+        Title = "Auto Equip 1 TON",
+        Default = false,
+        Description = "Automatically equips the 1 TON weight.",
+        Callback = function(enabled)
+            autoEquip1TON = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Weights:AddToggle("AutoEquip_10TON", {
+        Title = "Auto Equip 10 TON",
+        Default = false,
+        Description = "Automatically equips the 10 TON weight.",
+        Callback = function(enabled)
+            autoEquip10TON = enabled
+            playEnableSound()
+        end
+    })
+
+    Tabs.Weights:AddToggle("AutoEquip_100TON", {
+        Title = "Auto Equip 100 TON",
+        Default = false,
+        Description = "Automatically equips the 100 TON weight.",
+        Callback = function(enabled)
+            autoEquip100TON = enabled
+            playEnableSound()
+        end
+    })
+
+    task.spawn(function()
+        local VirtualUser = game:GetService("VirtualUser")
+        game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            if antiAFK then
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end
+        end)
+        while true do
+            repeat task.wait(0.5) until antiAFK
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end
+    end)
+
+    task.spawn(function()
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+        local lastPosition = nil
+
+        local function restorePosition(character)
+            local rootPart = character:WaitForChild("HumanoidRootPart")
+            if rootPart and lastPosition then
+                rootPart.CFrame = lastPosition
+            end
+        end
+
+        local function setupCharacter(character)
+            local humanoid = character:WaitForChild("Humanoid")
+            local rootPart = character:WaitForChild("HumanoidRootPart")
+            if rootPart then
+                rootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
+                    lastPosition = rootPart.CFrame
+                end)
+            end
+            if humanoid then
+                humanoid.HealthChanged:Connect(function(health)
+                    if AutoRespawnEnabled1 and health <= humanoid.MaxHealth * 0.3 and character.Parent then
+                        if rootPart then lastPosition = rootPart.CFrame end
+                        character:Destroy()
+                        task.wait(0)
+                        remote:FireServer({"Respawn"})
+                        LocalPlayer.CharacterAdded:Wait()
+                        restorePosition(LocalPlayer.Character)
+                    end
+                end)
+            end
+        end
+
+        if LocalPlayer.Character then
+            setupCharacter(LocalPlayer.Character)
+        end
+        LocalPlayer.CharacterAdded:Connect(setupCharacter)
+    end)
+
+    task.spawn(function()
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+        local lastPosition = nil
+        local safePosition = Vector3.new(0, 5000, 0)
+        local isRespawning = false
+
+        local function restorePosition(character)
+            local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+            if rootPart and lastPosition then
+                rootPart.CFrame = lastPosition
+            end
+        end
+
+        local function setupCharacter(character)
+            local humanoid = character:WaitForChild("Humanoid", 5)
+            local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+            if rootPart then
+                rootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
+                    if not isRespawning then
+                        lastPosition = rootPart.CFrame
+                    end
+                end)
+            end
+            if humanoid then
+                humanoid.HealthChanged:Connect(function(health)
+                    if AutoRespawnEnabled2 and health <= humanoid.MaxHealth * 0 and character.Parent then
+                        if rootPart then lastPosition = rootPart.CFrame end
+                        wait(6)
+                        isRespawning = true
+                        character:Destroy()
+                        remote:FireServer({"Respawn"})
+                        LocalPlayer.CharacterAdded:Wait()
+                        local newChar = LocalPlayer.Character
+                        local newRoot = newChar and (newChar:FindFirstChild("HumanoidRootPart") or newChar:WaitForChild("HumanoidRootPart", 5))
+                        if newRoot then
+                            local startTime = tick()
+                            while tick() - startTime < 18 do
+                                newRoot.CFrame = CFrame.new(safePosition)
+                                RunService.Heartbeat:Wait()
+                            end
+                        end
+                        restorePosition(LocalPlayer.Character)
+                        isRespawning = false
+                    end
+                end)
+            end
+        end
+
+        if LocalPlayer.Character then
+            setupCharacter(LocalPlayer.Character)
+        end
+        LocalPlayer.CharacterAdded:Connect(setupCharacter)
+    end)
+
+    task.spawn(function()
+        local player = LocalPlayer
+        local currentCharacter = player.Character
+        local lastTime = 0
+        local fistAnim1 = nil
+        local fistAnim2 = nil
+        local lastCheckTime = 0
+        local checkCooldown = 5
+        local hasSpecialSkill = nil
+
+        while true do
+            repeat
+                task.wait(0.2)
+                local playerData = getrenv()._G.ClientPlrData
+            until playerData
+
+            if player.Character ~= currentCharacter then
+                currentCharacter = player.Character
+                fistAnim1 = nil
+                fistAnim2 = nil
+            end
+
+            local backpack = player:FindFirstChild("Backpack")
+            local character = player.Character
+
+            if autoFarmFist then
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if backpack and humanoid then
+                    local fistTool = backpack:FindFirstChild("Fist Training")
+                    if fistTool then
+                        local animator = humanoid:FindFirstChildOfClass("Animator")
+                        if animator and fistTool:FindFirstChild("Anim1") and fistTool:FindFirstChild("Anim2") then
+                            fistAnim2 = fistAnim2 or animator:LoadAnimation(fistTool.Anim1)
+                            if not fistAnim1 then
+                                fistAnim1 = animator:LoadAnimation(fistTool.Anim2)
+                            end
+                        end
+                        if os.clock() - lastTime >= 1.6 then
+                            lastTime = os.clock()
+                            if fistAnim1 and not fistAnim1.IsPlaying then
+                                fistAnim1:Play()
+                                task.wait(0.7)
+                                fistAnim1:Stop()
+                            end
+                            if fistAnim2 and not fistAnim2.IsPlaying then
+                                fistAnim2:Play()
+                                task.wait(0.5)
+                                fistAnim2:Stop()
+                            end
+                        end
+                    end
+                end
+            end
+
+            if autoFarmBT then
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer({"+BT1"})
+            end
+
+            if autoFarmPhysic and backpack then
+                local meditateTool = backpack:FindFirstChild("Meditate")
+                if meditateTool then
+                    pcall(function() meditateTool.Parent = character end)
+                end
+                game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack({{"Update_Flying_Status", true}}))
+            end
+
+            local playerGui = player:FindFirstChild("PlayerGui")
+            local currentTime = os.clock()
+
+            if playerGui then
+                local screenGui = playerGui:FindFirstChild("ScreenGui")
+                if screenGui then
+                    local menuFrame = screenGui:FindFirstChild("MenuFrame")
+                    if menuFrame then
+                        local infoFrame = menuFrame:FindFirstChild("InfoFrame")
+                        local skillFrame = menuFrame:FindFirstChild("SkillFrame")
+
+                        if checkCooldown >= currentTime - lastCheckTime then
+                            currentTime = lastCheckTime
+                        else
+                            hasSpecialSkill = nil
+                            if skillFrame then
+                                local skillText = skillFrame:FindFirstChild("SkillTxt8")
+                                if skillText then
+                                    hasSpecialSkill = skillText.Text ~= "?????"
+                                end
+                            end
+                        end
+
+                        if infoFrame then
+                            local playerData = getrenv()._G.ClientPlrData
+
+                            if autoFarmFist then
+                                local fistStrength = playerData.FistStrength or 0
+                                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                                if rootPart then
+                                    local targetPos = (function(strength)
+                                        if strength >= 10000000000000 then
+                                            return Vector3.new(-345, 15726, 9)
+                                        elseif strength >= 100000000000 then
+                                            return Vector3.new(1381, 9274, 1651)
+                                        elseif strength >= 1000000000 then
+                                            return Vector3.new(1176, 4789, -2292)
+                                        elseif hasSpecialSkill then
+                                            return Vector3.new(-2277, 1943, 1053)
+                                        elseif strength >= 0 then
+                                            return Vector3.new(408, 270, 970)
+                                        else
+                                            return nil
+                                        end
+                                    end)(fistStrength)
+                                    if targetPos and (not lastFistPos or (lastFistPos - targetPos).Magnitude > 1 or (rootPart.Position - targetPos).Magnitude > 5) then
+                                        rootPart.CFrame = CFrame.new(targetPos)
+                                        lastFistPos = targetPos
+                                    end
+                                end
+                            end
+
+                            if autoFarmBT then
+                                local bodyToughness = playerData.BodyToughness or 0
+                                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                                if rootPart then
+                                    local targetPos = (function(toughness)
+                                        if toughness >= 38000000000000 then
+                                            return Vector3.new(-276, 280, 1013)
+                                        elseif toughness >= 380000000000 then
+                                            return Vector3.new(-270, 281, 989)
+                                        elseif toughness >= 3800000000 then
+                                            return Vector3.new(-248, 287, 983)
+                                        elseif toughness >= 38000000 then
+                                            return Vector3.new(-2005, 713, -1901)
+                                        elseif toughness >= 3800000 then
+                                            return Vector3.new(-2300, 975, 1063)
+                                        elseif toughness >= 380000 then
+                                            return Vector3.new(1629, 260, 2245)
+                                        elseif toughness >= 38000 then
+                                            return Vector3.new(356, 264, -490)
+                                        elseif toughness >= 380 then
+                                            return Vector3.new(368, 250, -444)
+                                        else
+                                            return nil
+                                        end
+                                    end)(bodyToughness)
+                                    if targetPos and (not lastBTPos or (lastBTPos - targetPos).Magnitude > 1 or (rootPart.Position - targetPos).Magnitude > 5) then
+                                        rootPart.CFrame = CFrame.new(targetPos)
+                                        lastBTPos = targetPos
+                                    end
+                                end
+                            end
+
+                            if autoFarmPhysic then
+                                local psychicPower = playerData.PsychicPower or 0
+                                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                                if rootPart then
+                                    local targetPos = nil
+                                    if psychicPower >= 1000000000000000 then
+                                        targetPos = Vector3.new(-2547, 5412, -493)
+                                    elseif psychicPower >= 1000000000000 then
+                                        targetPos = Vector3.new(-2580, 5516, -503)
+                                    elseif psychicPower >= 1000000000 then
+                                        targetPos = Vector3.new(-2561, 5501, -436)
+                                    elseif psychicPower >= 1000000 then
+                                        targetPos = Vector3.new(-2530, 5486, -527)
+                                    end
+                                    if targetPos and (not lastPhysicPos or (lastPhysicPos - targetPos).Magnitude > 1 or (rootPart.Position - targetPos).Magnitude > 5) then
+                                        rootPart.CFrame = CFrame.new(targetPos)
+                                        lastPhysicPos = targetPos
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        currentTime = lastCheckTime
+                    end
+                else
+                    currentTime = lastCheckTime
+                end
+            else
+                currentTime = lastCheckTime
+            end
+
+            if autoDeathGrinding then
+                local playerData = getrenv()._G.ClientPlrData
+                local bodyToughness = playerData.BodyToughness or 0
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local targetPos = (function(toughness)
+                        if toughness >= 510000000000 then
+                            return Vector3.new(-276, 280, 1013)
+                        elseif toughness >= 5100000000 then
+                            return Vector3.new(-270, 281, 989)
+                        elseif toughness >= 51000000 then
+                            return Vector3.new(-248, 287, 983)
+                        elseif toughness >= 510000 then
+                            return Vector3.new(-2005, 713, -1901)
+                        elseif toughness >= 51000 then
+                            return Vector3.new(-2300, 975, 1063)
+                        elseif toughness >= 5100 then
+                            return Vector3.new(1629, 260, 2245)
+                        elseif toughness >= 520 then
+                            return Vector3.new(356, 264, -490)
+                        elseif toughness >= 5 then
+                            return Vector3.new(368, 250, -444)
+                        else
+                            return nil
+                        end
+                    end)(bodyToughness)
+                    if targetPos and (not lastBTPos or (lastBTPos - targetPos).Magnitude > 1 or (rootPart.Position - targetPos).Magnitude > 5) then
+                        rootPart.CFrame = CFrame.new(targetPos)
+                        lastBTPos = targetPos
+                        lastCheckTime = currentTime
+                    else
+                        lastCheckTime = currentTime
+                    end
+                else
+                    lastCheckTime = currentTime
+                end
+            else
+                task.wait(1)
+                lastCheckTime = currentTime
+            end
+        end
+    end)
+
+    task.spawn(function()
+        while true do
+            task.wait(0)
+            if autoFarmMS then
+                RemoteEvent:FireServer({"Add_MS_Request"})
+            end
+            if autoFarmJF then
+                RemoteEvent:FireServer({"Add_JF_Request"})
+            end
+        end
+    end)
+
+    task.spawn(function()
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+        while task.wait(0) do
+            if autoFarmFist then
+                remote:FireServer({"Add_FS_Request"})
+            end
+        end
+    end)
+
+    SaveManager:SetLibrary(Fluent)
+    InterfaceManager:SetLibrary(Fluent)
+    SaveManager:SetIgnoreIndexes({})
+    Window:SelectTab(1)
+    Fluent:Notify({Title = "your executor is supported", Content = "ok", Duration = 1})
+    SaveManager:Load("main")
+
+    task.spawn(function()
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent")
+        while true do
+            task.wait(0.1)
+            if autoEquip100LB then
+                remote:FireServer(unpack({{"EquipWeight_Request", 1}}))
+            elseif autoEquip1TON then
+                remote:FireServer(unpack({{"EquipWeight_Request", 2}}))
+            elseif autoEquip10TON then
+                remote:FireServer(unpack({{"EquipWeight_Request", 3}}))
+            elseif autoEquip100TON then
+                remote:FireServer(unpack({{"EquipWeight_Request", 4}}))
+            end
+        end
+    end)
+end)()

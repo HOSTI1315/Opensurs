@@ -1,0 +1,284 @@
+-- nxp hub: killer district (walmart forsaken)
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/fuckg1thub/Fluent-Inspired-UI/refs/heads/main/fiui.luau"))()
+local window = library.Window("NXP hub (V1)", "Killer District", "rbxassetid://118689160394652", false, Color3.fromRGB(150, 63, 204))
+local visualTab = window:Tab("Visuals", "rbxassetid://101966922795157")
+local visualSection = visualTab:AddSection("Killer ESP")
+
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+
+local function getKillerModel()
+    for i, v in pairs(players:GetPlayers()) do
+        if tostring(v.Team) == "Killer" then
+            return v.Character
+        end
+    end
+end
+
+--[[
+local args = {
+	game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart"),
+	true
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Healing"):WaitForChild("HealEvent"):FireServer(unpack(args))
+]]
+
+visualSection.Toggle("Killer ESP", function(bool)
+    _G.killers = bool
+    task.spawn(function()
+        while task.wait() do
+            if _G.killers == true then
+                local v = getKillerModel()
+                if v then
+                    if not v:FindFirstChild("iskiddedfromneptz") then
+                        local hl = Instance.new("Highlight", v)
+                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        hl.Name = "iskiddedfromneptz"
+                    end
+                end
+            else
+                local v = getKillerModel()
+                if v then
+                    if v:FindFirstChild("iskiddedfromneptz") then
+                        v.iskiddedfromneptz:Destroy()
+                    end
+                end
+                break
+            end
+        end
+    end)
+end)
+
+visualSection.Toggle("Killer Nametag", function(bool)
+    _G.killerNametags = bool
+    task.spawn(function()
+        while task.wait() do
+            if _G.killerNametags then
+                pcall(function()
+                    local v = getKillerModel()
+                    if v and not v:FindFirstChild("nametag") then
+                        local bb = Instance.new("BillboardGui", v)
+                        bb.Size = UDim2.new(4, 0, 1, 0)
+                        bb.AlwaysOnTop = true
+                        bb.Name = "nametag"
+                        local text = Instance.new("TextLabel", bb)
+                        text.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        text.TextStrokeTransparency = 0
+                        text.Text = "Killer"
+                        text.TextSize = 20
+                        text.BackgroundTransparency = 1
+                        text.Size = UDim2.new(1, 0, 1, 0)
+                    end
+                end)
+            else
+                pcall(function()
+                    local v = getKillerModel()
+                    if v and v:FindFirstChild("nametag") then
+                        v.nametag:Destroy()
+                    end
+                end)
+                break
+            end
+        end
+    end)
+end)
+
+local generatorsSection = visualTab:AddSection("Generators ESP")
+generatorsSection.Toggle("Generators ESP", function(bool)
+    _G.generators = bool
+    task.spawn(function()
+        while task.wait() do
+            if _G.generators then
+                pcall(function()
+                    for i, v in pairs(workspace.Map:GetChildren()) do
+                        if v.Name == "Generator" and not v:FindFirstChild("iskiddedfromneptz") then
+                            local hl = Instance.new("Highlight", v)
+                            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            hl.Name = "iskiddedfromneptz"
+                            hl.FillColor = Color3.fromRGB(255, 255, 51)
+                        end
+                    end
+                end)
+            else
+                pcall(function()
+                    for i, v in pairs(workspace.Map:GetChildren()) do
+                        if v.Name == "Generator" and v:FindFirstChild("iskiddedfromneptz") then
+                            v.iskiddedfromneptz:Destroy()
+                        end
+                    end
+                end)
+                break
+            end
+        end
+    end)
+end)
+generatorsSection.Toggle("Generators Nametags", function(bool)
+    _G.generatorstag = bool
+    task.spawn(function()
+        while task.wait() do
+            if _G.generatorstag then
+                local suc, res=  pcall(function()
+                    for i, v in pairs(workspace.Map:GetChildren()) do
+                        if v.Name == "Generator" and not v:FindFirstChild("nametag",true) then
+                            local bb = Instance.new("BillboardGui", v.HitBox)
+                            bb.Size = UDim2.new(4, 0, 1, 0)
+                            bb.AlwaysOnTop = true
+                            bb.Name = "nametag"
+                            local text = Instance.new("TextLabel", bb)
+                            text.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            text.TextStrokeTransparency = 0
+                            text.Text = "Generator"
+                            text.TextSize = 20
+                            text.BackgroundTransparency = 1
+                            text.Size = UDim2.new(1, 0, 1, 0)
+                        elseif v:FindFirstChild("nametag",true) and v.Name == "Generator" then
+                            
+                        end
+                    end
+                end)
+            else
+                pcall(function()
+                    for i, v in pairs(workspace.Map:GetChildren()) do
+                        if v.Name == "Generator" and v:FindFirstChild("nametag",true) then
+                            v.nametag:Destroy()
+                        end
+                    end
+                end)
+                break
+            end
+        end
+    end)
+end)
+
+local survivorsSection = visualTab:AddSection("Survivors ESP")
+survivorsSection.Toggle("Survivors ESP", function(bool)
+    _G.survivors = bool
+    task.spawn(function()
+        while task.wait() do
+            if _G.survivors == true then
+                for i, v in pairs(players:GetPlayers()) do
+                    if tostring(v.Team) ~= "Killer" and v.Character and not v.Character:FindFirstChild("iskiddedfromneptz") then
+                        local hl = Instance.new("Highlight", v.Character)
+                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        hl.Name = "iskiddedfromneptz"
+                        hl.FillColor = Color3.fromRGB(0, 0, 255)
+                    end
+                end
+            else
+                for i, v in pairs(players:GetPlayers()) do
+                    if tostring(v.Team) ~= "Killer" and v.Character and v.Character:FindFirstChild("iskiddedfromneptz") then
+                        v.Character.iskiddedfromneptz:Destroy()
+                    end
+                end
+                break
+            end
+        end
+    end)
+end)
+
+local playerTab = window:Tab("Local Player", "rbxassetid://73140121358767")
+local speedSection = playerTab:AddSection("Speed")
+local yeahvariable = 0
+speedSection.Slider("Speed Value", 16, 16, 100, function (s)
+    yeahvariable = s
+end)
+speedSection.Toggle("Speed Toggle", function (s)
+    _G.mhhmmm = s
+    task.spawn(function ()
+        while task.wait() do
+            if not _G.mhhmmm then break end
+            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.MoveDirection ~= Vector3.zero then
+                localPlayer.Character:TranslateBy(humanoid.MoveDirection * yeahvariable * game:GetService("RunService").RenderStepped:Wait())
+            end
+        end
+    end)
+end)
+playerTab:AddSection("Noclip").Toggle("Enable Noclip", function (s)
+    _G.nokia = s
+    local cachey = {}
+    task.spawn(function ()
+        while task.wait() do
+            if not _G.nokia then
+                for i, v in pairs(cachey) do
+                    v.CanCollide = true
+                end
+                break
+            end
+            if localPlayer.Character then
+                for i, v in pairs(localPlayer.Character:GetChildren()) do
+                    if v:IsA("BasePart") then
+                        cachey[v] = v
+                        v.CanCollide = false
+                    end
+                end
+            end
+        end
+    end)
+end)
+playerTab:AddSection("Infinite Jump").Toggle("Infinite Jump", function (s)
+    if s == false then
+        return _G.connection:Disconnect()
+    end
+    _G.connection = game:GetService("UserInputService").JumpRequest:Connect(function ()
+        pcall(function ()
+            localPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
+    end)
+end)
+
+local old
+old = hookmetamethod(game, "__namecall", function (self, ...)
+    if _G.antiFail and tostring(self) == "SkillCheckResultEvent" and not checkcaller() then
+        return
+    end
+    return old(self, ...)
+end)
+
+local miscTab = window:Tab("Misc", "rbxassetid://85291691462928")
+local miscSection = miscTab:AddSection("Miscallenous")
+miscSection.Toggle("No Skill Check Fail", function (s)
+    _G.antiFail = s
+end)
+--[[miscSection.Toggle("Auto Heal (buggy)", function (s)
+    _G.autoHeal = s
+    task.spawn(function ()
+        while _G.autoHeal and task.wait() do
+            local args = {
+                game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart"),
+                true
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Healing"):WaitForChild("HealEvent"):FireServer(unpack(args))
+        end
+    end)
+end)]]
+miscSection.Toggle("Allow Jump", function (s)
+    _G.mhhmmm2 = s
+    task.spawn(function ()
+        while task.wait() do
+            if not _G.mhhmmm2 then break end
+            local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.JumpPower = 50
+            end
+        end
+    end)
+end)
+miscSection.Button("No Fog", function ()
+	for i,v in pairs(game.Lighting:GetDescendants()) do
+        if not v:IsA("Atmosphere") then continue end
+		v:Destroy()
+	end
+    game.Lighting.FogEnd = 999999
+end)
+miscSection.Button("Kill Yourself", function ()
+    pcall(function ()
+        localPlayer.Character:BreakJoints()
+    end)
+end)
+miscSection.Button("Rejoin", function ()
+    pcall(function ()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, localPlayer)
+    end)
+end)

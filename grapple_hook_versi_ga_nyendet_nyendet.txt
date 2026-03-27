@@ -1,0 +1,176 @@
+-- 🚀 WALVY COMMUNITY GRAPPLE HOOK STABLE HOLD (NO TP-BACK, NO BLINK)
+local player = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- ===== Vars =====
+local enabled = true
+local itemID = "Grapple Hook"
+local useItemRE = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+local character
+local backpack
+local tool
+local fakeFireLoop
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.Name = "WalvyGrappleStableGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 120)
+frame.Position = UDim2.new(0.5, -100, 0.5, -70)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.BorderSizePixel = 0
+frame.AnchorPoint = Vector2.new(0.5,0.5)
+frame.Active = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "WALVY GRAPPLE STABLE HOLD"
+title.Size = UDim2.new(1,0,0,25)
+title.Position = UDim2.new(0,0,0,5)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+
+local toggleButton = Instance.new("TextButton", frame)
+toggleButton.Size = UDim2.new(0.8,0,0,35)
+toggleButton.Position = UDim2.new(0.1,0,0.45,0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+toggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 12
+toggleButton.Text = enabled and "⏸ Turn Off Grapple" or "▶ Turn On Grapple"
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0,6)
+
+-- ===== Functions =====
+local function updateCharacter()
+    character = player.Character or player.CharacterAdded:Wait()
+    backpack = player:WaitForChild("Backpack")
+end
+
+local function buyItem()
+    pcall(function()
+        ReplicatedStorage:WaitForChild("Packages")
+        :WaitForChild("Net")
+        :WaitForChild("RF/CoinsShopService/RequestBuy")
+        :InvokeServer(itemID)
+    end)
+end
+
+local function autoEquip()
+    if not character then return end
+    tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if tool and tool.Parent ~= character then
+        tool.Parent = character
+    end
+end
+
+local function ensureGrapple()
+    if not character then return end
+    tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if not tool then
+        buyItem()
+        task.wait(0.5)
+        autoEquip()
+    else
+        autoEquip()
+    end
+end
+
+local function fakeFire()
+    local args = {0.10267777442932129}
+    pcall(function()
+        useItemRE:FireServer(unpack(args))
+    end)
+end
+
+-- ===== Event-based equip (stable, no blink) =====
+local function setupToolListener()
+    if not backpack then return end
+    -- saat tool dihapus dari character, langsung equip dari backpack
+    character.ChildRemoved:Connect(function(child)
+        if child.Name == itemID and enabled then
+            autoEquip()
+        end
+    end)
+    -- saat tool ditambahkan ke backpack, equip jika character tidak punya
+    backpack.ChildAdded:Connect(function(child)
+        if child.Name == itemID and enabled then
+            autoEquip()
+        end
+    end)
+end
+
+-- ===== Loops =====
+local function startFakeFireLoop()
+    if fakeFireLoop then fakeFireLoop:Disconnect() end
+    fakeFireLoop = RunService.Heartbeat:Connect(function()
+        if enabled then
+            fakeFire() -- tiap frame
+        end
+    end)
+end
+
+local function stopLoops()
+    if fakeFireLoop then fakeFireLoop:Disconnect() fakeFireLoop=nil end
+end
+
+-- ===== Events =====
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    updateCharacter()
+    if enabled then
+        ensureGrapple()
+        setupToolListener()
+        startFakeFireLoop()
+    end
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    updateCharacter()
+    toggleButton.Text = enabled and "⏸ Turn Off Grapple" or "▶ Turn On Grapple"
+    if enabled then
+        ensureGrapple()
+        setupToolListener()
+        startFakeFireLoop()
+    else
+        stopLoops()
+    end
+end)
+
+-- ===== Drag GUI =====
+local dragging, dragInput, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+        dragging=true
+        dragStart=input.Position
+        startPos=frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState==Enum.UserInputState.End then dragging=false end
+        end)
+    end
+end)
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+        dragInput=input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input==dragInput then
+        local delta=input.Position - dragStart
+        frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,
+                                 startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+    end
+end)
+
+-- ===== Auto start =====
+updateCharacter()
+ensureGrapple()
+setupToolListener()
+startFakeFireLoop()

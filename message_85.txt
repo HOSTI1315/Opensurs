@@ -1,0 +1,2501 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local ViewportSize = workspace.CurrentCamera.ViewportSize
+local TweenInfo_Default = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+
+local Library = {}
+
+function Library.validate(defaults, options)
+	for key, value in pairs(defaults) do
+		if options[key] == nil then
+			options[key] = value
+		end
+	end
+	return options
+end
+
+function Library.tween(object, properties, callback)
+	local tween = TweenService:Create(object, TweenInfo_Default, properties)
+	tween.Completed:Connect(callback or function() end)
+	tween:Play()
+end
+
+function Library.CreatNotify(title, text, duration)
+	if not duration then
+		duration = 2
+	end
+
+	local targetParent
+	if RunService:IsStudio() then
+		targetParent = LocalPlayer:WaitForChild("PlayerGui")
+	else
+		targetParent = CoreGui
+	end
+
+	local ScreenGui = Instance.new("ScreenGui", targetParent)
+	ScreenGui.Name = "NotificationGui"
+
+	local MainFrame = Instance.new("Frame", ScreenGui)
+	MainFrame.Size = UDim2.new(0, 220, 0, 100)
+	MainFrame.Position = UDim2.new(0.7, 0, 0.774, 0)
+	MainFrame.BackgroundTransparency = 0.2
+	MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	MainFrame.BorderSizePixel = 0
+	MainFrame.ZIndex = 1
+
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+	
+	local Gradient = Instance.new("UIGradient", MainFrame)
+	Gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 50)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 30))
+	})
+
+	local Icon = Instance.new("ImageLabel", MainFrame)
+	Icon.Size = UDim2.new(0, 20, 0, 20)
+	Icon.Position = UDim2.new(0, 10, 0, 10)
+	Icon.BackgroundTransparency = 1
+	Icon.Image = "rbxassetid://6031071053"
+	Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+	Icon.ZIndex = 2
+
+	local TitleLabel = Instance.new("TextLabel", MainFrame)
+	TitleLabel.Size = UDim2.new(1, -40, 0, 20)
+	TitleLabel.Position = UDim2.new(0, 40, 0, 10)
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TitleLabel.Text = title
+	TitleLabel.Font = Enum.Font.GothamBold
+	TitleLabel.TextSize = 16
+	TitleLabel.TextWrapped = true
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.TextYAlignment = Enum.TextYAlignment.Top
+	TitleLabel.ZIndex = 2
+
+	local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
+	ScrollFrame.Size = UDim2.new(1, -20, 1, -40)
+	ScrollFrame.Position = UDim2.new(0, 10, 0, 40)
+	ScrollFrame.BackgroundTransparency = 1
+	ScrollFrame.BorderSizePixel = 0
+	ScrollFrame.CanvasSize = UDim2.new(1, 0, 1, 0)
+	ScrollFrame.ScrollBarThickness = 0
+	ScrollFrame.ZIndex = 2
+
+	local TextContent = Instance.new("TextLabel", ScrollFrame)
+	TextContent.Size = UDim2.new(1, -20, 1, 0)
+	TextContent.Position = UDim2.new(0, 0, 0, 0)
+	TextContent.BackgroundTransparency = 1
+	TextContent.TextColor3 = Color3.fromRGB(235, 235, 235)
+	TextContent.Text = text
+	TextContent.Font = Enum.Font.Gotham
+	TextContent.TextSize = 14
+	TextContent.TextWrapped = true
+	TextContent.TextXAlignment = Enum.TextXAlignment.Left
+	TextContent.TextYAlignment = Enum.TextYAlignment.Top
+	TextContent.ZIndex = 2
+	
+	TextContent.Size = UDim2.new(1, -20, 0, TextContent.TextBounds.Y)
+	MainFrame.Size = UDim2.new(0, 220, 0, math.min(TextContent.TextBounds.Y + 60, 200))
+	ScrollFrame.CanvasSize = UDim2.new(1, 0, 0, TextContent.TextBounds.Y)
+
+	local TimerBar = Instance.new("Frame", MainFrame)
+	TimerBar.Size = UDim2.new(0, 0, 0, 5)
+	TimerBar.Position = UDim2.new(0, 0, 1, -5)
+	TimerBar.BackgroundTransparency = 0.2
+	TimerBar.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	TimerBar.BorderSizePixel = 0
+	TimerBar.ZIndex = 3
+	Instance.new("UICorner", TimerBar).CornerRadius = UDim.new(0, 12)
+
+	local TimerTween = TweenService:Create(TimerBar, TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+		Size = UDim2.new(1, 0, 0, 5),
+	})
+	TimerTween:Play()
+
+	Library:tween(MainFrame, {
+		Position = UDim2.new(0.7, 0, 0.774, -MainFrame.Size.Y.Offset),
+	}, function()
+		TimerTween.Completed:Wait()
+		Library:tween(MainFrame, {
+			Position = UDim2.new(0.7, 0, 0.774, 0),
+		}, function()
+			ScreenGui:Destroy()
+		end)
+	end)
+end
+
+function Library.Init(self, options)
+	options = Library.validate({
+		name = "Library",
+	}, options or {})
+
+	local Window = {
+		CurrentTab = nil,
+		LastPosition = UDim2.new(0.522, 0, 0.454, 0),
+		LastOpenButtonPosition = UDim2.new(0.089, 0, 0.453, 0),
+	}
+
+	local targetParent
+	if RunService:IsStudio() then
+		targetParent = LocalPlayer:WaitForChild("PlayerGui")
+	else
+		targetParent = CoreGui
+	end
+
+	Window["1"] = Instance.new("ScreenGui", targetParent)
+	Window["1"].Name = "MyLibrary"
+	Window["1"].IgnoreGuiInset = true
+
+	Window["2"] = Instance.new("Frame", Window["1"])
+	Window["2"].BorderSizePixel = 0
+	Window["2"].BackgroundColor3 = Color3.fromRGB(0, 58, 74)
+	Window["2"].BackgroundTransparency = 1
+	Window["2"].AnchorPoint = Vector2.new(0, 0)
+	Window["2"].Size = UDim2.new(0, 513, 0, 314)
+	Window["2"].Position = Window.LastPosition
+	Window["2"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["2"].Name = "Main"
+	Window["2"].Draggable = true
+
+	Window["2ui"] = Instance.new("UIStroke", Window["2"])
+	Window["2ui"].Color = Color3.fromRGB(0, 0, 0)
+	Window["2ui"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+	Window["200"] = Instance.new("ImageLabel", Window["2"])
+	Window["200"].BorderSizePixel = 0
+	Window["200"].BackgroundColor3 = Color3.fromRGB(0, 58, 74)
+	Window["200"].BackgroundTransparency = 1
+	Window["200"].AnchorPoint = Vector2.new(0, 0)
+	Window["200"].Size = UDim2.new(0, 513, 0, 314)
+	Window["200"].Position = Window.LastPosition
+	Window["200"].Image = "rbxassetid://17816995936"
+	Window["200"].ZIndex = -1
+	Window["200"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["200"].Name = "Main"
+
+	task.spawn(function()
+		Window["200"].Size = Window["2"].Size
+		Window["200"].Position = UDim2.new(0, 0, 0, 0)
+	end)
+
+	Window["200b"] = Instance.new("UICorner", Window["200"])
+	Window["200b"].CornerRadius = UDim.new(0, 6)
+
+	Window["3"] = Instance.new("UICorner", Window["2"])
+	Window["3"].CornerRadius = UDim.new(0, 6)
+
+	Window["4"] = Instance.new("Frame", Window["2"])
+	Window["4"].ZIndex = 0
+	Window["4"].BorderSizePixel = 0
+	Window["4"].Size = UDim2.new(1, 0, 1, 0)
+	Window["4"].Name = "DropShadowHolder"
+	Window["4"].BackgroundTransparency = 1
+
+	Window["5"] = Instance.new("ImageLabel", Window["4"])
+	Window["5"].ZIndex = 0
+	Window["5"].BorderSizePixel = 0
+	Window["5"].SliceCenter = Rect.new(49, 49, 450, 450)
+	Window["5"].ScaleType = Enum.ScaleType.Slice
+	Window["5"].ImageTransparency = 0.5
+	Window["5"].ImageColor3 = Color3.fromRGB(0, 0, 0)
+	Window["5"].AnchorPoint = Vector2.new(0.5, 0.5)
+	Window["5"].Image = "rbxassetid://6014261993"
+	Window["5"].Size = UDim2.new(1, 47, 1, 47)
+	Window["5"].BackgroundTransparency = 1
+	Window["5"].Name = "DropShadow"
+	Window["5"].Position = UDim2.new(0.5, 0, 0.5, 0)
+
+	Window["6"] = Instance.new("Frame", Window["2"])
+	Window["6"].BorderSizePixel = 0
+	Window["6"].BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	Window["6"].Size = UDim2.new(1, 0, 0, 30)
+	Window["6"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["6"].Name = "TopBar"
+	Window["6"].Transparency = 0.35
+
+	Window["7"] = Instance.new("UICorner", Window["6"])
+	Window["7"].CornerRadius = UDim.new(0, 3)
+
+	Window["8"] = Instance.new("Frame", Window["6"])
+	Window["8"].BorderSizePixel = 0
+	Window["8"].BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	Window["8"].AnchorPoint = Vector2.new(0, 1)
+	Window["8"].Size = UDim2.new(1, 0, 0.5, 0)
+	Window["8"].Position = UDim2.new(0, 0, 1, 0)
+	Window["8"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["8"].Name = "Extantion"
+	Window["8"].Transparency = 1
+
+	Window["9"] = Instance.new("TextLabel", Window["6"])
+	Window["9"].TextWrapped = true
+	Window["9"].BorderSizePixel = 0
+	Window["9"].TextXAlignment = Enum.TextXAlignment.Left
+	Window["9"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Window["9"].TextSize = 14
+	Window["9"].Font = Enum.Font.GothamBold
+	Window["9"].TextColor3 = Color3.fromRGB(255, 255, 255)
+	Window["9"].BackgroundTransparency = 1
+	Window["9"].Size = UDim2.new(0.5, 0, 1, 0)
+	Window["9"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["9"].Text = options.name
+	Window["9"].Name = options.name
+
+	Window.a = Instance.new("UIPadding", Window["9"])
+	Window.a.PaddingTop = UDim.new(0, 1)
+	Window.a.PaddingLeft = UDim.new(0, 8)
+
+	Window.b = Instance.new("Frame", Window["6"])
+	Window.b.BorderSizePixel = 0
+	Window.b.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	Window.b.AnchorPoint = Vector2.new(0, 1)
+	Window.b.Size = UDim2.new(1, 0, 0, 3)
+	Window.b.Position = UDim2.new(0, 0, 1, 2)
+	Window.b.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window.b.Name = "Line"
+
+	Window.c = Instance.new("ImageLabel", Window["6"])
+	Window.c.BorderSizePixel = 0
+	Window.c.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Window.c.AnchorPoint = Vector2.new(1, 0)
+	Window.c.Image = "rbxassetid://17718316977"
+	Window.c.Size = UDim2.new(0, 22, 0, 22)
+	Window.c.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window.c.BackgroundTransparency = 1
+	Window.c.Name = "Close"
+	Window.c.Position = UDim2.new(1, -4, 0, 4)
+
+	local CloseButton = Instance.new("ImageButton", Window.c)
+	CloseButton.Size = UDim2.new(1, 0, 1, 0)
+	CloseButton.BackgroundTransparency = 1
+	CloseButton.ImageTransparency = 1
+
+	Window["1b"] = Instance.new("Frame", Window["2"])
+	Window["1b"].BorderSizePixel = 0
+	Window["1b"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Window["1b"].AnchorPoint = Vector2.new(1, 0)
+	Window["1b"].Size = UDim2.new(1, -133, 1, -42)
+	Window["1b"].Position = UDim2.new(1, -6, 0, 36)
+	Window["1b"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["1b"].Name = "ContantContainer"
+	Window["1b"].BackgroundTransparency = 1
+
+	local Dragging = false
+	local DragInput = nil
+	local DragStart = nil
+	local StartPosition = nil
+
+	local function UpdateDrag(input)
+		local delta = input.Position - DragStart
+		Window["2"].Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + delta.Y)
+	end
+
+	Window["6"].InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			Dragging = true
+			DragStart = input.Position
+			StartPosition = Window["2"].Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					Dragging = false
+				end
+			end)
+		end
+	end)
+
+	Window["6"].InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			DragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == DragInput and Dragging then
+			UpdateDrag(input)
+		end
+	end)
+
+	local function CreateOpenButton()
+		local OpenBtn = Instance.new("ImageButton", Window["1"])
+		OpenBtn.Size = UDim2.new(0, 59, 0, 56)
+		OpenBtn.Position = Window.LastOpenButtonPosition or UDim2.new(0.089, 0, 0.453, 0)
+		OpenBtn.ImageTransparency = 0.5
+		OpenBtn.Image = "rbxassetid://17732141168"
+		OpenBtn.BackgroundTransparency = 1
+		OpenBtn.Draggable = true
+
+		TweenService:Create(OpenBtn, TweenInfo.new(0.5), {
+			ImageTransparency = 0,
+		}):Play()
+
+		local BtnDragging = false
+		local BtnDragInput = nil
+		local BtnDragStart = nil
+		local BtnStartPosition = nil
+
+		local function UpdateBtnDrag(input)
+			local delta = input.Position - BtnDragStart
+			OpenBtn.Position = UDim2.new(BtnStartPosition.X.Scale, BtnStartPosition.X.Offset + delta.X, BtnStartPosition.Y.Scale, BtnStartPosition.Y.Offset + delta.Y)
+		end
+
+		OpenBtn.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				BtnDragging = true
+				BtnDragStart = input.Position
+				BtnStartPosition = OpenBtn.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						BtnDragging = false
+					end
+				end)
+			end
+		end)
+
+		OpenBtn.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				BtnDragInput = input
+			end
+		end)
+
+		UserInputService.InputChanged:Connect(function(input)
+			if input == BtnDragInput and BtnDragging then
+				UpdateBtnDrag(input)
+			end
+		end)
+
+		OpenBtn.MouseButton1Click:Connect(function()
+			local tween = TweenService:Create(Window["2"], TweenInfo.new(0.5), {
+				Position = Window.LastPosition,
+			})
+			tween:Play()
+			tween.Completed:Connect(function()
+				Window["2"].Visible = true
+			end)
+
+			local btnTween = TweenService:Create(OpenBtn, TweenInfo.new(0.5), {
+				ImageTransparency = 1,
+			})
+			btnTween:Play()
+			btnTween.Completed:Connect(function()
+				Window.LastOpenButtonPosition = OpenBtn.Position
+				OpenBtn:Destroy()
+			end)
+		end)
+	end
+
+	CloseButton.MouseButton1Click:Connect(function()
+		Window.LastPosition = Window["2"].Position
+		local tween = TweenService:Create(Window["2"], TweenInfo.new(0.5), {
+			Position = UDim2.new(0.5, -200, 1, 300),
+		})
+		tween:Play()
+		tween.Completed:Connect(function()
+			Window["2"].Visible = false
+			CreateOpenButton()
+		end)
+	end)
+
+	Window["2"].Visible = true
+	Window["2"].Position = UDim2.new(0.5, -200, 0.5, -150)
+
+	Window.d = Instance.new("Frame", Window["2"])
+	Window.d.BorderSizePixel = 0
+	Window.d.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+	Window.d.Size = UDim2.new(0, 120, 1, -30)
+	Window.d.Position = UDim2.new(0, 0, 0, 31)
+	Window.d.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window.d.Name = "Navigation"
+	Window.d.Transparency = 0.35
+
+	Window.e = Instance.new("UICorner", Window.d)
+	Window.e.CornerRadius = UDim.new(0, 1)
+
+	Window.f = Instance.new("Frame", Window.d)
+	Window.f.BorderSizePixel = 0
+	Window.f.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+	Window.f.Size = UDim2.new(1, 0, 0, 20)
+	Window.f.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window.f.Name = "Hide"
+	Window.f.Transparency = 1
+
+	Window["10"] = Instance.new("Frame", Window.d)
+	Window["10"].BorderSizePixel = 0
+	Window["10"].BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+	Window["10"].AnchorPoint = Vector2.new(1, 0)
+	Window["10"].Size = UDim2.new(0, 20, 1, 0)
+	Window["10"].Position = UDim2.new(1, 0, 0, 0)
+	Window["10"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["10"].Name = "Hide2"
+	Window["10"].Transparency = 1
+
+	Window["11"] = Instance.new("Frame", Window.d)
+	Window["11"].BorderSizePixel = 0
+	Window["11"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Window["11"].Size = UDim2.new(1, 0, 1, 0)
+	Window["11"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["11"].Name = "ButtonHolder"
+	Window["11"].BackgroundTransparency = 1
+
+	Window["12"] = Instance.new("UIPadding", Window["11"])
+	Window["12"].PaddingTop = UDim.new(0, 8)
+	Window["12"].PaddingBottom = UDim.new(0, 8)
+
+	Window["13"] = Instance.new("UIListLayout", Window["11"])
+	Window["13"].Padding = UDim.new(0, 7)
+	Window["13"].SortOrder = Enum.SortOrder.LayoutOrder
+
+	Window["1a"] = Instance.new("Frame", Window.d)
+	Window["1a"].BorderSizePixel = 0
+	Window["1a"].BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	Window["1a"].Size = UDim2.new(0, 2, 1, -1)
+	Window["1a"].Position = UDim2.new(1, 0, 0, 0)
+	Window["1a"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Window["1a"].Name = "Line"
+
+	function Window.CreatTab(self, options)
+		options = Library.validate({
+			name = "Previse Tab",
+			icon = "rbxassetid://17740741723",
+		}, options or {})
+
+		local Tab = {
+			Hover = false,
+			Active = false,
+		}
+
+		Tab["17"] = Instance.new("TextButton", Window["11"])
+		Tab["17"].BorderSizePixel = 0
+		Tab["17"].TextXAlignment = Enum.TextXAlignment.Left
+		Tab["17"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Tab["17"].TextSize = 15
+		Tab["17"].Font = Enum.Font.GothamBold
+		Tab["17"].TextColor3 = Color3.fromRGB(158, 158, 158)
+		Tab["17"].BackgroundTransparency = 1
+		Tab["17"].Size = UDim2.new(1, 0, 0, 24)
+		Tab["17"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Tab["17"].Text = options.name
+		Tab["17"].Name = "Inactive"
+
+		Tab["18"] = Instance.new("UIPadding", Tab["17"])
+		Tab["18"].PaddingLeft = UDim.new(0, 28)
+
+		Tab["19"] = Instance.new("ImageLabel", Tab["17"])
+		Tab["19"].BorderSizePixel = 0
+		Tab["19"].BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		Tab["19"].ImageColor3 = Color3.fromRGB(158, 158, 158)
+		Tab["19"].AnchorPoint = Vector2.new(0, 0.5)
+		Tab["19"].Image = options.icon
+		Tab["19"].Size = UDim2.new(0, 25, 0, 25)
+		Tab["19"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Tab["19"].BackgroundTransparency = 1
+		Tab["19"].Position = UDim2.new(0, -28, 0.5, 0)
+
+		Tab["1c"] = Instance.new("ScrollingFrame", Window["1b"])
+		Tab["1c"].BorderSizePixel = 0
+		Tab["1c"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Tab["1c"].Name = "HomeTab"
+		Tab["1c"].Selectable = false
+		Tab["1c"].Size = UDim2.new(1, 0, 1, 0)
+		Tab["1c"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Tab["1c"].ScrollBarThickness = 0
+		Tab["1c"].BackgroundTransparency = 1
+		Tab["1c"].SelectionGroup = false
+		Tab["1c"].Visible = false
+
+		Tab["180"] = Instance.new("UIPadding", Tab["1c"])
+		Tab["180"].PaddingLeft = UDim.new(0, 2)
+		Tab["180"].PaddingRight = UDim.new(0, 2)
+		Tab["180"].PaddingTop = UDim.new(0, 1)
+		Tab["180"].PaddingBottom = UDim.new(0, 1)
+
+		Window["24"] = Instance.new("UIListLayout", Tab["1c"])
+		Window["24"].Padding = UDim.new(0, 6)
+		Window["24"].SortOrder = Enum.SortOrder.LayoutOrder
+
+		function Tab.Activate(self)
+			if not Tab.Active then
+				if Window.CurrentTab ~= nil then
+					Window.CurrentTab:Deactivate()
+				end
+				Tab.Active = true
+				Library:tween(Tab["17"], {
+					BackgroundTransparency = 0.8,
+				})
+				Library:tween(Tab["17"], {
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+				})
+				Library:tween(Tab["19"], {
+					ImageColor3 = Color3.fromRGB(255, 255, 255),
+				})
+				Tab["1c"].Visible = true
+				Window.CurrentTab = Tab
+			end
+		end
+
+		function Tab.Deactivate(self)
+			if Tab.Active then
+				Tab.Active = false
+				Tab.Hover = false
+				Library:tween(Tab["17"], {
+					TextColor3 = Color3.fromRGB(200, 200, 200),
+				})
+				Library:tween(Tab["19"], {
+					ImageColor3 = Color3.fromRGB(200, 200, 200),
+				})
+				Library:tween(Tab["17"], {
+					BackgroundTransparency = 1,
+				})
+				Tab["1c"].Visible = false
+			end
+		end
+
+		Tab["17"].MouseEnter:Connect(function()
+			Tab.Hover = true
+			if not Tab.Active then
+				Library:tween(Tab["17"], {
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+				})
+				Library:tween(Tab["19"], {
+					ImageColor3 = Color3.fromRGB(255, 255, 255),
+				})
+			end
+		end)
+
+		Tab["17"].MouseLeave:Connect(function()
+			Tab.Hover = false
+			if not Tab.Active then
+				Library:tween(Tab["17"], {
+					TextColor3 = Color3.fromRGB(200, 200, 200),
+				})
+				Library:tween(Tab["19"], {
+					ImageColor3 = Color3.fromRGB(200, 200, 200),
+				})
+			end
+		end)
+
+		Tab["17"].MouseButton1Click:Connect(function()
+			Tab:Activate()
+		end)
+
+		if Window.CurrentTab == nil then
+			Tab:Activate()
+		end
+
+		function Tab.Button(self, options)
+			options = Library.validate({
+				name = "This is button",
+				callback = function() end,
+			}, options or {})
+
+			local Button = {
+				Hover = false,
+				MouseDown = false,
+			}
+
+			Button["1d"] = Instance.new("TextButton", Tab["1c"])
+			Button["1d"].BorderSizePixel = 0
+			Button["1d"].BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+			Button["1d"].Size = UDim2.new(1, 0, 0, 32)
+			Button["1d"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Button["1d"].Name = "Button"
+			Button["1d"].Transparency = 0.3
+			Button["1d"].Text = ""
+
+			Button["1e"] = Instance.new("UICorner", Button["1d"])
+			Button["1e"].CornerRadius = UDim.new(0, 4)
+
+			Button["1f"] = Instance.new("UIStroke", Button["1d"])
+			Button["1f"].Color = Color3.fromRGB(0, 0, 0)
+			Button["1f"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			Button["20"] = Instance.new("TextLabel", Button["1d"])
+			Button["20"].BorderSizePixel = 0
+			Button["20"].TextXAlignment = Enum.TextXAlignment.Left
+			Button["20"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Button["20"].TextSize = 14
+			Button["20"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Button["20"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Button["20"].BackgroundTransparency = 1
+			Button["20"].Size = UDim2.new(1, -20, 1, 0)
+			Button["20"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Button["20"].Text = options.name
+			Button["20"].Name = "Title"
+
+			Button["21"] = Instance.new("UIPadding", Button["1d"])
+			Button["21"].PaddingTop = UDim.new(0, 6)
+			Button["21"].PaddingRight = UDim.new(0, 6)
+			Button["21"].PaddingLeft = UDim.new(0, 6)
+			Button["21"].PaddingBottom = UDim.new(0, 6)
+
+			Button["22"] = Instance.new("ImageLabel", Button["1d"])
+			Button["22"].BorderSizePixel = 0
+			Button["22"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Button["22"].AnchorPoint = Vector2.new(1, 0)
+			Button["22"].Image = "rbxassetid://17817415289"
+			Button["22"].Size = UDim2.new(0, 20, 0, 20)
+			Button["22"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Button["22"].BackgroundTransparency = 1
+			Button["22"].Name = "Icon"
+			Button["22"].Position = UDim2.new(1, 0, 0, 0)
+
+			function Button.SetText(self, text)
+				Button["20"].Text = text
+				options.name = text
+			end
+
+			function Button.SetCallback(self, callback)
+				options.callback = callback
+			end
+
+			Button["1d"].MouseEnter:Connect(function()
+				Button.Hover = true
+				Library:tween(Button["1f"], {
+					Color = Color3.fromRGB(85, 85, 85),
+				})
+			end)
+
+			Button["1d"].MouseLeave:Connect(function()
+				Button.Hover = false
+				if not Button.MouseDown then
+					Library:tween(Button["1f"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+				end
+			end)
+
+			Button["1d"].MouseButton1Down:Connect(function()
+				Button.MouseDown = true
+				Library:tween(Button["1d"], {
+					BackgroundColor3 = Color3.fromRGB(57, 57, 57),
+				})
+				Library:tween(Button["1f"], {
+					Color = Color3.fromRGB(200, 200, 200),
+				})
+				options.callback()
+			end)
+
+			Button["1d"].MouseButton1Up:Connect(function()
+				Button.MouseDown = false
+				Library:tween(Button["1d"], {
+					BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+				})
+				Library:tween(Button["1f"], {
+					Color = Color3.fromRGB(0, 0, 0),
+				})
+				Library:tween(Button["1d"], {
+					BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+				})
+				Library:tween(Button["1f"], {
+					Color = Color3.fromRGB(0, 0, 0),
+				})
+			end)
+
+			return Button
+		end
+
+		function Tab.Lable(self, options)
+			options = Library.validate({
+				messege = "This is lable",
+			}, options or {})
+
+			local Label = {}
+
+			Label["25"] = Instance.new("Frame", Tab["1c"])
+			Label["25"].BorderSizePixel = 0
+			Label["25"].BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+			Label["25"].Size = UDim2.new(1, 0, 0, 26)
+			Label["25"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Label["25"].Name = "Lable"
+			Label["25"].Transparency = 0.3
+
+			Label["26"] = Instance.new("UICorner", Label["25"])
+			Label["26"].CornerRadius = UDim.new(0, 4)
+
+			Label["27"] = Instance.new("UIStroke", Label["25"])
+			Label["27"].Color = Color3.fromRGB(0, 0, 0)
+
+			Label["28"] = Instance.new("TextLabel", Label["25"])
+			Label["28"].BorderSizePixel = 0
+			Label["28"].TextXAlignment = Enum.TextXAlignment.Left
+			Label["28"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Label["28"].TextSize = 14
+			Label["28"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Label["28"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Label["28"].BackgroundTransparency = 1
+			Label["28"].Size = UDim2.new(1, 0, 1, 0)
+			Label["28"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Label["28"].Text = options.messege
+			Label["28"].Name = "Title"
+			Label["28"].TextWrapped = true
+			Label["28"].TextYAlignment = Enum.TextYAlignment.Top
+
+			Label["29"] = Instance.new("UIPadding", Label["25"])
+			Label["29"].PaddingTop = UDim.new(0, 6)
+			Label["29"].PaddingRight = UDim.new(0, 6)
+			Label["29"].PaddingLeft = UDim.new(0, 6)
+			Label["29"].PaddingBottom = UDim.new(0, 6)
+
+			function Label.SetText(self, text)
+				options.messege = text
+				Label:_update()
+			end
+
+			function Label._update(self)
+				Label["28"].Text = options.messege
+				Label["28"].Size = UDim2.new(Label["28"].Size.X.Scale, Label["28"].Size.X.Offset, 0, math.huge)
+				Label["28"].Size = UDim2.new(Label["28"].Size.X.Scale, Label["28"].Size.X.Offset, 0, Label["28"].TextBounds.Y)
+				Label["25"].Size = UDim2.new(Label["25"].Size.X.Scale, Label["25"].Size.X.Offset, 0, Label["28"].TextBounds.Y + 12)
+			end
+
+			Label:_update()
+			return Label
+		end
+
+		function Tab.Section(self, options)
+			options = Library.validate({
+				messege = "This is Section",
+			}, options or {})
+
+			local Section = {}
+
+			Section["25"] = Instance.new("Frame", Tab["1c"])
+			Section["25"].BorderSizePixel = 0
+			Section["25"].BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+			Section["25"].Size = UDim2.new(1, 0, 0, 26)
+			Section["25"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Section["25"].Name = "Lable"
+			Section["25"].Transparency = 1
+
+			Section["26"] = Instance.new("UICorner", Section["25"])
+			Section["26"].CornerRadius = UDim.new(0, 4)
+
+			Section["28"] = Instance.new("TextLabel", Section["25"])
+			Section["28"].BorderSizePixel = 0
+			Section["28"].TextXAlignment = Enum.TextXAlignment.Left
+			Section["28"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Section["28"].TextSize = 14
+			Section["28"].Font = Enum.Font.GothamBold
+			Section["28"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Section["28"].BackgroundTransparency = 1
+			Section["28"].Size = UDim2.new(1, 0, 1, 0)
+			Section["28"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Section["28"].Text = options.messege
+			Section["28"].Name = "Title"
+			Section["28"].TextWrapped = true
+			Section["28"].TextYAlignment = Enum.TextYAlignment.Top
+
+			Section["29"] = Instance.new("UIPadding", Section["25"])
+			Section["29"].PaddingTop = UDim.new(0, 6)
+			Section["29"].PaddingRight = UDim.new(0, 6)
+			Section["29"].PaddingLeft = UDim.new(0, 6)
+			Section["29"].PaddingBottom = UDim.new(0, 6)
+
+			function Section.SetText(self, text)
+				options.messege = text
+				Section:_update()
+			end
+
+			function Section._update(self)
+				Section["28"].Text = options.messege
+				Section["28"].Size = UDim2.new(Section["28"].Size.X.Scale, Section["28"].Size.X.Offset, 0, math.huge)
+				Section["28"].Size = UDim2.new(Section["28"].Size.X.Scale, Section["28"].Size.X.Offset, 0, Section["28"].TextBounds.Y)
+				Section["25"].Size = UDim2.new(Section["25"].Size.X.Scale, Section["25"].Size.X.Offset, 0, Section["28"].TextBounds.Y + 12)
+			end
+
+			Section:_update()
+			return Section
+		end
+
+		function Tab.Toggle(self, options)
+			options = Library.validate({
+				title = "This is toggle",
+				callback = function() end,
+			}, options or {})
+
+			local Toggle = {
+				Hover = false,
+				MouseDown = false,
+				State = false,
+			}
+
+			Toggle["46"] = Instance.new("TextButton", Tab["1c"])
+			Toggle["46"].BorderSizePixel = 0
+			Toggle["46"].BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+			Toggle["46"].Size = UDim2.new(1, 0, 0, 32)
+			Toggle["46"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Toggle["46"].Name = "ToggleInactive"
+			Toggle["46"].Transparency = 0.3
+			Toggle["46"].Text = ""
+
+			Toggle["47"] = Instance.new("UICorner", Toggle["46"])
+			Toggle["47"].CornerRadius = UDim.new(0, 4)
+
+			Toggle["48"] = Instance.new("UIStroke", Toggle["46"])
+			Toggle["48"].Color = Color3.fromRGB(0, 0, 0)
+			Toggle["48"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			Toggle["49"] = Instance.new("TextLabel", Toggle["46"])
+			Toggle["49"].BorderSizePixel = 0
+			Toggle["49"].TextXAlignment = Enum.TextXAlignment.Left
+			Toggle["49"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Toggle["49"].TextSize = 14
+			Toggle["49"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Toggle["49"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Toggle["49"].BackgroundTransparency = 1
+			Toggle["49"].Size = UDim2.new(1, -26, 1, 0)
+			Toggle["49"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Toggle["49"].Text = options.title
+			Toggle["49"].Name = "Title"
+
+			Toggle["4a"] = Instance.new("UIPadding", Toggle["46"])
+			Toggle["4a"].PaddingTop = UDim.new(0, 6)
+			Toggle["4a"].PaddingRight = UDim.new(0, 6)
+			Toggle["4a"].PaddingLeft = UDim.new(0, 6)
+			Toggle["4a"].PaddingBottom = UDim.new(0, 6)
+
+			Toggle["4b"] = Instance.new("Frame", Toggle["46"])
+			Toggle["4b"].BorderSizePixel = 0
+			Toggle["4b"].BackgroundColor3 = Color3.fromRGB(57, 57, 56)
+			Toggle["4b"].AnchorPoint = Vector2.new(1, 0.5)
+			Toggle["4b"].Size = UDim2.new(0, 16, 0, 16)
+			Toggle["4b"].Position = UDim2.new(1, -3, 0.5, 0)
+			Toggle["4b"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Toggle["4b"].Name = "CheckMarkholder"
+
+			Toggle["4c"] = Instance.new("UICorner", Toggle["4b"])
+			Toggle["4c"].CornerRadius = UDim.new(0, 2)
+
+			Toggle["4d"] = Instance.new("UIStroke", Toggle["4b"])
+			Toggle["4d"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			Toggle["4d"].Color = Color3.fromRGB(0, 0, 0)
+
+			Toggle["4e"] = Instance.new("ImageLabel", Toggle["4b"])
+			Toggle["4e"].BorderSizePixel = 0
+			Toggle["4e"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Toggle["4e"].AnchorPoint = Vector2.new(0.5, 0.5)
+			Toggle["4e"].Image = "rbxassetid://17713558928"
+			Toggle["4e"].Size = UDim2.new(1, -2, 1, -2)
+			Toggle["4e"].Visible = false
+			Toggle["4e"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Toggle["4e"].BackgroundTransparency = 1
+			Toggle["4e"].Name = "CheckMark"
+			Toggle["4e"].Position = UDim2.new(0.5, 0, 0.5, 0)
+
+			function Toggle.Toggle(self, state)
+				if state == nil then
+					Toggle.State = not Toggle.State
+				else
+					Toggle.State = state
+				end
+
+				if Toggle.State then
+					Toggle["4e"].Visible = true
+					Library:tween(Toggle["4b"], {
+						BackgroundColor3 = Color3.fromRGB(0, 58, 74),
+					})
+					Library:tween(Toggle["4e"], {
+						ImageTransparency = 0,
+					})
+				else
+					Library:tween(Toggle["4b"], {
+						BackgroundColor3 = Color3.fromRGB(57, 57, 56),
+					})
+					Library:tween(Toggle["4e"], {
+						ImageTransparency = 1,
+					})
+				end
+				options.callback(Toggle.State)
+			end
+
+			Toggle["46"].MouseEnter:Connect(function()
+				Toggle.Hover = true
+				Library:tween(Toggle["48"], {
+					Color = Color3.fromRGB(85, 85, 85),
+				})
+			end)
+
+			Toggle["46"].MouseLeave:Connect(function()
+				Toggle.Hover = false
+				if not Toggle.MouseDown then
+					Library:tween(Toggle["48"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+				end
+			end)
+
+			Toggle["46"].MouseButton1Down:Connect(function()
+				Toggle.MouseDown = true
+				Library:tween(Toggle["46"], {
+					BackgroundColor3 = Color3.fromRGB(57, 57, 57),
+				})
+				Library:tween(Toggle["48"], {
+					Color = Color3.fromRGB(200, 200, 200),
+				})
+				Toggle:Toggle()
+			end)
+
+			Toggle["46"].MouseButton1Up:Connect(function()
+				Toggle.MouseDown = false
+				if Toggle.Hover then
+					Library:tween(Toggle["46"], {
+						BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+					})
+					Library:tween(Toggle["48"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+				else
+					Library:tween(Toggle["46"], {
+						BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+					})
+					Library:tween(Toggle["48"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+				end
+			end)
+
+			UserInputService.InputEnded:Connect(function(input, gameProcessed)
+				if gameProcessed then return end
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					Toggle.MouseDown = false
+					if Toggle.Hover then
+						Library:tween(Toggle["46"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Toggle["48"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+					else
+						Library:tween(Toggle["46"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Toggle["48"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+					end
+				end
+			end)
+
+			return Toggle
+		end
+
+		function Tab.Slider(self, options)
+			options = Library.validate({
+				title = "This is slider",
+				min = 0,
+				max = 100,
+				default = 50,
+				callback = function(val) end,
+			}, options or {})
+
+			local Slider = {
+				MouseDown = false,
+				Hover = false,
+				connection = nil,
+				Options = options,
+				CustomColor = Color3.fromRGB(167, 43, 5),
+			}
+
+			Slider["2a"] = Instance.new("TextButton", Tab["1c"])
+			Slider["2a"].BorderSizePixel = 0
+			Slider["2a"].BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+			Slider["2a"].Size = UDim2.new(1, 0, 0, 38)
+			Slider["2a"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["2a"].Name = "Slider"
+			Slider["2a"].Transparency = 0.3
+			Slider["2a"].Text = ""
+
+			Slider["2b"] = Instance.new("UICorner", Slider["2a"])
+			Slider["2b"].CornerRadius = UDim.new(0, 4)
+
+			Slider["2c"] = Instance.new("UIStroke", Slider["2a"])
+			Slider["2c"].Color = Color3.fromRGB(0, 0, 0)
+			Slider["2c"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			Slider["2d"] = Instance.new("TextLabel", Slider["2a"])
+			Slider["2d"].BorderSizePixel = 0
+			Slider["2d"].TextXAlignment = Enum.TextXAlignment.Left
+			Slider["2d"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Slider["2d"].TextSize = 14
+			Slider["2d"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Slider["2d"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Slider["2d"].BackgroundTransparency = 1
+			Slider["2d"].Size = UDim2.new(1, -24, 1, -10)
+			Slider["2d"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["2d"].Text = options.title
+			Slider["2d"].Name = "Title"
+
+			Slider["2e"] = Instance.new("UIPadding", Slider["2a"])
+			Slider["2e"].PaddingTop = UDim.new(0, 6)
+			Slider["2e"].PaddingRight = UDim.new(0, 6)
+			Slider["2e"].PaddingLeft = UDim.new(0, 6)
+			Slider["2e"].PaddingBottom = UDim.new(0, 6)
+
+			Slider["2f"] = Instance.new("TextLabel", Slider["2a"])
+			Slider["2f"].BorderSizePixel = 0
+			Slider["2f"].TextXAlignment = Enum.TextXAlignment.Right
+			Slider["2f"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Slider["2f"].TextSize = 14
+			Slider["2f"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Slider["2f"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Slider["2f"].BackgroundTransparency = 1
+			Slider["2f"].AnchorPoint = Vector2.new(1, 0)
+			Slider["2f"].Size = UDim2.new(0, 24, 1, -10)
+			Slider["2f"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["2f"].Text = tostring(options.default)
+			Slider["2f"].Name = "Value"
+			Slider["2f"].Position = UDim2.new(1, 0, 0, 0)
+
+			Slider["30"] = Instance.new("Frame", Slider["2a"])
+			Slider["30"].BorderSizePixel = 0
+			Slider["30"].BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+			Slider["30"].AnchorPoint = Vector2.new(0, 1)
+			Slider["30"].Size = UDim2.new(1, 0, 0, 4)
+			Slider["30"].Position = UDim2.new(0, 0, 1, 0)
+			Slider["30"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["30"].Name = "SliderBack"
+
+			Slider["31"] = Instance.new("UIStroke", Slider["30"])
+			Slider["31"].Color = Color3.fromRGB(82, 82, 82)
+
+			Slider["32"] = Instance.new("UICorner", Slider["30"])
+			Slider["32"].CornerRadius = UDim.new(0, 4)
+
+			Slider["33"] = Instance.new("Frame", Slider["30"])
+			Slider["33"].BorderSizePixel = 0
+			Slider["33"].BackgroundColor3 = Slider.CustomColor
+			Slider["33"].Size = UDim2.new(0.5, 0, 1, 0)
+			Slider["33"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["33"].Name = "Draggable"
+
+			Slider["330"] = Instance.new("ImageLabel", Slider["33"])
+			Slider["330"].BorderSizePixel = 0
+			Slider["330"].BackgroundColor3 = Slider.CustomColor
+			Slider["330"].BackgroundTransparency = 1
+			Slider["330"].Size = UDim2.new(0, 25, 0, 25)
+			Slider["330"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Slider["330"].Image = "rbxassetid://17817072276"
+			Slider["330"].Position = UDim2.new(1, -11, -3, 0)
+			Slider["330"].Name = "Draggable"
+
+			Slider["34"] = Instance.new("UICorner", Slider["33"])
+			Slider["34"].CornerRadius = UDim.new(0, 4)
+
+			function Slider.saveConfig(self, option)
+				writefile("SliderConfig.json", game:GetService("HttpService"):JSONEncode({
+					backgroundOption = option,
+				}))
+			end
+
+			function Slider.loadConfig(self)
+				if isfile("SliderConfig.json") then
+					local config = game:GetService("HttpService"):JSONDecode(readfile("SliderConfig.json"))
+					if config.backgroundOption then
+						Slider:updateBackgroundImage(config.backgroundOption)
+					end
+				end
+			end
+
+			function Slider.SetValue(self, val)
+				if val == nil then
+					local percentage = math.clamp((Mouse.X - Slider["30"].AbsolutePosition.X) / Slider["2a"].AbsoluteSize.X, 0, 1)
+					Slider["2f"].Text = tostring(math.floor((options.max - options.min) * percentage + options.min))
+					Slider["33"].Size = UDim2.fromScale(percentage, 1)
+				else
+					Slider["2f"].Text = tostring(val)
+					Slider["33"].Size = UDim2.fromScale((val - options.min) / (options.max - options.min), 1)
+				end
+				options.callback(Slider:GetValue())
+			end
+
+			function Slider.GetValue(self)
+				return tonumber(Slider["2f"].Text)
+			end
+
+			function Slider.updateBackgroundImage(self, option)
+				local draggableImages = {
+					Option1 = "rbxassetid://17817072276",
+					Option2 = "rbxassetid://17768456633",
+					Option3 = "rbxassetid://17745415535",
+					Option4 = "rbxassetid://17782389569",
+					Option5 = "rbxassetid://18209322730",
+					Option6 = "rbxassetid://18210105179",
+				}
+				local mainImages = {
+					Option1 = "rbxassetid://17816995936",
+					Option2 = "rbxassetid://17767691591",
+					Option3 = "rbxassetid://17745211225",
+					Option4 = "rbxassetid://17782353954",
+					Option5 = "rbxassetid://18209980526",
+					Option6 = "rbxassetid://18210105179",
+				}
+				local colors = {
+					Option1 = Color3.fromRGB(255, 75, 45),
+					Option2 = Color3.fromRGB(28, 141, 147),
+					Option3 = Color3.fromRGB(127, 117, 86),
+					Option4 = Color3.fromRGB(85, 110, 134),
+					Option5 = Color3.fromRGB(193, 161, 33),
+					Option6 = Color3.fromRGB(133, 125, 111),
+				}
+
+				if mainImages[option] then
+					print("Updating background image to: " .. mainImages[option])
+					if Window["200"] then
+						Window["200"].Image = mainImages[option]
+						Slider["330"].Image = draggableImages[option]
+						Slider.CustomColor = colors[option]
+						Slider["33"].BackgroundColor3 = Slider.CustomColor
+						print("Background image updated.")
+						Slider:saveConfig(option)
+					else
+						print("GUI[\"200\"] not found.")
+					end
+				else
+					print("Option not found in imageMap: " .. option)
+				end
+			end
+
+			Slider["2a"].MouseEnter:Connect(function()
+				Slider.Hover = true
+				Library:tween(Slider["2c"], {
+					Color = Color3.fromRGB(85, 85, 85),
+				})
+				Library:tween(Slider["31"], {
+					Color = Color3.fromRGB(85, 85, 85),
+				})
+				Library:tween(Slider["33"], {
+					BackgroundColor3 = Slider.CustomColor,
+				})
+			end)
+
+			Slider["2a"].MouseLeave:Connect(function()
+				Slider.Hover = false
+				if not Slider.MouseDown then
+					Library:tween(Slider["2c"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["31"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["33"], {
+						BackgroundColor3 = Slider.CustomColor,
+					})
+				end
+			end)
+
+			Slider["2a"].MouseButton1Down:Connect(function()
+				Slider.MouseDown = true
+				Library:tween(Slider["2a"], {
+					BackgroundColor3 = Color3.fromRGB(57, 57, 57),
+				})
+				Library:tween(Slider["2c"], {
+					Color = Color3.fromRGB(200, 200, 200),
+				})
+				Library:tween(Slider["31"], {
+					Color = Color3.fromRGB(200, 200, 200),
+				})
+				Library:tween(Slider["33"], {
+					BackgroundColor3 = Slider.CustomColor,
+				})
+				if not Slider.connection then
+					Slider.connection = RunService.RenderStepped:Connect(function()
+						Slider:SetValue()
+					end)
+				end
+			end)
+
+			Slider["2a"].MouseButton1Up:Connect(function()
+				Slider.MouseDown = false
+				if Slider.Hover then
+					Library:tween(Slider["2a"], {
+						BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+					})
+					Library:tween(Slider["2c"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["31"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["33"], {
+						BackgroundColor3 = Slider.CustomColor,
+					})
+				else
+					Library:tween(Slider["2a"], {
+						BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+					})
+					Library:tween(Slider["2c"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["31"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+					Library:tween(Slider["33"], {
+						BackgroundColor3 = Slider.CustomColor,
+					})
+				end
+				if Slider.connection then
+					Slider.connection:Disconnect()
+				end
+				Slider.connection = nil
+			end)
+
+			UserInputService.InputEnded:Connect(function(input, gameProcessed)
+				if gameProcessed then return end
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					Slider.MouseDown = false
+					if Slider.Hover then
+						Library:tween(Slider["2a"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Slider["2c"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+						Library:tween(Slider["31"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+						Library:tween(Slider["33"], {
+							BackgroundColor3 = Slider.CustomColor,
+						})
+					else
+						Library:tween(Slider["2a"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Slider["2c"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+						Library:tween(Slider["31"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+						Library:tween(Slider["33"], {
+							BackgroundColor3 = Slider.CustomColor,
+						})
+					end
+					if Slider.connection then
+						Slider.connection:Disconnect()
+					end
+					Slider.connection = nil
+				end
+			end)
+
+			Slider:loadConfig()
+			return Slider
+		end
+
+		function Tab.Dropdown(self, options)
+			options = Library.validate({
+				title = "This is Dropdown",
+				callback = function(val)
+					print(val)
+				end,
+			}, options or {})
+
+			local Dropdown = {}
+			Dropdown.Items = {}
+			Dropdown.Open = false
+			Dropdown.MouseDown = false
+			Dropdown.Hover = false
+			Dropdown.HoveringItem = false
+
+			Dropdown["35"] = Instance.new("TextButton", Tab["1c"])
+			Dropdown["35"].BorderSizePixel = 0
+			Dropdown["35"].BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+			Dropdown["35"].ClipsDescendants = true
+			Dropdown["35"].Size = UDim2.new(1, 0, 0, 30)
+			Dropdown["35"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Dropdown["35"].Name = "Dropdown"
+			Dropdown["35"].Transparency = 0.3
+			Dropdown["35"].Text = ""
+
+			Dropdown["36"] = Instance.new("UICorner", Dropdown["35"])
+			Dropdown["36"].CornerRadius = UDim.new(0, 4)
+
+			Dropdown["37"] = Instance.new("UIStroke", Dropdown["35"])
+			Dropdown["37"].Color = Color3.fromRGB(0, 0, 0)
+			Dropdown["37"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			Dropdown["38"] = Instance.new("TextLabel", Dropdown["35"])
+			Dropdown["38"].BorderSizePixel = 0
+			Dropdown["38"].TextXAlignment = Enum.TextXAlignment.Left
+			Dropdown["38"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Dropdown["38"].TextSize = 14
+			Dropdown["38"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+			Dropdown["38"].TextColor3 = Color3.fromRGB(255, 255, 255)
+			Dropdown["38"].BackgroundTransparency = 1
+			Dropdown["38"].Size = UDim2.new(1, -20, 0, 20)
+			Dropdown["38"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Dropdown["38"].Text = options.title
+			Dropdown["38"].Name = "Title"
+
+			Dropdown["39"] = Instance.new("UIPadding", Dropdown["35"])
+			Dropdown["39"].PaddingTop = UDim.new(0, 6)
+			Dropdown["39"].PaddingRight = UDim.new(0, 6)
+			Dropdown["39"].PaddingLeft = UDim.new(0, 6)
+			Dropdown["39"].PaddingBottom = UDim.new(0, 6)
+
+			Dropdown["3a"] = Instance.new("ImageLabel", Dropdown["35"])
+			Dropdown["3a"].BorderSizePixel = 0
+			Dropdown["3a"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Dropdown["3a"].AnchorPoint = Vector2.new(1, 0)
+			Dropdown["3a"].Image = "rbxassetid://17763182683"
+			Dropdown["3a"].Size = UDim2.new(0, 20, 0, 20)
+			Dropdown["3a"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Dropdown["3a"].BackgroundTransparency = 1
+			Dropdown["3a"].Name = "Icon"
+			Dropdown["3a"].Position = UDim2.new(1, 0, 0, 0)
+
+			Dropdown["3b"] = Instance.new("ScrollingFrame", Dropdown["35"])
+			Dropdown["3b"].Visible = false
+			Dropdown["3b"].BorderSizePixel = 0
+			Dropdown["3b"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Dropdown["3b"].Size = UDim2.new(1, 0, 1, -24)
+			Dropdown["3b"].Position = UDim2.new(0, 0, 0, 26)
+			Dropdown["3b"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Dropdown["3b"].Name = "OptionHolder"
+			Dropdown["3b"].BackgroundTransparency = 1
+			Dropdown["3b"].ScrollBarThickness = 5
+
+			Dropdown["3c"] = Instance.new("UIListLayout", Dropdown["3b"])
+			Dropdown["3c"].Padding = UDim.new(0, 3)
+			Dropdown["3c"].SortOrder = Enum.SortOrder.LayoutOrder
+
+			function Dropdown.Add(self, name, value)
+				local Item = {
+					Hover = false,
+					MouseDown = false,
+				}
+				if Dropdown.Items[name] ~= nil then
+					return
+				end
+				Dropdown.Items[name] = {
+					instance = {},
+					value = value,
+				}
+
+				Dropdown.Items[name].instance["3d"] = Instance.new("TextButton", Dropdown["3b"])
+				Dropdown.Items[name].instance["3d"].BorderSizePixel = 0
+				Dropdown.Items[name].instance["3d"].BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+				Dropdown.Items[name].instance["3d"].TextSize = 12
+				Dropdown.Items[name].instance["3d"].FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+				Dropdown.Items[name].instance["3d"].TextColor3 = Color3.fromRGB(189, 189, 189)
+				Dropdown.Items[name].instance["3d"].Size = UDim2.new(1, 0, 0, 30)
+				Dropdown.Items[name].instance["3d"].BorderColor3 = Color3.fromRGB(0, 0, 0)
+				Dropdown.Items[name].instance["3d"].Text = name
+				Dropdown.Items[name].instance["3d"].Name = "Inactiveoption"
+				Dropdown.Items[name].instance["3d"].BackgroundTransparency = 0.7
+
+				Dropdown.Items[name].instance["3e"] = Instance.new("UIStroke", Dropdown.Items[name].instance["3d"])
+				Dropdown.Items[name].instance["3e"].ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				Dropdown.Items[name].instance["3e"].Color = Color3.fromRGB(0, 0, 0)
+				Dropdown.Items[name].instance["3e"].Transparency = 0.9
+
+				Dropdown.Items[name].instance["3f"] = Instance.new("UICorner", Dropdown.Items[name].instance["3d"])
+				Dropdown.Items[name].instance["3f"].CornerRadius = UDim.new(0, 2)
+
+				Dropdown.Items[name].instance["3d"].MouseEnter:Connect(function()
+					Item.Hover = true
+					Dropdown.HoveringItem = true
+					Library:tween(Dropdown.Items[name].instance["3e"], {
+						Color = Color3.fromRGB(62, 62, 62),
+					})
+				end)
+
+				Dropdown.Items[name].instance["3d"].MouseLeave:Connect(function()
+					Item.Hover = false
+					Dropdown.HoveringItem = false
+					if not Dropdown.MouseDown then
+						Library:tween(Dropdown.Items[name].instance["3e"], {
+							Color = Color3.fromRGB(161, 161, 161),
+						})
+					end
+				end)
+
+				Dropdown.Items[name].instance["3d"].MouseButton1Click:Connect(function()
+					if Dropdown.Items[name] == nil then
+						return
+					end
+					Item.MouseDown = true
+					Library:tween(Dropdown.Items[name].instance["3d"], {
+						BackgroundColor3 = Color3.fromRGB(57, 57, 57),
+					})
+					Library:tween(Dropdown.Items[name].instance["3e"], {
+						Color = Color3.fromRGB(200, 200, 200),
+					})
+					options.callback(value)
+					Dropdown:SetText(name)
+					Dropdown:Toggle()
+				end)
+
+				UserInputService.InputEnded:Connect(function(input, gameProcessed)
+					if gameProcessed then return end
+					if Dropdown.Items[name] == nil then return end
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						Item.MouseDown = false
+						if Item.Hover then
+							Library:tween(Dropdown.Items[name].instance["3d"], {
+								BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+							})
+							Library:tween(Dropdown.Items[name].instance["3e"], {
+								Color = Color3.fromRGB(0, 0, 0),
+							})
+						else
+							Library:tween(Dropdown.Items[name].instance["3d"], {
+								BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+							})
+							Library:tween(Dropdown.Items[name].instance["3e"], {
+								Color = Color3.fromRGB(0, 0, 0),
+							})
+						end
+					end
+				end)
+			end
+
+			function Dropdown.Remove(self, name)
+				if Dropdown.Items[name] ~= nil then
+					if Dropdown.Items[name].instance ~= nil then
+						for _, instance in pairs(Dropdown.Items[name].instance) do
+							instance:Destroy()
+						end
+					end
+					Dropdown.Items[name] = nil
+				end
+			end
+
+			function Dropdown.Clear(self)
+				for name, _ in pairs(Dropdown.Items) do
+					Dropdown:Remove(name)
+				end
+			end
+
+			function Dropdown.Toggle(self)
+				if Dropdown.Open then
+					Dropdown["3a"].Image = "rbxassetid://17763182683"
+					Library:tween(Dropdown["35"], {
+						Size = UDim2.new(1, 0, 0, 30),
+					}, function()
+						Dropdown["3b"].Visible = false
+					end)
+				else
+					local count = 0
+					for _, item in pairs(Dropdown.Items) do
+						if item ~= nil then
+							count = count + 1
+						end
+					end
+					Dropdown["3a"].Image = "rbxassetid://17763173253"
+					Dropdown["3b"].Visible = true
+					Library:tween(Dropdown["35"], {
+						Size = UDim2.new(1, 0, 0, 30 + count * 16 + 4),
+					})
+				end
+				Dropdown.Open = not Dropdown.Open
+			end
+
+			function Dropdown.SetText(self, text)
+				Dropdown["38"].Text = "Choosed : " .. text
+				options.title = text
+			end
+
+			Dropdown["35"].MouseEnter:Connect(function()
+				Dropdown.Hover = true
+				Library:tween(Dropdown["37"], {
+					Color = Color3.fromRGB(85, 85, 85),
+				})
+			end)
+
+			Dropdown["35"].MouseLeave:Connect(function()
+				Dropdown.Hover = false
+				if not Dropdown.MouseDown then
+					Library:tween(Dropdown["37"], {
+						Color = Color3.fromRGB(0, 0, 0),
+					})
+				end
+			end)
+
+			Dropdown["35"].MouseButton1Down:Connect(function()
+				Dropdown.MouseDown = true
+				Library:tween(Dropdown["35"], {
+					BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+				})
+				Library:tween(Dropdown["37"], {
+					Color = Color3.fromRGB(200, 200, 200),
+				})
+				if not Dropdown.HoveringItem then
+					Dropdown:Toggle()
+				end
+			end)
+
+			UserInputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					Dropdown.MouseDown = false
+					if Dropdown.Hover then
+						Library:tween(Dropdown["35"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Dropdown["37"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+					else
+						Library:tween(Dropdown["35"], {
+							BackgroundColor3 = Color3.fromRGB(27, 27, 27),
+						})
+						Library:tween(Dropdown["37"], {
+							Color = Color3.fromRGB(0, 0, 0),
+						})
+					end
+				end
+			end)
+
+			return Dropdown
+		end
+
+		return Tab
+	end
+
+	return Window
+end
+
+local function SetClipboard(text)
+	setclipboard(text)
+end
+
+local MainLibrary = Library:Init({
+	name = "Nurk Hub | Version: V2 | Gym League (Summer Event)",
+})
+
+local HomeTab = MainLibrary:CreatTab({
+	name = "Home",
+	icon = "rbxassetid://17798759869",
+})
+local FarmingTab = MainLibrary:CreatTab({
+	name = "Farming",
+	icon = "rbxassetid://18204575717",
+})
+local CompetitionsTab = MainLibrary:CreatTab({
+	name = "Competitions",
+	icon = "rbxassetid://18204610403",
+})
+local ShopTab = MainLibrary:CreatTab({
+	name = "Shop",
+	icon = "rbxassetid://18204635822",
+})
+local PlayerTab = MainLibrary:CreatTab({
+	name = "Player",
+	icon = "rbxassetid://18204647268",
+})
+local MiscTab = MainLibrary:CreatTab({
+	name = "Misc",
+	icon = "rbxassetid://18204661163",
+})
+local SummerEventTab = MainLibrary:CreatTab({
+	name = "SummerEvent",
+	icon = "rbxassetid://18204661163",
+})
+
+HomeTab:Lable({
+	messege = "This script was developed by PoisonousPotato (abdoue_e). For the latest updates, ongoing support, issue reporting, and information about exclusive giveaways, we warmly invite you to join our Discord community.\r\n\r\n\t                                                                                                                                                                                                                                                     .",
+})
+
+HomeTab:Button({
+	name = "Copy Discord Link",
+	callback = function()
+		SetClipboard("https://dsc.gg/nurk")
+		Library:CreatNotify("Notification", "Link Copyed!", 3)
+	end,
+})
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local ViewportX = workspace.CurrentCamera.ViewportSize.X
+local ViewportY = workspace.CurrentCamera.ViewportSize.Y
+local ClickX = 0.5
+local ClickY = 0.5
+local AutoTrainEnabled = false
+local AutoTrainThread = nil
+
+local function ClickMouse()
+	VirtualInputManager:SendMouseButtonEvent(ClickX, ClickY, 0, true, game, 0)
+	wait(0.1)
+	VirtualInputManager:SendMouseButtonEvent(ClickX, ClickY, 0, false, game, 0)
+end
+
+local function MoveMouse()
+	VirtualInputManager:SendMouseMoveEvent(ClickX, ClickY, game)
+end
+
+local function AutoTrainLoop()
+	while AutoTrainEnabled do
+		MoveMouse()
+		ClickMouse()
+		wait(0.00001)
+	end
+end
+
+local function StartAutoTrain()
+	if not AutoTrainEnabled then
+		AutoTrainEnabled = true
+		AutoTrainThread = coroutine.create(AutoTrainLoop)
+		coroutine.resume(AutoTrainThread)
+	end
+end
+
+local function StopAutoTrain()
+	if AutoTrainEnabled then
+		AutoTrainEnabled = false
+		if AutoTrainThread then
+			coroutine.yield(AutoTrainThread)
+			AutoTrainThread = nil
+		end
+	end
+end
+
+local AutoLoadEnabled = false
+local AutoLoadConnection = nil
+
+function StartLoad()
+	AutoLoadEnabled = true
+	AutoLoadConnection = game:GetService("RunService").Heartbeat:Connect(function()
+		if AutoLoadEnabled then
+			game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.EquipmentService.RF.AutoLoad:InvokeServer()
+		end
+	end)
+end
+
+function StopLoad()
+	AutoLoadEnabled = false
+	if AutoLoadConnection then
+		AutoLoadConnection:Disconnect()
+		AutoLoadConnection = nil
+	end
+end
+
+local AutoTapEnabled = false
+
+function StartTap()
+	AutoTapEnabled = true
+	while AutoTapEnabled do
+		game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.PodiumService.RE.Event:FireServer()
+		wait(0.1)
+	end
+end
+
+function StopTap()
+	AutoTapEnabled = false
+end
+
+local function TeleportToCompetition()
+	game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.PodiumService.RF.Teleport:InvokeServer()
+end
+
+local Player = game.Players.LocalPlayer
+local HumanoidRootPart = (Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+local EquipmentsFolder = workspace:WaitForChild("Equipments")
+local VIM = game:GetService("VirtualInputManager")
+local EquipmentService = game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.EquipmentService
+
+local function TeleportPlayer(part)
+	if HumanoidRootPart and part then
+		HumanoidRootPart.CFrame = part.CFrame
+	end
+end
+
+local IsClicking = false
+
+local function ClickLoop(count, delay)
+	local x = 0.5
+	local y = 0.5
+	for i = 1, count, 1 do
+		if not IsClicking then
+			break
+		else
+			VIM:SendMouseButtonEvent(x, y, 0, true, game, 0)
+			wait(delay)
+			VIM:SendMouseButtonEvent(x, y, 0, false, game, 0)
+			wait(delay)
+		end
+	end
+end
+
+local function PressKeyLoop(count, delay)
+	for i = 1, count, 1 do
+		VIM:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+		wait(delay)
+		VIM:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+		wait(delay)
+	end
+end
+
+local AutoFullTrainEnabled = false
+
+local function AutoFullTrainLoop()
+	while AutoFullTrainEnabled do
+		for _, equipment in pairs(EquipmentsFolder:GetChildren()) do
+			if not AutoFullTrainEnabled then
+				return
+			end
+			local root = equipment:FindFirstChild("root")
+			if root then
+				EquipmentService.RF.Leave:InvokeServer()
+				wait(1)
+				TeleportPlayer(root)
+				PressKeyLoop(4, 0.5)
+				IsClicking = true
+				ClickLoop(250, 0.00000001)
+				wait(3)
+			end
+		end
+		wait(1)
+	end
+end
+
+local AutoFullTrainThread = nil
+
+local function StartAutoFullTrain()
+	AutoFullTrainEnabled = true
+	AutoFullTrainThread = coroutine.create(AutoFullTrainLoop)
+	coroutine.resume(AutoFullTrainThread)
+end
+
+local function StopAutoFullTrain()
+	AutoFullTrainEnabled = false
+	IsClicking = false
+end
+
+local AutoSpeedEnabled = false
+
+function Startmal()
+	AutoSpeedEnabled = true
+	spawn(function()
+		while AutoSpeedEnabled do
+			for i = 1, 5, 1 do
+				game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.EquipmentService.RF.ChangeSpeed:InvokeServer(unpack({
+					[1] = true,
+				}))
+				wait(0.5)
+			end
+			wait(2)
+		end
+	end)
+end
+
+function Stopmal()
+	AutoSpeedEnabled = false
+end
+
+local Player2 = game.Players.LocalPlayer
+local HumanoidRootPart2 = (Player2.Character or Player2.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+local EquipmentsFolder2 = workspace:WaitForChild("Equipments")
+local VIM2 = game:GetService("VirtualInputManager")
+local EquipmentService2 = game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.EquipmentService
+
+local function TeleportPlayer2(part)
+	if HumanoidRootPart2 and part then
+		HumanoidRootPart2.CFrame = part.CFrame
+	end
+end
+
+local IsClicking2 = false
+
+local function ClickLoop2(count, delay)
+	local x = 0.5
+	local y = 0.5
+	for i = 1, count, 1 do
+		if IsClicking2 then
+			VIM2:SendMouseButtonEvent(x, y, 0, true, game, 0)
+			wait(delay)
+			VIM2:SendMouseButtonEvent(x, y, 0, false, game, 0)
+			wait(delay)
+		else
+			break
+		end
+	end
+end
+
+local function PressKeyLoop2(count, delay)
+	for i = 1, count, 1 do
+		VIM2:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+		wait(delay)
+		VIM2:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+		wait(delay)
+	end
+end
+
+local AutoSpecificTrainEnabled = false
+
+local function AutoSpecificTrainLoop(machineName)
+	while AutoSpecificTrainEnabled do
+		local equipment = EquipmentsFolder2:FindFirstChild(machineName)
+		if equipment then
+			local root = equipment:FindFirstChild("root")
+			if root then
+				EquipmentService2.RF.Leave:InvokeServer()
+				wait(1)
+				TeleportPlayer2(root)
+				PressKeyLoop2(4, 0.5)
+				IsClicking2 = true
+				ClickLoop2(250, 0.00000001)
+				wait(3)
+			end
+		end
+		wait(1)
+	end
+end
+
+local AutoSpecificTrainThread = nil
+
+local function StartAutoSpecificTrain(machineName)
+	AutoSpecificTrainEnabled = true
+	AutoSpecificTrainThread = coroutine.create(function()
+		AutoSpecificTrainLoop(machineName)
+	end)
+	coroutine.resume(AutoSpecificTrainThread)
+end
+
+local function StopAutoSpecificTrain()
+	AutoSpecificTrainEnabled = false
+	IsClicking2 = false
+end
+
+local EquipmentList = {}
+for _, equipment in pairs(EquipmentsFolder:GetChildren()) do
+	table.insert(EquipmentList, {
+		title = equipment.Name,
+		value = equipment.Name,
+	})
+end
+
+local SelectedMachine = nil
+
+FarmingTab:Section({
+	messege = "Auto Farming",
+})
+
+FarmingTab:Toggle({
+	title = "Auto Full Train (Full auto)",
+	callback = function(state)
+		if state then
+			Library:CreatNotify("Notification", "Auto farm On!", 3)
+			StartAutoFullTrain()
+		else
+			Library:CreatNotify("Notification", "Auto farm Off!", 3)
+			StopAutoFullTrain()
+		end
+	end,
+})
+
+FarmingTab:Toggle({
+	title = "Auto Train",
+	callback = function(state)
+		if state then
+			StartAutoTrain()
+		else
+			StopAutoTrain()
+		end
+	end,
+})
+
+FarmingTab:Toggle({
+	title = "Auto Load Weights",
+	callback = function(state)
+		if state then
+			StartLoad()
+		else
+			StopLoad()
+		end
+	end,
+})
+
+CompetitionsTab:Section({
+	messege = "Competitions",
+})
+
+CompetitionsTab:Toggle({
+	title = "Auto Tap Competition",
+	callback = function(state)
+		if state then
+			StartTap()
+		else
+			StopTap()
+		end
+	end,
+})
+
+CompetitionsTab:Button({
+	name = "Teleport to Competition",
+	callback = function()
+		TeleportToCompetition()
+	end,
+})
+
+FarmingTab:Toggle({
+	title = "Auto Treadmill Speed",
+	callback = function(state)
+		if state then
+			Startmal()
+		else
+			Stopmal()
+		end
+	end,
+})
+
+FarmingTab:Section({
+	messege = "Use Full Farm",
+})
+
+local MachineDropdown = FarmingTab:Dropdown({
+	title = "Choose a Machine",
+	callback = function(val)
+		print(val .. " was clicked")
+		SelectedMachine = val
+	end,
+})
+
+for _, item in ipairs(EquipmentList) do
+	MachineDropdown:Add(item.title, item.value)
+end
+
+FarmingTab:Toggle({
+	title = "Auto Train Spacific Machine",
+	callback = function(state)
+		if state then
+			if SelectedMachine then
+				StartAutoSpecificTrain(SelectedMachine)
+			else
+				Library:CreatNotify("Notification", "Choose a Machine First!", 3)
+				print("No model selected for auto train.")
+			end
+		else
+			StopAutoSpecificTrain()
+		end
+	end,
+})
+
+PlayerTab:Section({
+	messege = "Improve Player Speed",
+})
+
+local Player3 = game.Players.LocalPlayer
+local SpeedSlider = PlayerTab:Slider({
+	title = "Set Player Speed",
+	min = 12,
+	max = 300,
+	default = 12,
+	callback = function(val)
+		local humanoid = Player3.Character and Player3.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = val
+			print("Speed Slider Value: ", val)
+			print("WalkSpeed set to: ", humanoid.WalkSpeed)
+		else
+			print("Humanoid not found.")
+		end
+	end,
+})
+
+PlayerTab:Section({
+	messege = "Player Stats",
+})
+
+local PlayersService = game:GetService("Players")
+
+local function GetStatsText(frame)
+	local amount = frame:FindFirstChild("Amount")
+	local amountText = amount and amount.Text or "N/A"
+	
+	local percentage = frame:FindFirstChild("APercentage")
+	local percentageText = percentage and percentage.Text or "N/A"
+	
+	return amountText, percentageText
+end
+
+(function(player)
+	local statsFrame = player:WaitForChild("PlayerGui"):WaitForChild("Frames"):WaitForChild("Stats"):WaitForChild("Main"):WaitForChild("MuscleList"):WaitForChild("Stats")
+	local labels = {}
+
+	local function UpdateLabel(button)
+		if button:IsA("ImageButton") then
+			local frame = button:FindFirstChild("Frame")
+			if frame then
+				local amount, percentage = GetStatsText(frame)
+				local text = button.Name .. ": " .. amount .. " (" .. percentage .. ")"
+				if labels[button] then
+					labels[button]:SetText(text)
+				else
+					labels[button] = PlayerTab:Lable({
+						messege = text,
+					})
+				end
+			else
+				print("No Frame found in " .. button.Name)
+			end
+		else
+			print(button.Name .. " is not an ImageButton")
+		end
+	end
+
+	for _, child in ipairs(statsFrame:GetChildren()) do
+		if child:IsA("ImageButton") then
+			local frame = child:FindFirstChild("Frame")
+			if frame then
+				local amount = frame:FindFirstChild("Amount")
+				local percentage = frame:FindFirstChild("APercentage")
+				if amount then
+					amount:GetPropertyChangedSignal("Text"):Connect(function()
+						UpdateLabel(child)
+					end)
+				end
+				if percentage then
+					percentage:GetPropertyChangedSignal("Text"):Connect(function()
+						UpdateLabel(child)
+					end)
+				end
+				UpdateLabel(child)
+			end
+		end
+	end
+end)(PlayersService.LocalPlayer)
+
+local CustomizationService = game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.CustomizationService
+local Colors = {
+	Color3.fromRGB(255, 0, 0),
+	Color3.fromRGB(0, 0, 0),
+	Color3.fromRGB(0, 255, 0),
+	Color3.fromRGB(255, 255, 255),
+	Color3.fromRGB(255, 255, 0),
+	Color3.fromRGB(128, 0, 128)
+}
+
+local function UpdateSkinColor(color)
+	CustomizationService.RF.UpdateColor:InvokeServer(unpack({
+		[1] = "skin",
+		[2] = color,
+	}))
+end
+
+local function UpdateHairColor(color)
+	CustomizationService.RF.UpdateHairColor:InvokeServer(unpack({
+		[1] = 1,
+		[2] = color,
+	}))
+	CustomizationService.RF.UpdateHairColor:InvokeServer(unpack({
+		[1] = 2,
+		[2] = color,
+	}))
+end
+
+local function UpdatePantsColor(color)
+	game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.CustomizationService.RF.UpdateColor:InvokeServer(unpack({
+		[1] = "pants",
+		[2] = color,
+	}))
+end
+
+local RGBBodyEnabled = false
+local RGBBodyIndex = 1
+local RGBBodyConnection = nil
+
+local function StartRGBBody()
+	RGBBodyEnabled = true
+	RGBBodyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+		if RGBBodyEnabled then
+			UpdateSkinColor(Colors[RGBBodyIndex])
+			RGBBodyIndex = RGBBodyIndex % #Colors + 1
+			wait(1)
+		end
+	end)
+end
+
+local function StopRGBBody()
+	RGBBodyEnabled = false
+	if RGBBodyConnection then
+		RGBBodyConnection:Disconnect()
+		RGBBodyConnection = nil
+	end
+end
+
+local RGBHairEnabled = false
+local RGBHairIndex = 1
+local RGBHairConnection = nil
+
+local function StartRGBHair()
+	RGBHairEnabled = true
+	RGBHairConnection = game:GetService("RunService").Heartbeat:Connect(function()
+		if RGBHairEnabled then
+			UpdateHairColor(Colors[RGBHairIndex])
+			RGBHairIndex = RGBHairIndex % #Colors + 1
+			wait(2)
+		end
+	end)
+end
+
+local function StopRGBHair()
+	RGBHairEnabled = false
+	if RGBHairConnection then
+		RGBHairConnection:Disconnect()
+		RGBHairConnection = nil
+	end
+end
+
+local RGBPantsEnabled = false
+local RGBPantsIndex = 1
+local RGBPantsConnection = nil
+
+local function StartRGBPants()
+	RGBPantsEnabled = true
+	RGBPantsConnection = game:GetService("RunService").Heartbeat:Connect(function()
+		if RGBPantsEnabled then
+			UpdatePantsColor(Colors[RGBPantsIndex])
+			RGBPantsIndex = RGBPantsIndex % #Colors + 1
+			wait(2)
+		end
+	end)
+end
+
+local function StopRGBPants()
+	RGBPantsEnabled = false
+	if RGBPantsConnection then
+		RGBPantsConnection:Disconnect()
+		RGBPantsConnection = nil
+	end
+end
+
+MiscTab:Section({
+	messege = "Other Things",
+})
+
+MiscTab:Toggle({
+	title = "RGB Body color (FE)",
+	callback = function(state)
+		if state then
+			StartRGBBody()
+		else
+			StopRGBBody()
+		end
+	end,
+})
+
+MiscTab:Toggle({
+	title = "RGB Hair color (FE)",
+	callback = function(state)
+		if state then
+			StartRGBHair()
+		else
+			StopRGBHair()
+		end
+	end,
+})
+
+MiscTab:Toggle({
+	title = "RGB Pants color (FE)",
+	callback = function(state)
+		if state then
+			StartRGBPants()
+		else
+			StopRGBPants()
+		end
+	end,
+})
+
+function RedeemCodes(codes)
+	local RedeemRemote = game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.CodeService.RF.Redeem
+	for _, code in ipairs(codes) do
+		RedeemRemote:InvokeServer(unpack({
+			[1] = code,
+		}))
+	end
+end
+
+local CodesList = {
+	"SORRY",
+	"1MVisits",
+	"10KLikes",
+	"5KLikes"
+}
+
+MiscTab:Button({
+	name = "Redeem All Codes",
+	callback = function()
+		RedeemCodes(CodesList)
+		Library:CreatNotify("Notification", "Done", 3)
+	end,
+})
+
+local ShopItems = {
+	{ title = "Tutorial Potion", value = "Tutorial Potion" },
+	{ title = "Average Body Oil", value = "Average Body Oil" },
+	{ title = "Cheap Body Oil", value = "Cheap Body Oil" },
+	{ title = "Random Potion", value = "Random Potion" },
+	{ title = "Chicken Wings", value = "Chicken Wings" },
+	{ title = "Chocolate Bar", value = "Chocolate Bar" },
+	{ title = "Master Drink", value = "Master Drink" },
+	{ title = "Milk", value = "Milk" },
+	{ title = "Premium Body Oil", value = "Premium Body Oil" },
+	{ title = "Chips", value = "Chips" },
+	{ title = "Protein Shake", value = "Protein Shake" },
+	{ title = "Rorate", value = "Rorate" },
+	{ title = "Steak", value = "Steak" },
+	{ title = "Money Potion", value = "Money Potion" },
+	{ title = "Small Pump Potion", value = "Small Pump Potion" },
+	{ title = "Small Speed Potion", value = "Small Speed Potion" },
+	{ title = "Small Stamina Potion", value = "Small Stamina Potion" },
+	{ title = "Angel Potion", value = "Angel Potion" },
+	{ title = "Death Potion", value = "Death Potion" },
+	{ title = "Secret Beans", value = "Secret Beans" },
+	{ title = "Small Power Potion", value = "Small Power Potion" },
+	{ title = "Power Potion", value = "Power Potion" },
+	{ title = "Speed Potion", value = "Speed Potion" },
+	{ title = "Stamina Potion", value = "Stamina Potion" },
+	{ title = "Pump Potion", value = "Pump Potion" },
+	{ title = "Mega Potion", value = "Mega Potion" },
+	{ title = "Protein Powder", value = "Protein Powder" },
+	{ title = "Cheap Protein Powder", value = "Cheap Protein Powder" },
+	{ title = "Protein Bar", value = "Protein Bar" },
+	{ title = "Creatine Powder", value = "Creatine Powder" },
+	{ title = "Small Money Potion", value = "Small Money Potion" }
+}
+
+local SelectedShopItem = nil
+
+ShopTab:Section({
+	messege = "Buy Stuffs",
+})
+
+local ShopDropdown = ShopTab:Dropdown({
+	title = "Choose item",
+	callback = function(val)
+		SelectedShopItem = val
+		Library:CreatNotify("Notification", val .. " Choosed!", 3)
+		print(val .. " was clicked")
+	end,
+})
+
+for _, item in ipairs(ShopItems) do
+	ShopDropdown:Add(item.title, item.value)
+end
+
+ShopTab:Button({
+	name = "Buy Selected Item",
+	callback = function()
+		if SelectedShopItem then
+			game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.PowerUpsService.RF.Buy:InvokeServer(unpack({
+				[1] = SelectedShopItem,
+			}))
+			print("Purchased: " .. SelectedShopItem)
+		else
+			print("No item selected")
+		end
+	end,
+})
+
+local AutoAuraEnabled = false
+
+function StartAutoAura()
+	AutoAuraEnabled = true
+	while AutoAuraEnabled do
+		game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.AuraService.RF.Buy:InvokeServer()
+		game:GetService("ReplicatedStorage").common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.AuraService.RF.Spin:InvokeServer()
+		wait(0.1)
+	end
+end
+
+function StopAutoAura()
+	AutoAuraEnabled = false
+end
+
+MiscTab:Toggle({
+	title = "Auto Aura Spins",
+	callback = function(state)
+		if state then
+			StartAutoAura()
+		else
+			StopAutoAura()
+		end
+	end,
+})
+
+SummerEventTab:Section({
+	messege = "Medal & Stamps Farm",
+})
+
+local PlayersService2 = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer2 = PlayersService2.LocalPlayer
+local RunService2 = game:GetService("RunService")
+local TweenService2 = game:GetService("TweenService")
+
+local function GetNearestPlayer()
+	local minDistance = math.huge
+	local nearestPlayer = nil
+	for _, player in pairs(PlayersService2:GetPlayers()) do
+		if player ~= LocalPlayer2 then
+			local character = player.Character
+			if character and character:FindFirstChild("HumanoidRootPart") then
+				local distance = (character.HumanoidRootPart.Position - LocalPlayer2.Character.HumanoidRootPart.Position).Magnitude
+				if distance < minDistance then
+					minDistance = distance
+					nearestPlayer = player
+				end
+			end
+		end
+	end
+	return nearestPlayer, minDistance
+end
+
+local function AttackPlayer(target)
+	if target and target.Character and target.Character:FindFirstChild("Humanoid") then
+		ReplicatedStorage.common.packages._Index:FindFirstChild("sleitnick_knit@1.5.1").knit.Services.OlympicBoxingService.RF.Attack:InvokeServer(unpack({
+			[1] = target.Character.Humanoid,
+		}))
+	end
+end
+
+local function TweenToPlayer(target)
+	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+		local targetPos = target.Character.HumanoidRootPart.Position + Vector3.new(0, 20, 0)
+		local root = LocalPlayer2.Character and LocalPlayer2.Character:FindFirstChild("HumanoidRootPart")
+		if root then
+			TweenService2:Create(root, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				CFrame = CFrame.new(targetPos),
+			}):Play()
+		end
+	end
+end
+
+local DistanceLabel = SummerEventTab:Lable({
+	message = "Message",
+})
+
+local FarmNearestEnabled = false
+local CurrentTarget = nil
+
+function StartFarmNearest()
+	FarmNearestEnabled = true
+	while FarmNearestEnabled do
+		local target, distance = GetNearestPlayer()
+		if target ~= CurrentTarget then
+			CurrentTarget = target
+		end
+		if CurrentTarget then
+			AttackPlayer(CurrentTarget)
+			TweenToPlayer(CurrentTarget)
+		end
+		RunService2.RenderStepped:Wait()
+	end
+end
+
+function StopFarmNearest()
+	FarmNearestEnabled = false
+	CurrentTarget = nil
+end
+
+SummerEventTab:Toggle({
+	title = "Farm nearest player",
+	callback = function(state)
+		FarmNearestEnabled = state
+		if FarmNearestEnabled then
+			StartFarmNearest()
+		else
+			StopFarmNearest()
+		end
+	end,
+})
+
+RunService2.RenderStepped:Connect(function()
+	if FarmNearestEnabled then
+		local target, distance = GetNearestPlayer()
+		if target then
+			DistanceLabel:SetText("Distance: " .. math.floor(distance) .. " studs")
+		else
+			DistanceLabel:SetText("No players nearby")
+		end
+	else
+		DistanceLabel:SetText("")
+	end
+end)
+
+local BoxingAreaPos = Vector3.new(3894, 14, 1260)
+
+SummerEventTab:Button({
+	name = "Teleport to Boxing Area",
+	callback = function()
+		if LocalPlayer2.Character and LocalPlayer2.Character:FindFirstChild("HumanoidRootPart") then
+			LocalPlayer2.Character.HumanoidRootPart.CFrame = CFrame.new(BoxingAreaPos)
+			print("Teleported to Boxing Area")
+		else
+			print("Teleport failed: Player or HumanoidRootPart not found.")
+		end
+	end,
+})
+
+local VIM3 = game:GetService("VirtualInputManager")
+local AutoDeadliftEnabled = false
+local AutoDeadliftThread = nil
+
+local function PressSpace()
+	VIM3:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+	VIM3:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+end
+
+local function AutoDeadliftLoop()
+	while AutoDeadliftEnabled do
+		PressSpace()
+		wait(0.00001)
+	end
+end
+
+local function StartAutoDeadlift()
+	if not AutoDeadliftEnabled then
+		AutoDeadliftEnabled = true
+		AutoDeadliftThread = coroutine.create(AutoDeadliftLoop)
+		coroutine.resume(AutoDeadliftThread)
+	end
+end
+
+local function StopAutoDeadlift()
+	if AutoDeadliftEnabled then
+		AutoDeadliftEnabled = false
+		if AutoDeadliftThread then
+			coroutine.yield(AutoDeadliftThread)
+			AutoDeadliftThread = nil
+		end
+	end
+end
+
+SummerEventTab:Toggle({
+	title = "Auto Deadlift",
+	callback = function(state)
+		if state then
+			StartAutoDeadlift()
+		else
+			StopAutoDeadlift()
+		end
+	end,
+})
+
+local Themes = {
+	{ title = "Default", value = "Option1" },
+	{ title = "Fantasy", value = "Option2" },
+	{ title = "Space", value = "Option3" },
+	{ title = "Ark Survival Evolved", value = "Option4" },
+	{ title = "Summer", value = "Option5" },
+	{ title = "Catshakira", value = "Option6" }
+}
+
+HomeTab:Section({
+	messege = "Theme Section",
+})
+
+local ThemeDropdown = HomeTab:Dropdown({
+	title = "Pick a Theam",
+	callback = function(val)
+		print(val .. "was clicked")
+		SpeedSlider:updateBackgroundImage(val)
+		-- staminachange:updateBackgroundImage(val) -- Variable 'staminachange' is undefined in source.
+	end,
+})
+
+for _, theme in ipairs(Themes) do
+	ThemeDropdown:Add(theme.title, theme.value)
+end

@@ -1,0 +1,82 @@
+pcall(function() game.CoreGui:FindFirstChild("RenderHub"):Destroy() end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+local BASE_SPEED = 57
+local BOOST_MULTIPLIER = 0.5
+local boosting = false
+local attachment = Instance.new("Attachment", root)
+local linearVelocity = Instance.new("LinearVelocity")
+linearVelocity.MaxForce = math.huge
+linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+linearVelocity.Attachment0 = attachment
+linearVelocity.VectorVelocity = Vector3.zero
+linearVelocity.Enabled = false
+linearVelocity.Parent = root
+local gui = Instance.new("ScreenGui", CoreGui)
+gui.Name = "RenderHub"
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 176, 0, 104)
+frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 25)
+title.BackgroundTransparency = 1
+title.Text = "RenderHub"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(0.9, 0, 0, 34)
+toggleBtn.Position = UDim2.new(0.05, 0, 0, 42)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamSemibold
+toggleBtn.TextSize = 14
+toggleBtn.Text = "Speed Boost"
+toggleBtn.AutoButtonColor = false
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+RunService.RenderStepped:Connect(function()
+if not boosting then return end
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+if humanoid and humanoid.MoveDirection.Magnitude > 0 then
+local dir = humanoid.MoveDirection
+dir = Vector3.new(dir.X, 0, dir.Z).Unit
+linearVelocity.VectorVelocity = dir * BASE_SPEED * BOOST_MULTIPLIER
+else
+linearVelocity.VectorVelocity = Vector3.zero
+end
+end)
+toggleBtn.MouseButton1Click:Connect(function()
+boosting = not boosting
+linearVelocity.Enabled = boosting
+if boosting then
+toggleBtn.Text = "stop"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
+else
+linearVelocity.VectorVelocity = Vector3.zero
+toggleBtn.Text = "start"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+end
+end)
+player.CharacterAdded:Connect(function(newChar)
+character = newChar
+root = newChar:WaitForChild("HumanoidRootPart")
+attachment:Destroy()
+linearVelocity:Destroy()
+attachment = Instance.new("Attachment", root)
+linearVelocity = Instance.new("LinearVelocity")
+linearVelocity.MaxForce = math.huge
+linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+linearVelocity.Attachment0 = attachment
+linearVelocity.VectorVelocity = Vector3.zero
+linearVelocity.Enabled = boosting
+linearVelocity.Parent = root
+end)

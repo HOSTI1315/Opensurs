@@ -1,0 +1,90 @@
+local syde = loadstring(game:HttpGet("https://raw.githubusercontent.com/essencejs/syde/refs/heads/main/source", true))()
+
+local Knit = game:GetService("ReplicatedStorage").Packages.Knit
+local ClickController = require(Knit).GetController("ClickController")
+local OrbController = require(Knit).GetController("OrbController")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local plr = LocalPlayer
+local leaderstats = plr:WaitForChild("leaderstats")
+local Clicks = leaderstats:WaitForChild("👏 Clicks")
+local RebirthsFrame = require(LocalPlayer.PlayerScripts.Client.Components.UI.Frames.RebirthFrame)
+
+-- Store loops so we can stop them later
+local AutoClickLoop = nil
+local AutoRebirthLoop = nil
+
+
+if game.PlaceId == 74260430392611 then
+		local Window = syde:Init({
+			Title = "(Void Hub) Rebirth Champions X Ultimate";
+			SubText = "Made With 💓 By @VoidHubExploits";
+		})
+		local EvenTab = Window:InitTab("Event")
+		local MainTab =Window:InitTab("Main")
+		local FarmTab = Window:InitTab("Farm")
+		local EggsTab = Window:InitTab("Eggs")
+		local function GetClicks()
+			return Clicks.Value
+		end
+
+		function ClickController.canAutoClick()
+			return true
+		end
+
+		FarmTab:Toggle({
+			Title = "Auto Click",
+			Value = false,
+			Config = true,
+			CallBack = function(state)
+				if state then
+					if not AutoClickLoop then
+						ClickController:setAutoClicker(true, true)
+						getgenv().autoClick = true
+						AutoClickLoop = task.spawn(function()
+							while task.wait(0.1) do
+								if not getgenv().autoClick then break end
+								ClickController:autoClick(ClickController)
+							end
+						end)
+					end
+				else
+					getgenv().autoClick = false
+					ClickController:setAutoClicker(false, false)
+					AutoClickLoop = nil
+				end
+			end,
+		})
+
+		FarmTab:Toggle({
+			Title = "Bypass Auto Rebirth",
+			Value = false,
+			Config = true,
+			Callback = function(state)
+        if Value then
+            local RebirthsFrame = require(LocalPlayer.PlayerScripts.Client.Components.UI.Frames.RebirthFrame)
+            
+            RebirthsFrame.canAutoRebirth = function()
+                return true
+            end 
+
+            local success, err = pcall(function()
+                local ui = LocalPlayer.PlayerGui:WaitForChild("Main"):WaitForChild("Frames"):WaitForChild("Rebirths")
+                ui.SelectInfo.Visible = false
+                ui.AutoRebirth.Visible = true
+                ui.Buy.Visible = false
+            end)
+
+            if not success then
+                warn("UI error:", err)
+            end
+
+        else
+            RebirthsFrame.canAutoRebirth = function()
+                return false -- this stops the bypass 
+            end
+            print("Auto Rebirth Bypass disabled.")
+        end
+    end,
+})

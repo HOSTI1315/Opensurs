@@ -1,0 +1,223 @@
+-- 🎯 WALVY COMMUNITY - Speedhack Grapple Hook (NO WINDUI VERSION)
+
+-- ===== SERVICES =====
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== VARS =====
+local enabled = false
+local currentSpeed = 150
+local DEFAULT_SPEED = 16
+local itemID = "Grapple Hook"
+local args = {1.9832406361897787}
+
+local character, humanoid, hrp
+local speedConnection, smoothLoop, equipLoop
+local gui, guiToggle, speedInput
+
+local useItemRE = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RE/UseItem")
+
+-- ===== FUNCTIONS =====
+local function updateCharacter()
+    if not LocalPlayer.Character then
+        character = LocalPlayer.CharacterAdded:Wait()
+    else
+        character = LocalPlayer.Character
+    end
+    humanoid = character:WaitForChild("Humanoid", 5)
+    hrp = character:WaitForChild("HumanoidRootPart", 5)
+end
+
+local function startSpeedHack()
+    if not humanoid or not hrp then return end
+    if speedConnection then speedConnection:Disconnect() end
+    speedConnection = RunService.Heartbeat:Connect(function()
+        if not enabled or not humanoid or not hrp then return end
+        local dir = humanoid.MoveDirection.Magnitude > 0 and humanoid.MoveDirection.Unit or Vector3.new()
+        hrp.AssemblyLinearVelocity = Vector3.new(dir.X * currentSpeed, hrp.AssemblyLinearVelocity.Y, dir.Z * currentSpeed)
+        task.wait(0.05)
+    end)
+end
+
+local function stopSpeedHack()
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+end
+
+local function buyItem()
+    pcall(function()
+        ReplicatedStorage.Packages.Net["RF/CoinsShopService/RequestBuy"]:InvokeServer(itemID)
+    end)
+end
+
+local function autoEquip()
+    if not character then return end
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    local tool = character:FindFirstChild(itemID) or backpack:FindFirstChild(itemID)
+    if tool and tool.Parent ~= character then
+        tool.Parent = character
+    end
+end
+
+local function fakeUse()
+    if not character then return end
+    local tool = character:FindFirstChild(itemID)
+    if tool then
+        pcall(function() useItemRE:FireServer(unpack(args)) end)
+    end
+end
+
+local function ensureGrapple()
+    if not character then return end
+    if not character:FindFirstChild(itemID) and not LocalPlayer.Backpack:FindFirstChild(itemID) then
+        buyItem()
+    end
+    autoEquip()
+end
+
+local function startSmoothLoop()
+    if smoothLoop then smoothLoop:Disconnect() end
+    smoothLoop = RunService.RenderStepped:Connect(function()
+        if enabled then fakeUse() end
+    end)
+end
+
+local function startEquipLoop()
+    if equipLoop then equipLoop:Disconnect() end
+    equipLoop = RunService.Heartbeat:Connect(function()
+        if enabled then ensureGrapple() end
+    end)
+end
+
+local function cleanupSpeed()
+    enabled = false
+    stopSpeedHack()
+    if smoothLoop then smoothLoop:Disconnect(); smoothLoop = nil end
+    if equipLoop then equipLoop:Disconnect(); equipLoop = nil end
+    if humanoid then humanoid.WalkSpeed = DEFAULT_SPEED end
+    if guiToggle then guiToggle.Text = "▶ Turn On" end
+end
+
+-- ===== GUI =====
+local function createSpeedGUI()
+    if gui then return end
+    gui = Instance.new("ScreenGui")
+    gui.Name = "WalvySpeedGrappleGUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 180, 0, 120)
+    frame.Position = UDim2.new(0.5, -90, 0.5, -80)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Active = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "WALVY COMMUNITY\nSpeed Hack"
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 5)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 12
+
+    guiToggle = Instance.new("TextButton", frame)
+    guiToggle.Size = UDim2.new(0.8, 0, 0, 22)
+    guiToggle.Position = UDim2.new(0.1, 0, 0.50, 0)
+    guiToggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    guiToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    guiToggle.Font = Enum.Font.GothamBold
+    guiToggle.TextSize = 12
+    guiToggle.Text = "▶ Turn On"
+    Instance.new("UICorner", guiToggle).CornerRadius = UDim.new(0, 5)
+
+    guiToggle.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        guiToggle.Text = enabled and "⏸ Turn Off" or "▶ Turn On"
+        if enabled then
+            updateCharacter()
+            startSpeedHack()
+            buyItem()
+            autoEquip()
+            startSmoothLoop()
+            startEquipLoop()
+        else
+            cleanupSpeed()
+        end
+    end)
+
+    speedInput = Instance.new("TextBox", frame)
+    speedInput.Size = UDim2.new(0.8, 0, 0, 22)
+    speedInput.Position = UDim2.new(0.1, 0, 0.70, 0)
+    speedInput.PlaceholderText = "Set speed (40-1000)"
+    speedInput.ClearTextOnFocus = false
+    speedInput.Text = tostring(currentSpeed)
+    speedInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    speedInput.Font = Enum.Font.Gotham
+    speedInput.TextSize = 11
+    Instance.new("UICorner", speedInput).CornerRadius = UDim.new(0, 5)
+
+    speedInput:GetPropertyChangedSignal("Text"):Connect(function()
+        local val = tonumber(speedInput.Text)
+        if val then
+            currentSpeed = math.clamp(val, 40, 1000)
+            speedInput.Text = tostring(currentSpeed)
+        else
+            speedInput.Text = tostring(currentSpeed)
+        end
+    end)
+
+    -- ✅ Cross-platform draggable (PC + Android) + Batas layar
+    local dragging, dragInput, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement 
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            local newX = startPos.X.Offset + delta.X
+            local newY = startPos.Y.Offset + delta.Y
+
+            -- Batas layar
+            local screen = gui.AbsoluteSize
+            local fSize = frame.AbsoluteSize
+            newX = math.clamp(newX, -screen.X/2 + fSize.X/2, screen.X/2 - fSize.X/2)
+            newY = math.clamp(newY, -screen.Y/2 + fSize.Y/2, screen.Y/2 - fSize.Y/2)
+
+            frame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+        end
+    end)
+end
+
+-- ===== RUN =====
+createSpeedGUI()
+updateCharacter()

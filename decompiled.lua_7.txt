@@ -1,0 +1,204 @@
+
+
+if game:GetService("CoreGui"):FindFirstChild("ToraScript") then
+  game:GetService("CoreGui").ToraScript:Destroy()
+end
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local window = library:CreateWindow("Steal a Brainrot MOD")
+getgenv().yourTycoon = nil
+for _, descendant in pairs(workspace.Plots:GetDescendants()) do
+  if descendant.Name == "YourBase" and descendant.Enabled == true then
+    getgenv().yourTycoon = descendant.Parent.Parent
+  end
+end
+window:AddToggle({
+  text = "Steal Best in Server",
+  flag = "toggle",
+  state = false,
+  callback = function(value)
+    _G.Steal = value
+    print("Steal: ", value)
+    if value then
+      Steal()
+    end
+  end,
+})
+function Steal()
+  spawn(function()
+    _G.Steal = true
+    while _G.Steal do
+      wait()
+      pcall(function()
+        local player = game:GetService("Players").LocalPlayer
+        local humanoidRootPart = (player.Character or player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        local function parseMoney(text)
+          text = text:upper():gsub("[$,à¸¿%s]", "")
+          local moneyValue = tonumber(text:match("%d+%.?%d*"))
+          if not moneyValue then
+            return nil
+          end
+          if text:find("K") then
+            return moneyValue * 1000
+          end
+          if text:find("M") then
+            return moneyValue * 1000000
+          end
+          if text:find("B") then
+            return moneyValue * 1000000000
+          end
+          if moneyValue >= 1000 then
+            return moneyValue
+          end
+          return nil
+        end
+        local bestValue = -math.huge
+        local bestPrompt = nil
+        local bestCFrame = nil
+        for _, descendant in pairs(workspace.Plots:GetDescendants()) do
+          if descendant:IsA("TextLabel") and descendant.Name == "Price" and descendant.Parent.Name == "AnimalOverhead" then
+            local success, isNotOwned = pcall(function()
+              return descendant.Parent.Parent.Parent.Parent.Parent.Parent.Parent.PlotSign.YourBase.Enabled == false
+            end)
+            if success and isNotOwned then
+              local value = parseMoney(descendant.Text)
+              if value and bestValue < value then
+                bestValue = value
+                bestCFrame = descendant.Parent.Parent.Parent.CFrame
+                bestPrompt = descendant.Parent.Parent.Parent:FindFirstChild("PromptAttachment") and descendant.Parent.Parent.Parent.PromptAttachment:FindFirstChild("ProximityPrompt")
+              end
+            end
+          end
+        end
+        if bestCFrame and bestPrompt then
+          humanoidRootPart.CFrame = bestCFrame + Vector3.new(0, 3, 0)
+          task.wait(0.1)
+          fireproximityprompt(bestPrompt)
+        end
+        task.spawn(function()
+          if getgenv().yourTycoon ~= nil then
+            for _, child in pairs(getgenv().yourTycoon:GetChildren()) do
+              if child.Name == "DeliveryHitbox" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(child.Position)
+              end
+            end
+          end
+        end)
+        wait()
+      end)
+    end
+  end)
+end
+window:AddToggle({
+  text = "Auto Locked",
+  flag = "toggle",
+  state = false,
+  callback = function(value)
+    _G.Locked = value
+    print("Locked: ", value)
+    if value then
+      Locked()
+    end
+  end,
+})
+function Locked()
+  spawn(function()
+    _G.Locked = true
+    while _G.Locked do
+      wait()
+      pcall(function()
+        getgenv().yourTycoon = nil
+        for _, descendant in pairs(workspace.Plots:GetDescendants()) do
+          if descendant.Name == "YourBase" and descendant.Enabled == true then
+            getgenv().yourTycoon = descendant.Parent.Parent
+          end
+        end
+        task.spawn(function()
+          if getgenv().yourTycoon ~= nil then
+            for _, child in pairs(getgenv().yourTycoon.Purchases.PlotBlock:GetChildren()) do
+              if child.Name == "Hitbox" and child.Parent.Main.BillboardGui.Locked.Visible == false then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, child, 0)
+                wait()
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, child, 1)
+              end
+            end
+          end
+        end)
+        wait()
+      end)
+    end
+  end)
+end
+window:AddToggle({
+  text = "Collect Cash",
+  flag = "toggle",
+  state = false,
+  callback = function(value)
+    _G.Cash = value
+    print("Cash: ", value)
+    if value then
+      Cash()
+    end
+  end,
+})
+function Cash()
+  spawn(function()
+    _G.Cash = true
+    while _G.Cash do
+      wait()
+      pcall(function()
+        getgenv().yourTycoon = nil
+        for _, descendant in pairs(workspace.Plots:GetDescendants()) do
+          if descendant.Name == "YourBase" and descendant.Enabled == true then
+            getgenv().yourTycoon = descendant.Parent.Parent
+          end
+        end
+        task.spawn(function()
+          if getgenv().yourTycoon ~= nil then
+            for _, descendant in pairs(getgenv().yourTycoon.AnimalPodiums:GetDescendants()) do
+              if descendant.Name == "Claim" then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, descendant.Hitbox, 0)
+                wait(1)
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, descendant.Hitbox, 1)
+              end
+            end
+          end
+        end)
+        for _, descendant in pairs(workspace:GetDescendants()) do
+          if descendant.ClassName == "ProximityPrompt" then
+            descendant.HoldDuration = 0
+          end
+        end
+        wait(3)
+      end)
+    end
+  end)
+end
+window:AddButton({
+  text = "Remove Walls",
+  flag = "button",
+  callback = function()
+    for _, descendant in pairs(workspace.Plots:GetDescendants()) do
+      if descendant.Name == "InvisibleWalls" or string.find(descendant.Name, "Side") then
+        descendant:Destroy()
+      end
+    end
+  end,
+})
+window:AddButton({
+  text = "Inf Jump",
+  flag = "button",
+  callback = function()
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+      game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end)
+  end,
+})
+window:AddLabel({
+  text = "YouTube: Tora IsMe",
+})
+library:Init()
+game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(prompt)
+  fireproximityprompt(prompt)
+end)Began:Connect(function(prompt)
+  fireproximityprompt(prompt)
+end)

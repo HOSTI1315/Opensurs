@@ -1,0 +1,424 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IAmJamal10/Library/refs/heads/main/New"))()
+local Window = Library.CreateLib("[🔥RELEASE+ 1.5x LUCK🍀] Hunters | Legend Hub", "Ocean")
+local Tab = Window:NewTab("Main")
+local Tab1 = Window:NewTab("Settings")
+
+local Section = Tab:NewSection("Main")
+local CredSection = Tab1:NewSection("Credits")
+
+Section:NewButton( 
+    "Unlock Quick Roll",
+    "Unlock",
+    function()
+
+end)
+Section:NewToggle(
+    "AutoFarm (Instant Kills)",
+    "AutoFarms Mobs in Entities",
+    function(Value)
+        a = Value
+        task.spawn(function()
+            while a do 
+                task.wait()
+                pcall(function()
+                    local player = game.Players.LocalPlayer
+                    local char = player.Character
+                    local char_root = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if not char_root then
+                        char = player.CharacterAdded:Wait()
+                        char_root = char:WaitForChild("HumanoidRootPart")
+                    end
+
+                    local function findNearestHumanoid()
+                        local nearest_hum = math.huge
+                        local target_root
+                        local target_hum
+
+                        for _, v in pairs(workspace.Mobs:GetDescendants()) do
+                            if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
+                                local root = v:FindFirstChild("HumanoidRootPart")
+                                local hum = v:FindFirstChildOfClass("Humanoid")
+
+                                if root and hum and v ~= char then
+                                    local mag = (char_root.Position - root.Position).Magnitude
+                                    if mag < 70 and mag < nearest_hum then
+                                        nearest_hum = mag
+                                        target_root = root
+                                        target_hum = hum
+                                    end
+                                end
+                            end
+                        end
+
+                        return target_root, target_hum
+                    end
+
+                    local target_root, target_hum = findNearestHumanoid()
+
+                    if target_root and target_hum then
+                        local behind = (target_root.CFrame * CFrame.new(0, 0, 15)).Position
+                        local lookAt = (target_root.Position - char_root.Position).Unit
+
+                        char_root.CFrame = CFrame.new(behind, behind + Vector3.new(lookAt.X, 0, lookAt.Z))
+
+                        if target_hum.Health > 0 then
+                            target_hum:TakeDamage(10)
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+)
+
+Section:NewSlider("AutoFarm Distance", "Distance", 50, 2, 15, function(s)
+
+end)
+
+Section:NewButton( 
+    "Bring Mobs To Me",
+    "Brings all mobs in Mobs folder to you for easier farming",
+    function(Value)
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        local char_root = char and char:WaitForChild("HumanoidRootPart")
+
+        if not char_root then
+            -- Wait for character to load if it's not yet loaded
+            char = player.CharacterAdded:Wait()
+            char_root = char:WaitForChild("HumanoidRootPart")
+        end
+
+        -- Function to bring mobs to player
+        local function bringMobsToPlayer()
+            for _, model in pairs(workspace.Mobs:GetDescendants()) do
+                if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+                    local mob_root = model.HumanoidRootPart
+
+                    -- Move the mob slightly in front of the player (and slightly elevated)
+                    local mob_offset = CFrame.new(0, 0, -10) -- Adjust the -10 for how far the mob should be
+                    mob_root.CFrame = char_root.CFrame * mob_offset
+
+                    -- Move the player slightly back to avoid being hit
+                    local player_offset = CFrame.new(0, 0, 1.3)  -- Adjust the 3 for how far behind you want to be
+                    char_root.CFrame = char_root.CFrame * player_offset
+                end
+            end
+        end
+
+        -- Loop to keep bringing mobs to player while toggle is ON
+        task.spawn(function()
+            while Value do
+                bringMobsToPlayer()
+                task.wait(0.2) -- Adjust the wait time for how fast mobs should be moved
+            end
+        end)
+    end
+)
+
+
+Section:NewToggle(
+    "Mob Hitbox",
+    "Increases HumanoidRootPart size for all mobs",
+    function(Value)
+    a = Value
+        while a do task.wait(1)
+        pcall(function()
+   for i, v in pairs(game.Workspace.Mobs:GetDescendants()) do
+          if v.Name == "HumanoidRootPart" then
+
+                v.Size = Vector3.new(18,18,18)
+                v.Transparency = 0.8
+                 v.Material = "Neon"
+             v.BrickColor = BrickColor.new("Really red")
+                v.CanCollide = true
+        end
+    end   
+end)
+end
+    end)
+
+Section:NewToggle(
+    "Auto Parry",
+    "Auto Blocks",
+    function(Value)
+     a = Value
+        while a do task.wait(1.3)
+        pcall(function()
+
+local args = {
+    [1] = true
+}
+
+game:GetService("ReplicatedStorage").Remotes.Block:FireServer(unpack(args))
+wait(1)
+
+local args = {
+    [1] = false
+}
+
+game:GetService("ReplicatedStorage").Remotes.Block:FireServer(unpack(args))
+
+end)
+end
+end)
+Section:NewToggle("Kill Aura", "Kill Aura", function(Value)
+ a = Value
+        while a do task.wait(1)
+        pcall(function()
+
+game:GetService("ReplicatedStorage").Remotes.Combat:FireServer()
+
+end)
+end
+end)
+
+
+
+Section:NewToggle("CFrame Speed", "CFrame Speed Toggle", function(Value)
+    getgenv().CFrameSpeedEnabled = Value  -- This stores the toggle state (true/false)
+    if CFrameSpeedEnabled then
+        startCFrameSpeed() -- Starts moving when the toggle is enabled
+    else
+        stopCFrameSpeed() -- Stops moving when the toggle is disabled
+    end
+end)
+
+repeat
+    wait()
+until game:IsLoaded()
+
+local Players = game:service('Players')
+local LocalPlayer = Players.LocalPlayer
+repeat
+    wait()
+until LocalPlayer.Character
+
+local UserInputService = game:service('UserInputService')
+local RunService = game:service('RunService')
+
+getgenv().Multiplier = 0.5
+local movementConnection = nil  -- Used to store the movement loop connection
+
+-- Function to start CFrame movement
+function startCFrameSpeed()
+    if movementConnection == nil then
+        movementConnection = RunService.Stepped:Connect(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * Multiplier
+        end)
+    end
+end
+
+-- Function to stop CFrame movement
+function stopCFrameSpeed()
+    if movementConnection then
+        movementConnection:Disconnect()
+        movementConnection = nil
+    end
+end
+
+-- Key bindings for increasing and decreasing speed multiplier
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftBracket then
+        Multiplier = Multiplier + 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.LeftBracket) do
+            wait()
+            Multiplier = Multiplier + 0.01
+            print(Multiplier)
+        end
+    elseif input.KeyCode == Enum.KeyCode.RightBracket then
+        Multiplier = Multiplier - 0.01
+        print(Multiplier)
+        wait(0.2)
+        while UserInputService:IsKeyDown(Enum.KeyCode.RightBracket) do
+            wait()
+            Multiplier = Multiplier - 0.01
+            print(Multiplier)
+        end
+    end
+end)
+
+-- Slider for adjusting speed multiplier
+Section:NewSlider("CFrame Speed", "Speed", 10, 0, function(s)
+    getgenv().Multiplier = s
+end)
+
+
+Section:NewButton("Boost FPS", "FPS Booster", function()
+        for _,v in pairs(workspace:GetDescendants()) do
+if v.ClassName == "Part"
+or v.ClassName == "SpawnLocation"
+or v.ClassName == "WedgePart"
+or v.ClassName == "Terrain"
+or v.ClassName == "MeshPart" then
+v.Material = "Plastic"
+end
+end
+end)
+
+Section:NewToggle("Infinite Jump", "Infinite Jump", function(state)
+if state then
+_G.infinjump = true
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+if _G.infinjump then
+if k:byte() == 32 then
+Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+Humanoid:ChangeState("Jumping")
+wait(0.1)
+Humanoid:ChangeState("Seated")
+end
+end
+end)
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+    else
+if _G.infinjump == true then
+_G.infinjump = false
+else
+_G.infinjump = true
+end
+end
+            end)
+
+Section:NewToggle("Noclip", "Noclip", function()
+ local Noclip = nil
+local Clip = nil
+
+function noclip()
+	Clip = false
+	local function Nocl()
+		if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+					v.CanCollide = false
+				end
+			end
+		end
+		wait(0.21) -- basic optimization
+	end
+	Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+	if Noclip then Noclip:Disconnect() end
+	Clip = true
+end
+
+noclip()
+end)
+
+
+CredSection:NewLabel("Made By Legend HandlesYT")
+
+
+CredSection:NewKeybind("Toggle UI", "Toggle The UI", Enum.KeyCode.L, function()
+	Library:ToggleUI()
+end)
+wait(0.1)
+local player = game.Players.LocalPlayer
+
+local function createTutorialGui()
+    -- Create the GUI
+    local Turtorial = Instance.new("ScreenGui")
+    local main = Instance.new("Frame")
+    local JoinButton = Instance.new("TextButton")
+    local UICorner_Join = Instance.new("UICorner")
+    local shadow = Instance.new("Frame")
+
+    Turtorial.Name = "Turtorial"
+    Turtorial.Parent = player:WaitForChild("PlayerGui")
+    Turtorial.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    main.Name = "main"
+    main.Parent = Turtorial
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.AnchorPoint = Vector2.new(0, 0)
+
+    -- Function to position the GUI just below the top-left corner of the screen
+    local function setPositionBelowTopLeft()
+        local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+        main.Position = UDim2.new(0, 10, 0, 10)  -- Just below the top-left with a slight offset
+        main.Size = UDim2.new(0.15, 0, 0.10, 0)  -- Standard size for both devices
+    end
+
+    setPositionBelowTopLeft()
+
+    main.Active = true
+    main.Draggable = true
+
+    -- Shadow effect for main frame
+    shadow.Name = "shadow"
+    shadow.Parent = main
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.ZIndex = 0
+
+    JoinButton.Name = "JoinButton"
+    JoinButton.Parent = main
+    JoinButton.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+
+    -- Adjust button size based on device type
+    if game:GetService("UserInputService").TouchEnabled then
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    else
+        JoinButton.Size = UDim2.new(0.9, 0, 0.4, 0)
+    end
+
+    JoinButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+    JoinButton.Font = Enum.Font.Highway
+    JoinButton.Text = "Toggle Gui"
+    JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    JoinButton.TextSize = 25
+    JoinButton.TextStrokeTransparency = 0.7
+    JoinButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    UICorner_Join.CornerRadius = UDim.new(0.15, 0)
+    UICorner_Join.Parent = JoinButton
+
+    -- Toggle the visibility of ScreenGuis
+    JoinButton.MouseButton1Down:Connect(function()
+        local CoreGui = game:GetService("CoreGui")
+        local function containsNumber(name)
+            return name:match("%d") ~= nil
+        end
+
+        local function toggleScreenGuisWithNumbers()
+            for _, gui in ipairs(CoreGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and containsNumber(gui.Name) and gui.Name ~= "Turtorial" then
+                    gui.Enabled = not gui.Enabled
+                    print((gui.Enabled and "Enabled" or "Disabled") .. " ScreenGui:", gui.Name)
+                end
+            end
+        end
+
+        toggleScreenGuisWithNumbers()
+
+        CoreGui.ChildAdded:Connect(function(child)
+            if child:IsA("ScreenGui") then
+                task.wait(0.1)
+                if containsNumber(child.Name) and child.Name ~= "Turtorial" then
+                    child.Enabled = false
+                    print("Disabled new ScreenGui:", child.Name)
+                end
+            end
+        end)
+    end)
+end
+
+-- Connect to CharacterAdded to ensure GUI is created again after respawn
+player.CharacterAdded:Connect(function()
+    -- Wait for the PlayerGui to load in case it's reset
+    player:WaitForChild("PlayerGui")
+    -- Create the GUI again after respawn
+    createTutorialGui()
+end)
+
+-- Initial creation of the GUI when the player first joins
+createTutorialGui()

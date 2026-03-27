@@ -1,0 +1,137 @@
+-- Load the library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/vita6it/Antigravity/refs/heads/main/Utils/Library.lua"))() -- Replace with actual path
+
+-- Create the main window
+local Window = Library:Window({
+    Title = "Xova's Project",  -- Your window title
+    SubTitle = "Made by s1nve"  -- Your subtitle
+})
+
+-- Create a new page
+local MainPage = Window:NewPage({
+    Title = "Main",  -- Page title
+    Desc = "Main Features",  -- Page description
+    Icon = 127194456372995  -- Icon asset ID (or use your own)
+})
+
+-- Create another page
+local SettingsPage = Window:NewPage({
+    Title = "Settings",
+    Desc = "Configuration Options",
+    Icon = 127194456372995
+})
+
+-- Add a section to MainPage
+MainPage:Section("Player Settings")
+
+-- Add a toggle
+local ToggleExample = MainPage:Toggle({
+    Title = "Auto Farm",
+    Desc = "Automatically collect resources",
+    Value = false,  -- Default value
+    Callback = function(value)
+        print("Auto Farm is now:", value)
+        -- Add your auto farm logic here
+        if value then
+            -- Start auto farm
+        else
+            -- Stop auto farm
+        end
+    end
+})
+
+-- Add a slider
+MainPage:Slider({
+    Title = "Walk Speed",
+    Min = 16,
+    Max = 100,
+    Rounding = 1,  -- Round to 1 decimal place
+    Value = 16,  -- Default value
+    Callback = function(value)
+        print("Speed set to:", value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+})
+
+-- Add a button
+MainPage:Button({
+    Title = "Teleport to Spawn",
+    Desc = "Teleports you to the spawn location",
+    Text = "TP",  -- Button text
+    Callback = function()
+        print("Teleporting to spawn...")
+        -- Add teleport logic here
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+    end
+})
+
+-- Add a right label (displays text on the right side)
+MainPage:RightLabel({
+    Title = "Player Info",
+    Desc = "Current player statistics",
+    Right = "Online"  -- Text displayed on the right
+})
+
+-- Add an input box
+local InputBox = MainPage:Input({
+    Value = "Default Text",
+    Callback = function(text)
+        print("User entered:", text)
+    end
+})
+
+-- Add a dropdown
+MainPage:Dropdown({
+    Title = "Select Weapon",
+    List = {"Sword", "Gun", "Bow", "Axe"},
+    Value = "Sword",  -- Default selected value
+    Callback = function(selected)
+        print("Selected weapon:", selected)
+        -- Add weapon selection logic here
+    end
+})
+
+-- Multi-select dropdown example
+MainPage:Dropdown({
+    Title = "Select Buffs",
+    List = {"Speed", "Strength", "Jump", "Defense"},
+    Value = {"Speed", "Strength"},  -- Multiple default selections
+    Callback = function(selected)
+        print("Selected buffs:", table.concat(selected, ", "))
+        -- Add buff application logic here
+    end
+})
+
+-- Add a paragraph with icon
+MainPage:Paragraph({
+    Title = "Welcome Message",
+    Desc = "Hello! Welcome to the script. Use the toggles to enable features.",
+    Image = 127194456372995  -- Icon to display
+})
+
+-- Add a banner image
+MainPage:Banner(125411502674016)  -- Banner image asset ID
+
+-- Settings page elements
+SettingsPage:Section("Interface Settings")
+
+-- Add a toggle for dark mode
+SettingsPage:Toggle({
+    Title = "Dark Mode",
+    Desc = "Toggle dark theme",
+    Value = true,
+    Callback = function(value)
+        print("Dark mode:", value)
+        -- Add theme switching logic here
+    end
+})
+
+-- Update the expires time (optional)
+Library:SetTimeValue("23:59:59 Hours")
+
+-- You can also update toggle values later
+task.wait(5)
+ToggleExample.Value = true  -- This will automatically trigger the callback
+
+-- You can update dropdown values
+-- For the dropdown example, you would need to store the dropdown object to update it

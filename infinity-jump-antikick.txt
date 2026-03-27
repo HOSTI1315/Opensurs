@@ -1,0 +1,61 @@
+-- 🚀 Infinity Jump Aman TPBack + Hold + Anti-Kick
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local humanoid
+local boosting = false
+local boostForce = 25   -- Naik wajar, aman anti-kick
+local boostFrames = 2   -- BodyVelocity hidup beberapa frame
+local boostCooldown = 0.12 -- Delay antar boost
+local lastBoost = 0
+
+-- Fungsi apply BodyVelocity sementara
+local function applyBoost(root)
+    if not root or boosting then return end
+    local now = tick()
+    if now - lastBoost < boostCooldown then return end
+    lastBoost = now
+    boosting = true
+
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(0, math.huge, 0)
+    bv.P = 1250
+    bv.Velocity = Vector3.new(root.Velocity.X, boostForce, root.Velocity.Z)
+    bv.Parent = root
+
+    local frameCount = 0
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if frameCount < boostFrames then
+            frameCount += 1
+            bv.Velocity = bv.Velocity + Vector3.new(0, 0.01, 0) -- Anti-TPBack kecil
+        else
+            bv:Destroy()
+            conn:Disconnect()
+            boosting = false
+        end
+    end)
+end
+
+-- Loop tiap 0.1 detik untuk hold jump
+RunService.Heartbeat:Connect(function()
+    if humanoid and humanoid.Health > 0 then
+        local root = humanoid.Parent:FindFirstChild("HumanoidRootPart")
+        if root and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            applyBoost(root)
+        end
+    end
+end)
+
+-- Hook saat karakter spawn
+local function onSpawn(char)
+    humanoid = char:WaitForChild("Humanoid", 5)
+end
+
+player.CharacterAdded:Connect(onSpawn)
+if player.Character then
+    onSpawn(player.Character)
+end

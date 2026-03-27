@@ -1,0 +1,173 @@
+--leaked by script haven https://discord.gg/pMWtneJk2C
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+local pos1, pos2 = nil, nil
+local currentKeybind = nil
+local isBinding = false
+
+local function getRoot()
+    return player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+end
+
+local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+screenGui.Name = "CarpetTPNova_Fixed"
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.fromScale(0.28, 0.36)
+mainFrame.Position = UDim2.fromScale(0.36, 0.32)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 18)
+
+local stroke1 = Instance.new("UIStroke", mainFrame)
+stroke1.Thickness = 2
+local stroke2 = Instance.new("UIStroke", mainFrame)
+stroke2.Thickness = 6
+stroke2.Transparency = 0.75
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(0.75, 0, 0.14, 0)
+title.Position = UDim2.new(0.125, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Carpet TP * hold carpet out"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+
+local closeBtn = Instance.new("TextButton", mainFrame)
+closeBtn.Size = UDim2.new(0.14, 0, 0.14, 0)
+closeBtn.Position = UDim2.new(0.84, 0, 0.02, 0)
+closeBtn.Text = "—"
+closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 12)
+
+local pos1Btn = Instance.new("TextButton", mainFrame)
+pos1Btn.Size = UDim2.new(0.88, 0, 0.14, 0)
+pos1Btn.Position = UDim2.new(0.06, 0, 0.18, 0)
+pos1Btn.Text = "Set Position 1"
+pos1Btn.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+pos1Btn.TextColor3 = Color3.new(1, 1, 1)
+pos1Btn.Font = Enum.Font.GothamBold
+pos1Btn.TextScaled = true
+Instance.new("UICorner", pos1Btn).CornerRadius = UDim.new(0, 14)
+
+-- Position 2 Button
+local pos2Btn = Instance.new("TextButton", mainFrame)
+pos2Btn.Size = UDim2.new(0.88, 0, 0.14, 0)
+pos2Btn.Position = UDim2.new(0.06, 0, 0.34, 0)
+pos2Btn.Text = "Set Position 2"
+pos2Btn.BackgroundColor3 = Color3.fromRGB(0, 190, 220)
+pos2Btn.TextColor3 = Color3.new(1, 1, 1)
+pos2Btn.Font = Enum.Font.GothamBold
+pos2Btn.TextScaled = true
+Instance.new("UICorner", pos2Btn).CornerRadius = UDim.new(0, 14)
+
+-- Teleport Button
+local tpBtn = Instance.new("TextButton", mainFrame)
+tpBtn.Size = UDim2.new(0.88, 0, 0.14, 0)
+tpBtn.Position = UDim2.new(0.06, 0, 0.5, 0)
+tpBtn.Text = "TP P1 ➜ P2"
+tpBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 130)
+tpBtn.TextColor3 = Color3.new(1, 1, 1)
+tpBtn.Font = Enum.Font.GothamBold
+tpBtn.TextScaled = true
+Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 14)
+
+-- Keybind Button
+local bindBtn = Instance.new("TextButton", mainFrame)
+bindBtn.Size = UDim2.new(0.88, 0, 0.14, 0)
+bindBtn.Position = UDim2.new(0.06, 0, 0.66, 0)
+bindBtn.Text = "⌨️ Bind TP: NONE"
+bindBtn.BackgroundColor3 = Color3.fromRGB(120, 120, 140)
+bindBtn.TextColor3 = Color3.new(1, 1, 1)
+bindBtn.Font = Enum.Font.GothamBold
+bindBtn.TextScaled = true
+Instance.new("UICorner", bindBtn).CornerRadius = UDim.new(0, 14)
+
+-- Small Open Toggle Button
+local openBtn = Instance.new("TextButton", screenGui)
+openBtn.Size = UDim2.fromScale(0.05, 0.05)
+openBtn.Position = UDim2.fromScale(0.03, 0.47)
+openBtn.Text = "TP"
+openBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+openBtn.TextColor3 = Color3.new(1, 1, 1)
+openBtn.Draggable = true
+openBtn.Active = true
+Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
+
+-- --- Logic Implementation ---
+
+local function executeTeleport()
+    local root = getRoot()
+    if root and pos1 and pos2 then
+        root.CFrame = pos1
+        task.wait(0.1) -- Small delay to prevent physics glitches
+        root.CFrame = pos2
+    end
+end
+
+pos1Btn.MouseButton1Click:Connect(function()
+    local root = getRoot()
+    if root then
+        pos1 = root.CFrame
+        pos1Btn.Text = "✅ Position 1 Saved"
+        task.wait(1)
+        pos1Btn.Text = "Set Position 1"
+    end
+end)
+
+pos2Btn.MouseButton1Click:Connect(function()
+    local root = getRoot()
+    if root then
+        pos2 = root.CFrame
+        pos2Btn.Text = "✅ Position 2 Saved"
+        task.wait(1)
+        pos2Btn.Text = "Set Position 2"
+    end
+end)
+
+tpBtn.MouseButton1Click:Connect(executeTeleport)
+
+bindBtn.MouseButton1Click:Connect(function()
+    isBinding = true
+    bindBtn.Text = "Press any key..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    
+    if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        currentKeybind = input.KeyCode
+        bindBtn.Text = "⌨️ Bind TP: " .. input.KeyCode.Name
+        isBinding = false
+    elseif currentKeybind and input.KeyCode == currentKeybind then
+        executeTeleport()
+    end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    openBtn.Visible = true
+end)
+
+openBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    openBtn.Visible = false
+end)
+
+RunService.RenderStepped:Connect(function()
+    local hue = tick() % 5 / 5
+    local color = Color3.fromHSV(hue, 0.8, 1)
+    stroke1.Color = color
+    stroke2.Color = color
+    openBtn.BackgroundColor3 = color
+end)

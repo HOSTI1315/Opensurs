@@ -1,0 +1,31 @@
+I relearned python for this (delete me)
+
+import requests
+import random
+import string
+import time
+
+def make_name(n):
+    s = string.ascii_lowercase + string.digits
+    return "".join(random.choice(s) for _ in range(n))
+
+def check(name):
+    u = f"https://users.roblox.com/v1/usernames/validate?request.username={name}&request.birthday=2000-01-01"
+    try:
+        r = requests.get(u, timeout=5).json()
+        return r.get("message") == "Username is valid"
+    except:
+        return False
+
+n = int(input("length: "))
+print("searching...")
+
+t = 0
+while True:
+    name = make_name(n)
+    t += 1
+    print("try", t, name)
+    if check(name):
+        print("free:", name)
+        break
+    time.sleep(0.2)

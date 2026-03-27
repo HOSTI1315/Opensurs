@@ -1,0 +1,76 @@
+-- Created by Termux_404 ~ Open source
+
+HttpService = game:GetService("HttpService")
+TextChatService = game:GetService("TextChatService")
+Players = game:GetService("Players")
+LP = Players.LocalPlayer
+LastMsg = nil
+
+API_KEY = "YOUR API KEY HERE" 
+
+-- get your api key here: https://aistudio.google.com/app/api-keys
+
+MAX_DISTANCE = 15 
+
+-- Maximum distance to respond to a player
+
+function Say(text)
+	text = text:sub(1, 190)
+	coroutine.wrap(function()
+		pcall(function()
+			TextChatService.TextChannels.RBXGeneral:SendAsync(text)
+		end)
+	end)()
+end
+
+function Gemini(player, message)
+	local body = HttpService:JSONEncode({
+		contents = {{ parts = {{ text = message }} }}
+	})
+	local ok, res = pcall(function()
+		return request({
+			Url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json",
+				["X-goog-api-key"] = API_KEY
+			},
+			Body = body
+		})
+	end)
+	if not ok or not res or not res.Body then return end
+	local success, data = pcall(function()
+		return HttpService:JSONDecode(res.Body)
+	end)
+	if success and data and data.candidates and data.candidates[1] and data.candidates[1].content and data.candidates[1].content.parts then
+		local text = data.candidates[1].content.parts[1].text
+		if text then
+			Say("[" .. player.DisplayName .. "]: " .. text:gsub("[\r\n]", " "))
+		end
+	end
+end
+
+TextChatService.OnBubbleAdded = function(msg)
+	local src = msg.TextSource
+	if not src or not src.UserId then return end
+
+	local plr = Players:GetPlayerByUserId(src.UserId)
+	if not plr or plr == LP then return end
+
+	local c1, c2 = LP.Character, plr.Character
+	if not c1 or not c2 then return end
+
+	local h1, h2 = c1:FindFirstChild("HumanoidRootPart"), c2:FindFirstChild("HumanoidRootPart")
+	if not h1 or not h2 or (h1.Position - h2.Position).Magnitude > MAX_DISTANCE then return end
+
+	local t = msg.Text
+	if t:gsub("%s+", "") == "" or t == "#" then return end
+
+	local id = plr.UserId .. "|" .. t
+	if id == LastMsg then return end
+	LastMsg = id
+
+	task.spawn(function()
+		Gemini(plr, t)
+	end)
+end

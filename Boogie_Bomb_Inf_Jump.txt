@@ -1,0 +1,45 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local success, err = pcall(function()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    local packages = ReplicatedStorage:WaitForChild("Packages", 5)
+    if not packages then warn("Packages not found!!!!>:(") return end
+
+    local netFolder = packages:WaitForChild("Net", 5)
+    if not netFolder then warn("the net folder is not found idiot:3") return end
+
+    local useItemRemote = netFolder:WaitForChild("RE/UseItem", 5)
+    if not useItemRemote then warn("UseItem remote not found") return end
+
+    local tool = character:FindFirstChild("Boogie Bomb") or backpack:FindFirstChild("Boogie Bomb")
+    if tool and humanoid:IsDescendantOf(character) then
+        if tool.Parent == backpack then
+            humanoid:EquipTool(tool)
+            task.wait(0.3)
+        end
+
+        useItemRemote:FireServer(tool.Name)
+
+        local handle = workspace:WaitForChild("Handle")
+        handle.CanCollide = true
+
+        local offsetY = -humanoid.HipHeight - (handle.Size.Y / 2) - 2
+
+        RunService.RenderStepped:Connect(function()
+            if character and humanoidRootPart and handle then
+                handle.CFrame = CFrame.new(humanoidRootPart.Position + Vector3.new(0, offsetY, 0))
+            end
+        end)
+    end
+end)
+
+if not success then
+    warn("ey almightybang made this so this script sucks:", err)
+end

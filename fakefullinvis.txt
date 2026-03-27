@@ -1,0 +1,431 @@
+-- Nany's Panel Script
+-- Full Invis System com Ragdoll e Freeze
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Configurações
+local fullInvisEnabled = false
+local speedEnabled = false
+local desyncEnabled = false
+local isProcessing = false
+local frozenParts = {}
+local originalCFrames = {}
+local ballSockets = {}
+local attachments = {}
+
+-- Variável global para controlar movimento
+local moveConnection = nil
+
+-- Criar GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NanysPanel"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Frame Principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 300, 0, 250)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Bordas Arredondadas
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
+
+-- Borda Laranja
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 140, 0)
+stroke.Thickness = 3
+stroke.Parent = mainFrame
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -20, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "Nany's Panel"
+title.TextColor3 = Color3.fromRGB(255, 140, 0)
+title.TextSize = 24
+title.Font = Enum.Font.Arcade
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.Parent = mainFrame
+
+-- Botão Full Invis
+local invisButton = Instance.new("TextButton")
+invisButton.Name = "InvisButton"
+invisButton.Size = UDim2.new(0, 250, 0, 50)
+invisButton.Position = UDim2.new(0.5, -125, 0, 70)
+invisButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+invisButton.BorderSizePixel = 0
+invisButton.Text = "Full Invis: OFF"
+invisButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+invisButton.TextSize = 18
+invisButton.Font = Enum.Font.Arcade
+invisButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = invisButton
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(255, 140, 0)
+buttonStroke.Thickness = 2
+buttonStroke.Parent = invisButton
+
+-- Botão Speed
+local speedButton = Instance.new("TextButton")
+speedButton.Name = "SpeedButton"
+speedButton.Size = UDim2.new(0, 250, 0, 50)
+speedButton.Position = UDim2.new(0.5, -125, 0, 130)
+speedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+speedButton.BorderSizePixel = 0
+speedButton.Text = "SPEED: OFF"
+speedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedButton.TextSize = 18
+speedButton.Font = Enum.Font.Arcade
+speedButton.Parent = mainFrame
+
+local speedButtonCorner = Instance.new("UICorner")
+speedButtonCorner.CornerRadius = UDim.new(0, 10)
+speedButtonCorner.Parent = speedButton
+
+local speedButtonStroke = Instance.new("UIStroke")
+speedButtonStroke.Color = Color3.fromRGB(255, 140, 0)
+speedButtonStroke.Thickness = 2
+speedButtonStroke.Parent = speedButton
+
+-- Botão Desync
+local desyncButton = Instance.new("TextButton")
+desyncButton.Name = "DesyncButton"
+desyncButton.Size = UDim2.new(0, 250, 0, 50)
+desyncButton.Position = UDim2.new(0.5, -125, 0, 190)
+desyncButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+desyncButton.BorderSizePixel = 0
+desyncButton.Text = "Desync: OFF"
+desyncButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+desyncButton.TextSize = 18
+desyncButton.Font = Enum.Font.Arcade
+desyncButton.Parent = mainFrame
+
+local desyncButtonCorner = Instance.new("UICorner")
+desyncButtonCorner.CornerRadius = UDim.new(0, 10)
+desyncButtonCorner.Parent = desyncButton
+
+local desyncButtonStroke = Instance.new("UIStroke")
+desyncButtonStroke.Color = Color3.fromRGB(255, 140, 0)
+desyncButtonStroke.Thickness = 2
+desyncButtonStroke.Parent = desyncButton
+
+-- Função para fazer partes caírem com física (sem Motor6D/Ragdoll)
+local function makePartsFall()
+	-- Salvar posições originais ANTES de cair
+	originalCFrames = {}
+	for _, part in pairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and part ~= hrp then
+			originalCFrames[part] = part.CFrame -- Salvar posição ANTES
+		end
+	end
+	
+	-- Criar WeldConstraints temporários para cada parte com HRP
+	local welds = {}
+	for _, part in pairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and part ~= hrp and part.Parent == character then
+			-- Remover conexões existentes
+			for _, child in pairs(part:GetChildren()) do
+				if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+					child:Destroy()
+				end
+			end
+			
+			-- Ativar física
+			part.CanCollide = false
+			part.Massless = false
+			part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+			
+			-- Aplicar força de gravidade artificial para simular queda
+			local bodyForce = Instance.new("BodyForce")
+			bodyForce.Force = Vector3.new(0, -part:GetMass() * 196.2, 0) -- Gravidade aumentada
+			bodyForce.Parent = part
+			table.insert(welds, bodyForce)
+			
+			-- Adicionar velocidade inicial aleatória para movimento natural
+			part.AssemblyLinearVelocity = Vector3.new(
+				math.random(-5, 5),
+				math.random(-10, 0),
+				math.random(-5, 5)
+			)
+		end
+	end
+	
+	humanoid.AutoRotate = false
+	humanoid.PlatformStand = true
+	
+	return welds
+end
+
+-- Função para fazer partes invisíveis PERMANENTEMENTE (PARTES DO MAPA SEM COLISÃO)
+local function makePartsInvisible(welds)
+	-- Remover BodyForces
+	for _, force in pairs(welds) do
+		if force and force.Parent then
+			force:Destroy()
+		end
+	end
+	
+	-- Tornar partes do WORKSPACE (MAPA) sem colisão invisíveis
+	local invisibleParts = {}
+	for _, part in pairs(workspace:GetDescendants()) do
+		-- Ignorar partes do personagem
+		if part:IsA("BasePart") and not part:IsDescendantOf(character) and part.CanCollide == false and part.Transparency < 0.95 then
+			part.Transparency = 1
+			table.insert(invisibleParts, part)
+		end
+	end
+	
+	-- Também processar MeshParts do mapa e remover texturas
+	for _, part in pairs(workspace:GetDescendants()) do
+		if part:IsA("MeshPart") and not part:IsDescendantOf(character) and part.CanCollide == false and part.Transparency < 0.95 then
+			part.TextureID = ""
+			part.Transparency = 1
+		end
+	end
+	
+	-- Tornar Decals e Textures invisíveis em partes do mapa sem colisão
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Parent and obj.Parent:IsA("BasePart") then
+			if not obj:IsDescendantOf(character) and obj.Parent.CanCollide == false and obj.Transparency < 0.95 then
+				obj.Transparency = 1
+			end
+		end
+	end
+	
+	print("Tornando " .. #invisibleParts .. " partes do MAPA sem colisão invisíveis")
+end
+
+-- Função para restaurar humanoid (Motor6Ds continuam desabilitados)
+local function restoreHumanoid()
+	-- Restaurar humanoid
+	humanoid.AutoRotate = true
+	humanoid.Sit = false
+	humanoid.PlatformStand = false
+	
+	-- Motor6Ds permanecem desabilitados permanentemente
+	-- Partes continuam congeladas permanentemente
+end
+
+-- Função Desync (melhorada)
+local FFlags = {
+	GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
+	LargeReplicatorWrite5 = true,
+	LargeReplicatorEnabled9 = true,
+	AngularVelociryLimit = 360,
+	TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646,
+	S2PhysicsSenderRate = 15000,
+	DisableDPIScale = true,
+	MaxDataPacketPerSend = 2147483647,
+	PhysicsSenderMaxBandwidthBps = 20000,
+	TimestepArbiterHumanoidLinearVelThreshold = 21,
+	MaxMissedWorldStepsRemembered = -2147483648,
+	PlayerHumanoidPropertyUpdateRestrict = true,
+	SimDefaultHumanoidTimestepMultiplier = 0,
+	StreamJobNOUVolumeLengthCap = 2147483647,
+	DebugSendDistInSteps = -2147483648,
+	GameNetDontSendRedundantNumTimes = 1,
+	CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 1,
+	CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 1,
+	LargeReplicatorSerializeRead3 = true,
+	ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 2147483647,
+	CheckPVCachedVelThresholdPercent = 10,
+	CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 1,
+	GameNetDontSendRedundantDeltaPositionMillionth = 1,
+	InterpolationFrameVelocityThresholdMillionth = 5,
+	StreamJobNOUVolumeCap = 2147483647,
+	InterpolationFrameRotVelocityThresholdMillionth = 5,
+	CheckPVCachedRotVelThresholdPercent = 10,
+	WorldStepMax = 30,
+	InterpolationFramePositionThresholdMillionth = 5,
+	TimestepArbiterHumanoidTurningVelThreshold = 1,
+	SimOwnedNOUCountThresholdMillionth = 2147483647,
+	GameNetPVHeaderLinearVelocityZeroCutoffExponent = -5000,
+	NextGenReplicatorEnabledWrite4 = true,
+	TimestepArbiterOmegaThou = 1073741823,
+	MaxAcceptableUpdateDelay = 1,
+	LargeReplicatorSerializeWrite4 = true
+}
+
+local function respawnar(plr)
+	local rcdEnabled, wasHidden = false, false
+	if getgenv().gethidden then
+		rcdEnabled = getgenv().gethidden(workspace, 'RejectCharacterDeletions') ~= Enum.RejectCharacterDeletions.Disabled
+	end
+
+	if rcdEnabled and getgenv().replicatesignal then
+		getgenv().replicatesignal(plr.ConnectDiedSignalBackend)
+		task.wait(Players.RespawnTime - 0.1)
+		getgenv().replicatesignal(plr.Kill)
+	else
+		local char = plr.Character
+		local hum = char:FindFirstChildWhichIsA('Humanoid')
+		if hum then
+			hum:ChangeState(Enum.HumanoidStateType.Dead)
+		end
+		char:ClearAllChildren()
+		local newChar = Instance.new('Model')
+		newChar.Parent = workspace
+		plr.Character = newChar
+		task.wait()
+		plr.Character = char
+		newChar:Destroy()
+	end
+end
+
+local function applyDesync()
+	-- Aplicar FFlags
+	for name, value in pairs(FFlags) do
+		pcall(function()
+			if setfflag then
+				setfflag(tostring(name), tostring(value))
+			end
+		end)
+	end
+	
+	-- Respawnar sem mexer nas animações
+	respawnar(player)
+	
+	print("Desync aplicado com sucesso!")
+end
+local function customMovement()
+	-- Desconectar conexão anterior se existir
+	if moveConnection then
+		moveConnection:Disconnect()
+		moveConnection = nil
+	end
+	
+	if speedEnabled then
+		-- Criar nova conexão que continua indefinidamente
+		moveConnection = RunService.Heartbeat:Connect(function()
+			if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0 then
+				local moveDir = humanoid.MoveDirection
+				-- Speed de 28.3 usando Velocity
+				local newVelocity = Vector3.new(moveDir.X * 28.3, hrp.Velocity.Y, moveDir.Z * 28.3)
+				hrp.AssemblyLinearVelocity = newVelocity
+			end
+		end)
+	end
+end
+
+-- Sistema de detecção de ProximityPrompt
+local function setupProximityPromptDetection()
+	local connection
+	
+	connection = ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, playerWhoTriggered)
+		if playerWhoTriggered == player and fullInvisEnabled and not isProcessing then
+			isProcessing = true
+			
+			-- Atualizar referências do personagem
+			character = player.Character or player.CharacterAdded:Wait()
+			humanoid = character:WaitForChild("Humanoid")
+			hrp = character:WaitForChild("HumanoidRootPart")
+			
+			-- 1. Fazer partes caírem com física (sem Motor6D/Ragdoll)
+			local welds = makePartsFall()
+			
+			-- 2. Após 2 segundos, tornar partes sem colisão do MAPA invisíveis PERMANENTEMENTE
+			task.wait(2)
+			makePartsInvisible(welds)
+			
+			-- 3. Após 3 segundos adicionais (total 5s), restaurar humanoid
+			task.wait(3)
+			restoreHumanoid()
+			
+			isProcessing = false
+		end
+	end)
+	
+	return connection
+end
+
+local proximityConnection = nil
+
+-- Toggle do botão
+invisButton.MouseButton1Click:Connect(function()
+	fullInvisEnabled = not fullInvisEnabled
+	
+	if fullInvisEnabled then
+		invisButton.Text = "Full Invis: ON"
+		invisButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+		proximityConnection = setupProximityPromptDetection()
+	else
+		invisButton.Text = "Full Invis: OFF"
+		invisButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		if proximityConnection then
+			proximityConnection:Disconnect()
+			proximityConnection = nil
+		end
+		if moveConnection then
+			moveConnection:Disconnect()
+			moveConnection = nil
+		end
+	end
+end)
+
+-- Toggle do botão Speed
+speedButton.MouseButton1Click:Connect(function()
+	speedEnabled = not speedEnabled
+	
+	if speedEnabled then
+		speedButton.Text = "SPEED: ON"
+		speedButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+		customMovement()
+	else
+		speedButton.Text = "SPEED: OFF"
+		speedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		if moveConnection then
+			moveConnection:Disconnect()
+			moveConnection = nil
+		end
+	end
+end)
+
+-- Toggle do botão Desync
+desyncButton.MouseButton1Click:Connect(function()
+	if not desyncEnabled then
+		desyncEnabled = true
+		desyncButton.Text = "Desync: ON"
+		desyncButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+		applyDesync()
+	else
+		desyncButton.Text = "Desync: ON"
+		-- Desync não pode ser desligado, apenas aplicado uma vez
+	end
+end)
+
+-- Responsividade mobile
+if UserInputService.TouchEnabled then
+	mainFrame.Size = UDim2.new(0, 280, 0, 240)
+	mainFrame.Position = UDim2.new(0.5, -140, 0.5, -120)
+	invisButton.Size = UDim2.new(0, 230, 0, 45)
+	invisButton.Position = UDim2.new(0.5, -115, 0, 70)
+	speedButton.Size = UDim2.new(0, 230, 0, 45)
+	speedButton.Position = UDim2.new(0.5, -115, 0, 125)
+	desyncButton.Size = UDim2.new(0, 230, 0, 45)
+	desyncButton.Position = UDim2.new(0.5, -115, 0, 180)
+end
+
+print("Nany's Panel carregado com sucesso!")

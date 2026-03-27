@@ -1,0 +1,48 @@
+-- by @melon.uwu on discord | https://discord.gg/gpgDkjrJFG
+-- big shit we dont need to talk about it
+
+local cloneref = cloneref or function(a)
+    return a
+end
+
+local Players = cloneref(game:GetService("Players"))
+local RunService = cloneref(game:GetService("RunService"))
+
+local plr = Players.LocalPlayer
+local Character = plr.Character
+
+local Humanoid = Character.Humanoid
+local HumanoidRootPart = Character.HumanoidRootPart
+
+local c_body = Instance.new("BodyVelocity", HumanoidRootPart)
+
+Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+task.wait(0.2)
+
+local g_const_flipDuration = 0.4
+
+local g_const_startTime = tick()
+local g_const_startCFrame = HumanoidRootPart.CFrame
+
+Humanoid.Sit = true
+
+local connection; connection = RunService.Heartbeat:Connect(function()
+    local elapsed = tick() - g_const_startTime
+    local progress = math.min(elapsed / g_const_flipDuration, 1)
+    
+    local easedProgress = progress * progress
+    
+    local rotationAngle = math.rad(360 * easedProgress)
+    
+    HumanoidRootPart.CFrame = g_const_startCFrame * CFrame.Angles(rotationAngle, 0, 0)
+    
+    if progress >= 1 then
+        connection:Disconnect()
+        c_body:Destroy()
+
+        task.wait(0.1)
+
+        Humanoid.Sit = false
+    end
+end)

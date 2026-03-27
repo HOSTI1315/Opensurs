@@ -1,0 +1,240 @@
+-- Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Services
+local PathfindingService = game:GetService("PathfindingService")
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Default crash node position
+local DEFAULT_POSITION = Vector3.new(-331.9, -4.61, 19.06)
+
+-- Create GUI
+local CrashTP_GUI = Instance.new("ScreenGui")
+CrashTP_GUI.ResetOnSpawn = false
+CrashTP_GUI.Name = "CrashTP_Mini_V2"
+CrashTP_GUI.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 180, 0, 180)
+MainFrame.Position = UDim2.new(0, 30, 0, 30)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0.4
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = CrashTP_GUI
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Thickness = 1.2
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Transparency = 0.3
+MainStroke.Parent = MainFrame
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 4)
+MainCorner.Parent = MainFrame
+
+-- Title label
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -15, 0, 25)
+TitleLabel.Position = UDim2.new(0, 10, 0, 2)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "// CRASH TP"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 13
+TitleLabel.Font = Enum.Font.Code
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+-- Status label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -20, 0, 15)
+StatusLabel.Position = UDim2.new(0, 10, 0, 28)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "> READY"
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.TextSize = 10
+StatusLabel.Font = Enum.Font.Code
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainFrame
+
+-- Overwrite target button
+local OverwriteButton = Instance.new("TextButton")
+OverwriteButton.Size = UDim2.new(1, -20, 0, 26)
+OverwriteButton.Position = UDim2.new(0, 10, 0, 55)
+OverwriteButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+OverwriteButton.BackgroundTransparency = 0.9
+OverwriteButton.Text = "OVERWRITE TARGET"
+OverwriteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+OverwriteButton.TextSize = 10
+OverwriteButton.Font = Enum.Font.GothamBold
+OverwriteButton.Parent = MainFrame
+
+local OverwriteStroke = Instance.new("UIStroke")
+OverwriteStroke.Thickness = 1
+OverwriteStroke.Color = Color3.fromRGB(255, 255, 255)
+OverwriteStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+OverwriteStroke.Transparency = 0.4
+OverwriteStroke.Parent = OverwriteButton
+
+local OverwriteCorner = Instance.new("UICorner")
+OverwriteCorner.CornerRadius = UDim.new(0, 2)
+OverwriteCorner.Parent = OverwriteButton
+
+-- Hover effects for overwrite button
+OverwriteButton.MouseEnter:Connect(function()
+    OverwriteButton.BackgroundTransparency = 0.8
+end)
+
+OverwriteButton.MouseLeave:Connect(function()
+    OverwriteButton.BackgroundTransparency = 0.9
+end)
+
+-- Teleport button
+local TeleportButton = Instance.new("TextButton")
+TeleportButton.Size = UDim2.new(1, -20, 0, 26)
+TeleportButton.Position = UDim2.new(0, 10, 0, 88)
+TeleportButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.BackgroundTransparency = 0.9
+TeleportButton.Text = "TELEPORT"
+TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.TextSize = 10
+TeleportButton.Font = Enum.Font.GothamBold
+TeleportButton.Parent = MainFrame
+
+local TeleportStroke = Instance.new("UIStroke")
+TeleportStroke.Thickness = 1
+TeleportStroke.Color = Color3.fromRGB(255, 255, 255)
+TeleportStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+TeleportStroke.Transparency = 0.4
+TeleportStroke.Parent = TeleportButton
+
+local TeleportCorner = Instance.new("UICorner")
+TeleportCorner.CornerRadius = UDim.new(0, 2)
+TeleportCorner.Parent = TeleportButton
+
+-- Hover effects for teleport button
+TeleportButton.MouseEnter:Connect(function()
+    TeleportButton.BackgroundTransparency = 0.8
+end)
+
+TeleportButton.MouseLeave:Connect(function()
+    TeleportButton.BackgroundTransparency = 0.9
+end)
+
+-- Restore target button
+local RestoreButton = Instance.new("TextButton")
+RestoreButton.Size = UDim2.new(1, -20, 0, 26)
+RestoreButton.Position = UDim2.new(0, 10, 0, 121)
+RestoreButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+RestoreButton.BackgroundTransparency = 0.9
+RestoreButton.Text = "RESTORE TARGET"
+RestoreButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+RestoreButton.TextSize = 10
+RestoreButton.Font = Enum.Font.GothamBold
+RestoreButton.Parent = MainFrame
+
+local RestoreStroke = Instance.new("UIStroke")
+RestoreStroke.Thickness = 1
+RestoreStroke.Color = Color3.fromRGB(150, 0, 0)
+RestoreStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+RestoreStroke.Transparency = 0.4
+RestoreStroke.Parent = RestoreButton
+
+local RestoreCorner = Instance.new("UICorner")
+RestoreCorner.CornerRadius = UDim.new(0, 2)
+RestoreCorner.Parent = RestoreButton
+
+-- Hover effects for restore button
+RestoreButton.MouseEnter:Connect(function()
+    RestoreButton.BackgroundTransparency = 0.8
+end)
+
+RestoreButton.MouseLeave:Connect(function()
+    RestoreButton.BackgroundTransparency = 0.9
+end)
+
+-- Discord label
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Size = UDim2.new(1, -20, 0, 20)
+DiscordLabel.Position = UDim2.new(0, 10, 0, 152)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Text = ".gg/rwVjfNZFhv"
+DiscordLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+DiscordLabel.TextSize = 10
+DiscordLabel.Font = Enum.Font.Code
+DiscordLabel.TextXAlignment = Enum.TextXAlignment.Center
+DiscordLabel.Parent = MainFrame
+
+-- Helper function to create crash node
+local function createCrashNode(position)
+    local node = Instance.new("Part")
+    node.Name = "Crash_Node"
+    node.Shape = Enum.PartType.Ball
+    node.Size = Vector3.new(1, 1, 1)
+    node.Anchored = true
+    node.CanCollide = false
+    node.Material = Enum.Material.Neon
+    node.Color = Color3.fromRGB(255, 255, 255)
+    node.Position = position
+    node.Parent = Workspace
+    
+    local selectionBox = Instance.new("SelectionBox")
+    selectionBox.Adornee = node
+    selectionBox.Color3 = Color3.fromRGB(255, 255, 255)
+    selectionBox.LineThickness = 0.03
+    selectionBox.Parent = node
+    
+    return node
+end
+
+-- Create initial crash node
+local CrashNode = createCrashNode(DEFAULT_POSITION)
+StatusLabel.Text = "> LOADED"
+
+-- Overwrite button click (sets node to player position)
+OverwriteButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    if CrashNode then
+        CrashNode:Destroy()
+    end
+    
+    CrashNode = createCrashNode(hrp.Position)
+    StatusLabel.Text = "> UPDATED"
+end)
+
+-- Restore button click (resets node to default position)
+RestoreButton.MouseButton1Click:Connect(function()
+    if CrashNode then
+        CrashNode:Destroy()
+    end
+    
+    CrashNode = createCrashNode(DEFAULT_POSITION)
+    StatusLabel.Text = "> RESTORED"
+end)
+
+-- Teleport button click (equips flying carpet)
+TeleportButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
+    
+    local flyingCarpet = backpack:FindFirstChild("Flying Carpet")
+    if flyingCarpet then
+        humanoid:EquipTool(flyingCarpet)
+    end
+end)

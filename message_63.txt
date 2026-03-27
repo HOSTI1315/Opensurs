@@ -1,0 +1,129 @@
+--========================================================
+-- 🛡️ BOTÃO FLUTUANTE (ARRASTÁVEL) + FUNÇÃO ANTI-HIT
+--========================================================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+--========================================================
+-- 🖼️ UI PRINCIPAL (BOTÃO FLUTUANTE)
+--========================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local Botao = Instance.new("TextButton")
+Botao.Parent = ScreenGui
+Botao.Size = UDim2.new(0, 150, 0, 50)
+Botao.Position = UDim2.new(0.1, 0, 0.4, 0)
+Botao.BackgroundColor3 = Color3.fromRGB(40, 140, 255)
+Botao.Text = "🛡️ Anti-Hit: OFF"
+Botao.TextScaled = true
+Botao.Font = Enum.Font.GothamBold
+Botao.TextColor3 = Color3.new(1,1,1)
+Botao.Active = true
+Botao.Draggable = true   -- 👈 ARRÁSTAVEL
+
+--========================================================
+-- 🔧 Variáveis
+--========================================================
+
+local AntiHitAtivo = false
+local conexoes = {}
+
+--========================================================
+-- 🛡 FUNÇÃO: ATIVAR ANTI-HIT
+--========================================================
+
+local function AtivarAntiHit()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    humanoid.BreakJointsOnDeath = false
+
+    -- Desativa colisões
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.Massless = false
+            part.Touched:Connect(function() return end)
+        end
+    end
+
+    -- Impede dano
+    conexoes["HealthChange"] = humanoid.HealthChanged:Connect(function()
+        if AntiHitAtivo then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end)
+
+    -- Remove empurrões
+    conexoes["AntiForce"] = game:GetService("RunService").Stepped:Connect(function()
+        if character:FindFirstChild("HumanoidRootPart") then
+            for _, obj in pairs(character.HumanoidRootPart:GetChildren()) do
+                if obj:IsA("BodyVelocity") or obj:IsA("BodyMover") or obj:IsA("VectorForce") then
+                    obj:Destroy()
+                end
+            end
+
+            local vel = character.HumanoidRootPart.Velocity
+            local move = humanoid.MoveDirection * humanoid.WalkSpeed
+            character.HumanoidRootPart.Velocity = Vector3.new(move.X, vel.Y, move.Z)
+        end
+    end)
+
+    -- Reaplica ao renascer
+    conexoes["respawn"] = LocalPlayer.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Humanoid").BreakJointsOnDeath = false
+        for _, p in pairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = false
+                p.Massless = false
+                p.Touched:Connect(function() return end)
+            end
+        end
+    end)
+
+    AntiHitAtivo = true
+    Botao.Text = "🛡️ Anti-Hit: ON"
+    Botao.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+end
+
+--========================================================
+-- ❌ FUNÇÃO: DESATIVAR
+--========================================================
+
+local function DesativarAntiHit()
+    for _, c in pairs(conexoes) do
+        c:Disconnect()
+    end
+    conexoes = {}
+
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+                part.Massless = false
+            end
+        end
+    end
+
+    AntiHitAtivo = false
+    Botao.Text = "🛡️ Anti-Hit: OFF"
+    Botao.BackgroundColor3 = Color3.fromRGB(40, 140, 255)
+end
+
+--========================================================
+-- 🟦 EVENTO DO BOTÃO
+--========================================================
+
+Botao.MouseButton1Click:Connect(function()
+    if AntiHitAtivo then
+        DesativarAntiHit()
+    else
+        AtivarAntiHit()
+    end
+end)

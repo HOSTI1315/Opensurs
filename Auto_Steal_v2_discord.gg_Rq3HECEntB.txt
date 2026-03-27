@@ -1,0 +1,129 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+-- Wait for game to load
+game:IsLoaded()
+task.wait()
+
+-- Get needed services
+game:GetService("TweenService")
+require(game:GetService("ReplicatedStorage").Datas.Animals)
+
+-- Heartbeat connection
+local Connection = game:GetService("RunService").Heartbeat:Connect(function()
+end)
+
+-- Create GUI
+local AutoStealV2 = Instance.new("ScreenGui")
+AutoStealV2.Name = "AutoStealV2"
+AutoStealV2.ResetOnSpawn = false
+AutoStealV2.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main frame
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 180, 0, 32)
+Frame.Position = UDim2.new(0, 10, 0.5, -16)
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Frame.BorderSizePixel = 0
+Frame.Parent = AutoStealV2
+
+-- Round corners
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0, 6)
+
+-- Frame border
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(60, 60, 70)
+UIStroke.Thickness = 1
+UIStroke.Parent = Frame
+
+-- Progress bar
+local ProgressBar = Instance.new("Frame")
+ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+ProgressBar.Position = UDim2.new(0, 0, 0, 0)
+ProgressBar.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
+ProgressBar.BorderSizePixel = 0
+ProgressBar.ZIndex = 2
+ProgressBar.Parent = Frame
+
+-- Progress bar corners
+local ProgressCorner = Instance.new("UICorner")
+ProgressCorner.Parent = ProgressBar
+ProgressCorner.CornerRadius = UDim.new(0, 6)
+
+-- Gradient for progress bar
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 0, 200))
+})
+UIGradient.Rotation = 90
+UIGradient.Parent = ProgressBar
+
+-- Percentage text
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(1, 0, 1, 0)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "0%"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 14
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.ZIndex = 3
+TextLabel.Parent = Frame
+
+-- Invisible button over everything
+local TextButton = Instance.new("TextButton")
+TextButton.Size = UDim2.new(1, 0, 1, 0)
+TextButton.BackgroundTransparency = 1
+TextButton.Text = ""
+TextButton.ZIndex = 4
+TextButton.Parent = Frame
+
+-- Reset progress on click
+TextButton.MouseButton1Click:Connect(function()
+    TextLabel.Text = "0%"
+end)
+
+-- Wait a bit
+task.spawn(function()
+    task.wait(2)
+end)
+
+-- Make frame draggable
+local dragging = false
+local dragStart
+local startPos
+
+-- Start dragging
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+-- Stop dragging
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Move frame when dragging
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Monitor plots
+workspace:WaitForChild("Plots").ChildRemoved:Connect(function()
+    -- When a plot is removed
+end)

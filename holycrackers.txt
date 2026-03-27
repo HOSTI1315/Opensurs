@@ -1,0 +1,58 @@
+local req = syn and syn.request or request or http_request or http and http.request
+if not req then
+ warn("no request")
+ return
+end
+local old_request = req
+function hook_request(data)
+ local url = (data.Url or data.URL or data.url or ""):lower()
+ local method = (data.Method or data.method):upper()
+ if url:find("getconfig") and method == "GET" then
+  return {
+   StatusMessage = "",
+   Success = true,
+   StatusCode = 200,
+   Body = game:GetService("HttpService"):JSONEncode({
+    IPToken = "",
+    AuthMode = "",
+    Allow_IP_Verification = false,
+    Display = "Cracked By 08v3",
+    Service_Locked = false,
+    Invitation_Discord = "https://discord.gg/chunkhub"
+   })
+  }
+ end
+ if url:find("validation") and method == "GET" then
+  return {
+   StatusMessage = "",
+   Success = true,
+   StatusCode = 200,
+   Body = game:GetService("HttpService"):JSONEncode({
+    OwnerSecretID = "",
+    Registered_ServiceID = "",
+    Authentication = "",
+    V2_Authentication = "success",
+    Key_Information = {
+     NoKey_Requirement = true,
+     Hardware_ID = "dihhh",
+     Premium_Mode = true,
+     Notes = "Key Authenticated",
+     expiresAt = "Sat Oct 04 69420 14:52:38 GMT-0700 (Pacific Daylight Time)"
+    }
+   })
+  }
+ end
+ return old_request(data)
+end
+if syn then
+ syn.request = hook_request
+end
+if http_request then
+ http_request = hook_request
+end
+if request then
+ request = hook_request
+end
+if http and http.request then
+ http.request = hook_request
+end

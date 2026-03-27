@@ -1,0 +1,288 @@
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local PathfindingService = game:GetService("PathfindingService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+player.CharacterAdded:Connect(function(c)
+	character = c
+	hrp = character:WaitForChild("HumanoidRootPart")
+	humanoid = character:WaitForChild("Humanoid")
+end)
+
+-- Fungsi beli & equip-unequip Speed Coil
+local function buyAndEquipItem(itemName)
+    local success, err = pcall(function()
+        local remote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net"):WaitForChild("RF/CoinsShopService/RequestBuy")
+        remote:InvokeServer(itemName)
+    end)
+    if success then
+        task.delay(0.5, function()
+            local backpack = player:WaitForChild("Backpack", 5)
+            local tool = backpack and backpack:FindFirstChild(itemName)
+            if tool then
+                local char = player.Character
+                if char then
+                    tool.Parent = char
+                    task.wait(0.25)
+                    tool.Parent = backpack
+                end
+            else
+                warn("Tool tidak ditemukan di Backpack: " .. itemName)
+            end
+        end)
+    else
+        warn("Gagal membeli item: " .. tostring(err))
+    end
+end
+
+local function buyAndEquipSpeedCoil()
+    buyAndEquipItem("Speed Coil") -- Ganti jika nama item berbeda
+
+    local backpack = player:WaitForChild("Backpack")
+    local tool
+
+    -- Tunggu sampai Speed Coil ada di backpack (max 10 detik)
+    for i = 1, 20 do
+        tool = backpack:FindFirstChild("Speed Coil")
+        if tool then break end
+        task.wait(0.5)
+    end
+
+    if tool then
+        local char = player.Character
+        if char then
+            tool.Parent = char
+            task.wait(0.3)
+            tool.Parent = backpack
+            print("Speed Coil sudah di-equip & unequip.")
+        end
+    else
+        warn("Speed Coil tidak ditemukan di Backpack setelah pembelian.")
+    end
+end
+
+-- GUI Setup
+local gui = Instance.new("ScreenGui")
+gui.Name = "WalvyWalkGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 240, 0, 130)
+frame.Position = UDim2.new(0.5, -120, 0.5, -65)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderSizePixel = 0
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Active = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "WALVY COMMUNITY"
+title.Size = UDim2.new(1, 0, 0, 20)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.ZIndex = 2
+
+local tweenButton = Instance.new("TextButton", frame)
+tweenButton.Text = "▶ START TWEEN TO BASE"
+tweenButton.Size = UDim2.new(0.8, 0, 0, 40)
+tweenButton.Position = UDim2.new(0.1, 0, 0.25, 0)
+tweenButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+tweenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tweenButton.Font = Enum.Font.GothamBold
+tweenButton.TextSize = 16
+tweenButton.ZIndex = 2
+Instance.new("UICorner", tweenButton).CornerRadius = UDim.new(0, 8)
+
+local statusLabel = Instance.new("TextLabel", frame)
+statusLabel.Text = "Status: No Tweening"
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 0.7, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.ZIndex = 2
+
+-- Drag GUI
+local dragging, dragInput, dragStart, startPos
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- Anti Death & Anti Kick
+local function applyAntiDeath(state)
+	if humanoid then
+		for _, s in pairs({
+			Enum.HumanoidStateType.FallingDown,
+			Enum.HumanoidStateType.Ragdoll,
+			Enum.HumanoidStateType.PlatformStanding,
+			Enum.HumanoidStateType.Seated
+		}) do
+			humanoid:SetStateEnabled(s, not state)
+		end
+		if state then
+			humanoid.Health = humanoid.MaxHealth
+			humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+				if humanoid.Health <= 0 then
+					humanoid.Health = humanoid.MaxHealth
+				end
+			end)
+		end
+	end
+end
+
+-- Cari posisi base
+local function getBasePosition()
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return nil end
+	for _, plot in ipairs(plots:GetChildren()) do
+		local sign = plot:FindFirstChild("PlotSign")
+		local base = plot:FindFirstChild("DeliveryHitbox")
+		if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled and base then
+			return base.Position
+		end
+	end
+	return nil
+end
+
+local Y_OFFSET = 9
+local STOP_DISTANCE = 5
+
+local currentTween
+local function tweenWalkTo(position)
+	if currentTween then currentTween:Cancel() end
+
+	local startPos = hrp.Position
+	local targetPos = Vector3.new(position.X, position.Y + Y_OFFSET, position.Z)
+	local distance = (targetPos - startPos).Magnitude
+	local speed = math.max(humanoid.WalkSpeed, 24)
+	local duration = distance / speed
+	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+
+	currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+	currentTween:Play()
+
+	humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+	currentTween.Completed:Wait()
+end
+
+local active = false
+local walkThread
+
+local function isAtBase(basePos)
+	if not basePos then return false end
+	local dist = (hrp.Position - basePos).Magnitude
+	return dist <= STOP_DISTANCE
+end
+
+local function walkToBase()
+	while active do
+		local target = getBasePosition()
+		if not target then
+			warn("Base Not Found")
+			statusLabel.Text = "Status: Base Not Found"
+			break
+		end
+
+		if isAtBase(target) then
+			warn("Reached Base, stopping tween.")
+			statusLabel.Text = "Status: Reached Base"
+			stopTweenToBase()
+			break
+		end
+
+		local path = PathfindingService:CreatePath()
+		path:ComputeAsync(hrp.Position, target)
+
+		if path.Status == Enum.PathStatus.Success then
+			for _, waypoint in ipairs(path:GetWaypoints()) do
+				if not active then return end
+				if isAtBase(target) then
+					warn("Reached Base during path, stopping tween.")
+					statusLabel.Text = "Status: Reached Base"
+					stopTweenToBase()
+					return
+				end
+				tweenWalkTo(waypoint.Position)
+			end
+		else
+			tweenWalkTo(target)
+		end
+
+		task.wait(1.5)
+	end
+end
+
+function startTweenToBase()
+	if active then return end
+	active = true
+	applyAntiDeath(true)
+	humanoid.WalkSpeed = 24
+	statusLabel.Text = "Status: Walking to Base..."
+	tweenButton.Text = "▶ START AGAIN"
+	tweenButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+
+	walkThread = task.spawn(function()
+		while active do
+			walkToBase()
+			task.wait(1)
+		end
+	end)
+end
+
+function stopTweenToBase()
+	if not active then return end
+	active = false
+	if currentTween then currentTween:Cancel() end
+	if walkThread then task.cancel(walkThread) end
+	humanoid.WalkSpeed = 24
+	statusLabel.Text = "Status: Stopped"
+	tweenButton.Text = "▶ START TWEEN TO BASE"
+	tweenButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+end
+
+-- Panggil otomatis beli & equip Speed Coil saat script dijalankan
+buyAndEquipSpeedCoil()
+
+-- Toggle tombol
+tweenButton.MouseButton1Click:Connect(function()
+	if active then
+		stopTweenToBase()
+	else
+		startTweenToBase()
+	end
+end)
+
+-- Jangan auto start tween supaya manual lewat tombol
+-- startTweenToBase()

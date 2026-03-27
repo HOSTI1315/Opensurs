@@ -1,0 +1,2244 @@
+-- filename: 
+-- version: lua51
+-- line: [0, 0] id: 0
+local r0_0 = game:GetService("Players")
+local r1_0 = game:GetService("RunService")
+local r2_0 = game:GetService("TweenService")
+local r3_0 = game:GetService("HttpService")
+local r4_0 = game:GetService("UserInputService")
+local r5_0 = game:GetService("StarterGui")
+local r6_0 = r0_0.LocalPlayer
+local r7_0 = r6_0:WaitForChild("PlayerGui")
+local r8_0 = workspace.CurrentCamera
+local r9_0 = {
+  MAIN_BG = Color3.fromRGB(30, 30, 30),
+  SECONDARY_BG = Color3.fromRGB(45, 45, 45),
+  BUTTON_RED = Color3.fromRGB(180, 70, 70),
+  BUTTON_GREEN = Color3.fromRGB(90, 160, 90),
+  BUTTON_BLUE = Color3.fromRGB(80, 120, 200),
+  BUTTON_PURPLE = Color3.fromRGB(150, 100, 200),
+  WHITE_TEXT = Color3.fromRGB(255, 255, 255),
+}
+local r10_0 = false
+local r11_0 = nil
+local r12_0 = nil
+local r13_0 = 100
+local r14_0 = 0.4
+local r15_0 = true
+local r16_0 = true
+local r17_0 = false
+local r18_0 = true
+local r19_0 = Color3.fromRGB(255, 0, 0)
+local r20_0 = "Head"
+local r21_0 = false
+local r22_0 = true
+local r23_0 = true
+local r24_0 = true
+local r25_0 = false
+local r26_0 = false
+local r27_0 = false
+local r28_0 = false
+local r29_0 = {}
+local r30_0 = {}
+local r31_0 = nil
+local r32_0 = {}
+local r33_0 = {}
+local r34_0 = {}
+local r35_0 = {
+  Color3.fromRGB(255, 0, 0),
+  Color3.fromRGB(255, 127, 0),
+  Color3.fromRGB(255, 255, 0),
+  Color3.fromRGB(0, 255, 0),
+  Color3.fromRGB(0, 0, 255),
+  Color3.fromRGB(75, 0, 130),
+  Color3.fromRGB(148, 0, 211)
+}
+local r36_0 = 1
+local r37_0 = 0
+local r38_0 = {}
+local r39_0 = Enum.KeyCode.F
+local r40_0 = Enum.KeyCode.G
+local r41_0 = {}
+local function r42_0()
+  -- line: [0, 0] id: 5
+  r32_0 = {}
+  r33_0 = {}
+  for r3_5, r4_5 in ipairs(r0_0:GetPlayers()) do
+    if r4_5 ~= r6_0 then
+      r32_0[r4_5.UserId] = true
+      r33_0[r4_5.UserId] = true
+    end
+  end
+end
+local function r43_0()
+  -- line: [0, 0] id: 82
+  writefile("aimbot_settings.json", r3_0:JSONEncode({
+    aimbotEnabled = r10_0,
+    radius = r13_0,
+    smoothness = r14_0,
+    ignoreDead = r15_0,
+    ignoreTeam = r16_0,
+    ignoreWall = r17_0,
+    showFOV = r18_0,
+    fovColor = {
+      r19_0.R,
+      r19_0.G,
+      r19_0.B
+    },
+    aimPart = r20_0,
+    espEnabled = r21_0,
+    espLineEnabled = r22_0,
+    espBoxEnabled = r23_0,
+    espInfoEnabled = r24_0,
+    espTeamOnly = r25_0,
+    behindWarningEnabled = r26_0,
+    autoTurnBehindEnabled = r27_0,
+    rainbowESP = r28_0,
+    toggleAimbotKey = r39_0.Value,
+    toggleESPKey = r40_0.Value,
+    aimbotWhitelist = r32_0,
+    espWhitelist = r33_0,
+  }))
+end
+local function r44_0()
+  -- line: [0, 0] id: 2
+  if not isfile("aimbot_settings.json") then
+    r42_0()
+    return false
+  end
+  local r0_2, r1_2 = pcall(function()
+    -- line: [0, 0] id: 3
+    local r1_3 = r3_0:JSONDecode(readfile("aimbot_settings.json"))
+    r10_0 = r1_3.aimbotEnabled
+    r13_0 = r1_3.radius
+    r14_0 = r1_3.smoothness
+    r15_0 = r1_3.ignoreDead
+    r16_0 = r1_3.ignoreTeam
+    r17_0 = r1_3.ignoreWall
+    r18_0 = r1_3.showFOV
+    if r1_3.fovColor then
+      r19_0 = Color3.new(r1_3.fovColor[1], r1_3.fovColor[2], r1_3.fovColor[3])
+    end
+    r20_0 = r1_3.aimPart
+    r21_0 = r1_3.espEnabled
+    r22_0 = r1_3.espLineEnabled
+    r23_0 = r1_3.espBoxEnabled or true
+    r24_0 = r1_3.espInfoEnabled or true
+    r25_0 = r1_3.espTeamOnly
+    r26_0 = r1_3.behindWarningEnabled
+    r27_0 = r1_3.autoTurnBehindEnabled or false
+    r28_0 = r1_3.rainbowESP
+    if r1_3.toggleAimbotKey then
+      r39_0 = Enum.KeyCode[r1_3.toggleAimbotKey]
+    end
+    if r1_3.toggleESPKey then
+      r40_0 = Enum.KeyCode[r1_3.toggleESPKey]
+    end
+    if r1_3.aimbotWhitelist then
+      r32_0 = r1_3.aimbotWhitelist
+    else
+      r42_0()
+    end
+    if r1_3.espWhitelist then
+      r33_0 = r1_3.espWhitelist
+    else
+      r42_0()
+    end
+    return true
+  end)
+  if not r0_2 then
+    r42_0()
+  end
+  return r0_2 and r1_2
+end
+local function r45_0()
+  -- line: [0, 0] id: 79
+  for r3_79, r4_79 in pairs(r38_0) do
+    if r4_79 and r4_79.Parent then
+      r4_79:Destroy()
+    end
+  end
+  r38_0 = {}
+end
+local function r46_0()
+  -- line: [0, 0] id: 80
+  for r3_80, r4_80 in pairs(r41_0) do
+    r4_80:Disconnect()
+  end
+  r41_0 = {}
+  table.insert(r41_0, r4_0.InputBegan:Connect(function(r0_81, r1_81)
+    -- line: [0, 0] id: 81
+    if r1_81 then
+      return 
+    end
+    if r0_81.KeyCode == r39_0 then
+      r10_0 = not r10_0
+    elseif r0_81.KeyCode == r40_0 then
+      r21_0 = not r21_0
+    end
+  end))
+end
+local function r47_0()
+  -- line: [0, 0] id: 10
+  r37_0 = r37_0 + 0.005
+  if r37_0 >= 1 then
+    r37_0 = 0
+    r36_0 = r36_0 + 1
+    if #r35_0 < r36_0 then
+      r36_0 = 1
+    end
+  end
+  local r0_10 = r36_0 + 1
+  if #r35_0 < r0_10 then
+    r0_10 = 1
+  end
+  return r35_0[r36_0]:Lerp(r35_0[r0_10], r37_0)
+end
+local function r48_0(r0_72)
+  -- line: [0, 0] id: 72
+  if not r0_72.Team then
+    return Color3.fromRGB(255, 255, 255)
+  end
+  return r0_72.TeamColor.Color
+end
+local function r49_0(r0_6)
+  -- line: [0, 0] id: 6
+  if r0_6 == r6_0 then
+    return false
+  end
+  if not r0_6.Parent then
+    return false
+  end
+  if r25_0 and r0_6.Team == r6_0.Team then
+    return false
+  end
+  if r33_0[r0_6.UserId] ~= true then
+    return false
+  end
+  return true
+end
+local function r50_0(r0_76)
+  -- line: [0, 0] id: 76
+  if not r6_0.Character then
+    return 0
+  end
+  local r1_76 = r6_0.Character:FindFirstChild("HumanoidRootPart")
+  local r2_76 = r0_76.Character and r0_76.Character:FindFirstChild("HumanoidRootPart")
+  if not r1_76 or not r2_76 then
+    return 0
+  end
+  return math.floor((r1_76.Position - r2_76.Position).Magnitude)
+end
+local function r51_0(r0_73)
+  -- line: [0, 0] id: 73
+  if r29_0[r0_73] then
+    r29_0[r0_73]:Remove()
+  end
+  local r1_73 = Drawing.new("Line")
+  r1_73.Visible = false
+  r1_73.Thickness = 1
+  r29_0[r0_73] = r1_73
+end
+local function r52_0(r0_1)
+  -- line: [0, 0] id: 1
+  if r29_0[r0_1] then
+    r29_0[r0_1]:Remove()
+    r29_0[r0_1] = nil
+  end
+end
+local function r53_0(r0_70, r1_70)
+  -- line: [0, 0] id: 70
+  local r2_70 = r0_70:FindFirstChild("ESP_Highlight")
+  if not r2_70 then
+    r2_70 = Instance.new("Highlight")
+    r2_70.Name = "ESP_Highlight"
+    r2_70.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    r2_70.Parent = r0_70
+  end
+  r2_70.FillColor = r1_70
+  r2_70.OutlineColor = r1_70
+  r2_70.Enabled = r21_0
+  return r2_70
+end
+local function r54_0(r0_7, r1_7, r2_7)
+  -- line: [0, 0] id: 7
+  local r3_7 = r1_7:FindFirstChild("HumanoidRootPart") or r1_7:FindFirstChild("Torso") or r1_7:FindFirstChild("UpperTorso")
+  if not r3_7 then
+    return 
+  end
+  local r4_7 = r3_7:FindFirstChild("ESP_Box")
+  if not r4_7 then
+    r4_7 = Instance.new("BoxHandleAdornment")
+    r4_7.Name = "ESP_Box"
+    r4_7.Size = Vector3.new(2, 3, 2)
+    r4_7.ZIndex = 5
+    r4_7.Transparency = 0.5
+    r4_7.AlwaysOnTop = true
+    r4_7.Adornee = r3_7
+    r4_7.Parent = r3_7
+  end
+  r4_7.Color3 = r2_7
+  r4_7.Visible = r21_0 and r23_0
+  return r4_7
+end
+local function r55_0(r0_8, r1_8, r2_8)
+  -- line: [0, 0] id: 8
+  local r3_8 = r1_8:FindFirstChild("Head")
+  if not r3_8 then
+    return 
+  end
+  local r4_8 = r3_8:FindFirstChild("ESP_Name")
+  if not r4_8 then
+    r4_8 = Instance.new("BillboardGui")
+    r4_8.Name = "ESP_Name"
+    r4_8.Size = UDim2.new(0, 200, 0, 50)
+    r4_8.AlwaysOnTop = true
+    r4_8.StudsOffset = Vector3.new(0, 2, 0)
+    local r5_8 = Instance.new("TextLabel")
+    r5_8.Name = "Label"
+    r5_8.BackgroundTransparency = 1
+    r5_8.Size = UDim2.new(1, 0, 1, 0)
+    r5_8.Font = Enum.Font.SourceSansBold
+    r5_8.TextSize = 16
+    r5_8.TextStrokeTransparency = 0.5
+    r5_8.Parent = r4_8
+    r4_8.Parent = r3_8
+  end
+  local r5_8 = r4_8:FindFirstChild("Label")
+  local r6_8 = r1_8:FindFirstChildOfClass("Humanoid")
+  if r5_8 and r6_8 then
+    local r7_8 = r50_0(r0_8)
+    local r8_8 = math.floor(r6_8.Health)
+    local r9_8 = math.floor(r6_8.MaxHealth)
+    local r10_8 = math.clamp(r8_8 / r9_8, 0, 1)
+    local r11_8 = Color3.fromRGB(255 * (1 - r10_8), 255 * r10_8, 0)
+    r5_8.Text = string.format("%s [%dm] | HP: %d/%d", r0_8.DisplayName, r7_8, r8_8, r9_8)
+    r5_8.TextColor3 = r11_8
+    r5_8.Visible = r21_0 and r24_0
+    r4_8.Enabled = r21_0 and r24_0
+  end
+  return r4_8
+end
+local function r56_0(r0_4)
+  -- line: [0, 0] id: 4
+  if r30_0[r0_4] then
+    if r30_0[r0_4].Highlight then
+      r30_0[r0_4].Highlight:Destroy()
+    end
+    if r30_0[r0_4].Box then
+      r30_0[r0_4].Box:Destroy()
+    end
+    if r30_0[r0_4].Billboard then
+      r30_0[r0_4].Billboard:Destroy()
+    end
+  end
+  if not r0_4.Character then
+    return 
+  end
+  local r1_4 = r28_0
+  if r1_4 then
+    r1_4 = r47_0() or r48_0(r0_4)
+  else
+    goto label_45	-- block#11 is visited secondly
+  end
+  r30_0[r0_4] = {
+    Highlight = r53_0(r0_4.Character, r1_4),
+    Box = r54_0(r0_4, r0_4.Character, r1_4),
+    Billboard = r55_0(r0_4, r0_4.Character, r1_4),
+  }
+end
+local function r57_0(r0_71)
+  -- line: [0, 0] id: 71
+  if r30_0[r0_71] then
+    if r30_0[r0_71].Highlight then
+      r30_0[r0_71].Highlight:Destroy()
+    end
+    if r30_0[r0_71].Box then
+      r30_0[r0_71].Box:Destroy()
+    end
+    if r30_0[r0_71].Billboard then
+      r30_0[r0_71].Billboard:Destroy()
+    end
+    r30_0[r0_71] = nil
+  end
+end
+local function r58_0()
+  -- line: [0, 0] id: 74
+  if not r21_0 then
+    for r3_74, r4_74 in pairs(r29_0) do
+      if r4_74 then
+        r4_74.Visible = false
+      end
+    end
+    for r3_74, r4_74 in pairs(r30_0) do
+      if r4_74.Highlight then
+        r4_74.Highlight.Enabled = false
+      end
+      if r4_74.Box then
+        r4_74.Box.Visible = false
+      end
+      if r4_74.Billboard then
+        r4_74.Billboard.Enabled = false
+      end
+    end
+    return 
+  end
+  local r0_74 = {}
+  for r4_74, r5_74 in pairs(r29_0) do
+    if not r4_74 or not r4_74.Parent then
+      if r5_74 then
+        r5_74.Visible = false
+      end
+      table.insert(r0_74, r4_74)
+    elseif not r49_0(r4_74) then
+      if r5_74 then
+        r5_74.Visible = false
+      end
+    elseif not r4_74.Character then
+      if r5_74 then
+        r5_74.Visible = false
+      end
+    else
+      local r6_74 = r4_74.Character:FindFirstChild("HumanoidRootPart") or r4_74.Character:FindFirstChild("Torso") or r4_74.Character:FindFirstChild("UpperTorso")
+      if not r6_74 then
+        if r5_74 then
+          r5_74.Visible = false
+        end
+      else
+        local r8_74, r9_74 = r8_0:WorldToViewportPoint(r6_74.Position)
+        if not r9_74 then
+          if r5_74 then
+            r5_74.Visible = false
+          end
+        else
+          local r10_74 = r28_0
+          if r10_74 then
+            r10_74 = r47_0() or r48_0(r4_74)
+          else
+            goto label_109	-- block#37 is visited secondly
+          end
+          if r22_0 then
+            r5_74.From = Vector2.new(r8_0.ViewportSize.X / 2, r8_0.ViewportSize.Y)
+            r5_74.To = Vector2.new(r8_74.X, r8_74.Y)
+            r5_74.Color = r10_74
+            r5_74.Visible = true
+          else
+            r5_74.Visible = false
+          end
+        end
+      end
+    end
+  end
+  for r4_74, r5_74 in ipairs(r0_74) do
+    r52_0(r5_74)
+    r57_0(r5_74)
+  end
+  local r1_74 = {}
+  for r5_74, r6_74 in pairs(r30_0) do
+    if not r5_74 or not r5_74.Parent then
+      table.insert(r1_74, r5_74)
+    elseif not r49_0(r5_74) then
+      if r6_74.Highlight then
+        r6_74.Highlight.Enabled = false
+      end
+      if r6_74.Box then
+        r6_74.Box.Visible = false
+      end
+      if r6_74.Billboard then
+        r6_74.Billboard.Enabled = false
+      end
+    elseif not r5_74.Character then
+      if r6_74.Highlight then
+        r6_74.Highlight.Enabled = false
+      end
+      if r6_74.Box then
+        r6_74.Box.Visible = false
+      end
+      if r6_74.Billboard then
+        r6_74.Billboard.Enabled = false
+      end
+    else
+      local r7_74 = r28_0
+      if r7_74 then
+        r7_74 = r47_0() or r48_0(r5_74)
+      else
+        goto label_213	-- block#65 is visited secondly
+      end
+      if r6_74.Highlight then
+        r6_74.Highlight.Enabled = true
+        r6_74.Highlight.FillColor = r7_74
+        r6_74.Highlight.OutlineColor = r7_74
+      end
+      if r6_74.Box and r23_0 then
+        r6_74.Box.Visible = true
+        r6_74.Box.Color3 = r7_74
+      elseif r6_74.Box then
+        r6_74.Box.Visible = false
+      end
+      if r6_74.Billboard and r24_0 then
+        local r8_74 = r5_74.Character:FindFirstChild("Head")
+        local r9_74 = r5_74.Character:FindFirstChildOfClass("Humanoid")
+        if r8_74 and r9_74 then
+          local r10_74 = r6_74.Billboard:FindFirstChild("Label")
+          if r10_74 then
+            local r11_74 = r50_0(r5_74)
+            local r12_74 = math.floor(r9_74.Health)
+            local r13_74 = math.floor(r9_74.MaxHealth)
+            local r14_74 = math.clamp(r12_74 / r13_74, 0, 1)
+            local r15_74 = Color3.fromRGB(255 * (1 - r14_74), 255 * r14_74, 0)
+            r10_74.Text = string.format("%s [%dm] | HP: %d/%d", r5_74.DisplayName, r11_74, r12_74, r13_74)
+            r10_74.TextColor3 = r15_74
+            r10_74.Visible = true
+          end
+          r6_74.Billboard.Enabled = true
+        else
+          r6_74.Billboard.Enabled = false
+        end
+      elseif r6_74.Billboard then
+        r6_74.Billboard.Enabled = false
+      end
+    end
+  end
+  for r5_74, r6_74 in ipairs(r1_74) do
+    r57_0(r6_74)
+  end
+end
+local function r59_0()
+  -- line: [0, 0] id: 77
+  for r3_77, r4_77 in ipairs(r0_0:GetPlayers()) do
+    if r4_77 ~= r6_0 then
+      r51_0(r4_77)
+      if r21_0 then
+        r56_0(r4_77)
+      end
+    end
+  end
+  r1_0:BindToRenderStep("ESPUpdate", Enum.RenderPriority.Camera.Value + 1, r58_0)
+end
+local function r60_0()
+  -- line: [0, 0] id: 78
+  r1_0:UnbindFromRenderStep("ESPUpdate")
+  for r3_78, r4_78 in pairs(r29_0) do
+    if r4_78 then
+      r4_78:Remove()
+    end
+  end
+  r29_0 = {}
+  for r3_78, r4_78 in pairs(r30_0) do
+    if r4_78.Highlight then
+      r4_78.Highlight:Destroy()
+    end
+    if r4_78.Box then
+      r4_78.Box:Destroy()
+    end
+    if r4_78.Billboard then
+      r4_78.Billboard:Destroy()
+    end
+  end
+  r30_0 = {}
+end
+local function r61_0()
+  -- line: [0, 0] id: 9
+  if r21_0 then
+    r59_0()
+  else
+    r60_0()
+  end
+end
+local r63_0 = (function()
+  -- line: [0, 0] id: 11
+  local r0_11 = Instance.new("ScreenGui")
+  r0_11.Name = "Aimbot"
+  r0_11.Parent = r7_0
+  r0_11.ZIndexBehavior = Enum.ZIndexBehavior.Global
+  r0_11.ResetOnSpawn = false
+  r0_11.DisplayOrder = 999
+  local r1_11 = Instance.new("Frame")
+  r1_11.Size = UDim2.new(0, 200, 0, 330)
+  r1_11.Position = UDim2.new(0.5, -100, 0.5, -165)
+  r1_11.BackgroundColor3 = r9_0.MAIN_BG
+  r1_11.BorderSizePixel = 0
+  r1_11.Active = true
+  r1_11.Draggable = true
+  r1_11.Parent = r0_11
+  Instance.new("UICorner", r1_11).CornerRadius = UDim.new(0, 8)
+  local r2_11 = Instance.new("TextLabel")
+  r2_11.Size = UDim2.new(1, 0, 0, 25)
+  r2_11.Position = UDim2.new(0, 0, 0, 0)
+  r2_11.BackgroundColor3 = r9_0.SECONDARY_BG
+  r2_11.Text = "Aimbot"
+  r2_11.TextColor3 = r9_0.WHITE_TEXT
+  r2_11.Font = Enum.Font.GothamBold
+  r2_11.TextSize = 12
+  r2_11.Parent = r1_11
+  Instance.new("UICorner", r2_11).CornerRadius = UDim.new(0, 8)
+  local r3_11 = Instance.new("TextButton")
+  r3_11.Size = UDim2.new(0, 20, 0, 20)
+  r3_11.Position = UDim2.new(1, -24, 0, 2)
+  r3_11.BackgroundColor3 = r9_0.BUTTON_RED
+  r3_11.TextColor3 = r9_0.WHITE_TEXT
+  r3_11.Font = Enum.Font.GothamBold
+  r3_11.TextSize = 10
+  r3_11.Text = "X"
+  r3_11.AutoButtonColor = false
+  r3_11.Parent = r2_11
+  Instance.new("UICorner", r3_11).CornerRadius = UDim.new(0, 4)
+  local r4_11 = Instance.new("TextButton")
+  r4_11.Size = UDim2.new(0, 20, 0, 20)
+  r4_11.Position = UDim2.new(1, -48, 0, 2)
+  r4_11.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+  r4_11.TextColor3 = r9_0.WHITE_TEXT
+  r4_11.Font = Enum.Font.GothamBold
+  r4_11.TextSize = 13
+  r4_11.Text = "_"
+  r4_11.AutoButtonColor = false
+  r4_11.Parent = r2_11
+  Instance.new("UICorner", r4_11).CornerRadius = UDim.new(0, 4)
+  local r5_11 = Instance.new("Frame")
+  r5_11.Size = UDim2.new(1, 0, 1, -25)
+  r5_11.Position = UDim2.new(0, 0, 0, 25)
+  r5_11.BackgroundTransparency = 1
+  r5_11.Parent = r1_11
+  local r6_11 = Instance.new("TextButton")
+  r6_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r6_11.Position = UDim2.new(0.05, 0, 0, 10)
+  r6_11.BackgroundColor3 = r9_0.BUTTON_RED
+  r6_11.TextColor3 = r9_0.WHITE_TEXT
+  r6_11.Font = Enum.Font.GothamBold
+  r6_11.TextSize = 12
+  r6_11.Text = "AIMBOT: OFF"
+  r6_11.AutoButtonColor = false
+  r6_11.Parent = r5_11
+  Instance.new("UICorner", r6_11).CornerRadius = UDim.new(0, 6)
+  local r7_11 = Instance.new("TextButton")
+  r7_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r7_11.Position = UDim2.new(0.05, 0, 0, 45)
+  r7_11.BackgroundColor3 = Color3.fromRGB(200, 50, 150)
+  r7_11.TextColor3 = r9_0.WHITE_TEXT
+  r7_11.Font = Enum.Font.GothamBold
+  r7_11.TextSize = 12
+  r7_11.Text = "ESP: OFF"
+  r7_11.AutoButtonColor = false
+  r7_11.Parent = r5_11
+  Instance.new("UICorner", r7_11).CornerRadius = UDim.new(0, 6)
+  local r8_11 = Instance.new("TextButton")
+  r8_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r8_11.Position = UDim2.new(0.05, 0, 0, 80)
+  r8_11.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+  r8_11.TextColor3 = r9_0.WHITE_TEXT
+  r8_11.Font = Enum.Font.GothamBold
+  r8_11.TextSize = 12
+  r8_11.Text = "AIMBOT SETTINGS"
+  r8_11.AutoButtonColor = false
+  r8_11.Parent = r5_11
+  Instance.new("UICorner", r8_11).CornerRadius = UDim.new(0, 6)
+  local r9_11 = Instance.new("TextButton")
+  r9_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r9_11.Position = UDim2.new(0.05, 0, 0, 115)
+  r9_11.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+  r9_11.TextColor3 = r9_0.WHITE_TEXT
+  r9_11.Font = Enum.Font.GothamBold
+  r9_11.TextSize = 12
+  r9_11.Text = "ESP SETTINGS"
+  r9_11.AutoButtonColor = false
+  r9_11.Parent = r5_11
+  Instance.new("UICorner", r9_11).CornerRadius = UDim.new(0, 6)
+  local r10_11 = Instance.new("TextButton")
+  r10_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r10_11.Position = UDim2.new(0.05, 0, 0, 150)
+  r10_11.BackgroundColor3 = Color3.fromRGB(150, 100, 200)
+  r10_11.TextColor3 = r9_0.WHITE_TEXT
+  r10_11.Font = Enum.Font.GothamBold
+  r10_11.TextSize = 12
+  r10_11.Text = "VISUAL SETTINGS"
+  r10_11.AutoButtonColor = false
+  r10_11.Parent = r5_11
+  Instance.new("UICorner", r10_11).CornerRadius = UDim.new(0, 6)
+  local r11_11 = Instance.new("TextButton")
+  r11_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r11_11.Position = UDim2.new(0.05, 0, 0, 185)
+  r11_11.BackgroundColor3 = Color3.fromRGB(100, 150, 200)
+  r11_11.TextColor3 = r9_0.WHITE_TEXT
+  r11_11.Font = Enum.Font.GothamBold
+  r11_11.TextSize = 12
+  r11_11.Text = "PLAYER LIST"
+  r11_11.AutoButtonColor = false
+  r11_11.Parent = r5_11
+  Instance.new("UICorner", r11_11).CornerRadius = UDim.new(0, 6)
+  local r12_11 = Instance.new("TextButton")
+  r12_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r12_11.Position = UDim2.new(0.05, 0, 0, 220)
+  r12_11.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
+  r12_11.TextColor3 = r9_0.WHITE_TEXT
+  r12_11.Font = Enum.Font.GothamBold
+  r12_11.TextSize = 12
+  r12_11.Text = "KEYBINDS"
+  r12_11.AutoButtonColor = false
+  r12_11.Parent = r5_11
+  Instance.new("UICorner", r12_11).CornerRadius = UDim.new(0, 6)
+  local r13_11 = Instance.new("TextButton")
+  r13_11.Size = UDim2.new(0.9, 0, 0, 30)
+  r13_11.Position = UDim2.new(0.05, 0, 0, 255)
+  r13_11.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+  r13_11.TextColor3 = r9_0.WHITE_TEXT
+  r13_11.Font = Enum.Font.GothamBold
+  r13_11.TextSize = 12
+  r13_11.Text = "SAVE SETTINGS"
+  r13_11.AutoButtonColor = false
+  r13_11.Parent = r5_11
+  Instance.new("UICorner", r13_11).CornerRadius = UDim.new(0, 6)
+  local r14_11 = Instance.new("TextLabel")
+  r14_11.Size = UDim2.new(1, 0, 0, 15)
+  r14_11.Position = UDim2.new(0, 0, 1, -15)
+  r14_11.BackgroundTransparency = 1
+  r14_11.Text = "By ThawaBR • YouTube • v1.5.1"
+  r14_11.TextColor3 = Color3.fromRGB(150, 150, 150)
+  r14_11.Font = Enum.Font.Gotham
+  r14_11.TextSize = 9
+  r14_11.Parent = r5_11
+  local r15_11 = false
+  r31_0 = Drawing.new("Text")
+  r31_0.Visible = false
+  r31_0.Text = "⚠️ PLAYER BEHIND!"
+  r31_0.Size = 25
+  r31_0.Color = Color3.fromRGB(255, 0, 0)
+  r31_0.Outline = true
+  r31_0.OutlineColor = Color3.fromRGB(0, 0, 0)
+  r31_0.Position = Vector2.new(r8_0.ViewportSize.X / 2 - 100, 50)
+  local function r16_11()
+    -- line: [0, 0] id: 42
+    if r11_0 then
+      r11_0:Remove()
+      r11_0 = nil
+    end
+    r11_0 = Drawing.new("Circle")
+    r11_0.Visible = r18_0 and r10_0
+    r11_0.Radius = r13_0
+    r11_0.Thickness = 2
+    r11_0.Transparency = 1
+    r11_0.Color = r19_0
+    r11_0.Filled = false
+  end
+  local function r17_11()
+    -- line: [0, 0] id: 67
+    if r11_0 then
+      r11_0.Position = Vector2.new(r8_0.ViewportSize.X / 2, r8_0.ViewportSize.Y / 2)
+      r11_0.Visible = r18_0 and r10_0
+      if r28_0 then
+        r11_0.Color = r47_0()
+      else
+        r11_0.Color = r19_0
+      end
+    end
+  end
+  local function r18_11(r0_69)
+    -- line: [0, 0] id: 69
+    if not r17_0 then
+      return true
+    end
+    local r1_69 = r6_0.Character
+    if not r1_69 then
+      return false
+    end
+    local r2_69 = r1_69:FindFirstChild("HumanoidRootPart")
+    if not r2_69 then
+      return false
+    end
+    local r3_69 = r2_69.Position
+    local r4_69 = r0_69.Position
+    local r8_69, r9_69 = workspace:FindPartOnRayWithIgnoreList(Ray.new(r3_69, ((r4_69 - r3_69)).Unit * ((r4_69 - r3_69)).Magnitude), {
+      r1_69,
+      r0_69.Parent
+    })
+    return not r8_69
+  end
+  local function r19_11()
+    -- line: [0, 0] id: 48
+    local r1_48 = r13_0
+    local r0_48 = nil	-- notice: implicit variable refs by block#[19]
+    for r5_48, r6_48 in pairs(r0_0:GetPlayers()) do
+      if r6_48 ~= r6_0 and r32_0[r6_48.UserId] == true and r6_48.Character then
+        local r7_48 = r6_48.Character:FindFirstChildOfClass("Humanoid")
+        local r8_48 = r6_48.Character:FindFirstChild(r20_0)
+        if r7_48 and r8_48 and (not r15_0 or r7_48.Health > 0) and (not r16_0 or not r6_48.Team or not r6_0.Team or r6_48.Team ~= r6_0.Team) and r18_11(r8_48) then
+          local r9_48, r10_48 = r8_0:WorldToViewportPoint(r8_48.Position)
+          if r10_48 then
+            local r13_48 = (Vector2.new(r8_0.ViewportSize.X / 2, r8_0.ViewportSize.Y / 2) - Vector2.new(r9_48.X, r9_48.Y)).Magnitude
+            if r13_48 <= r1_48 then
+              r1_48 = r13_48
+              r0_48 = r8_48
+            end
+          end
+        end
+      end
+    end
+    return r0_48
+  end
+  local function r20_11()
+    -- line: [0, 0] id: 66
+    if not r6_0.Character then
+      return false
+    end
+    local r0_66 = r6_0.Character:FindFirstChild("Head")
+    if not r0_66 then
+      return false
+    end
+    return (r8_0.CFrame.Position - r0_66.Position).Magnitude < 2
+  end
+  local function r21_11()
+    -- line: [0, 0] id: 63
+    local r0_63 = r6_0.Character
+    if not r0_63 then
+      return nil
+    end
+    local r1_63 = r0_63:FindFirstChild("HumanoidRootPart")
+    if not r1_63 then
+      return nil
+    end
+    local r2_63 = nil
+    local r3_63 = math.huge
+    for r7_63, r8_63 in pairs(r0_0:GetPlayers()) do
+      if r8_63 ~= r6_0 and r8_63.Character and r32_0[r8_63.UserId] == true then
+        local r9_63 = r8_63.Character:FindFirstChildOfClass("Humanoid")
+        local r10_63 = r8_63.Character:FindFirstChild("HumanoidRootPart")
+        if r10_63 and r9_63 and (not r15_0 or r9_63.Health > 0) and (not r16_0 or not r8_63.Team or not r6_0.Team or r8_63.Team ~= r6_0.Team) and (r10_63.Position - r1_63.Position).Unit:Dot(r1_63.CFrame.LookVector) < -0.3 then
+          local r14_63 = (r10_63.Position - r1_63.Position).Magnitude
+          if r14_63 < r3_63 then
+            local r15_63 = Ray.new(r1_63.Position, ((r10_63.Position - r1_63.Position)).Unit * r14_63)
+            local r16_63 = workspace
+            local r16_63, r17_63 = r16_63:FindPartOnRayWithIgnoreList(r15_63, {
+              r0_63,
+              r8_63.Character
+            })
+            if not r16_63 then
+              r2_63 = r10_63
+              r3_63 = r14_63
+            end
+          end
+        end
+      end
+    end
+    return r2_63
+  end
+  local function r22_11()
+    -- line: [0, 0] id: 43
+    local r0_43 = r6_0.Character
+    if not r0_43 then
+      return false
+    end
+    local r1_43 = r0_43:FindFirstChild("HumanoidRootPart")
+    if not r1_43 then
+      return false
+    end
+    for r5_43, r6_43 in pairs(r0_0:GetPlayers()) do
+      if r6_43 ~= r6_0 and r6_43.Character then
+        local r7_43 = r6_43.Character:FindFirstChildOfClass("Humanoid")
+        local r8_43 = r6_43.Character:FindFirstChild("HumanoidRootPart")
+        if r8_43 and r7_43 and (not r15_0 or r7_43.Health > 0) and (not r16_0 or not r6_43.Team or not r6_0.Team or r6_43.Team ~= r6_0.Team) and (r8_43.Position - r1_43.Position).Unit:Dot(r1_43.CFrame.LookVector) < -0.3 then
+          local r12_43 = (r8_43.Position - r1_43.Position).Magnitude
+          if r12_43 < 25 then
+            local r13_43 = Ray.new(r1_43.Position, ((r8_43.Position - r1_43.Position)).Unit * r12_43)
+            local r14_43 = workspace
+            local r14_43, r15_43 = r14_43:FindPartOnRayWithIgnoreList(r13_43, {
+              r0_43,
+              r6_43.Character
+            })
+            if not r14_43 then
+              return true
+            end
+          end
+        end
+      end
+    end
+    return false
+  end
+  local function r23_11()
+    -- line: [0, 0] id: 45
+    r31_0.Visible = r22_11() and r26_0
+  end
+  local function r24_11(r0_41)
+    -- line: [0, 0] id: 41
+    r8_0.CFrame = CFrame.lookAt(r8_0.CFrame.Position, r0_41)
+    if r6_0.Character then
+      local r3_41 = r6_0.Character:FindFirstChild("HumanoidRootPart")
+      if r3_41 then
+        r3_41.CFrame = CFrame.lookAt(r3_41.Position, Vector3.new(r0_41.X, r3_41.Position.Y, r0_41.Z))
+      end
+    end
+  end
+  local function r25_11()
+    -- line: [0, 0] id: 46
+    if r12_0 then
+      r12_0:Disconnect()
+      r12_0 = nil
+    end
+    if r11_0 then
+      r11_0.Visible = r18_0
+    end
+    r12_0 = r1_0.RenderStepped:Connect(function()
+      -- line: [0, 0] id: 47
+      r17_11()
+      r23_11()
+      local r0_47 = nil
+      if r10_0 then
+        r0_47 = r19_11()
+        if r0_47 then
+          local r1_47 = r8_0.CFrame
+          r8_0.CFrame = r1_47:Lerp(CFrame.lookAt(r1_47.Position, r0_47.Position), math.min(r14_0, 1))
+        end
+      end
+      if r27_0 and not r0_47 and r20_11() then
+        local r1_47 = r21_11()
+        if r1_47 then
+          r24_11(r1_47.Position)
+        end
+      end
+    end)
+  end
+  local function r26_11()
+    -- line: [0, 0] id: 44
+    if r12_0 then
+      r12_0:Disconnect()
+      r12_0 = nil
+    end
+    if r11_0 then
+      r11_0.Visible = false
+    end
+    r31_0.Visible = false
+  end
+  local function r27_11()
+    -- line: [0, 0] id: 62
+    local r0_62 = r6_11
+    local r1_62 = "AIMBOT: "
+    local r2_62 = r10_0
+    if r2_62 then
+      r2_62 = "ON" or "OFF"
+    else
+      goto label_8	-- block#2 is visited secondly
+    end
+    r0_62.Text = r1_62 .. r2_62
+    r0_62 = r6_11
+    r1_62 = r10_0
+    if r1_62 then
+      r1_62 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_19	-- block#5 is visited secondly
+    end
+    r0_62.BackgroundColor3 = r1_62
+    r0_62 = r7_11
+    r1_62 = "ESP: "
+    r2_62 = r21_0
+    if r2_62 then
+      r2_62 = "ON" or "OFF"
+    else
+      goto label_30	-- block#8 is visited secondly
+    end
+    r0_62.Text = r1_62 .. r2_62
+    r0_62 = r7_11
+    r1_62 = r21_0
+    if r1_62 then
+      r1_62 = Color3.fromRGB(50, 200, 150) or Color3.fromRGB(200, 50, 150)
+    else
+      goto label_45	-- block#11 is visited secondly
+    end
+    r0_62.BackgroundColor3 = r1_62
+    if r10_0 or r27_0 then
+      r25_11()
+    else
+      r26_11()
+    end
+    r61_0()
+  end
+  r11_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 19
+    r45_0()
+    local r0_19 = Instance.new("ScreenGui")
+    r0_19.Name = "PlayerList"
+    r0_19.Parent = r7_0
+    r0_19.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    r0_19.DisplayOrder = 999
+    r38_0.playerList = r0_19
+    local r1_19 = Instance.new("Frame")
+    r1_19.Size = UDim2.new(0, 280, 0, 400)
+    r1_19.Position = UDim2.new(0.5, 140, 0.5, -200)
+    r1_19.BackgroundColor3 = r9_0.MAIN_BG
+    r1_19.BorderSizePixel = 0
+    r1_19.Active = true
+    r1_19.Draggable = true
+    r1_19.Parent = r0_19
+    Instance.new("UICorner", r1_19).CornerRadius = UDim.new(0, 12)
+    local r2_19 = Instance.new("TextLabel")
+    r2_19.Size = UDim2.new(1, 0, 0, 30)
+    r2_19.BackgroundColor3 = r9_0.SECONDARY_BG
+    r2_19.Text = "Player Selection"
+    r2_19.TextColor3 = r9_0.WHITE_TEXT
+    r2_19.Font = Enum.Font.GothamBold
+    r2_19.TextSize = 14
+    r2_19.Parent = r1_19
+    Instance.new("UICorner", r2_19).CornerRadius = UDim.new(0, 12)
+    local r3_19 = Instance.new("TextButton")
+    r3_19.Size = UDim2.new(0, 24, 0, 24)
+    r3_19.Position = UDim2.new(1, -28, 0, 3)
+    r3_19.BackgroundColor3 = r9_0.BUTTON_RED
+    r3_19.Text = "X"
+    r3_19.TextColor3 = r9_0.WHITE_TEXT
+    r3_19.Font = Enum.Font.GothamBold
+    r3_19.TextSize = 12
+    r3_19.Parent = r2_19
+    Instance.new("UICorner", r3_19).CornerRadius = UDim.new(0, 6)
+    local r4_19 = Instance.new("Frame")
+    r4_19.Size = UDim2.new(1, 0, 0, 35)
+    r4_19.Position = UDim2.new(0, 0, 0, 30)
+    r4_19.BackgroundColor3 = r9_0.SECONDARY_BG
+    r4_19.BorderSizePixel = 0
+    r4_19.Parent = r1_19
+    local r5_19 = Instance.new("TextButton")
+    r5_19.Size = UDim2.new(0.5, 0, 1, 0)
+    r5_19.Position = UDim2.new(0, 0, 0, 0)
+    r5_19.BackgroundColor3 = r9_0.BUTTON_BLUE
+    r5_19.TextColor3 = r9_0.WHITE_TEXT
+    r5_19.Font = Enum.Font.GothamBold
+    r5_19.TextSize = 12
+    r5_19.Text = "AIMBOT"
+    r5_19.AutoButtonColor = false
+    r5_19.Parent = r4_19
+    Instance.new("UICorner", r5_19).CornerRadius = UDim.new(0, 6)
+    local r6_19 = Instance.new("TextButton")
+    r6_19.Size = UDim2.new(0.5, 0, 1, 0)
+    r6_19.Position = UDim2.new(0.5, 0, 0, 0)
+    r6_19.BackgroundColor3 = r9_0.SECONDARY_BG
+    r6_19.TextColor3 = r9_0.WHITE_TEXT
+    r6_19.Font = Enum.Font.GothamBold
+    r6_19.TextSize = 12
+    r6_19.Text = "ESP"
+    r6_19.AutoButtonColor = false
+    r6_19.Parent = r4_19
+    Instance.new("UICorner", r6_19).CornerRadius = UDim.new(0, 6)
+    local r7_19 = Instance.new("ScrollingFrame")
+    r7_19.Size = UDim2.new(0.95, 0, 0, 290)
+    r7_19.Position = UDim2.new(0.025, 0, 0, 70)
+    r7_19.BackgroundColor3 = r9_0.SECONDARY_BG
+    r7_19.BorderSizePixel = 0
+    r7_19.ScrollBarThickness = 6
+    r7_19.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    r7_19.Parent = r1_19
+    Instance.new("UICorner", r7_19).CornerRadius = UDim.new(0, 8)
+    local r8_19 = Instance.new("UIListLayout")
+    r8_19.Parent = r7_19
+    r8_19.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    r8_19.SortOrder = Enum.SortOrder.LayoutOrder
+    r8_19.Padding = UDim.new(0, 6)
+    local r9_19 = Instance.new("Frame")
+    r9_19.Size = UDim2.new(0.95, 0, 0, 35)
+    r9_19.Position = UDim2.new(0.025, 0, 0, 365)
+    r9_19.BackgroundTransparency = 1
+    r9_19.Parent = r1_19
+    local r10_19 = Instance.new("TextButton")
+    r10_19.Size = UDim2.new(0.45, 0, 0, 30)
+    r10_19.Position = UDim2.new(0, 0, 0, 0)
+    r10_19.BackgroundColor3 = r9_0.BUTTON_GREEN
+    r10_19.TextColor3 = r9_0.WHITE_TEXT
+    r10_19.Font = Enum.Font.GothamBold
+    r10_19.TextSize = 12
+    r10_19.Text = "SELECT ALL"
+    r10_19.AutoButtonColor = false
+    r10_19.Parent = r9_19
+    Instance.new("UICorner", r10_19).CornerRadius = UDim.new(0, 6)
+    local r11_19 = Instance.new("TextButton")
+    r11_19.Size = UDim2.new(0.45, 0, 0, 30)
+    r11_19.Position = UDim2.new(0.55, 0, 0, 0)
+    r11_19.BackgroundColor3 = r9_0.BUTTON_RED
+    r11_19.TextColor3 = r9_0.WHITE_TEXT
+    r11_19.Font = Enum.Font.GothamBold
+    r11_19.TextSize = 12
+    r11_19.Text = "DESELECT ALL"
+    r11_19.AutoButtonColor = false
+    r11_19.Parent = r9_19
+    Instance.new("UICorner", r11_19).CornerRadius = UDim.new(0, 6)
+    local r12_19 = "AIMBOT"
+    local function r13_19()
+      -- line: [0, 0] id: 23
+      for r3_23, r4_23 in ipairs(r7_19:GetChildren()) do
+        if r4_23:IsA("Frame") then
+          r4_23:Destroy()
+        end
+      end
+      r34_0 = {}
+      for r3_23, r4_23 in ipairs(r0_0:GetPlayers()) do
+        if r4_23 ~= r6_0 then
+          local r5_23 = Instance.new("Frame")
+          r5_23.Size = UDim2.new(0.95, 0, 0, 28)
+          r5_23.BackgroundColor3 = r9_0.MAIN_BG
+          r5_23.BorderSizePixel = 0
+          r5_23.Parent = r7_19
+          Instance.new("UICorner", r5_23).CornerRadius = UDim.new(0, 6)
+          local r6_23 = Instance.new("TextLabel")
+          r6_23.Size = UDim2.new(0.65, 0, 1, 0)
+          r6_23.Position = UDim2.new(0, 0, 0, 0)
+          r6_23.BackgroundTransparency = 1
+          r6_23.Text = r4_23.Name
+          r6_23.TextColor3 = r9_0.WHITE_TEXT
+          r6_23.Font = Enum.Font.Gotham
+          r6_23.TextSize = 12
+          r6_23.TextXAlignment = Enum.TextXAlignment.Left
+          r6_23.Parent = r5_23
+          local r7_23 = Instance.new("TextButton")
+          r7_23.Size = UDim2.new(0.3, 0, 0.7, 0)
+          r7_23.Position = UDim2.new(0.65, 0, 0.15, 0)
+          r7_23.BackgroundColor3 = r9_0.BUTTON_RED
+          r7_23.Text = "OFF"
+          r7_23.TextColor3 = r9_0.WHITE_TEXT
+          r7_23.Font = Enum.Font.GothamBold
+          r7_23.TextSize = 11
+          r7_23.AutoButtonColor = false
+          r7_23.Parent = r5_23
+          Instance.new("UICorner", r7_23).CornerRadius = UDim.new(0, 6)
+          if r12_19 == "AIMBOT" then
+            local r9_23 = r4_23.UserId
+            local r8_23 = r32_0[r9_23] == true
+            if r8_23 then
+              r9_23 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+            else
+              goto label_152	-- block#12 is visited secondly
+            end
+            r7_23.BackgroundColor3 = r9_23
+            if r8_23 then
+              r9_23 = "ON" or "OFF"
+            else
+              goto label_160	-- block#15 is visited secondly
+            end
+            r7_23.Text = r9_23
+          else
+            local r9_23 = r4_23.UserId
+            local r8_23 = r33_0[r9_23] == true
+            if r8_23 then
+              r9_23 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+            else
+              goto label_176	-- block#22 is visited secondly
+            end
+            r7_23.BackgroundColor3 = r9_23
+            if r8_23 then
+              r9_23 = "ON" or "OFF"
+            else
+              goto label_184	-- block#25 is visited secondly
+            end
+            r7_23.Text = r9_23
+          end
+          r7_23.MouseButton1Click:Connect(function()
+            -- line: [0, 0] id: 24
+            if r12_19 == "AIMBOT" then
+              local r2_24 = not r32_0[r4_23.UserId]
+              r32_0[r4_23.UserId] = r2_24
+              local r0_24 = r32_0[r4_23.UserId] == true
+              local r1_24 = r7_23
+              if r0_24 then
+                r2_24 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+              else
+                goto label_27	-- block#6 is visited secondly
+              end
+              r1_24.BackgroundColor3 = r2_24
+              r1_24 = r7_23
+              if r0_24 then
+                r2_24 = "ON" or "OFF"
+              else
+                goto label_36	-- block#9 is visited secondly
+              end
+              r1_24.Text = r2_24
+            else
+              local r2_24 = not r33_0[r4_23.UserId]
+              r33_0[r4_23.UserId] = r2_24
+              local r0_24 = r33_0[r4_23.UserId] == true
+              local r1_24 = r7_23
+              if r0_24 then
+                r2_24 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+              else
+                goto label_63	-- block#16 is visited secondly
+              end
+              r1_24.BackgroundColor3 = r2_24
+              r1_24 = r7_23
+              if r0_24 then
+                r2_24 = "ON" or "OFF"
+              else
+                goto label_72	-- block#19 is visited secondly
+              end
+              r1_24.Text = r2_24
+              r61_0()
+            end
+          end)
+          r34_0[r4_23] = r5_23
+          -- close: r5_23
+        end
+        -- close: r3_23
+      end
+      local r4_23 = 0
+      r7_19.CanvasSize = UDim2.new(0, 0, r4_23, r8_19.AbsoluteContentSize.Y)
+    end
+    r5_19.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 26
+      r12_19 = "AIMBOT"
+      r5_19.BackgroundColor3 = r9_0.BUTTON_BLUE
+      r6_19.BackgroundColor3 = r9_0.SECONDARY_BG
+      r13_19()
+    end)
+    r6_19.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 25
+      r12_19 = "ESP"
+      r6_19.BackgroundColor3 = r9_0.BUTTON_BLUE
+      r5_19.BackgroundColor3 = r9_0.SECONDARY_BG
+      r13_19()
+    end)
+    r10_19.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 28
+      for r3_28, r4_28 in ipairs(r0_0:GetPlayers()) do
+        if r4_28 ~= r6_0 then
+          if r12_19 == "AIMBOT" then
+            r32_0[r4_28.UserId] = true
+          else
+            r33_0[r4_28.UserId] = true
+          end
+        end
+      end
+      r13_19()
+      if r12_19 == "ESP" then
+        r61_0()
+      end
+    end)
+    r11_19.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 21
+      for r3_21, r4_21 in ipairs(r0_0:GetPlayers()) do
+        if r4_21 ~= r6_0 then
+          if r12_19 == "AIMBOT" then
+            r32_0[r4_21.UserId] = false
+          else
+            r33_0[r4_21.UserId] = false
+          end
+        end
+      end
+      r13_19()
+      if r12_19 == "ESP" then
+        r61_0()
+      end
+    end)
+    r3_19.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 20
+      r0_19:Destroy()
+      r38_0.playerList = nil
+    end)
+    r13_19()
+    local function r15_19(r0_22)
+      -- line: [0, 0] id: 22
+      if r34_0[r0_22] then
+        r34_0[r0_22]:Destroy()
+        r34_0[r0_22] = nil
+      end
+    end
+    r0_0.PlayerAdded:Connect(function(r0_27)
+      -- line: [0, 0] id: 27
+      if r0_27 ~= r6_0 then
+        if r32_0[r0_27.UserId] == nil then
+          r32_0[r0_27.UserId] = true
+        end
+        if r33_0[r0_27.UserId] == nil then
+          r33_0[r0_27.UserId] = true
+        end
+        if r38_0.playerList then
+          r13_19()
+        end
+      end
+    end)
+    r0_0.PlayerRemoving:Connect(r15_19)
+  end)
+  local function r30_11()
+    -- line: [0, 0] id: 29
+    r45_0()
+    local r0_29 = Instance.new("ScreenGui")
+    r0_29.Name = "ESPSettings"
+    r0_29.Parent = r7_0
+    r0_29.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    r0_29.DisplayOrder = 999
+    r38_0.esp = r0_29
+    local r1_29 = Instance.new("Frame")
+    r1_29.Size = UDim2.new(0, 200, 0, 190)
+    r1_29.Position = UDim2.new(0.5, 120, 0.5, -95)
+    r1_29.BackgroundColor3 = r9_0.MAIN_BG
+    r1_29.BorderSizePixel = 0
+    r1_29.Active = true
+    r1_29.Draggable = true
+    r1_29.Parent = r0_29
+    Instance.new("UICorner", r1_29).CornerRadius = UDim.new(0, 8)
+    local r2_29 = Instance.new("TextLabel")
+    r2_29.Size = UDim2.new(1, 0, 0, 25)
+    r2_29.BackgroundColor3 = r9_0.SECONDARY_BG
+    r2_29.Text = "ESP Settings"
+    r2_29.TextColor3 = r9_0.WHITE_TEXT
+    r2_29.Font = Enum.Font.GothamBold
+    r2_29.TextSize = 12
+    r2_29.Parent = r1_29
+    Instance.new("UICorner", r2_29).CornerRadius = UDim.new(0, 8)
+    local r3_29 = Instance.new("TextButton")
+    r3_29.Size = UDim2.new(0, 20, 0, 20)
+    r3_29.Position = UDim2.new(1, -24, 0, 2)
+    r3_29.BackgroundColor3 = r9_0.BUTTON_RED
+    r3_29.Text = "X"
+    r3_29.TextColor3 = r9_0.WHITE_TEXT
+    r3_29.Font = Enum.Font.GothamBold
+    r3_29.TextSize = 10
+    r3_29.Parent = r2_29
+    Instance.new("UICorner", r3_29).CornerRadius = UDim.new(0, 4)
+    local r4_29 = Instance.new("TextButton")
+    r4_29.Size = UDim2.new(0.9, 0, 0, 25)
+    r4_29.Position = UDim2.new(0.05, 0, 0, 35)
+    local r5_29 = r22_0
+    if r5_29 then
+      r5_29 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_161	-- block#2 is visited secondly
+    end
+    r4_29.BackgroundColor3 = r5_29
+    r4_29.TextColor3 = r9_0.WHITE_TEXT
+    r4_29.Font = Enum.Font.Gotham
+    r4_29.TextSize = 11
+    r5_29 = "Line ESP: "
+    local r6_29 = r22_0
+    if r6_29 then
+      r6_29 = "ON" or "OFF"
+    else
+      goto label_179	-- block#5 is visited secondly
+    end
+    r4_29.Text = r5_29 .. r6_29
+    r4_29.AutoButtonColor = false
+    r4_29.Parent = r1_29
+    Instance.new("UICorner", r4_29).CornerRadius = UDim.new(0, 4)
+    r5_29 = Instance.new("TextButton")
+    r5_29.Size = UDim2.new(0.9, 0, 0, 25)
+    r5_29.Position = UDim2.new(0.05, 0, 0, 65)
+    r6_29 = r23_0
+    if r6_29 then
+      r6_29 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_222	-- block#8 is visited secondly
+    end
+    r5_29.BackgroundColor3 = r6_29
+    r5_29.TextColor3 = r9_0.WHITE_TEXT
+    r5_29.Font = Enum.Font.Gotham
+    r5_29.TextSize = 11
+    r6_29 = "Box ESP: "
+    local r7_29 = r23_0
+    if r7_29 then
+      r7_29 = "ON" or "OFF"
+    else
+      goto label_240	-- block#11 is visited secondly
+    end
+    r5_29.Text = r6_29 .. r7_29
+    r5_29.AutoButtonColor = false
+    r5_29.Parent = r1_29
+    Instance.new("UICorner", r5_29).CornerRadius = UDim.new(0, 4)
+    r6_29 = Instance.new("TextButton")
+    r6_29.Size = UDim2.new(0.9, 0, 0, 25)
+    r6_29.Position = UDim2.new(0.05, 0, 0, 95)
+    r7_29 = r24_0
+    if r7_29 then
+      r7_29 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_283	-- block#14 is visited secondly
+    end
+    r6_29.BackgroundColor3 = r7_29
+    r6_29.TextColor3 = r9_0.WHITE_TEXT
+    r6_29.Font = Enum.Font.Gotham
+    r6_29.TextSize = 11
+    r7_29 = "Info ESP: "
+    local r8_29 = r24_0
+    if r8_29 then
+      r8_29 = "ON" or "OFF"
+    else
+      goto label_301	-- block#17 is visited secondly
+    end
+    r6_29.Text = r7_29 .. r8_29
+    r6_29.AutoButtonColor = false
+    r6_29.Parent = r1_29
+    Instance.new("UICorner", r6_29).CornerRadius = UDim.new(0, 4)
+    r7_29 = Instance.new("TextButton")
+    r7_29.Size = UDim2.new(0.9, 0, 0, 25)
+    r7_29.Position = UDim2.new(0.05, 0, 0, 125)
+    r8_29 = r25_0
+    if r8_29 then
+      r8_29 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_344	-- block#20 is visited secondly
+    end
+    r7_29.BackgroundColor3 = r8_29
+    r7_29.TextColor3 = r9_0.WHITE_TEXT
+    r7_29.Font = Enum.Font.Gotham
+    r7_29.TextSize = 11
+    r8_29 = "Hide Team: "
+    local r9_29 = r25_0
+    if r9_29 then
+      r9_29 = "ON" or "OFF"
+    else
+      goto label_362	-- block#23 is visited secondly
+    end
+    r7_29.Text = r8_29 .. r9_29
+    r7_29.AutoButtonColor = false
+    r7_29.Parent = r1_29
+    Instance.new("UICorner", r7_29).CornerRadius = UDim.new(0, 4)
+    r8_29 = Instance.new("TextButton")
+    r8_29.Size = UDim2.new(0.9, 0, 0, 25)
+    r8_29.Position = UDim2.new(0.05, 0, 0, 155)
+    r9_29 = r26_0
+    if r9_29 then
+      r9_29 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_405	-- block#26 is visited secondly
+    end
+    r8_29.BackgroundColor3 = r9_29
+    r8_29.TextColor3 = r9_0.WHITE_TEXT
+    r8_29.Font = Enum.Font.Gotham
+    r8_29.TextSize = 11
+    r9_29 = "Behind Warning: "
+    local r10_29 = r26_0
+    if r10_29 then
+      r10_29 = "ON" or "OFF"
+    else
+      goto label_423	-- block#29 is visited secondly
+    end
+    r8_29.Text = r9_29 .. r10_29
+    r8_29.AutoButtonColor = false
+    r8_29.Parent = r1_29
+    Instance.new("UICorner", r8_29).CornerRadius = UDim.new(0, 4)
+    r4_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 31
+      r22_0 = not r22_0
+      local r0_31 = r4_29
+      local r1_31 = "Line ESP: "
+      local r2_31 = r22_0
+      if r2_31 then
+        r2_31 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_31.Text = r1_31 .. r2_31
+      r0_31 = r4_29
+      r1_31 = r22_0
+      if r1_31 then
+        r1_31 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_31.BackgroundColor3 = r1_31
+    end)
+    r5_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 32
+      r23_0 = not r23_0
+      local r0_32 = r5_29
+      local r1_32 = "Box ESP: "
+      local r2_32 = r23_0
+      if r2_32 then
+        r2_32 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_32.Text = r1_32 .. r2_32
+      r0_32 = r5_29
+      r1_32 = r23_0
+      if r1_32 then
+        r1_32 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_32.BackgroundColor3 = r1_32
+    end)
+    r6_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 35
+      r24_0 = not r24_0
+      local r0_35 = r6_29
+      local r1_35 = "Info ESP: "
+      local r2_35 = r24_0
+      if r2_35 then
+        r2_35 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_35.Text = r1_35 .. r2_35
+      r0_35 = r6_29
+      r1_35 = r24_0
+      if r1_35 then
+        r1_35 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_35.BackgroundColor3 = r1_35
+    end)
+    r7_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 30
+      r25_0 = not r25_0
+      local r0_30 = r7_29
+      local r1_30 = "Hide Team: "
+      local r2_30 = r25_0
+      if r2_30 then
+        r2_30 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_30.Text = r1_30 .. r2_30
+      r0_30 = r7_29
+      r1_30 = r25_0
+      if r1_30 then
+        r1_30 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_30.BackgroundColor3 = r1_30
+    end)
+    r8_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 34
+      r26_0 = not r26_0
+      local r0_34 = r8_29
+      local r1_34 = "Behind Warning: "
+      local r2_34 = r26_0
+      if r2_34 then
+        r2_34 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_34.Text = r1_34 .. r2_34
+      r0_34 = r8_29
+      r1_34 = r26_0
+      if r1_34 then
+        r1_34 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_34.BackgroundColor3 = r1_34
+    end)
+    r3_29.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 33
+      r0_29:Destroy()
+      r38_0.esp = nil
+    end)
+  end
+  local function r31_11()
+    -- line: [0, 0] id: 12
+    r45_0()
+    local r0_12 = Instance.new("ScreenGui")
+    r0_12.Name = "VisualSettings"
+    r0_12.Parent = r7_0
+    r0_12.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    r0_12.DisplayOrder = 999
+    r38_0.visual = r0_12
+    local r1_12 = Instance.new("Frame")
+    r1_12.Size = UDim2.new(0, 200, 0, 130)
+    r1_12.Position = UDim2.new(0.5, 120, 0.5, -65)
+    r1_12.BackgroundColor3 = r9_0.MAIN_BG
+    r1_12.BorderSizePixel = 0
+    r1_12.Active = true
+    r1_12.Draggable = true
+    r1_12.Parent = r0_12
+    Instance.new("UICorner", r1_12).CornerRadius = UDim.new(0, 8)
+    local r2_12 = Instance.new("TextLabel")
+    r2_12.Size = UDim2.new(1, 0, 0, 25)
+    r2_12.BackgroundColor3 = r9_0.SECONDARY_BG
+    r2_12.Text = "Visual Settings"
+    r2_12.TextColor3 = r9_0.WHITE_TEXT
+    r2_12.Font = Enum.Font.GothamBold
+    r2_12.TextSize = 12
+    r2_12.Parent = r1_12
+    Instance.new("UICorner", r2_12).CornerRadius = UDim.new(0, 8)
+    local r3_12 = Instance.new("TextButton")
+    r3_12.Size = UDim2.new(0, 20, 0, 20)
+    r3_12.Position = UDim2.new(1, -24, 0, 2)
+    r3_12.BackgroundColor3 = r9_0.BUTTON_RED
+    r3_12.Text = "X"
+    r3_12.TextColor3 = r9_0.WHITE_TEXT
+    r3_12.Font = Enum.Font.GothamBold
+    r3_12.TextSize = 10
+    r3_12.Parent = r2_12
+    Instance.new("UICorner", r3_12).CornerRadius = UDim.new(0, 4)
+    local r4_12 = Instance.new("TextButton")
+    r4_12.Size = UDim2.new(0.9, 0, 0, 25)
+    r4_12.Position = UDim2.new(0.05, 0, 0, 35)
+    local r5_12 = r18_0
+    if r5_12 then
+      r5_12 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_161	-- block#2 is visited secondly
+    end
+    r4_12.BackgroundColor3 = r5_12
+    r4_12.TextColor3 = r9_0.WHITE_TEXT
+    r4_12.Font = Enum.Font.Gotham
+    r4_12.TextSize = 11
+    r5_12 = "Show FOV: "
+    local r6_12 = r18_0
+    if r6_12 then
+      r6_12 = "ON" or "OFF"
+    else
+      goto label_179	-- block#5 is visited secondly
+    end
+    r4_12.Text = r5_12 .. r6_12
+    r4_12.AutoButtonColor = false
+    r4_12.Parent = r1_12
+    Instance.new("UICorner", r4_12).CornerRadius = UDim.new(0, 4)
+    r5_12 = Instance.new("TextButton")
+    r5_12.Size = UDim2.new(0.9, 0, 0, 25)
+    r5_12.Position = UDim2.new(0.05, 0, 0, 65)
+    r5_12.BackgroundColor3 = r19_0
+    r5_12.TextColor3 = r9_0.WHITE_TEXT
+    r5_12.Font = Enum.Font.Gotham
+    r5_12.TextSize = 11
+    r5_12.Text = "Change FOV Color"
+    r5_12.AutoButtonColor = false
+    r5_12.Parent = r1_12
+    Instance.new("UICorner", r5_12).CornerRadius = UDim.new(0, 4)
+    r6_12 = Instance.new("TextButton")
+    r6_12.Size = UDim2.new(0.9, 0, 0, 25)
+    r6_12.Position = UDim2.new(0.05, 0, 0, 95)
+    local r7_12 = r28_0
+    if r7_12 then
+      r7_12 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_266	-- block#8 is visited secondly
+    end
+    r6_12.BackgroundColor3 = r7_12
+    r6_12.TextColor3 = r9_0.WHITE_TEXT
+    r6_12.Font = Enum.Font.Gotham
+    r6_12.TextSize = 11
+    r7_12 = "Rainbow ESP: "
+    local r8_12 = r28_0
+    if r8_12 then
+      r8_12 = "ON" or "OFF"
+    else
+      goto label_284	-- block#11 is visited secondly
+    end
+    r6_12.Text = r7_12 .. r8_12
+    r6_12.AutoButtonColor = false
+    r6_12.Parent = r1_12
+    Instance.new("UICorner", r6_12).CornerRadius = UDim.new(0, 4)
+    r4_12.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 13
+      r18_0 = not r18_0
+      local r0_13 = r4_12
+      local r1_13 = "Show FOV: "
+      local r2_13 = r18_0
+      if r2_13 then
+        r2_13 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_13.Text = r1_13 .. r2_13
+      r0_13 = r4_12
+      r1_13 = r18_0
+      if r1_13 then
+        r1_13 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_13.BackgroundColor3 = r1_13
+      if r11_0 then
+        r11_0.Visible = r18_0 and r10_0
+      end
+    end)
+    r5_12.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 15
+      if r19_0 == Color3.fromRGB(255, 0, 0) then
+        r19_0 = Color3.fromRGB(0, 255, 0)
+      elseif r19_0 == Color3.fromRGB(0, 255, 0) then
+        r19_0 = Color3.fromRGB(0, 0, 255)
+      elseif r19_0 == Color3.fromRGB(0, 0, 255) then
+        r19_0 = Color3.fromRGB(255, 255, 0)
+      elseif r19_0 == Color3.fromRGB(255, 255, 0) then
+        r19_0 = Color3.fromRGB(255, 0, 255)
+      elseif r19_0 == Color3.fromRGB(255, 0, 255) then
+        r19_0 = Color3.fromRGB(0, 255, 255)
+      else
+        r19_0 = Color3.fromRGB(255, 0, 0)
+      end
+      r5_12.BackgroundColor3 = r19_0
+      if r11_0 then
+        r11_0.Color = r19_0
+      end
+    end)
+    r6_12.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 14
+      r28_0 = not r28_0
+      local r0_14 = r6_12
+      local r1_14 = "Rainbow ESP: "
+      local r2_14 = r28_0
+      if r2_14 then
+        r2_14 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_14.Text = r1_14 .. r2_14
+      r0_14 = r6_12
+      r1_14 = r28_0
+      if r1_14 then
+        r1_14 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_14.BackgroundColor3 = r1_14
+    end)
+    r3_12.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 16
+      r0_12:Destroy()
+      r38_0.visual = nil
+    end)
+  end
+  local function r32_11()
+    -- line: [0, 0] id: 36
+    r45_0()
+    local r0_36 = Instance.new("ScreenGui")
+    r0_36.Name = "Keybinds"
+    r0_36.Parent = r7_0
+    r0_36.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    r0_36.DisplayOrder = 999
+    r38_0.keybinds = r0_36
+    local r1_36 = Instance.new("Frame")
+    r1_36.Size = UDim2.new(0, 200, 0, 160)
+    r1_36.Position = UDim2.new(0.5, 120, 0.5, -80)
+    r1_36.BackgroundColor3 = r9_0.MAIN_BG
+    r1_36.BorderSizePixel = 0
+    r1_36.Active = true
+    r1_36.Draggable = true
+    r1_36.Parent = r0_36
+    Instance.new("UICorner", r1_36).CornerRadius = UDim.new(0, 8)
+    local r2_36 = Instance.new("TextLabel")
+    r2_36.Size = UDim2.new(1, 0, 0, 25)
+    r2_36.BackgroundColor3 = r9_0.SECONDARY_BG
+    r2_36.Text = "Keybinds"
+    r2_36.TextColor3 = r9_0.WHITE_TEXT
+    r2_36.Font = Enum.Font.GothamBold
+    r2_36.TextSize = 12
+    r2_36.Parent = r1_36
+    Instance.new("UICorner", r2_36).CornerRadius = UDim.new(0, 8)
+    local r3_36 = Instance.new("TextButton")
+    r3_36.Size = UDim2.new(0, 20, 0, 20)
+    r3_36.Position = UDim2.new(1, -24, 0, 2)
+    r3_36.BackgroundColor3 = r9_0.BUTTON_RED
+    r3_36.Text = "X"
+    r3_36.TextColor3 = r9_0.WHITE_TEXT
+    r3_36.Font = Enum.Font.GothamBold
+    r3_36.TextSize = 10
+    r3_36.Parent = r2_36
+    Instance.new("UICorner", r3_36).CornerRadius = UDim.new(0, 4)
+    local r4_36 = Instance.new("TextLabel")
+    r4_36.Size = UDim2.new(0.9, 0, 0, 20)
+    r4_36.Position = UDim2.new(0.05, 0, 0, 35)
+    r4_36.BackgroundTransparency = 1
+    r4_36.Text = "Aimbot: " .. r39_0.Name
+    r4_36.TextColor3 = r9_0.WHITE_TEXT
+    r4_36.Font = Enum.Font.Gotham
+    r4_36.TextSize = 11
+    r4_36.TextXAlignment = Enum.TextXAlignment.Left
+    r4_36.Parent = r1_36
+    local r5_36 = Instance.new("TextButton")
+    r5_36.Size = UDim2.new(0.9, 0, 0, 25)
+    r5_36.Position = UDim2.new(0.05, 0, 0, 55)
+    r5_36.BackgroundColor3 = r9_0.BUTTON_BLUE
+    r5_36.TextColor3 = r9_0.WHITE_TEXT
+    r5_36.Font = Enum.Font.Gotham
+    r5_36.TextSize = 11
+    r5_36.Text = "Change Aimbot Key"
+    r5_36.AutoButtonColor = false
+    r5_36.Parent = r1_36
+    Instance.new("UICorner", r5_36).CornerRadius = UDim.new(0, 4)
+    local r6_36 = Instance.new("TextLabel")
+    r6_36.Size = UDim2.new(0.9, 0, 0, 20)
+    r6_36.Position = UDim2.new(0.05, 0, 0, 85)
+    r6_36.BackgroundTransparency = 1
+    r6_36.Text = "ESP: " .. r40_0.Name
+    r6_36.TextColor3 = r9_0.WHITE_TEXT
+    r6_36.Font = Enum.Font.Gotham
+    r6_36.TextSize = 11
+    r6_36.TextXAlignment = Enum.TextXAlignment.Left
+    r6_36.Parent = r1_36
+    local r7_36 = Instance.new("TextButton")
+    r7_36.Size = UDim2.new(0.9, 0, 0, 25)
+    r7_36.Position = UDim2.new(0.05, 0, 0, 105)
+    r7_36.BackgroundColor3 = r9_0.BUTTON_PURPLE
+    r7_36.TextColor3 = r9_0.WHITE_TEXT
+    r7_36.Font = Enum.Font.Gotham
+    r7_36.TextSize = 11
+    r7_36.Text = "Change ESP Key"
+    r7_36.AutoButtonColor = false
+    r7_36.Parent = r1_36
+    Instance.new("UICorner", r7_36).CornerRadius = UDim.new(0, 4)
+    local r8_36 = Instance.new("TextLabel")
+    r8_36.Size = UDim2.new(0.9, 0, 0, 30)
+    r8_36.Position = UDim2.new(0.05, 0, 0, 135)
+    r8_36.BackgroundTransparency = 1
+    r8_36.Text = "Click button and press new key"
+    r8_36.TextColor3 = Color3.fromRGB(200, 200, 200)
+    r8_36.Font = Enum.Font.Gotham
+    r8_36.TextSize = 10
+    r8_36.TextXAlignment = Enum.TextXAlignment.Center
+    r8_36.Parent = r1_36
+    local r9_36 = false
+    local r10_36 = false
+    r5_36.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 40
+      r9_36 = true
+      r10_36 = false
+      r5_36.Text = "Press any key..."
+      r5_36.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    end)
+    r7_36.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 38
+      r10_36 = true
+      r9_36 = false
+      r7_36.Text = "Press any key..."
+      r7_36.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    end)
+    local r11_36 = nil
+    r11_36 = r4_0.InputBegan:Connect(function(r0_37, r1_37)
+      -- line: [0, 0] id: 37
+      if r1_37 then
+        return 
+      end
+      if r9_36 and r0_37.KeyCode ~= Enum.KeyCode.Unknown then
+        r39_0 = r0_37.KeyCode
+        r4_36.Text = "Aimbot: " .. r39_0.Name
+        r5_36.Text = "Change Aimbot Key"
+        r5_36.BackgroundColor3 = r9_0.BUTTON_BLUE
+        r9_36 = false
+        r46_0()
+      elseif r10_36 and r0_37.KeyCode ~= Enum.KeyCode.Unknown then
+        r40_0 = r0_37.KeyCode
+        r6_36.Text = "ESP: " .. r40_0.Name
+        r7_36.Text = "Change ESP Key"
+        r7_36.BackgroundColor3 = r9_0.BUTTON_PURPLE
+        r10_36 = false
+        r46_0()
+      end
+    end)
+    r3_36.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 39
+      if r11_36 then
+        r11_36:Disconnect()
+      end
+      r0_36:Destroy()
+      r38_0.keybinds = nil
+    end)
+  end
+  r8_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 52
+    r45_0()
+    local r0_52 = Instance.new("ScreenGui")
+    r0_52.Name = "AimbotSettings"
+    r0_52.Parent = r7_0
+    r0_52.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    r0_52.DisplayOrder = 999
+    r38_0.aimbot = r0_52
+    local r1_52 = Instance.new("Frame")
+    r1_52.Size = UDim2.new(0, 200, 0, 310)
+    r1_52.Position = UDim2.new(0.5, 120, 0.5, -155)
+    r1_52.BackgroundColor3 = r9_0.MAIN_BG
+    r1_52.BorderSizePixel = 0
+    r1_52.Active = true
+    r1_52.Draggable = true
+    r1_52.Parent = r0_52
+    Instance.new("UICorner", r1_52).CornerRadius = UDim.new(0, 8)
+    local r2_52 = Instance.new("TextLabel")
+    r2_52.Size = UDim2.new(1, 0, 0, 25)
+    r2_52.BackgroundColor3 = r9_0.SECONDARY_BG
+    r2_52.Text = "Aimbot Settings"
+    r2_52.TextColor3 = r9_0.WHITE_TEXT
+    r2_52.Font = Enum.Font.GothamBold
+    r2_52.TextSize = 12
+    r2_52.Parent = r1_52
+    Instance.new("UICorner", r2_52).CornerRadius = UDim.new(0, 8)
+    local r3_52 = Instance.new("TextButton")
+    r3_52.Size = UDim2.new(0, 20, 0, 20)
+    r3_52.Position = UDim2.new(1, -24, 0, 2)
+    r3_52.BackgroundColor3 = r9_0.BUTTON_RED
+    r3_52.Text = "X"
+    r3_52.TextColor3 = r9_0.WHITE_TEXT
+    r3_52.Font = Enum.Font.GothamBold
+    r3_52.TextSize = 10
+    r3_52.Parent = r2_52
+    Instance.new("UICorner", r3_52).CornerRadius = UDim.new(0, 4)
+    local r4_52 = Instance.new("TextLabel")
+    r4_52.Size = UDim2.new(0.9, 0, 0, 20)
+    r4_52.Position = UDim2.new(0.05, 0, 0, 35)
+    r4_52.BackgroundTransparency = 1
+    r4_52.Text = "FOV: " .. r13_0
+    r4_52.TextColor3 = r9_0.WHITE_TEXT
+    r4_52.Font = Enum.Font.Gotham
+    r4_52.TextSize = 11
+    r4_52.TextXAlignment = Enum.TextXAlignment.Left
+    r4_52.Parent = r1_52
+    local r5_52 = Instance.new("TextButton")
+    r5_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r5_52.Position = UDim2.new(0.05, 0, 0, 55)
+    r5_52.BackgroundColor3 = r9_0.BUTTON_BLUE
+    r5_52.TextColor3 = r9_0.WHITE_TEXT
+    r5_52.Font = Enum.Font.Gotham
+    r5_52.TextSize = 11
+    r5_52.Text = "Change FOV"
+    r5_52.AutoButtonColor = false
+    r5_52.Parent = r1_52
+    Instance.new("UICorner", r5_52).CornerRadius = UDim.new(0, 4)
+    local r6_52 = Instance.new("TextLabel")
+    r6_52.Size = UDim2.new(0.9, 0, 0, 20)
+    r6_52.Position = UDim2.new(0.05, 0, 0, 85)
+    r6_52.BackgroundTransparency = 1
+    r6_52.Text = "Smooth: " .. string.format("%.1f", r14_0)
+    r6_52.TextColor3 = r9_0.WHITE_TEXT
+    r6_52.Font = Enum.Font.Gotham
+    r6_52.TextSize = 11
+    r6_52.TextXAlignment = Enum.TextXAlignment.Left
+    r6_52.Parent = r1_52
+    local r7_52 = Instance.new("TextButton")
+    r7_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r7_52.Position = UDim2.new(0.05, 0, 0, 105)
+    r7_52.BackgroundColor3 = r9_0.BUTTON_PURPLE
+    r7_52.TextColor3 = r9_0.WHITE_TEXT
+    r7_52.Font = Enum.Font.Gotham
+    r7_52.TextSize = 11
+    r7_52.Text = "Change Smooth"
+    r7_52.AutoButtonColor = false
+    r7_52.Parent = r1_52
+    Instance.new("UICorner", r7_52).CornerRadius = UDim.new(0, 4)
+    local r8_52 = Instance.new("TextLabel")
+    r8_52.Size = UDim2.new(0.9, 0, 0, 20)
+    r8_52.Position = UDim2.new(0.05, 0, 0, 135)
+    r8_52.BackgroundTransparency = 1
+    r8_52.Text = "Aim Part: " .. r20_0
+    r8_52.TextColor3 = r9_0.WHITE_TEXT
+    r8_52.Font = Enum.Font.Gotham
+    r8_52.TextSize = 11
+    r8_52.TextXAlignment = Enum.TextXAlignment.Left
+    r8_52.Parent = r1_52
+    local r9_52 = Instance.new("TextButton")
+    r9_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r9_52.Position = UDim2.new(0.05, 0, 0, 155)
+    r9_52.BackgroundColor3 = Color3.fromRGB(100, 150, 200)
+    r9_52.TextColor3 = r9_0.WHITE_TEXT
+    r9_52.Font = Enum.Font.Gotham
+    r9_52.TextSize = 11
+    r9_52.Text = "Change Aim Part"
+    r9_52.AutoButtonColor = false
+    r9_52.Parent = r1_52
+    Instance.new("UICorner", r9_52).CornerRadius = UDim.new(0, 4)
+    local r10_52 = Instance.new("TextButton")
+    r10_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r10_52.Position = UDim2.new(0.05, 0, 0, 185)
+    local r11_52 = r15_0
+    if r11_52 then
+      r11_52 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_418	-- block#2 is visited secondly
+    end
+    r10_52.BackgroundColor3 = r11_52
+    r10_52.TextColor3 = r9_0.WHITE_TEXT
+    r10_52.Font = Enum.Font.Gotham
+    r10_52.TextSize = 11
+    r11_52 = "Ignore Dead: "
+    local r12_52 = r15_0
+    if r12_52 then
+      r12_52 = "ON" or "OFF"
+    else
+      goto label_436	-- block#5 is visited secondly
+    end
+    r10_52.Text = r11_52 .. r12_52
+    r10_52.AutoButtonColor = false
+    r10_52.Parent = r1_52
+    Instance.new("UICorner", r10_52).CornerRadius = UDim.new(0, 4)
+    r11_52 = Instance.new("TextButton")
+    r11_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r11_52.Position = UDim2.new(0.05, 0, 0, 215)
+    r12_52 = r16_0
+    if r12_52 then
+      r12_52 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_479	-- block#8 is visited secondly
+    end
+    r11_52.BackgroundColor3 = r12_52
+    r11_52.TextColor3 = r9_0.WHITE_TEXT
+    r11_52.Font = Enum.Font.Gotham
+    r11_52.TextSize = 11
+    r12_52 = "Ignore Team: "
+    local r13_52 = r16_0
+    if r13_52 then
+      r13_52 = "ON" or "OFF"
+    else
+      goto label_497	-- block#11 is visited secondly
+    end
+    r11_52.Text = r12_52 .. r13_52
+    r11_52.AutoButtonColor = false
+    r11_52.Parent = r1_52
+    Instance.new("UICorner", r11_52).CornerRadius = UDim.new(0, 4)
+    r12_52 = Instance.new("TextButton")
+    r12_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r12_52.Position = UDim2.new(0.05, 0, 0, 245)
+    r13_52 = r17_0
+    if r13_52 then
+      r13_52 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_540	-- block#14 is visited secondly
+    end
+    r12_52.BackgroundColor3 = r13_52
+    r12_52.TextColor3 = r9_0.WHITE_TEXT
+    r12_52.Font = Enum.Font.Gotham
+    r12_52.TextSize = 11
+    r13_52 = "Ignore Walls: "
+    local r14_52 = r17_0
+    if r14_52 then
+      r14_52 = "ON" or "OFF"
+    else
+      goto label_558	-- block#17 is visited secondly
+    end
+    r12_52.Text = r13_52 .. r14_52
+    r12_52.AutoButtonColor = false
+    r12_52.Parent = r1_52
+    Instance.new("UICorner", r12_52).CornerRadius = UDim.new(0, 4)
+    r13_52 = Instance.new("TextButton")
+    r13_52.Size = UDim2.new(0.9, 0, 0, 25)
+    r13_52.Position = UDim2.new(0.05, 0, 0, 275)
+    r14_52 = r27_0
+    if r14_52 then
+      r14_52 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+    else
+      goto label_601	-- block#20 is visited secondly
+    end
+    r13_52.BackgroundColor3 = r14_52
+    r13_52.TextColor3 = r9_0.WHITE_TEXT
+    r13_52.Font = Enum.Font.Gotham
+    r13_52.TextSize = 11
+    r14_52 = "Auto Turn Behind: "
+    local r15_52 = r27_0
+    if r15_52 then
+      r15_52 = "ON" or "OFF"
+    else
+      goto label_619	-- block#23 is visited secondly
+    end
+    r13_52.Text = r14_52 .. r15_52
+    r13_52.AutoButtonColor = false
+    r13_52.Parent = r1_52
+    Instance.new("UICorner", r13_52).CornerRadius = UDim.new(0, 4)
+    r5_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 54
+      r13_0 = r13_0 + 25
+      if r13_0 > 300 then
+        r13_0 = 50
+      end
+      r4_52.Text = "FOV: " .. r13_0
+      if r11_0 then
+        r11_0.Radius = r13_0
+      end
+    end)
+    r7_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 59
+      r14_0 = r14_0 + 0.2
+      if r14_0 > 5 then
+        r14_0 = 0.2
+      end
+      r6_52.Text = "Smooth: " .. string.format("%.1f", r14_0)
+    end)
+    r9_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 60
+      if r20_0 == "Head" then
+        r20_0 = "HumanoidRootPart"
+      else
+        r20_0 = "Head"
+      end
+      r8_52.Text = "Aim Part: " .. r20_0
+    end)
+    r10_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 53
+      r15_0 = not r15_0
+      local r0_53 = r10_52
+      local r1_53 = "Ignore Dead: "
+      local r2_53 = r15_0
+      if r2_53 then
+        r2_53 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_53.Text = r1_53 .. r2_53
+      r0_53 = r10_52
+      r1_53 = r15_0
+      if r1_53 then
+        r1_53 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_53.BackgroundColor3 = r1_53
+    end)
+    r11_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 55
+      r16_0 = not r16_0
+      local r0_55 = r11_52
+      local r1_55 = "Ignore Team: "
+      local r2_55 = r16_0
+      if r2_55 then
+        r2_55 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_55.Text = r1_55 .. r2_55
+      r0_55 = r11_52
+      r1_55 = r16_0
+      if r1_55 then
+        r1_55 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_55.BackgroundColor3 = r1_55
+    end)
+    r12_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 56
+      r17_0 = not r17_0
+      local r0_56 = r12_52
+      local r1_56 = "Ignore Walls: "
+      local r2_56 = r17_0
+      if r2_56 then
+        r2_56 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_56.Text = r1_56 .. r2_56
+      r0_56 = r12_52
+      r1_56 = r17_0
+      if r1_56 then
+        r1_56 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_56.BackgroundColor3 = r1_56
+    end)
+    r13_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 58
+      r27_0 = not r27_0
+      local r0_58 = r13_52
+      local r1_58 = "Auto Turn Behind: "
+      local r2_58 = r27_0
+      if r2_58 then
+        r2_58 = "ON" or "OFF"
+      else
+        goto label_11	-- block#2 is visited secondly
+      end
+      r0_58.Text = r1_58 .. r2_58
+      r0_58 = r13_52
+      r1_58 = r27_0
+      if r1_58 then
+        r1_58 = r9_0.BUTTON_GREEN or r9_0.BUTTON_RED
+      else
+        goto label_22	-- block#5 is visited secondly
+      end
+      r0_58.BackgroundColor3 = r1_58
+      r27_11()
+    end)
+    r3_52.MouseButton1Click:Connect(function()
+      -- line: [0, 0] id: 57
+      r0_52:Destroy()
+      r38_0.aimbot = nil
+    end)
+  end)
+  r9_11.MouseButton1Click:Connect(r30_11)
+  r10_11.MouseButton1Click:Connect(r31_11)
+  r12_11.MouseButton1Click:Connect(r32_11)
+  r13_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 50
+    r43_0()
+    pcall(function()
+      -- line: [0, 0] id: 51
+      game.StarterGui:SetCore("SendNotification", {
+        Title = "✅ Settings Saved",
+        Text = "All settings have been saved!",
+        Duration = 3,
+        Button1 = "Close",
+      })
+    end)
+  end)
+  r6_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 61
+    r10_0 = not r10_0
+    r27_11()
+  end)
+  r7_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 17
+    r21_0 = not r21_0
+    r27_11()
+  end)
+  r4_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 49
+    r15_11 = not r15_11
+    if r15_11 then
+      r1_11.Size = UDim2.new(0, 200, 0, 25)
+      r5_11.Visible = false
+      r4_11.Text = "+"
+    else
+      r1_11.Size = UDim2.new(0, 200, 0, 330)
+      r5_11.Visible = true
+      r4_11.Text = "_"
+    end
+  end)
+  r3_11.MouseButton1Click:Connect(function()
+    -- line: [0, 0] id: 18
+    r26_11()
+    r60_0()
+    r45_0()
+    if r11_0 then
+      r11_0:Remove()
+      r11_0 = nil
+    end
+    if r31_0 then
+      r31_0:Remove()
+    end
+    for r3_18, r4_18 in pairs(r41_0) do
+      r4_18:Disconnect()
+    end
+    r0_11:Destroy()
+  end)
+  local function r33_11(r0_64)
+    -- line: [0, 0] id: 64
+    if r0_64 ~= r6_0 then
+      if r32_0[r0_64.UserId] == nil then
+        r32_0[r0_64.UserId] = true
+      end
+      if r33_0[r0_64.UserId] == nil then
+        r33_0[r0_64.UserId] = true
+      end
+      if r21_0 then
+        r51_0(r0_64)
+        r56_0(r0_64)
+      end
+    end
+    r0_64.CharacterAdded:Connect(function()
+      -- line: [0, 0] id: 65
+      if r21_0 then
+        wait(1)
+        r56_0(r0_64)
+      end
+    end)
+  end
+  local function r34_11(r0_68)
+    -- line: [0, 0] id: 68
+    r52_0(r0_68)
+    r57_0(r0_68)
+  end
+  for r38_11, r39_11 in ipairs(r0_0:GetPlayers()) do
+    if r39_11 ~= r6_0 then
+      r33_11(r39_11)
+    end
+  end
+  r0_0.PlayerAdded:Connect(r33_11)
+  r0_0.PlayerRemoving:Connect(r34_11)
+  r42_0()
+  r44_0()
+  r16_11()
+  r17_11()
+  r27_11()
+  r46_0()
+  return r0_11
+end)()
+pcall(function()
+  -- line: [0, 0] id: 75
+  game.StarterGui:SetCore("SendNotification", {
+    Title = "✅ Aimbot Activated",
+    Text = "Created by ThawaBR • YouTube\nF - Toggle Aimbot | G - Toggle ESP",
+    Duration = 8,
+    Button1 = "Close",
+  })
+end)
+-- close: r0_0

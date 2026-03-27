@@ -1,0 +1,617 @@
+-- Load DummyUI Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zzxzsss/zxs/refs/heads/main/ui/dummyui"))()
+
+-- Create Main Window
+local Window = Library:Window({
+    Title = "zzz hub",
+    Desc = "Build a Island",
+    Icon = 105059922903197,
+    Theme = "Dark",
+    Config = {
+        Keybind = Enum.KeyCode.LeftControl,
+        Size = UDim2.new(0, 500, 0, 400)
+    },
+    CloseUIButton = {
+        Enabled = true,
+        Text = "zzzhub"
+    }
+})
+
+-- Create Tabs
+local MainTab = Window:Tab({Title = "Main", Icon = "home"})
+local SettingsTab = Window:Tab({Title = "Settings", Icon = "settings"})
+
+-- Main Tab Content
+MainTab:Section({Title = "Auto Farm"})
+
+MainTab:Toggle({
+    Title = "Auto Chop/Mine",
+    Desc = "Automatically hits all resources within range",
+    Value = false,
+    Callback = function(value)
+        killAuraEnabled = value
+        if value then startKillAura() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Slider({
+    Title = "Chop/Mine Range",
+    Min = 15,
+    Max = 30,
+    Rounding = 1,
+    Value = 15,
+    Callback = function(value)
+        killAuraRange = value
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Claim Reward",
+    Desc = "Automatically claims all timed rewards",
+    Value = false,
+    Callback = function(value)
+        autoClaimRewardEnabled = value
+        if value then startAutoClaimReward() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Claim Daily",
+    Desc = "Automatically claims daily rewards",
+    Value = false,
+    Callback = function(value)
+        autoClaimDailyEnabled = value
+        if value then startAutoClaimDaily() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Harvest",
+    Desc = "Automatically harvests all locations",
+    Value = false,
+    Callback = function(value)
+        autoHarvestEnabled = value
+        if value then startAutoHarvest() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Section({Title = "Essentials"})
+
+MainTab:Toggle({
+    Title = "Auto Sawmill",
+    Desc = "Automatically crafts with sawmill machines",
+    Value = false,
+    Callback = function(value)
+        autoSawmillEnabled = value
+        if value then startAutoSawmill() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Workshop",
+    Desc = "Automatically crafts with workshop machines",
+    Value = false,
+    Callback = function(value)
+        autoWorkshopEnabled = value
+        if value then startAutoWorkshop() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Stonecutter",
+    Desc = "Automatically crafts with stonecutter machines",
+    Value = false,
+    Callback = function(value)
+        autoStonecutterEnabled = value
+        if value then startAutoStonecutter() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Section({Title = "Auto Events"})
+
+MainTab:Toggle({
+    Title = "Rainbow Event",
+    Desc = "Automatically teleports to Rainbow Island and collects chest",
+    Value = false,
+    Callback = function(value)
+        autoRainbowEnabled = value
+        if value then startAutoRainbow() end
+        autoSaveConfig()
+    end
+})
+
+MainTab:Toggle({
+    Title = "World Tree Event",
+    Desc = "Automatically teleports to World Tree location",
+    Value = false,
+    Callback = function(value)
+        worldTreeEventEnabled = value
+        if value then startWorldTreeEvent() end
+        autoSaveConfig()
+    end
+})
+
+-- Settings Tab Content
+SettingsTab:Section({Title = "Script Information"})
+
+SettingsTab:Button({
+    Title = "Script by: zzz hub",
+    Desc = "Version: 2.0.0 - Build a Island",
+    Callback = function()
+        Window:Notify({
+            Title = "zzz hub",
+            Desc = "Build a Island automation script loaded!",
+            Time = 3
+        })
+    end
+})
+
+SettingsTab:Section({Title = "Upgrades"})
+
+SettingsTab:Toggle({
+    Title = "Auto Crafting Time",
+    Desc = "Makes machines craft items faster",
+    Value = false,
+    Callback = function(value)
+        autoCraftingTimeEnabled = value
+        if value then startAutoCraftingTime() end
+        autoSaveConfig()
+    end
+})
+
+SettingsTab:Toggle({
+    Title = "Auto Speed Boost",
+    Desc = "Makes character move faster",
+    Value = false,
+    Callback = function(value)
+        autoSpeedBoostEnabled = value
+        if value then startAutoSpeedBoost() end
+        autoSaveConfig()
+    end
+})
+
+SettingsTab:Toggle({
+    Title = "Auto Golden Chance",
+    Desc = "Increases chance of getting golden resources",
+    Value = false,
+    Callback = function(value)
+        autoGoldenChanceEnabled = value
+        if value then startAutoGoldenChance() end
+        autoSaveConfig()
+    end
+})
+
+SettingsTab:Button({
+    Title = "Unload Script",
+    Desc = "Stops all automation and removes UI",
+    Callback = function()
+        -- Stop all automation
+        getgenv().SeisenHubRunning = false
+
+        -- Set all variables to false
+        killAuraEnabled = false
+        autoRainbowEnabled = false
+        autoSawmillEnabled = false
+        autoWorkshopEnabled = false
+        autoStonecutterEnabled = false
+        autoClaimRewardEnabled = false
+        worldTreeEventEnabled = false
+        autoClaimDailyEnabled = false
+        autoBambooPlankEnabled = false
+        autoBuyEggEnabled = false
+        autoBuyCrateEnabled = false
+        autoHaybaleEnabled = false
+        autoFurnaceEnabled = false
+        autoCactusLoomEnabled = false
+        autoCementEnabled = false
+        autoToolsmithEnabled = false
+        autoCraftingTimeEnabled = false
+        autoRegrowthTimeEnabled = false
+        autoSpeedBoostEnabled = false
+        autoCropGrowthEnabled = false
+        autoGoldenChanceEnabled = false
+        autoOfflineEarningsEnabled = false
+        autoBeeHiveSpeedEnabled = false
+        autoCollectorTimeEnabled = false
+        autoFishCrateCapacityEnabled = false
+        autoHarvestEnabled = false
+        customCursorEnabled = true
+
+        Window:Notify({
+            Title = "zzz hub",
+            Desc = "Script unloaded successfully!",
+            Time = 3
+        })
+
+        -- Destroy UI
+        task.wait(3)
+        if Library then
+            Library:Unload()
+        end
+    end
+})
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CollectionService = game:GetService("CollectionService")
+
+-- Set up global running state
+getgenv().SeisenHubRunning = true
+
+local configFolder = "SeisenHub"
+local configFile = configFolder .. "/seisen_hub_bai.txt"
+local HttpService = game:GetService("HttpService")
+
+-- Ensure folder exists
+if not isfolder(configFolder) then
+    makefolder(configFolder)
+end
+
+-- Player
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Character respawn handler
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+end)
+
+-- Remote
+local HitResource = ReplicatedStorage.Communication.HitResource
+local RewardChestClaimRequest = ReplicatedStorage.Communication.RewardChestClaimRequest
+local Craft = ReplicatedStorage.Communication.Craft
+local DoubleCraft = ReplicatedStorage.Communication.DoubleCraft
+local ClaimTimedReward = ReplicatedStorage.Communication.ClaimTimedReward
+
+-- Initialize variables with explicit defaults
+local config = getgenv().SeisenHubBuildAPlotConfig or {}
+
+-- Individual variables
+local killAuraEnabled = false
+local autoRainbowEnabled = false
+local autoSawmillEnabled = false
+local autoWorkshopEnabled = false
+local autoStonecutterEnabled = false
+local autoClaimRewardEnabled = false
+local worldTreeEventEnabled = false
+local autoClaimDailyEnabled = false
+local autoBambooPlankEnabled = false
+local autoBuyEggEnabled = false
+local autoBuyCrateEnabled = false
+local autoHaybaleEnabled = false
+local autoFurnaceEnabled = false
+local autoCactusLoomEnabled = false
+local autoCementEnabled = false
+local autoToolsmithEnabled = false
+local autoCraftingTimeEnabled = false
+local autoRegrowthTimeEnabled = false
+local autoSpeedBoostEnabled = false
+local autoCropGrowthEnabled = false
+local autoGoldenChanceEnabled = false
+local autoOfflineEarningsEnabled = false
+local autoBeeHiveSpeedEnabled = false
+local autoCollectorTimeEnabled = false
+local autoFishCrateCapacityEnabled = false
+local autoHarvestEnabled = false
+local customCursorEnabled = true
+local killAuraRange = 15
+
+-- Save config function
+local function saveConfig()
+    config.killAuraEnabled = killAuraEnabled
+    config.killAuraRange = killAuraRange
+    config.autoRainbowEnabled = autoRainbowEnabled
+    config.autoSawmillEnabled = autoSawmillEnabled
+    config.autoWorkshopEnabled = autoWorkshopEnabled
+    config.autoStonecutterEnabled = autoStonecutterEnabled
+    config.autoClaimRewardEnabled = autoClaimRewardEnabled
+    config.worldTreeEventEnabled = worldTreeEventEnabled
+    config.autoClaimDailyEnabled = autoClaimDailyEnabled
+    config.autoBambooPlankEnabled = autoBambooPlankEnabled
+    config.autoBuyEggEnabled = autoBuyEggEnabled
+    config.autoBuyCrateEnabled = autoBuyCrateEnabled
+    config.autoHaybaleEnabled = autoHaybaleEnabled
+    config.autoFurnaceEnabled = autoFurnaceEnabled
+    config.autoCactusLoomEnabled = autoCactusLoomEnabled
+    config.autoCementEnabled = autoCementEnabled
+    config.autoToolsmithEnabled = autoToolsmithEnabled
+    config.autoCraftingTimeEnabled = autoCraftingTimeEnabled
+    config.autoRegrowthTimeEnabled = autoRegrowthTimeEnabled
+    config.autoSpeedBoostEnabled = autoSpeedBoostEnabled
+    config.autoCropGrowthEnabled = autoCropGrowthEnabled
+    config.autoGoldenChanceEnabled = autoGoldenChanceEnabled
+    config.autoOfflineEarningsEnabled = autoOfflineEarningsEnabled
+    config.autoBeeHiveSpeedEnabled = autoBeeHiveSpeedEnabled
+    config.autoCollectorTimeEnabled = autoCollectorTimeEnabled
+    config.autoFishCrateCapacityEnabled = autoFishCrateCapacityEnabled
+    config.autoHarvestEnabled = autoHarvestEnabled
+    config.customCursorEnabled = customCursorEnabled
+
+    getgenv().SeisenHubBuildAPlotConfig = config
+    writefile(configFile, HttpService:JSONEncode(config))
+end
+
+-- Auto save config
+local function autoSaveConfig()
+    saveConfig()
+end
+
+-- Kill Aura Function
+function startKillAura()
+    task.spawn(function()
+        while killAuraEnabled and getgenv().SeisenHubRunning do
+            if not character or not humanoidRootPart then
+                task.wait(0.1)
+                continue
+            end
+
+            local playerPosition = humanoidRootPart.Position
+            local hitTargets = {}
+
+            -- Check player's plot resources first
+            local playerPlot = workspace.Plots:FindFirstChild(player.Name)
+            if playerPlot and playerPlot.Resources then
+                for _, resource in pairs(playerPlot.Resources:GetChildren()) do
+                    if resource:IsA("Model") and resource:GetAttribute("HP") and resource:GetAttribute("HP") > 0 then
+                        local distance = (resource:GetPivot().Position - playerPosition).Magnitude
+                        if distance <= killAuraRange then
+                            table.insert(hitTargets, resource)
+                        end
+                    end
+                end
+            end
+
+            -- Check shared resources
+            for _, resource in pairs(CollectionService:GetTagged("SharedResource")) do
+                if resource:GetAttribute("HP") and resource:GetAttribute("HP") > 0 then
+                    local distance = (resource:GetPivot().Position - playerPosition).Magnitude
+                    if distance <= killAuraRange then
+                        table.insert(hitTargets, resource)
+                    end
+                end
+            end
+
+            -- Hit all targets found
+            if #hitTargets > 0 then
+                for _, target in pairs(hitTargets) do
+                    HitResource:FireServer(target)
+                end
+            end
+
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- Auto Rainbow Function
+function startAutoRainbow()
+    task.spawn(function()
+        -- Teleport to Rainbow Island once when starting
+        pcall(function()
+            local rainbowIsland = workspace.RainbowIsland.FloatingIsland.Base.Land:GetChildren()[12]
+            if rainbowIsland then
+                humanoidRootPart.CFrame = rainbowIsland.CFrame + Vector3.new(0,10, 0)
+            end
+        end)
+
+        while autoRainbowEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                RewardChestClaimRequest:FireServer("RainbowIslandShamrockChest")
+            end)
+
+            task.wait(5)
+        end
+    end)
+end
+
+-- Auto Sawmill Function
+function startAutoSawmill()
+    task.spawn(function()
+        while autoSawmillEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local playerPlot = workspace.Plots:FindFirstChild(player.Name)
+                if playerPlot and playerPlot.Land then
+                    for _, item in pairs(playerPlot.Land:GetDescendants()) do
+                        if item.Name == "Crafter" and item:FindFirstChild("Attachment") and 
+                           not item.Parent.Name:find("S9") and not item.Parent.Name:find("S24") then
+                            Craft:FireServer(item.Attachment)
+                            break
+                        end
+                    end
+                end
+            end)
+            task.wait(3)
+        end
+    end)
+end
+
+-- Auto Workshop Function
+function startAutoWorkshop()
+    task.spawn(function()
+        while autoWorkshopEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local playerPlot = workspace.Plots:FindFirstChild(player.Name)
+                if playerPlot and playerPlot.Land then
+                    for _, item in pairs(playerPlot.Land:GetDescendants()) do
+                        if item.Name == "Crafter" and item:FindFirstChild("Attachment") and item.Parent.Name:find("S9") then
+                            DoubleCraft:FireServer(item.Attachment)
+                            break
+                        end
+                    end
+                end
+            end)
+            task.wait(3)
+        end
+    end)
+end
+
+-- Auto Stonecutter Function
+function startAutoStonecutter()
+    task.spawn(function()
+        while autoStonecutterEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local playerPlot = workspace.Plots:FindFirstChild(player.Name)
+                if playerPlot and playerPlot.Land then
+                    for _, item in pairs(playerPlot.Land:GetDescendants()) do
+                        if item.Name == "Crafter" and item:FindFirstChild("Attachment") and item.Parent.Name:find("S24") then
+                            Craft:FireServer(item.Attachment)
+                            break
+                        end
+                    end
+                end
+            end)
+            task.wait(3)
+        end
+    end)
+end
+
+-- Auto Claim Reward Function
+function startAutoClaimReward()
+    task.spawn(function()
+        while autoClaimRewardEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local rewards = {
+                    "rewardOne", "rewardTwo", "rewardThree", "rewardFour", "rewardFive", "rewardSix",
+                    "rewardSeven", "rewardEight", "rewardNine", "rewardTen", "rewardEleven", "rewardTwelve"
+                }
+
+                for _, reward in pairs(rewards) do
+                    ClaimTimedReward:InvokeServer(reward)
+                    task.wait(1)
+                end
+            end)
+
+            task.wait(60)
+        end
+    end)
+end
+
+-- World Tree Event Function
+function startWorldTreeEvent()
+    task.spawn(function()
+        -- Teleport to World Tree once when starting
+        pcall(function()
+            local worldTree = workspace.GlobalResources["World Tree"]["0"].Part67
+            if worldTree then
+                humanoidRootPart.CFrame = worldTree.CFrame + Vector3.new(0, 5, 0)
+            end
+        end)
+
+        while worldTreeEventEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local uniqueTimestamp = tick() + math.random() * 0.1
+                local args = {
+                    [1] = uniqueTimestamp;
+                }
+
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("RewardChestClaimRequest", 9e9):FireServer(unpack(args))
+
+                task.wait(0.1)
+
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("CollectWorldTree", 9e9):FireServer(unpack(args))
+            end)
+
+            task.wait(2)
+        end
+    end)
+end
+
+-- Auto Claim Daily Function
+function startAutoClaimDaily()
+    task.spawn(function()
+        while autoClaimDailyEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                for i = 1, 100 do
+                    local args = {
+                        [1] = i;
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("ClaimDailyReward", 9e9):FireServer(unpack(args))
+                    task.wait(1)
+                end
+            end)
+            task.wait(30)
+        end
+    end)
+end
+
+-- Auto Harvest Function
+function startAutoHarvest()
+    task.spawn(function()
+        while autoHarvestEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                for i = 1, 25 do
+                    local args = {
+                        [1] = tostring(i);
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("Harvest", 9e9):FireServer(unpack(args))
+                    task.wait(0.5)
+                end
+            end)
+            task.wait(10)
+        end
+    end)
+end
+
+-- Auto Crafting Time Function
+function startAutoCraftingTime()
+    task.spawn(function()
+        while autoCraftingTimeEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local args = {
+                    [1] = "CraftingTime";
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("DoGoldUpgrade", 9e9):FireServer(unpack(args))
+            end)
+            task.wait(5)
+        end
+    end)
+end
+
+-- Auto Speed Boost Function
+function startAutoSpeedBoost()
+    task.spawn(function()
+        while autoSpeedBoostEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local args = {
+                    [1] = "SpeedBoost";
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("DoGoldUpgrade", 9e9):FireServer(unpack(args))
+            end)
+            task.wait(5)
+        end
+    end)
+end
+
+-- Auto Golden Chance Function
+function startAutoGoldenChance()
+    task.spawn(function()
+        while autoGoldenChanceEnabled and getgenv().SeisenHubRunning do
+            pcall(function()
+                local args = {
+                    [1] = "GoldenChance";
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication", 9e9):WaitForChild("DoGoldUpgrade", 9e9):FireServer(unpack(args))
+            end)
+            task.wait(5)
+        end
+    end)
+end
+
+-- Final Notification
+Window:Notify({
+    Title = "zzz hub",
+    Desc = "Build a Island script loaded successfully!",
+    Time = 4
+})

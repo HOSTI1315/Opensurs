@@ -1,0 +1,225 @@
+-- Lynx Simple Loader - Fixed & Improved
+-- 4 buttons visible: Discord copier + 3 scripts
+-- Taller window + scrolling for perfect fit
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+
+-- Main ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LynxSimple"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+-- Main Window - Taller for all buttons
+local Window = Instance.new("Frame")
+Window.Size = UDim2.new(0, 400, 0, 400)  -- Increased height
+Window.Position = UDim2.new(0.5, -200, 0.5, -200)
+Window.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+Window.BackgroundTransparency = 0.25
+Window.BorderSizePixel = 0
+Window.ClipsDescendants = true
+Window.Parent = ScreenGui
+
+-- Shadow
+local Shadow = Instance.new("Frame")
+Shadow.Size = UDim2.new(1, 8, 1, 8)
+Shadow.Position = UDim2.new(0, -4, 0, -4)
+Shadow.BackgroundColor3 = Color3.new(0, 0, 0)
+Shadow.BackgroundTransparency = 0.7
+Shadow.ZIndex = -1
+Shadow.Parent = Window
+
+-- Rounded corners
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 14)
+Corner.Parent = Window
+
+-- Title Bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 50)
+TitleBar.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+TitleBar.BackgroundTransparency = 0.2
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = Window
+
+local TitleBarCorner = Instance.new("UICorner")
+TitleBarCorner.CornerRadius = UDim.new(0, 14)
+TitleBarCorner.Parent = TitleBar
+
+local Title = Instance.new("TextLabel")
+Title.Text = "Lynx Loader"
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 20, 0, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(220, 220, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 40, 0, 40)
+CloseBtn.Position = UDim2.new(1, -50, 0, 5)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 28
+CloseBtn.Parent = TitleBar
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Scrolling Content Area
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -30, 1, -80)
+ScrollFrame.Position = UDim2.new(0, 15, 0, 65)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(50, 50, 70)
+ScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.Parent = Window
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 15)
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ListLayout.Parent = ScrollFrame
+
+local Padding = Instance.new("UIPadding")
+Padding.PaddingTop = UDim.new(0, 10)
+Padding.PaddingBottom = UDim.new(0, 20)
+Padding.Parent = ScrollFrame
+
+-- Button Function
+local function CreateButton(name, description, callback)
+    local BtnFrame = Instance.new("Frame")
+    BtnFrame.Size = UDim2.new(1, -20, 0, 70)
+    BtnFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+    BtnFrame.BackgroundTransparency = 0.4
+    BtnFrame.Parent = ScrollFrame
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 10)
+    BtnCorner.Parent = BtnFrame
+
+    local BtnTitle = Instance.new("TextLabel")
+    BtnTitle.Text = name
+    BtnTitle.Size = UDim2.new(1, -20, 0, 30)
+    BtnTitle.Position = UDim2.new(0, 10, 0, 8)
+    BtnTitle.BackgroundTransparency = 1
+    BtnTitle.TextColor3 = Color3.new(1, 1, 1)
+    BtnTitle.Font = Enum.Font.GothamBold
+    BtnTitle.TextSize = 18
+    BtnTitle.TextXAlignment = Enum.TextXAlignment.Left
+    BtnTitle.Parent = BtnFrame
+
+    local BtnDesc = Instance.new("TextLabel")
+    BtnDesc.Text = description
+    BtnDesc.Size = UDim2.new(1, -20, 0, 20)
+    BtnDesc.Position = UDim2.new(0, 10, 0, 35)
+    BtnDesc.BackgroundTransparency = 1
+    BtnDesc.TextColor3 = Color3.fromRGB(170, 170, 220)
+    BtnDesc.Font = Enum.Font.Gotham
+    BtnDesc.TextSize = 14
+    BtnDesc.TextXAlignment = Enum.TextXAlignment.Left
+    BtnDesc.Parent = BtnFrame
+
+    local ClickArea = Instance.new("TextButton")
+    ClickArea.Size = UDim2.new(1, 0, 1, 0)
+    ClickArea.BackgroundTransparency = 1
+    ClickArea.Text = ""
+    ClickArea.Parent = BtnFrame
+
+    ClickArea.MouseEnter:Connect(function()
+        TweenService:Create(BtnFrame, TweenInfo.new(0.2), {BackgroundTransparency = 0.2}):Play()
+    end)
+    ClickArea.MouseLeave:Connect(function()
+        TweenService:Create(BtnFrame, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play()
+    end)
+
+    ClickArea.MouseButton1Click:Connect(callback)
+end
+
+-- Notification
+local function Notify(text, duration)
+    local Notif = Instance.new("Frame")
+    Notif.Size = UDim2.new(0, 260, 0, 60)
+    Notif.Position = UDim2.new(1, 0, 1, -80)
+    Notif.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+    Notif.BackgroundTransparency = 0.1
+    Notif.Parent = ScreenGui
+
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 10)
+    NotifCorner.Parent = Notif
+
+    local NotifText = Instance.new("TextLabel")
+    NotifText.Text = text
+    NotifText.Size = UDim2.new(1, -20, 1, 0)
+    NotifText.Position = UDim2.new(0, 10, 0, 0)
+    NotifText.BackgroundTransparency = 1
+    NotifText.TextColor3 = Color3.new(1, 1, 1)
+    NotifText.Font = Enum.Font.GothamSemibold
+    NotifText.TextSize = 16
+    NotifText.Parent = Notif
+
+    TweenService:Create(Notif, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -280, 1, -80)}):Play()
+
+    task.delay(duration or 3, function()
+        TweenService:Create(Notif, TweenInfo.new(0.4), {Position = UDim2.new(1, 0, 1, -80)}):Play()
+        task.delay(0.4, function() Notif:Destroy() end)
+    end)
+end
+
+-- The 4 Buttons
+CreateButton("Copy Discord", "Copies invite to clipboard", function()
+    setclipboard("https://discord.gg/SnXQCYzGjx")  -- CHANGE TO YOUR LINK
+    Notify("Discord link copied!", 3)
+end)
+
+CreateButton("Spawner", "Spawn Brainrot", function()
+    loadstring(game:HttpGet('https://lynx-visuals.vercel.app/api/sab-spawner.lua'))()
+    Notify("Spawner executed", 3)
+end)
+
+CreateButton("Instant Steal", "Auto Steal Brainrot", function()
+    loadstring(game:HttpGet("https://lynx-visuals.vercel.app/api/sab-instant-steal.lua"))()
+    Notify("Instant Steal executed", 3)
+end)
+
+CreateButton("Auto Moreiera Method", "Advance Moreiera", function()
+    loadstring(game:HttpGet("https://lynx-visuals.vercel.app/api/sab-moreiera.lua"))()
+    Notify("Auto Moreiera Method executed", 3)
+end)
+
+-- Draggable
+local dragging = false
+local dragStart, startPos
+
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Window.Position
+    end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        Window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)

@@ -1,0 +1,366 @@
+-- Pelimen Hub v1.4.1 sa ispravnim ESP i filterom za "God"
+local plr = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local run = game:GetService("RunService")
+local sg = game:GetService("StarterGui")
+
+local SETTINGS = {
+    KingMode = false,
+    SuperJump = false,
+    NoClip = false,
+    ESPMen = false,
+    ESPTime = false,
+    ESPName = false,
+}
+
+local UNLOCKED = false
+local CORRECT_KEY = "062965"
+local KEY_LINK = "https://direct-link.net/1239053/ISc964DtuCFO"
+
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "pelimen"
+
+-- P dugme
+local iconBtn = Instance.new("TextButton", gui)
+iconBtn.Size = UDim2.new(0, 50, 0, 50)
+iconBtn.Position = UDim2.new(0, 10, 0, 10)
+iconBtn.Text = "P"
+iconBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+iconBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+iconBtn.Font = Enum.Font.Fantasy
+iconBtn.TextSize = 30
+iconBtn.AutoButtonColor = false
+iconBtn.BorderSizePixel = 0
+iconBtn.BackgroundTransparency = 0.1
+Instance.new("UICorner", iconBtn).CornerRadius = UDim.new(0, 12)
+
+-- Frame za ključ
+local keyFrame = Instance.new("Frame", gui)
+keyFrame.Size = UDim2.new(0, 260, 0, 150)
+keyFrame.Position = UDim2.new(0, 70, 0, 10)
+keyFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+keyFrame.Visible = true
+keyFrame.Active = true
+keyFrame.Draggable = true
+Instance.new("UICorner", keyFrame).CornerRadius = UDim.new(0, 10)
+
+local keyLabel = Instance.new("TextLabel", keyFrame)
+keyLabel.Size = UDim2.new(1, 0, 0, 30)
+keyLabel.Text = "Enter Key to Unlock"
+keyLabel.TextColor3 = Color3.new(1, 1, 1)
+keyLabel.Font = Enum.Font.SourceSansBold
+keyLabel.TextSize = 20
+keyLabel.BackgroundTransparency = 1
+
+local keyBox = Instance.new("TextBox", keyFrame)
+keyBox.Size = UDim2.new(0, 200, 0, 30)
+keyBox.Position = UDim2.new(0, 30, 0, 50)
+keyBox.PlaceholderText = "Paste Key Here"
+keyBox.Font = Enum.Font.SourceSans
+keyBox.TextSize = 18
+keyBox.Text = ""
+keyBox.TextColor3 = Color3.new(1, 1, 1)
+keyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+local submitBtn = Instance.new("TextButton", keyFrame)
+submitBtn.Size = UDim2.new(0, 100, 0, 30)
+submitBtn.Position = UDim2.new(0, 80, 0, 90)
+submitBtn.Text = "Unlock"
+submitBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+submitBtn.TextColor3 = Color3.new(1, 1, 1)
+submitBtn.Font = Enum.Font.SourceSansBold
+submitBtn.TextSize = 18
+
+-- Get Key dugme
+local getKeyBtn = Instance.new("TextButton", keyFrame)
+getKeyBtn.Size = UDim2.new(0, 100, 0, 20)
+getKeyBtn.Position = UDim2.new(0.5, -50, 1, -25)
+getKeyBtn.Text = "Get Key"
+getKeyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+getKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+getKeyBtn.Font = Enum.Font.SourceSans
+getKeyBtn.TextSize = 14
+getKeyBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        setclipboard(KEY_LINK)
+        sg:SetCore("SendNotification", {
+            Title = "Copied!",
+            Text = "Link copied to clipboard!",
+            Duration = 3
+        })
+    end)
+end)
+
+-- Glavni i ESP frame
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Name = "mainFrame"
+mainFrame.Size = UDim2.new(0, 420, 0, 280)
+mainFrame.Position = UDim2.new(0, 70, 0, 10)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local espFrame = Instance.new("Frame", gui)
+espFrame.Size = UDim2.new(0, 420, 0, 280)
+espFrame.Position = UDim2.new(0, 70, 0, 10)
+espFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+espFrame.Visible = false
+espFrame.Active = true
+espFrame.Draggable = true
+
+-- Naslov
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "Pelimen"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+
+-- Funkcija za toggle dugmad
+local function createToggle(text, key, posX, posY, parent)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 180, 0, 30)
+    btn.Position = UDim2.new(0, posX, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 18
+    btn.Text = text .. ": OFF"
+    btn.MouseButton1Click:Connect(function()
+        SETTINGS[key] = not SETTINGS[key]
+        btn.Text = text .. ": " .. (SETTINGS[key] and "ON" or "OFF")
+    end)
+    return btn
+end
+
+-- Toggle dugmad
+createToggle("King Mode", "KingMode", 10, 40, mainFrame)
+createToggle("Super Jump", "SuperJump", 10, 80, mainFrame)
+createToggle("NoClip", "NoClip", 10, 120, mainFrame)
+createToggle("ESP Men", "ESPMen", 10, 40, espFrame)
+createToggle("ESP Time", "ESPTime", 10, 80, espFrame)
+createToggle("ESP Name", "ESPName", 10, 120, espFrame)
+
+-- ESP meni dugmad
+local espMenuBtn = Instance.new("TextButton", mainFrame)
+espMenuBtn.Size = UDim2.new(0, 180, 0, 30)
+espMenuBtn.Position = UDim2.new(0, 10, 0, 160)
+espMenuBtn.Text = "ESP Menu >>"
+espMenuBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+espMenuBtn.TextColor3 = Color3.new(1, 1, 1)
+espMenuBtn.Font = Enum.Font.SourceSansBold
+espMenuBtn.TextSize = 18
+espMenuBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    espFrame.Visible = true
+end)
+
+local backBtn = Instance.new("TextButton", espFrame)
+backBtn.Size = UDim2.new(0, 180, 0, 30)
+backBtn.Position = UDim2.new(0, 10, 0, 160)
+backBtn.Text = "<< Back to Main"
+backBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+backBtn.TextColor3 = Color3.new(1, 1, 1)
+backBtn.Font = Enum.Font.SourceSansBold
+backBtn.TextSize = 18
+backBtn.MouseButton1Click:Connect(function()
+    espFrame.Visible = false
+    mainFrame.Visible = true
+end)
+
+-- YouTube dugme
+local ytBtn = Instance.new("TextButton", mainFrame)
+ytBtn.Size = UDim2.new(0, 180, 0, 30)
+ytBtn.Position = UDim2.new(0, 210, 0, 40)
+ytBtn.Text = "YouTube"
+ytBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ytBtn.TextColor3 = Color3.new(1, 1, 1)
+ytBtn.Font = Enum.Font.SourceSansBold
+ytBtn.TextSize = 18
+ytBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://youtube.com/@pelimenmod")
+    sg:SetCore("SendNotification", { Title = "Copied!", Text = "YouTube copied!", Duration = 3 })
+end)
+
+-- Website dugme
+local siteBtn = Instance.new("TextButton", mainFrame)
+siteBtn.Size = UDim2.new(0, 180, 0, 30)
+siteBtn.Position = UDim2.new(0, 210, 0, 80)
+siteBtn.Text = "All Scripts"
+siteBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+siteBtn.TextColor3 = Color3.new(1, 1, 1)
+siteBtn.Font = Enum.Font.SourceSansBold
+siteBtn.TextSize = 18
+siteBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://pelimen.com")
+    sg:SetCore("SendNotification", { Title = "Copied!", Text = "Website copied!", Duration = 3 })
+end)
+
+-- Teleport dugme
+local teleportBtn = Instance.new("TextButton", mainFrame)
+teleportBtn.Size = UDim2.new(0, 180, 0, 30)
+teleportBtn.Position = UDim2.new(0, 210, 0, 120)
+teleportBtn.Text = "Teleport"
+teleportBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 120)
+teleportBtn.TextColor3 = Color3.new(1, 1, 1)
+teleportBtn.Font = Enum.Font.SourceSansBold
+teleportBtn.TextSize = 18
+
+local teleportPoint = nil
+local teleporting = false
+
+teleportBtn.MouseButton1Click:Connect(function()
+    if teleporting or not plr.Character then return end
+    local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local char = plr.Character
+    char.PrimaryPart = hrp
+
+    if not teleportPoint then
+        teleportPoint = hrp.Position
+        teleportBtn.Text = "Point Saved!"
+        wait(1)
+        teleportBtn.Text = "Teleport"
+    else
+        teleporting = true
+        teleportBtn.Text = "Teleporting..."
+        hrp.Anchored = true
+        char:SetPrimaryPartCFrame(CFrame.new(teleportPoint))
+        wait(5)
+        hrp.Anchored = false
+        teleportBtn.Text = "Teleport"
+        teleportPoint = nil
+        teleporting = false
+    end
+end)
+
+-- Close dugme
+local closeBtn = Instance.new("TextButton", mainFrame)
+closeBtn.Size = UDim2.new(0, 180, 0, 30)
+closeBtn.Position = UDim2.new(0, 10, 1, -40)
+closeBtn.Text = "Close GUI"
+closeBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Font = Enum.Font.SourceSansBold
+closeBtn.TextSize = 18
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Footer label
+local footer = Instance.new("TextLabel", mainFrame)
+footer.Size = UDim2.new(0, 200, 0, 20)
+footer.Position = UDim2.new(1, -200, 1, -20)
+footer.Text = "pelimen.com"
+footer.TextColor3 = Color3.new(1, 1, 1)
+footer.BackgroundTransparency = 1
+footer.Font = Enum.Font.SourceSansItalic
+footer.TextSize = 14
+
+-- Key Unlock logika
+submitBtn.MouseButton1Click:Connect(function()
+    if keyBox.Text == CORRECT_KEY then
+        UNLOCKED = true
+        keyFrame.Visible = false
+        mainFrame.Visible = true
+    else
+        keyBox.Text = "Wrong Key!"
+    end
+end)
+
+-- Toggle GUI vidljivost
+iconBtn.MouseButton1Click:Connect(function()
+    if not UNLOCKED then
+        keyFrame.Visible = not keyFrame.Visible
+    else
+        mainFrame.Visible = not (mainFrame.Visible or espFrame.Visible)
+        espFrame.Visible = false
+    end
+end)
+
+-- Aktivacija funkcija na RenderStepped
+run.RenderStepped:Connect(function()
+    if not UNLOCKED then return end
+    if SETTINGS.KingMode and plr.Character then
+        local hum = plr.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum and hum.Health < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
+            hum.PlatformStand = false
+            hum.Sit = false
+        end
+    end
+
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= plr and p.Character then
+            local esp = p.Character:FindFirstChild("PelimenESP")
+            if SETTINGS.ESPMen and not esp then
+                local h = Instance.new("Highlight", p.Character)
+                h.Name = "PelimenESP"
+                h.FillColor = Color3.fromRGB(255, 0, 0)
+                h.OutlineColor = Color3.fromRGB(255, 255, 255)
+            elseif not SETTINGS.ESPMen and esp then
+                esp:Destroy()
+            end
+
+            if SETTINGS.ESPName then
+                if not p.Character:FindFirstChild("PelimenName") then
+                    local bill = Instance.new("BillboardGui", p.Character)
+                    bill.Name = "PelimenName"
+                    bill.Adornee = p.Character:FindFirstChild("Head")
+                    bill.Size = UDim2.new(0, 100, 0, 40)
+                    bill.AlwaysOnTop = true
+                    local txt = Instance.new("TextLabel", bill)
+                    txt.Size = UDim2.new(1, 0, 1, 0)
+                    txt.Text = p.Name
+                    txt.TextColor3 = Color3.new(1, 0, 0)
+                    txt.BackgroundTransparency = 1
+                    txt.TextScaled = true
+                end
+            else
+                local tag = p.Character:FindFirstChild("PelimenName")
+                if tag then tag:Destroy() end
+            end
+        end
+    end
+end)
+
+uis.JumpRequest:Connect(function()
+    if UNLOCKED and SETTINGS.SuperJump then
+        local hum = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+run.Stepped:Connect(function()
+    if UNLOCKED and SETTINGS.NoClip and plr.Character then
+        for _, v in pairs(plr.Character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- DODATAK: Filter za "God"
+local function blurGodText(obj)
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+        if obj.Text:match("[Gg][Oo][Dd]") then
+            obj.Text = string.gsub(obj.Text, "[Gg][Oo][Dd]", "???")
+        end
+    end
+end
+
+local function monitorDescendants(parent)
+    for _, obj in pairs(parent:GetDescendants()) do
+        blurGodText(obj)
+    end
+    parent.DescendantAdded:Connect(function(desc)
+        blurGodText(desc)
+    end)
+end
+
+monitorDescendants(game.CoreGui)
+monitorDescendants(game.Players.LocalPlayer.PlayerGui)
+monitorDescendants(game.Workspace)

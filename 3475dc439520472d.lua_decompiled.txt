@@ -1,0 +1,3082 @@
+--[[
+                 . .  .     .          .  .             .
+          .       .  .  .     ..   .    .      .        .
+                   .   .     .             ...  .        
+.                  .       .    ..  .    .=*+-.         .
+       . .             .               .-*:..+:  .      .
+..      .               .+=:..        :*-.. .-+          
+.           ..        . :#-..-#=.   .#-      .*.         
+  .          .........:-=#=.  ..=*-==.       .*..   .    
+        . .:+#%%%%*#%%#%%=..      -+:.       .*.         
+         .-%#%*%%#****%%#=:.       ..     .. .*.      .  
+        ..=%%*@*******%%##+.           .    .==        . 
+       .  -%%%**********+--.   .  ..:*%=-. .:+:  .. . .  
+          .=#****#%@%**++**:.    .+#-.#..  .=-. .   .    
+      ..   :****#@@@@%*****-.=..-%@%-.--  :*=:..     .   
+     .     :*****#%@%******=-:+#@@@#:..=..:::+=          
+. .       .:##************=:. ..*@%=..... .:*-..         
+           :##**********+=++::..  ..:==-:.=*.      .     
+          .=##********##===+*+++:  ...-... :+:..  .    . 
+ ..  .    :+##********##===*-....  ...:++===*=.      .   
+    .     .-#%#%*****##@=-*= ....:=#%+.                  
+        .     :%%%%#%*%%#*..      .:+.                .  
+        . .   -@%#%#******+..   .  .-+.                  
+    .        :%%#******+-... .  .  ..+=.   .         .   
+            :%*%********+...  .    . .%.            .  . 
+       .   .*##%*********....        .:+.  .   .         
+          .-#*##*********+:..        ..*.    .           
+  .    .  .=#*%#********+::...     .  .=:  . .           
+    .     .+#*%#*******=.... ..       .--        .  ..   
+          .*#*%%********=.. .     . . .-=.    .    .     
+   .   .  .+#*#%*******-:..           .-=.         .   . 
+       .  .:--+*********+-...   .  .  ... .  .     .     
+        .     .........::::..            .  ..           
+                        .. .                     ..      
+             .            .           .               .  
+This file was generated on https://dsc.gg/decompiler | Pulsar v1.4.3
+Resolved: 147 identifiers | 89 functions | 0 Strings | Renamed: 67 functions | Connected: 23 callbacks | Dead Code Removed: 0 blocks | Inlined: 0 wrappers | Detected loop: 12 blocks
+[Renamer: ON] [Decompiler: ON]
+]]
+
+repeat wait() until game:IsLoaded()
+print("Game Loaded")
+
+repeat task.wait() until game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+print("Character loaded")
+
+local LibraryURL = "https://raw.githubusercontent.com/Yv50/Ui-lib/main/"
+local Library = (loadstring(game:HttpGet(LibraryURL .. "Library.lua")))()
+local ThemeManager = (loadstring(game:HttpGet(LibraryURL .. "addons/ThemeManager.lua")))()
+local SaveManager = (loadstring(game:HttpGet(LibraryURL .. "addons/SaveManager.lua")))()
+local PlayerESPModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/Yv50/testing-stuff/refs/heads/main/pre")))()
+
+local Window = Library:CreateWindow({
+    Title = "Sex Ghoul://RE | discord.gg/cielbasement | This is FREE",
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8
+})
+
+local Tabs = {
+    PlayerTab = Window:AddTab("Players"),
+    WorldTab = Window:AddTab("World"),
+    VisualTab = Window:AddTab("Visual"),
+    MiscTab = Window:AddTab("Miscs"),
+    ["UI Settings"] = Window:AddTab("UI Settings")
+}
+
+local LocalPlayerGroupbox = Tabs.PlayerTab:AddLeftGroupbox("< Local Player >")
+local AutoParryGroupbox = Tabs.PlayerTab:AddRightGroupbox("< Auto Parry >")
+local CameraGroupbox = Tabs.PlayerTab:AddRightGroupbox("< Camera >")
+local WorldGroupbox = Tabs.WorldTab:AddLeftGroupbox("< Main >")
+local ESPGroupbox = Tabs.VisualTab:AddLeftGroupbox("< ESP >")
+local VisualMiscGroupbox = Tabs.VisualTab:AddRightGroupbox("< Miscs >")
+local MiscGroupbox = Tabs.MiscTab:AddLeftGroupbox("< Main >")
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local UserInputService = game:GetService("UserInputService")
+game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+local Camera = workspace.CurrentCamera
+local GuiService = game:GetService("GuiService")
+local TeleportService = game:GetService("TeleportService")
+
+local Settings = {
+    noanims = false,
+    flying = false,
+    noclip = false,
+    flyingSpeed = 100,
+    speedhack = false,
+    speedhackWalkSpeed = 100,
+    infJump = false,
+    infjumpheight = 50,
+    VoidMob = false,
+    AutoLoot = false,
+    Autoparry = false,
+    AutoParryAdjustToPing = false,
+    autorollcancel = false,
+    ModNotifer = false,
+    kickifmod = false,
+    killaurahp = 100,
+    killauraifcreds = false,
+    autofarmplayers = false,
+    fullbright = false,
+    Brightness = 0,
+    spectateplayers = false,
+    autoloot = false,
+    autofragment = false,
+    fpsunlocker = false,
+    aimbotEnabled = false,
+    aimbotPlayers = false,
+    aimbotMobs = false,
+    aimbotVisible = false,
+    aimbotFOV = 45,
+    aimbotMode = "Toggle",
+    aimbotActive = false,
+    showFov = false,
+    aimbotXOffset = 0,
+    aimbotYOffset = 0,
+    bringmobs = false,
+    bringmobsrange = 1000,
+    bringmobsdistance = 50,
+    fovchanger = false,
+    CameraFOV = 70,
+    bypassSpeed = false,
+    autogrip = false,
+    autoequip = false,
+    autocrit = false,
+    autoswing = false,
+    autouppercut = false,
+    autoperfectroll = false
+}
+
+local AnimationDatabase = {
+    ["rbxassetid://73909511758220"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77200481731064"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://81343624564970"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://90222174246856"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120591268956676"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://72026342966670"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123559289828864"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://109153497237538"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://73200908069196"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 1, RepeatDelay = 200},
+    ["rbxassetid://140176432457093"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77165655925697"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136182618554502"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://129436447203162"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123196114390104"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120703912197833"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://111637306541526"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://79780873512551"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://91417655657970"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124496925241237"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://97888761442444"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130254051363204"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110920960051584"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://133676778221315"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://111882127396652"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://79981588130961"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://138044545828371"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://112387369480518"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120459951639400"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://121050000257819"] = {Delay = 120, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://116301245600177"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://78213991536260"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://88929119667129"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://124170657036313"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://82184472713821"] = {Delay = 2000, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://96875568331308"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://103629114814061"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://122371661060085"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136330405034599"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://84687276916489"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124861357738478"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://113483328429065"] = {Delay = 390, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://96240580568749"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 1, RepeatDelay = 200},
+    ["rbxassetid://78297239425049"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134047638406873"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106306160427852"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110738231926426"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107500740429380"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://113373203557133"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://109285759428857"] = {Delay = 520, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://97485727762508"] = {Delay = 520, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135835813606350"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://103561209301954"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139400282938724"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98357517858626"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://84286984142876"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102453919149515"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://126923665753961"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://87070202310860"] = {Delay = 650, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130405818992714"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98283641519215"] = {Delay = 670, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://92937790229658"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://101521677894258"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://127566287157805"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98960600377850"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://128625727833366"] = {Delay = 450, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://87764692704657"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125123147660993"] = {Delay = 140, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139753135160439"] = {Delay = 240, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://105184330766070"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://95223978004602"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107868355016077"] = {Delay = 1840, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://95150289594302"] = {Delay = 270, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://119570344423009"] = {Delay = 130, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://73760371893091"] = {Delay = 130, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://137309504999398"] = {Delay = 120, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://80560734051179"] = {Delay = 110, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124747961486333"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://96651052503322"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136225630152817"] = {Delay = 190, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://140472353306379"] = {Delay = 630, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://126485913058460"] = {Delay = 450, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true, RepeatParryAmount = 5, RepeatParryDelay = 600},
+    ["rbxassetid://87277155207058"] = {Delay = 110, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135309318514442"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://96389761265228"] = {Delay = 330, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://127462812873675"] = {Delay = 30, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107752838734051"] = {Delay = 800, Parryable = true, MultiHit = false, Range = 35, RepeatCount = 0, RepeatDelay = 0, Hold = true, RepeatParryAmount = 1, RepeatParryDelay = 1000},
+    ["rbxassetid://134903538230160"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 300},
+    ["rbxassetid://103430086615689"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://133200348314646"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://137072596301637"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://104346885061572"] = {Delay = 170, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135552671823399"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://90460084897725"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 400},
+    ["rbxassetid://109184942183064"] = {Delay = 430, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://83022911727660"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://81458429848274"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131051682278134"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://109123230222277"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://89588139226485"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://137684196851746"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://87735609876920"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131385671108953"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://132546734612246"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://98385414593823"] = {Delay = 170, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102642995643169"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 400},
+    ["rbxassetid://125810707684008"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124926828571060"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://119850347232500"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://91554414015826"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://103463736964630"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://95010299561530"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98771209216846"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134132208906469"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110368664835385"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://114986752830080"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131161290739036"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106519942311504"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139299396702735"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://126141375680416"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://122661360698160"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135750505225960"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123392788492194"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://104337999454796"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77317789467088"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107364098903611"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110164563494809"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125084555032360"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://97110277579383"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106731070269238"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://75078726065204"] = {Delay = 450, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130277667485774"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://115413666205678"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://129495651539604"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://101523256677778"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://128839194087258"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://76467866872093"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://78887381717473"] = {Delay = 410, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130687440100798"] = {Delay = 240, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110240097445732"] = {Delay = 170, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://118233181584094"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://78854925472750"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125985327613003"] = {Delay = -50, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://83183690291105"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139358065129445"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://128101625557631"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://137780787423425"] = {Delay = 330, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134809434589356"] = {Delay = 450, Parryable = true, MultiHit = false, Range = 35, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://105589945317363"] = {Delay = 860, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://115126886859402"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://116238600074144"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77659049501128"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://82130174183873"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134101600310736"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125001482194702"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130077418131222"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 45, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://78047711237192"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://76927396984144"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124343869615532"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://94205575550862"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124184099417502"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102683625069547"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://132904283786634"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://76639298017828"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://91532107165998"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134872805405567"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://129368863744217"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 400},
+    ["rbxassetid://110583793495632"] = {Delay = 50, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106867803794428"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://100434572913975"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134071135239015"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://90521401898889"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108307424389592"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://130560592953206"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://99915059516084"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://101613783270135"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 1, RepeatDelay = 200},
+    ["rbxassetid://72678012629652"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://97870196303383"] = {Delay = 1150, Parryable = true, MultiHit = false, Range = 35, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://99762577752557"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://126074016457313"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://88694211921073"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131297557817293"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://103255608932910"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://117434170736698"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://122675079330408"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://75362717367704"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://91066171406248"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 35, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125273732099482"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://119065419146950"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136761323860583"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://127813492491875"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134741686910618"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://103983986351361"] = {Delay = 280, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98178166706006"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135205073126877"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107287988363428"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://76272752426300"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://82068830027727"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://87492498431491"] = {Delay = 280, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://104802848622022"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://92214982692498"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://114579951667352"] = {Delay = 280, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77780360064182"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://109500654652931"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://122049582999621"] = {Delay = 280, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102372557046570"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://90597596100338"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://128106238874291"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102546483231226"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120830339429568"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://79913467941771"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://99511332362280"] = {Delay = 730, Parryable = true, MultiHit = false, Range = 45, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://118816187211996"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://122454882730691"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102535173492586"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://86370715406171"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://94300503125812"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://100558480169185"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131740708909971"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 36, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108197299905495"] = {Delay = 220, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://114558724693893"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://72464788731730"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://74422320699083"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://98582715122328"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://105442988085026"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 400, Hold = true},
+    ["rbxassetid://80201031269662"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://111909089248577"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://99963342174936"] = {Delay = 190, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 2, RepeatDelay = 200},
+    ["rbxassetid://123123044774364"] = {Delay = 120, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108458212372937"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134488256445396"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://78797347094985"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://92415288342537"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://93902031289683"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://129441247864879"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://97138435604112"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106461888875800"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://86232832931002"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://86086892466510"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://119912107937230"] = {Delay = 370, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102288540818350"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131696285162463"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://89816763320681"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://101714150006632"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://93419864791125"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120819611310918"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://88509112744612"] = {Delay = 760, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136400690344027"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 20, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://121109139209671"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 1, RepeatDelay = 200},
+    ["rbxassetid://120354402053029"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108012620140199"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131074884814797"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://87004016130630"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131725694254635"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125049330153289"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://71491979500146"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://116706902543424"] = {Delay = 430, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123728918222864"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124766932801835"] = {Delay = 0, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://87087952781021"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://90448243904946"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 45, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106535138040115"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://125415359989914"] = {Delay = 660, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://124819625937751"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, Hold = true},
+    ["rbxassetid://76399640175696"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://138228123826571"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://114126220009836"] = {Delay = 210, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://115882469124985"] = {Delay = 210, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120664443221590"] = {Delay = 210, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108646132311038"] = {Delay = 210, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://105107078372382"] = {Delay = 350, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://113848079779223"] = {Delay = 140, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://70738136253672"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://94049296655188"] = {Delay = 1300, Parryable = true, MultiHit = false, Range = 35, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://138484499722859"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://115340718314209"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://129618429137267"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://114773679703806"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://86208887161745"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125756826659861"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102242322759462"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://118696475800411"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135872625391687"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 40, RepeatCount = 0, RepeatDelay = 0, Hold = true, RepeatParryAmount = 1, RepeatParryDelay = 300},
+    ["rbxassetid://124960892283230"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://74706986010083"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://126930390220804"] = {Delay = 200, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://134473609101433"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 400},
+    ["rbxassetid://127376055093534"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://75082454798619"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://75375865302458"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123818970722547"] = {Delay = 300, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0, RepeatParryAmount = 1, RepeatParryDelay = 300},
+    ["rbxassetid://138545708561292"] = {Delay = 230, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://111230499786651"] = {Delay = 170, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135652259836955"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135900749451957"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://81633765878584"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108984564775659"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://74877124260548"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://106257688932263"] = {Delay = 650, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://112467136433884"] = {Delay = 150, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://116952479079386"] = {Delay = 630, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 6, RepeatDelay = 200, Hold = true},
+    ["rbxassetid://99157378634706"] = {Delay = 180, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136449717558100"] = {Delay = 140, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135207502419237"] = {Delay = 400, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120259747831957"] = {Delay = 1800, Parryable = true, MultiHit = false, Range = 30, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://136641282446354"] = {Delay = 1200, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://80342660237834"] = {Delay = 750, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123704785794118"] = {Delay = 500, Parryable = true, MultiHit = true, Range = 50, RepeatCount = 3, RepeatDelay = 300},
+    ["rbxassetid://73319481678482"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://107934946852201"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://135898238795346"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://120741003942852"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://73480352291165"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139086739426590"] = {Delay = 750, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://128650604729435"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://82900331340803"] = {Delay = 700, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://72662379371809"] = {Delay = 500, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://76680580465447"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://72798299659280"] = {Delay = 700, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://118924333638893"] = {Delay = 1000, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://83691818071163"] = {Delay = 700, Parryable = false, MultiHit = true, Range = 50, RepeatCount = 2, RepeatDelay = 200},
+    ["rbxassetid://82528260253305"] = {Delay = 650, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://102445468244138"] = {Delay = 650, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://139919975605872"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123543445163800"] = {Delay = 700, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://75292643761800"] = {Delay = 250, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 2, RepeatDelay = 100},
+    ["rbxassetid://83497963716622"] = {Delay = 500, Parryable = true, MultiHit = true, Range = 50, RepeatCount = 10, RepeatDelay = 100},
+    ["rbxassetid://90569570699828"] = {Delay = 750, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://86176364287625"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://104648794624547"] = {Delay = 750, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://125608535553115"] = {Delay = 700, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131653409763212"] = {Delay = 500, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://131442938695981"] = {Delay = 900, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://123727511642989"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://110619255719303"] = {Delay = 1000, Parryable = false, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://83748907427260"] = {Delay = 700, Parryable = true, MultiHit = false, Range = 50, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://94946484791547"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://77368757687748"] = {Delay = 200, Parryable = false, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://104722560930205"] = {Delay = 600, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://101138797487568"] = {Delay = 650, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://108769432958516"] = {Delay = 550, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://85467164225058"] = {Delay = 700, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0},
+    ["rbxassetid://121339998382547"] = {Delay = 730, Parryable = true, MultiHit = false, Range = 100, RepeatCount = 0, RepeatDelay = 0}
+}
+
+local function GetDistance(position1, position2)
+    return (position1 - position2).Magnitude
+end
+
+local function TeleportTo(x, y, z)
+    local remoteData = {}
+    local packetData = {{Module = "Dash"}, "\005"}
+    remoteData[1] = packetData
+    game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main"):WaitForChild("dataRemoteEvent"):FireServer(unpack(remoteData))
+    game.Players.LocalPlayer.Character.PrimaryPart.CFrame = CFrame.new(x, y, z)
+end
+
+local function ServerHop()
+    local serverListURL = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+    
+    local function FetchServers(cursor)
+        return HttpService:JSONDecode(game:HttpGet(serverListURL .. (cursor and "&cursor=" .. cursor or "")))
+    end
+    
+    local nextCursor = nil
+    while true do
+        local serverData = FetchServers(nextCursor)
+        local selectedServer = serverData.data[math.random(1, #serverData.data / 3)]
+        nextCursor = serverData.nextPageCursor
+        
+        if selectedServer and (selectedServer.playing < selectedServer.maxPlayers and selectedServer.id ~= game.JobId) then
+            break
+        end
+        
+        if not nextCursor then
+            warn("No suitable server found, retrying...")
+            ServerHop()
+            return
+        end
+    end
+    
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, v42.id, game.Players.LocalPlayer)
+end
+
+local function SmoothTeleport(targetCFrame, speed)
+    local playerCharacter = game.Players.LocalPlayer.Character
+    if playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+        local rootPart = playerCharacter.HumanoidRootPart
+        local startCFrame = rootPart.CFrame
+        local startTime = tick()
+        local duration = (startCFrame.Position - targetCFrame.Position).Magnitude / speed
+        
+        rootPart.AssemblyLinearVelocity = Vector3.new()
+        rootPart.AssemblyAngularVelocity = Vector3.new()
+        
+        local connection = nil
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            local elapsed = tick() - startTime
+            if duration > elapsed then
+                local alpha = elapsed / duration
+                rootPart.AssemblyLinearVelocity = Vector3.new()
+                rootPart.AssemblyAngularVelocity = Vector3.new()
+                rootPart.CFrame = startCFrame:Lerp(targetCFrame, alpha)
+            else
+                rootPart.AssemblyLinearVelocity = Vector3.new()
+                rootPart.AssemblyAngularVelocity = Vector3.new()
+                rootPart.CFrame = targetCFrame
+                connection:Disconnect()
+            end
+        end)
+    end
+end
+
+local BodyVelocity = nil
+local FlyRootPart = nil
+local FlyCFrame = nil
+local FlyHumanoid = nil
+local CharacterAddedConnection = nil
+
+local function CreateBodyVelocity()
+    local playerCharacter = game.Players.LocalPlayer.Character
+    if not (BodyVelocity and BodyVelocity.Parent) then
+        BodyVelocity = Instance.new("BodyVelocity")
+        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        BodyVelocity.MaxForce = Vector3.new(math.huge, 0, math.huge)
+        BodyVelocity.Parent = playerCharacter:FindFirstChild("Torso")
+    end
+end
+
+local function GetMoveDirection()
+    local direction = Vector3.new(0, 0, 0)
+    local cameraCFrame = workspace.CurrentCamera.CFrame
+    local forwardVector = Vector3.new(cameraCFrame.LookVector.X, 0, cameraCFrame.LookVector.Z).Unit
+    local rightVector = Vector3.new(cameraCFrame.RightVector.X, 0, cameraCFrame.RightVector.Z).Unit
+    
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        direction = direction + forwardVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        direction = direction - forwardVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        direction = direction - rightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        direction = direction + rightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        direction = direction + Vector3.new(0, 1, 0)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        direction = direction - Vector3.new(0, 1, 0)
+    end
+    
+    return direction.Magnitude > 0 and direction.Unit or Vector3.new(0, 0, 0)
+end
+
+local function UpdateFly(deltaTime)
+    if Settings.flying and (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+        FlyRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        FlyHumanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+        
+        if FlyHumanoid then
+            FlyHumanoid.PlatformStand = true
+        end
+        
+        if not FlyCFrame then
+            FlyCFrame = FlyRootPart.CFrame
+        end
+        
+        local moveDirection = GetMoveDirection()
+        if moveDirection.Magnitude > 0 then
+            FlyCFrame = FlyCFrame + (moveDirection * Settings.flyingSpeed) * deltaTime
+        end
+        
+        local lookVector = workspace.CurrentCamera.CFrame.LookVector
+        local flatLookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+        
+        if flatLookVector.Magnitude > 0 then
+            FlyCFrame = CFrame.new(FlyCFrame.Position, FlyCFrame.Position + flatLookVector)
+        end
+        
+        FlyRootPart.AssemblyLinearVelocity = Vector3.new()
+        FlyRootPart.CFrame = FlyCFrame
+    elseif FlyRootPart and FlyHumanoid then
+        FlyHumanoid.PlatformStand = false
+    end
+end
+
+local function ToggleFly(enabled)
+    Settings.flying = enabled
+    if Settings.flying then
+        RunService:BindToRenderStep("Fly", Enum.RenderPriority.Input.Value, UpdateFly)
+    else
+        RunService:UnbindFromRenderStep("Fly")
+        FlyCFrame = nil
+    end
+end
+
+local function UpdateSpeedhack(deltaTime)
+    if not Settings.flying then
+        local playerCharacter = game.Players.LocalPlayer.Character
+        if Settings.speedhack and (playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart")) then
+            CreateBodyVelocity()
+            local humanoid = playerCharacter:FindFirstChild("Humanoid")
+            if humanoid then
+                local moveDirection = humanoid.MoveDirection
+                if moveDirection and moveDirection.Magnitude > 0 then
+                    BodyVelocity.Velocity = moveDirection * ((Settings.speedhackWalkSpeed + humanoid.WalkSpeed) / 2)
+                else
+                    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+        elseif BodyVelocity then
+            BodyVelocity:Destroy()
+            BodyVelocity = nil
+        end
+    end
+end
+
+local function InfiniteJumpLoop(enabled)
+    if not enabled then
+        return
+    end
+    
+    while true do
+        local rootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            rootPart.Velocity = Vector3.new(rootPart.Velocity.X, Settings.infjumpheight, rootPart.Velocity.Z)
+        end
+        task.wait(0.1)
+        if not (Settings.infJump and enabled) then
+            return
+        end
+    end
+end
+
+local function ToggleSpeedhack(enabled)
+    Settings.speedhack = enabled
+    if Settings.speedhack then
+        RunService:BindToRenderStep("Speedhack", Enum.RenderPriority.Input.Value + (Settings.flying and 1 or 0), UpdateSpeedhack)
+    else
+        RunService:UnbindFromRenderStep("Speedhack")
+        if BodyVelocity then
+            BodyVelocity:Destroy()
+            BodyVelocity = nil
+        end
+    end
+end
+
+LocalPlayerGroupbox:AddToggle("Fly", {
+    Text = "Fly",
+    Default = false,
+    Tooltip = "Fly",
+    Callback = function(enabled)
+        ToggleFly(enabled)
+    end
+}):AddKeyPicker("FlyKeybind", {
+    Default = "Y",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Fly Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddSlider("FlySpeed", {
+    Text = "Fly Speed",
+    Default = 100,
+    Min = 0,
+    Max = 1000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.flyingSpeed = value
+    end
+})
+
+LocalPlayerGroupbox:AddToggle("Speedhack", {
+    Text = "Speedhack",
+    Default = false,
+    Tooltip = "Speedhack",
+    Callback = function(enabled)
+        ToggleSpeedhack(enabled)
+        local player = game.Players.LocalPlayer
+        if enabled then
+            if not CharacterAddedConnection then
+                CharacterAddedConnection = player.CharacterAdded:Connect(function(character)
+                    if BodyVelocity then
+                        BodyVelocity:Destroy()
+                        BodyVelocity = nil
+                    end
+                    if Settings.speedhack then
+                        ToggleSpeedhack(false)
+                        ToggleSpeedhack(true)
+                    end
+                end)
+            end
+        elseif CharacterAddedConnection then
+            CharacterAddedConnection:Disconnect()
+            CharacterAddedConnection = nil
+        end
+    end
+}):AddKeyPicker("SpeedhackKeybind", {
+    Default = "N",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Speedhack Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddSlider("Speedhack Speed", {
+    Text = "Speedhack Speed",
+    Default = 100,
+    Min = 0,
+    Max = 1000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.speedhackWalkSpeed = value
+    end
+})
+
+LocalPlayerGroupbox:AddToggle("Infinite Jump", {
+    Text = "Infinite Jump",
+    Default = false,
+    Tooltip = "Infinite Jump",
+    Callback = function(enabled)
+        Settings.infJump = enabled
+        if Settings.infJump then
+            InfiniteJumpLoop(true)
+        end
+    end
+}):AddKeyPicker("InfiniteJumpKeybind", {
+    Default = "H",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Infinite Jump Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddSlider("InfiniteJump Height", {
+    Text = "InfiniteJump Height",
+    Default = 50,
+    Min = 0,
+    Max = 1000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.infjumpheight = value
+    end
+})
+
+local NoclipConnection = nil
+
+LocalPlayerGroupbox:AddToggle("Noclip", {
+    Text = "Noclip",
+    Default = false,
+    Tooltip = "noclip",
+    Callback = function(enabled)
+        Settings.noclip = enabled
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+        
+        if enabled then
+            if LocalPlayer.Character then
+                local head = LocalPlayer.Character:FindFirstChild("Head")
+                local torso = LocalPlayer.Character:FindFirstChild("Torso")
+                if head then
+                    head.CanCollide = false
+                end
+                if torso then
+                    torso.CanCollide = false
+                end
+            end
+            
+            NoclipConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if Settings.noclip and LocalPlayer.Character then
+                    local head = LocalPlayer.Character:FindFirstChild("Head")
+                    local torso = LocalPlayer.Character:FindFirstChild("Torso")
+                    if head then
+                        head.CanCollide = false
+                    end
+                    if torso then
+                        torso.CanCollide = false
+                    end
+                end
+            end)
+        elseif LocalPlayer.Character then
+            local head = LocalPlayer.Character:FindFirstChild("Head")
+            local torso = LocalPlayer.Character:FindFirstChild("Torso")
+            if head then
+                head.CanCollide = true
+            end
+            if torso then
+                torso.CanCollide = true
+            end
+        end
+    end
+}):AddKeyPicker("NoclipKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Noclip Keybind",
+    NoUI = false
+})
+
+LocalPlayerGroupbox:AddToggle("Bypass Anti-Speed", {
+    Text = "Bypass Anti-Speed",
+    Default = false,
+    Tooltip = "Bypass Anti-Speed",
+    Callback = function(enabled)
+        Settings.bypassSpeed = enabled
+        if Settings.bypassSpeed then
+            while Settings.bypassSpeed and task.wait() do
+                local remoteData = {{{Module = "Dash"}, "\005"}}
+                game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main"):WaitForChild("dataRemoteEvent"):FireServer(unpack(remoteData))
+            end
+        end
+    end
+})
+
+LocalPlayerGroupbox:AddToggle("AutoM1", {
+    Text = "Auto M1",
+    Default = false,
+    Tooltip = "Auto M1",
+    Callback = function(enabled)
+        Settings.autoswing = enabled
+        if Settings.autoswing then
+            repeat
+                local remoteData = {{{Module = "M1"}, "\005"}}
+                game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main", 9000000000):WaitForChild("dataRemoteEvent", 9000000000):FireServer(unpack(remoteData))
+                task.wait(0.1)
+            until not Settings.autoswing
+        end
+    end
+}):AddKeyPicker("AutoM1Keybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto M1 Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddToggle("AutoCrit", {
+    Text = "Auto Critical",
+    Default = false,
+    Tooltip = "Auto Critical",
+    Callback = function(enabled)
+        Settings.autocrit = enabled
+        if Settings.autocrit then
+            repeat
+                local remoteData = {{{Module = "M2"}, "\005"}}
+                game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main", 9000000000):WaitForChild("dataRemoteEvent", 9000000000):FireServer(unpack(remoteData))
+                task.wait()
+            until not Settings.autocrit
+        end
+    end
+}):AddKeyPicker("autocritKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Crit Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddToggle("AutoUppercut", {
+    Text = "Auto Uppercut",
+    Default = false,
+    Tooltip = "Auto Uppercut",
+    Callback = function(enabled)
+        Settings.autouppercut = enabled
+        if Settings.autouppercut then
+            repeat
+                local remoteData = {{{Module = "Uppercut"}, "\005"}}
+                game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main", 9000000000):WaitForChild("dataRemoteEvent", 9000000000):FireServer(unpack(remoteData))
+                task.wait(0.1)
+            until not Settings.autouppercut
+        end
+    end
+}):AddKeyPicker("AutoUppercutKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Uppercut Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+local PerfectRollConnection = nil
+
+LocalPlayerGroupbox:AddToggle("autoPerfectRoll", {
+    Text = "Auto Perfect Roll",
+    Default = false,
+    Tooltip = "Auto Uppercut",
+    Callback = function(enabled)
+        Settings.autoperfectroll = enabled
+        if PerfectRollConnection then
+            PerfectRollConnection:Disconnect()
+            PerfectRollConnection = nil
+        end
+        
+        if Settings.autoperfectroll then
+            PerfectRollConnection = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Q then
+                    task.wait(Options.AutoPerfectRollDelay.Value)
+                    mouse2click()
+                end
+            end)
+        end
+    end
+}):AddKeyPicker("AutoPerfectRollKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Perfect Roll Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+LocalPlayerGroupbox:AddSlider("AutoPerfectRollDelay", {
+    Text = "Auto Perfect Roll Delay",
+    Default = 0,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Compact = true,
+    Callback = function(value) end
+})
+
+LocalPlayerGroupbox:AddToggle("Auto Fragment", {
+    Text = "Auto Fragment",
+    Default = false,
+    Tooltip = "Auto Fragment",
+    Callback = function(enabled)
+        Settings.autofragment = enabled
+        if Settings.autofragment then
+            task.spawn(function()
+                for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                    if string.find(item.Name, "Fragment") then
+                        item.Parent = LocalPlayer.Character
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                        task.wait()
+                        item.Parent = LocalPlayer.Backpack
+                    end
+                end
+                task.wait()
+                if not Settings.autofragment then
+                    return
+                end
+            end)
+        end
+    end
+}):AddKeyPicker("AutoFragmentKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Fragment Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+game:GetService("Players").LocalPlayer.PlayerGui.ChildAdded:Connect(function(gui)
+    if gui.Name == "BagGui" and Settings.AutoLoot then
+        local itemsFrame = gui.Frame.ItemsFrame
+        for _, button in pairs(itemsFrame:GetChildren()) do
+            if button:IsA("TextButton") then
+                GuiService.SelectedObject = button
+                task.wait(0.1)
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                task.wait(0)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                button.Active = false
+                button.AutoButtonColor = false
+                button.BackgroundColor3 = Color3.fromRGB(128, 128, 128)
+                GuiService.SelectedObject = nil
+            end
+        end
+    end
+end)
+
+LocalPlayerGroupbox:AddToggle("AutoLoot", {
+    Text = "Auto Loot",
+    Default = false,
+    Tooltip = "Auto Loot items ",
+    Callback = function(enabled)
+        Settings.AutoLoot = enabled
+        if enabled then
+            for _, button in pairs(game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("BagGui").Frame.ItemsFrame:GetChildren()) do
+                if button:IsA("TextButton") then
+                    GuiService.SelectedObject = button
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                    button.Active = false
+                    button.AutoButtonColor = false
+                    button.BackgroundColor3 = Color3.fromRGB(128, 128, 128)
+                    GuiService.SelectedObject = nil
+                end
+            end
+        end
+    end
+}):AddKeyPicker("AutoLootKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Loot Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+local NoAnimsThread = nil
+local NoAnimsCharacterConnection = nil
+local StoredAnimTracks = {}
+local OriginalAnimTracks = {}
+
+LocalPlayerGroupbox:AddToggle("No Anims", {
+    Text = "No Anims",
+    Default = false,
+    Tooltip = "Freezes character animations",
+    Callback = function(enabled)
+        Settings.noanims = enabled
+        
+        if NoAnimsThread then
+            task.cancel(NoAnimsThread)
+            NoAnimsThread = nil
+        end
+        
+        if NoAnimsCharacterConnection then
+            NoAnimsCharacterConnection:Disconnect()
+            NoAnimsCharacterConnection = nil
+        end
+        
+        if Settings.noanims then
+            local function SetupNoAnims(character)
+                local humanoid = character:FindFirstChildOfClass("Humanoid") or character:WaitForChild("Humanoid", 2)
+                if humanoid then
+                    local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator", 2)
+                    if animator then
+                        local freezeAnimation = Instance.new("Animation")
+                        freezeAnimation.AnimationId = "http://www.roblox.com/asset/?id=109212722752"
+                        
+                        NoAnimsThread = task.spawn(function()
+                            while Settings.noanims and (humanoid and humanoid.Parent) do
+                                local currentTrack = nil
+                                
+                                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+                                    if track.Animation.AnimationId == freezeAnimation.AnimationId then
+                                        currentTrack = track
+                                    else
+                                        if not table.find(OriginalAnimTracks, track) then
+                                            table.insert(OriginalAnimTracks, track)
+                                        end
+                                        pcall(function()
+                                            track:Stop()
+                                            task.defer(track.Destroy, track)
+                                        end)
+                                    end
+                                end
+                                
+                                if not currentTrack then
+                                    local loadedTrack = animator:LoadAnimation(freezeAnimation)
+                                    table.insert(StoredAnimTracks, loadedTrack)
+                                    loadedTrack.Priority = Enum.AnimationPriority.Core
+                                    loadedTrack:AdjustSpeed(0)
+                                    loadedTrack:Play()
+                                end
+                                
+                                task.wait(0.1)
+                            end
+                        end)
+                    end
+                end
+            end
+            
+            if LocalPlayer.Character then
+                SetupNoAnims(LocalPlayer.Character)
+            end
+            
+            NoAnimsCharacterConnection = LocalPlayer.CharacterAdded:Connect(SetupNoAnims)
+        else
+            for _, track in pairs(StoredAnimTracks) do
+                pcall(function()
+                    track:Stop()
+                    track:Destroy()
+                end)
+            end
+            StoredAnimTracks = {}
+            
+            for _, track in pairs(OriginalAnimTracks) do
+                pcall(function()
+                    track:Play()
+                end)
+            end
+            OriginalAnimTracks = {}
+        end
+    end
+}):AddKeyPicker("NoAnimsKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "No Anims Keybind",
+    NoUI = false
+})
+
+LocalPlayerGroupbox:AddToggle("Auto Grip", {
+    Text = "Auto Grip",
+    Default = false,
+    Tooltip = "Auto Grip",
+    Callback = function(enabled)
+        Settings.autogrip = enabled
+        if Settings.autogrip then
+            task.spawn(function()
+                while Settings.autogrip and task.wait() do
+                    local closestDistance = math.huge
+                    local closestTarget = nil
+                    
+                    for _, entity in ipairs(workspace.Entities:GetChildren()) do
+                        if entity ~= Character and (entity:FindFirstChild("Humanoid") and entity:FindFirstChild("HumanoidRootPart")) then
+                            local humanoid = entity.Humanoid
+                            local distance = (entity.HumanoidRootPart.Position - Character.PrimaryPart.Position).Magnitude
+                            
+                            if distance <= 5 and humanoid.Health <= 2.5 then
+                                if distance < closestDistance then
+                                    closestTarget = entity
+                                    closestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                    
+                    if closestTarget then
+                        local remoteData = {{{Module = "Grip"}, "\005"}}
+                        game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main"):WaitForChild("dataRemoteEvent"):FireServer(unpack(remoteData))
+                        
+                        repeat
+                            task.wait(0)
+                            local targetRoot = closestTarget:FindFirstChild("HumanoidRootPart")
+                        until not targetRoot or (targetRoot.Position - Character.PrimaryPart.Position).Magnitude > 6 or not closestTarget.Parent or closestTarget:FindFirstChild("Humanoid").Health <= 0
+                    end
+                end
+            end)
+        end
+    end
+})
+
+LocalPlayerGroupbox:AddToggle("Auto Equip", {
+    Text = "Auto Equip",
+    Default = false,
+    Tooltip = "Auto Equip",
+    Callback = function(enabled)
+        Settings.autoequip = enabled
+        if Settings.autoequip then
+            while Settings.autoequip and task.wait(0.1) do
+                if not Character:GetAttribute("CombatMode") then
+                    local remoteData = {{{Module = "Toggle", IsHolding = true}, "\005"}}
+                    game:GetService("ReplicatedStorage"):WaitForChild("Bridgenet2Main", 9000000000):WaitForChild("dataRemoteEvent", 9000000000):FireServer(unpack(remoteData))
+                end
+            end
+        end
+    end
+})
+
+LocalPlayerGroupbox:AddButton({
+    Text = "Kill Yourself",
+    Func = function()
+        game.Players.LocalPlayer.Character:FindFirstChild("Humanoid"):TakeDamage(math.huge)
+    end,
+    Tooltip = "Commit Suicide"
+})
+
+local ParryConnections = {}
+
+local function GetPlayerPing()
+    local success, ping = pcall(function()
+        return math.floor(Players.LocalPlayer:GetNetworkPing() * 1000)
+    end)
+    return success and (ping and ping) or 0
+end
+
+local function GetFrameTime()
+    local success, frameTime = pcall(function()
+        return math.floor((1 / RunService.RenderStepped:Wait()) * 1000)
+    end)
+    return success and (frameTime and frameTime) or 0
+end
+
+local function AdjustDelayForPing(delay, adjustEnabled)
+    if not adjustEnabled then
+        return delay
+    end
+    local ping = GetPlayerPing()
+    local frameTime = GetFrameTime()
+    local adjustedDelay = delay - (ping / 2 + frameTime / 2)
+    return math.max(50, adjustedDelay)
+end
+
+local function IsInRange(character1, character2, range)
+    if range then
+        local root1 = character1:FindFirstChild("HumanoidRootPart")
+        local root2 = character2:FindFirstChild("HumanoidRootPart")
+        if root1 and root2 then
+            return (root1.Position - root2.Position).Magnitude <= range
+        else
+            return false
+        end
+    else
+        return true
+    end
+end
+
+local function ExecuteParry(animData)
+    local function PerformParry()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+        if animData.Hold then
+            task.wait(0.1)
+        end
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+    end
+    
+    if animData.RepeatCount and animData.RepeatCount > 0 then
+        for i = 1, animData.RepeatCount do
+            pcall(PerformParry)
+            if i < animData.RepeatCount then
+                if animData.RepeatDelay then
+                    task.wait(animData.RepeatDelay / 1000)
+                end
+            end
+        end
+    else
+        pcall(PerformParry)
+    end
+    
+    if animData.RepeatParryAmount and animData.RepeatParryAmount > 0 then
+        task.wait(animData.RepeatParryDelay / 1000)
+        for i = 1, animData.RepeatParryAmount do
+            pcall(PerformParry)
+            if i < animData.RepeatParryAmount then
+                task.wait(animData.RepeatDelay or 0.1)
+            end
+        end
+    end
+end
+
+local function SetupAutoParryForEntity(entity)
+    if Settings.Autoparry then
+        if entity ~= game.Players.LocalPlayer.Character then
+            local humanoid = entity:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                local connection = humanoid.AnimationPlayed:Connect(function(animTrack)
+                    if Settings.Autoparry then
+                        local animation = animTrack.Animation
+                        if animation then
+                            local animData = AnimationDatabase[animation.AnimationId]
+                            if animData then
+                                local playerCharacter = Players.LocalPlayer.Character
+                                if playerCharacter and not IsInRange(playerCharacter, entity, animData.Range) then
+                                    return
+                                else
+                                    local adjustedDelay = AdjustDelayForPing(animData.Delay or 0, Settings.AutoParryAdjustToPing)
+                                    if adjustedDelay > 0 then
+                                        task.wait(adjustedDelay / 1000)
+                                    end
+                                    ExecuteParry(animData)
+                                    
+                                    if not animData.Parryable then
+                                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+                                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+                                        if Settings.autorollcancel then
+                                            task.wait(0.1)
+                                            mouse2click()
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+                table.insert(ParryConnections, connection)
+            end
+        end
+    end
+end
+
+local function InitializeAutoParry()
+    for _, connection in ipairs(ParryConnections) do
+        pcall(connection.Disconnect, connection)
+    end
+    ParryConnections = {}
+    
+    if Settings.Autoparry then
+        local entitiesFolder = workspace:FindFirstChild("Entities")
+        if entitiesFolder then
+            for _, entity in pairs(entitiesFolder:GetChildren()) do
+                task.spawn(SetupAutoParryForEntity, entity)
+            end
+            
+            entitiesFolder.ChildAdded:Connect(function(entity)
+                task.spawn(SetupAutoParryForEntity, entity)
+            end)
+        end
+    end
+end
+
+AutoParryGroupbox:AddToggle("Auto Parry", {
+    Text = "Auto Parry",
+    Default = false,
+    Tooltip = "Automatically parry enemy attacks",
+    Callback = function(enabled)
+        Settings.Autoparry = enabled
+        if Settings.Autoparry then
+            InitializeAutoParry()
+        else
+            for _, connection in ipairs(ParryConnections) do
+                pcall(function()
+                    connection:Disconnect()
+                end)
+            end
+            ParryConnections = {}
+        end
+    end
+}):AddKeyPicker("AutoParryKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Auto Parry Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+AutoParryGroupbox:AddToggle("AdjustToPing", {
+    Text = "Adjust to Ping",
+    Default = false,
+    Tooltip = "Adjust parry timing based on your ping",
+    Callback = function(enabled)
+        Settings.AutoParryAdjustToPing = enabled
+    end
+})
+
+AutoParryGroupbox:AddToggle("Auto Roll Cancel", {
+    Text = "Auto Roll Cancel",
+    Default = false,
+    Tooltip = "Auto Roll Cancel",
+    Callback = function(enabled)
+        Settings.autorollcancel = enabled
+    end
+})
+
+local function GetAimbotTargets()
+    local targets = {}
+    for _, entity in ipairs(workspace.Entities:GetChildren()) do
+        if entity ~= Character then
+            local isPlayer = Players:FindFirstChild(entity.Name) ~= nil
+            if Settings.aimbotPlayers and isPlayer or Settings.aimbotMobs and not isPlayer then
+                table.insert(targets, entity)
+            end
+        end
+    end
+    return targets
+end
+
+local function IsTargetVisible(targetPart)
+    local ray = Ray.new(Camera.CFrame.Position, (targetPart.Position - Camera.CFrame.Position).Unit * 1000)
+    local hitPart = workspace:FindPartOnRayWithIgnoreList(ray, {Character, Camera})
+    if hitPart then
+        hitPart = hitPart:IsDescendantOf(targetPart.Parent)
+    end
+    return hitPart
+end
+
+local function GetClosestTarget()
+    local closestDistance = math.huge
+    local closestTarget = nil
+    
+    for _, entity in ipairs(GetAimbotTargets()) do
+        local targetPart = entity:FindFirstChild("HumanoidRootPart") or entity:FindFirstChild("Head")
+        if targetPart then
+            local screenPos = Camera:WorldToViewportPoint(targetPart.Position)
+            if math.deg(math.acos(Camera.CFrame.LookVector:Dot((targetPart.Position - Camera.CFrame.Position).Unit))) <= Settings.aimbotFOV / 2 and (not Settings.aimbotVisible or IsTargetVisible(targetPart)) then
+                local mousePos = UserInputService:GetMouseLocation()
+                local distance = (Vector2.new(mousePos.X, mousePos.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if distance < closestDistance then
+                    closestTarget = targetPart
+                    closestDistance = distance
+                end
+            end
+        end
+    end
+    
+    return closestTarget
+end
+
+local AimbotConnection = nil
+
+CameraGroupbox:AddToggle("Aimbot", {
+    Text = "Aimbot",
+    Default = false,
+    Tooltip = "Aimbot",
+    Callback = function(enabled)
+        Settings.aimbotEnabled = enabled
+        if not Settings.aimbotEnabled then
+            Settings.aimbotActive = false
+        end
+        
+        if AimbotConnection then
+            AimbotConnection:Disconnect()
+            AimbotConnection = nil
+        end
+        
+        if Settings.aimbotEnabled then
+            AimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                local target = Settings.aimbotActive and GetClosestTarget()
+                if target then
+                    local targetPosition = target.Position
+                    if Settings.aimbotXOffset ~= 0 or Settings.aimbotYOffset ~= 0 then
+                        local screenPos = Camera:WorldToViewportPoint(targetPosition)
+                        local offsetPos = Vector2.new(screenPos.X + Settings.aimbotXOffset, screenPos.Y + Settings.aimbotYOffset)
+                        local ray = Camera:ViewportPointToRay(offsetPos.X, offsetPos.Y)
+                        targetPosition = ray.Origin + ray.Direction * 100
+                    end
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
+                end
+            end)
+        end
+    end
+})
+
+CameraGroupbox:AddLabel("Aimbot Keybind"):AddKeyPicker("AimbotKeybind", {
+    Default = "MB2",
+    SyncToggleState = false,
+    Mode = "Hold",
+    Text = "Aimbot Keybind",
+    NoUI = true,
+    Callback = function(enabled)
+        Settings.aimbotActive = enabled
+    end
+})
+
+CameraGroupbox:AddToggle("Aimbot Players", {
+    Text = "Target Players",
+    Default = false,
+    Tooltip = "Target other players",
+    Callback = function(enabled)
+        Settings.aimbotPlayers = enabled
+    end
+})
+
+CameraGroupbox:AddToggle("Aimbot Mobs", {
+    Text = "Target Mobs",
+    Default = false,
+    Tooltip = "Target Mobs",
+    Callback = function(enabled)
+        Settings.aimbotMobs = enabled
+    end
+})
+
+CameraGroupbox:AddToggle("Visible Only", {
+    Text = "Visible Only",
+    Default = false,
+    Tooltip = "Only target visible enemies",
+    Callback = function(enabled)
+        Settings.aimbotVisible = enabled
+    end
+})
+
+CameraGroupbox:AddSlider("Aimbot X Offset", {
+    Text = "Aimbot X Offset",
+    Default = 0,
+    Min = -300,
+    Max = 300,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.aimbotXOffset = value
+    end
+})
+
+CameraGroupbox:AddSlider("Aimbot Y Offset", {
+    Text = "Aimbot Y Offset",
+    Default = 0,
+    Min = -300,
+    Max = 300,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.aimbotYOffset = value
+    end
+})
+
+local FOVCircle = nil
+
+local function GetFOVRadius()
+    return math.tan(math.rad(1)) * (Camera.ViewportSize.Y / 2)
+end
+
+CameraGroupbox:AddToggle("Show FOV", {
+    Text = "Show FOV",
+    Default = false,
+    Tooltip = "Show FOV",
+    Callback = function(enabled)
+        Settings.showFov = enabled
+        if enabled then
+            if not FOVCircle then
+                FOVCircle = Drawing.new("Circle")
+                FOVCircle.Thickness = 1
+                FOVCircle.NumSides = 100
+                FOVCircle.Filled = false
+                FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+                FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            end
+            FOVCircle.Visible = true
+        elseif FOVCircle then
+            FOVCircle.Visible = false
+        end
+    end
+})
+
+CameraGroupbox:AddSlider("Aimbot FOV", {
+    Text = "Aimbot FOV",
+    Default = 45,
+    Min = 1,
+    Max = 120,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.aimbotFOV = value
+        if Settings.showFov and FOVCircle then
+            FOVCircle.Radius = value * GetFOVRadius()
+        end
+    end
+})
+
+local function UpdateFOVCircle()
+    if FOVCircle then
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        FOVCircle.Radius = Settings.aimbotFOV * GetFOVRadius()
+    end
+end
+
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateFOVCircle)
+Camera:GetPropertyChangedSignal("FieldOfView"):Connect(UpdateFOVCircle)
+
+CameraGroupbox:AddToggle("FOV Changer", {
+    Text = "FOV Changer",
+    Default = false,
+    Tooltip = "Fov Changer",
+    Callback = function(enabled)
+        Settings.fovchanger = enabled
+        if Settings.fovchanger then
+            Camera.FieldOfView = Settings.CameraFOV
+        else
+            Camera.FieldOfView = 70
+        end
+    end
+})
+
+CameraGroupbox:AddSlider("FOV", {
+    Text = "Field of View",
+    Default = 70,
+    Min = 0,
+    Max = 120,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        if Settings.fovchanger then
+            Camera.FieldOfView = value
+        end
+    end
+})
+
+local ESPSettings = {
+    PlayerESP = false,
+    mobESP = false,
+    npcESP = false,
+    ESPObjects = {},
+    NPCESPOBjects = {},
+    PlayerEspObjects = {},
+    ActiveMobs = {},
+    ActiveNPCs = {},
+    ActivePlayers = {},
+    fontSize = 14,
+    espDistance = 1000,
+    MobESPColor = Color3.new(1, 1, 1),
+    NpcESPColor = Color3.new(0, 1, 0),
+    PlayerESPColor = Color3.new(1, 1, 1)
+}
+
+local function CreateESPText(color)
+    local text = Drawing.new("Text")
+    text.Visible = false
+    text.Center = true
+    text.Outline = true
+    text.Color = color
+    text.Size = ESPSettings.fontSize
+    return text
+end
+
+local function CleanupESP(entity, objectsTable, activeTable)
+    if activeTable[entity] then
+        local data = activeTable[entity]
+        if data.espText then
+            data.espText:Remove()
+        end
+        activeTable[entity] = nil
+    end
+end
+
+local function CleanupMobESP(entity)
+    if ESPSettings.ActiveMobs[entity] then
+        local data = ESPSettings.ActiveMobs[entity]
+        if data.espText then
+            data.espText:Remove()
+        end
+        if data.highlight then
+            data.highlight:Destroy()
+        end
+        ESPSettings.ActiveMobs[entity] = nil
+    end
+end
+
+local function SetupNPCESP(npc)
+    if npc and (npc:IsA("Model") and not ESPSettings.ActiveNPCs[npc]) then
+        local rootPart = npc:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local espText = CreateESPText(ESPSettings.NpcESPColor)
+            espText.Visible = false
+            table.insert(ESPSettings.NPCESPOBjects, espText)
+            
+            local espData = {espText = espText}
+            ESPSettings.ActiveNPCs[npc] = espData
+            
+            local renderStepName = "UpdateNpcESP_" .. npc:GetDebugId()
+            
+            local function UpdateNPCESP()
+                if npc and (npc.Parent and ESPSettings.npcESP) then
+                    local playerCharacter = Players.LocalPlayer.Character
+                    if playerCharacter then
+                        local playerRoot = playerCharacter:FindFirstChild("HumanoidRootPart")
+                        if playerRoot then
+                            local distance = (rootPart.Position - playerRoot.Position).Magnitude
+                            local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+                            
+                            if distance > ESPSettings.espDistance or not onScreen then
+                                espText.Visible = false
+                            else
+                                espText.Text = string.format("[%s][Dist: %.1f]", npc.Name, distance)
+                                espText.Size = ESPSettings.fontSize
+                                espText.Position = Vector2.new(screenPos.X, screenPos.Y - 50)
+                                espText.Visible = true
+                            end
+                        end
+                    end
+                else
+                    RunService:UnbindFromRenderStep(renderStepName)
+                    CleanupESP(npc, ESPSettings.NPCESPOBjects, ESPSettings.ActiveNPCs)
+                end
+            end
+            
+            RunService:BindToRenderStep(renderStepName, Enum.RenderPriority.Camera.Value + 1, UpdateNPCESP)
+            
+            npc.AncestryChanged:Connect(function(_, parent)
+                if not parent then
+                    RunService:UnbindFromRenderStep(renderStepName)
+                    CleanupESP(npc, ESPSettings.NPCESPOBjects, ESPSettings.ActiveNPCs)
+                end
+            end)
+        end
+    end
+end
+
+local function SetupMobESP(mob)
+    if mob and (mob:IsA("Model") and not ESPSettings.ActiveMobs[mob]) then
+        local humanoid = mob:FindFirstChildOfClass("Humanoid")
+        local rootPart = mob:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart then
+            local espText = CreateESPText(ESPSettings.MobESPColor)
+            espText.Visible = false
+            table.insert(ESPSettings.ESPObjects, espText)
+            
+            local highlight = Instance.new("Highlight")
+            highlight.Parent = mob
+            highlight.FillColor = ESPSettings.MobESPColor
+            highlight.Enabled = false
+            
+            local espData = {espText = espText, highlight = highlight}
+            ESPSettings.ActiveMobs[mob] = espData
+            
+            local renderStepName = "UpdateESP_" .. mob:GetDebugId()
+            
+            local function UpdateMobESP()
+                if mob and (mob.Parent and (humanoid and (rootPart and ESPSettings.mobESP))) then
+                    local playerCharacter = Players.LocalPlayer.Character
+                    if playerCharacter then
+                        local playerRoot = playerCharacter:FindFirstChild("HumanoidRootPart")
+                        if playerRoot then
+                            local distance = (rootPart.Position - playerRoot.Position).Magnitude
+                            local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+                            
+                            if distance > ESPSettings.espDistance or not onScreen then
+                                espText.Visible = false
+                                highlight.Enabled = false
+                            else
+                                local healthPercent = humanoid.MaxHealth > 0 and (humanoid.Health / humanoid.MaxHealth) * 100 or 0
+                                local clampedHealth = math.clamp(math.floor(healthPercent), 0, 100)
+                                local displayName = mob.Name:match("^(.-)_") or mob.Name
+                                
+                                espText.Text = string.format("[%s] [Dist: %.1f] [HP: %d%%]", displayName, distance, clampedHealth)
+                                espText.Position = Vector2.new(screenPos.X, screenPos.Y - 50)
+                                espText.Size = ESPSettings.fontSize
+                                espText.Visible = true
+                                highlight.Enabled = true
+                            end
+                        end
+                    end
+                else
+                    RunService:UnbindFromRenderStep(renderStepName)
+                    CleanupMobESP(mob)
+                end
+            end
+            
+            RunService:BindToRenderStep(renderStepName, Enum.RenderPriority.Camera.Value + 1, UpdateMobESP)
+            
+            mob.AncestryChanged:Connect(function(_, parent)
+                if not parent then
+                    RunService:UnbindFromRenderStep(renderStepName)
+                    CleanupMobESP(mob)
+                end
+            end)
+        end
+    end
+end
+
+local function InitializeMobESP()
+    for _, entity in ipairs(workspace.Entities:GetChildren()) do
+        if entity:IsA("Model") and not (Players:FindFirstChild(entity.Name) or ESPSettings.ActiveMobs[entity]) then
+            SetupMobESP(entity)
+        end
+    end
+end
+
+local function InitializeNPCESP()
+    for _, npc in ipairs(workspace.Dialogues:GetChildren()) do
+        if npc:IsA("Model") and not ESPSettings.ActiveNPCs[npc] then
+            SetupNPCESP(npc)
+        end
+    end
+end
+
+workspace.Entities.ChildAdded:Connect(function(entity)
+    if entity:IsA("Model") and not Players:FindFirstChild(entity.Name) then
+        SetupMobESP(entity)
+    end
+end)
+
+ESPGroupbox:AddToggle("PlayerESP", {
+    Text = "Player ESP",
+    Default = false,
+    Tooltip = "ESP players with name, distance, and health",
+    Callback = function(enabled)
+        ESPSettings.PlayerESP = enabled
+        if ESPSettings.PlayerESP then
+            PlayerESPModule:load()
+        else
+            PlayerESPModule:unload()
+        end
+    end
+}):AddColorPicker("PlayerColorPicker", {
+    Default = ESPSettings.MobESPColor,
+    Title = "Player ESP Color",
+    Transparency = 0,
+    Callback = function(color) end
+})
+
+ESPGroupbox:AddToggle("MobESP", {
+    Text = "MobESP",
+    Default = false,
+    Tooltip = "ESP mobs with name, distance, and health",
+    Callback = function(enabled)
+        ESPSettings.mobESP = enabled
+        if ESPSettings.mobESP then
+            InitializeMobESP()
+        else
+            for entity in pairs(ESPSettings.ActiveMobs) do
+                CleanupMobESP(entity)
+            end
+            ESPSettings.ESPObjects = {}
+        end
+    end
+}):AddColorPicker("MobColorPicker", {
+    Default = ESPSettings.MobESPColor,
+    Title = "Mob ESP Color",
+    Transparency = 0,
+    Callback = function(color)
+        ESPSettings.MobESPColor = color
+        for _, data in pairs(ESPSettings.ActiveMobs) do
+            if data.highlight then
+                data.highlight.FillColor = color
+            end
+        end
+    end
+})
+
+ESPGroupbox:AddToggle("NPCEsp", {
+    Text = "NpcESP",
+    Default = false,
+    Tooltip = "NPC ESP",
+    Callback = function(enabled)
+        ESPSettings.npcESP = enabled
+        if ESPSettings.npcESP then
+            InitializeNPCESP()
+        else
+            for entity in pairs(ESPSettings.ActiveNPCs) do
+                CleanupESP(entity, ESPSettings.NPCESPOBjects, ESPSettings.ActiveNPCs)
+            end
+            ESPSettings.NPCESPOBjects = {}
+        end
+    end
+}):AddColorPicker("NPCEspPicker", {
+    Default = ESPSettings.NpcESPColor,
+    Title = "NPC ESP COLOR",
+    Transparency = 0,
+    Callback = function(color)
+        ESPSettings.NpcESPColor = color
+        for _, data in pairs(ESPSettings.ActiveNPCs) do
+            data.espText.Color = color
+        end
+    end
+})
+
+ESPGroupbox:AddSlider("Distance", {
+    Text = "ESP Distance",
+    Default = 1000,
+    Min = 0,
+    Max = 10000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        ESPSettings.espDistance = value
+    end
+})
+
+ESPGroupbox:AddSlider("TextSizeSlider", {
+    Text = "Text Font Size",
+    Default = 14,
+    Min = 10,
+    Max = 30,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        ESPSettings.fontSize = value
+    end
+})
+
+local AutoFarmSettings = {
+    AutoFarmMobsDistance = 10,
+    AutoFarmMobsHeight = 0,
+    AutoFarmMobs = false,
+    AutoFarmSelectedMobs = false
+}
+
+WorldGroupbox:AddToggle("Attach to nearby mobs", {
+    Text = "Auto Farm Nearby Mobs",
+    Default = false,
+    Tooltip = "Auto Farm Nearest mob",
+    Callback = function(enabled)
+        AutoFarmSettings.AutoFarmMobs = enabled
+        if AutoFarmSettings.AutoFarmMobs then
+            task.spawn(function()
+                while AutoFarmSettings.AutoFarmMobs and task.wait() do
+                    local playerCharacter = LocalPlayer.Character
+                    if not (playerCharacter and (playerCharacter:FindFirstChild("HumanoidRootPart") and Character.PrimaryPart)) then
+                        return
+                    end
+                    
+                    local playerRoot = playerCharacter.HumanoidRootPart
+                    local closestDistance = math.huge
+                    local closestTarget = nil
+                    
+                    for _, entity in pairs(workspace.Entities:GetChildren()) do
+                        if entity:IsA("Model") and not Players:FindFirstChild(entity.Name) then
+                            local entityRoot = entity:FindFirstChild("HumanoidRootPart") or entity.PrimaryPart
+                            if entityRoot then
+                                local distance = (playerRoot.Position - entityRoot.Position).Magnitude
+                                if distance < closestDistance then
+                                    closestTarget = entityRoot
+                                    closestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                    
+                    if closestTarget then
+                        repeat
+                            SmoothTeleport(closestTarget.CFrame * CFrame.new(0, AutoFarmSettings.AutoFarmMobsHeight, AutoFarmSettings.AutoFarmMobsDistance), 170)
+                            task.wait()
+                        until not (AutoFarmSettings.AutoFarmMobs and (closestTarget.Parent and closestTarget:IsDescendantOf(workspace))) or closestTarget.Parent:FindFirstChild("Humanoid").Health <= 0
+                    end
+                end
+            end)
+        end
+    end
+}):AddKeyPicker("AutoFarmNearbyKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "AutoFarmNearby Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+WorldGroupbox:AddToggle("Attach to nearby Players", {
+    Text = "Auto Farm Nearby Players",
+    Default = false,
+    Tooltip = "Auto Farm Nearest Players",
+    Callback = function(enabled)
+        AutoFarmSettings.autofarmplayers = enabled
+        if AutoFarmSettings.autofarmplayers then
+            task.spawn(function()
+                while AutoFarmSettings.autofarmplayers and task.wait() do
+                    local playerCharacter = LocalPlayer.Character
+                    if not (playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart")) then
+                        return
+                    end
+                    
+                    local playerRoot = playerCharacter.HumanoidRootPart
+                    local closestDistance = math.huge
+                    local closestTarget = nil
+                    
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character then
+                            local targetCharacter = player.Character
+                            local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart") or targetCharacter.PrimaryPart
+                            if targetRoot then
+                                local distance = (playerRoot.Position - targetRoot.Position).Magnitude
+                                if distance < closestDistance then
+                                    closestTarget = targetRoot
+                                    closestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                    
+                    if closestTarget then
+                        SmoothTeleport(closestTarget.CFrame * CFrame.new(0, AutoFarmSettings.AutoFarmMobsHeight, AutoFarmSettings.AutoFarmMobsDistance), 170)
+                        task.wait()
+                        if Settings.autofarmplayers and ((closestTarget and (closestTarget.Parent and closestTarget:IsDescendantOf(workspace))) and closestTarget.Parent:FindFirstChild("Humanoid").Health > 0) then
+                            break
+                        end
+                    end
+                end
+            end)
+        end
+    end
+}):AddKeyPicker("AutoFarmNearbyPlayersKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "AutoFarmNearby Players Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+WorldGroupbox:AddSlider("Distance", {
+    Text = "Distance",
+    Default = 10,
+    Min = 0,
+    Max = 30,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        AutoFarmSettings.AutoFarmMobsDistance = value
+    end
+})
+
+WorldGroupbox:AddSlider("Height", {
+    Text = "Height",
+    Default = 0,
+    Min = -30,
+    Max = 30,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        AutoFarmSettings.AutoFarmMobsHeight = value
+    end
+})
+
+local BringMobsConnection = nil
+
+WorldGroupbox:AddToggle("Bring Mob", {
+    Text = "Bring Mob",
+    Default = false,
+    Tooltip = "Bring Mob",
+    Callback = function(enabled)
+        Settings.bringmobs = enabled
+        if Settings.bringmobs then
+            BringMobsConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if Settings.bringmobs then
+                    for _, entity in ipairs(workspace.Entities:GetChildren()) do
+                        if entity:IsA("Model") and (entity:FindFirstChild("HumanoidRootPart") and (not game.Players:FindFirstChild(entity.Name) and (GetDistance(game.Players.LocalPlayer.Character.PrimaryPart.Position, entity.PrimaryPart.Position) < Settings.bringmobsrange and isnetworkowner(entity.PrimaryPart)))) then
+                            entity:FindFirstChild("HumanoidRootPart").CFrame = LocalPlayer.Character.PrimaryPart.CFrame * CFrame.new(0, 0, -Settings.bringmobsdistance)
+                        end
+                    end
+                end
+            end)
+        elseif BringMobsConnection then
+            BringMobsConnection:Disconnect()
+            BringMobsConnection = nil
+        end
+    end
+}):AddKeyPicker("BringMobKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Bring Mob Keybind",
+    NoUI = false
+})
+
+WorldGroupbox:AddSlider("Bring Mobs Range", {
+    Text = "Bring Mob Range",
+    Default = 1000,
+    Min = 0,
+    Max = 10000,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.bringmobsrange = value
+    end
+})
+
+WorldGroupbox:AddSlider("BringMobsDistance", {
+    Text = "Bring Mob Distance",
+    Default = 50,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.bringmobsdistance = value
+    end
+})
+
+local KillAuraCredsConnection = nil
+
+WorldGroupbox:AddToggle("Kill Aura", {
+    Text = "Kill Aura",
+    Default = false,
+    Tooltip = "Instant Kill",
+    Callback = function(enabled)
+        Settings.VoidMob = enabled
+        if Settings.VoidMob then
+            while Settings.VoidMob and task.wait() do
+                for _, entity in ipairs(workspace.Entities:GetChildren()) do
+                    if entity:IsA("Model") and not game.Players:FindFirstChild(entity.Name) then
+                        local humanoid = entity:FindFirstChild("Humanoid") and entity:FindFirstChild("Humanoid")
+                        if humanoid then
+                            humanoid.Health = 0
+                            humanoid.MaxHealth = 0
+                        end
+                        
+                        for _, part in ipairs(entity:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part:BreakJoints()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+}):AddKeyPicker("KillAuraKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Kill Aura Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+WorldGroupbox:AddToggle("Kill Aura If Creds", {
+    Text = "Kill Aura if Creds",
+    Default = false,
+    Tooltip = "Instant Kill",
+    Callback = function(enabled)
+        Settings.killauraifcreds = enabled
+        if enabled then
+            KillAuraCredsConnection = RunService.RenderStepped:Connect(function()
+                if Settings.killauraifcreds then
+                    for _, entity in ipairs(workspace.Entities:GetChildren()) do
+                        if entity:IsA("Model") and (not game.Players:FindFirstChild(entity.Name) and entity:FindFirstChild("Humanoid")) then
+                            local humanoid = entity:FindFirstChild("Humanoid")
+                            if humanoid and (humanoid.Health / humanoid.MaxHealth) * 100 < Settings.killaurahp then
+                                humanoid.Health = 0
+                                humanoid.MaxHealth = 0
+                            end
+                        end
+                    end
+                end
+            end)
+        elseif KillAuraCredsConnection then
+            KillAuraCredsConnection:Disconnect()
+        end
+    end
+}):AddKeyPicker("KillAuraIfCredsKeybind", {
+    Default = "",
+    SyncToggleState = true,
+    Mode = "Toggle",
+    Text = "Kill Aura if Creds Keybind",
+    NoUI = false,
+    Callback = function(enabled) end
+})
+
+WorldGroupbox:AddSlider("Kill Aura Creds HP Threshold", {
+    Text = "Kill Aura HP Threshold %",
+    Default = 100,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Compact = true,
+    Callback = function(value)
+        Settings.killaurahp = value
+    end
+})
+
+WorldGroupbox:AddButton("Go to quest marker", function()
+    if Character:FindFirstChild("MissionIcon") then
+        TeleportTo(Character.MissionIcon.Position.X, Character.MissionIcon.Position.Y, Character.MissionIcon.Position.Z)
+    else
+        warn("No Mission")
+    end
+    
+    if Character:FindFirstChild("BoxDeliveryIcon") then
+        TeleportTo(Character.BoxDeliveryIcon.Position.X, Character.BoxDeliveryIcon.Position.Y, Character.BoxDeliveryIcon.Position.Z)
+    else
+        warn("No Box Icon")
+    end
+end)
+
+WorldGroupbox:AddButton("Go to Event marker", function()
+    if Character:FindFirstChild("EventMarker") then
+        TeleportTo(Character.EventMarker.Position.X, Character.EventMarker.Position.Y, Character.EventMarker.Position.Z)
+    else
+        warn("no event ")
+    end
+end)
+
+WorldGroupbox:AddButton("Go to Nearest Loot Crate", function()
+    local closestDistance = math.huge
+    local closestCrate = nil
+    
+    for _, object in pairs(workspace:GetChildren()) do
+        if object.Name == "giftbox_blend" then
+            local distance = (object.WorldPivot.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestCrate = object
+                closestDistance = distance
+            end
+        end
+    end
+    
+    if closestCrate then
+        TeleportTo(closestCrate.WorldPivot.Position.X, closestCrate.WorldPivot.Position.Y, closestCrate.WorldPivot.Position.Z)
+    else
+        warn("No giftbox_blend found in the workspace.")
+    end
+end)
+
+WorldGroupbox:AddButton("Go to Nearest Artifact", function()
+    local closestDistance = math.huge
+    local closestArtifact = nil
+    
+    for _, object in pairs(workspace:GetChildren()) do
+        if string.find(object.Name, "Artifact") then
+            local distance = (object.WorldPivot.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestArtifact = object
+                closestDistance = distance
+            end
+        end
+    end
+    
+    if closestArtifact then
+        TeleportTo(closestArtifact.WorldPivot.Position.X, closestArtifact.WorldPivot.Position.Y, closestArtifact.WorldPivot.Position.Z)
+    else
+        warn("No Artifact found in the workspace.")
+    end
+end)
+
+local SelectedArea = nil
+
+WorldGroupbox:AddDropdown("AreaDropdown", {
+    Values = {"Anteiku", "Art Studio", "Clothing Store", "CCG Base", "Boss Arenas", "Ghoul Mission Board 1", "CCG Mission Board 1"},
+    Default = {},
+    Multi = false,
+    Text = "Areas",
+    Tooltip = "Select Area to tp to",
+    Callback = function(value)
+        SelectedArea = value
+    end
+})
+
+WorldGroupbox:AddButton("Goto Selected Area", function()
+    if SelectedArea == "Anteiku" then
+        TeleportTo(8461.96582, 20.8455334, 1682.95093)
+    end
+    if SelectedArea == "Art Studio" then
+        TeleportTo(8112.271, 8.47572327, -1640.54663)
+    end
+    if SelectedArea == "Clothing Store" then
+        TeleportTo(8026.98535, 6.97037315, 1923.37378)
+    end
+    if SelectedArea == "CCG Base" then
+        TeleportTo(7758.4750976562, -6.5043659210205, -654.69714355469)
+    end
+    if SelectedArea == "Boss Arenas" then
+        TeleportTo(7714.3271484375, -5.3807783126831, -984.13073730469)
+    end
+    if SelectedArea == "Ghoul Mission Board 1" then
+        TeleportTo(8447.2578125, -4.5083823204041, 1730.5115966797)
+    end
+    if SelectedArea == "CCG Mission Board 1" then
+        TeleportTo(7696.603515625, 23.998931884766, -689.29748535156)
+    end
+end)
+
+local function RemoveCharacterAppearance(character)
+    for _, clothingType in pairs({"Shirt", "Pants"}) do
+        local clothing = character:FindFirstChild(clothingType)
+        if clothing then
+            clothing:Destroy()
+        end
+    end
+    
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("Accessory") or child:IsA("MeshPart") then
+            child:Destroy()
+        end
+    end
+    
+    if character:FindFirstChild("Head") then
+        character.Head.Transparency = 1
+        for _, descendant in ipairs(character.Head:GetDescendants()) do
+            if descendant:IsA("Decal") or descendant:IsA("SpecialMesh") or descendant:IsA("Part") then
+                descendant:Destroy()
+            end
+        end
+    end
+    
+    for _, fakeHead in ipairs(workspace.FakeHeads:GetChildren()) do
+        if string.match(fakeHead.Name, LocalPlayer.Name) then
+            fakeHead:Destroy()
+        end
+    end
+    
+    character:FindFirstChild("Left Arm").Transparency = 0
+    character:FindFirstChild("Right Arm").Transparency = 0
+end
+
+local function AttachAccessoryToArm(assetId, character, position, rotation, isLeftArm, hideArm)
+    local accessory = game:GetObjects("rbxassetid://" .. tostring(assetId))[1]
+    if accessory then
+        local arm = character:FindFirstChild(isLeftArm and "Left Arm" or "Right Arm")
+        if arm then
+            if hideArm then
+                arm.Transparency = 1
+            end
+            accessory.Parent = character
+            
+            if accessory:FindFirstChild("Handle") then
+                local weld = Instance.new("Weld")
+                weld.Name = isLeftArm and "LeftArmWeld" or "RightArmWeld"
+                weld.Part0 = arm
+                weld.Part1 = accessory.Handle
+                
+                local defaultPos, defaultRot
+                if isLeftArm then
+                    defaultPos = Vector3.new(-accessory.Handle.Size.X / 2, -accessory.Handle.Size.Y / 2, 0)
+                    defaultRot = Vector3.new(0, 90, 0)
+                else
+                    defaultPos = Vector3.new(accessory.Handle.Size.X / 2, -accessory.Handle.Size.Y / 2, 0)
+                    defaultRot = Vector3.new(0, -90, 0)
+                end
+                
+                weld.C0 = CFrame.new(position or defaultPos) * CFrame.Angles(math.rad(rotation and rotation.X or defaultRot.X), math.rad(rotation and rotation.Y or defaultRot.Y), math.rad(rotation and rotation.Z or defaultRot.Z))
+                weld.Parent = accessory.Handle
+            end
+        end
+    end
+end
+
+local function AttachAccessoryToTorso(assetId, character, position, rotation)
+    local accessory = game:GetObjects("rbxassetid://" .. tostring(assetId))[1]
+    if accessory then
+        local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+        if torso then
+            accessory.Parent = character
+            
+            if accessory:FindFirstChild("Handle") then
+                local weld = Instance.new("Weld")
+                weld.Name = "HeadWeld"
+                weld.Part0 = torso
+                weld.Part1 = accessory.Handle
+                weld.C0 = CFrame.new(position or Vector3.new(0, torso.Size.Y / 1.15 + accessory.Handle.Size.Y / 2, 0)) * CFrame.Angles(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z))
+                weld.Parent = accessory.Handle
+            end
+        end
+    end
+end
+
+local function ApplyClothing(shirtId, pantsId, character)
+    local function LoadClothing(assetId, name)
+        local clothing = game:GetObjects("rbxassetid://" .. tostring(assetId))[1]
+        if clothing then
+            clothing.Parent = character
+            clothing.Name = name
+        end
+    end
+    
+    LoadClothing(shirtId, "Shirt")
+    LoadClothing(pantsId, "Pants")
+end
+
+local function SetSkinColor(character, colorName)
+    local brickColor = BrickColor.new(colorName or "Light orange")
+    for _, partName in pairs({"Torso", "UpperTorso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
+        local part = character:FindFirstChild(partName)
+        if part then
+            part.BrickColor = brickColor
+        end
+    end
+end
+
+VisualMiscGroupbox:AddDropdown("Morphs", {
+    Values = {"Goku", "Naruto", "Miku", "Aizen", "Gawr Gura", "Guts", "Gojo", "Toji", "Mahoraga", "Kurumi", "Changli", "Rias Gremory", "Akeno Himejima", "Akame", "Acheron", "Esdeath", "Sakuya", "Sparkle", "Jane Doe", "Alya", "Sung Jin Woo", "Ryuko", "Hutao", "MommyRaga", "Castorice", "Shadow", "Lebron James", "Steve", "Gilgamesh", "Ishtar", "Albedo", "Astolfo", "Zani", "Cantarella", "Yinlin", "Vasto Lorde", "Igris", "Beru", "Cha Hae In", "Luffy", "Frieren", "Raiden Shogun", "Rimuru", "Zero Two", "Columbina", "Bocchi", "Mavuika", "Carlotta", "Kafka", "Jingliu", "Feixiao", "Shorekeeper", "Kiana HoF", "Senti", "Mei HoT", "Aglaea", "Mari Setogaya"},
+    Default = {},
+    Multi = false,
+    Text = "Morphs",
+    Tooltip = "Morphs",
+    Callback = function(selected)
+        if selected == "Goku" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(96778240725860, Character, Vector3.new(0, 2.3, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(18642081551, 13980707182, Character)
+        elseif selected == "Naruto" then
+            SetSkinColor(Character, "Pastel yellow")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(129818847988995, Character, Vector3.new(0, 1.8, 0), Vector3.new(0, -90, 0))
+            ApplyClothing(6469644436, 2733834231, Character)
+        elseif selected == "Miku" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(107263500564078, Character, Vector3.new(0, 0.8, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(11562331516, 11562350632, Character)
+        elseif selected == "Aizen" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(117644781784979, Character, Vector3.new(0, 1.7, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(87853669951881, 118029167731205, Character)
+        elseif selected == "Gawr Gura" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(93023559996037, Character, Vector3.new(0, 1.2, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(6392201226, 5896597102, Character)
+        elseif selected == "Guts" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(117337600216775, Character, Vector3.new(0, 1.6, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(83748529688503, Character, Vector3.new(0, 0, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(13381096342, 13381103162, Character)
+        elseif selected == "Gojo" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(132501783778842, Character, Vector3.new(0, 1.9, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(73084050138865, 15312673306, Character)
+        elseif selected == "Toji" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(135664715112347, Character, Vector3.new(0, 1.7, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(121088463088431, 16149857407, Character)
+        elseif selected == "Mahoraga" then
+            SetSkinColor(Character, "White")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(107798985962651, Character, Vector3.new(0, 1.7, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(15549196125, 15886594659, Character)
+        elseif selected == "Kurumi" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(103832443149308, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(97284203988261, Character, Vector3.new(0, 1.3, 0.3), Vector3.new(0, 180, 0))
+            ApplyClothing(8483860912, 6274345723, Character)
+        elseif selected == "Changli" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(18237124713, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(18776258812, Character, Vector3.new(0, 1, 0.4), Vector3.new(0, 180, 0))
+            ApplyClothing(18248384660, 18248339309, Character)
+        elseif selected == "Rias Gremory" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(93210597936941, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(117401070298880, Character, Vector3.new(0, 0.8, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(6684203479, 17237310293, Character)
+        elseif selected == "Akame" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(126922773003151, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(17737783504, Character, Vector3.new(0, 0.7, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(6369044571, 6368994316, Character)
+        elseif selected == "Akeno Himejima" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(126359064831342, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(77228070098121, Character, Vector3.new(0.02, 1, 0.3), Vector3.new(0, 0, 0))
+            ApplyClothing(16622515487, 16622517173, Character)
+        elseif selected == "Acheron" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(18813009640, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(18239465044, Character, Vector3.new(0, 0.8, 0.3), Vector3.new(0, 180, 0))
+            ApplyClothing(16816449958, 16816449614, Character)
+        elseif selected == "Esdeath" then
+            SetSkinColor(Character)
+            AttachAccessoryToTorso(98167182209809, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(137436093988045, Character, Vector3.new(0, 0.8, 0), Vector3.new(0, -90, 0))
+            AttachAccessoryToTorso(15862735278, Character, Vector3.new(0, 2, -0.2), Vector3.new(0, 90, 0))
+            ApplyClothing(13052699332, 10897251729, Character)
+        elseif selected == "Sakuya" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(93904932109451, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            ApplyClothing(7136184157, 7136202011, Character)
+        elseif selected == "Sparkle" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(104060985865516, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(74627256516640, Character, Vector3.new(0, 0.9, 0.5), Vector3.new(0, 180, 0))
+            ApplyClothing(16124774730, 16124783134, Character)
+        elseif selected == "Jane Doe" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(78741773770897, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(135658490795864, Character, Vector3.new(0, 0.9, 0.3), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(71390527808664, Character, Vector3.new(-0.5, -1.7, 1.6), Vector3.new(0, 180, 0))
+            ApplyClothing(11428156317, 18526177706, Character)
+        elseif selected == "Alya" then
+            SetSkinColor(Character, "Light red")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(92501934174622, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(119554753750641, Character, Vector3.new(0, 1, 0.5), Vector3.new(0, 0, 0))
+            ApplyClothing(18473143856, 18473161125, Character)
+        elseif selected == "Sung Jin Woo" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(92171733938281, Character, Vector3.new(0, 1.8, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(14160558115, 14160562408, Character)
+        elseif selected == "Ryuko" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(15960510977, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(18564277439, Character, Vector3.new(-0.1, 1.7, 0.2), Vector3.new(0, 180, 0))
+            ApplyClothing(11768963211, 16299464312, Character)
+        elseif selected == "Hutao" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(89528590195822, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(16560974401, Character, Vector3.new(0, 0.8, 0.3), Vector3.new(0, 180, 0))
+            ApplyClothing(8242153821, 18183543100, Character)
+        elseif selected == "MommyRaga" then
+            SetSkinColor(Character, "White")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(15499533232, Character, Vector3.new(0, 1.5, -0.8), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(114269140957508, Character, Vector3.new(0, 1.5, -0.3), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(76160238269805, Character, Vector3.new(0, 0.8, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(3984208381, Character, Vector3.new(0, 1.3, 0.05), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(15375503386, Character, Vector3.new(0, 2.5, 0.05), Vector3.new(0, 0, 0))
+            ApplyClothing(18837359756, 16754818347, Character)
+        elseif selected == "Castorice" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(80815430026853, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 90, 0))
+            AttachAccessoryToTorso(131730218083544, Character, Vector3.new(0, 0.8, 0.5), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(105037563912931, Character, Vector3.new(0, -1.7, 0.1), Vector3.new(0, 0, 0))
+            ApplyClothing(130958701361408, 128171165420795, Character)
+        elseif selected == "Shadow" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(126730965425176, Character, Vector3.new(0, 1.7, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(127718553592663, Character, Vector3.new(0, -0.6, 0.5), Vector3.new(0, 0, 0))
+            ApplyClothing(15618792366, 15616067613, Character)
+        elseif selected == "Lebron James" then
+            SetSkinColor(Character, "Brown")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(135528148574372, Character, Vector3.new(0, 1.6, -0.1), Vector3.new(0, 90, 0))
+            ApplyClothing(132033269414854, 10650849519, Character)
+        elseif selected == "Steve" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(118830888902962, Character, Vector3.new(0, 1.7, 0), Vector3.new(0, -90, 0))
+            ApplyClothing(10872887511, 14032414623, Character)
+        elseif selected == "Gilgamesh" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(16811269033, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(17744441803, Character, Vector3.new(0.017, 1.9, 0.25), Vector3.new(0, 0, 0))
+            ApplyClothing(11296284708, 12410511854, Character)
+        elseif selected == "Ishtar" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(15189465318, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(14421272696, Character, Vector3.new(0.1, 0.8, 0.1), Vector3.new(0, 0, 0))
+            ApplyClothing(17076499177, 8841735074, Character)
+        elseif selected == "Albedo" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(16928430955, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(17801756150, Character, Vector3.new(0, 0.8, 0.1), Vector3.new(0, 0, 0))
+            ApplyClothing(14354812428, 4843984198, Character)
+        elseif selected == "Astolfo" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(116209602375859, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(127876222605899, Character, Vector3.new(0, 0.8, 0.2), Vector3.new(0, 180, 0))
+            ApplyClothing(16080173838, 16080176781, Character)
+        elseif selected == "Zani" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(100752947077542, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(137097160002996, Character, Vector3.new(0.01, 1.5, 0.3), Vector3.new(0, 180, 0))
+            ApplyClothing(133227975938709, 81320299831803, Character)
+        elseif selected == "Cantarella" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(126886929043892, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(113118733783201, Character, Vector3.new(0, 1, 0.1), Vector3.new(0, 0, 0))
+            ApplyClothing(78999603630056, 75202173730252, Character)
+        elseif selected == "Yinlin" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(17870830321, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(98431603239714, Character, Vector3.new(0, 0.9, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(17749723866, 17749862800, Character)
+        elseif selected == "Vasto Lorde" then
+            SetSkinColor(Character, "White")
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(93115339379404, Character, Vector3.new(0, 0.6, 0.3), Vector3.new(15, 0, 0))
+            ApplyClothing(12389968084, 9153779931, Character)
+        elseif selected == "Igris" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(95863570452709, Character, Vector3.new(0, 1.7, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(109244088690965, Character, Vector3.new(0, -0.7, 1), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(101764628214933, Character, Vector3.new(0, -0.2, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(15918209151, Character, Vector3.new(0, -1.5, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToArm(116491025917228, Character, Vector3.new(0, 0.66, 0), Vector3.new(0, 0, 0), true, false)
+            AttachAccessoryToArm(76919787720229, Character, Vector3.new(0, 0.66, 0), Vector3.new(0, 0, 0), false, false)
+            ApplyClothing(130860982870441, 127852847129078, Character)
+        elseif selected == "Beru" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(101563619574844, Character, Vector3.new(0, 1.9, -0.2), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(92335412248140, Character, Vector3.new(0, 0, 0.2), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(130071708950394, Character, Vector3.new(0, 0.9, 1.7), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(109660279391974, Character, Vector3.new(0, -1.1, 0.2), Vector3.new(0, 0, 0))
+            AttachAccessoryToArm(76299748154778, Character, Vector3.new(0, 0.3, 0), Vector3.new(0, 0, 0), true, true)
+            AttachAccessoryToArm(138112552732432, Character, Vector3.new(0, 0.3, 0), Vector3.new(0, 0, 0), false, true)
+            ApplyClothing(133863284896119, 82175261849570, Character)
+        elseif selected == "Cha Hae In" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(16123775088, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(72437172160861, Character, Vector3.new(0, 1.6, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(85084288840822, 17870204589, Character)
+        elseif selected == "Luffy" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(18543513455, Character, Vector3.new(0, 2, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(72038275744700, Character, Vector3.new(0, 1, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(12581156224, 12566365740, Character)
+        elseif selected == "Frieren" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(16018569620, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(16732705622, Character, Vector3.new(0, 0.7, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(117192283652792, Character, Vector3.new(0, 0.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(16732594752, Character, Vector3.new(0, -0.8, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToArm(91359068074598, Character, Vector3.new(0, 0.5, 0), Vector3.new(0, 0, 0), true, false)
+            AttachAccessoryToArm(112435443180759, Character, Vector3.new(0, 0.5, 0), Vector3.new(0, 0, 0), false, false)
+            ApplyClothing(16775363591, 16775370003, Character)
+        elseif selected == "Raiden Shogun" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(18589200366, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(89742200248607, Character, Vector3.new(-0.05, 0.8, 0.2), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(125828006762870, Character, Vector3.new(0, -1.1, 0.1), Vector3.new(0, 0, 0))
+            AttachAccessoryToArm(94603590977259, Character, Vector3.new(-0.1, 0.3, 0), Vector3.new(0, 0, 0), true, false)
+            ApplyClothing(7510268954, 15049045301, Character)
+        elseif selected == "Rimuru" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(118948540012480, Character, Vector3.new(0, 0.7, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(12795104537, 12795105839, Character)
+        elseif selected == "Zero Two" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(15123869167, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(118097633335749, Character, Vector3.new(0, 0.73, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(9114999117, 9115000719, Character)
+        elseif selected == "Columbina" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(132679220950392, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(93846197455372, Character, Vector3.new(0, 1.2, 0.3), Vector3.new(0, 0, 0))
+            ApplyClothing(13953999748, 13954210928, Character)
+        elseif selected == "Bocchi" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(95059679093830, Character, Vector3.new(0, 1, 0.1), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(73702660507578, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            ApplyClothing(13748820887, 13748829895, Character)
+        elseif selected == "Mavuika" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(125529887642405, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(18695554348, Character, Vector3.new(0.1, 1, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(139461445077341, 115617915090550, Character)
+        elseif selected == "Carlotta" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(102058069766854, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(96237059455196, Character, Vector3.new(0, 1, 0.4), Vector3.new(0, 180, 0))
+            ApplyClothing(132449747768331, 129671157331059, Character)
+        elseif selected == "Kafka" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(18478967502, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(17788212416, Character, Vector3.new(0, 1, 0.3), Vector3.new(0, 0, 0))
+            ApplyClothing(18249584394, 14562649452, Character)
+        elseif selected == "Jingliu" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(77994723868639, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(135708732755807, Character, Vector3.new(0, 0.9, 0.1), Vector3.new(0, 180, 0))
+            ApplyClothing(15077903868, 13570651830, Character)
+        elseif selected == "Feixiao" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(122778677622659, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(109691996875078, Character, Vector3.new(0, 1.3, 0.5), Vector3.new(0, 180, 0))
+            ApplyClothing(18740200611, 18750942054, Character)
+        elseif selected == "Shorekeeper" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(75990289148007, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(75204472174011, Character, Vector3.new(0, 1, 0.4), Vector3.new(0, 180, 0))
+            ApplyClothing(89261572309020, 94021230830355, Character)
+        elseif selected == "Kiana HoF" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(78095263339710, Character, Vector3.new(0.01, 1, 0.5), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(122539578016772, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(79379397199011, Character, Vector3.new(0, -1.6, 0.3), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(75557489121624, Character, Vector3.new(0, -1.6, 1.8), Vector3.new(0, 0, 0))
+            ApplyClothing(15380082951, 14468431989, Character)
+        elseif selected == "Senti" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(104590944127512, Character, Vector3.new(0, 1.4, 0.2), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(122400148532477, Character, Vector3.new(0, -1, 1.1), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(89308826234091, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(85316018717660, Character, Vector3.new(0, -1.4, 0.2), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(81278214623934, Character, Vector3.new(0, 2, 2), Vector3.new(0, 180, 0))
+            AttachAccessoryToArm(135423956847061, Character, Vector3.new(0.8, 0.6, 0), Vector3.new(0, 0, 0), false, false)
+            ApplyClothing(6734201984, 18212079377, Character)
+        elseif selected == "Mei HoT" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(109709649449982, Character, Vector3.new(0, 0.8, 0.4), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(14699650567, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(109272959830887, Character, Vector3.new(0, 0, 1.5), Vector3.new(0, 0, 0))
+            ApplyClothing(12025064851, 12025034793, Character)
+        elseif selected == "Aglaea" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(73951456892786, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 180, 0))
+            AttachAccessoryToTorso(72478051422522, Character, Vector3.new(0, 1.4, 0), Vector3.new(0, 0, 0))
+            ApplyClothing(92961438681401, 88461230208684, Character)
+        elseif selected == "Mari Setogaya" then
+            SetSkinColor(Character)
+            RemoveCharacterAppearance(Character)
+            AttachAccessoryToTorso(99020883428971, Character, Vector3.new(0, 1.5, 0), Vector3.new(0, 0, 0))
+            AttachAccessoryToTorso(122671975876357, Character, Vector3.new(0, 1.7, 0.2), Vector3.new(0, 0, 0))
+            ApplyClothing(9350582122, 9365799269, Character)
+        end
+    end
+})
+
+VisualMiscGroupbox:AddToggle("StreamerMode", {
+    Text = "Streamer Mode",
+    Default = false,
+    Tooltip = "Hides your UID",
+    Callback = function(enabled)
+        game:GetService("Players").LocalPlayer.PlayerGui.ClientInfo.Section1.Visible = not enabled
+    end
+})
+
+local DefaultAtmosphereDensity = 0.44999998807907
+
+VisualMiscGroupbox:AddToggle("NoFog", {
+    Text = "No Fog",
+    Default = false,
+    Tooltip = "Removes Fog",
+    Callback = function(enabled)
+        if enabled then
+            if Lighting:FindFirstChild("Atmosphere") then
+                Lighting.Atmosphere.Density = 0
+            end
+        elseif Lighting:FindFirstChild("Atmosphere") then
+            Lighting.Atmosphere.Density = DefaultAtmosphereDensity
+        end
+    end
+})
+
+local WeatherConnection = nil
+
+VisualMiscGroupbox:AddToggle("No Weather", {
+    Text = "No Weather",
+    Default = false,
+    Tooltip = "Removes Weather",
+    Callback = function(enabled)
+        if not WeatherConnection then
+            WeatherConnection = nil
+        end
+        
+        if enabled then
+            for _, object in ipairs(workspace.DebrisFolder:GetChildren()) do
+                if string.find(object.Name, "Weather") then
+                    object:Destroy()
+                end
+            end
+            
+            WeatherConnection = workspace.DebrisFolder.DescendantAdded:Connect(function(descendant)
+                if string.find(descendant.Name, "Weather") then
+                    descendant:Destroy()
+                end
+            end)
+        elseif WeatherConnection then
+            WeatherConnection:Disconnect()
+            WeatherConnection = nil
+        end
+    end
+})
+
+local FullbrightConnection = nil
+
+VisualMiscGroupbox:AddToggle("FullBright", {
+    Text = "FullBright",
+    Default = false,
+    Tooltip = "Turns off darkness and shadows",
+    Callback = function(enabled)
+        Settings.fullbright = enabled
+        
+        if FullbrightConnection then
+            FullbrightConnection:Disconnect()
+            FullbrightConnection = nil
+        end
+        
+        if enabled then
+            FullbrightConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                game.Lighting.Brightness = Settings.Brightness or 2
+                game.Lighting.ClockTime = 14
+                game.Lighting.FogEnd = 100000
+                game.Lighting.GlobalShadows = false
+                game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            end)
+        else
+            game.Lighting.Brightness = 1
+            game.Lighting.ClockTime = 14
+            game.Lighting.FogEnd = 1000000
+            game.Lighting.GlobalShadows = true
+            game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        end
+    end
+})
+
+VisualMiscGroupbox:AddSlider("Brightness", {
+    Text = "Brightness",
+    Default = 2,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(value)
+        Settings.Brightness = value
+    end
+})
+
+MiscGroupbox:AddButton("Serverhop", function()
+    ServerHop()
+end)
+
+MiscGroupbox:AddInput("JobID", {
+    Default = "",
+    Numeric = false,
+    Finished = false,
+    Text = "JobID",
+    Tooltip = "Job ID",
+    Placeholder = "",
+    Callback = function(value) end
+})
+
+MiscGroupbox:AddButton({
+    Text = "Join Server",
+    Func = function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Options.JobID.Value, Players.LocalPlayer)
+    end,
+    Tooltip = "Join Server, Add the JobId on the textbox or uses the latest clipboard if empty"
+})
+
+MiscGroupbox:AddButton("Teleport to Permadeath Server", function()
+    game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ServerListUI").Enabled = true
+    task.wait(0.1)
+    
+    local foundServer = false
+    
+    for _, button in ipairs(game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ServerListUI").Container.CosmeticInterface.ScrollingFrame:GetChildren()) do
+        if button:IsA("TextButton") and string.find(button.ServerName.Text, "PERMADEATH") then
+            local currentPlayers, maxPlayers = string.match(button.ServerSize.Text, "(%d+)%s*/%s*(%d+)")
+            if currentPlayers and (maxPlayers and tonumber(currentPlayers) < tonumber(maxPlayers)) then
+                GuiService.SelectedObject = button
+                task.wait(0.1)
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                task.wait(0)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                task.wait(0.1)
+                button.Active = false
+                GuiService.SelectedObject = nil
+                foundServer = true
+                break
+            end
+        end
+    end
+    
+    if not foundServer then
+        Library:Notify("No permadeath server found", 10)
+    end
+    
+    task.wait(0.1)
+    game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ServerListUI").Enabled = false
+end)
+
+MiscGroupbox:AddToggle("ModNotifier", {
+    Text = "Mod Notifier",
+    Default = false,
+    Tooltip = "Notifies if a Moderator joined",
+    Callback = function(enabled)
+        Settings.ModNotifer = enabled
+    end
+})
+
+MiscGroupbox:AddToggle("KickIfMod", {
+    Text = "Kick if Mod joined",
+    Default = false,
+    Tooltip = "Kick yourself when a moderator joined the server",
+    Callback = function(enabled)
+        Settings.kickifmod = enabled
+    end
+})
+
+game.Players.PlayerAdded:Connect(function(player)
+    if Settings.ModNotifer and player:GetRankInGroup(34160477) > 1 then
+        Library:Notify("A Moderator has joined: " .. player.Name, 20)
+    end
+    
+    if Settings.kickifmod and player:GetRankInGroup(34160477) > 1 then
+        LocalPlayer:Kick("A Moderator has joined: " .. player.Name)
+    end
+end)
+
+local function SpectatePlayer(player)
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        workspace.CurrentCamera.CameraSubject = character.Humanoid
+    end
+end
+
+local function StopSpectating()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        workspace.CurrentCamera.CameraSubject = character.Humanoid
+    end
+end
+
+local function SetupSpectateButton(button)
+    local player = Players:FindFirstChild(button.Name)
+    
+    button.MouseButton1Down:Connect(function()
+        if Settings.spectateplayers and player then
+            SpectatePlayer(player)
+        end
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        if Settings.spectateplayers then
+            StopSpectating()
+        end
+    end)
+    
+    button.MouseLeave:Connect(function()
+        if Settings.spectateplayers then
+            StopSpectating()
+        end
+    end)
+end
+
+local function InitializeSpectate()
+    for _, button in ipairs(game:GetService("Players").LocalPlayer.PlayerGui.Leaderboard.Leaderboard:GetChildren()) do
+        if button:IsA("ImageButton") then
+            SetupSpectateButton(button)
+        end
+    end
+end
+
+local function CleanupSpectate()
+    for _, button in ipairs(game:GetService("Players").LocalPlayer.PlayerGui.Leaderboard.Leaderboard:GetChildren()) do
+        if button:IsA("TextBuImageButtontton") then
+            button.MouseButton1Down:Disconnect()
+            button.MouseButton1Up:Disconnect()
+            button.MouseLeave:Disconnect()
+        end
+    end
+end
+
+game:GetService("Players").LocalPlayer.PlayerGui.Leaderboard.Leaderboard.ChildAdded:Connect(function(child)
+    if child:IsA("ImageButton") then
+        SetupSpectateButton(child)
+    end
+end)
+
+MiscGroupbox:AddToggle("SpectatePlayer", {
+    Text = "Spectate Players",
+    Default = false,
+    Tooltip = "Hold down the username from the leaderboard",
+    Callback = function(enabled)
+        Settings.spectateplayers = enabled
+        if Settings.spectateplayers then
+            InitializeSpectate()
+        else
+            CleanupSpectate()
+            StopSpectating()
+        end
+    end
+})
+
+MiscGroupbox:AddToggle("FPS Unlockers", {
+    Text = "FPS Unlocker",
+    Default = false,
+    Tooltip = "FPS Unlocker",
+    Callback = function(enabled)
+        Settings.fpsunlocker = enabled
+        if not Settings.fpsunlocker then
+            setfpscap(120)
+        end
+    end
+})
+
+MiscGroupbox:AddInput("FPS", {
+    Default = 120,
+    Numeric = true,
+    Finished = true,
+    Text = "FPS",
+    Tooltip = "FPS",
+    Placeholder = "",
+    Callback = function(value)
+        if Settings.fpsunlocker then
+            setfpscap(tonumber(value))
+        end
+    end
+})
+
+Library:OnUnload(function()
+    print("Unloaded!")
+    Library.Unloaded = true
+end)
+
+local LastFPSUpdate = tick()
+local FrameCount = 0
+local CurrentFPS = 60
+
+local WatermarkConnection = game:GetService("RunService").RenderStepped:Connect(function()
+    FrameCount = FrameCount + 1
+    
+    if tick() - LastFPSUpdate >= 1 then
+        CurrentFPS = FrameCount
+        FrameCount = 0
+        LastFPSUpdate = tick()
+    end
+    
+    Library:SetWatermark(("XES Hub | %s fps | %s ms"):format(math.floor(CurrentFPS), math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())))
+end)
+
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
+    print("Unloaded!")
+    Library.Unloaded = true
+end)
+
+local UISettingsGroupbox = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
+
+UISettingsGroupbox:AddButton("Unload", function()
+    Library:Unload()
+end)
+
+UISettingsGroupbox:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
+    Default = "End",
+    NoUI = true,
+    Text = "Menu keybind"
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+UISettingsGroupbox:AddToggle("KeybindPanel", {
+    Text = "Keybinds Menu",
+    Default = true,
+    Callback = function(enabled)
+        Library.KeybindFrame.Visible = enabled
+    end
+})
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+ThemeManager:SetFolder("SexHub")
+SaveManager:SetFolder("SexHub/specific-game")
+SaveManager:BuildConfigSection(Tabs["UI Settings"])
+ThemeManager:ApplyToTab(Tabs["UI Settings"])
+SaveManager:LoadAutoloadConfig()
+            

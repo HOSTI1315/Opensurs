@@ -1,0 +1,252 @@
+--Why Buy Lights? Just Buy Cxyro Hubs It's cheaper And Better https://discord.gg/Rq3HECEntB
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Create main GUI
+local PickleHub = Instance.new("ScreenGui")
+PickleHub.Name = "PickleHub_Reverted"
+PickleHub.Parent = game:GetService("CoreGui")
+
+-- Top FPS/PING bar
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(0, 260, 0, 26)
+topBar.Position = UDim2.new(0.5, -130, 0, 10)
+topBar.BackgroundColor3 = Color3.fromRGB(12, 18, 12)
+topBar.BackgroundTransparency = 0.2
+topBar.Parent = PickleHub
+
+local topCorner = Instance.new("UICorner")
+topCorner.Parent = topBar
+topCorner.CornerRadius = UDim.new(0, 6)
+
+local topStroke = Instance.new("UIStroke")
+topStroke.Parent = topBar
+topStroke.Color = Color3.fromRGB(70, 200, 70)
+
+local statsText = Instance.new("TextLabel")
+statsText.Size = UDim2.new(1, 0, 1, 0)
+statsText.BackgroundTransparency = 1
+statsText.TextColor3 = Color3.fromRGB(200, 255, 200)
+statsText.Font = Enum.Font.GothamBold
+statsText.TextSize = 11
+statsText.Text = "PICKLE HUB | FPS: -- | PING: --"
+statsText.Parent = topBar
+
+-- Main menu frame
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 150, 0, 260)
+menuFrame.Position = UDim2.new(0.5, -75, 0.5, -130)
+menuFrame.BackgroundColor3 = Color3.fromRGB(12, 18, 12)
+menuFrame.Parent = PickleHub
+
+local menuCorner = Instance.new("UICorner")
+menuCorner.Parent = menuFrame
+menuCorner.CornerRadius = UDim.new(0, 10)
+
+local menuStroke = Instance.new("UIStroke")
+menuStroke.Parent = menuFrame
+menuStroke.Color = Color3.fromRGB(70, 200, 70)
+
+-- Pickle button to toggle menu
+local pickleButton = Instance.new("TextButton")
+pickleButton.Size = UDim2.new(0, 65, 0, 65)
+pickleButton.Position = UDim2.new(0, 20, 0.5, -32)
+pickleButton.BackgroundColor3 = Color3.fromRGB(15, 35, 15)
+pickleButton.Text = "🥒"
+pickleButton.TextSize = 35
+pickleButton.Parent = PickleHub
+
+local pickleCorner = Instance.new("UICorner")
+pickleCorner.Parent = pickleButton
+pickleCorner.CornerRadius = UDim.new(1, 0)
+
+local pickleStroke = Instance.new("UIStroke")
+pickleStroke.Parent = pickleButton
+pickleStroke.Color = Color3.fromRGB(70, 200, 70)
+
+-- Button creator function
+local function createButton(yPos, text)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -16, 0, 32)
+    button.Position = UDim2.new(0, 8, 0, yPos)
+    button.BackgroundColor3 = Color3.fromRGB(25, 40, 25)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 10
+    button.TextColor3 = Color3.fromRGB(229, 229, 229)
+    button.Text = text
+    button.Parent = menuFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.Parent = button
+    buttonCorner.CornerRadius = UDim.new(0, 6)
+    
+    return button
+end
+
+-- Create menu buttons
+local desyncButton = createButton(15, "Desync: OFF")
+local devourButton = createButton(52, "DEVOUR")
+local nowalkButton = createButton(89, "No Walk: OFF")
+local speedButton = createButton(126, "Speed: OFF")
+local pbSpamButton = createButton(163, "PB SPAM: OFF")
+
+-- Speed value input
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(1, -16, 0, 26)
+speedInput.Position = UDim2.new(0, 8, 0, 205)
+speedInput.BackgroundColor3 = Color3.fromRGB(5, 10, 5)
+speedInput.Text = "25"
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.Font = Enum.Font.GothamBold
+speedInput.TextSize = 11
+speedInput.Parent = menuFrame
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.Parent = speedInput
+
+-- Hide/show menu
+pickleButton.MouseButton1Click:Connect(function()
+    menuFrame.Visible = not menuFrame.Visible
+end)
+
+-- Update FPS and PING
+RunService.RenderStepped:Connect(function(deltaTime)
+    local fps = math.floor(1 / deltaTime)
+    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+    statsText.Text = "PICKLE HUB | FPS: " .. fps .. " | PING: " .. math.floor(ping) .. "ms"
+end)
+
+-- PB Spam button
+pbSpamButton.MouseButton1Click:Connect(function()
+    pbSpamButton.Text = "PB SPAM: ON"
+    pbSpamButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+    
+    RunService.Heartbeat:Connect(function()
+        local paintball = LocalPlayer.Backpack:FindFirstChild("Paintball Gun")
+        if paintball then
+            paintball.Parent = LocalPlayer.Character
+        end
+    end)
+end)
+
+-- Desync button
+desyncButton.MouseButton1Click:Connect(function()
+    desyncButton.Text = "Desync: ON"
+    desyncButton.BackgroundColor3 = Color3.fromRGB(0, 120, 50)
+    
+    setfflag("LargeReplicatorWrite5", "true")
+    setfflag("LargeReplicatorEnabled9", "true")
+    setfflag("AngularVelociryLimit", "360")
+    setfflag("TimestepArbiterVelocityCriteriaThresholdTwoDt", "2147483646")
+    setfflag("S2PhysicsSenderRate", "15000")
+    setfflag("DisableDPIScale", "true")
+    setfflag("MaxDataPacketPerSend", "2147483647")
+    setfflag("PhysicsSenderMaxBandwidthBps", "20000")
+    setfflag("TimestepArbiterHumanoidLinearVelThreshold", "21")
+    setfflag("MaxMissedWorldStepsRemembered", "-2147483648")
+end)
+
+-- Devour button
+devourButton.MouseButton1Click:Connect(function()
+    local quantumCloner = LocalPlayer.Backpack:FindFirstChild("Quantum Cloner")
+    if quantumCloner then
+        quantumCloner.Parent = LocalPlayer.Character
+    end
+    
+    task.wait(0.12)
+    
+    for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if tool.Name:lower():find("slap") then
+            tool.Parent = LocalPlayer.Character
+        end
+    end
+    
+    task.wait(0.15)
+    
+    local netModule = require(game:GetService("ReplicatedStorage").Packages.Net)
+    local useItem = netModule:RemoteEvent("UseItem")
+    useItem:FireServer(quantumCloner)
+    
+    task.wait(0.1)
+    
+    for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = LocalPlayer.Backpack
+        end
+    end
+end)
+
+-- No Walk button
+nowalkButton.MouseButton1Click:Connect(function()
+    nowalkButton.Text = "No Walk: ON"
+    nowalkButton.BackgroundColor3 = Color3.fromRGB(0, 120, 50)
+    
+    if LocalPlayer.Character then
+        LocalPlayer.Character.Animate.Disabled = true
+    end
+    
+    LocalPlayer.CharacterAdded:Connect(function(character)
+        task.wait(0.5)
+        if character:FindFirstChild("Animate") then
+            character.Animate.Disabled = true
+        end
+    end)
+end)
+
+-- Speed button
+speedButton.MouseButton1Click:Connect(function()
+    speedButton.Text = "Speed: ON"
+    speedButton.BackgroundColor3 = Color3.fromRGB(0, 120, 50)
+    
+    local speedValue = tonumber(speedInput.Text) or 25
+    
+    RunService.Heartbeat:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = speedValue
+            end
+        end
+    end)
+end)
+
+-- Make frames draggable
+local function makeDraggable(frame)
+    local dragging = false
+    local dragStart
+    local startPos
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+    
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+makeDraggable(topBar)
+makeDraggable(menuFrame)
+makeDraggable(pickleButton)

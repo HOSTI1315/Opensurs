@@ -1,0 +1,172 @@
+-- Made by AnthonyIsntHere | GUI + Modular version by ChatGPT
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SkidFlingGUI"
+ScreenGui.ResetOnSpawn = false
+pcall(function() ScreenGui.Parent = CoreGui end)
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 300, 0, 120)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+local TextBox = Instance.new("TextBox", Frame)
+TextBox.Size = UDim2.new(0, 280, 0, 40)
+TextBox.Position = UDim2.new(0, 10, 0, 10)
+TextBox.PlaceholderText = "Enter target name (or 'All')"
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.new(1, 1, 1)
+TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TextBox.BorderSizePixel = 0
+
+local Button = Instance.new("TextButton", Frame)
+Button.Size = UDim2.new(0, 280, 0, 40)
+Button.Position = UDim2.new(0, 10, 0, 70)
+Button.Text = "FLING!"
+Button.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+Button.TextColor3 = Color3.new(1, 1, 1)
+Button.BorderSizePixel = 0
+
+-- Notification
+local function Message(title, text, time)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = time
+        })
+    end)
+end
+
+-- Get Player
+local function GetPlayer(name)
+    name = name:lower()
+    if name == "all" then return "all" end
+    if name == "random" then
+        local plrs = Players:GetPlayers()
+        local i = table.find(plrs, LocalPlayer)
+        if i then table.remove(plrs, i) end
+        return plrs[math.random(1, #plrs)]
+    end
+    for _, x in pairs(Players:GetPlayers()) do
+        if x ~= LocalPlayer and (x.Name:lower():match("^" .. name) or x.DisplayName:lower():match("^" .. name)) then
+            return x
+        end
+    end
+end
+
+-- Fling Logic
+local function SkidFling(target)
+    local Char = LocalPlayer.Character
+    local Hum = Char and Char:FindFirstChildOfClass("Humanoid")
+    local Root = Hum and Hum.RootPart
+    if not (Char and Hum and Root) then return Message("Error", "Character not ready", 3) end
+
+    local TChar = target.Character
+    if not TChar then return Message("Error", "Target has no character", 3) end
+
+    local THum = TChar:FindFirstChildOfClass("Humanoid")
+    local TRoot = THum and THum.RootPart
+    local THead = TChar:FindFirstChild("Head")
+    local Accessory = TChar:FindFirstChildOfClass("Accessory")
+    local Handle = Accessory and Accessory:FindFirstChild("Handle")
+
+    local FPDH = workspace.FallenPartsDestroyHeight
+    getgenv().OldPos = Root.CFrame
+
+    local function FPos(BasePart, Pos, Ang)
+        Root.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+        Char:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+        Root.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+        Root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    end
+
+    local function SFBasePart(BasePart)
+        local Start = tick()
+        local Angle = 0
+        repeat
+            if Root and THum then
+                if BasePart.Velocity.Magnitude < 50 then
+                    Angle += 100
+                    FPos(BasePart, CFrame.new(0, 1.5, 0) + THum.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(BasePart, CFrame.new(0, -1.5, 0) + THum.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                else
+                    FPos(BasePart, CFrame.new(0, 1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                end
+            end
+        until BasePart.Velocity.Magnitude > 500 or tick() > Start + 2 or Hum.Health <= 0
+    end
+
+    workspace.FallenPartsDestroyHeight = math.huge * 0
+    local BV = Instance.new("BodyVelocity", Root)
+    BV.Name = "EpixVel"
+    BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+    BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+
+    Hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+    local TargetPart = TRoot or THead or Handle
+    if not TargetPart then return Message("Error", "No target part found", 3) end
+
+    SFBasePart(TargetPart)
+
+    BV:Destroy()
+    Hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    workspace.CurrentCamera.CameraSubject = Hum
+
+    repeat
+        Root.CFrame = getgenv().OldPos * CFrame.new(0, 0.5, 0)
+        Char:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, 0.5, 0))
+        Hum:ChangeState("GettingUp")
+        for _, bp in pairs(Char:GetChildren()) do
+            if bp:IsA("BasePart") then
+                bp.Velocity = Vector3.zero
+                bp.RotVelocity = Vector3.zero
+            end
+        end
+        task.wait()
+    until (Root.Position - getgenv().OldPos.p).Magnitude < 25
+
+    workspace.FallenPartsDestroyHeight = FPDH
+end
+
+-- Wrapper
+local function SkidFlingByName(name)
+    local target = GetPlayer(name)
+    if target == "all" then
+        for _, x in pairs(Players:GetPlayers()) do
+            if x ~= LocalPlayer and x.UserId ~= 1414978355 then
+                SkidFling(x)
+            end
+        end
+    elseif target and target ~= LocalPlayer then
+        if target.UserId == 1414978355 then
+            Message("Error", "This user is whitelisted (Owner)", 4)
+        else
+            SkidFling(target)
+        end
+    else
+        Message("Error", "Player not found!", 3)
+    end
+end
+
+-- Button Connect
+Button.MouseButton1Click:Connect(function()
+    local name = TextBox.Text
+    if name and name ~= "" then
+        SkidFlingByName(name)
+    else
+        Message("Error", "Enter a target name!", 3)
+    end
+end)

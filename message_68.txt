@@ -1,0 +1,930 @@
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+
+local http = game:GetService("HttpService")
+local tweenService = game:GetService("TweenService")
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local coreGui = game:GetService("CoreGui")
+local userInput = game:GetService("UserInputService")
+
+local localPlayer = players.LocalPlayer
+
+if localPlayer.PlayerGui:FindFirstChild("Main") then
+    local _coinsShop = localPlayer.PlayerGui.Main:FindFirstChild("CoinsShop")
+end
+
+local dataFolder = "Qiwik"
+makefolder(dataFolder)
+
+local function saveJson(fileName, tableData)
+    writefile(dataFolder .. "/" .. fileName .. ".json", http:JSONEncode(tableData))
+end
+
+local function readJson(fileName)
+    local path = dataFolder .. "/" .. fileName .. ".json"
+    if isfile(path) then
+        local content = readfile(path)
+        return http:JSONDecode(content)
+    end
+    return nil
+end
+
+local function listJsonFiles()
+    local names = {}
+    for _, p in ipairs(listfiles(dataFolder)) do
+        local name = p:match("([^/]+)%.json$")
+        if name then
+            table.insert(names, name)
+        end
+    end
+    return names
+end
+
+local mainWindow = library:CreateWindow("Steal a Brainrot")
+local espWindow = library:CreateWindow("ESP")
+local keybindsWindow = library:CreateWindow("Keybinds")
+
+-- Detect current plot name
+local myPlotName = nil
+for _, plot in ipairs(workspace.Plots:GetChildren()) do
+    local yourBase = plot:FindFirstChild("YourBase", true)
+    if yourBase and yourBase.Enabled then
+        myPlotName = plot.Name
+        break
+    end
+end
+
+local mainFolder = mainWindow:AddFolder("Main")
+
+-- Brought to you by itsjaven on Discord
+
+local floatEnabled = false
+local floatConn = nil
+local baseY = nil
+
+mainFolder:AddToggle({
+    text = "Float",
+    state = false,
+    flag = "float_toggle",
+    callback = function(state)
+        floatEnabled = state
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local root = char:WaitForChild("HumanoidRootPart")
+
+        if floatEnabled then
+            baseY = root.Position.Y
+            floatConn = runService.Heartbeat:Connect(function()
+                if not floatEnabled or not humanoid or not root or humanoid.Health <= 0 then
+                    if floatConn then
+                        floatConn:Disconnect()
+                        floatConn = nil
+                    end
+                    return
+                end
+
+                humanoid:ChangeState(Enum.HumanoidStateType.Flying)
+
+                local cam = workspace.CurrentCamera
+                local forward = cam and cam.CFrame.LookVector or Vector3.new(0, 0, -1)
+                forward = Vector3.new(forward.X, 0, forward.Z)
+                if forward.Magnitude > 0 then
+                    forward = forward.Unit
+                end
+
+                local pos = root.Position
+                local targetY = baseY + 2.7
+                if pos.Y < targetY then
+                    root.AssemblyLinearVelocity = forward * 40 + Vector3.new(0, math.min(40, (targetY - pos.Y) * 10), 0)
+                else
+                    root.AssemblyLinearVelocity = forward * 40
+                    if math.abs(pos.Y - targetY) > 0.1 then
+                        root.CFrame = CFrame.new(
+                            pos.X, targetY, pos.Z,
+                            root.CFrame:VectorToWorldSpace(Vector3.new(1, 0, 0)),
+                            root.CFrame:VectorToWorldSpace(Vector3.new(0, 1, 0)),
+                            root.CFrame:VectorToWorldSpace(Vector3.new(0, 0, 1))
+                        )
+                    end
+                end
+            end)
+        else
+            if floatConn then
+                floatConn:Disconnect()
+                floatConn = nil
+            end
+            baseY = nil
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        end
+    end,
+})
+
+local jumpBoostEnabled = false
+local jumpConn = nil
+
+mainFolder:AddToggle({
+    text = "Jump Boost",
+    state = false,
+    flag = "jump_boost_toggle",
+    callback = function(state)
+        jumpBoostEnabled = state
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local root = char:WaitForChild("HumanoidRootPart")
+
+        if jumpBoostEnabled then
+            if humanoid then
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = 96
+            end
+            if jumpConn then jumpConn:Disconnect() end
+            jumpConn = runService.Stepped:Connect(function()
+                if not jumpBoostEnabled then
+                    if jumpConn then jumpConn:Disconnect() jumpConn = nil end
+                    if humanoid then humanoid.JumpPower = 50 end
+                    return
+                end
+                if root and root.Velocity.Y < 0 then
+                    root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * 0.9, root.Velocity.Z)
+                end
+            end)
+        else
+            if jumpConn then jumpConn:Disconnect() jumpConn = nil end
+            if humanoid then humanoid.JumpPower = 50 end
+        end
+    end,
+})
+
+local speedBoostEnabled = false
+local speedConn = nil
+
+mainFolder:AddToggle({
+    text = "Speed Boost",
+    state = false,
+    flag = "speed_boost_toggle",
+    callback = function(state)
+        speedBoostEnabled = state
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local root = char:WaitForChild("HumanoidRootPart")
+
+        if speedBoostEnabled then
+            if speedConn then speedConn:Disconnect() end
+            speedConn = runService.Heartbeat:Connect(function()
+                if not speedBoostEnabled then
+                    if speedConn then speedConn:Disconnect() speedConn = nil end
+                    return
+                end
+                if humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
+                    local dir = humanoid.MoveDirection
+                    root.Velocity = Vector3.new(dir.X * 50, root.Velocity.Y, dir.Z * 50)
+                end
+            end)
+        elseif speedConn then
+            speedConn:Disconnect()
+            speedConn = nil
+        end
+    end,
+})
+
+local infiniteJumpEnabled = false
+mainFolder:AddToggle({
+    text = "Infinity Jump",
+    state = false,
+    flag = "infinity_jump_toggle",
+    callback = function(state)
+        infiniteJumpEnabled = state
+    end,
+})
+userInput.JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+local godModeEnabled = false
+mainFolder:AddToggle({
+    text = "God Mode",
+    state = false,
+    flag = "god_mode_toggle",
+    callback = function(state)
+        godModeEnabled = state
+    end,
+})
+runService.RenderStepped:Connect(function()
+    if godModeEnabled and localPlayer.Character then
+        local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid.Health < humanoid.MaxHealth then
+            humanoid.Health = humanoid.MaxHealth
+            humanoid.PlatformStand = false
+            humanoid.Sit = false
+        end
+    end
+end)
+
+mainFolder:AddButton({
+    text = "Teleport Up",
+    flag = "teleport_up_button",
+    callback = function()
+        local root = (localPlayer.Character or localPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        if root then
+            root.CFrame = root.CFrame + Vector3.new(0, 150, 0)
+        end
+    end,
+})
+mainFolder:AddButton({
+    text = "Teleport Down",
+    flag = "teleport_down_button",
+    callback = function()
+        local root = (localPlayer.Character or localPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        if root then
+            root.CFrame = root.CFrame - Vector3.new(0, 189, 0)
+        end
+    end,
+})
+
+mainFolder:AddButton({
+    text = "Auto Steal",
+    flag = "auto_steal_button",
+    callback = function()
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local root = char:WaitForChild("HumanoidRootPart")
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+        local deliveryHitbox = nil
+        for _, plot in pairs(workspace.Plots:GetChildren()) do
+            local yourBase = plot:FindFirstChild("YourBase", true)
+            if yourBase and yourBase.Enabled then
+                deliveryHitbox = plot:FindFirstChild("DeliveryHitbox", true)
+                break
+            end
+        end
+
+        if deliveryHitbox and root and humanoid then
+            local originalY = root.Position.Y
+            root.CFrame = root.CFrame + Vector3.new(0, 200, 0)
+            task.wait(2)
+            local targetPos = Vector3.new(deliveryHitbox.Position.X, root.Position.Y, deliveryHitbox.Position.Z)
+            local tw = tweenService:Create(
+                root,
+                TweenInfo.new(((targetPos - root.Position).Magnitude) / humanoid.WalkSpeed * 1.3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+                {
+                    CFrame = CFrame.new(targetPos) * (root.CFrame - root.Position),
+                    Velocity = Vector3.new(0, 0, 0),
+                }
+            )
+            tw:Play()
+            tw.Completed:Wait()
+            root.CFrame = CFrame.new(Vector3.new(root.Position.X, originalY, root.Position.Z))
+        end
+    end,
+})
+
+local utilityFolder = mainWindow:AddFolder("Utility")
+
+local antiRagdollEnabled = false
+local antiConnections = {}
+local characterAddedConn = nil
+
+local function watchInstance(inst)
+    if inst:IsA("BasePart") then
+        table.insert(antiConnections, inst:GetPropertyChangedSignal("Anchored"):Connect(function()
+            if inst.Anchored and antiRagdollEnabled then
+                inst.Anchored = false
+            end
+        end))
+        table.insert(antiConnections, inst.ChildAdded:Connect(function(child)
+            if child and (child:IsA("BallSocketConstraint") or child.Name == "Attachment" or child:IsA("HingeConstraint")) and child.Parent then
+                child:Destroy()
+
+                local char = localPlayer.Character
+                if char and char:FindFirstChildOfClass("Humanoid") then
+                    local hum = char.Humanoid
+                    hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    hum.PlatformStand = false
+                    workspace.CurrentCamera.CameraSubject = hum
+                    char.HumanoidRootPart.CanCollide = true
+                end
+
+                local motor = inst:FindFirstChildWhichIsA("Motor6D")
+                if motor then
+                    motor.Enabled = true
+                end
+
+                -- Re-enable controls
+                require(players.LocalPlayer.PlayerScripts.PlayerModule.ControlModule):Enable()
+
+                for _ = 1, 10 do
+                    task.wait()
+                    inst.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end))
+    elseif inst:IsA("Humanoid") then
+        table.insert(antiConnections, inst.StateChanged:Connect(function()
+            if antiRagdollEnabled and (inst:GetState() == Enum.HumanoidStateType.Physics or inst:GetState() == Enum.HumanoidStateType.Ragdoll) then
+                inst:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        end))
+    end
+end
+
+local function watchCharacter(char)
+    if not char then return end
+    for _, child in pairs(char:GetChildren()) do
+        watchInstance(child)
+    end
+    table.insert(antiConnections, char.ChildAdded:Connect(watchInstance))
+end
+
+utilityFolder:AddToggle({
+    text = "Anti-Ragdoll",
+    state = false,
+    flag = "anti_ragdoll_toggle",
+    callback = function(state)
+        antiRagdollEnabled = state
+        if state then
+            if localPlayer.Character then
+                watchCharacter(localPlayer.Character)
+            end
+            if characterAddedConn then characterAddedConn:Disconnect() end
+            characterAddedConn = localPlayer.CharacterAdded:Connect(watchCharacter)
+        else
+            for _, conn in pairs(antiConnections) do
+                conn:Disconnect()
+            end
+            antiConnections = {}
+            if characterAddedConn then
+                characterAddedConn:Disconnect()
+                characterAddedConn = nil
+            end
+        end
+    end,
+})
+
+local autoSlapEnabled = false
+local autoSlapInterval = 0.1
+local slapToolNames = {
+    "Tung Bat",
+    "Blackhole Slap",
+    "Dark Matter Slap",
+    "Dev Slap",
+    "Devil Slap",
+    "Diamond Slap",
+    "Emerald Slap",
+    "Flame Slap",
+    "Gold Slap",
+    "Iron Slap",
+    "Nuclear Slap",
+    "Ruby Slap",
+    "Slap",
+}
+utilityFolder:AddToggle({
+    text = "Auto-Slap",
+    state = false,
+    flag = "auto_slap_toggle",
+    callback = function(state)
+        autoSlapEnabled = state
+    end,
+})
+
+task.spawn(function()
+    while true do
+        if autoSlapEnabled then
+            local char = localPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local root = char.HumanoidRootPart
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if root and humanoid then
+                    for _, plr in pairs(players:GetPlayers()) do
+                        if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                            local otherRoot = plr.Character.HumanoidRootPart
+                            if (root.Position - otherRoot.Position).Magnitude <= 10 then
+                                for _, toolName in pairs(slapToolNames) do
+                                    local tool = localPlayer.Backpack:FindFirstChild(toolName) or localPlayer.Character:FindFirstChild(toolName)
+                                    if tool then
+                                        if not localPlayer.Character:FindFirstChild(toolName) then
+                                            humanoid:EquipTool(tool)
+                                            task.wait(0.1)
+                                        end
+                                        if tool:IsA("Tool") and tool.Parent == localPlayer.Character then
+                                            tool:Activate()
+                                        end
+                                    end
+                                end
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(autoSlapInterval)
+    end
+end)
+
+utilityFolder:AddButton({
+    text = "Server Hop",
+    flag = "server_hop_button",
+    callback = function()
+        local placeId = game.PlaceId
+        local seenServers = {}
+        local cursor = ""
+        local currentHour = os.date("!*t").hour
+
+        if not pcall(function()
+            seenServers = http:JSONDecode(readfile("NotSameServers.json"))
+        end) then
+            table.insert(seenServers, currentHour)
+            writefile("NotSameServers.json", http:JSONEncode(seenServers))
+        end
+
+        local function scanPage()
+            local page
+            if cursor == "" then
+                page = http:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"))
+            else
+                page = http:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor))
+            end
+
+            if page.nextPageCursor and page.nextPageCursor ~= "null" then
+                cursor = page.nextPageCursor
+            end
+
+            for _, server in pairs(page.data) do
+                local candidateId = tostring(server.id)
+                local canJoin = tonumber(server.playing) < tonumber(server.maxPlayers)
+                if canJoin then
+                    local unique = true
+                    for _, prev in ipairs(seenServers) do
+                        if candidateId == tostring(prev) then
+                            unique = false
+                            break
+                        end
+                    end
+                    if unique then
+                        table.insert(seenServers, candidateId)
+                        task.wait()
+                        writefile("NotSameServers.json", http:JSONEncode(seenServers))
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, candidateId, localPlayer)
+                        task.wait(4)
+                        return
+                    end
+                end
+            end
+        end
+
+        task.spawn(function()
+            while task.wait() do
+                scanPage()
+                if cursor ~= "" then
+                    scanPage()
+                end
+            end
+        end)
+    end,
+})
+
+utilityFolder:AddButton({
+    text = "Rejoin",
+    flag = "rejoin_button",
+    callback = function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
+    end,
+})
+
+local espFolder = espWindow:AddFolder("ESP")
+
+local playersEspEnabled = false
+local playerEspMap = {}
+
+local lockEspEnabled = false
+local lockEspMap = {}
+
+local function createPlayerEsp(plr)
+    if not playersEspEnabled or plr == players.LocalPlayer then return end
+    local char = plr.Character
+    if not char then return end
+    local root = char:WaitForChild("HumanoidRootPart", 5)
+    if not root then return end
+
+    if playerEspMap[plr] then
+        playerEspMap[plr]:Destroy()
+        playerEspMap[plr] = nil
+    end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "ESP_" .. plr.Name
+    bb.AlwaysOnTop = true
+    bb.Size = UDim2.new(0, 100, 0, 40)
+    bb.StudsOffset = Vector3.new(0, 3, 0)
+    bb.Adornee = root
+    bb.Parent = coreGui
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = plr.DisplayName
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(138, 43, 226)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Parent = bb
+
+    playerEspMap[plr] = bb
+end
+
+local function removePlayerEsp(plr)
+    if playerEspMap[plr] then
+        playerEspMap[plr]:Destroy()
+        playerEspMap[plr] = nil
+    end
+end
+
+local function setPlayersEsp(enabled)
+    playersEspEnabled = enabled
+    if enabled then
+        for _, plr in ipairs(players:GetPlayers()) do
+            if plr ~= players.LocalPlayer then
+                createPlayerEsp(plr)
+            end
+        end
+    else
+        for _, gui in pairs(playerEspMap) do
+            if gui then gui:Destroy() end
+        end
+        playerEspMap = {}
+    end
+end
+
+players.PlayerAdded:Connect(function(plr)
+    if playersEspEnabled and plr ~= players.LocalPlayer then
+        createPlayerEsp(plr)
+        plr.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            createPlayerEsp(plr)
+        end)
+    end
+end)
+players.PlayerRemoving:Connect(removePlayerEsp)
+
+-- Lock and rarity ESP configs
+local rarityConfig = {
+    Mythic = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+    ["Brainrot God"] = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+    Secret = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+}
+
+local mutationConfig = {
+    Gold = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+    Diamond = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+    Rainbow = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+    Bloodrot = {
+        Color = Color3.fromRGB(255, 255, 255),
+        Stroke = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(0, 100, 0, 40),
+    },
+}
+
+local function updateLockEsp()
+    if not lockEspEnabled then
+        for _, gui in pairs(lockEspMap) do
+            if gui then gui:Destroy() end
+        end
+        lockEspMap = {}
+        return
+    end
+
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        local remainingLabel = plot:FindFirstChild("Purchases", true)
+            and plot.Purchases:FindFirstChild("PlotBlock", true)
+            and plot.Purchases.PlotBlock.Main:FindFirstChild("BillboardGui", true)
+            and plot.Purchases.PlotBlock.Main.BillboardGui:FindFirstChild("RemainingTime", true)
+
+        if remainingLabel then
+            local tagName = "LockTimeESP_" .. plot.Name
+            local existing = plot:FindFirstChild(tagName)
+
+            local unlocked = (remainingLabel.Text == "0s")
+            local text = unlocked and "Unlocked" or ("Lock: " .. remainingLabel.Text)
+
+            local color
+            if plot.Name == myPlotName then
+                color = unlocked and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 0)
+            else
+                color = unlocked and Color3.fromRGB(220, 20, 60) or Color3.fromRGB(255, 255, 0)
+            end
+
+            if not existing then
+                local bb = Instance.new("BillboardGui")
+                bb.Name = tagName
+                bb.Size = UDim2.new(0, 100, 0, 40)
+                bb.StudsOffset = Vector3.new(0, 5, 0)
+                bb.AlwaysOnTop = true
+                bb.Adornee = plot.Purchases.PlotBlock.Main
+                bb.Parent = plot
+
+                local label = Instance.new("TextLabel")
+                label.Text = text
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.TextScaled = true
+                label.TextColor3 = color
+                label.TextStrokeColor3 = Color3.fromRGB(138, 43, 226)
+                label.TextStrokeTransparency = 0
+                label.Font = Enum.Font.GothamBold
+                label.Parent = bb
+
+                lockEspMap[plot.Name] = bb
+            else
+                existing.TextLabel.Text = text
+                existing.TextLabel.TextColor3 = color
+            end
+        elseif lockEspMap[plot.Name] then
+            lockEspMap[plot.Name]:Destroy()
+            lockEspMap[plot.Name] = nil
+        end
+    end
+end
+
+local rarityEnabled = {
+}
+
+local function updateRarityMutationEsp()
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        if plot.Name ~= myPlotName then
+            for _, desc in pairs(plot:GetDescendants()) do
+                if desc.Name == "Rarity" and desc:IsA("TextLabel") and rarityConfig[desc.Text] then
+                    local parentModel = desc.Parent.Parent
+                    local rarityTag = desc.Text .. "_ESP"
+                    local mutationTag = "Mutation_ESP"
+
+                    local rarityGui = parentModel:FindFirstChild(rarityTag)
+                    local mutationGui = parentModel:FindFirstChild(mutationTag)
+
+                    if rarityEnabled[desc.Text] then
+                        if not rarityGui then
+                            local cfg = rarityConfig[desc.Text]
+                            local bb = Instance.new("BillboardGui")
+                            bb.Name = rarityTag
+                            bb.Size = cfg.Size
+                            bb.StudsOffset = Vector3.new(0, 3, 0)
+                            bb.AlwaysOnTop = true
+
+                            local label = Instance.new("TextLabel")
+                            label.Text = desc.Parent.DisplayName.Text
+                            label.Size = UDim2.new(1, 0, 1, 0)
+                            label.BackgroundTransparency = 1
+                            label.TextScaled = true
+                            label.TextColor3 = cfg.Color
+                            label.TextStrokeColor3 = cfg.Stroke
+                            label.TextStrokeTransparency = 0
+                            label.Font = Enum.Font.GothamBold
+                            label.Parent = bb
+
+                            bb.Parent = parentModel
+                        end
+
+                        local mutationLabel = desc.Parent:FindFirstChild("Mutation")
+                        if mutationLabel and mutationConfig[mutationLabel.Text] then
+                            local cfg = mutationConfig[mutationLabel.Text]
+                            if not mutationGui then
+                                local bb = Instance.new("BillboardGui")
+                                bb.Name = mutationTag
+                                bb.Size = cfg.Size
+                                bb.StudsOffset = Vector3.new(0, 6, 0)
+                                bb.AlwaysOnTop = true
+
+                                local label = Instance.new("TextLabel")
+                                label.Text = mutationLabel.Text
+                                label.Size = UDim2.new(1, 0, 1, 0)
+                                label.BackgroundTransparency = 1
+                                label.TextScaled = true
+                                label.TextColor3 = cfg.Color
+                                label.TextStrokeColor3 = cfg.Stroke
+                                label.TextStrokeTransparency = 0
+                                label.Font = Enum.Font.GothamBold
+                                label.Parent = bb
+
+                                bb.Parent = parentModel
+                            else
+                                mutationGui.TextLabel.Text = mutationLabel.Text
+                                mutationGui.TextLabel.TextColor3 = cfg.Color
+                                mutationGui.TextLabel.TextStrokeColor3 = cfg.Stroke
+                            end
+                        elseif mutationGui then
+                            mutationGui:Destroy()
+                        end
+                    else
+                        if rarityGui then rarityGui:Destroy() end
+                        if mutationGui then mutationGui:Destroy() end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ESP toggles
+espFolder:AddToggle({
+    text = "Lock ESP",
+    state = false,
+    flag = "lock_esp_toggle",
+    callback = function(state)
+        lockEspEnabled = state
+        updateLockEsp()
+    end,
+})
+espFolder:AddToggle({
+    text = "Players ESP",
+    state = false,
+    flag = "players_esp_toggle",
+    callback = function(state)
+        setPlayersEsp(state)
+    end,
+})
+espFolder:AddToggle({
+    text = "Mythic ESP",
+    state = false,
+    flag = "mythic_esp_toggle",
+    callback = function(state)
+        rarityEnabled.Mythic = state
+        updateRarityMutationEsp()
+    end,
+})
+espFolder:AddToggle({
+    text = "Brainrot God ESP",
+    state = false,
+    flag = "brainrot_god_esp_toggle",
+    callback = function(state)
+        rarityEnabled["Brainrot God"] = state
+        updateRarityMutationEsp()
+    end,
+})
+espFolder:AddToggle({
+    text = "Secret ESP",
+    state = false,
+    flag = "secret_esp_toggle",
+    callback = function(state)
+        rarityEnabled.Secret = state
+        updateRarityMutationEsp()
+    end,
+})
+
+local keybindsFolder = keybindsWindow:AddFolder("Keybinds")
+
+keybindsFolder:AddBind({
+    text = "Teleport Up",
+    key = "R",
+    hold = false,
+    flag = "teleport_up_bind",
+    callback = function()
+        local root = (localPlayer.Character or localPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        if root then
+            root.CFrame = root.CFrame + Vector3.new(0, 150, 0)
+        end
+    end,
+})
+keybindsFolder:AddBind({
+    text = "Teleport Down",
+    key = "F",
+    hold = false,
+    flag = "teleport_down_bind",
+    callback = function()
+        local root = (localPlayer.Character or localPlayer.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")
+        if root then
+            root.CFrame = root.CFrame - Vector3.new(0, 189, 0)
+        end
+    end,
+})
+keybindsFolder:AddBind({
+    text = "Toggle Float",
+    key = "G",
+    hold = false,
+    flag = "float_bind",
+    callback = function()
+        local state = not floatEnabled
+        floatEnabled = state
+
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local root = char:WaitForChild("HumanoidRootPart")
+
+        if floatEnabled then
+            baseY = root.Position.Y
+            floatConn = runService.Heartbeat:Connect(function()
+                if not floatEnabled or not humanoid or not root or humanoid.Health <= 0 then
+                    if floatConn then floatConn:Disconnect() floatConn = nil end
+                    return
+                end
+
+                humanoid:ChangeState(Enum.HumanoidStateType.Flying)
+
+                local cam = workspace.CurrentCamera
+                local forward = cam and cam.CFrame.LookVector or Vector3.new(0, 0, -1)
+                forward = Vector3.new(forward.X, 0, forward.Z)
+                if forward.Magnitude > 0 then forward = forward.Unit end
+
+                local pos = root.Position
+                local targetY = baseY + 2.7
+                if pos.Y < targetY then
+                    root.AssemblyLinearVelocity = forward * 40 + Vector3.new(0, math.min(40, (targetY - pos.Y) * 10), 0)
+                else
+                    root.AssemblyLinearVelocity = forward * 40
+                    if math.abs(pos.Y - targetY) > 0.1 then
+                        root.CFrame = CFrame.new(
+                            pos.X, targetY, pos.Z,
+                            root.CFrame:VectorToWorldSpace(Vector3.new(1, 0, 0)),
+                            root.CFrame:VectorToWorldSpace(Vector3.new(0, 1, 0)),
+                            root.CFrame:VectorToWorldSpace(Vector3.new(0, 0, 1))
+                        )
+                    end
+                end
+            end)
+        else
+            if floatConn then floatConn:Disconnect() floatConn = nil end
+            baseY = nil
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        end
+    end,
+})
+keybindsFolder:AddBind({
+    text = "Toggle Walkspeed 50",
+    key = "T",
+    hold = false,
+    flag = "walkspeed_bind",
+    callback = function()
+        speedBoostEnabled = not speedBoostEnabled
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local root = char:WaitForChild("HumanoidRootPart")
+
+        if speedBoostEnabled then
+            if speedConn then speedConn:Disconnect() end
+            speedConn = runService.Heartbeat:Connect(function()
+                if not speedBoostEnabled then
+                    if speedConn then speedConn:Disconnect() speedConn = nil end
+                    return
+                end
+                if humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
+                    local dir = humanoid.MoveDirection
+                    root.Velocity = Vector3.new(dir.X * 50, root.Velocity.Y, dir.Z * 50)
+                end
+            end)
+        elseif speedConn then
+            speedConn:Disconnect()
+            speedConn = nil
+        end
+    end,
+})
+
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+        if lockEspEnabled then
+            updateLockEsp()
+        end
+        if next(rarityEnabled) ~= nil then
+            updateRarityMutationEsp()
+        end
+    end
+end)
+
+localPlayer.Idled:Connect(function()
+    game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
+
+library:Init()

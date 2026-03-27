@@ -1,0 +1,269 @@
+local v0 = getgenv and getgenv() or _G
+if v0.__XD_SPAM_PANEL__ then
+    return 
+else
+    v0.__XD_SPAM_PANEL__ = true
+    repeat
+        task.wait()
+    until game and game.IsLoaded and game:IsLoaded()
+    local l_Players_0 = game:GetService("Players")
+    local l_ReplicatedStorage_0 = game:GetService("ReplicatedStorage")
+    local l_StarterGui_0 = game:GetService("StarterGui")
+    local l_CoreGui_0 = game:GetService("CoreGui")
+    local l_LocalPlayer_0 = l_Players_0.LocalPlayer
+    local _ = 0
+    local v7 = false
+    local v8 = {"rocket", "balloon", "inverse", "tiny"}
+    local function v12(v9, v10, v11)
+        if not v7 then
+            return 
+        else
+            pcall(function()
+                l_StarterGui_0:SetCore("SendNotification", {Title = v9, Text = v10, Duration = v11 or 3})
+            end)
+            return 
+        end
+    end
+    local v20 = (function(v13)
+        if not v13 then
+            v13 = 6
+        end
+        local v14 = os.clock()
+        local l_Packages_0 = l_ReplicatedStorage_0:FindFirstChild("Packages")
+        while true do
+            if not l_Packages_0 then
+                if v13 >= os.clock() - v14 then
+                    task.wait(0.1)
+                    l_Packages_0 = l_ReplicatedStorage_0:FindFirstChild("Packages")
+                else
+                    return nil
+                end
+            else
+                local v16 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                while true do
+                    if not v16 then
+                        if v13 < os.clock() - v14 then
+                            return nil
+                        else
+                            task.wait(0.1)
+                            v16 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                        end
+                    else
+                        local v17 = v16.FindFirstChild(v16, "RE/AdminPanelService/ExecuteCommand")
+                        local v18 = v14 + v13
+                        while not v17 and os.clock() < v18 do
+                            task.wait(0.1)
+                            local v19 = l_Packages_0.FindFirstChild(l_Packages_0, "Net")
+                            if v19 then
+                                v17 = l_Packages_0.Net:FindFirstChild("RE/AdminPanelService/ExecuteCommand")
+                            else
+                                v17 = v19
+                            end
+                        end
+                        return v17
+                    end
+                end
+            end
+        end
+    end)(6)
+    if not v20 or not v20:IsA("RemoteEvent") then
+        v12("Missing Remote", "RE/AdminPanelService/ExecuteCommand not found", 5)
+        return 
+    else
+        local function v23(v21)
+            local v22 = v21.DisplayName or ""
+            if v22 == "" or v22 == v21.Name then
+                return "@" .. v21.Name
+            else
+                return string.format("%s  (@%s)", v22, v21.Name)
+            end
+        end
+        local l_ScreenGui_0 = Instance.new("ScreenGui")
+        l_ScreenGui_0.Name = "xd_spam_gui"
+        l_ScreenGui_0.ResetOnSpawn = false
+        l_ScreenGui_0.IgnoreGuiInset = true
+        l_ScreenGui_0.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        l_ScreenGui_0.Parent = not not l_CoreGui_0:FindFirstChildOfClass("ScreenGui") and l_CoreGui_0 or l_LocalPlayer_0:FindFirstChildOfClass("PlayerGui") or l_CoreGui_0
+        local l_Frame_0 = Instance.new("Frame")
+        l_Frame_0.Name = "Root"
+        l_Frame_0.Size = UDim2.fromOffset(300, 380)
+        l_Frame_0.Position = UDim2.fromOffset(40, 120)
+        l_Frame_0.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+        l_Frame_0.BorderSizePixel = 0
+        l_Frame_0.BackgroundTransparency = 0.08
+        l_Frame_0.Parent = l_ScreenGui_0
+        local l_UIStroke_0 = Instance.new("UIStroke")
+        l_UIStroke_0.Thickness = 1
+        l_UIStroke_0.Color = Color3.fromRGB(255, 70, 85)
+        l_UIStroke_0.Transparency = 0.25
+        l_UIStroke_0.Parent = l_Frame_0
+        local l_UICorner_0 = Instance.new("UICorner")
+        l_UICorner_0.CornerRadius = UDim.new(0, 12)
+        l_UICorner_0.Parent = l_Frame_0
+        local l_Frame_1 = Instance.new("Frame")
+        l_Frame_1.Name = "TopBar"
+        l_Frame_1.Size = UDim2.new(1, 0, 0, 36)
+        l_Frame_1.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+        l_Frame_1.BorderSizePixel = 0
+        l_Frame_1.Parent = l_Frame_0
+        local l_UICorner_1 = Instance.new("UICorner")
+        l_UICorner_1.CornerRadius = UDim.new(0, 12)
+        l_UICorner_1.Parent = l_Frame_1
+        local l_TextLabel_0 = Instance.new("TextLabel")
+        l_TextLabel_0.Name = "Title"
+        l_TextLabel_0.BackgroundTransparency = 1
+        l_TextLabel_0.Size = UDim2.new(1, -90, 1, 0)
+        l_TextLabel_0.Position = UDim2.fromOffset(12, 0)
+        l_TextLabel_0.Font = Enum.Font.GothamBold
+        l_TextLabel_0.TextSize = 16
+        l_TextLabel_0.TextXAlignment = Enum.TextXAlignment.Left
+        l_TextLabel_0.TextColor3 = Color3.fromRGB(235, 235, 235)
+        l_TextLabel_0.Text = "xd spam"
+        l_TextLabel_0.Parent = l_Frame_1
+        local l_TextButton_0 = Instance.new("TextButton")
+        l_TextButton_0.Text = "Refresh"
+        l_TextButton_0.AutoButtonColor = true
+        l_TextButton_0.Font = Enum.Font.Gotham
+        l_TextButton_0.TextSize = 14
+        l_TextButton_0.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+        l_TextButton_0.TextColor3 = Color3.fromRGB(235, 235, 235)
+        l_TextButton_0.Size = UDim2.fromOffset(80, 26)
+        l_TextButton_0.Position = UDim2.new(1, -86, 0, 5)
+        l_TextButton_0.Parent = l_Frame_1
+        local l_UICorner_2 = Instance.new("UICorner")
+        l_UICorner_2.CornerRadius = UDim.new(0, 8)
+        l_UICorner_2.Parent = l_TextButton_0
+        local l_Frame_2 = Instance.new("Frame")
+        l_Frame_2.Name = "Holder"
+        l_Frame_2.BackgroundTransparency = 1
+        l_Frame_2.Size = UDim2.new(1, -16, 1, -52)
+        l_Frame_2.Position = UDim2.fromOffset(8, 44)
+        l_Frame_2.Parent = l_Frame_0
+        local l_ScrollingFrame_0 = Instance.new("ScrollingFrame")
+        l_ScrollingFrame_0.Name = "List"
+        l_ScrollingFrame_0.Active = true
+        l_ScrollingFrame_0.ScrollingDirection = Enum.ScrollingDirection.Y
+        l_ScrollingFrame_0.ScrollBarThickness = 6
+        l_ScrollingFrame_0.BackgroundTransparency = 1
+        l_ScrollingFrame_0.BorderSizePixel = 0
+        l_ScrollingFrame_0.Size = UDim2.new(1, 0, 1, 0)
+        l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, 0)
+        l_ScrollingFrame_0.Parent = l_Frame_2
+        local l_UIListLayout_0 = Instance.new("UIListLayout")
+        l_UIListLayout_0.Padding = UDim.new(0, 6)
+        l_UIListLayout_0.SortOrder = Enum.SortOrder.LayoutOrder
+        l_UIListLayout_0.Parent = l_ScrollingFrame_0
+        local l_UIPadding_0 = Instance.new("UIPadding")
+        l_UIPadding_0.PaddingTop = UDim.new(0, 4)
+        l_UIPadding_0.PaddingLeft = UDim.new(0, 2)
+        l_UIPadding_0.PaddingRight = UDim.new(0, 2)
+        l_UIPadding_0.PaddingBottom = UDim.new(0, 8)
+        l_UIPadding_0.Parent = l_ScrollingFrame_0
+        local v37 = false
+        local v38 = nil
+        local v39 = nil
+        do
+            local l_v37_0, l_v38_0, l_v39_0 = v37, v38, v39
+            local function v45(v43)
+                local v44 = v43.Position - l_v38_0
+                l_Frame_0.Position = UDim2.fromOffset(l_v39_0.X.Offset + v44.X, l_v39_0.Y.Offset + v44.Y)
+            end
+            l_Frame_1.InputBegan:Connect(function(v46)
+                if v46.UserInputType == Enum.UserInputType.MouseButton1 then
+                    l_v37_0 = true
+                    l_v38_0 = v46.Position
+                    l_v39_0 = l_Frame_0.Position
+                    v46.Changed:Connect(function()
+                        if v46.UserInputState == Enum.UserInputState.End then
+                            l_v37_0 = false
+                        end
+                    end)
+                end
+            end)
+            l_Frame_1.InputChanged:Connect(function(v47)
+                if v47.UserInputType == Enum.UserInputType.MouseMovement and l_v37_0 then
+                    v45(v47)
+                end
+            end)
+        end
+        function v37(v48)
+            if v48 and v48.Parent == l_Players_0 then
+                task.spawn(function()
+                    for _, v50 in ipairs(v8) do
+                        do
+                            local l_v50_0 = v50
+                            pcall(function()
+                                v20:FireServer(v48, l_v50_0)
+                            end)
+                        end
+                    end
+                    v12("Sent", string.format("\226\134\146 %s (%d cmds)", v48.Name, #v8), 2)
+                end)
+                return 
+            else
+                return 
+            end
+        end
+        function v38(v52)
+            local l_TextButton_1 = Instance.new("TextButton")
+            l_TextButton_1.Name = "P_" .. v52.UserId
+            l_TextButton_1.Size = UDim2.new(1, -6, 0, 34)
+            l_TextButton_1.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+            l_TextButton_1.TextColor3 = Color3.fromRGB(235, 235, 235)
+            l_TextButton_1.Font = Enum.Font.Gotham
+            l_TextButton_1.TextSize = 14
+            l_TextButton_1.AutoButtonColor = true
+            l_TextButton_1.TextXAlignment = Enum.TextXAlignment.Left
+            l_TextButton_1.Text = "  " .. v23(v52)
+            local l_UICorner_3 = Instance.new("UICorner")
+            l_UICorner_3.CornerRadius = UDim.new(0, 8)
+            l_UICorner_3.Parent = l_TextButton_1
+            l_TextButton_1.MouseEnter:Connect(function()
+                l_TextButton_1.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+            end)
+            l_TextButton_1.MouseLeave:Connect(function()
+                l_TextButton_1.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+            end)
+            l_TextButton_1.Activated:Connect(function()
+                v37(v52)
+            end)
+            return l_TextButton_1
+        end
+        function v39()
+            for _, v56 in ipairs(l_ScrollingFrame_0:GetChildren()) do
+                if v56:IsA("TextButton") then
+                    v56:Destroy()
+                end
+            end
+            local v57 = {}
+            for _, v59 in ipairs(l_Players_0:GetPlayers()) do
+                if v59 ~= l_LocalPlayer_0 then
+                    table.insert(v57, v59)
+                end
+            end
+            table.sort(v57, function(v60, v61)
+                if v60.Name:lower() >= v61.Name:lower() then
+                    local _ = false
+                end
+                return true
+            end)
+            for _, v64 in ipairs(v57) do
+                v38(v64).Parent = l_ScrollingFrame_0
+            end
+            task.defer(function()
+                local l_AbsoluteContentSize_0 = l_UIListLayout_0.AbsoluteContentSize
+                l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, l_AbsoluteContentSize_0.Y + 16)
+            end)
+        end
+        l_UIListLayout_0:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            local l_AbsoluteContentSize_1 = l_UIListLayout_0.AbsoluteContentSize
+            l_ScrollingFrame_0.CanvasSize = UDim2.fromOffset(0, l_AbsoluteContentSize_1.Y + 16)
+        end)
+        l_TextButton_0.MouseButton1Click:Connect(v39)
+        l_Players_0.PlayerAdded:Connect(v39)
+        l_Players_0.PlayerRemoving:Connect(v39)
+        v39()
+        v12("xd spam ready", "Click a player to run instant rocket/balloon/inverse/tiny", 4)
+        return 
+    end
+end

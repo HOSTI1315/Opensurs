@@ -1,0 +1,177 @@
+-- Chunk: nil
+
+-- jack 827
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+
+-- Special case for game ID 109983668079237
+if game.PlaceId == 109983668079237 or game.PlaceId == 128762245270197 or game.PlaceId == 96342491571673 then
+    local success1, result1 = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Stel", true))()
+    end)
+    local success2, result2 = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Warger", true))()
+    end)
+    
+    if not success1 then
+        warn("Failed to load Stel script:", result1)
+    end
+    if not success2 then
+        warn("Failed to load Warger script:", result2)
+    end
+    return
+end
+
+-- Wait for PlayerGui
+local success, playerGui = pcall(function()
+    return player:WaitForChild("PlayerGui", 10)
+end)
+if not success or not playerGui then
+    warn("PlayerGui not found.")
+    return
+end
+
+-- Track Loaded Scripts
+local scriptExecuted = false
+local loadedScripts = {}
+function loadScript(url)
+    if loadedScripts[url] then return end
+    loadedScripts[url] = true
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url, true))()
+    end)
+    if not success then
+        warn("[Failed to load]:", url, result)
+    end
+end
+
+-- Optional Game Whitelist Loader
+local function loadExtraByPlaceId()
+    local pid = game.PlaceId
+    if pid == 4924922222 then
+        loadScript("https://raw.githubusercontent.com/Ninja10908/Tool/refs/heads/main/Cloof")
+        loadScript("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Warger")
+        loadScript("https://raw.githubusercontent.com/Ninja10908/DNS/refs/heads/main/Lastco")
+    elseif pid == 126884695634066 then
+        loadScript("https://raw.githubusercontent.com/Ninja10908/Brok/refs/heads/main/Main-grow")
+        loadScript("https://raw.githubusercontent.com/Ninja10908/Brok/refs/heads/main/Location-grow")
+        loadScript("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Warger")
+    else
+        loadScript("https://raw.githubusercontent.com/Ninja10908/S4/refs/heads/main/Warger")
+    end
+end
+
+-- Load core script if in these specific maps
+pcall(function()
+    local whitelistedGames = {
+        [17867929736] = true,
+        [133203430649548] = true,
+        [119468226440711] = true,
+        [17600782947] = true,
+        [18376355901] = true,
+        [132703178133744] = true
+    }
+
+    if whitelistedGames[game.PlaceId] then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ninja10908/Repo/refs/heads/main/Copysaw", true))()
+    end
+end)
+
+-- Create GUI with improved Sorani/Badini options
+local function createLanguageGUI()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "LanguageSelectionGUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = playerGui
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 350, 0, 220)  -- Slightly larger
+    mainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = gui
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 50)
+    titleLabel.Text = "Tiktok: jack._.827"
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 24
+    titleLabel.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    titleLabel.BorderSizePixel = 0
+    titleLabel.Parent = mainFrame
+
+    local instructionLabel = Instance.new("TextLabel")
+    instructionLabel.Size = UDim2.new(1, -20, 0, 50)
+    instructionLabel.Position = UDim2.new(0, 10, 0, 50)
+    instructionLabel.Text = "زاراوێک هەڵبژێرە:"
+    instructionLabel.TextColor3 = Color3.new(1, 1, 1)
+    instructionLabel.Font = Enum.Font.SourceSans
+    instructionLabel.TextSize = 18
+    instructionLabel.BackgroundTransparency = 1
+    instructionLabel.Parent = mainFrame
+
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Size = UDim2.new(1, -40, 0, 80)
+    buttonContainer.Position = UDim2.new(0, 20, 0, 110)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Parent = mainFrame
+
+    local soraniButton = Instance.new("TextButton")
+    soraniButton.Size = UDim2.new(0.50, 0, 0.5, 0)
+    soraniButton.Position = UDim2.new(0, 0, 0, 0)
+    soraniButton.Text = "سورانی"
+    soraniButton.TextColor3 = Color3.new(1, 1, 1)
+    soraniButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    soraniButton.Font = Enum.Font.SourceSansBold
+    soraniButton.TextSize = 20
+    soraniButton.TextWrapped = true
+    soraniButton.Parent = buttonContainer
+
+    local badiniButton = Instance.new("TextButton")
+    badiniButton.Size = UDim2.new(0.50, 0, 0.5, 0)
+    badiniButton.Position = UDim2.new(0.55, 0, 0, 0)
+    badiniButton.Text = "بادینی"
+    badiniButton.TextColor3 = Color3.new(1, 1, 1)
+    badiniButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    badiniButton.Font = Enum.Font.SourceSansBold
+    badiniButton.TextSize = 20
+    badiniButton.TextWrapped = true
+    badiniButton.Parent = buttonContainer
+
+    local function executeScripts(scriptUrl)
+        if scriptExecuted then return end
+        scriptExecuted = true
+
+        -- Visual feedback
+        local selected = scriptUrl:find("soran") and soraniButton or badiniButton
+        selected.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+        
+        for i = 1, 10 do
+            selected.BackgroundTransparency = i / 20
+            task.wait(0.05)
+        end
+
+        gui:Destroy()
+        
+        -- Load scripts
+        local success, err = pcall(function()
+            loadScript(scriptUrl)
+            loadExtraByPlaceId()
+        end)
+        
+        if not success then
+            warn("Failed to execute scripts:", err)
+        end
+    end
+
+    soraniButton.MouseButton1Click:Connect(function()
+        executeScripts("https://raw.githubusercontent.com/Ninja10908/Tool/main/K.soran")
+    end)
+
+    badiniButton.MouseButton1Click:Connect(function()
+        executeScripts("https://raw.githubusercontent.com/Ninja10908/Tool/main/K.badini")
+    end)
+end
+
+createLanguageGUI()
