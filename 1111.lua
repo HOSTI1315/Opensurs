@@ -12,42 +12,10 @@ if getgenv()._AOUI then pcall(function() getgenv()._AOUI:Unload() end) end
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
-local _cachedRequest = (syn and syn.request) or (http and http.request) or http_request or request
 local LocalPlayer = Players.LocalPlayer
 getgenv()._AORunning = true
-
--- Снимаем размытие мира (Lighting BlurEffect / UIBlur) — игра постоянно поднимает Size твинами
-task.spawn(function()
-	local Lighting = game:GetService("Lighting")
-	local function zeroBlur(inst)
-		if inst:IsA("BlurEffect") then
-			inst.Enabled = false
-			pcall(function()
-				inst.Size = 0
-			end)
-		end
-	end
-	for _, ch in Lighting:GetChildren() do
-		zeroBlur(ch)
-	end
-	local added = Lighting.ChildAdded:Connect(zeroBlur)
-	while getgenv()._AORunning do
-		for _, ch in Lighting:GetChildren() do
-			if ch:IsA("BlurEffect") then
-				if ch.Enabled or (ch.Size and ch.Size > 0) then
-					zeroBlur(ch)
-				end
-			end
-		end
-		task.wait(0.2)
-	end
-	added:Disconnect()
-end)
-
 local _AO = {}
 _AO.EnableDebug = false
-_AO._webhookQueue = nil
-_AO._macroSuppressPrioHook = false -- true while hub Auto Upgrade loop calls changeUpgradePriority (do not record)
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -102,6 +70,7 @@ _AO.AutoReplayEnabled = false
 _AO.ChallengeMatchForceLobby = true
 _AO.LiveUnitsMap = {}
 _AO.RecordedEntityMap = {}
+_AO._macroSuppressPrioHook = false -- true while hub Auto Upgrade loop calls changeUpgradePriority (do not record)
 _AO.AutoPlayByStageEnabled = false
 
 -- Auto Ultimate
@@ -133,7 +102,7 @@ if not isfolder(MacroFolder) then makefolder(MacroFolder) end
 if not isfolder(DataFolder) then makefolder(DataFolder) end
 
 -- // 3. LIBRARY SETUP
-local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac"))()
+local MacLib = loadstring(game:HttpGet("http://localhost:8081/MacLib.lua"))()
 local Window = MacLib:Window({
     Title = "Anime Overload | Apel Hub",
     Subtitle = isLobby and "Lobby" or "Game Stage",
@@ -176,7 +145,6 @@ local sections = {
     CardsLeft     = tabs.Cards:Section({ Side = "Left" }),
     CardsCenter   = tabs.Cards:Section({ Side = "Center" }),
     CardsRight    = tabs.Cards:Section({ Side = "Right" }),
-    CardsWave1    = tabs.Cards:Section({ Side = "Bottom" }),
     TeleportLeft  = tabs.Teleport:Section({ Side = "Left" }),
     TeleportRight = tabs.Teleport:Section({ Side = "Right" }),
     SettingsUI    = tabs.Settings:Section({ Side = "Left" }),
@@ -1291,7 +1259,7 @@ local function ClaimCompletedQuests()
         if type(qs) == "table" and qs.progress then
             local ok2, cfg = pcall(function() return questsConfig.get(questId) end)
             if ok2 and cfg and cfg.target and qs.progress >= cfg.target then
-                pcall(function() questsNet.claimQuest.call(questId) end)
+                pcall(function() questsNet.claimQuest.fire(questId) end)
                 task.wait(0.1)
             end
         end
@@ -1553,7 +1521,6 @@ local function EnsureMacroJsonFile(rawName)
     if not isfile(path) then SaveMacro(name, {}) end
 end
 
-
 local function MacroBaseNameFromImportUrl(url)
     if type(url) ~= "string" then return "" end
     -- paste.rs URLs: use "imported_XXXX" since ID is meaningless
@@ -1592,14 +1559,6 @@ local function NormalizeImportedMacroTable(t)
     if type(t.steps) == "table" and t.steps[1] ~= nil then return t.steps end
     if type(t.macro) == "table" and t.macro[1] ~= nil then return t.macro end
     return t
-end
-
-local function ValidateMacroImportDecoded(t)
-    if type(t) ~= "table" then return false, "not a JSON object/array" end
-    for i, step in ipairs(t) do
-        if type(step) ~= "table" then return false, "step #" .. tostring(i) .. " must be an object" end
-    end
-    return true
 end
 
 local function _macro_normImportLabel(s)
@@ -1767,6 +1726,14 @@ local function LoadMacro(name)
     return data
 end
 
+local function ValidateMacroImportDecoded(t)
+    if type(t) ~= "table" then return false, "not a JSON object/array" end
+    for i, step in ipairs(t) do
+        if type(step) ~= "table" then return false, "step #" .. tostring(i) .. " must be an object" end
+    end
+    return true
+end
+
 _AO.StopRecordingAndSave = nil -- forward declaration
 
 -- Hook recording (Game Stage only)
@@ -1774,7 +1741,6 @@ _AO.origPlaceCall = nil
 _AO.origUpgradeCall = nil
 _AO.origSellCall = nil
 _AO.origUltFire = nil
-_AO.origChangePriorityCall = nil
 
 -- Luraph macro shims for non-obfuscated runs
 if not LPH_OBFUSCATED then
@@ -1937,16 +1903,6 @@ if LPH_OBFUSCATED then
                 end)
             end)
             dbg("Hook changeUpgradePriority: " .. (okPrio and "OK" or ("FAIL: " .. tostring(errPrio))))
-            local okCP, errCP = pcall(function()
-                _AO.origChangePriorityCall = hookfunction(towersNet.changePriority.call, function(towerUid, priority)
-                    local success, errMsg = _AO.origChangePriorityCall(towerUid, priority)
-                    if _AO.IsRecording and success then
-                        deferredRecord(towerUid, "ChangePriority", { Priority = priority })
-                    end
-                    return success, errMsg
-                end)
-            end)
-            dbg("Hook changePriority: " .. (okCP and "OK" or ("FAIL: " .. tostring(errCP))))
             local ok4, err4 = pcall(function()
                 _AO.origUltFire = hookfunction(syncNet.clientUltimate.fire, function(uniqueId, slot)
                     if _AO.IsRecording then
@@ -1998,6 +1954,7 @@ else
         end)
     end)
     dbg("Hook Sell: " .. (ok3 and "OK" or ("FAIL: " .. tostring(err3))))
+
     local okPrio, errPrio = pcall(function()
         _AO.origChangeUpgradePriorityCall = hookfunction(towersNet.changeUpgradePriority.call, function(towerUid)
             local success, errMsg = _AO.origChangeUpgradePriorityCall(towerUid)
@@ -2008,17 +1965,6 @@ else
         end)
     end)
     dbg("Hook changeUpgradePriority: " .. (okPrio and "OK" or ("FAIL: " .. tostring(errPrio))))
-
-    local okCP, errCP = pcall(function()
-        _AO.origChangePriorityCall = hookfunction(towersNet.changePriority.call, function(towerUid, priority)
-            local success, errMsg = _AO.origChangePriorityCall(towerUid, priority)
-            if _AO.IsRecording and success then
-                deferredRecord(towerUid, "ChangePriority", { Priority = priority })
-            end
-            return success, errMsg
-        end)
-    end)
-    dbg("Hook changePriority: " .. (okCP and "OK" or ("FAIL: " .. tostring(errCP))))
 
     local ok4, err4 = pcall(function()
         _AO.origUltFire = hookfunction(syncNet.clientUltimate.fire, function(uniqueId, slot)
@@ -2231,42 +2177,6 @@ local function PlayMacro()
                     else
                         if retries % 10 == 0 then
                             dbg("Step " .. stepNum .. ": AutoUpgrade retry #" .. retries .. " ok=" .. tostring(callOk) .. " res=" .. tostring(callResult))
-                        end
-                        task.wait(0.5)
-                    end
-                end
-            end
-
-        elseif step.Action == "ChangePriority" then
-            local uid = _AO.LiveUnitsMap[step.UnitIndex]
-            local priority = step.Priority
-            dbg("Step " .. stepNum .. ": ChangePriority idx=" .. tostring(step.UnitIndex) .. " uid=" .. tostring(uid) .. " priority=" .. tostring(priority))
-            if uid and priority then
-                local changed = false
-                local retries = 0
-                while not changed and not shouldStop() do
-                    local callDone = false
-                    local callOk, callResult = false, false
-                    task.spawn(function()
-                        callOk, callResult = pcall(function()
-                            return towersNet.changePriority.call(uid, priority)
-                        end)
-                        callDone = true
-                    end)
-                    while not callDone and not shouldStop() do
-                        task.wait(0.1)
-                    end
-                    if shouldStop() then
-                        dbg("Step " .. stepNum .. ": ChangePriority ABORTED after " .. retries .. " tries")
-                        break
-                    end
-                    retries = retries + 1
-                    if callOk and callResult then
-                        changed = true
-                        dbg("Step " .. stepNum .. ": ChangePriority SUCCESS after " .. retries .. " tries")
-                    else
-                        if retries % 10 == 0 then
-                            dbg("Step " .. stepNum .. ": ChangePriority retry #" .. retries)
                         end
                         task.wait(0.5)
                     end
@@ -2548,75 +2458,10 @@ end
 local function SendWebhook(won, rewardsData, heroesExp, finalTime)
     if not _AO.WebhookEnabled or _AO.WebhookURL == "" then return end
 
-    local HttpService = game:GetService("HttpService")
-    local req = _cachedRequest
+    pcall(function()
+        local req = (syn and syn.request) or (http and http.request) or http_request or request
+        if not req then return end
 
-    local function trySendRaw(payload)
-        if req then
-            local ok, res = pcall(function()
-                return req({
-                    Url = _AO.WebhookURL,
-                    Method = "POST",
-                    Headers = { ["Content-Type"] = "application/json" },
-                    Body = payload
-                })
-            end)
-            if ok and res then
-                local code = tonumber(res.StatusCode or res.status_code or res.code) or 0
-                if code >= 200 and code <= 299 then return code, res end
-                warn("[SendWebhook] request() — HTTP " .. tostring(code))
-            elseif not ok then
-                warn("[SendWebhook] request() failed: " .. tostring(res))
-            end
-        end
-
-        local ok2, res2 = pcall(function()
-            return HttpService:RequestAsync({
-                Url = _AO.WebhookURL,
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = payload
-            })
-        end)
-        if ok2 and res2 then
-            local code = tonumber(res2.StatusCode) or 0
-            if code >= 200 and code <= 299 then return code, res2 end
-            warn("[SendWebhook] RequestAsync() — HTTP " .. tostring(code))
-        elseif not ok2 then
-            warn("[SendWebhook] RequestAsync() failed: " .. tostring(res2))
-        end
-
-        local ok3, res3 = pcall(function()
-            HttpService:PostAsync(_AO.WebhookURL, payload, Enum.HttpContentType.ApplicationJson, false)
-        end)
-        if ok3 then
-            return 200, { StatusCode = 200, Body = "" }
-        else
-            warn("[SendWebhook] PostAsync() failed: " .. tostring(res3))
-        end
-
-        return 0, nil
-    end
-
-    local function sendErrorToWebhook(errorMsg)
-        pcall(function()
-            local errPayload = HttpService:JSONEncode({
-                username = "Apel Hub Webhook",
-                embeds = {{
-                    title = "⚠️ Webhook Error",
-                    description = "```\n" .. tostring(errorMsg) .. "\n```",
-                    color = 16776960,
-                    footer = { text = "Apel Hub • " .. os.date("%Y-%m-%d %H:%M:%S") }
-                }}
-            })
-            local code = trySendRaw(errPayload)
-            if code < 200 or code > 299 then
-                warn("[SendWebhook] Failed to send error report — HTTP " .. tostring(code))
-            end
-        end)
-    end
-
-    local ok, err = pcall(function()
         -- Match info
         local stage, act, difficulty, waves = "?", 0, "?", "?"
         pcall(function()
@@ -2640,7 +2485,7 @@ local function SendWebhook(won, rewardsData, heroesExp, finalTime)
             timeText = string.format("%02d:%02d", mins, secs)
         end
 
-        -- Rewards
+        -- Rewards (+ total held per item: collection, core, or raid currency slice)
         local rewardsText = ""
         local collectionById, coreTbl, raidById = {}, nil, {}
         pcall(function()
@@ -2678,7 +2523,7 @@ local function SendWebhook(won, rewardsData, heroesExp, finalTime)
             end)
         end
 
-        -- Currencies
+        -- Currencies (subset chosen in Auto → Webhook)
         local currText = ""
         pcall(function()
             local state = gameClientStore:getState()
@@ -2732,7 +2577,7 @@ local function SendWebhook(won, rewardsData, heroesExp, finalTime)
             { name = "Duration",   value = "⏱️ " .. timeText,                inline = true },
             { name = "Stage",      value = stageLabel .. " Act " .. tostring(act) .. " (" .. difficulty .. ")", inline = true },
             { name = "Waves",      value = waves,                             inline = true },
-            { name = "\xE2\x80\x8B", value = "\xE2\x80\x8B",                inline = true },
+            { name = "\u{200b}",   value = "\u{200b}",                       inline = true },
         }
         if _AO.WebhookEquippedTeamEnabled then
             table.insert(embedFields, {
@@ -2756,20 +2601,13 @@ local function SendWebhook(won, rewardsData, heroesExp, finalTime)
             }
         })
 
-        local code, res = trySendRaw(payload)
-
-        if code < 200 or code > 299 then
-            local body = res and (res.Body or res.body) or ""
-            local errMsg = string.format("All methods failed — last HTTP %d — %s", code, tostring(body))
-            warn("[SendWebhook] " .. errMsg)
-            sendErrorToWebhook(errMsg)
-        end
+        req({
+            Url = _AO.WebhookURL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = payload
+        })
     end)
-
-    if not ok then
-        warn("[SendWebhook] Error: " .. tostring(err))
-        sendErrorToWebhook(tostring(err))
-    end
 end
 
 -- Auto Return to Lobby
@@ -2852,7 +2690,7 @@ if not isLobby and _AO.ModulesLoaded then
 
             -- Webhook
             if _AO.WebhookEnabled then
-                _AO._webhookQueue = { won = won, rewardsData = rewardsData, heroesExp = heroesExp, finalTime = finalTime }
+                pcall(function() SendWebhook(won, rewardsData, heroesExp, finalTime) end)
             end
 
             -- Auto actions (wait a bit for game to process)
@@ -4064,25 +3902,24 @@ _AO.IgnoredChallengeModifiers = {} -- { modifierId = true }
 
 -- Load unique reward item IDs from config
 local AllRewardItemIds = {}
-local RewardPoolMap = {} -- {freq:poolIndex = {itemId1, itemId2, ...}}
+local RewardPoolMap = {} -- {poolIndex = {itemId1, itemId2, ...}}
 
 pcall(function()
     local rewardsConfig = require(RS:WaitForChild("shared"):WaitForChild("config"):WaitForChild("gamemodes"):WaitForChild("challengeRewards"))
     local freqEnum = require(RS:WaitForChild("shared"):WaitForChild("enums"):WaitForChild("challengeFrequency"))
 
-    -- Collect per frequency — same poolIndex can have different rewards per frequency
+    -- Collect from all frequency types
     for _, freq in pairs(freqEnum) do
         local pools = rewardsConfig[freq]
         if pools then
             for poolIdx, items in pairs(pools) do
-                local key = tostring(freq) .. ":" .. tostring(poolIdx)
-                RewardPoolMap[key] = RewardPoolMap[key] or {}
+                RewardPoolMap[poolIdx] = RewardPoolMap[poolIdx] or {}
                 for _, item in ipairs(items) do
                     if not table.find(AllRewardItemIds, item.id) then
                         table.insert(AllRewardItemIds, item.id)
                     end
-                    if not table.find(RewardPoolMap[key], item.id) then
-                        table.insert(RewardPoolMap[key], item.id)
+                    if not table.find(RewardPoolMap[poolIdx], item.id) then
+                        table.insert(RewardPoolMap[poolIdx], item.id)
                     end
                 end
             end
@@ -4199,26 +4036,24 @@ if #ChallengeModifierIgnoreOptions == 0 then
     ChallengeModifierIgnoreOptions = { "(no modifiers loaded)" }
 end
 
-local function GetChallengePoolItemIds(poolIndex, chalType)
+local function GetChallengePoolItemIds(poolIndex)
     if poolIndex == nil then return nil end
-    if chalType then
-        local key = tostring(chalType) .. ":" .. tostring(poolIndex)
-        local items = RewardPoolMap[key]
-        if items then return items end
+    local items = RewardPoolMap[poolIndex]
+    if items then return items end
+    if type(poolIndex) == "number" then
+        return RewardPoolMap[tostring(poolIndex)]
     end
-    -- Fallback: try all frequencies
-    for _, freq in ipairs({ "hourly", "daily", "weekly" }) do
-        local key = tostring(freq) .. ":" .. tostring(poolIndex)
-        local items = RewardPoolMap[key]
-        if items then return items end
+    if type(poolIndex) == "string" then
+        local n = tonumber(poolIndex)
+        if n then return RewardPoolMap[n] end
     end
     return nil
 end
 
 -- Check if a reward pool contains any of the selected rewards
-local function PoolMatchesSelectedRewards(poolIndex, chalType)
-    if not next(_AO.SelectedRewards) then return true end
-    local items = GetChallengePoolItemIds(poolIndex, chalType)
+local function PoolMatchesSelectedRewards(poolIndex)
+    if not next(_AO.SelectedRewards) then return true end -- nothing selected = any
+    local items = GetChallengePoolItemIds(poolIndex)
     if not items then return false end
     for _, itemId in ipairs(items) do
         if _AO.SelectedRewards[itemId] then return true end
@@ -4328,7 +4163,7 @@ local function FindMatchingChallenge()
             local challenges = GetActiveChallenges(chalType)
             for _, chal in ipairs(challenges) do
                 if not IsChallengeCompleted(chal.id) then
-                    if PoolMatchesSelectedRewards(chal.rewardPool, chalType) then
+                    if PoolMatchesSelectedRewards(chal.rewardPool) then
                         if not ShouldSkipChallengeDueToIgnoreList(chal) then
                             return chal, chalType
                         end
@@ -4586,7 +4421,7 @@ task.spawn(function()
                         local ignoreTag = ignored and " [ignored]" or ""
 
                         local rewardText = ""
-                        local poolItems = GetChallengePoolItemIds(chal.rewardPool, freq)
+                        local poolItems = RewardPoolMap[chal.rewardPool]
                         if poolItems then
                             local rp = {}
                             for _, pid in ipairs(poolItems) do
@@ -4888,6 +4723,14 @@ for _, c in ipairs(AllCards) do _AO.CardPriorities[c.id] = 0 end
 
 _AO.AutoCardPickEnabled = false
 
+-- Рестарт акта (resetAct) после 1-й волны: хотя бы одна «плохая» карта в тройке
+_AO.RestartWave1IfAnyDebuffEnabled = false
+_AO.RestartWave1IfAnyZeroPrioEnabled = false
+_AO.Wave1DebuffOffer = {}
+for _, c in ipairs(AllCards) do
+    _AO.Wave1DebuffOffer[c.id] = false
+end
+
 for _, card in ipairs(AllCards) do
     sections.CardsLeft:Slider({
         Name = card.name,
@@ -4910,51 +4753,32 @@ sections.CardsLeft:Toggle({
     end
 }, "AutoCardPickToggle")
 
--- Wave 1 act restart (resetAct): debuff cards/contracts detection
-_AO.RestartWave1IfAllDebuffEnabled = false
-_AO.RestartWave1IfAnyDebuffEnabled = false
-_AO.RestartWave1IfAnyZeroPrioEnabled = false
-_AO.Wave1DebuffOffer = {}
-for _, c in ipairs(AllCards) do
-    _AO.Wave1DebuffOffer[c.id] = false
-end
-_AO.Wave1DebuffContract = {}
-
-sections.CardsWave1:Header({ Text = "Wave 1 · Act Restart" })
-sections.CardsWave1:Paragraph({
-    Header = "How it works",
-    Body = "After the first wave in Legends / Chain of Control: resetAct if the offered cards or contracts are bad.\n\n• 'Any with priority 0': restart if any of the three has slider 0.\n• 'Restart if ALL three are debuff': safe mode — only restart when every option is bad, no good picks left.\n• 'Restart if ANY is debuff': aggressive mode — restart if even one bad card/contract appears.",
+sections.CardsLeft:Divider()
+sections.CardsLeft:Header({ Text = "Волна 1 · рестарт акта" })
+sections.CardsLeft:Paragraph({
+    Header = "Как работает",
+    Body = "После первой волны Legends: resetAct, если в тройке есть хотя бы одна «плохая» карта.\n\n• «Хотя бы одна с приоритетом 0»: если среди трёх есть карта со слайдером 0 — рестарт (продолжаем только если все три с приоритетом ≥1).\n• «Хотя бы одна — дебафф»: если среди трёх есть карта, отмеченная переключателем ниже — рестарт (одной катастрофической карты в пуле достаточно).",
 })
 
-sections.CardsWave1:Toggle({
-    Name = "Restart if any of three has priority 0",
+sections.CardsLeft:Toggle({
+    Name = "Рестарт, если у любой из трёх приоритет 0",
     Default = false,
     Callback = function(v)
         _AO.RestartWave1IfAnyZeroPrioEnabled = v
     end
 }, "RestartWave1AnyZeroPrioToggle")
 
-sections.CardsWave1:Toggle({
-    Name = "Restart if ALL three are debuff (safe)",
-    Default = false,
-    Callback = function(v)
-        _AO.RestartWave1IfAllDebuffEnabled = v
-    end
-}, "RestartWave1AllDebuffToggle")
-
-sections.CardsWave1:Toggle({
-    Name = "Restart if ANY of three is debuff (aggressive)",
+sections.CardsLeft:Toggle({
+    Name = "Рестарт, если любая из трёх — дебафф (список ниже)",
     Default = false,
     Callback = function(v)
         _AO.RestartWave1IfAnyDebuffEnabled = v
     end
 }, "RestartWave1AnyDebuffToggle")
 
-sections.CardsWave1:Divider()
-sections.CardsWave1:Header({ Text = "Debuff Cards" })
 for _, card in ipairs(AllCards) do
-    sections.CardsWave1:Toggle({
-        Name = card.name,
+    sections.CardsLeft:Toggle({
+        Name = "Дебафф: " .. card.name,
         Default = false,
         Callback = function(v)
             _AO.Wave1DebuffOffer[card.id] = v
@@ -4980,7 +4804,6 @@ local AllContracts = {
     { id = "sacrificialContract", name = "Sacrificial Contract" },
 }
 for _, c in ipairs(AllContracts) do _AO.ContractPriorities[c.id] = 0 end
-for _, c in ipairs(AllContracts) do _AO.Wave1DebuffContract[c.id] = false end
 
 _AO.AutoContractPickEnabled = false
 
@@ -5005,18 +4828,6 @@ sections.CardsRight:Toggle({
         _AO.AutoContractPickEnabled = v
     end
 }, "AutoContractPickToggle")
-
-sections.CardsWave1:Divider()
-sections.CardsWave1:Header({ Text = "Debuff Contracts" })
-for _, contract in ipairs(AllContracts) do
-    sections.CardsWave1:Toggle({
-        Name = contract.name,
-        Default = false,
-        Callback = function(v)
-            _AO.Wave1DebuffContract[contract.id] = v
-        end
-    }, "Wave1DebuffContract_" .. contract.id)
-end
 
 -- Auto Card + Contract Pick (Game Stage only)
 -- Both come through showInfCards — detect by checking if IDs match contracts
@@ -5073,28 +4884,15 @@ if not isLobby then
                 if votingNet and aoIsFirstWaveCardPhase() then
                     if _AO.RestartWave1IfAnyZeroPrioEnabled then
                         for _, cardId in ipairs(availableCards) do
-                            local prio = (_AO.CardPriorities[cardId] or _AO.ContractPriorities[cardId] or 0)
-                            if prio <= 0 then
+                            if (_AO.CardPriorities[cardId] or 0) <= 0 then
                                 shouldRestartWave1 = true
                                 break
                             end
                         end
                     end
-                    if not shouldRestartWave1 and _AO.RestartWave1IfAllDebuffEnabled then
-                        local allDebuff = true
-                        for _, cardId in ipairs(availableCards) do
-                            if not _AO.Wave1DebuffOffer[cardId] and not _AO.Wave1DebuffContract[cardId] then
-                                allDebuff = false
-                                break
-                            end
-                        end
-                        if allDebuff and #availableCards > 0 then
-                            shouldRestartWave1 = true
-                        end
-                    end
                     if not shouldRestartWave1 and _AO.RestartWave1IfAnyDebuffEnabled then
                         for _, cardId in ipairs(availableCards) do
-                            if _AO.Wave1DebuffOffer[cardId] or _AO.Wave1DebuffContract[cardId] then
+                            if _AO.Wave1DebuffOffer[cardId] then
                                 shouldRestartWave1 = true
                                 break
                             end
@@ -5104,7 +4902,7 @@ if not isLobby then
 
                 if shouldRestartWave1 then
                     dbg("showInfCards: wave1 restart (unwanted cards only)")
-                    Notify("Act restart: unwanted card set after wave 1")
+                    Notify("Рестарт акта: нежелательный набор карт после 1-й волны")
                     _AO.MatchEnded = true
                     _AO.IsPlaying = false
                     pcall(function()
@@ -6871,8 +6669,6 @@ sections.SettingsUI:Toggle({ Name = "Hide Name", Default = false,
 
 sections.SettingsUI:Button({ Name = "Unload Script", Callback = function() getgenv()._AORunning = false; Window:Unload() end })
 
-
-
 -- ═══════════════════════════════════════════
 -- WINDOW FINALIZE
 -- ═══════════════════════════════════════════
@@ -7027,16 +6823,3 @@ if LPH_OBFUSCATED then
 else
     _doConfigSetup()
 end
--- Webhook queue loop (runs in executor context, not game callback)
-task.spawn(function()
-    while getgenv()._AORunning do
-        if _AO._webhookQueue then
-            local data = _AO._webhookQueue
-            _AO._webhookQueue = nil
-            pcall(function()
-                SendWebhook(data.won, data.rewardsData, data.heroesExp, data.finalTime)
-            end)
-        end
-        task.wait(1)
-    end
-end)
