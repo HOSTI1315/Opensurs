@@ -14,6 +14,17 @@
       • Live-обновление списка при появлении/смерти мобов
 --]]
 
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+-- LocalPlayer может быть nil при очень раннем инжекте (раньше, чем клиент привяжет игрока)
+while not LocalPlayer do
+    task.wait()
+    LocalPlayer = Players.LocalPlayer
+end
+
+
 -- =========================================================
 -- [0] KILL PREVIOUS INSTANCE
 -- =========================================================
