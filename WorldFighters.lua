@@ -1,207 +1,300 @@
---[[
-    World Fighters Hub — Auto Farm v0.37
-    PlaceId: 95630541662383
-    Framework: Omni (BridgeNet v1 + ReplicaService)
-    UI: ApelHub MacLib fork
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║                [NEW] WORLD FIGHTERS — APEL HUB                 ║
+-- ║   PlaceId 95630541662383  ·  Framework: Omni (BridgeNet wrap)  ║
+-- ╚══════════════════════════════════════════════════════════════╝
 
-    Функционал:
-      • Детект мобов в Workspace.Client.Enemies
-      • Группировка одинаковых имён (Buggo x54 → одна запись "Buggo (54)")
-      • Выбор цели в дропдауне
-      • ТП к ближайшему живому мобу с этим именем
-      • Attack/Click через Omni.Signal с уважением ClickCooldown
-      • Автопереход к следующему мобу того же имени после смерти
-      • Live-обновление списка при появлении/смерти мобов
---]]
+-- // 1. CLEANUP
+if getgenv()._WFRunning then getgenv()._WFRunning = false task.wait(0.5) end
+if getgenv()._WFStop    then pcall(getgenv()._WFStop) end
+if getgenv()._WFUI      then pcall(function() getgenv()._WFUI:Unload() end) end
+if getgenv()._WFCleanup then pcall(getgenv()._WFCleanup) end
+getgenv()._WFRunning = true
 
--- =========================================================
--- [0] KILL PREVIOUS INSTANCE
--- =========================================================
-if getgenv()._WF_Stop then
-    pcall(getgenv()._WF_Stop)
-    task.wait(0.3)
+local _cleanupConns = {}
+getgenv()._WFCleanup = function()
+    for _, c in ipairs(_cleanupConns) do pcall(function() c:Disconnect() end) end
+    table.clear(_cleanupConns)
 end
 
--- =========================================================
--- [1] SERVICES / PLAYER
--- =========================================================
-local Players       = game:GetService("Players")
-local RS            = game:GetService("ReplicatedStorage")
-local Workspace     = game:GetService("Workspace")
-local VirtualUser   = game:GetService("VirtualUser")
-local HttpService   = game:GetService("HttpService")
-local RunService    = game:GetService("RunService")
+-- // 2. SERVICES & VARIABLES
+local Players          = game:GetService("Players")
+local RS               = game:GetService("ReplicatedStorage")
+local HttpService      = game:GetService("HttpService")
+local RunService       = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser      = game:GetService("VirtualUser")
+local Workspace        = game:GetService("Workspace")
 
-local LocalPlayer   = Players.LocalPlayer
+local _cachedRequest = (syn and syn.request) or (http and http.request) or http_request or request
 
--- =========================================================
--- [2] LOAD OMNI FRAMEWORK
--- =========================================================
-local Omni do
-    local ok, result = pcall(function()
-        return require(RS:WaitForChild("Omni", 15))
-    end)
-    if not ok or not result then
-        warn("[WF] Не удалось загрузить Omni:", result)
-        return
-    end
-    Omni = result
+if not game:IsLoaded() then game.Loaded:Wait() end
+local LocalPlayer = Players.LocalPlayer
+while not LocalPlayer do task.wait() LocalPlayer = Players.LocalPlayer end
+
+local GameName = "World Fighters"
+
+-- State namespace — everything feature-related lives here.
+local _WF = {}
+_WF.EnableDebug    = false
+_WF.ModulesLoaded  = false
+
+-- Farm
+_WF.AutoFarmEnabled = false
+_WF.Targets         = {}    -- { [mobName] = true }
+-- TP offset: Vector3.new(3, 2, 0) — +3 X (сбоку от моба), +2 Y (над), 0 Z.
+-- Из рабочей версии: оптимально для DD (не выкидывает из arena bounds) и
+-- обычных зон (не клипает через стены). Заменяет предыдущий (0,4,4) который
+-- иногда ставил слишком высоко/далеко в узких гейммодах.
+_WF.TpOffset        = Vector3.new(3, 2, 0)
+_WF.FillerRadius    = 80    -- studs (радиус поиска ближайшего живого при простое)
+-- NoClip: проходим сквозь стены/пол во время фарма. Критично для Dragon Defense
+-- (arena имеет стены/barriers, TP на мобов может уронить игрока за пределы).
+-- Режимы:
+--   "off"   — всегда выкл
+--   "auto"  — вкл во время Trial/DD/обычного фарма (default)
+--   "on"    — всегда вкл
+_WF.NoClipMode      = "auto"
+
+-- Eggs (Stars)
+_WF.AutoOpenStarEnabled = false
+_WF.StarTargets         = {}
+_WF.HideStarAnimEnabled = false
+_WF.StarBusy            = false   -- mutex for star TP
+
+-- Quests
+_WF.AutoQuestEnabled         = false
+_WF.AutoPinQuestEnabled      = true
+_WF.AutoTpToQuestZoneEnabled = true
+_WF.QuestSelections          = {}
+
+-- Trials
+_WF.AutoTrialEnabled     = false
+_WF.TrialSelections      = {}
+_WF.TrialAutoLeaveWave   = 0
+-- После leaveTrial() серверная сессия gamemode НЕ очищается (игра не имеет
+-- сигнала "Leave"). Физически уходим, но сервер держит Data.Gamemode=name до
+-- natural end. Флаг чтобы не спамить leaveTrial в цикле.
+_WF.TrialAbandoned       = false
+-- Dragon Defense (отдельный event-gamemode в табе Trials)
+_WF.AutoDragonDefenseEnabled = false
+_WF.DragonDefenseLeaveWave   = 0  -- 0 = пройти до конца, >0 = выход на волне
+_WF.DragonDefenseAbandoned   = false
+-- Приоритет когда включены ОБА (Auto Trial + Auto DD):
+--   "Trial"         — делаем трайлы, DD игнорится пока есть активный трайл
+--   "DragonDefense" — делаем DD, трайлы игнорятся (default, у DD требуется ключ)
+_WF.GamemodePriority = "DragonDefense"
+-- Saved player position (для возврата после трайлов/DD на точное место фарма)
+_WF.SavedPosition     = nil  -- CFrame
+_WF.SavedLocation     = nil  -- "Fruits Verse | Zone 4"
+
+-- Gacha
+_WF.AutoGachaEnabled     = false
+_WF.GachaSelection       = {}
+_WF.GachaTargetRarity    = nil
+_WF.GachaThreshold       = 100
+_WF.GachaFarmMob         = ""
+_WF.AutoBannerRollEnabled   = false
+_WF.BannerName           = ""
+_WF.AutoRouletteRollEnabled = false
+_WF.RouletteName         = ""
+
+-- Rewards
+_WF.AutoAchievementsEnabled  = false
+_WF.AutoTimeRewardsEnabled   = false
+_WF.AutoDailyRewardsEnabled  = false
+_WF.AutoFollowRewardsEnabled = false
+_WF.AutoDailyChestEnabled    = false
+_WF.AutoGroupChestEnabled    = false
+_WF.AutoVIPChestEnabled      = false
+
+-- Progression
+_WF.AutoProgressionEnabled   = false
+_WF.ProgressionSelection     = {}
+_WF.AutoTrialUpgradesEnabled = false
+_WF.TrialUpgradeSelection    = {}
+_WF.AutoSkillTreeEnabled     = false
+_WF.SkillTreeSelection       = {}
+_WF.AutoEquipBestEnabled     = false
+_WF.EquipBestStat            = ""
+_WF.EquipBestCategories      = {}
+
+-- Misc
+_WF.WalkSpeed                = 16
+_WF.DisableGameAntiAfkEnabled = false
+_WF.AutoPotionsEnabled       = false
+_WF.PotionSelection          = {}
+_WF.AutoCodesEnabled         = false
+
+-- Webhook
+_WF.WebhookEnabled           = false
+_WF.WebhookURL               = ""
+_WF.WebhookDiscordUserId     = ""
+_WF.WebhookRarityFilter      = {}
+_WF.WebhookPingOnMythical    = false
+_WF.WebhookSentCount         = 0
+_WF.WebhookLastSent          = nil
+
+-- Mutex for zone TP (conflicts with star TP and gacha mob-farm TP)
+_WF.ZoneTpBusy = false
+-- Mutex: когда мы внутри trial'а (AutoTrial активен + игрок реально в gamemode),
+-- блокируем farm/egg/quest чтобы они не дёргали HRP и не портили прохождение волн.
+_WF.TrialBusy  = false
+
+-- File system
+local RootFolder = "ApelHub"
+if not isfolder(RootFolder) then makefolder(RootFolder) end
+
+-- // 3. HELPERS
+-- Forward declaration — Notify is assigned in section 6 (UI setup)
+local Notify
+local function dbg(msg)
+    if _WF.EnableDebug then print("[WF] " .. tostring(msg)) end
 end
-Omni:WaitInitialization()
 
--- =========================================================
--- [3] GLOBAL STATE
--- =========================================================
-getgenv().AutoFarm  = false
-getgenv().Targets   = {}    -- set {[mobName] = true}, поддержка множественного выбора
-getgenv().TpOffset  = Vector3.new(0, 4, 4)
-
-local stopped       = false
-local connections   = {}
-local farmThread    = nil
-
--- =========================================================
--- [3b] DEBUG DUMP HELPER
--- =========================================================
--- Заменяет print(...) в debug-кнопках: собирает строки в буфер,
--- печатает в F9, копирует в буфер обмена, показывает Notify.
--- Использование: local d, buf = newDump(); d("line 1"); d("line 2"); flushDump(buf, "title")
-local function newDump()
-    local buf = {}
-    local function push(s)
-        if s == nil then s = "" end
-        table.insert(buf, tostring(s))
-    end
-    return push, buf
+local function safe(fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then dbg("error: " .. tostring(err)) end
+    return ok, err
 end
 
-local function flushDump(buf, label)
-    local text = table.concat(buf, "\n")
-    -- В F9 (для тех случаев когда буфер обмена не сработал)
-    print(text)
-    local clipOk = false
-    pcall(function()
-        if type(setclipboard) == "function" then
-            setclipboard(text)
-            clipOk = true
-        elseif type(toclipboard) == "function" then
-            toclipboard(text)
-            clipOk = true
+local function awaitChild(parent, name, timeout)
+    if not parent then return nil end
+    return parent:WaitForChild(name, timeout or 8)
+end
+
+-- ═══════════════════════════════════════════════════════════════════
+-- SafeWrapParagraph — workaround для MacSploit / executors которые теряют
+-- Plugin-capability через ~10 сек после инжекта. Без обёртки `:UpdateBody`
+-- (который внутри делает TextLabel.Text=X) тихо фейлит с "lacking capability
+-- Plugin" — paragraph застывает и перестаёт обновляться.
+-- Обёртка роутит апдейты на RunService.Heartbeat:Once (privileged thread).
+-- Использовать для любого paragraph который апдейтится в task.spawn цикле.
+-- ═══════════════════════════════════════════════════════════════════
+local RunService = game:GetService("RunService")
+local function wrapParagraph(p)
+    if not p then return p end
+    local origUpdateBody   = p.UpdateBody
+    local origUpdateHeader = p.UpdateHeader
+    local origSetVis       = p.SetVisibility
+
+    local pendingBody, pendingHeader, pendingVis
+    local scheduled = false
+    local function flush()
+        scheduled = false
+        if pendingBody ~= nil then
+            local b = pendingBody; pendingBody = nil
+            pcall(origUpdateBody, p, b)
         end
-    end)
-    pcall(function()
-        Window:Notify({
-            Title       = label or "Debug",
-            Description = clipOk
-                and ("Скопировано в буфер (%d симв.)"):format(#text)
-                or ("Clipboard недоступен — см. F9 (%d симв.)"):format(#text),
-            Lifetime    = 4,
-        })
+        if pendingHeader ~= nil then
+            local h = pendingHeader; pendingHeader = nil
+            pcall(origUpdateHeader, p, h)
+        end
+        if pendingVis ~= nil then
+            local v = pendingVis; pendingVis = nil
+            pcall(origSetVis, p, v)
+        end
+    end
+    local function schedule()
+        if scheduled then return end
+        scheduled = true
+        RunService.Heartbeat:Once(flush)
+    end
+    function p:UpdateBody(text)   pendingBody = text;     schedule() end
+    function p:UpdateHeader(text) pendingHeader = text;   schedule() end
+    function p:SetVisibility(v)   pendingVis = v;         schedule() end
+    return p
+end
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Saved Position System — JSON-persisted CFrame для возврата после трайлов/DD.
+-- Юзер фармит в определённой зоне → заходит в event-gamemode → выходит → возвращаем
+-- на ту же координату. Лучше чем fallback TP в Fruits Verse 1.
+-- ═══════════════════════════════════════════════════════════════════
+local HttpService = game:GetService("HttpService")
+
+local function savePositionToFile(cframe, location)
+    if not cframe then return end
+    local data = {
+        position = { x = cframe.Position.X, y = cframe.Position.Y, z = cframe.Position.Z },
+        location = location or "Unknown"
+    }
+    safe(function()
+        if not isfolder("ApelHub") then makefolder("ApelHub") end
+        if not isfolder("ApelHub/saved_positions") then makefolder("ApelHub/saved_positions") end
+        writefile("ApelHub/saved_positions/WorldFighters.json", HttpService:JSONEncode(data))
     end)
 end
 
--- =========================================================
--- [3c] ANTI-AFK BYPASS
--- =========================================================
--- Двухслойная защита от AFK-kick'а:
---
--- (1) Клиентская защита — LocalPlayer.Idled. Roblox сам шлёт Idled через 20 мин
---     бездействия, Rojo'нский Disconnect отключает всё или фолбэк через VirtualUser.
--- (2) Игровая анти-AFK (Omni.Scripts.Player.AntiAfk). Если включена настройка
---     Settings["Anti Afk"]==true — игра дёргает Reconnect на 900с idle (кик+тп).
---     Надёжнее выключить через General/Settings/Set + дисконнектить обработчики.
+local function loadPositionFromFile()
+    local ok, raw = pcall(function()
+        return readfile("ApelHub/saved_positions/WorldFighters.json")
+    end)
+    if not ok or not raw then return nil, nil end
+    local ok2, decoded = pcall(function() return HttpService:JSONDecode(raw) end)
+    if not ok2 or type(decoded) ~= "table" or type(decoded.position) ~= "table" then return nil, nil end
+    local p = decoded.position
+    return CFrame.new(p.x or 0, p.y or 0, p.z or 0), decoded.location or "Unknown"
+end
 
--- (1) Client-side Idled bypass. Делаем сразу, без toggle — оно безопасно.
-coroutine.wrap(function()
-    local getSigCons = getconnections or get_signal_cons
-    if getSigCons then
-        for _, v in pairs(getSigCons(LocalPlayer.Idled)) do
-            if v.Disable      then pcall(v.Disable, v)
-            elseif v.Disconnect then pcall(v.Disconnect, v) end
-        end
-    else
-        local VU = (cloneref or function(x) return x end)(VirtualUser)
-        LocalPlayer.Idled:Connect(function()
-            pcall(function() VU:CaptureController() end)
-            pcall(function() VU:ClickButton2(Vector2.new()) end)
-        end)
+-- Парсит "Fruits Verse | Zone 4 | Trial" → mapName="Fruits Verse", zoneIdx=4
+local function parseSavedLocation(loc)
+    if type(loc) ~= "string" then return nil, nil end
+    local m, z = loc:match("^(.-)%s*|%s*Zone%s*(%d+)")
+    if m and z then return m, tonumber(z) end
+    return nil, nil
+end
+
+-- Надёжный TP: TP в нужную зону если не там → ждём респавн персонажа → ставим CFrame
+-- с retry (сервер может отбросить physics'ом). ~8с макс.
+-- TP на сохранённую позицию. Ключевой инсайт из рабочей версии:
+-- 1. ВСЕГДА фаирим Teleport signal — даже если Data.Map/Zone совпадают.
+--    Это гарантирует что сервер снимет Gamemode status.
+--    Если savedLocation == lobby-зоне трайла (типично), и мы "TP в себя" без
+--    этого signal'а — сервер не поймёт что надо выйти из гейммода.
+-- 2. Ждём 4 сек — за это время сервер выгружает gamemode, снимает Data.Gamemode,
+--    respawn'ит новый character, завершает Results screen.
+-- 3. ПОТОМ ставим HRP.CFrame (до 3 попыток с 0.3с между ними).
+local function tpToSavedPosition()
+    if not _WF.SavedPosition then return false end
+    local targetMap, targetZone = parseSavedLocation(_WF.SavedLocation)
+    if not targetMap then
+        targetMap = "Fruits Verse"
+        targetZone = 1
     end
-end)()
 
--- Периодически пингуем humanoid.Running — некоторые анти-AFK системы слушают это
+    -- [1] Всегда fire — не пропускаем по match'у Data.Map
+    safe(function()
+        _WF.Omni.Signal:Fire("Player", "Teleport", "Teleport", targetMap, targetZone or 1)
+    end)
+
+    -- [2] 4 секунды на серверную обработку: выгрузка gamemode, respawn, Results
+    task.wait(4)
+
+    -- [3] Ставим HRP на точную сохранённую позицию (до 3 попыток)
+    local targetPos = _WF.SavedPosition.Position
+    for _ = 1, 3 do
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and hrp.Parent and not hrp.Anchored then
+            safe(function() hrp.CFrame = _WF.SavedPosition end)
+            task.wait(0.3)
+            if hrp.Parent and (hrp.Position - targetPos).Magnitude < 25 then
+                return true
+            end
+        else
+            task.wait(0.3)
+        end
+    end
+    return false
+end
+
+-- Load at script start
 do
-    local _runThread
-    local function startRunPing(character)
-        if _runThread then pcall(task.cancel, _runThread); _runThread = nil end
-        local hum = character:WaitForChild("Humanoid", 5)
-        if not hum then return end
-        _runThread = task.spawn(function()
-            while hum and hum.Parent do
-                task.wait(60)
-                if hum and hum.Parent and getconnections then
-                    for _, c in pairs(getconnections(hum.Running)) do
-                        pcall(function() c:Fire(1) end)
-                    end
-                end
-            end
-        end)
-    end
-    if LocalPlayer.Character then startRunPing(LocalPlayer.Character) end
-    LocalPlayer.CharacterAdded:Connect(startRunPing)
+    local cf, loc = loadPositionFromFile()
+    if cf then _WF.SavedPosition = cf; _WF.SavedLocation = loc end
 end
 
--- (2) Game-level Anti-AFK killer — вызывается из тоггла в Misc tab.
--- Глобальные fire/fireSelf shortcuts используются и webhook'ом и здесь.
-local function fire(...)
-    if Omni and Omni.Signal then
-        pcall(function(...) Omni.Signal:Fire(...) end, ...)
-    end
-end
-local function fireSelf(...)
-    if Omni and Omni.Signal and Omni.Signal.FireSelf then
-        pcall(function(...) Omni.Signal:FireSelf(...) end, ...)
-    end
-end
-
-local function killGameAntiAfk()
-    local d = Omni and Omni.Data
-    -- Выключить настройку
-    pcall(function()
-        if d and d.Settings and d.Settings["Anti Afk"] == true then
-            fire("General", "Settings", "Set", "Anti Afk", false)
-        end
-    end)
-    -- Дисконнектим все обработчики Idled (включая игровые)
-    pcall(function()
-        local GC = getconnections or get_signal_cons
-        if GC then
-            for _, c in pairs(GC(LocalPlayer.Idled)) do
-                if c.Disable      then pcall(c.Disable, c)
-                elseif c.Disconnect then pcall(c.Disconnect, c) end
-            end
-        end
-    end)
-    -- Сбрасываем AntiAfk auto-resume (чтобы игра не открывала звёзды/гача сама)
-    pcall(function()
-        if d and d.AntiAfk then
-            for _, field in ipairs({ "LastStar", "LastGacha", "LastBanner" }) do
-                if d.AntiAfk[field] and d.AntiAfk[field] ~= "None" then
-                    fire("Player", "AntiAfk", "SetValue", field, "None")
-                end
-            end
-        end
-    end)
-end
-
--- =========================================================
--- [3d] ACTIVITY PRIORITY + THROTTLE
--- =========================================================
--- Централизованный координатор для тех фич которые требуют монопольного
--- использования персонажа (TP к звезде, crunching gamemode join), чтобы они не
--- перебивали друг друга. Приоритеты: чем выше число — тем важнее.
---
--- Старые мьютексы `_StarBusy` / `_ZoneTpBusy` остаются для legacy-кода —
--- этот слой предназначен для НОВЫХ фич (Banner, Roulette, Merchant, ...).
+-- ── ActivityPriority — coordinates features that can't run simultaneously ──
 local ActivityPriority = {
     currentActivity = nil,
     activities = {
@@ -230,261 +323,303 @@ function ActivityPriority:ClearActivity(name)
 end
 getgenv().ActivityPriority = ActivityPriority
 
--- Throttle помощник: предотвращает спам одного и того же remote чаще чем
--- раз в N секунд. Используется автокодами, equip-best, banner spam protection.
-local _lastFire = {}
+-- ── Throttle: prevents spam of the same remote ──
+_WF._lastFire = {}
 local function shouldFire(key, minInterval)
-    local t = _lastFire[key]
+    local t = _WF._lastFire[key]
     if t and tick() - t < (minInterval or 1) then return false end
-    _lastFire[key] = tick()
+    _WF._lastFire[key] = tick()
     return true
 end
 
--- =========================================================
--- [4] ENEMY UTILS
--- =========================================================
--- Настоящие данные мобов лежат в:
---   workspace.Server.Enemies.World[Map][Zone]:GetChildren()
--- HP хранится в Attribute "Health" на Part (Client.Enemies — только визуалка).
-local function getEnemiesFolder()
-    local sv = Workspace:FindFirstChild("Server")              if not sv    then return nil end
-    local en = sv:FindFirstChild("Enemies")                    if not en    then return nil end
-    local world = en:FindFirstChild("World")                   if not world then return nil end
+-- ── Dump helpers: buffer debug output into a string, copy to clipboard + print ──
+-- Example:
+--   local d, buf = newDump()
+--   d("line 1"); d("line 2")
+--   flushDump(buf, "Gacha Debug")  -- copies to clipboard, prints, notifies
+local function newDump()
+    local buf = { lines = {} }
+    local function d(s) table.insert(buf.lines, tostring(s)) end
+    return d, buf
+end
 
-    local mapName  = (Omni.Data and Omni.Data.Map)  or "Fruits Verse"
-    local zoneIdx  = (Omni.Data and Omni.Data.Zone) or 1
+local function flushDump(buf, label)
+    local text = table.concat(buf.lines, "\n")
+    print(text)
+    local copied = false
+    if setclipboard then
+        local ok = pcall(setclipboard, text)
+        copied = ok
+    elseif toclipboard then
+        local ok = pcall(toclipboard, text)
+        copied = ok
+    end
+    Notify((label or "Debug") .. (copied and " copied to clipboard" or " printed (clipboard unavailable)"), 4)
+end
 
-    local mapFolder = world:FindFirstChild(mapName)             if not mapFolder then return nil end
-    return mapFolder:FindFirstChild(tostring(zoneIdx))
+-- ── Character helpers ──
+local function getChar()
+    return LocalPlayer.Character
 end
 
 local function getHRP()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
+    local ch = LocalPlayer.Character
+    if not ch then return nil end
+    -- В момент respawn'а HRP на ~0.3s отсутствует — возвращаем nil, пусть луп ретраит,
+    -- а не блокируемся на CharacterAdded:Wait() внутри 15-секундного attack-лупа.
+    return ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso")
 end
 
--- Устойчивый лукап HP/MaxHP: атрибут может называться Health/health/HP/hp
--- или как-нибудь типа currentHealth — делаем fuzzy fallback.
-local function getMobHPValue(mob)
-    if not mob then return nil end
-    local ok, attrs = pcall(function() return mob:GetAttributes() end)
-    if not ok or type(attrs) ~= "table" then return nil end
-    for _, k in ipairs({ "Health", "health", "HP", "hp" }) do
-        local v = attrs[k]
-        if type(v) == "number" then return v end
-    end
-    -- fuzzy: любой числовой атрибут, где имя содержит health / hp, НО не max
-    for k, v in pairs(attrs) do
-        if type(v) == "number" then
-            local lk = k:lower()
-            if (lk:find("health") or lk:find("hp")) and not lk:find("max") then
-                return v
-            end
-        end
-    end
-    return nil
+-- ── Enemy/mob helpers ──
+-- Real mob data lives in workspace.Server.Enemies.World[Map][Zone]:GetChildren()
+function _WF.getEnemiesFolder()
+    local sv = Workspace:FindFirstChild("Server")              if not sv    then return nil end
+    local en = sv:FindFirstChild("Enemies")                    if not en    then return nil end
+    local wr = en:FindFirstChild("World")                      if not wr    then return nil end
+    local mapName = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Map
+    if not mapName then return nil end
+    local mf = wr:FindFirstChild(mapName)                      if not mf    then return nil end
+    local zoneIdx = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Zone
+    if zoneIdx == nil then return nil end
+    local zf = mf:FindFirstChild(tostring(zoneIdx))            if not zf    then return nil end
+    return zf
 end
 
-local function getMobMaxHPValue(mob)
-    if not mob then return nil end
-    local ok, attrs = pcall(function() return mob:GetAttributes() end)
-    if not ok or type(attrs) ~= "table" then return nil end
-    for _, k in ipairs({ "MaxHealth", "maxHealth", "Max_Health", "max_health",
-                        "HealthMax", "Health_Max", "MaxHP", "maxHP" }) do
-        local v = attrs[k]
-        if type(v) == "number" then return v end
-    end
-    for k, v in pairs(attrs) do
-        if type(v) == "number" then
-            local lk = k:lower()
-            if lk:find("max") and (lk:find("health") or lk:find("hp")) then
-                return v
-            end
-        end
-    end
-    return nil
-end
-
-local function isAlive(mob)
+function _WF.isAlive(mob)
     if not mob or not mob.Parent then return false end
-    local hp = getMobHPValue(mob)
-    if hp ~= nil then return hp > 0 end
-    local hum = mob:FindFirstChildOfClass("Humanoid")
-    if hum then return hum.Health > 0 end
-    return true
+    local hp = mob:GetAttribute("Health")
+    if type(hp) == "number" then return hp > 0 end
+    -- Fallback: Humanoid
+    local h = mob:FindFirstChildOfClass("Humanoid")
+    return h and h.Health > 0
 end
 
-local function getMobPos(mob)
+function _WF.getMobHP(mob)
+    if not mob then return nil end
+    local hp = mob:GetAttribute("Health")
+    if type(hp) == "number" then return hp end
+    local h = mob:FindFirstChildOfClass("Humanoid")
+    return h and h.Health
+end
+
+function _WF.getMobPos(mob)
     if not mob or not mob.Parent then return nil end
     local pos
+    -- ВАЖНО: в этой игре мобы — Part, а не Model. Доступ к mob.PrimaryPart на Part'е
+    -- выкидывает ошибку (property не существует на этом классе). Поэтому сначала IsA.
     if mob:IsA("BasePart") then
         pos = mob.Position
-    elseif mob.PrimaryPart then
-        pos = mob.PrimaryPart.Position
-    else
-        local ok, piv = pcall(function() return mob:GetPivot().Position end)
-        if ok and piv then
-            pos = piv
+    elseif mob:IsA("Model") then
+        local root = mob:FindFirstChild("HumanoidRootPart") or mob.PrimaryPart
+        if root then
+            pos = root.Position
         else
-            for _, d in ipairs(mob:GetDescendants()) do
-                if d:IsA("BasePart") then pos = d.Position; break end
+            local ok, piv = pcall(function() return mob:GetPivot().Position end)
+            if ok and piv then
+                pos = piv
+            else
+                local part = mob:FindFirstChildWhichIsA("BasePart")
+                if part then pos = part.Position end
             end
         end
+    else
+        -- Неизвестный класс (Folder, etc) — пробуем найти первый BasePart-потомок
+        local part = mob:FindFirstChildWhichIsA("BasePart")
+        if part then pos = part.Position end
     end
-    -- StreamingEnabled: если моб далеко и не загружен, Position будет близко к (0,0,0).
-    -- Возвращаем nil чтобы вызывающий код знал что ТП к нему делать нельзя (и перепроверил).
+    -- StreamingEnabled: выгруженные парты репортят Position около (0,0,0).
+    -- Возвращаем nil — иначе ТП кинет персонажа под карту.
     if not pos or pos.Magnitude < 0.5 then return nil end
     return pos
 end
 
-local function getMobHP(mob)
-    local hp  = getMobHPValue(mob)
-    local mhp = getMobMaxHPValue(mob)
-    if hp ~= nil then
-        return math.floor(hp), (mhp and math.floor(mhp) or nil)
-    end
-    local hum = mob:FindFirstChildOfClass("Humanoid")
-    if hum then return math.floor(hum.Health), math.floor(hum.MaxHealth) end
-    return nil, nil
+function _WF.teleportTo(mob)
+    local hrp = getHRP()
+    if not hrp then return false end
+    local pos = _WF.getMobPos(mob)
+    if not pos then return false end
+    hrp.CFrame = CFrame.new(pos + _WF.TpOffset)
+    return true
 end
 
-local function groupMobs()
-    local groups = {}
-    local folder = getEnemiesFolder()
-    if not folder then return groups end
-    for _, mob in ipairs(folder:GetChildren()) do
-        if isAlive(mob) then
-            local n = mob.Name
-            groups[n] = groups[n] or {}
-            table.insert(groups[n], mob)
-        end
-    end
-    return groups
-end
-
--- =========================================================
--- [4b] ZONE ROUTING — когда выбранных мобов нет в текущей зоне
--- =========================================================
-
--- Разблокирована ли зона? Сначала через PlayerStats.HasMapZone, потом fallback'и.
-local function isZoneUnlocked(mapName, zoneIdx)
-    local ok, result = pcall(function()
-        return Omni.Utils.PlayerStats.HasMapZone(Omni.Data, mapName, tonumber(zoneIdx))
+function _WF.attackOnce()
+    if not (_WF.Omni and _WF.Omni.Signal) then return end
+    if not _WF.Omni.Cache then return end   -- рано, Cache ещё не готов
+    local ids = _WF.Omni.Cache:Get({"EnemiesOnRangeIds"}) or {}
+    -- Пустой список = сервер проигнорирует атаку. Не тратим fire, ждём следующего тика.
+    if #ids == 0 then return end
+    safe(function()
+        _WF.Omni.Signal:Fire("General", "Attack", "Click", ids)
     end)
-    if ok and type(result) == "boolean" then return result end
-    -- Fallback 1: стартовая зона всегда открыта
-    if mapName == "Fruits Verse" and tonumber(zoneIdx) == 1 then return true end
-    -- Fallback 2: если игрок там был — есть SavedPositions
-    local saved = Omni.Data.SavedPositions and Omni.Data.SavedPositions["Map " .. mapName]
-    if saved then return true end
-    return false
 end
 
--- Универсальный экстрактор имён мобов из конфига зоны.
--- Поддерживает три возможные структуры Omni.Shared.Enemies[map][zone]:
---   (A) массив строк:   {"Buggo", "Shanke", ...}
---   (B) массив таблиц:  {{Name="Buggo", ...}, {Name="Shanke", ...}}
---   (C) словарь:        {Buggo = {stats}, Shanke = {stats}, ...}
--- Возвращает set {[name]=true} найденных имён, чтобы вызывающий код мог делать O(1) проверки.
-local function extractMobNames(list)
-    local names = {}
-    if type(list) ~= "table" then return names end
-    for k, v in pairs(list) do
-        -- (A) массив строк
-        if type(v) == "string" then
-            names[v] = true
-        -- (B) таблица с .Name
-        elseif type(v) == "table" then
-            if type(v.Name) == "string" then
-                names[v.Name] = true
-            elseif type(v.ID) == "string" then
-                names[v.ID] = true
-            end
-            -- (C) словарь — имя в ключе
-            if type(k) == "string" then
-                names[k] = true
+function _WF.getClickCooldown()
+    local u = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+    if type(u) == "table" and type(u.ClickCooldown) == "function" then
+        local ok, v = pcall(function()
+            return u.ClickCooldown(_WF.Omni.Data, _WF.Omni.Instance)
+        end)
+        if ok and type(v) == "number" and v > 0 then return v end
+    end
+    return 0.15
+end
+
+-- Вытащить MaxHP моба из Omni.Shared.Enemies конфига (структура варьируется:
+-- dict name→cfg, array of {Name=...,Health=...}, или array of strings без HP).
+function _WF.getMobMaxHPFromConfig(mobName)
+    local shared = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Enemies
+    if type(shared) ~= "table" then return nil end
+    local function readHP(cfg)
+        if type(cfg) ~= "table" then return nil end
+        for _, k in ipairs({ "MaxHealth", "Health", "MaxHP", "HP", "HealthAmount", "MaxHp" }) do
+            if type(cfg[k]) == "number" then return cfg[k] end
+        end
+        for _, parent in ipairs({ "Stats", "BaseStats", "Data" }) do
+            if type(cfg[parent]) == "table" then
+                for _, k in ipairs({ "MaxHealth", "Health", "MaxHP", "HP" }) do
+                    if type(cfg[parent][k]) == "number" then return cfg[parent][k] end
+                end
             end
         end
+        return nil
     end
-    return names
-end
-
--- Ищет наилучшую разблокированную зону с хотя бы одним выбранным типом мобов.
--- Предпочтение: текущая зона > зона с максимальным числом совпадений.
-local function findBestZoneForTargets(targets)
-    if not targets or next(targets) == nil then return nil end
-    local shared = Omni.Shared and Omni.Shared.Enemies
-    if type(shared) ~= "table" then return nil end
-
-    local curMap  = Omni.Data and Omni.Data.Map
-    local curZone = tonumber(Omni.Data and Omni.Data.Zone or 0)
-
-    local best = nil
-    for mapName, zones in pairs(shared) do
+    for _, zones in pairs(shared) do
         if type(zones) == "table" then
-            for zoneKey, list in pairs(zones) do
-                local zoneIdx = tonumber(zoneKey) or zoneKey
-                if type(list) == "table" and isZoneUnlocked(mapName, zoneIdx) then
-                    -- Универсальное извлечение: {string[]} / {{.Name}} / {key=val}
-                    local zoneMobs = extractMobNames(list)
-                    local matches = 0
-                    for name in pairs(targets) do
-                        if zoneMobs[name] then matches = matches + 1 end
-                    end
-                    if matches > 0 then
-                        local isCur = (mapName == curMap) and (tonumber(zoneIdx) == curZone)
-                        local betterThanBest = false
-                        if not best then
-                            betterThanBest = true
-                        elseif isCur and not best.isCurrent then
-                            betterThanBest = true
-                        elseif isCur == best.isCurrent and matches > best.matches then
-                            betterThanBest = true
-                        end
-                        if betterThanBest then
-                            best = {
-                                mapName   = mapName,
-                                zoneIdx   = tonumber(zoneIdx) or zoneIdx,
-                                matches   = matches,
-                                isCurrent = isCur,
-                            }
+            for _, list in pairs(zones) do
+                if type(list) == "table" then
+                    -- Словарь: list[mobName] = cfg
+                    local dictCfg = list[mobName]
+                    local hp = readHP(dictCfg)
+                    if hp then return hp end
+                    -- Массив: {Name=mobName, Health=...}
+                    for _, v in pairs(list) do
+                        if type(v) == "table" and v.Name == mobName then
+                            local h = readHP(v)
+                            if h then return h end
                         end
                     end
                 end
             end
         end
     end
-    return best
+    return nil
 end
 
--- ТП игрока в указанную зону + ожидание пока Data.Map/Zone обновятся и папка прогрузится.
-local function teleportToZone(mapName, zoneIdx)
-    pcall(function()
-        Omni.Signal:Fire("Player", "Teleport", "Teleport", mapName, zoneIdx)
-    end)
-    local deadline = tick() + 8
-    while tick() < deadline and not stopped do
-        local curMap  = Omni.Data.Map
-        local curZone = tonumber(Omni.Data.Zone or 0)
-        if curMap == mapName and curZone == tonumber(zoneIdx) then
-            local f = getEnemiesFolder()
-            if f and #f:GetChildren() > 0 then return true end
+-- Fallback: снять MaxHealth с любого живого экземпляра в текущей зоне.
+function _WF.getMobMaxHPFromLive(mobName)
+    local folder = _WF.getEnemiesFolder()
+    if not folder then return nil end
+    for _, m in ipairs(folder:GetChildren()) do
+        if m.Name == mobName then
+            local v = m:GetAttribute("MaxHealth") or m:GetAttribute("Health")
+            if type(v) == "number" and v > 0 then return v end
         end
-        task.wait(0.3)
+    end
+    return nil
+end
+
+-- Универсальная сортировка имён мобов по MaxHP ascending. Без HP → в конец, alpha tiebreak.
+function _WF.sortMobNamesByHP(names)
+    local hpCache = {}
+    for _, n in ipairs(names) do
+        hpCache[n] = _WF.getMobMaxHPFromConfig(n) or _WF.getMobMaxHPFromLive(n) or math.huge
+    end
+    table.sort(names, function(a, b)
+        if hpCache[a] == hpCache[b] then return a < b end
+        return hpCache[a] < hpCache[b]
+    end)
+    return names
+end
+
+-- List all mob names in current zone (sorted by HP ascending)
+function _WF.getMobsInCurrentZone()
+    local out = {}
+    local folder = _WF.getEnemiesFolder()
+    if not folder then return out end
+    local seen = {}
+    for _, m in ipairs(folder:GetChildren()) do
+        if not seen[m.Name] then
+            seen[m.Name] = true
+            table.insert(out, m.Name)
+        end
+    end
+    return _WF.sortMobNamesByHP(out)
+end
+
+-- List all mob names across all zones (from Shared.Enemies config, sorted by HP ascending)
+function _WF.getAllMobsGlobal()
+    local set = {}
+    local shared = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Enemies
+    if type(shared) == "table" then
+        for _, zones in pairs(shared) do
+            if type(zones) == "table" then
+                for _, list in pairs(zones) do
+                    if type(list) == "table" then
+                        for k, v in pairs(list) do
+                            local nm
+                            if type(v) == "string" then nm = v
+                            elseif type(v) == "table" and type(v.Name) == "string" then nm = v.Name
+                            elseif type(k) == "string" then nm = k
+                            end
+                            if nm then set[nm] = true end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if next(set) == nil then
+        for _, n in ipairs(_WF.getMobsInCurrentZone()) do set[n] = true end
+    end
+    local out = {}
+    for n in pairs(set) do table.insert(out, n) end
+    return _WF.sortMobNamesByHP(out)
+end
+
+-- Extract mob names from a zone config table (can be array or name-keyed dict)
+function _WF.extractMobNames(list)
+    local out = {}
+    if type(list) ~= "table" then return out end
+    for k, v in pairs(list) do
+        if type(v) == "string" then out[v] = true
+        elseif type(v) == "table" and type(v.Name) == "string" then out[v.Name] = true
+        elseif type(k) == "string" then out[k] = true
+        end
+    end
+    return out
+end
+
+-- Get mob names configured for a specific map/zone
+function _WF.getMobsInZoneConfig(mapName, zoneIdx)
+    local shared = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Enemies
+    if type(shared) ~= "table" then return {} end
+    local mapConfig = shared[mapName]
+    if type(mapConfig) ~= "table" then return {} end
+    local zoneConfig = mapConfig[tostring(zoneIdx)] or mapConfig[zoneIdx]
+    if type(zoneConfig) ~= "table" then return {} end
+    return _WF.extractMobNames(zoneConfig)
+end
+
+-- Check if any selected target is configured to spawn in this zone
+function _WF.anyTargetInZoneConfig(targetSet, mapName, zoneIdx)
+    local zoneMobs = _WF.getMobsInZoneConfig(mapName, zoneIdx)
+    for n in pairs(targetSet) do
+        if zoneMobs[n] then return true end
     end
     return false
 end
 
--- Проверка: есть ли в текущей зоне мобы выбранных типов (alive + стриммятся)
-local function hasReadyTargetsInCurrentZone(targets)
-    local folder = getEnemiesFolder()
+-- Check current-zone folder: are there live/ready targets?
+-- Returns (hasReady, hasLive). Ready = in streaming range. Live = config-listed
+-- but may be culled due to distance.
+function _WF.hasReadyTargetsInCurrentZone(targetSet)
+    local folder = _WF.getEnemiesFolder()
     if not folder then return false, false end
-    local hasLive  = false   -- есть вообще живые выбранного типа
-    local hasReady = false   -- есть живые с валидной позицией
+    local hasReady, hasLive = false, false
     for _, mob in ipairs(folder:GetChildren()) do
-        if targets[mob.Name] and isAlive(mob) then
+        if targetSet[mob.Name] then
             hasLive = true
-            if getMobPos(mob) then
+            if _WF.isAlive(mob) and _WF.getMobPos(mob) then
                 hasReady = true
                 break
             end
@@ -493,4502 +628,3983 @@ local function hasReadyTargetsInCurrentZone(targets)
     return hasReady, hasLive
 end
 
--- Проверка: содержит ли конфиг Shared.Enemies хотя бы один из targets для указанной зоны.
--- Это серверная правда — говорит "в этой зоне вообще должны быть такие мобы", независимо
--- от того прогружены они сейчас в workspace или нет.
-local function anyTargetInZoneConfig(targets, mapName, zoneIdx)
-    local shared = Omni.Shared and Omni.Shared.Enemies
-    if type(shared) ~= "table" then return false end
-    local zones = shared[mapName]
-    if type(zones) ~= "table" then return false end
-    local list = zones[tonumber(zoneIdx)] or zones[tostring(zoneIdx)]
-    if type(list) ~= "table" then return false end
-    local zoneMobs = extractMobNames(list)
-    for name in pairs(targets) do
-        if zoneMobs[name] then return true end
-    end
-    return false
-end
-
--- Streaming trick: если в текущей зоне НЕ видно наших мобов, но конфиг говорит что они тут есть —
--- значит они спавнятся на другом краю карты и не стримятся. Телепортируемся к самому дальнему
--- видимому мобу (даже не нашего типа) — это заставит StreamingEnabled прогрузить соседей.
-local function tpToFurthestVisibleMob()
-    local folder = getEnemiesFolder()
+-- TP to the furthest visible mob (un-stalls Roblox streaming to load new mobs)
+function _WF.tpToFurthestVisibleMob()
+    local folder = _WF.getEnemiesFolder()
     if not folder then return false end
-    local hrp = getHRP()
-    if not hrp then return false end
-
-    local furthest, maxDist = nil, -1
-    for _, m in ipairs(folder:GetChildren()) do
-        if isAlive(m) then
-            local p = getMobPos(m)
-            if p then
-                local d = (p - hrp.Position).Magnitude
-                if d > maxDist then
-                    maxDist = d
-                    furthest = m
-                end
-            end
+    local hrp = getHRP(); if not hrp then return false end
+    local myPos = hrp.Position
+    local best, bestDist = nil, 0
+    for _, mob in ipairs(folder:GetChildren()) do
+        local mp = _WF.getMobPos(mob)
+        if mp then
+            local d = (mp - myPos).Magnitude
+            if d > bestDist then best, bestDist = mob, d end
         end
     end
-    if furthest then
-        local pos = getMobPos(furthest)
-        if pos then
-            hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 4))
-            return true
-        end
-    end
-    return false
-end
-
--- Где вообще может находиться моб с данным именем (все map/zone из Shared.Enemies).
--- Возвращает массив {mapName, zoneIdx, unlocked}. Нужно для статуса (показать юзеру "локально / в FV2 / locked").
-local function findMobLocations(mobName)
-    local result = {}
-    local shared = Omni.Shared and Omni.Shared.Enemies
-    if type(shared) ~= "table" then return result end
-    for mapName, zones in pairs(shared) do
-        if type(zones) == "table" then
-            for zoneKey, list in pairs(zones) do
-                if type(list) == "table" then
-                    local names = extractMobNames(list)
-                    if names[mobName] then
-                        local zIdx = tonumber(zoneKey) or zoneKey
-                        table.insert(result, {
-                            mapName  = mapName,
-                            zoneIdx  = zIdx,
-                            unlocked = isZoneUnlocked(mapName, zIdx),
-                        })
-                    end
-                end
-            end
-        end
-    end
-    return result
-end
-
-
--- Источник: только мобы ТЕКУЩЕЙ зоны (чтобы легче искать в дропдауне).
--- Сортировка по HP (слабые сверху). Для мобов из других зон — используй Auto Quest
--- (он сам находит нужную зону и фармит).
-local function buildOptions()
-    local groups = groupMobs()
-    local entries = {}
-    for name, mobs in pairs(groups) do
-        local refHP
-        for _, mob in ipairs(mobs) do
-            local cur, mx = getMobHP(mob)
-            local v = mx or cur
-            if v and (not refHP or v > refHP) then refHP = v end
-        end
-        table.insert(entries, { name = name, hp = refHP or 0 })
-    end
-    table.sort(entries, function(a, b)
-        if a.hp == b.hp then return a.name < b.name end
-        return a.hp < b.hp
-    end)
-    local opts = {}
-    for _, e in ipairs(entries) do table.insert(opts, e.name) end
-    return opts
-end
-
--- =========================================================
--- [5] TELEPORT + ATTACK
--- =========================================================
-local function teleportTo(mob)
-    local hrp = getHRP()
-    if not hrp then return false end
-    local pos = getMobPos(mob)
-    if not pos then return false end
-    hrp.CFrame = CFrame.new(pos + getgenv().TpOffset)
-    return true
-end
-
-local function attackOnce()
-    local ids = Omni.Cache:Get({ "EnemiesOnRangeIds" }) or {}
-    Omni.Signal:Fire("General", "Attack", "Click", ids)
-end
-
-local function getClickCooldown()
-    local cd = 0.3
-    pcall(function()
-        local v = Omni.Utils.PlayerStats.ClickCooldown(Omni.Data, Omni.Instance)
-        if type(v) == "number" and v > 0 then cd = v end
-    end)
-    return math.max(cd, 0.05)
-end
-
--- =========================================================
--- [6] FARM LOOP
--- =========================================================
-local function farmLoop()
-    while getgenv().AutoFarm and not stopped do
-        -- Уважаем star-open / zone-tp: ждём пока операция не завершится
-        while (getgenv()._StarBusy or getgenv()._ZoneTpBusy) and getgenv().AutoFarm and not stopped do
-            task.wait(0.1)
-        end
-
-        local targetSet = getgenv().Targets
-        if not targetSet or next(targetSet) == nil then
-            task.wait(0.3)
-        else
-            local curMap  = Omni.Data and Omni.Data.Map
-            local curZone = tonumber(Omni.Data and Omni.Data.Zone or 1) or 1
-
-            -- [1] Есть ли рядом (streamed) готовые к атаке мобы выбранных типов?
-            local hasReady, hasLive = hasReadyTargetsInCurrentZone(targetSet)
-
-            if hasReady then
-                -- ==== ФАРМИМ ====
-                local candidates = {}
-                local folder = getEnemiesFolder()
-                if folder then
-                    for _, mob in ipairs(folder:GetChildren()) do
-                        if targetSet[mob.Name] and isAlive(mob) and getMobPos(mob) then
-                            table.insert(candidates, mob)
-                        end
-                    end
-                end
-
-                if #candidates == 0 then
-                    task.wait(0.5)
-                else
-                    -- Сортировка по HP (слабейший первый)
-                    table.sort(candidates, function(a, b)
-                        local ha = getMobHPValue(a) or math.huge
-                        local hb = getMobHPValue(b) or math.huge
-                        return ha < hb
-                    end)
-
-                    local hrp = getHRP()
-                    local mob = candidates[1]
-                    if mob and isAlive(mob) then
-                        teleportTo(mob)
-                        task.wait(0.08)
-
-                        local cd        = getClickCooldown()
-                        local startTime = tick()
-                        local mobName   = mob.Name
-
-                        while getgenv().AutoFarm
-                            and not stopped
-                            and not getgenv()._StarBusy
-                            and not getgenv()._ZoneTpBusy
-                            and getgenv().Targets
-                            and getgenv().Targets[mobName]
-                            and isAlive(mob)
-                            and tick() - startTime < 15
-                        do
-                            local mp = getMobPos(mob)
-                            local my = hrp and hrp.Position
-                            if mp and my and (mp - my).Magnitude > 12 then
-                                teleportTo(mob)
-                                task.wait(0.05)
-                            end
-
-                            attackOnce()
-                            task.wait(cd)
-                        end
-                    end
-                end
-            elseif hasLive then
-                -- [2] Наши мобы есть в папке но не стримятся. Streaming trick:
-                -- TP к самому дальнему видимому мобу — это подтянет наших.
-                local ok = tpToFurthestVisibleMob()
-                if not ok then
-                    -- Вообще ничего не видно → полный re-stream через Teleport в ту же зону
-                    getgenv()._ZoneTpBusy = true
-                    pcall(function()
-                        Omni.Signal:Fire("Player", "Teleport", "Teleport", curMap, curZone)
-                    end)
-                    task.wait(1.0)
-                    getgenv()._ZoneTpBusy = false
-                else
-                    task.wait(0.6) -- дать streaming'у прогрузить новую окрестность
-                end
-            else
-                -- [3] В папке нет наших мобов вообще. Есть два подслучая:
-                --  (a) конфиг говорит "в этой зоне они должны быть" → ждём respawn (или streaming)
-                --  (b) эта зона не для них → ищем другую разблокированную зону и TP туда
-                if anyTargetInZoneConfig(targetSet, curMap, curZone) then
-                    -- Ждём respawn, заодно пробуем streaming trick (вдруг только что умерли и скоро спавн)
-                    local tpOk = tpToFurthestVisibleMob()
-                    task.wait(tpOk and 0.6 or 1.5)
-                else
-                    local best = findBestZoneForTargets(targetSet)
-                    if best and (best.mapName ~= curMap or best.zoneIdx ~= curZone) then
-                        getgenv()._ZoneTpBusy = true
-                        teleportToZone(best.mapName, best.zoneIdx)
-                        getgenv()._ZoneTpBusy = false
-                    else
-                        -- Ни одна зона с нашими мобами не разблокирована. Ждём дольше,
-                        -- статус покажет юзеру что проблема.
-                        task.wait(3)
-                    end
-                end
-            end
-        end
-    end
-    farmThread = nil
-end
-
-local function startFarm()
-    if farmThread then return end
-    farmThread = task.spawn(farmLoop)
-end
-
--- =========================================================
--- [6b] AUTO-CLAIM (Achievements / Rewards / Chests)
--- =========================================================
--- Anti-spam: минимальный интервал между однотипными вызовами.
-local _lastFire = {}
-local function shouldFire(key, minInterval)
-    local t = _lastFire[key]
-    if t and tick() - t < (minInterval or 1) then return false end
-    _lastFire[key] = tick()
-    return true
-end
-
--- Cooldown'ы сундуков (в секундах)
-local CHEST_CD = {
-    ["Daily Chest"] = 24 * 3600,
-    ["Group Chest"] = 12 * 3600,
-    ["VIP Chest"]   =  4 * 3600,
-}
-
--- Кэш позиций сундуков (ищем один раз)
-local _chestPos = {}
-local function getChestPos(chestName)
-    if _chestPos[chestName] ~= nil then return _chestPos[chestName] end
-    local sv = Workspace:FindFirstChild("Server")
-    local ia = sv and sv:FindFirstChild("Interactable")
-    if not ia then return nil end
-    for _, zone in ipairs(ia:GetChildren()) do
-        local part = zone:FindFirstChild(chestName .. " Chest")
-        if part and part:IsA("BasePart") then
-            _chestPos[chestName] = part.Position
-            return part.Position
-        end
-    end
-    _chestPos[chestName] = false
-    return nil
-end
-
--- Узнаёт timestamp последнего клейма сундука из Omni.Data (структура нам точно неизвестна,
--- поэтому пробуем несколько типовых форматов).
-local function getChestLastClaim(chestName)
-    local d = Omni.Data and Omni.Data.Chests and Omni.Data.Chests[chestName]
-    if not d then return nil end
-    if type(d) == "number" then return d end
-    if type(d) == "table" then
-        return d.LastClaim or d.Last or d.Time or d.LastRefresh or d.Claimed
-    end
-    return nil
-end
-
-local function chestOnCooldown(chestName)
-    local last = getChestLastClaim(chestName)
-    if not last then return false end
-    local cd = CHEST_CD[chestName] or 24 * 3600
-    return (tick() - last) < cd
-end
-
-local function tryClaimChest(chestName)
-    if chestOnCooldown(chestName) then return false end
-    -- ограничение частоты ретраев (если cooldown неправильно определён)
-    if not shouldFire("chest." .. chestName, 60) then return false end
-
-    local hrp = getHRP()
-    if not hrp then return false end
-    local savedCF = hrp.CFrame
-    local pos     = getChestPos(chestName)
-
-    if pos then
-        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
-        task.wait(0.2)
-    end
-    pcall(function()
-        Omni.Signal:Fire("General", "Chests", "Claim", chestName)
-    end)
-    task.wait(0.3)
-    if pos then
-        hrp.CFrame = savedCF  -- возвращаемся (если фарм активен — он ТП к мобу сам)
-    end
-    return true
-end
-
-local function tryAchievementsClaimAll()
-    if not shouldFire("ach.claimall", 5) then return end
-    pcall(function()
-        Omni.Signal:Fire("General", "Achievements", "ClaimAll")
-    end)
-end
-
-local function tryTimeRewards()
-    local data   = Omni.Data and Omni.Data.TimeRewards
-    local shared = Omni.Shared and Omni.Shared.TimeRewards
-    if not data or not shared then return end
-    local tp       = data.TimePlayed or 0
-    local claimed  = data.Claimed or {}
-    for idx, entry in pairs(shared) do
-        if type(idx) == "number" and type(entry) == "table" and entry.Time then
-            if tp >= entry.Time and not claimed[idx] then
-                if shouldFire("time." .. idx, 2) then
-                    pcall(function()
-                        Omni.Signal:Fire("General", "TimeRewards", "Claim", idx)
-                    end)
-                end
-            end
-        end
-    end
-end
-
-local function tryDailyRewards()
-    local data   = Omni.Data and Omni.Data.DailyRewards
-    local shared = Omni.Shared and Omni.Shared.DailyRewards
-    if not data or not shared then return end
-    local start   = data.Start or 0
-    local claimed = data.Claimed or {}
-    local days    = math.floor((tick() - start) / 86400) + 1
-    for idx = 1, 7 do
-        if shared[idx] and not claimed[idx] and idx <= days then
-            if shouldFire("daily." .. idx, 2) then
-                pcall(function()
-                    Omni.Signal:Fire("General", "DailyRewards", "Claim", idx)
-                end)
-            end
-        end
-    end
-end
-
-local function tryFollowRewards()
-    if not shouldFire("follow.verify", 300) then return end  -- раз в 5 мин
-    pcall(function()
-        Omni.Signal:Fire("General", "FollowRewards", "Verify")
-    end)
-end
-
--- Главный цикл авто-клейма (один на всё — меньше тредов, проще останов)
-local rewardsThread
-local function startRewardsLoop()
-    if rewardsThread then return end
-    rewardsThread = task.spawn(function()
-        while not stopped do
-            if getgenv().AutoAchievements then tryAchievementsClaimAll() end
-            if getgenv().AutoTimeRewards   then tryTimeRewards()          end
-            if getgenv().AutoDailyRewards  then tryDailyRewards()         end
-            if getgenv().AutoFollowRewards then tryFollowRewards()        end
-            if getgenv().AutoDailyChest    then tryClaimChest("Daily Chest") end
-            if getgenv().AutoGroupChest    then tryClaimChest("Group Chest") end
-            if getgenv().AutoVIPChest      then tryClaimChest("VIP Chest")   end
-            task.wait(30)
-        end
-        rewardsThread = nil
-    end)
-end
-
--- Инициализация глобалов
-getgenv().AutoAchievements  = getgenv().AutoAchievements  or false
-getgenv().AutoTimeRewards   = getgenv().AutoTimeRewards   or false
-getgenv().AutoDailyRewards  = getgenv().AutoDailyRewards  or false
-getgenv().AutoFollowRewards = getgenv().AutoFollowRewards or false
-getgenv().AutoDailyChest    = getgenv().AutoDailyChest    or false
-getgenv().AutoGroupChest    = getgenv().AutoGroupChest    or false
-getgenv().AutoVIPChest      = getgenv().AutoVIPChest      or false
-
--- =========================================================
--- [6c] EGGS / STARS — открытие звёзд (яиц)
--- =========================================================
-local CollectionService = game:GetService("CollectionService")
-
--- Список всех доступных звёзд из Omni.Shared.Stars
-local function getAllStars()
-    local result = {}
-    local shared = Omni.Shared and Omni.Shared.Stars
-    if type(shared) ~= "table" then return result end
-    for name, cfg in pairs(shared) do
-        if type(name) == "string" and type(cfg) == "table" and cfg.Price then
-            table.insert(result, name)
-        end
-    end
-    table.sort(result)
-    return result
-end
-
-local function getStarCfg(starName)
-    local s = Omni.Shared and Omni.Shared.Stars
-    return s and s[starName]
-end
-
--- Получить текущий баланс игрока для пары (Type, Name)
-local function getBalance(priceType, priceName)
-    if priceType == "Currency" then
-        return Omni.Data[priceName] or 0
-    elseif priceType == "Item" then
-        local items = Omni.Data.Inventory and Omni.Data.Inventory.Items or {}
-        return items[priceName] or 0
-    end
-    return 0
-end
-
-local function canAffordStar(starName, amount)
-    local cfg = getStarCfg(starName)
-    if not cfg or not cfg.Price then return false, 0, 0 end
-    amount = amount or 1
-    local have = getBalance(cfg.Price.Type, cfg.Price.Name)
-    local need = (cfg.Price.Amount or 0) * amount
-    return have >= need, have, need
-end
-
--- Максимальное число открытий за раз (зависит от gamepass Multi Open)
-local function getMaxStarOpen()
-    local v
-    local ok = pcall(function()
-        v = Omni.Utils.PlayerStats.MaxStarOpen(Omni.Data, Omni.Instance)
-    end)
-    if ok and type(v) == "number" and v >= 1 then
-        return math.floor(v)
-    end
-    return 1
-end
-
--- Тайминги репликации (критично для серверной проверки дистанции до звезды):
--- TP_SETTLE — время, нужное чтобы позиция HRP реплицировалась на сервер после TP.
--- FIRE_SETTLE — время, нужное серверу чтобы обработать Fire до того как мы ТП'немся обратно.
--- Роблокс реплицирует клиентскую позицию ~30-60Hz, сервер обрабатывает Fire через несколько frame'ов.
--- Ниже 0.15с сервер начинает терять запросы (открывает "через раз").
-local STAR_TP_SETTLE   = 0.2
-local STAR_FIRE_SETTLE = 0.2
-local STAR_BATCH_GAP   = 0.1  -- между Fire разных звёзд в одном batch (для rate-limit защиты)
-
--- Поиск модели звезды в мире
-local function findStarModel(starName)
-    -- Через CollectionService
-    for _, m in ipairs(CollectionService:GetTagged("StarModel")) do
-        if m.Name == starName then return m end
-    end
-    -- Fallback: Workspace.Client.Stars.*.<starName>
-    local cl = Workspace:FindFirstChild("Client")
-    local st = cl and cl:FindFirstChild("Stars")
-    if st then
-        for _, zone in ipairs(st:GetChildren()) do
-            local match = zone:FindFirstChild(starName)
-            if match then return match end
-            if zone.Name == starName then return zone end
-        end
-    end
-    return nil
-end
-
--- "Remote Star" gamepass позволяет открывать без ТП
-local function hasRemoteStarPass()
-    local gp = Omni.Data and Omni.Data.Gamepasses or {}
-    return gp["Remote Star"] == true
-end
-
--- Чистое открытие звезды (БЕЗ ТП — координацию делает вызывающий код).
-local function fireStarOpen(starName, amount)
-    amount = amount or 1
-    pcall(function()
-        Omni.Signal:Fire("General", "Stars", "Open", starName, amount)
-    end)
-end
-
--- ТП к модели звезды (если доступна и далеко)
-local function tpNearStar(starName)
-    local model = findStarModel(starName)
-    local hrp   = getHRP()
-    if not model or not hrp then return false end
-    local pos
-    if model:IsA("BasePart") then
-        pos = model.Position
-    else
-        pcall(function() pos = model:GetPivot().Position end)
-    end
-    if not pos then return false end
-    if (pos - hrp.Position).Magnitude > 8 then
-        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
-        return true   -- ТП'нулись
-    end
-    return false      -- уже рядом, ТП не было
-end
-
--- Совместимый публичный враппер (используется кнопками "Open Now" в UI)
-local function openStarOnce(starName, amount)
-    if not hasRemoteStarPass() then
-        local tpHappened = tpNearStar(starName)
-        if tpHappened then
-            task.wait(STAR_TP_SETTLE)   -- ждём репликацию позиции на сервер
-        end
-    end
-    fireStarOpen(starName, amount)
-    return true
-end
-
--- Подсчитать оптимальный amount с учётом баланса (<= maxOpen и <= affordable)
-local function computeStarAmount(starName)
-    local max = getMaxStarOpen()
-    for try = max, 1, -1 do
-        if canAffordStar(starName, try) then
-            return try
-        end
-    end
-    return 0
-end
-
--- Авто-цикл открытия звёзд — координируется с Farm через _StarBusy
-local starThread
-local function startStarLoop()
-    if starThread then return end
-    starThread = task.spawn(function()
-        while getgenv().AutoOpenStar and not stopped do
-            -- Уважаем zone-tp farm'а: не вмешиваемся пока он телепортирует между зонами
-            while getgenv()._ZoneTpBusy and getgenv().AutoOpenStar and not stopped do
-                task.wait(0.15)
-            end
-
-            local targets = getgenv().StarTargets or {}
-            if next(targets) == nil then
-                task.wait(1)
-            else
-                -- Есть ли хотя бы одна звезда, которую можем открыть сейчас?
-                local anyAffordable = false
-                for name in pairs(targets) do
-                    if computeStarAmount(name) >= 1 then
-                        anyAffordable = true
-                        break
-                    end
-                end
-
-                if not anyAffordable then
-                    -- Нечего открывать — ждём пока накопится (farm продолжает работать)
-                    task.wait(5)
-                else
-                    local remote = hasRemoteStarPass()
-
-                    -- === Remote Star: ТП не нужен, работаем параллельно farm'у ===
-                    if remote then
-                        for starName in pairs(targets) do
-                            if not (getgenv().AutoOpenStar and not stopped) then break end
-                            local amt = computeStarAmount(starName)
-                            if amt >= 1 and shouldFire("star." .. starName, 0.5) then
-                                fireStarOpen(starName, amt)
-                                task.wait(STAR_BATCH_GAP)
-                            end
-                        end
-                    else
-                    -- === Без Remote Star: захватываем HRP, ждём репликацию позиции ===
-                        local hrp       = getHRP()
-                        local savedCF   = hrp and hrp.CFrame
-                        local farmActive = getgenv().AutoFarm == true
-
-                        getgenv()._StarBusy = true
-                        task.wait(0.1)  -- farm должен успеть выйти из attack-loop
-
-                        for starName in pairs(targets) do
-                            if not (getgenv().AutoOpenStar and not stopped) then break end
-                            local amt = computeStarAmount(starName)
-                            if amt >= 1 and shouldFire("star." .. starName, 0.5) then
-                                local tpHappened = tpNearStar(starName)
-                                -- После ТП ждём пока сервер увидит новую позицию (критично для
-                                -- серверной проверки "игрок у звезды", иначе Fire отклоняется).
-                                if tpHappened then
-                                    task.wait(STAR_TP_SETTLE)
-                                end
-                                fireStarOpen(starName, amt)
-                                -- Ждём пока сервер обработает Fire, ДО того как клиент
-                                -- отрепортит новую (возвращённую) позицию у моба.
-                                task.wait(STAR_FIRE_SETTLE)
-                            end
-                        end
-
-                        -- Возвращаем позицию к мобу (анимация открытия играет в фоне).
-                        if farmActive and savedCF then
-                            local hrp2 = getHRP()
-                            if hrp2 then hrp2.CFrame = savedCF end
-                        end
-
-                        getgenv()._StarBusy = false
-                    end
-
-                    -- Пауза до следующей проверки
-                    -- Remote: часто (2с), shared HRP: длиннее (чтобы farm успел нафармить валюту)
-                    task.wait(remote and 2 or 8)
-                end
-            end
-        end
-        -- На выходе гарантированно сбрасываем флаг
-        getgenv()._StarBusy = false
-        starThread = nil
-    end)
-end
-
-getgenv().AutoOpenStar  = getgenv().AutoOpenStar or false
-getgenv().StarTargets   = getgenv().StarTargets or {}  -- set {[starName] = true}
-getgenv()._StarBusy     = false
-getgenv()._ZoneTpBusy   = false
-
--- =========================================================
--- [6d] QUESTS — авто-прохождение миссий
--- =========================================================
--- Структура данных (из анализа):
---   Omni.Shared.Quests.List[questName]              -- конфиг квеста
---     .Missions[idx]                                -- конфиг миссии (таблица с 4 полями)
---     .MapName / .ZoneIndex                         -- где этот квест делается
---     .AutoCollect (bool)
---   Omni.Data.Quests.List[questName].Missions[idx]  -- число текущего прогресса миссии
---   Omni.Data.Quests.Pinned                         -- имя закреплённого квеста
---
--- Точные имена полей внутри Missions[idx] сканер не дампил (глубина=2). Эвристически
--- ищем mob name (Target/Name/Mob/Enemy...) и required count (Amount/Count/Required/Goal/Times).
--- Если структура экзотична — кнопка "Debug Quest Data" в UI дампит всё в консоль.
-
-local MISSION_TARGET_KEYS = { "Target", "Name", "Mob", "Enemy", "EnemyName", "MobName", "What" }
-local MISSION_COUNT_KEYS  = { "Amount", "Count", "Required", "Goal", "Times", "Total" }
-
-local function extractMissionTarget(missionCfg)
-    if type(missionCfg) ~= "table" then return nil, nil end
-    local target, count
-    for _, k in ipairs(MISSION_TARGET_KEYS) do
-        if type(missionCfg[k]) == "string" then target = missionCfg[k]; break end
-    end
-    for _, k in ipairs(MISSION_COUNT_KEYS) do
-        if type(missionCfg[k]) == "number" then count = missionCfg[k]; break end
-    end
-    return target, count
-end
-
-local function getQuestCfg(questName)
-    local s = Omni.Shared and Omni.Shared.Quests and Omni.Shared.Quests.List
-    return s and s[questName]
-end
-
--- Пытается найти данные конкретного квеста в Omni.Data, пробуя несколько типовых путей.
--- Возможные структуры:
---   Omni.Data.Quests.List[questName]           (мой старый домысел)
---   Omni.Data.Quests[questName]                (прямой ключ)
---   Omni.Data.Quests.Active[questName]
---   Omni.Data.Quests.Progress[questName]
---   Omni.Data.Quests.Missions[questName]
-local function getQuestData(questName)
-    local q = Omni.Data and Omni.Data.Quests
-    if not q then return nil end
-    if q.List     and q.List[questName]     then return q.List[questName]     end
-    if q.Active   and q.Active[questName]   then return q.Active[questName]   end
-    if q.Progress and q.Progress[questName] then return q.Progress[questName] end
-    if q.Missions and q.Missions[questName] then return q.Missions[questName] end
-    if rawget(q, questName) ~= nil          then return rawget(q, questName)  end
-    return nil
-end
-
--- ReplicaService и похожие часто сериализуют числовые ключи в строки при репликации.
--- Поэтому прогресс может лежать под ключом "1" а не 1. Эта функция пробует оба варианта.
-local function tblGetAny(t, key)
-    if type(t) ~= "table" then return nil end
-    local v = t[key]
-    if v ~= nil then return v end
-    if type(key) == "number" then
-        v = t[tostring(key)]
-        if v ~= nil then return v end
-    elseif type(key) == "string" then
-        local n = tonumber(key)
-        if n then
-            v = t[n]
-            if v ~= nil then return v end
-        end
-    end
-    return nil
-end
-
--- Универсальное чтение прогресса миссии. Передаём index И имя моба (target) —
--- некоторые игры хранят прогресс по имени, некоторые по индексу. Плюс проверяем
--- что ключ может быть числом ИЛИ строкой (ReplicaService-сериализация).
-local function getMissionProgress(questName, idx, targetName)
-    local d = getQuestData(questName)
-    if not d then return 0 end
-
-    local function unwrap(p)
-        if type(p) == "number" then return p end
-        if type(p) == "table" then
-            return p.Progress or p.Current or p.Amount or p.Count or p.Value or p[1] or 0
-        end
-        return nil
-    end
-
-    -- (A) d.Missions[idx] — число или таблица (idx число ИЛИ строка)
-    if type(d) == "table" and type(d.Missions) == "table" then
-        local p = tblGetAny(d.Missions, idx)
-        local unwrapped = unwrap(p)
-        if unwrapped then return unwrapped end
-        -- (B) d.Missions[targetName]
-        if targetName then
-            p = d.Missions[targetName]
-            unwrapped = unwrap(p)
-            if unwrapped then return unwrapped end
-        end
-    end
-
-    -- (C) d[idx] или d[targetName]
-    if type(d) == "table" then
-        local direct = tblGetAny(d, idx)
-        if type(direct) == "number" then return direct end
-        if targetName and type(d[targetName]) == "number" then return d[targetName] end
-        -- (D) d.Progress[idx|targetName]
-        if type(d.Progress) == "table" then
-            local p = tblGetAny(d.Progress, idx)
-            if type(p) == "number" then return p end
-            if targetName and type(d.Progress[targetName]) == "number" then return d.Progress[targetName] end
-        end
-    end
-
-    -- (E) d это сразу число (прогресс всей квест-линии — одна цифра)
-    if type(d) == "number" then return d end
-
-    return 0
-end
-
--- Возвращает {name, required, progress, missionIdx} первой активной (незавершённой) миссии
--- или nil если квест полностью пройден / не имеет корректно распознанных миссий.
-local function getActiveMission(questName)
-    local cfg = getQuestCfg(questName)
-    if not cfg or not cfg.Missions then return nil end
-    -- Собираем индексы и идём по возрастанию (миссии могут быть не ipairs-совместимы)
-    local indices = {}
-    for k in pairs(cfg.Missions) do
-        if type(k) == "number" then table.insert(indices, k) end
-    end
-    table.sort(indices)
-    for _, idx in ipairs(indices) do
-        local target, required = extractMissionTarget(cfg.Missions[idx])
-        if target and required then
-            local progress = getMissionProgress(questName, idx, target)
-            if progress < required then
-                return {
-                    name       = target,
-                    required   = required,
-                    progress   = progress,
-                    missionIdx = idx,
-                }
-            end
-        end
-    end
-    return nil
-end
-
--- Список всех квестов
-local function getAllQuests()
-    local out = {}
-    local src = Omni.Shared and Omni.Shared.Quests and Omni.Shared.Quests.List
-    if type(src) == "table" then
-        for k in pairs(src) do
-            if type(k) == "string" then table.insert(out, k) end
-        end
-    end
-    table.sort(out)
-    return out
-end
-
--- Проверяем, в правильной ли зоне игрок для конкретного квеста
-local function isInQuestZone(questName)
-    local cfg = getQuestCfg(questName)
-    if not cfg then return true end
-    local curMap = Omni.Data and Omni.Data.Map
-    local curZone = Omni.Data and Omni.Data.Zone
-    local wantMap = cfg.MapName
-    local wantZone = cfg.ZoneIndex
-    if not wantMap then return true end
-    if curMap ~= wantMap then return false end
-    if wantZone and curZone ~= wantZone then return false end
-    return true
-end
-
-local function tpToQuestZone(questName)
-    local cfg = getQuestCfg(questName)
-    if not cfg or not cfg.MapName then return false end
-    if not shouldFire("quest.tp." .. questName, 3) then return false end
-    pcall(function()
-        Omni.Signal:Fire("Player", "Teleport", "Teleport", cfg.MapName, cfg.ZoneIndex or 1)
-    end)
-    return true
-end
-
-local function pinQuest(questName)
-    if Omni.Data and Omni.Data.Quests and Omni.Data.Quests.Pinned == questName then return end
-    if not shouldFire("quest.pin." .. questName, 5) then return end
-    pcall(function()
-        Omni.Signal:Fire("General", "Quests", "Pin", questName)
-    end)
-end
-
--- Главный цикл авто-квестов.
--- СТОЯТ САМОСТОЯТЕЛЬНО: дублирует логику farmLoop, не зависит от getgenv().AutoFarm.
--- Одновременно с основным Farm работать может — будет гонка за HRP, но у них одинаковая
--- логика и та же цель (или похожая), конфликт минимальный.
-local questThread
-local function startQuestLoop()
-    if questThread then return end
-    questThread = task.spawn(function()
-        while getgenv().AutoQuest and not stopped do
-            -- Уважаем star-open / zone-tp (тот же мьютекс что и у Farm)
-            while (getgenv()._StarBusy or getgenv()._ZoneTpBusy)
-                and getgenv().AutoQuest and not stopped
-            do
-                task.wait(0.1)
-            end
-
-            -- [1] Находим активный квест и миссию
-            local selected = getgenv().QuestSelections or {}
-            local names = {}
-            for n in pairs(selected) do table.insert(names, n) end
-            table.sort(names)
-
-            local activeQuestName, activeMission
-            for _, qn in ipairs(names) do
-                local m = getActiveMission(qn)
-                if m then
-                    activeQuestName = qn
-                    activeMission   = m
-                    break
-                end
-            end
-
-            if not activeQuestName then
-                -- Нет активных миссий — ждём и пробуем снова
-                task.wait(3)
-            else
-                -- Авто-пин
-                if getgenv().AutoPinQuest then pinQuest(activeQuestName) end
-
-                -- Синхронизируем глобальную Targets (для отображения в статусе Farm-таба)
-                getgenv().Targets = { [activeMission.name] = true }
-
-                -- ТП в зону квеста если включено
-                if getgenv().AutoTpToQuestZone and not isInQuestZone(activeQuestName) then
-                    getgenv()._ZoneTpBusy = true
-                    tpToQuestZone(activeQuestName)
-                    task.wait(1.5)
-                    getgenv()._ZoneTpBusy = false
-                end
-
-                -- [2] ФАРМ ЛОГИКА (копия farmLoop) — для одного моба-цели
-                local targetSet = { [activeMission.name] = true }
-                local curMap    = Omni.Data and Omni.Data.Map
-                local curZone   = tonumber(Omni.Data and Omni.Data.Zone or 1) or 1
-
-                local hasReady, hasLive = hasReadyTargetsInCurrentZone(targetSet)
-
-                if hasReady then
-                    -- Собираем валидных кандидатов и бьём
-                    local candidates = {}
-                    local folder = getEnemiesFolder()
-                    if folder then
-                        for _, mob in ipairs(folder:GetChildren()) do
-                            if targetSet[mob.Name] and isAlive(mob) and getMobPos(mob) then
-                                table.insert(candidates, mob)
-                            end
-                        end
-                    end
-
-                    if #candidates == 0 then
-                        task.wait(0.5)
-                    else
-                        table.sort(candidates, function(a, b)
-                            local ha = getMobHPValue(a) or math.huge
-                            local hb = getMobHPValue(b) or math.huge
-                            return ha < hb
-                        end)
-
-                        local hrp = getHRP()
-                        local mob = candidates[1]
-                        if mob and isAlive(mob) then
-                            teleportTo(mob)
-                            task.wait(0.08)
-
-                            local cd        = getClickCooldown()
-                            local startTime = tick()
-                            local mobName   = mob.Name
-
-                            while getgenv().AutoQuest
-                                and not stopped
-                                and not getgenv()._StarBusy
-                                and not getgenv()._ZoneTpBusy
-                                and targetSet[mobName]
-                                and isAlive(mob)
-                                and tick() - startTime < 15
-                            do
-                                local mp = getMobPos(mob)
-                                local my = hrp and hrp.Position
-                                if mp and my and (mp - my).Magnitude > 12 then
-                                    teleportTo(mob)
-                                    task.wait(0.05)
-                                end
-
-                                attackOnce()
-                                task.wait(cd)
-                            end
-                        end
-                    end
-                elseif hasLive then
-                    -- Streaming trick — TP к самому дальнему видимому мобу
-                    local ok = tpToFurthestVisibleMob()
-                    if not ok then
-                        getgenv()._ZoneTpBusy = true
-                        pcall(function()
-                            Omni.Signal:Fire("Player", "Teleport", "Teleport", curMap, curZone)
-                        end)
-                        task.wait(1.0)
-                        getgenv()._ZoneTpBusy = false
-                    else
-                        task.wait(0.6)
-                    end
-                else
-                    -- Нет моба в текущей зоне — ищем где он есть
-                    if anyTargetInZoneConfig(targetSet, curMap, curZone) then
-                        local tpOk = tpToFurthestVisibleMob()
-                        task.wait(tpOk and 0.6 or 1.5)
-                    else
-                        local best = findBestZoneForTargets(targetSet)
-                        if best and (best.mapName ~= curMap or best.zoneIdx ~= curZone) then
-                            getgenv()._ZoneTpBusy = true
-                            teleportToZone(best.mapName, best.zoneIdx)
-                            getgenv()._ZoneTpBusy = false
-                        else
-                            -- Моб не найден ни в одной разблокированной зоне.
-                            -- Либо имя не совпадает с конфигом, либо все зоны locked.
-                            task.wait(3)
-                        end
-                    end
-                end
-            end
-        end
-        questThread = nil
-    end)
-end
-
-getgenv().AutoQuest         = getgenv().AutoQuest         or false
-getgenv().AutoPinQuest      = getgenv().AutoPinQuest      or true
-getgenv().AutoTpToQuestZone = getgenv().AutoTpToQuestZone or true
-getgenv().QuestSelections   = getgenv().QuestSelections   or {}
-
-
-
--- =========================================================
--- [7] UI — ApelHub MacLib fork
--- =========================================================
-local MacLib
-do
-    local ok, result = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac"))()
-    end)
-    if not ok or not result then
-        warn("[WF] Не удалось загрузить MacLib:", result)
-        return
-    end
-    MacLib = result
-end
-
--- Window
-local Window = MacLib:Window({
-    Title                  = "World Fighters Hub",
-    Subtitle               = "v0.37",
-    Size                   = UDim2.fromOffset(865, 650),
-    DragStyle              = 2,                           -- free-form drag
-    DisabledWindowControls = {},
-    ShowUserInfo           = false,
-    Keybind                = Enum.KeyCode.LeftControl,     -- toggle UI
-    AcrylicBlur            = false,
-})
-
--- Порядок: Window → TabGroup → Tab → Section → элементы
-local MainTabGroup = Window:TabGroup()
-local FarmTab      = MainTabGroup:Tab({ Name = "Farm" })
-local MainSection  = FarmTab:Section({ Side = "Left"  })
-local InfoSection  = FarmTab:Section({ Side = "Right" })
-
--- === Left: controls ===
-MainSection:Toggle({
-    Name     = "Auto Farm",
-    Default  = false,
-    Callback = function(state)
-        getgenv().AutoFarm = state
-        if state then startFarm() end
-    end,
-}, "AutoFarmToggle")
-
-local mobDropdown = MainSection:Dropdown({
-    Name     = "Target Mobs",
-    Multi    = true,
-    Required = false,
-    Options  = buildOptions(),
-    Callback = function(values)
-        -- ВАЖНО: в Multi-режиме этого форка MacLib отдаёт set {[name] = true},
-        -- имена мобов — это КЛЮЧИ, а значения всегда true.
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then
-                    set[k] = true
-                end
-            end
-        elseif type(values) == "string" and values ~= "" then
-            set[values] = true
-        end
-        getgenv().Targets = set
-    end,
-})
-
-local function refreshDropdown()
-    if not mobDropdown then return end
-    local opts = buildOptions()
-    pcall(function()
-        mobDropdown:ClearOptions()
-        mobDropdown:InsertOptions(opts)
-    end)
-end
-
-MainSection:Button({
-    Name     = "Refresh Mobs",
-    Callback = refreshDropdown,
-})
-
-MainSection:Button({
-    Name     = "Debug: Dump Zone→Mobs",
-    Callback = function()
-        local d, buf = newDump()
-        local shared = Omni.Shared and Omni.Shared.Enemies
-        if type(shared) ~= "table" then
-            d("[WF-Debug] Omni.Shared.Enemies not available")
-            flushDump(buf, "Farm Debug")
-            return
-        end
-        d("=========== [WF-Debug] Omni.Shared.Enemies ===========")
-        for mapName, zones in pairs(shared) do
-            d(("[Map] %s"):format(mapName))
-            if type(zones) == "table" then
-                for zoneKey, list in pairs(zones) do
-                    local unlocked = isZoneUnlocked(mapName, zoneKey)
-                    d(("  [Zone %s]  unlocked=%s  list type=%s")
-                        :format(tostring(zoneKey), tostring(unlocked), typeof(list)))
-                    if type(list) == "table" then
-                        for k, v in pairs(list) do
-                            if type(v) == "table" then
-                                d(("    %s → table: Name=%s, ID=%s")
-                                    :format(tostring(k), tostring(v.Name), tostring(v.ID)))
-                            else
-                                d(("    %s → %s"):format(tostring(k), tostring(v)))
-                            end
-                        end
-                        local names = extractMobNames(list)
-                        local arr = {}
-                        for n in pairs(names) do table.insert(arr, n) end
-                        table.sort(arr)
-                        d(("    extracted names [%d]: %s"):format(#arr, table.concat(arr, ", ")))
-                    end
-                end
-            end
-        end
-        d("======================================================")
-        d(("Current: Map=%s, Zone=%s"):format(tostring(Omni.Data.Map), tostring(Omni.Data.Zone)))
-        flushDump(buf, "Farm Debug")
-    end,
-})
-
-MainSection:Button({
-    Name     = "Unload Script",
-    Callback = function()
-        pcall(getgenv()._WF_Stop)
-    end,
-})
-
--- === Right: status ===
-local statusPara = InfoSection:Paragraph({
-    Header = "Status",
-    Body   = "Idle",
-})
-
-local playerInfoPara = InfoSection:Paragraph({
-    Header = "Player Info",
-    Body   = "loading...",
-})
-
-local mobCountPara = InfoSection:Paragraph({
-    Header = "Mobs in zone",
-    Body   = (function()
-        local f = getEnemiesFolder()
-        return tostring(f and #f:GetChildren() or 0)
-    end)(),
-})
-
--- Live player info update (Power/Crystals/Gems/Aura/Level/Map/Zone/Gamemode)
-local function updatePlayerInfo()
-    if not playerInfoPara then return end
-    local d = Omni and Omni.Data
-    if not d then return end
-    local lvl = (d.Level and d.Level.Amount) or 1
-    local txt = string.format(
-        "Power: %s\nCrystals: %s\nGems: %s\nAura: %s\nLevel: %s\nMap: %s | Zone: %s\nGamemode: %s",
-        tostring(d.Power    or 0),
-        tostring(d.Crystals or 0),
-        tostring((d.FreeGems or 0) + (d.PaidGems or 0)),
-        tostring(d.Aura     or 0),
-        tostring(lvl),
-        tostring(d.Map      or "?"),
-        tostring(d.Zone     or 1),
-        tostring(d.Gamemode or "—")
-    )
-    pcall(function() playerInfoPara:UpdateBody(txt) end)
-end
-
-local function updateStatus()
-    if not statusPara then return end
-
-    local targets = getgenv().Targets or {}
-    local selected = {}
-    for n in pairs(targets) do table.insert(selected, n) end
-    table.sort(selected)
-
-    -- Считаем живых мобов по каждому выбранному типу
-    local groups = groupMobs()
-    local perType = {}
-    local total = 0
-    for _, name in ipairs(selected) do
-        local c = groups[name] and #groups[name] or 0
-        total = total + c
-        table.insert(perType, ("  • %s: %d"):format(name, c))
-    end
-
-    local lines = { "Auto Farm: " .. (getgenv().AutoFarm and "ON" or "OFF") }
-
-    -- Информация о зоне
-    local curMap  = Omni.Data and Omni.Data.Map  or "?"
-    local curZone = Omni.Data and Omni.Data.Zone or "?"
-    if getgenv()._ZoneTpBusy then
-        table.insert(lines, ("Zone: %s %s → TP…"):format(curMap, tostring(curZone)))
-    else
-        table.insert(lines, ("Zone: %s %s"):format(curMap, tostring(curZone)))
-    end
-
-    if #selected == 0 then
-        table.insert(lines, "Targets: —")
-    else
-        table.insert(lines, ("Targets (%d): %d здесь"):format(#selected, total))
-
-        -- Построчно по каждому таргету: где он доступен
-        for _, name in ipairs(selected) do
-            local cntHere = groups[name] and #groups[name] or 0
-            local locs = findMobLocations(name)
-            if cntHere > 0 then
-                table.insert(lines, ("  ✓ %s — здесь (%d)"):format(name, cntHere))
-            elseif #locs == 0 then
-                table.insert(lines, ("  ? %s — не найден в конфиге"):format(name))
-            else
-                -- Собираем карту зон: разблокированные vs заблокированные
-                local unlockedLocs, lockedLocs = {}, {}
-                for _, l in ipairs(locs) do
-                    local str = ("%s %s"):format(l.mapName, tostring(l.zoneIdx))
-                    if l.unlocked then
-                        table.insert(unlockedLocs, str)
-                    else
-                        table.insert(lockedLocs, str)
-                    end
-                end
-                if #unlockedLocs > 0 then
-                    table.insert(lines, ("  → %s — в: %s"):format(name, table.concat(unlockedLocs, ", ")))
-                else
-                    table.insert(lines, ("  🔒 %s — locked: %s"):format(name, table.concat(lockedLocs, ", ")))
-                end
-            end
-        end
-
-        -- Показать HP ближайшего по сортировке (слабейшего) из выбранных
-        local allCands = {}
-        for _, name in ipairs(selected) do
-            for _, m in ipairs(groups[name] or {}) do
-                table.insert(allCands, m)
-            end
-        end
-        if #allCands > 0 then
-            table.sort(allCands, function(a, b)
-                return (getMobHPValue(a) or math.huge) < (getMobHPValue(b) or math.huge)
-            end)
-            local hp, mhp = getMobHP(allCands[1])
-            if hp then
-                if mhp then
-                    table.insert(lines, ("Next HP: %d / %d (%s)"):format(hp, mhp, allCands[1].Name))
-                else
-                    table.insert(lines, ("Next HP: %d (%s)"):format(hp, allCands[1].Name))
-                end
-            end
-        end
-    end
-
-    pcall(function() statusPara:UpdateBody(table.concat(lines, "\n")) end)
-    pcall(function()
-        local f = getEnemiesFolder()
-        mobCountPara:UpdateBody(tostring(f and #f:GetChildren() or 0))
-    end)
-end
-
--- =========================================================
--- [7b] UI — Rewards Tab
--- =========================================================
-local RewardsTab     = MainTabGroup:Tab({ Name = "Rewards" })
-local RewardsLeft    = RewardsTab:Section({ Side = "Left"  })
-local RewardsRight   = RewardsTab:Section({ Side = "Right" })
-
--- Кнопка-хелпер: "любой тоггл включился → убедиться что rewardsLoop запущен"
-local function ensureRewardsLoop(state)
-    if state then startRewardsLoop() end
-end
-
-RewardsLeft:Toggle({
-    Name     = "Auto Achievements (ClaimAll)",
-    Default  = false,
-    Callback = function(s) getgenv().AutoAchievements = s; ensureRewardsLoop(s) end,
-}, "AutoAchievementsToggle")
-RewardsLeft:Toggle({
-    Name     = "Auto Time Rewards",
-    Default  = false,
-    Callback = function(s) getgenv().AutoTimeRewards = s; ensureRewardsLoop(s) end,
-}, "AutoTimeRewardsToggle")
-RewardsLeft:Toggle({
-    Name     = "Auto Daily Rewards",
-    Default  = false,
-    Callback = function(s) getgenv().AutoDailyRewards = s; ensureRewardsLoop(s) end,
-}, "AutoDailyRewardsToggle")
-RewardsLeft:Toggle({
-    Name     = "Auto Follow Rewards (Verify)",
-    Default  = false,
-    Callback = function(s) getgenv().AutoFollowRewards = s; ensureRewardsLoop(s) end,
-}, "AutoFollowRewardsToggle")
-
-RewardsRight:Toggle({
-    Name     = "Auto Daily Chest",
-    Default  = false,
-    Callback = function(s) getgenv().AutoDailyChest = s; ensureRewardsLoop(s) end,
-}, "AutoDailyChestToggle")
-RewardsRight:Toggle({
-    Name     = "Auto Group Chest",
-    Default  = false,
-    Callback = function(s) getgenv().AutoGroupChest = s; ensureRewardsLoop(s) end,
-}, "AutoGroupChestToggle")
-RewardsRight:Toggle({
-    Name     = "Auto VIP Chest",
-    Default  = false,
-    Callback = function(s) getgenv().AutoVIPChest = s; ensureRewardsLoop(s) end,
-}, "AutoVIPChestToggle")
-
-RewardsRight:Button({
-    Name     = "Claim Now (все включенные)",
-    Callback = function()
-        task.spawn(function()
-            if getgenv().AutoAchievements then tryAchievementsClaimAll() end
-            if getgenv().AutoTimeRewards   then tryTimeRewards()          end
-            if getgenv().AutoDailyRewards  then tryDailyRewards()         end
-            if getgenv().AutoFollowRewards then tryFollowRewards()        end
-            if getgenv().AutoDailyChest    then tryClaimChest("Daily Chest") end
-            if getgenv().AutoGroupChest    then tryClaimChest("Group Chest") end
-            if getgenv().AutoVIPChest      then tryClaimChest("VIP Chest")   end
-        end)
-    end,
-})
-
--- =========================================================
--- Auto Codes — периодический redeem всех известных кодов.
--- Логика: раз в 5 мин прогоняем список (0.4с между попытками чтобы сервер не
--- rate-limit'ил). Уже-применённые коды сервер просто отвергнет — без ошибок.
--- Также добавляем все Data.Codes которые есть в Shared но ещё не в Data.Codes
--- (если Shared.Codes доступен) — это ловит временные коды из апдейтов.
--- =========================================================
-local KNOWN_CODES = {
-    "RELEASE", "WORLDFIGHTERS", "FREE100", "UPDATE1", "UPDATE2", "UPDATE3",
-    "DEV", "ADMIN", "WELCOME", "SHUTDOWN", "SORRY",
-    "THXSUB", "100KLIKES", "1MVISITS", "10MVISITS", "100MVISITS",
-    "LIKES", "FAVORITE", "FOLLOW",
-}
-
-local function getAllCodes()
-    local out, seen = {}, {}
-    for _, c in ipairs(KNOWN_CODES) do
-        if not seen[c] then seen[c] = true; table.insert(out, c) end
-    end
-    -- Динамически докидываем все коды из Shared (если структура доступна)
-    local sc = Omni and Omni.Shared and Omni.Shared.Codes
-    if type(sc) == "table" then
-        for k in pairs(sc) do
-            if type(k) == "string" and not seen[k] then
-                seen[k] = true; table.insert(out, k)
-            end
-        end
-        if type(sc.List) == "table" then
-            for k in pairs(sc.List) do
-                if type(k) == "string" and not seen[k] then
-                    seen[k] = true; table.insert(out, k)
-                end
-            end
-        end
-    end
-    return out
-end
-
-local _autoCodesLoop
-local function startAutoCodesLoop()
-    if _autoCodesLoop then return end
-    _autoCodesLoop = task.spawn(function()
-        while getgenv().AutoCodes and not stopped do
-            local codes = getAllCodes()
-            local used = (Omni and Omni.Data and Omni.Data.Codes) or {}
-            for _, code in ipairs(codes) do
-                if not getgenv().AutoCodes or stopped then break end
-                -- Пропускаем уже применённые (если структура позволяет проверить)
-                if not used[code] then
-                    pcall(function() fire("General", "Codes", "Redeem", code) end)
-                    task.wait(0.4)
-                end
-            end
-            -- Спим 5 минут — новые коды постят редко, нет смысла спамить
-            for _ = 1, 300 do
-                if not getgenv().AutoCodes or stopped then break end
-                task.wait(1)
-            end
-        end
-        _autoCodesLoop = nil
-    end)
-end
-
-RewardsRight:Toggle({
-    Name     = "Auto Redeem Codes (every 5 min)",
-    Default  = false,
-    Callback = function(s)
-        getgenv().AutoCodes = s
-        if s then startAutoCodesLoop() end
-    end,
-}, "AutoCodesToggle")
-
-RewardsRight:Button({
-    Name     = "Redeem All Codes Now",
-    Callback = function()
-        task.spawn(function()
-            local codes = getAllCodes()
-            for _, code in ipairs(codes) do
-                pcall(function() fire("General", "Codes", "Redeem", code) end)
-                task.wait(0.4)
-            end
-            pcall(function()
-                Window:Notify({
-                    Title       = "Codes",
-                    Description = ("Прогнал %d кодов"):format(#codes),
-                    Lifetime    = 3,
-                })
-            end)
-        end)
-    end,
-})
-
-getgenv().AutoCodes = getgenv().AutoCodes or false
-
--- Статус сундуков (cooldown остаток)
-local chestStatusPara = RewardsRight:Paragraph({
-    Header = "Chests Cooldown",
-    Body   = "—",
-})
-
-local function formatChestCooldown(chestName)
-    local last = getChestLastClaim(chestName)
-    if not last then return "ready" end
-    local cd = CHEST_CD[chestName] or 24 * 3600
-    local remaining = cd - (tick() - last)
-    if remaining <= 0 then return "ready" end
-    local h = math.floor(remaining / 3600)
-    local m = math.floor((remaining % 3600) / 60)
-    return ("%dh %dm"):format(h, m)
-end
-
-local function updateChestStatus()
-    if not chestStatusPara then return end
-    local lines = {
-        "Daily: "  .. formatChestCooldown("Daily Chest"),
-        "Group: "  .. formatChestCooldown("Group Chest"),
-        "VIP: "    .. formatChestCooldown("VIP Chest"),
-    }
-    pcall(function() chestStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
-
--- =========================================================
--- [7c] UI — Eggs Tab (Stars)
--- =========================================================
-local EggsTab   = MainTabGroup:Tab({ Name = "Eggs" })
-local EggsLeft  = EggsTab:Section({ Side = "Left"  })
-local EggsRight = EggsTab:Section({ Side = "Right" })
-
--- Star UI Hider — когда сервер отвечает на Stars.Open, клиент замораживает
--- камеру анимацией StarAnimation. Для фонового фарма это мешает. Этот helper
--- агрессивно закрывает анимацию каждый Heartbeat пока она включена.
-local starHideEnabled = false
-local starHideConn    = nil
-
-local function applyStarHide()
-    if not Omni then return end
-    pcall(function()
-        local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
-        if sa then sa.Enabled = false end
-    end)
-    pcall(function() Omni.Frame:Close("Star") end)
-    pcall(function() Omni.Frame:RemoveUIHider("StarAnimation") end)
-    pcall(function()
-        if Omni.Signal and Omni.Signal.FireSelf then
-            Omni.Signal:FireSelf("Player", "Camera", "RemoveCameraTypeModifier", "StarAnimation")
-            Omni.Signal:FireSelf("Player", "FOV", "Enable")
-        end
-    end)
-end
-
-EggsLeft:Toggle({
-    Name     = "Auto Open Eggs",
-    Default  = false,
-    Callback = function(s)
-        getgenv().AutoOpenStar = s
-        if s then
-            startStarLoop()
-        else
-            getgenv()._StarBusy = false  -- разблокируем farm если выключили посреди цикла
-        end
-    end,
-}, "AutoOpenStarToggle")
-
-EggsLeft:Toggle({
-    Name     = "Hide Star Animation (unfreeze camera)",
-    Default  = false,
-    Callback = function(on)
-        starHideEnabled = on
-        if on then
-            if starHideConn then starHideConn:Disconnect() end
-            starHideConn = RunService.Heartbeat:Connect(function()
-                if not starHideEnabled then return end
-                applyStarHide()
-            end)
-            table.insert(connections, starHideConn)
-        else
-            if starHideConn then starHideConn:Disconnect(); starHideConn = nil end
-            pcall(function()
-                local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
-                if sa then sa.Enabled = true end
-            end)
-        end
-    end,
-}, "StarHideAnimToggle")
-
-local starDropdown = EggsLeft:Dropdown({
-    Name     = "Target Eggs (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllStars(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then
-                    set[k] = true
-                end
-            end
-        elseif type(values) == "string" and values ~= "" then
-            set[values] = true
-        end
-        getgenv().StarTargets = set
-    end,
-})
-
-EggsLeft:Button({
-    Name     = "Refresh List",
-    Callback = function()
-        pcall(function()
-            starDropdown:ClearOptions()
-            starDropdown:InsertOptions(getAllStars())
-        end)
-    end,
-})
-
-EggsLeft:Button({
-    Name     = "Open Selected Now (x1 каждая)",
-    Callback = function()
-        task.spawn(function()
-            for starName in pairs(getgenv().StarTargets or {}) do
-                openStarOnce(starName, 1)
-                task.wait(STAR_FIRE_SETTLE)
-            end
-        end)
-    end,
-})
-
-EggsLeft:Button({
-    Name     = "Open Selected (max × 10)",
-    Callback = function()
-        task.spawn(function()
-            for starName in pairs(getgenv().StarTargets or {}) do
-                for _ = 1, 10 do
-                    local amt = getMaxStarOpen()
-                    local ok = canAffordStar(starName, amt)
-                    if not ok and amt > 1 then
-                        for try = amt - 1, 1, -1 do
-                            if canAffordStar(starName, try) then amt = try; ok = true; break end
-                        end
-                    end
-                    if not ok then break end
-                    openStarOnce(starName, amt)
-                    task.wait(STAR_FIRE_SETTLE)
-                end
-            end
-        end)
-    end,
-})
-
--- Статус звёзд (цена/баланс/можем ли открыть)
-local eggStatusPara = EggsRight:Paragraph({
-    Header = "Status",
-    Body   = "—",
-})
-
-local function updateEggStatus()
-    if not eggStatusPara then return end
-    local targets = getgenv().StarTargets or {}
-    local names = {}
-    for n in pairs(targets) do table.insert(names, n) end
-    table.sort(names)
-
-    -- Режим работы относительно фарма
-    local farmOn   = getgenv().AutoFarm == true
-    local remote   = hasRemoteStarPass()
-    local busy     = getgenv()._StarBusy == true
-    local modeLine
-    if remote then
-        modeLine = "Mode: Remote Star ✓ (параллельно с farm)"
-    elseif farmOn then
-        modeLine = busy and "Mode: opening… (farm paused)" or "Mode: shared HRP (перерывает farm)"
-    else
-        modeLine = "Mode: standalone"
-    end
-
-    local lines = {
-        "Auto Open: " .. (getgenv().AutoOpenStar and "ON" or "OFF"),
-        modeLine,
-    }
-    if #names == 0 then
-        table.insert(lines, "Target: —")
-    else
-        local maxAmt = getMaxStarOpen()
-        table.insert(lines, ("Max per open: %d"):format(maxAmt))
-        for _, name in ipairs(names) do
-            local cfg = getStarCfg(name)
-            if cfg and cfg.Price then
-                local pname, ptype, amt = cfg.Price.Name, cfg.Price.Type, cfg.Price.Amount or 0
-                local have = getBalance(ptype, pname)
-                local canMax = math.floor(have / math.max(1, amt))
-                local tag = (canMax >= maxAmt) and "✅" or (canMax >= 1 and "⚠️" or "❌")
-                table.insert(lines, ("%s %s"):format(tag, name))
-                table.insert(lines, ("  %s: %d / %d (opens: %d)"):format(pname, have, amt, canMax))
-            end
-        end
-    end
-    pcall(function() eggStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
-
--- =========================================================
--- [7d] UI — Quests Tab
--- =========================================================
-local QuestsTab   = MainTabGroup:Tab({ Name = "Quests" })
-local QuestsLeft  = QuestsTab:Section({ Side = "Left"  })
-local QuestsRight = QuestsTab:Section({ Side = "Right" })
-
-QuestsLeft:Toggle({
-    Name     = "Auto Quest",
-    Default  = false,
-    Callback = function(s)
-        getgenv().AutoQuest = s
-        if s then
-            startQuestLoop()
-        else
-            -- Сбрасываем одноразовый флаг уведомления, чтобы при следующем включении
-            -- снова показалось "Auto Farm включён автоматически"
-            getgenv()._QuestAutoFarmNotified = nil
-        end
-    end,
-}, "AutoQuestToggle")
-
-local questDropdown = QuestsLeft:Dropdown({
-    Name     = "Quests to do (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllQuests(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then
-                    set[k] = true
-                end
-            end
-        elseif type(values) == "string" and values ~= "" then
-            set[values] = true
-        end
-        getgenv().QuestSelections = set
-    end,
-}, "QuestsMultiDropdown")
-
-QuestsLeft:Toggle({
-    Name     = "Auto Pin Quest",
-    Default  = true,
-    Callback = function(s) getgenv().AutoPinQuest = s end,
-}, "AutoPinQuestToggle")
-
-QuestsLeft:Toggle({
-    Name     = "Auto TP to Quest Zone",
-    Default  = true,
-    Callback = function(s) getgenv().AutoTpToQuestZone = s end,
-}, "AutoTpToQuestZoneToggle")
-
-QuestsLeft:Button({
-    Name     = "Refresh Quest List",
-    Callback = function()
-        pcall(function()
-            questDropdown:ClearOptions()
-            questDropdown:InsertOptions(getAllQuests())
-        end)
-    end,
-})
-
-QuestsLeft:Button({
-    Name     = "Debug: Dump Quest Data",
-    Callback = function()
-        local d, buf = newDump()
-        d("========== [WF] QUEST DEBUG ==========")
-
-        -- Сначала — корень Omni.Data.Quests целиком (все ключи верхнего уровня)
-        local qRoot = Omni.Data and Omni.Data.Quests
-        d("Omni.Data.Quests keys:")
-        if type(qRoot) == "table" then
-            for k, v in pairs(qRoot) do
-                d(("  [%s] = %s (%s)"):format(tostring(k), tostring(v), typeof(v)))
-            end
-        else
-            d("  (Omni.Data.Quests is not a table)")
-        end
-
-        -- Дамп деталей для каждого выбранного квеста из КАЖДОГО вероятного пути
-        for qn in pairs(getgenv().QuestSelections or {}) do
-            d(("-- Quest: %s --"):format(qn))
-
-            local cfg = getQuestCfg(qn)
-            if cfg then
-                d("  Config:")
-                d(("    MapName: %s  ZoneIndex: %s"):format(tostring(cfg.MapName), tostring(cfg.ZoneIndex)))
-                d(("    AutoCollect: %s  Difficulty: %s"):format(tostring(cfg.AutoCollect), tostring(cfg.Difficulty)))
-                if type(cfg.Missions) == "table" then
-                    d("    Missions:")
-                    for idx, m in pairs(cfg.Missions) do
-                        d(("     [%s] =>"):format(tostring(idx)))
-                        if type(m) == "table" then
-                            for k, v in pairs(m) do
-                                d(("        %s = %s (%s)"):format(tostring(k), tostring(v), typeof(v)))
-                            end
-                        else
-                            d(("        <value> %s"):format(tostring(m)))
-                        end
-                    end
-                end
-            end
-
-            d("  Data — пробуем все пути:")
-            local tried = {
-                { "Quests.List["       .. qn .. "]", qRoot and qRoot.List     and qRoot.List[qn]     },
-                { "Quests[" .. qn .. "]",             qRoot and qRoot[qn]                            },
-                { "Quests.Active["     .. qn .. "]", qRoot and qRoot.Active   and qRoot.Active[qn]   },
-                { "Quests.Progress["   .. qn .. "]", qRoot and qRoot.Progress and qRoot.Progress[qn] },
-                { "Quests.Missions["   .. qn .. "]", qRoot and qRoot.Missions and qRoot.Missions[qn] },
-            }
-            for _, t in ipairs(tried) do
-                local path, val = t[1], t[2]
-                if val ~= nil then
-                    d(("    %s = %s (%s)"):format(path, tostring(val), typeof(val)))
-                    if type(val) == "table" then
-                        for k, v in pairs(val) do
-                            d(("      .%s = %s (%s)"):format(tostring(k), tostring(v), typeof(v)))
-                            if type(v) == "table" then
-                                for kk, vv in pairs(v) do
-                                    d(("        .%s = %s (%s)"):format(tostring(kk), tostring(vv), typeof(vv)))
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-
-            -- Резолв через нашу логику (что скрипт сейчас видит)
-            local dataQ = getQuestData(qn)
-            d(("  Resolved getQuestData => %s (%s)"):format(tostring(dataQ), typeof(dataQ)))
-            local am = getActiveMission(qn)
-            if am then
-                d(("  Resolved active mission: #%d  Kill %s [%d/%d]"):format(am.missionIdx, am.name, am.progress, am.required))
-            else
-                d("  Resolved active mission: nil  (значит все распознанные прогрессы >= required)")
-            end
-        end
-        d("========== END =============")
-        flushDump(buf, "Quest Debug")
-    end,
-})
-
--- Status paragraph
-local questStatusPara = QuestsRight:Paragraph({
-    Header = "Quests Status",
-    Body   = "—",
-})
-
-local function updateQuestStatus()
-    if not questStatusPara then return end
-    local selected = getgenv().QuestSelections or {}
-    local names = {}
-    for n in pairs(selected) do table.insert(names, n) end
-    table.sort(names)
-
-    local lines = { "Auto Quest: " .. (getgenv().AutoQuest and "ON" or "OFF") }
-    table.insert(lines, "Auto Farm:  " .. (getgenv().AutoFarm and "ON" or "OFF"))
-
-    -- Показать какие цели сейчас стоят на фарме (сверка с квестовым)
-    local curTargets = {}
-    for n in pairs(getgenv().Targets or {}) do table.insert(curTargets, n) end
-    if #curTargets > 0 then
-        table.sort(curTargets)
-        table.insert(lines, "Farm targets: " .. table.concat(curTargets, ", "))
-    end
-
-    if #names == 0 then
-        table.insert(lines, "Quests: —")
-    else
-        for _, qn in ipairs(names) do
-            local cfg = getQuestCfg(qn)
-            local totalMissions = 0
-            if cfg and cfg.Missions then
-                for k in pairs(cfg.Missions) do
-                    if type(k) == "number" then totalMissions = totalMissions + 1 end
-                end
-            end
-            local active = getActiveMission(qn)
-            if active then
-                local zoneOK = isInQuestZone(qn) and "" or "  (wrong zone)"
-                table.insert(lines, ("▶ %s  (m#%d/%d)%s"):format(qn, active.missionIdx, totalMissions, zoneOK))
-                table.insert(lines, ("  Kill %s [%d/%d]"):format(active.name, active.progress, active.required))
-            else
-                if cfg and cfg.Missions then
-                    local anyTarget
-                    for _, m in pairs(cfg.Missions) do
-                        if extractMissionTarget(m) then anyTarget = true; break end
-                    end
-                    if not anyTarget then
-                        table.insert(lines, ("⚠ %s (структура миссий не распознана — нажми Debug)"):format(qn))
-                    else
-                        table.insert(lines, ("✅ %s (завершён)"):format(qn))
-                    end
-                else
-                    table.insert(lines, ("? %s"):format(qn))
-                end
-            end
-        end
-    end
-    pcall(function() questStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
-
--- =========================================================
--- [7e] TRIALS — helpers + loop + UI
--- =========================================================
--- Trial'ы — отдельные gamemode'ы со своими мобами в workspace.Server.Enemies.Gamemodes[name]
--- и периодами доступности (OpenTimes). Конфиг в Omni.Shared.Gamemodes.
--- Сервер-вход: Signal:Fire("General","Gamemodes","Join", name).
---
--- Известные gamemode имена (из анализа): "Trial Easy", "Trial Medium", "Trial Hard",
--- "Test Raid", "Dragon Defense". Основной фокус — Trial'ы (у них регулярный cooldown).
---
--- Стратегия: смотрим на Omni.Data.Gamemodes[name] (кулдаун/next open), либо пытаемся
--- Join если папка с мобами пуста. Внутри — стандартный attack-loop по всем видимым мобам.
-
--- Dynamic trial discovery: принимаем любой gamemode чьё имя начинается с "Trial "
--- (так автоматически поддержим будущие Trial Insane/Nightmare/etc. без правок кода).
--- Остальные gamemode'ы (Test Raid, Dragon Defense) — другой режим игры, не показываем.
-local TRIAL_NAME_PATTERN = "^Trial "
-local KNOWN_TRIALS = { "Trial Easy", "Trial Medium", "Trial Hard" }  -- fallback
-
-local function isTrialName(name)
-    return type(name) == "string" and name:match(TRIAL_NAME_PATTERN) ~= nil
-end
-
-local function getAllTrials()
-    local out, seen = {}, {}
-    local function add(n)
-        if isTrialName(n) and not seen[n] then
-            seen[n] = true; table.insert(out, n)
-        end
-    end
-
-    -- Рекурсивно сканим Omni.Shared.Gamemodes (включая подпапки вроде "For Updates")
-    local sg = Omni and Omni.Shared and Omni.Shared.Gamemodes
-    if type(sg) == "table" then
-        for k, v in pairs(sg) do
-            if type(v) == "table" then
-                if v.OpenTimes or v.MapName or v.EnterTime or v.MaxWave then
-                    add(k)
-                else
-                    for k2, v2 in pairs(v) do
-                        if type(v2) == "table" and (v2.OpenTimes or v2.MapName or v2.EnterTime or v2.MaxWave) then
-                            add(k2)
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- Fallback: scan workspace.Server.Enemies.Gamemodes (детектит runtime-only)
-    local ok, gmFolder = pcall(function() return workspace.Server.Enemies.Gamemodes end)
-    if ok and gmFolder then
-        for _, ch in ipairs(gmFolder:GetChildren()) do add(ch.Name) end
-    end
-
-    -- Ultimate fallback
-    for _, n in ipairs(KNOWN_TRIALS) do add(n) end
-
-    table.sort(out)
-    return out
-end
-
-local function getTrialCfg(name)
-    -- Пробуем все вероятные пути в Shared.Gamemodes
-    local sg = Omni and Omni.Shared and Omni.Shared.Gamemodes
-    if type(sg) ~= "table" then return nil end
-    if type(sg[name]) == "table" then return sg[name] end
-    for _, sub in pairs(sg) do
-        if type(sub) == "table" and type(sub[name]) == "table" then
-            return sub[name]
-        end
-    end
-    return nil
-end
-
-local function getTrialData(name)
-    -- Progress/timestamps gamemode'а в Data
-    local d = Omni and Omni.Data and Omni.Data.Gamemodes
-    if type(d) ~= "table" then return nil end
-    return d[name]
-end
-
-local function getTrialEnemiesFolder(name)
-    local ok, f = pcall(function()
-        return workspace.Server.Enemies.Gamemodes:FindFirstChild(name)
-    end)
-    if ok then return f end
-    return nil
-end
-
--- Проверка что мы сейчас в этом Trial'е.
--- Эвристика: папка с мобами gamemode непустая ИЛИ Data.Map/Zone указывает на Trial.
-local function isInTrial(name)
-    local f = getTrialEnemiesFolder(name)
-    if f and #f:GetChildren() > 0 then return true end
-    -- Некоторые trial'ы живут в отдельной Map (вроде Test Raid → Map=Fruits Verse);
-    -- эта эвристика не 100%, но лучше чем ничего. Если есть Data.CurrentGamemode — используем.
-    local d = Omni.Data
-    if d and type(d.CurrentGamemode) == "string" and d.CurrentGamemode == name then
+    if best then
+        _WF.teleportTo(best)
         return true
     end
     return false
 end
 
--- Дёргаем Join — сервер сам перенесёт если gamemode доступен.
-local function joinTrial(name)
-    if not Omni or not Omni.Signal then return false end
-    local ok = pcall(function()
-        Omni.Signal:Fire("General", "Gamemodes", "Join", name)
-    end)
-    return ok
+-- Helper: max HP конкретной инстанции моба (live attribute приоритет, config fallback).
+function _WF.getMobInstanceMaxHP(mob)
+    local m = mob:GetAttribute("MaxHealth")
+    if type(m) == "number" and m > 0 then return m end
+    local h = mob:GetAttribute("Health")
+    if type(h) == "number" and h > 0 then return h end
+    return _WF.getMobMaxHPFromConfig(mob.Name)
 end
 
--- Простая оценка "можно ли зайти прямо сейчас".
--- Если мы не знаем точной семантики OpenTimes — просто пробуем раз в N секунд.
--- Сервер всё равно сам отвергнет Join если ещё не время.
-local _trialLastJoinAttempt = {}
-local TRIAL_JOIN_RETRY = 20 -- сек между повторными попытками Join
-local function canTryJoin(name)
-    local last = _trialLastJoinAttempt[name] or 0
-    return (tick() - last) >= TRIAL_JOIN_RETRY
-end
-
--- Чтение текущей волны. 5 путей в порядке надёжности.
-local function getCurrentWave(name)
-    -- Path 0 (БЕСТ): Omni.Libs.DataContainer — игровой runtime-стейт gamemode'а
-    -- (обновляется PlayerScripts скриптами которые игра подгружает во время
-    -- активного mode). Возвращает {Data={Wave=N, MaxWave=M, ...}}.
-    if Omni and Omni.Libs and Omni.Libs.DataContainer then
-        local ok, container = pcall(function()
-            return Omni.Libs.DataContainer:Get("GamemodeData - " .. name)
-        end)
-        if ok and container and container.Data and type(container.Data.Wave) == "number" then
-            if container.Data.Wave > 0 then return container.Data.Wave end
-        end
-    end
-
-    -- Path 1: Omni.Data.Gamemodes[name].Wave / CurrentWave / wave
-    local d = Omni and Omni.Data and Omni.Data.Gamemodes
-    if type(d) == "table" and type(d[name]) == "table" then
-        for _, key in ipairs({ "Wave", "CurrentWave", "wave", "currentWave" }) do
-            local v = d[name][key]
-            if type(v) == "number" then return v end
-        end
-    end
-
-    -- Path 2: workspace.Server.Enemies.Gamemodes[name] attributes
-    local f = getTrialEnemiesFolder(name)
-    if f then
-        for _, key in ipairs({ "Wave", "CurrentWave" }) do
-            local ok, v = pcall(function() return f:GetAttribute(key) end)
-            if ok and type(v) == "number" then return v end
-        end
-        if f.Parent then
-            for _, key in ipairs({ "Wave", "CurrentWave" }) do
-                local ok, v = pcall(function() return f.Parent:GetAttribute(key) end)
-                if ok and type(v) == "number" then return v end
-            end
-        end
-    end
-
-    -- Path 3: workspace.Client.Maps[name] attribute
-    local ok, m = pcall(function()
-        return workspace.Client.Maps:FindFirstChild(name)
-    end)
-    if ok and m then
-        for _, key in ipairs({ "Wave", "CurrentWave" }) do
-            local ok2, v = pcall(function() return m:GetAttribute(key) end)
-            if ok2 and type(v) == "number" then return v end
-        end
-    end
-
-    -- Path 4 (last resort): PlayerGui HUD parse.
-    -- Путь: PlayerGui.UI.HUD.Gamemodes.<name>.Main.Wave.Value.Text = "X / Y".
-    local pg = LocalPlayer:FindFirstChild("PlayerGui")
-    local ui = pg and pg:FindFirstChild("UI")
-    local hud = ui and ui:FindFirstChild("HUD")
-    local gms = hud and hud:FindFirstChild("Gamemodes")
-    local modeUI = gms and gms:FindFirstChild(name)
-    local main = modeUI and modeUI:FindFirstChild("Main")
-    local waveNode = main and main:FindFirstChild("Wave")
-    local valueNode = waveNode and waveNode:FindFirstChild("Value")
-    if valueNode and valueNode:IsA("TextLabel") then
-        local w = valueNode.Text:match("(%d+)%s*/%s*%d+") or valueNode.Text:match("(%d+)")
-        if w then return tonumber(w) end
-    end
-
-    return nil
-end
-
--- Выход из Trial'а — TP в безопасное место (Fruits Verse 1 по умолчанию).
--- В этой игре gamemode'ы не имеют explicit "Leave" action; TP на обычную карту
--- корректно снимает нас с gamemode.
-local function leaveTrial()
-    getgenv()._ZoneTpBusy = true
-    pcall(function()
-        Omni.Signal:Fire("Player", "Teleport", "Teleport", "Fruits Verse", 1)
-    end)
-    task.wait(1.0)
-    getgenv()._ZoneTpBusy = false
-end
-
--- Состояние/статус Trial'ов для paragraph
-local _trialStatus = {
-    current  = nil,   -- имя активного trial'а (где мы сейчас)
-    wave     = nil,   -- текущая волна
-    lastJoin = {},    -- { [name] = tick() }
-    lastExit = {},    -- { [name] = tick() }
-}
-
--- Активный таргетинг мобов в trial'е: берём всех живых из папки gamemode
-local function getTrialLiveMobs(name)
-    local f = getTrialEnemiesFolder(name)
-    if not f then return {} end
-    local out = {}
-    for _, mob in ipairs(f:GetChildren()) do
-        if isAlive(mob) and getMobPos(mob) then
-            table.insert(out, mob)
-        end
-    end
-    return out
-end
-
--- Флаг и поток
-local trialThread
-local function startTrialLoop()
-    if trialThread then return end
-    trialThread = task.spawn(function()
-        while getgenv().AutoTrial and not stopped do
-            -- Уважаем общие мьютексы
-            while (getgenv()._StarBusy or getgenv()._ZoneTpBusy)
-                and getgenv().AutoTrial and not stopped
-            do
-                task.wait(0.1)
-            end
-
-            local selected = getgenv().TrialSelections or {}
-            local names = {}
-            for n, on in pairs(selected) do
-                if on then table.insert(names, n) end
-            end
-            table.sort(names)
-
-            if #names == 0 then
-                task.wait(2)
-            else
-                -- [A] Если мы уже в каком-то выбранном trial'е — фармим его
-                local inTrialName
-                for _, n in ipairs(names) do
-                    if isInTrial(n) then inTrialName = n; break end
-                end
-
-                if inTrialName then
-                    _trialStatus.current = inTrialName
-                    local wave = getCurrentWave(inTrialName)
-                    _trialStatus.wave = wave
-                    local leaveThr = tonumber(getgenv().TrialAutoLeaveWave) or 0
-
-                    if leaveThr > 0 and type(wave) == "number" and wave > leaveThr then
-                        -- Порог превышен — ливаем.
-                        pcall(function()
-                            Window:Notify({
-                                Title       = "Trial",
-                                Description = ("Wave %d > %d — leaving"):format(wave, leaveThr),
-                                Lifetime    = 4,
-                            })
-                        end)
-                        _trialStatus.lastExit[inTrialName] = tick()
-                        leaveTrial()
-                        _trialStatus.current = nil
-                        _trialStatus.wave    = nil
-                        task.wait(1.5)
-                    else
-                        local mobs = getTrialLiveMobs(inTrialName)
-                    if #mobs == 0 then
-                        -- Волна закончилась? Ждём следующего тика или выхода
-                        task.wait(1)
-                    else
-                        -- Сортируем по HP (слабые первыми) чтобы добить
-                        table.sort(mobs, function(a, b)
-                            local ha = getMobHPValue(a) or math.huge
-                            local hb = getMobHPValue(b) or math.huge
-                            return ha < hb
-                        end)
-                        local mob = mobs[1]
-                        if mob and isAlive(mob) then
-                            teleportTo(mob)
-                            task.wait(0.08)
-                            local cd        = getClickCooldown()
-                            local startTime = tick()
-                            local hrp       = getHRP()
-                            while getgenv().AutoTrial
-                                and not stopped
-                                and not getgenv()._StarBusy
-                                and not getgenv()._ZoneTpBusy
-                                and isAlive(mob)
-                                and tick() - startTime < 15
-                            do
-                                local mp = getMobPos(mob)
-                                local my = hrp and hrp.Position
-                                if mp and my and (mp - my).Magnitude > 12 then
-                                    teleportTo(mob)
-                                    task.wait(0.05)
-                                end
-                                attackOnce()
-                                task.wait(cd)
-                            end
-                        end
-                    end
-                    end
-                else
-                    -- [B] Не в trial'е — пробуем зайти
-                    _trialStatus.current = nil
-                    local joined = false
-                    for _, n in ipairs(names) do
-                        if canTryJoin(n) then
-                            _trialLastJoinAttempt[n] = tick()
-                            _trialStatus.lastJoin[n] = tick()
-                            if joinTrial(n) then
-                                task.wait(1.2)
-                                if isInTrial(n) then
-                                    joined = true
-                                    break
-                                end
-                            end
-                        end
-                    end
-                    if not joined then
-                        task.wait(3)
-                    end
+-- Find nearest LIVE mob (any name) in the current zone within radius.
+-- Used by Filler farm: когда target недоступен — бьём ближайшего любого живого.
+function _WF.findNearestLiveMob(radius)
+    local folder = _WF.getEnemiesFolder()
+    if not folder then return nil end
+    local hrp = getHRP(); if not hrp then return nil end
+    local myPos = hrp.Position
+    local best, bestDist = nil, radius or 80
+    for _, mob in ipairs(folder:GetChildren()) do
+        if _WF.isAlive(mob) then
+            local p = _WF.getMobPos(mob)
+            if p then
+                local d = (p - myPos).Magnitude
+                if d < bestDist then
+                    best, bestDist = mob, d
                 end
             end
-        end
-        trialThread = nil
-    end)
-end
-
-getgenv().AutoTrial         = getgenv().AutoTrial         or false
-getgenv().TrialSelections   = getgenv().TrialSelections   or {}
-getgenv().TrialAutoLeaveWave = getgenv().TrialAutoLeaveWave or 0
-
--- UI
-local TrialsTab   = MainTabGroup:Tab({ Name = "Trials" })
-local TrialsLeft  = TrialsTab:Section({ Side = "Left"  })
-local TrialsRight = TrialsTab:Section({ Side = "Right" })
-
-TrialsLeft:Toggle({
-    Name     = "Auto Trial",
-    Default  = false,
-    Callback = function(s)
-        getgenv().AutoTrial = s
-        if s then startTrialLoop() end
-    end,
-}, "AutoTrialToggle")
-
-local trialDropdown = TrialsLeft:Dropdown({
-    Name     = "Trials to run (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllTrials(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then
-                    set[k] = true
-                end
-            end
-        elseif type(values) == "string" and values ~= "" then
-            set[values] = true
-        end
-        getgenv().TrialSelections = set
-    end,
-})
-
-TrialsLeft:Button({
-    Name     = "Refresh Trial List",
-    Callback = function()
-        pcall(function()
-            trialDropdown:ClearOptions()
-            trialDropdown:InsertOptions(getAllTrials())
-        end)
-    end,
-})
-
-TrialsLeft:Button({
-    Name     = "Join Selected Now",
-    Callback = function()
-        task.spawn(function()
-            for name in pairs(getgenv().TrialSelections or {}) do
-                joinTrial(name)
-                task.wait(0.3)
-            end
-        end)
-    end,
-})
-
-pcall(function()
-    TrialsLeft:Slider({
-        Name          = "Auto Leave on Wave (0=off)",
-        Default       = 0,
-        Minimum       = 0,
-        Maximum       = 50,
-        Precision     = 0,
-        DisplayMethod = "Value",
-        Callback      = function(v)
-            getgenv().TrialAutoLeaveWave = tonumber(v) or 0
-        end,
-    }, "TrialAutoLeaveWaveSlider")
-end)
-
-TrialsLeft:Button({
-    Name     = "Leave Trial Now",
-    Callback = function()
-        task.spawn(function() leaveTrial() end)
-    end,
-})
-
-TrialsLeft:Button({
-    Name     = "Debug: Dump Gamemodes",
-    Callback = function()
-        local d, buf = newDump()
-        d("========== [WF] GAMEMODES DEBUG ==========")
-        -- Shared config
-        local sg = Omni and Omni.Shared and Omni.Shared.Gamemodes
-        d("Omni.Shared.Gamemodes:")
-        if type(sg) == "table" then
-            for k, v in pairs(sg) do
-                d(("  [%s] type=%s"):format(tostring(k), typeof(v)))
-                if type(v) == "table" then
-                    for k2, v2 in pairs(v) do
-                        if type(v2) == "table" then
-                            d(("    [%s.%s] table:"):format(tostring(k), tostring(k2)))
-                            for k3, v3 in pairs(v2) do
-                                d(("      %s = %s (%s)"):format(tostring(k3), tostring(v3), typeof(v3)))
-                            end
-                        else
-                            d(("    [%s.%s] = %s (%s)"):format(tostring(k), tostring(k2), tostring(v2), typeof(v2)))
-                        end
-                    end
-                end
-            end
-        else
-            d("  (not a table)")
-        end
-
-        -- Data
-        d("Omni.Data.Gamemodes:")
-        local gd = Omni and Omni.Data and Omni.Data.Gamemodes
-        if type(gd) == "table" then
-            for k, v in pairs(gd) do
-                d(("  [%s] = %s (%s)"):format(tostring(k), tostring(v), typeof(v)))
-                if type(v) == "table" then
-                    for k2, v2 in pairs(v) do
-                        d(("    %s = %s (%s)"):format(tostring(k2), tostring(v2), typeof(v2)))
-                    end
-                end
-            end
-        else
-            d("  (not a table)")
-        end
-
-        -- Workspace folders + attributes
-        d("workspace.Server.Enemies.Gamemodes:")
-        local ok, gmFolder = pcall(function() return workspace.Server.Enemies.Gamemodes end)
-        if ok and gmFolder then
-            for _, ch in ipairs(gmFolder:GetChildren()) do
-                d(("  [%s] children=%d"):format(ch.Name, #ch:GetChildren()))
-                -- Всё-все атрибуты чтобы увидеть где лежит волна
-                local attrs = ch:GetAttributes()
-                if next(attrs) then
-                    for ak, av in pairs(attrs) do
-                        d(("    attr[%s] = %s (%s)"):format(tostring(ak), tostring(av), typeof(av)))
-                    end
-                end
-            end
-            -- Атрибуты самой папки Gamemodes
-            local gmAttrs = gmFolder:GetAttributes()
-            if next(gmAttrs) then
-                d("  (root) attributes:")
-                for ak, av in pairs(gmAttrs) do
-                    d(("    %s = %s (%s)"):format(tostring(ak), tostring(av), typeof(av)))
-                end
-            end
-        end
-
-        -- Текущее значение getCurrentWave для каждого выбранного trial'а
-        d("getCurrentWave() resolve:")
-        for n in pairs(getgenv().TrialSelections or {}) do
-            d(("  [%s] => %s"):format(n, tostring(getCurrentWave(n))))
-        end
-        d("Data.Map=" .. tostring(Omni.Data and Omni.Data.Map) ..
-          " Data.Zone=" .. tostring(Omni.Data and Omni.Data.Zone))
-        d("=========================================")
-        flushDump(buf, "Trial Debug")
-    end,
-})
-
--- Status
-local trialStatusPara = TrialsRight:Paragraph({
-    Header = "Status",
-    Body   = "—",
-})
-
-local function fmtTimeAgo(t)
-    if not t or t <= 0 then return "—" end
-    local d = tick() - t
-    if d < 60 then return ("%ds ago"):format(math.floor(d)) end
-    if d < 3600 then return ("%dm%ds ago"):format(math.floor(d / 60), math.floor(d) % 60) end
-    return ("%dh ago"):format(math.floor(d / 3600))
-end
-
-local function updateTrialStatus()
-    if not trialStatusPara then return end
-    local targets = getgenv().TrialSelections or {}
-    local names = {}
-    for n, on in pairs(targets) do
-        if on then table.insert(names, n) end
-    end
-    table.sort(names)
-
-    local leaveThr = tonumber(getgenv().TrialAutoLeaveWave) or 0
-    local lines = {
-        "Auto Trial: " .. (getgenv().AutoTrial and "ON" or "OFF"),
-        "Current: " .. (_trialStatus.current or "—"),
-        "Wave: " .. (_trialStatus.wave and tostring(_trialStatus.wave) or "—"),
-        "Leave on wave: " .. (leaveThr > 0 and tostring(leaveThr) or "off"),
-    }
-    if #names == 0 then
-        table.insert(lines, "Targets: —")
-    else
-        for _, n in ipairs(names) do
-            local cfg  = getTrialCfg(n)
-            local f    = getTrialEnemiesFolder(n)
-            local live = f and #f:GetChildren() or 0
-            local cfgInfo = "no-cfg"
-            if cfg then
-                local parts = {}
-                if cfg.MapName then table.insert(parts, "map=" .. tostring(cfg.MapName)) end
-                if cfg.MaxWave then table.insert(parts, "waves=" .. tostring(cfg.MaxWave)) end
-                if cfg.EnterTime then table.insert(parts, "enter=" .. tostring(cfg.EnterTime) .. "s") end
-                if cfg.TotalTime then table.insert(parts, "total=" .. tostring(cfg.TotalTime) .. "s") end
-                cfgInfo = (#parts > 0) and table.concat(parts, " ") or "cfg"
-            end
-            local tag = (n == _trialStatus.current) and "▶" or (live > 0 and "●" or "○")
-            table.insert(lines, ("%s %s"):format(tag, n))
-            table.insert(lines, ("  %s | live=%d"):format(cfgInfo, live))
-            local lj = _trialStatus.lastJoin[n]
-            if lj then table.insert(lines, ("  last join: %s"):format(fmtTimeAgo(lj))) end
-        end
-    end
-    pcall(function() trialStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
-
--- =========================================================
--- [7f] GACHA — helpers + loop + UI
--- =========================================================
--- Поддержка ВСЕХ гач: Race, Dragon Power, Fruit, Haki, Slime Power.
--- Логика: каждая выбранная гача крутится в своём task.spawn параллельно.
--- Target rarity и threshold общие, но каждая гача смотрит свою валюту
--- (auto-detected через cfg.Price.Name). При достижении target rarity конкретная
--- гача выключается из списка. Когда все выключились — master toggle = false.
-
--- Список имён всех гач из Omni.Shared.Gacha.List
-local function getAllGachaNames()
-    local list = Omni and Omni.Shared and Omni.Shared.Gacha and Omni.Shared.Gacha.List
-    if type(list) ~= "table" then
-        return { "Race", "Dragon Power", "Fruit", "Haki", "Slime Power" }
-    end
-    local out = {}
-    for k in pairs(list) do
-        if type(k) == "string" then table.insert(out, k) end
-    end
-    table.sort(out)
-    return out
-end
-
--- Валюта гачи из cfg.Price.Name. Фолбэк по известным именам.
-local function getGachaCurrency(gachaName)
-    local sg = Omni and Omni.Shared and Omni.Shared.Gacha
-    local cfg = sg and sg.List and sg.List[gachaName] or (sg and sg[gachaName])
-    if type(cfg) == "table" and type(cfg.Price) == "table" and type(cfg.Price.Name) == "string" then
-        return cfg.Price.Name
-    end
-    local defaults = {
-        Haki            = "Haki Token",
-        Fruit           = "Fruit Token",
-        Race            = "Race Token",
-        ["Dragon Power"] = "Dragon Balls Token",
-        ["Slime Power"] = "Slime Token",
-    }
-    return defaults[gachaName] or (gachaName .. " Token")
-end
-
-local RARITY_ORDER = {
-    Common = 1, Uncommon = 2, Rare = 3, Epic = 4,
-    Mythical = 5, Legendary = 6, Secret = 7,
-}
-local RARITY_OPTIONS = { "Common", "Uncommon", "Rare", "Epic", "Mythical", "Legendary", "Secret" }
-
-local function getGachaCfg(gachaName)
-    local sg = Omni and Omni.Shared and Omni.Shared.Gacha
-    if type(sg) ~= "table" then return nil end
-    if type(sg[gachaName]) == "table" then return sg[gachaName] end
-    if type(sg.List) == "table" and type(sg.List[gachaName]) == "table" then
-        return sg.List[gachaName]
-    end
-    return nil
-end
-
-local function getGachaCost(gachaName)
-    local cfg = getGachaCfg(gachaName)
-    if cfg then
-        if type(cfg.Price) == "table" and type(cfg.Price.Amount) == "number" then
-            return cfg.Price.Amount
-        end
-        if type(cfg.Cost) == "number" then return cfg.Cost end
-    end
-    return 1 -- fallback: сервер всё равно отклонит если недостаточно
-end
-
-local function getCurrencyBalance(currencyName)
-    local inv = Omni and Omni.Data and Omni.Data.Inventory
-    if type(inv) ~= "table" then return 0 end
-    if type(inv.Items) == "table" then
-        local v = inv.Items[currencyName]
-        if type(v) == "number" then return v end
-        if type(v) == "table" and type(v.Amount) == "number" then return v.Amount end
-    end
-    local d = Omni.Data
-    if d and type(d[currencyName]) == "number" then return d[currencyName] end
-    return 0
-end
-
--- =========================================================
--- HELPERS для gacha-rewards. Используют Omni.Shared.Gacha.List[name].SourceInfo
--- как canonical список валидных наград конкретной гачи (с их rarity).
--- Награды могут падать в разные категории Inventory (Units/Accessories/Items/...)
--- или даже в top-level Data.<Category>; скан пройдёт по всем.
--- =========================================================
-
--- Возвращает SourceInfo конкретной гачи: { [rewardName] = { Rarity=..., Icon=... }, ... }
--- nil если SourceInfo нет.
-local function getGachaSourceInfo(gachaName)
-    local cfg = getGachaCfg(gachaName)
-    if type(cfg) == "table" and type(cfg.SourceInfo) == "table" then
-        return cfg.SourceInfo
-    end
-    return nil
-end
-
--- Возвращает имя категории inventory куда сервер складывает награды этой гачи.
--- Напр. для "Haki" это "Hakis", для "Fruit" — "Fruits", и т.д.
-local function getGachaSourceCategory(gachaName)
-    local cfg = getGachaCfg(gachaName)
-    if type(cfg) == "table" and type(cfg.Source) == "string" then
-        return cfg.Source
-    end
-    return nil
-end
-
--- Категории, в которых потенциально лежат награды. Расширяется defensive.
-local INV_CATEGORIES = {
-    "Units", "Accessories", "Items", "Hakis", "Hair", "Auras", "Mounts", "Swords", "Avatars"
-}
-local DATA_TOP_CATEGORIES = {
-    "Hakis", "Auras", "Haki", "Aura"
-}
-
--- Rarity reward'а: сначала SourceInfo (canonical), потом fallback на Shared.Units.
-local function getRewardRarity(rewardName, gachaName)
-    local si = getGachaSourceInfo(gachaName)
-    if si and type(si[rewardName]) == "table" and si[rewardName].Rarity then
-        return si[rewardName].Rarity
-    end
-    -- fallback
-    local su = Omni and Omni.Shared and Omni.Shared.Units
-    if type(su) == "table" then
-        if type(su.List) == "table" and type(su.List[rewardName]) == "table" then
-            return su.List[rewardName].Rarity
-        end
-        if type(su[rewardName]) == "table" then return su[rewardName].Rarity end
-    end
-    return nil
-end
-
--- Совместимость со старым именем (старый код звал getUnitRarity).
-local getUnitRarity = getRewardRarity
-
--- Итерация по всем возможным категориям инвентаря игрока.
--- extraCats — дополнительные имена категорий которые нужно проверить
--- (например cfg.Source = "Hakis" для гачи Haki).
--- visit(key, value, categoryName) вызывается для каждого элемента.
-local function forEachInventoryEntry(visit, extraCats)
-    local data = Omni and Omni.Data
-    if type(data) ~= "table" then return end
-
-    -- Собираем список уникальных inventory-категорий
-    local invSet, dataSet = {}, {}
-    for _, c in ipairs(INV_CATEGORIES) do invSet[c] = true end
-    for _, c in ipairs(DATA_TOP_CATEGORIES) do dataSet[c] = true end
-    if type(extraCats) == "table" then
-        for _, c in ipairs(extraCats) do
-            if type(c) == "string" then
-                invSet[c] = true
-                dataSet[c] = true
-            end
-        end
-    end
-
-    local inv = data.Inventory
-    if type(inv) == "table" then
-        for cat in pairs(invSet) do
-            local t = inv[cat]
-            if type(t) == "table" then
-                for k, v in pairs(t) do visit(k, v, "Inventory." .. cat) end
-            end
-        end
-    end
-    for cat in pairs(dataSet) do
-        local t = data[cat]
-        if type(t) == "table" then
-            for k, v in pairs(t) do visit(k, v, "Data." .. cat) end
-        end
-    end
-end
-
-local function entryName(k, v)
-    return (type(v) == "table" and (v.Name or tostring(k))) or tostring(k)
-end
-
-local function entryCount(v)
-    if type(v) == "number" then return v end
-    if type(v) == "table" then
-        return v.Count or v.Amount or 1
-    end
-    return 1
-end
-
--- Считает текущие награды игрока по данной гаче используя SourceInfo как whitelist.
--- Если SourceInfo отсутствует — фолбэк на старую логику (все Inventory.Units).
--- Возвращает (counts={[rarity]=N}, total, foundCategories={[catName]=count}).
--- Сканирует Data.Gacha[gachaName].* — все подполя (Vault, Unlocked и т.д.)
--- Нужно потому что Haki-награды сервер кладёт не в Inventory а сюда.
-local function scanGachaVault(gachaName, visit)
-    local data = Omni and Omni.Data
-    local gd = data and data.Gacha and data.Gacha[gachaName]
-    if type(gd) ~= "table" then return end
-    for field, val in pairs(gd) do
-        if type(val) == "table" then
-            for k, v in pairs(val) do
-                visit(k, v, "Data.Gacha." .. gachaName .. "." .. tostring(field))
-            end
-        end
-    end
-end
-
-local function getMyUnitsByRarity(gachaName)
-    local counts = {}
-    local total  = 0
-    local foundIn = {}
-
-    local si = getGachaSourceInfo(gachaName)
-    local sourceCat = getGachaSourceCategory(gachaName)
-    local extras = sourceCat and { sourceCat } or nil
-
-    local function hit(k, v, catName)
-        local name = entryName(k, v)
-        if si[name] then
-            local cnt = entryCount(v)
-            local r = si[name].Rarity or getRewardRarity(name, gachaName)
-            if r then
-                counts[r] = (counts[r] or 0) + cnt
-                total = total + cnt
-                foundIn[catName] = (foundIn[catName] or 0) + cnt
-            end
-        end
-    end
-
-    if type(si) == "table" then
-        forEachInventoryEntry(hit, extras)
-        scanGachaVault(gachaName, hit)
-    else
-        -- Fallback: SourceInfo неизвестен — считаем все Units.
-        local inv = Omni and Omni.Data and Omni.Data.Inventory
-        if type(inv) == "table" and type(inv.Units) == "table" then
-            for k, v in pairs(inv.Units) do
-                local name = entryName(k, v)
-                local cnt  = entryCount(v)
-                local r = getRewardRarity(name, gachaName)
-                if r then
-                    counts[r] = (counts[r] or 0) + cnt
-                    total = total + cnt
-                    foundIn["Inventory.Units"] = (foundIn["Inventory.Units"] or 0) + cnt
-                end
-            end
-        end
-    end
-    return counts, total, foundIn
-end
-
--- Возвращает наивысший rarity (по RARITY_ORDER).
-local function getMyHighestRarity(gachaName)
-    local counts = getMyUnitsByRarity(gachaName)
-    local best, bestOrd = nil, 0
-    for r, n in pairs(counts) do
-        if n > 0 then
-            local ord = RARITY_ORDER[r] or 0
-            if ord > bestOrd then best, bestOrd = r, ord end
         end
     end
     return best
 end
 
--- Проверяет есть ли у игрока юнит редкости targetRarity или выше.
--- Возвращает (hasIt, owningRarityName).
-local function hasRarityOrHigher(gachaName, targetRarity)
-    if not targetRarity then return false end
-    local targetOrd = RARITY_ORDER[targetRarity] or 0
-    if targetOrd == 0 then return false end
-    local counts = getMyUnitsByRarity(gachaName)
-    -- Берём наивысший rarity который есть (и проверяем >= target)
-    local best, bestOrd = nil, 0
-    for r, n in pairs(counts) do
-        if n > 0 and (RARITY_ORDER[r] or 0) >= targetOrd then
-            local ord = RARITY_ORDER[r] or 0
-            if ord > bestOrd then best, bestOrd = r, ord end
+-- Find EASIER mob for filler: HP below the weakest selected target, closest-by-HP.
+-- Идея: пока ждём respawn нашего Big Boss'а (HP = X), набиваем убивы на мобе с HP = X-ε.
+-- Берём моба с максимальным HP среди тех у кого HP строго ниже таргета — это "самый похожий
+-- по сложности" моб (Insane ближе к Боссу чем King). Радиус НЕ ограничиваем — мы всё равно
+-- телепортируемся, а при ограничении 80 studs упускались мобы в 150+ studs.
+function _WF.findEasierMob(targetSet, _unusedRadius)
+    local folder = _WF.getEnemiesFolder()
+    if not folder then return nil end
+
+    -- Нижняя граница "таргет HP" = минимум по всем выбранным таргетам.
+    local targetMinHP
+    for name in pairs(targetSet or {}) do
+        local hp = _WF.getMobMaxHPFromConfig(name) or _WF.getMobMaxHPFromLive(name)
+        if type(hp) == "number" then
+            if not targetMinHP or hp < targetMinHP then targetMinHP = hp end
         end
     end
-    if best then return true, best end
-    return false
-end
-
-local function getMaxGachaPerRoll()
-    local u = Omni and Omni.Utils and Omni.Utils.PlayerStats
-    if type(u) == "table" then
-        for _, fname in ipairs({ "GachaRolls", "MaxGachaRoll", "Rolls" }) do
-            if type(u[fname]) == "function" then
-                local ok, val = pcall(function() return u[fname](Omni.Data, Omni.Instance) end)
-                if ok and type(val) == "number" and val >= 1 then return math.floor(val) end
-            end
-        end
+    if not targetMinHP then
+        dbg("findEasierMob: no HP for target → fallback to nearest")
+        return _WF.findNearestLiveMob(_WF.FillerRadius)
     end
-    return 1
-end
 
--- Snapshot по ВСЕМ категориям. Если передана gachaName — добавляет cfg.Source
--- как дополнительную категорию (напр. "Hakis" для Haki гачи).
--- Ключ — "catName::entryKey".
-local function snapshotUnits(gachaName)
-    local snap = {}
-    local extras = gachaName and getGachaSourceCategory(gachaName)
-    local extrasList = extras and { extras } or nil
-    local function capture(k, v, catName)
-        local fullKey = catName .. "::" .. tostring(k)
-        if type(v) == "table" then
-            snap[fullKey] = { Count = v.Count, Amount = v.Amount, Name = v.Name, _name = entryName(k, v) }
-        elseif type(v) == "number" then
-            snap[fullKey] = { _num = v, _name = tostring(k) }
-        elseif type(v) == "boolean" then
-            snap[fullKey] = { _bool = v, _name = tostring(k) }
-        else
-            snap[fullKey] = { _name = tostring(k) }
-        end
-    end
-    forEachInventoryEntry(capture, extrasList)
-    if gachaName then scanGachaVault(gachaName, capture) end
-    return snap
-end
-
-local function diffNewUnits(pre, gachaName)
-    local out = {}
-    local extras = gachaName and getGachaSourceCategory(gachaName)
-    local extrasList = extras and { extras } or nil
-    local function check(k, v, catName)
-        local fullKey = catName .. "::" .. tostring(k)
-        local prev = pre[fullKey]
-        local name = entryName(k, v)
-        if prev == nil then
-            table.insert(out, name)
-        else
-            if type(v) == "table" then
-                local oldCount = (prev.Count or prev.Amount or 0)
-                local newCount = (v.Count or v.Amount or 0)
-                if newCount > oldCount then
-                    for _ = 1, (newCount - oldCount) do table.insert(out, name) end
-                end
-            elseif type(v) == "number" then
-                local oldNum = prev._num or 0
-                if v > oldNum then
-                    for _ = 1, (v - oldNum) do table.insert(out, name) end
-                end
-            elseif type(v) == "boolean" and v and not prev._bool then
-                table.insert(out, name)
-            end
-        end
-    end
-    forEachInventoryEntry(check, extrasList)
-    if gachaName then scanGachaVault(gachaName, check) end
-    return out
-end
-
-local function getAllMobsGlobal()
-    local shared = Omni and Omni.Shared and Omni.Shared.Enemies
-    local set = {}
-    if type(shared) == "table" then
-        for _, zones in pairs(shared) do
-            if type(zones) == "table" then
-                for _, list in pairs(zones) do
-                    local names = extractMobNames(list)
-                    for n in pairs(names) do set[n] = true end
+    local best, bestHP = nil, -1
+    local considered = 0
+    for _, mob in ipairs(folder:GetChildren()) do
+        if _WF.isAlive(mob) and not (targetSet and targetSet[mob.Name]) then
+            local p = _WF.getMobPos(mob)
+            if p then
+                considered = considered + 1
+                local hp = _WF.getMobInstanceMaxHP(mob)
+                if hp and hp < targetMinHP and hp > bestHP then
+                    best, bestHP = mob, hp
                 end
             end
         end
     end
-    if next(set) == nil then
-        -- fallback: текущая зона
-        local folder = getEnemiesFolder()
-        if folder then
-            for _, m in ipairs(folder:GetChildren()) do set[m.Name] = true end
-        end
+    if _WF.EnableDebug then
+        dbg(("findEasierMob: targetMinHP=%s, scanned=%d, picked=%s (HP=%s)"):format(
+            tostring(targetMinHP), considered,
+            best and best.Name or "nil",
+            tostring(bestHP > 0 and bestHP or "—")
+        ))
     end
-    local out = {}
-    for n in pairs(set) do table.insert(out, n) end
-    table.sort(out)
-    return out
+    return best
 end
 
--- STATE
-local _gachaStatus  = { phase = "idle", lastRoll = 0, lastNewUnit = "—" }
-local _gachaRollThreads = {}   -- { [gachaName] = thread }
-local _gachaFarmThread   = nil
+-- Short filler attack burst: TP + atacks N times or until mob dies / HP stalls.
+-- Always <2s, non-blocking for the main farm loop on its next tick.
+-- gateFn (optional): () → bool. Возвращает false — филлер сразу выходит.
+-- Если не передан — дефолт: _WF.AutoFarmEnabled (старое поведение для farm-loop'а).
+function _WF.fillerHit(mob, maxDuration, gateFn)
+    if not mob or not _WF.isAlive(mob) then return end
+    gateFn = gateFn or function() return _WF.AutoFarmEnabled end
+    _WF.teleportTo(mob)
+    task.wait(0.05)
+    local cd = _WF.getClickCooldown()
+    local started = tick()
+    local lastHP = _WF.getMobHP(mob)
+    local lastHPTick = tick()
+    while gateFn() and getgenv()._WFRunning
+        and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+        and _WF.isAlive(mob) and tick() - started < (maxDuration or 1.5)
+    do
+        _WF.attackOnce()
+        local curHP = _WF.getMobHP(mob)
+        if curHP and lastHP and curHP < lastHP then
+            lastHP = curHP; lastHPTick = tick()
+        elseif tick() - lastHPTick > 0.8 then
+            break  -- HP не падает, выходим раньше — у filler короткий ресурс терпения
+        end
+        task.wait(cd)
+    end
+end
 
--- ROLL THREAD на одну конкретную гачу. Запускается для каждой выбранной.
--- Смотрит СВОЙ target ownership и СВОЮ валюту.
-local function startGachaRollThreadFor(gachaName)
-    if _gachaRollThreads[gachaName] then return end
-    _gachaRollThreads[gachaName] = task.spawn(function()
-        local currency = getGachaCurrency(gachaName)
-        while getgenv().AutoGacha and getgenv().GachaSelection[gachaName] and not stopped do
-            -- Проверка: target rarity уже во владении?
-            local targetR = getgenv().GachaTargetRarity
-            if targetR then
-                local ownedIt, ownedR = hasRarityOrHigher(gachaName, targetR)
-                if ownedIt then
-                    -- Конкретно эта гача больше не нужна — убираем из selection
-                    getgenv().GachaSelection[gachaName] = nil
-                    pcall(function()
-                        Window:Notify({
-                            Title       = "Gacha hit!",
-                            Description = ("%s: %s ≥ %s"):format(gachaName, ownedR or "?", targetR),
-                            Lifetime    = 6,
-                        })
-                    end)
-                    -- Если никого не осталось — выключаем master
-                    if not next(getgenv().GachaSelection) then
-                        getgenv().AutoGacha = false
+-- Find best zone for targets: scans all maps/zones, returns {mapName, zoneIdx}
+-- where the most selected targets are configured.
+function _WF.findBestZoneForTargets(targetSet)
+    local shared = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Enemies
+    if type(shared) ~= "table" then return nil end
+    local best, bestScore = nil, 0
+    for mapName, zones in pairs(shared) do
+        if type(zones) == "table" then
+            for zoneKey, zoneConfig in pairs(zones) do
+                if type(zoneConfig) == "table" then
+                    local zoneMobs = _WF.extractMobNames(zoneConfig)
+                    local score = 0
+                    for n in pairs(targetSet) do
+                        if zoneMobs[n] then score = score + 1 end
                     end
+                    if score > bestScore then
+                        bestScore = score
+                        best = { mapName = mapName, zoneIdx = tonumber(zoneKey) or zoneKey }
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+-- TP to a specific map/zone (fires server teleport). Uses ZoneTpBusy mutex.
+function _WF.teleportToZone(mapName, zoneIdx)
+    if not (_WF.Omni and _WF.Omni.Signal) then return end
+    _WF.ZoneTpBusy = true
+    safe(function()
+        _WF.Omni.Signal:Fire("Player", "Teleport", "Teleport", mapName, zoneIdx)
+    end)
+    task.wait(1.0)
+    _WF.ZoneTpBusy = false
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- One iteration of target-farming logic. Shared by Farm-loop и Quest-loop.
+-- Позволяет Quest-loop'у быть самодостаточным (как в легаси v0.37) — не
+-- зависеть от того, включён ли AutoFarm toggle пользователем.
+--
+--   targetSet : {[mobName]=true} — кого бить
+--   gateFn    : () → bool — вернёт false → итерация останавливается досрочно
+--                          (передавай _WF.AutoFarmEnabled / _WF.AutoQuestEnabled)
+-- ═══════════════════════════════════════════════════════════════════════
+function _WF.runTargetFarmStep(targetSet, gateFn)
+    gateFn = gateFn or function() return true end
+    if not (_WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Map) then return end
+    if not next(targetSet) then return end
+    local curMap  = _WF.Omni.Data.Map
+    local curZone = tonumber(_WF.Omni.Data.Zone or 1) or 1
+
+    local hasReady, hasLive = _WF.hasReadyTargetsInCurrentZone(targetSet)
+
+    if hasReady then
+        -- ATTACK PHASE
+        local folder = _WF.getEnemiesFolder()
+        local hrp0 = getHRP()
+        local myPos = (hrp0 and hrp0.Position) or Vector3.new()
+        local candidates = {}
+        if folder then
+            for _, mob in ipairs(folder:GetChildren()) do
+                if targetSet[mob.Name] and _WF.isAlive(mob) then
+                    local p = _WF.getMobPos(mob)
+                    if p then
+                        table.insert(candidates, { mob = mob, dist = (p - myPos).Magnitude })
+                    end
+                end
+            end
+        end
+        table.sort(candidates, function(a, b) return a.dist < b.dist end)
+        local mob = candidates[1] and candidates[1].mob
+        if mob then
+            _WF.teleportTo(mob)
+            task.wait(0.08)
+            local cd         = _WF.getClickCooldown()
+            local started    = tick()
+            local lastHP     = _WF.getMobHP(mob)
+            local lastHPTick = tick()
+            while gateFn() and getgenv()._WFRunning
+                and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+                and _WF.isAlive(mob) and tick() - started < 15
+            do
+                local hrp = getHRP()
+                local mp  = _WF.getMobPos(mob)
+                if hrp and mp then
+                    local my = hrp.Position
+                    if (mp - my).Magnitude > 12 then
+                        _WF.teleportTo(mob)
+                        task.wait(0.05)
+                    end
+                    _WF.attackOnce()
+                end
+                local curHP = _WF.getMobHP(mob)
+                if curHP and lastHP and curHP < lastHP then
+                    lastHP = curHP; lastHPTick = tick()
+                elseif tick() - lastHPTick > 1.5 then
+                    dbg(("HP-stall: skip %s (HP stuck at %s)"):format(tostring(mob.Name), tostring(lastHP)))
                     break
                 end
-            end
-
-            local cost = math.max(1, getGachaCost(gachaName))
-            local bal  = getCurrencyBalance(currency)
-            local thr  = math.max(cost, tonumber(getgenv().GachaThreshold) or 0)
-
-            if bal >= thr and bal >= cost then
-                _gachaStatus.phase = "rolling"
-                local maxPer = getMaxGachaPerRoll()
-                local canBuy = math.floor(bal / cost)
-                local amount = math.min(maxPer, canBuy)
-                if amount >= 1 then
-                    local pre = snapshotUnits(gachaName)
-                    pcall(function()
-                        Omni.Signal:Fire("General", "Gacha", "Roll", gachaName, amount)
-                    end)
-                    _gachaStatus.lastRoll = tick()
-                    task.wait(1.0)
-                    local dropped = diffNewUnits(pre, gachaName)
-                    if #dropped > 0 then
-                        _gachaStatus.lastNewUnit = dropped[#dropped] .. " [" .. gachaName .. "]"
-                    end
-                else
-                    task.wait(0.5)
-                end
-            else
-                _gachaStatus.phase = (getgenv().AutoFarm and "waiting (Auto Farm on)") or "waiting"
-                task.wait(1.0)
+                task.wait(cd)
             end
         end
-        _gachaRollThreads[gachaName] = nil
-        if not next(_gachaRollThreads) then
-            _gachaStatus.phase = "idle"
-        end
-    end)
-end
 
--- FARM THREAD — ОДИН на все гачи. Фармит выбранного моба когда хотя бы
--- одной из активных гач не хватает токенов.
-local function startGachaFarmThread()
-    if _gachaFarmThread then return end
-    _gachaFarmThread = task.spawn(function()
-        while getgenv().AutoGacha and not stopped do
-            if getgenv().AutoFarm then
-                task.wait(1.0)
-            else
-                -- Нужен ли фарм? Да, если хотя бы у одной выбранной гачи баланс < threshold
-                local thr = math.max(1, tonumber(getgenv().GachaThreshold) or 0)
-                local needFarm = false
-                for gachaName, on in pairs(getgenv().GachaSelection or {}) do
-                    if on then
-                        local bal = getCurrencyBalance(getGachaCurrency(gachaName))
-                        if bal < thr then needFarm = true; break end
-                    end
-                end
-                if not needFarm then
-                    task.wait(0.5)
-                else
-                    local mobName = getgenv().GachaFarmMob
-                    if type(mobName) ~= "string" or mobName == "" then
-                        task.wait(2)
-                    else
-                        while (getgenv()._StarBusy or getgenv()._ZoneTpBusy)
-                            and getgenv().AutoGacha and not stopped
-                        do
-                            task.wait(0.1)
-                        end
-
-                        local targetSet = { [mobName] = true }
-                        local curMap    = Omni.Data and Omni.Data.Map
-                        local curZone   = tonumber(Omni.Data and Omni.Data.Zone or 1) or 1
-                        local hasReady, hasLive = hasReadyTargetsInCurrentZone(targetSet)
-
-                        if hasReady then
-                            local candidates = {}
-                            local folder = getEnemiesFolder()
-                            if folder then
-                                for _, mob in ipairs(folder:GetChildren()) do
-                                    if targetSet[mob.Name] and isAlive(mob) and getMobPos(mob) then
-                                        table.insert(candidates, mob)
-                                    end
-                                end
-                            end
-                            if #candidates == 0 then
-                                task.wait(0.5)
-                            else
-                                table.sort(candidates, function(a, b)
-                                    local ha = getMobHPValue(a) or math.huge
-                                    local hb = getMobHPValue(b) or math.huge
-                                    return ha < hb
-                                end)
-                                local mob = candidates[1]
-                                if mob and isAlive(mob) then
-                                    teleportTo(mob)
-                                    task.wait(0.08)
-                                    local cd        = getClickCooldown()
-                                    local startTime = tick()
-                                    local hrp       = getHRP()
-                                    while getgenv().AutoGacha
-                                        and not stopped
-                                        and not getgenv()._StarBusy
-                                        and not getgenv()._ZoneTpBusy
-                                        and not getgenv().AutoFarm
-                                        and isAlive(mob)
-                                        and tick() - startTime < 15
-                                    do
-                                        -- Если все гачи набрали — выходим досрочно
-                                        local stillNeed = false
-                                        for gn, on in pairs(getgenv().GachaSelection or {}) do
-                                            if on and getCurrencyBalance(getGachaCurrency(gn)) < thr then
-                                                stillNeed = true; break
-                                            end
-                                        end
-                                        if not stillNeed then break end
-                                        local mp = getMobPos(mob)
-                                        local my = hrp and hrp.Position
-                                        if mp and my and (mp - my).Magnitude > 12 then
-                                            teleportTo(mob)
-                                            task.wait(0.05)
-                                        end
-                                        attackOnce()
-                                        task.wait(cd)
-                                    end
-                                end
-                            end
-                        elseif hasLive then
-                            local ok = tpToFurthestVisibleMob()
-                            if not ok then
-                                getgenv()._ZoneTpBusy = true
-                                pcall(function()
-                                    Omni.Signal:Fire("Player", "Teleport", "Teleport", curMap, curZone)
-                                end)
-                                task.wait(1.0)
-                                getgenv()._ZoneTpBusy = false
-                            else
-                                task.wait(0.6)
-                            end
-                        else
-                            if anyTargetInZoneConfig(targetSet, curMap, curZone) then
-                                local tpOk = tpToFurthestVisibleMob()
-                                task.wait(tpOk and 0.6 or 1.5)
-                            else
-                                local best = findBestZoneForTargets(targetSet)
-                                if best and (best.mapName ~= curMap or best.zoneIdx ~= curZone) then
-                                    getgenv()._ZoneTpBusy = true
-                                    teleportToZone(best.mapName, best.zoneIdx)
-                                    getgenv()._ZoneTpBusy = false
-                                else
-                                    task.wait(3)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        _gachaFarmThread = nil
-    end)
-end
-
-local function startGachaLoop()
-    -- Спавн потоков для каждой выбранной гачи
-    for gachaName, on in pairs(getgenv().GachaSelection or {}) do
-        if on then startGachaRollThreadFor(gachaName) end
-    end
-    startGachaFarmThread()
-end
-
-getgenv().AutoGacha          = getgenv().AutoGacha          or false
-getgenv().GachaSelection     = getgenv().GachaSelection     or {}
-getgenv().GachaTargetRarity  = getgenv().GachaTargetRarity  or nil
-getgenv().GachaThreshold     = getgenv().GachaThreshold     or 100
-getgenv().GachaFarmMob       = getgenv().GachaFarmMob       or ""
-
--- UI
-local gachaStatusPara  -- top-level: used by updateGachaStatus() below
-do
-local GachaTab   = MainTabGroup:Tab({ Name = "Gacha" })
-local GachaLeft  = GachaTab:Section({ Side = "Left"  })
-local GachaRight = GachaTab:Section({ Side = "Right" })
-
-GachaLeft:Toggle({
-    Name     = "Auto Gacha",
-    Default  = false,
-    Callback = function(s)
-        getgenv().AutoGacha = s
-        if s then
-            -- Проверяем что хоть что-то выбрано
-            if not next(getgenv().GachaSelection or {}) then
-                getgenv().AutoGacha = false
-                pcall(function()
-                    Window:Notify({
-                        Title       = "No gachas selected",
-                        Description = "Сначала выбери гачу в дропдауне ниже",
-                        Lifetime    = 4,
-                    })
-                end)
-                return
-            end
-            -- Уже-во-владении check для КАЖДОЙ выбранной
-            local targetR = getgenv().GachaTargetRarity
-            if targetR then
-                local allOwned = true
-                for gn, on in pairs(getgenv().GachaSelection) do
-                    if on then
-                        local ownedIt = hasRarityOrHigher(gn, targetR)
-                        if not ownedIt then allOwned = false; break end
-                    end
-                end
-                if allOwned then
-                    getgenv().AutoGacha = false
-                    pcall(function()
-                        Window:Notify({
-                            Title       = "All targets already owned",
-                            Description = ("Все выбранные гачи уже ≥ %s — сними или смени target"):format(targetR),
-                            Lifetime    = 6,
-                        })
-                    end)
-                    return
-                end
-            end
-            startGachaLoop()
-        end
-    end,
-}, "AutoGachaToggle")
-
-GachaLeft:Dropdown({
-    Name     = "Select Gachas (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllGachaNames(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
-            end
-        elseif type(values) == "string" and values ~= "" then
-            set[values] = true
-        end
-        getgenv().GachaSelection = set
-    end,
-})
-
-GachaLeft:Dropdown({
-    Name     = "Target Rarity (stop on ≥, per-gacha)",
-    Multi    = false,
-    Required = false,
-    Options  = RARITY_OPTIONS,
-    Callback = function(v)
-        if type(v) == "string" and v ~= "" then
-            getgenv().GachaTargetRarity = v
+    elseif hasLive then
+        -- STREAMING-BOUNDS PHASE: target в folder есть, но position = (0,0,0).
+        local streamed = _WF.tpToFurthestVisibleMob()
+        task.wait(0.1)
+        local easier = _WF.findEasierMob(targetSet, _WF.FillerRadius)
+        if easier then
+            _WF.fillerHit(easier, 1.2, gateFn)
         else
-            getgenv().GachaTargetRarity = nil
+            task.wait(streamed and 0.5 or 0.8)
         end
-    end,
-})
 
-pcall(function()
-    GachaLeft:Slider({
-        Name          = "Min Tokens Before Roll (per-gacha)",
-        Default       = 100,
-        Minimum       = 0,
-        Maximum       = 1000,
-        Precision     = 0,
-        DisplayMethod = "Value",
-        Callback      = function(v)
-            getgenv().GachaThreshold = tonumber(v) or 100
-        end,
-    }, "GachaThresholdSlider")
+    else
+        -- ZONE ROUTING PHASE
+        if _WF.anyTargetInZoneConfig(targetSet, curMap, curZone) then
+            local easier = _WF.findEasierMob(targetSet, _WF.FillerRadius)
+            if easier then
+                _WF.fillerHit(easier, 1.5, gateFn)
+            else
+                local tpOk = _WF.tpToFurthestVisibleMob()
+                task.wait(tpOk and 0.6 or 1.5)
+            end
+        else
+            local best = _WF.findBestZoneForTargets(targetSet)
+            if best and (best.mapName ~= curMap or best.zoneIdx ~= curZone) then
+                _WF.teleportToZone(best.mapName, best.zoneIdx)
+            else
+                task.wait(3)
+            end
+        end
+    end
+end
+
+-- // 4. SAFE MODULE LOADER
+local okLoad, errLoad = pcall(function()
+    local OmniModule = awaitChild(RS, "Omni", 15)
+    if not OmniModule then error("Omni ModuleScript missing in ReplicatedStorage") end
+    _WF.Omni = require(OmniModule)
+    if _WF.Omni.WaitInitialization then
+        _WF.Omni:WaitInitialization()
+    end
+    assert(_WF.Omni.Signal,  "Omni.Signal missing")
+    assert(_WF.Omni.Data,    "Omni.Data missing")
+    _WF.ModulesLoaded = true
 end)
 
-local gachaMobDropdown = GachaLeft:Dropdown({
-    Name     = "Farm Mob (only if Auto Farm OFF)",
-    Multi    = false,
-    Required = false,
-    Options  = getAllMobsGlobal(),
-    Callback = function(v)
-        if type(v) == "string" then getgenv().GachaFarmMob = v end
-    end,
-})
+-- Omni:WaitInitialization() возвращается как только готова Data (через Replica),
+-- но Shared-конфиги (Enemies/Stars/Quests/Gacha/Progression/SkillTree/Items/Gamemodes)
+-- подтягиваются отдельно и могут опоздать на 1–3 секунды. Если строить UI сразу —
+-- все Dropdown'ы создадутся с пустыми Options и юзер ничего не выберет.
+-- Даём Shared до 6с, чтобы хоть Enemies прогрузился (остальное обычно подтягивается вместе).
+if _WF.ModulesLoaded then
+    local deadline = tick() + 6
+    while tick() < deadline do
+        local shared = _WF.Omni.Shared
+        if shared and shared.Enemies and next(shared.Enemies) ~= nil then
+            break
+        end
+        task.wait(0.1)
+    end
+    if not (_WF.Omni.Shared and _WF.Omni.Shared.Enemies and next(_WF.Omni.Shared.Enemies)) then
+        warn("[WF] Omni.Shared.Enemies не загрузился за 6с — дропдауны будут пустыми, жми Refresh после их появления.")
+    end
+end
 
-GachaLeft:Button({
-    Name     = "Refresh Mob List",
-    Callback = function()
-        pcall(function()
-            gachaMobDropdown:ClearOptions()
-            gachaMobDropdown:InsertOptions(getAllMobsGlobal())
+-- // 5. ANTI-AFK
+coroutine.wrap(function()
+    local GC = getconnections or get_signal_cons
+    if GC then
+        safe(function()
+            for _, v in pairs(GC(LocalPlayer.Idled)) do
+                if v.Disable then v:Disable()
+                elseif v.Disconnect then v:Disconnect() end
+            end
         end)
-    end,
-})
+    else
+        LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)()
 
-GachaLeft:Button({
-    Name     = "Roll Selected x1 Each (now)",
-    Callback = function()
-        task.spawn(function()
-            for gachaName, on in pairs(getgenv().GachaSelection or {}) do
-                if on then
-                    local cost = getGachaCost(gachaName)
-                    local bal  = getCurrencyBalance(getGachaCurrency(gachaName))
-                    if bal >= cost then
-                        pcall(function()
-                            Omni.Signal:Fire("General", "Gacha", "Roll", gachaName, 1)
-                        end)
-                        task.wait(0.5)
+-- ДОПОЛНИТЕЛЬНЫЙ слой anti-AFK — каждые 60с fire'им Humanoid.Running connections
+-- чтобы обмануть ROBLOX-движковый (не игровой) 20-минутный AFK-таймер. Симулирует
+-- движение на уровне Humanoid. Работает независимо от toggle в Misc tab.
+do
+    local antiAfkThread = nil
+    local function startAntiAfkLoop(character)
+        if antiAfkThread then pcall(task.cancel, antiAfkThread); antiAfkThread = nil end
+        local humanoid = character:WaitForChild("Humanoid")
+        antiAfkThread = task.spawn(function()
+            while humanoid and humanoid.Parent and getgenv()._WFRunning do
+                task.wait(60)
+                if humanoid and humanoid.Parent and getconnections then
+                    for _, c in pairs(getconnections(humanoid.Running)) do
+                        pcall(function() c:Fire(1) end)
                     end
                 end
             end
         end)
-    end,
-})
+    end
+    if LocalPlayer.Character then startAntiAfkLoop(LocalPlayer.Character) end
+    LocalPlayer.CharacterAdded:Connect(startAntiAfkLoop)
+end
 
-GachaLeft:Button({
-    Name     = "Debug: Dump All Gachas",
-    Callback = function()
-        local d, buf = newDump()
-        d("========== [WF] GACHA DEBUG (all) ==========")
-        for _, gachaName in ipairs(getAllGachaNames()) do
-            d(("\n=========== %s ==========="):format(gachaName))
-            local cfg = getGachaCfg(gachaName)
-            local currency = getGachaCurrency(gachaName)
-            d(("  Currency: %s  (balance: %d)"):format(currency, getCurrencyBalance(currency)))
-            d(("  Cost/roll: %d  Max/roll: %d"):format(getGachaCost(gachaName), getMaxGachaPerRoll()))
-
-            local srcCat = getGachaSourceCategory(gachaName)
-            d(("  cfg.Source: %s"):format(tostring(srcCat)))
-
-            local si = getGachaSourceInfo(gachaName)
-            if type(si) == "table" then
-                local n = 0; for _ in pairs(si) do n = n + 1 end
-                d(("  SourceInfo: %d rewards"):format(n))
-                local names = {}
-                for k in pairs(si) do table.insert(names, k) end
-                table.sort(names)
-                for _, nm in ipairs(names) do
-                    d(("    %s (%s)"):format(nm, tostring(si[nm].Rarity)))
-                end
-            end
-
-            -- Data.Gacha[name] содержимое
-            local data = Omni and Omni.Data and Omni.Data.Gacha
-            if type(data) == "table" and type(data[gachaName]) == "table" then
-                d(("  Data.Gacha.%s:"):format(gachaName))
-                for k, v in pairs(data[gachaName]) do
-                    if type(v) == "table" then
-                        local n = 0; for _ in pairs(v) do n = n + 1 end
-                        d(("    .%s = table (%d keys)"):format(tostring(k), n))
-                        if n > 0 and n <= 30 then
-                            for k2, v2 in pairs(v) do
-                                d(("      [%s] = %s"):format(tostring(k2), tostring(v2)))
-                            end
-                        end
-                    else
-                        d(("    .%s = %s"):format(tostring(k), tostring(v)))
-                    end
-                end
-            end
-
-            local counts, total, foundIn = getMyUnitsByRarity(gachaName)
-            d(("  My rewards: %d total"):format(total))
-            for _, r in ipairs(RARITY_OPTIONS) do
-                if counts[r] and counts[r] > 0 then
-                    d(("    %s: %d"):format(r, counts[r]))
-                end
-            end
-            if foundIn then
-                for k, v in pairs(foundIn) do
-                    d(("    found in %s: %d"):format(k, v))
-                end
+-- ═══════════════════════════════════════════════════════════════════
+-- NoClip — проходим сквозь стены/пол во время фарма.
+-- Решает проблему DD: teleportTo(mob) может поставить игрока в/за стену arena,
+-- персонаж падает в void → character respawn → ещё один TP → loop повторяется.
+-- Отключаем CanCollide у всех BasePart'ов в персонаже каждый Stepped (Roblox
+-- восстанавливает их автоматически когда applyAnchored/respawn).
+-- Режимы через _WF.NoClipMode: "off" / "auto" / "on".
+-- ═══════════════════════════════════════════════════════════════════
+do
+    local function isFarming()
+        return _WF.AutoFarmEnabled
+            or _WF.AutoTrialEnabled
+            or _WF.AutoDragonDefenseEnabled
+            or _WF.AutoQuestEnabled
+    end
+    local function shouldNoClip()
+        local m = _WF.NoClipMode
+        if m == "on" then return true end
+        if m == "off" then return false end
+        return isFarming()  -- "auto"
+    end
+    -- Per-character: храним ссылки на descendants, чтобы возвращать CanCollide обратно
+    -- когда noclip выключается (не оставляем персонажа в broken state).
+    local noclippedParts = {}  -- [part] = true
+    local noClipConn = nil
+    local function stopNoClip()
+        if noClipConn then noClipConn:Disconnect(); noClipConn = nil end
+        for part in pairs(noclippedParts) do
+            if part and part.Parent then
+                pcall(function() part.CanCollide = true end)
             end
         end
-        d("\n=======================================")
-        flushDump(buf, "Gacha Debug (all)")
-    end,
-})
+        noclippedParts = {}
+    end
+    local function startNoClip()
+        if noClipConn then return end
+        noClipConn = RunService.Stepped:Connect(function()
+            if not shouldNoClip() then
+                stopNoClip()
+                return
+            end
+            local char = LocalPlayer.Character
+            if not char then return end
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    pcall(function() part.CanCollide = false end)
+                    noclippedParts[part] = true
+                end
+            end
+        end)
+    end
+    -- Фоновый watcher — поддерживает активный connection когда shouldNoClip()=true
+    task.spawn(function()
+        -- Ждём пока скрипт полностью инициализируется (_WFRunning ставится в finalize)
+        while getgenv()._WFRunning == nil do task.wait(0.2) end
+        while getgenv()._WFRunning do
+            task.wait(0.5)
+            if shouldNoClip() then
+                startNoClip()
+            end
+            -- Stop происходит автоматически внутри Stepped callback когда
+            -- shouldNoClip() возвращает false — не надо явно вызывать stopNoClip
+        end
+        -- Final cleanup when script stops
+        stopNoClip()
+    end)
+    -- На respawn'е — старые part-references невалидны, сбрасываем таблицу.
+    LocalPlayer.CharacterAdded:Connect(function()
+        noclippedParts = {}
+    end)
+end
 
--- ============ Auto Banner / Auto Roulette (GachaRight) ============
--- Discovery helpers: читаем список доступных баннеров и рулеток.
-do
-local function getAllBannerNames()
-    local out = {}
-    local d = Omni and Omni.Data and Omni.Data.Banner
-    if type(d) == "table" then
-        for k in pairs(d) do
-            if type(k) == "string" then table.insert(out, k) end
+-- // 6. UI LIBRARY
+local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac"))()
+
+local Window = MacLib:Window({
+    Title                  = "World Fighters | Apel Hub",
+    Subtitle               = "v1.0",
+    Size                   = UDim2.fromOffset(865, 650),
+    DragStyle              = 2,
+    DisabledWindowControls = {},
+    ShowUserInfo           = false,
+    Keybind                = Enum.KeyCode.LeftControl,
+    AcrylicBlur            = false,
+})
+getgenv()._WFUI = Window
+
+local function Notify_impl(msg, lifetime)
+    pcall(function()
+        Window:Notify({ Title = "Apel Hub", Description = tostring(msg), Lifetime = lifetime or 3 })
+    end)
+end
+Notify = Notify_impl
+
+local tabs      = {}
+local sec       = {}
+local MainGroup = Window:TabGroup()
+
+tabs.Farm      = MainGroup:Tab({ Name = "Farm" })
+tabs.Rewards   = MainGroup:Tab({ Name = "Rewards" })
+tabs.Eggs      = MainGroup:Tab({ Name = "Eggs" })
+tabs.Quests    = MainGroup:Tab({ Name = "Quests" })
+tabs.Trials    = MainGroup:Tab({ Name = "Trials" })
+tabs.Gacha     = MainGroup:Tab({ Name = "Gacha" })
+tabs.Progress  = MainGroup:Tab({ Name = "Progress" })
+tabs.Misc      = MainGroup:Tab({ Name = "Misc" })
+tabs.Webhook   = MainGroup:Tab({ Name = "Webhook" })
+tabs.Settings  = MainGroup:Tab({ Name = "Settings" })
+
+sec.FarmL     = tabs.Farm:Section({ Side = "Left"  })
+sec.FarmR     = tabs.Farm:Section({ Side = "Right" })
+sec.RewardsL  = tabs.Rewards:Section({ Side = "Left"  })
+sec.RewardsR  = tabs.Rewards:Section({ Side = "Right" })
+sec.EggsL     = tabs.Eggs:Section({ Side = "Left"  })
+sec.EggsR     = tabs.Eggs:Section({ Side = "Right" })
+sec.QuestsL   = tabs.Quests:Section({ Side = "Left"  })
+sec.QuestsR   = tabs.Quests:Section({ Side = "Right" })
+sec.TrialsL   = tabs.Trials:Section({ Side = "Left"  })
+sec.TrialsR   = tabs.Trials:Section({ Side = "Right" })
+sec.GachaL    = tabs.Gacha:Section({ Side = "Left"  })
+sec.GachaR    = tabs.Gacha:Section({ Side = "Right" })
+sec.ProgressL = tabs.Progress:Section({ Side = "Left"  })
+sec.ProgressR = tabs.Progress:Section({ Side = "Right" })
+sec.MiscL     = tabs.Misc:Section({ Side = "Left"  })
+sec.MiscR     = tabs.Misc:Section({ Side = "Right" })
+sec.WebhookL  = tabs.Webhook:Section({ Side = "Left"  })
+sec.WebhookR  = tabs.Webhook:Section({ Side = "Right" })
+sec.SetL      = tabs.Settings:Section({ Side = "Left"  })
+sec.SetR      = tabs.Settings:Section({ Side = "Right" })
+
+-- ════════════════════════════════════════════════════════════════
+-- GLOBAL UI UNLOCKER
+-- ════════════════════════════════════════════════════════════════
+-- Gacha roll и Star open добавляют Frame:AddUIHider(...) + camera modifier
+-- на время анимации. Когда несколько фаиров стакаются параллельно (AutoGacha
+-- + AutoOpenEgg + AutoBanner одновременно), одна из анимаций иногда не снимает
+-- свой hider → камера замирает, UI пропадает, персонаж "залочен".
+-- Этот фоновый таск каждые 0.15с агрессивно чистит все известные hiders пока
+-- активна любая из autoroll-фичей.
+task.spawn(function()
+    while getgenv()._WFRunning do
+        task.wait(0.15)
+        local anyRollActive = _WF.AutoOpenStarEnabled
+            or _WF.AutoGachaEnabled
+            or _WF.AutoBannerRollEnabled
+            or _WF.AutoRouletteRollEnabled
+        if anyRollActive and _WF.ModulesLoaded and _WF.Omni then
+            -- UI hiders: Gacha animation и StarAnimation. Snapshot names'ов из decompiled.
+            safe(function() _WF.Omni.Frame:RemoveUIHider("Gacha") end)
+            safe(function() _WF.Omni.Frame:RemoveUIHider("StarAnimation") end)
+            safe(function() _WF.Omni.Frame:Close("Star") end)
+            -- Camera modifiers: ставятся игрой при анимации, не всегда снимаются.
+            if _WF.Omni.Signal and _WF.Omni.Signal.FireSelf then
+                safe(function() _WF.Omni.Signal:FireSelf("Player", "Camera", "RemoveCameraTypeModifier", "StarAnimation") end)
+                safe(function() _WF.Omni.Signal:FireSelf("Player", "Camera", "RemoveCameraTypeModifier", "Gacha") end)
+                safe(function() _WF.Omni.Signal:FireSelf("Player", "FOV", "Enable") end)
+            end
+            -- GUI'шки с анимациями — если есть, глушим рендер.
+            safe(function()
+                local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
+                if sa and sa:IsA("ScreenGui") and sa.Enabled then sa.Enabled = false end
+            end)
+            safe(function()
+                local ga = LocalPlayer.PlayerGui:FindFirstChild("GachaAnimation")
+                if ga and ga:IsA("ScreenGui") and ga.Enabled then ga.Enabled = false end
+            end)
         end
     end
-    if #out == 0 then
-        local sb = Omni and Omni.Shared and Omni.Shared.Banner
-        if type(sb) == "table" then
-            for k in pairs(sb) do
-                if type(k) == "string" and k ~= "Default" then
+end)
+
+-- Graceful degradation: if Omni failed to load, show error and still allow Settings
+if not _WF.ModulesLoaded then
+    sec.SetL:Header({ Text = "Module load failed" })
+    sec.SetL:Paragraph({ Header = "Error", Body = tostring(errLoad) })
+    sec.SetL:Button({
+        Name = "Retry (rerun script)",
+        Callback = function() Notify("Rerun the script to retry", 4) end,
+    })
+end
+
+-- // 7. WEBHOOK SENDER
+local function sendWebhook(title, description, color)
+    if not _WF.WebhookEnabled then return end
+    if not _WF.WebhookURL or _WF.WebhookURL == "" then return end
+    task.spawn(function()
+        local pingContent = nil
+        if type(_WF.WebhookDiscordUserId) == "string" and _WF.WebhookDiscordUserId ~= "" then
+            pingContent = "<@" .. _WF.WebhookDiscordUserId .. ">"
+        end
+        local payload = HttpService:JSONEncode({
+            username = "Apel Hub · " .. GameName,
+            content  = pingContent,
+            embeds   = {{
+                title = title,
+                description = description,
+                color = color or 15277667,
+                footer = { text = "Apel Hub • " .. os.date("%Y-%m-%d %H:%M:%S") },
+            }},
+        })
+        local sent = false
+        if _cachedRequest then
+            sent = pcall(function()
+                _cachedRequest({
+                    Url = _WF.WebhookURL, Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = payload,
+                })
+            end)
+        end
+        if not sent then
+            pcall(function()
+                HttpService:PostAsync(_WF.WebhookURL, payload,
+                    Enum.HttpContentType.ApplicationJson, false)
+            end)
+        end
+        _WF.WebhookSentCount = _WF.WebhookSentCount + 1
+        _WF.WebhookLastSent  = os.date("%H:%M:%S")
+    end)
+end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 8. FARM TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_farm, _err_farm = pcall(function()
+    sec.FarmL:Header({ Text = "Auto Farm" })
+
+    sec.FarmL:Toggle({
+        Name = "Auto Farm",
+        Default = false,
+        Callback = function(on) _WF.AutoFarmEnabled = on end,
+    }, "AutoFarmToggle")
+
+    local mobDropdown = sec.FarmL:Dropdown({
+        Name     = "Target Mobs (multi) — current zone",
+        Multi    = true,
+        Required = false,
+        Options  = _WF.getMobsInCurrentZone(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do
+                    if v and type(k) == "string" then set[k] = true end
+                end
+            end
+            _WF.Targets = set
+        end,
+    }, "FarmTargetsDropdown")
+
+    local function refreshMobList()
+        pcall(function()
+            mobDropdown:ClearOptions()
+            mobDropdown:InsertOptions(_WF.getMobsInCurrentZone())
+        end)
+    end
+
+    sec.FarmL:Button({
+        Name = "Refresh Mob List",
+        Callback = function()
+            refreshMobList()
+            Notify("Mob list refreshed", 2)
+        end,
+    })
+
+    -- Авто-обновление при смене зоны/карты. Проверяем каждые 1.5с — дёшево.
+    task.spawn(function()
+        local lastMap, lastZone
+        while getgenv()._WFRunning do
+            task.wait(1.5)
+            safe(function()
+                local d = _WF.Omni and _WF.Omni.Data
+                if not d then return end
+                local m, z = d.Map, d.Zone
+                if m ~= lastMap or z ~= lastZone then
+                    lastMap, lastZone = m, z
+                    -- Первый запуск: lastMap был nil, пропускаем (начальный список уже правильный).
+                    -- Последующие смены: обновляем dropdown.
+                    if lastMap ~= nil then
+                        refreshMobList()
+                    end
+                end
+            end)
+        end
+    end)
+
+    sec.FarmL:Button({
+        Name = "Debug: Dump Farm State",
+        Callback = function()
+            local d, buf = newDump()
+            d("========== [WF] FARM DEBUG ==========")
+            local data = _WF.Omni and _WF.Omni.Data
+            d(("Map: %s | Zone: %s"):format(tostring(data and data.Map), tostring(data and data.Zone)))
+
+            local sel = {}
+            for n in pairs(_WF.Targets) do table.insert(sel, n) end
+            table.sort(sel)
+            d("Selected targets: " .. (#sel == 0 and "(none)" or table.concat(sel, ", ")))
+
+            local folder = _WF.getEnemiesFolder()
+            d(("Enemies folder: %s"):format(folder and folder:GetFullName() or "nil"))
+            if folder then
+                local byName = {}
+                for _, m in ipairs(folder:GetChildren()) do
+                    byName[m.Name] = (byName[m.Name] or 0) + 1
+                end
+                local names = {}
+                for n in pairs(byName) do table.insert(names, n) end
+                table.sort(names)
+                d(("Mobs in zone: %d total"):format(#folder:GetChildren()))
+                for _, n in ipairs(names) do
+                    local isTarget = _WF.Targets[n] and " ← TARGET" or ""
+                    d(("  %s x%d%s"):format(n, byName[n], isTarget))
+                end
+            end
+
+            d("-- Zone routing check --")
+            if data and data.Map then
+                local hasReady, hasLive = _WF.hasReadyTargetsInCurrentZone(_WF.Targets)
+                d(("  hasReadyTargets: %s"):format(tostring(hasReady)))
+                d(("  hasLiveTargets: %s"):format(tostring(hasLive)))
+                d(("  anyTargetInZoneConfig: %s"):format(tostring(_WF.anyTargetInZoneConfig(_WF.Targets, data.Map, data.Zone))))
+                local best = _WF.findBestZoneForTargets(_WF.Targets)
+                d(("  findBestZone: %s"):format(best and (best.mapName .. " / " .. tostring(best.zoneIdx)) or "(none)"))
+            end
+
+            d("=======================================")
+            flushDump(buf, "Farm Debug")
+        end,
+    })
+
+    -- Status paragraphs (right section)
+    sec.FarmR:Header({ Text = "Status" })
+    local statusPara     = wrapParagraph(sec.FarmR:Paragraph({ Header = "Farm Status", Body = "Idle" }))
+    local infoPara       = wrapParagraph(sec.FarmR:Paragraph({ Header = "Player Info", Body = "loading..." }))
+    local mobCountPara   = wrapParagraph(sec.FarmR:Paragraph({ Header = "Mobs in zone", Body = "—" }))
+    local routingPara    = wrapParagraph(sec.FarmR:Paragraph({ Header = "Zone Routing", Body = "—" }))
+
+    -- Background: status refresh
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(1)
+            safe(function()
+                -- Status
+                local sel = {}
+                for n in pairs(_WF.Targets) do table.insert(sel, n) end
+                table.sort(sel)
+                local lines = {
+                    "Auto Farm: " .. (_WF.AutoFarmEnabled and "ON" or "OFF"),
+                    "Targets: " .. (#sel == 0 and "—" or table.concat(sel, ", ")),
+                    "Busy: " .. ((_WF.StarBusy or _WF.ZoneTpBusy) and "yes (TP in progress)" or "no"),
+                }
+                statusPara:UpdateBody(table.concat(lines, "\n"))
+
+                -- Player Info
+                local d = _WF.Omni and _WF.Omni.Data
+                if d then
+                    local lvl = (d.Level and d.Level.Amount) or 1
+                    infoPara:UpdateBody(string.format(
+                        "Power: %s\nCrystals: %s\nGems: %s\nAura: %s\nLevel: %s\nMap: %s | Zone: %s\nGamemode: %s",
+                        tostring(d.Power or 0), tostring(d.Crystals or 0),
+                        tostring((d.FreeGems or 0) + (d.PaidGems or 0)),
+                        tostring(d.Aura or 0), tostring(lvl),
+                        tostring(d.Map or "?"), tostring(d.Zone or 1),
+                        tostring(d.Gamemode or "—")
+                    ))
+                end
+
+                -- Mob count
+                local folder = _WF.getEnemiesFolder()
+                mobCountPara:UpdateBody(folder and tostring(#folder:GetChildren()) or "—")
+
+                -- Zone routing state (only meaningful when AutoFarm on)
+                if _WF.AutoFarmEnabled and d and d.Map and next(_WF.Targets) then
+                    local hasReady, hasLive = _WF.hasReadyTargetsInCurrentZone(_WF.Targets)
+                    local inConfig = _WF.anyTargetInZoneConfig(_WF.Targets, d.Map, d.Zone)
+                    local best = _WF.findBestZoneForTargets(_WF.Targets)
+                    local rLines = {
+                        "Ready: " .. (hasReady and "✓" or "—"),
+                        "Live in zone: " .. (hasLive and "✓" or "—"),
+                        "In zone config: " .. (inConfig and "✓" or "—"),
+                    }
+                    if best then
+                        table.insert(rLines, ("Best zone: %s / %s"):format(best.mapName, tostring(best.zoneIdx)))
+                    end
+                    routingPara:UpdateBody(table.concat(rLines, "\n"))
+                else
+                    routingPara:UpdateBody("(disabled)")
+                end
+            end)
+        end
+    end)
+
+    -- Background: farm loop. Логика вынесена в _WF.runTargetFarmStep — используется
+    -- также quest-loop'ом для самодостаточного фарма миссии.
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(0.15)
+            if _WF.AutoFarmEnabled and _WF.ModulesLoaded
+                and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+            then
+                safe(function()
+                    _WF.runTargetFarmStep(_WF.Targets, function() return _WF.AutoFarmEnabled end)
+                end)
+            end
+        end
+    end)
+end)
+if not _ok_farm then warn("[ApelHub] FARM tab failed: " .. tostring(_err_farm)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 9. REWARDS TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_rewards, _err_rewards = pcall(function()
+    local CHEST_CD = {
+        ["Daily Chest"] = 24 * 3600,
+        ["Group Chest"] = 24 * 3600,
+        ["VIP Chest"]   = 12 * 3600,
+    }
+    local function fire(sys, scr, act, ...)
+        if _WF.Omni and _WF.Omni.Signal then _WF.Omni.Signal:Fire(sys, scr, act, ...) end
+    end
+
+    -- Позиция сундука в workspace — сервер проверяет дистанцию до сундука при Claim.
+    -- Путь: workspace.Server.Interactable.[zoneName].[chestName " Chest"]
+    -- Кешируем (позиция не меняется в течение сессии).
+    local _chestPosCache = {}
+    local function getChestPos(chestName)
+        if _chestPosCache[chestName] ~= nil then
+            return _chestPosCache[chestName] or nil
+        end
+        local sv = Workspace:FindFirstChild("Server")
+        local ia = sv and sv:FindFirstChild("Interactable")
+        if not ia then return nil end
+        for _, zone in ipairs(ia:GetChildren()) do
+            local part = zone:FindFirstChild(chestName .. " Chest")
+            if part and part:IsA("BasePart") then
+                _chestPosCache[chestName] = part.Position
+                return part.Position
+            end
+        end
+        _chestPosCache[chestName] = false  -- отмечаем "искали и не нашли"
+        return nil
+    end
+
+    -- Claim chest: TP к сундуку → Fire("General","Chests","Claim",name) → возврат
+    -- Сигнал именно "Claim" (проверено в decompiled), НЕ "Open".
+    local function tryClaimChest(chestName)
+        local hrp = getHRP()
+        if not hrp then return false end
+        local savedCF = hrp.CFrame
+        local pos = getChestPos(chestName)
+        if pos then
+            hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
+            task.wait(0.2)
+        end
+        safe(function() fire("General", "Chests", "Claim", chestName) end)
+        task.wait(0.3)
+        if pos then
+            local h2 = getHRP()
+            if h2 then h2.CFrame = savedCF end
+        end
+        return true
+    end
+
+    sec.RewardsL:Header({ Text = "Rewards" })
+
+    sec.RewardsL:Toggle({ Name = "Auto Achievements (ClaimAll)", Default = false,
+        Callback = function(s) _WF.AutoAchievementsEnabled = s end }, "AutoAchievementsToggle")
+    sec.RewardsL:Toggle({ Name = "Auto Time Rewards", Default = false,
+        Callback = function(s) _WF.AutoTimeRewardsEnabled = s end }, "AutoTimeRewardsToggle")
+    sec.RewardsL:Toggle({ Name = "Auto Daily Rewards", Default = false,
+        Callback = function(s) _WF.AutoDailyRewardsEnabled = s end }, "AutoDailyRewardsToggle")
+    sec.RewardsL:Toggle({ Name = "Auto Follow Rewards (Verify)", Default = false,
+        Callback = function(s) _WF.AutoFollowRewardsEnabled = s end }, "AutoFollowRewardsToggle")
+
+    sec.RewardsR:Header({ Text = "Chests" })
+    sec.RewardsR:Toggle({ Name = "Auto Daily Chest", Default = false,
+        Callback = function(s) _WF.AutoDailyChestEnabled = s end }, "AutoDailyChestToggle")
+    sec.RewardsR:Toggle({ Name = "Auto Group Chest", Default = false,
+        Callback = function(s) _WF.AutoGroupChestEnabled = s end }, "AutoGroupChestToggle")
+    sec.RewardsR:Toggle({ Name = "Auto VIP Chest", Default = false,
+        Callback = function(s) _WF.AutoVIPChestEnabled = s end }, "AutoVIPChestToggle")
+
+    sec.RewardsR:Button({ Name = "Claim Now (все включенные)",
+        Callback = function()
+            task.spawn(function()
+                if _WF.AutoAchievementsEnabled  then safe(function() fire("General", "Achievements", "ClaimAll") end) task.wait(0.3) end
+                if _WF.AutoDailyRewardsEnabled  then safe(function() fire("General", "DailyRewards",  "Claim")    end) task.wait(0.3) end
+                if _WF.AutoFollowRewardsEnabled then safe(function() fire("General", "FollowRewards", "Verify")   end) task.wait(0.3) end
+                for name, enabled in pairs({
+                    ["Daily Chest"] = _WF.AutoDailyChestEnabled,
+                    ["Group Chest"] = _WF.AutoGroupChestEnabled,
+                    ["VIP Chest"]   = _WF.AutoVIPChestEnabled,
+                }) do
+                    if enabled then tryClaimChest(name); task.wait(0.3) end
+                end
+            end)
+        end,
+    })
+
+    -- Chest status paragraph
+    local chestStatus = wrapParagraph(sec.RewardsR:Paragraph({ Header = "Chest Cooldowns", Body = "—" }))
+
+    local function getChestLastClaim(chestName)
+        local d = _WF.Omni and _WF.Omni.Data
+        if type(d) ~= "table" then return nil end
+        -- Various possible paths the game might use
+        local paths = {
+            { "Chests", chestName, "LastClaim" },
+            { "Chests", chestName, "LastClaimed" },
+            { "Chests", chestName, "Last" },
+            { "LastChest",  chestName },
+            { "ChestData", chestName, "Last" },
+        }
+        for _, path in ipairs(paths) do
+            local cur = d
+            for _, key in ipairs(path) do
+                cur = type(cur) == "table" and cur[key]
+                if cur == nil then break end
+            end
+            if type(cur) == "number" then return cur end
+        end
+        return nil
+    end
+
+    local function formatChestCooldown(chestName)
+        local last = getChestLastClaim(chestName)
+        if not last then return "ready (or no data)" end
+        local cd = CHEST_CD[chestName] or 24 * 3600
+        local remaining = cd - (tick() - last)
+        if remaining <= 0 then return "ready" end
+        local h = math.floor(remaining / 3600)
+        local m = math.floor((remaining % 3600) / 60)
+        return ("%dh %dm"):format(h, m)
+    end
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(5)
+            safe(function()
+                chestStatus:UpdateBody(
+                    "Daily: "  .. formatChestCooldown("Daily Chest") ..
+                    "\nGroup: " .. formatChestCooldown("Group Chest") ..
+                    "\nVIP: "   .. formatChestCooldown("VIP Chest")
+                )
+            end)
+        end
+    end)
+
+    -- Background: rewards loop (polls every 30s)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(30)
+            if _WF.ModulesLoaded then
+                if _WF.AutoAchievementsEnabled  and shouldFire("ach.claimall", 5)  then safe(function() fire("General", "Achievements", "ClaimAll") end) end
+                if _WF.AutoTimeRewardsEnabled   and shouldFire("time.claim",   5)  then
+                    -- time rewards are indexed; try first few slots
+                    for i = 1, 10 do safe(function() fire("General", "TimeRewards", "Claim", i) end) task.wait(0.1) end
+                end
+                if _WF.AutoDailyRewardsEnabled  and shouldFire("daily.claim",  60) then safe(function() fire("General", "DailyRewards",  "Claim")  end) end
+                if _WF.AutoFollowRewardsEnabled and shouldFire("follow.verify",60) then safe(function() fire("General", "FollowRewards", "Verify") end) end
+                for name, flag in pairs({
+                    ["Daily Chest"] = _WF.AutoDailyChestEnabled,
+                    ["Group Chest"] = _WF.AutoGroupChestEnabled,
+                    ["VIP Chest"]   = _WF.AutoVIPChestEnabled,
+                }) do
+                    -- Проверка cooldown'а: getChestLastClaim → если не прошло CHEST_CD, пропускаем
+                    if flag then
+                        local last = getChestLastClaim(name)
+                        local cd = CHEST_CD[name] or 24 * 3600
+                        local ready = not last or (tick() - last) >= cd
+                        if ready and shouldFire("chest." .. name, 60) then
+                            tryClaimChest(name)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end)
+if not _ok_rewards then warn("[ApelHub] REWARDS tab failed: " .. tostring(_err_rewards)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 10. EGGS TAB (Stars)
+-- ════════════════════════════════════════════════════════════════
+local _ok_eggs, _err_eggs = pcall(function()
+    local CollectionService = game:GetService("CollectionService")
+
+    -- Timing critical: Roblox replicates position ~30-60Hz. Below 0.15s
+    -- server starts rejecting Fire as "player not at star".
+    local STAR_TP_SETTLE   = 0.2
+    local STAR_FIRE_SETTLE = 0.2
+    local STAR_BATCH_GAP   = 0.1
+
+    -- Реальный сервер-ный cooldown между open'ами: формула из декомпайла —
+    -- 3.5 / StarOpenSpeed(data, player). Без геймпасса speed=1 → 3.5с.
+    -- С геймпассами/бустами может упасть до ~0.5с. Жёсткая нижняя граница 0.3с —
+    -- чтобы не насобирать server-side rate-limit.
+    local function getStarOpenCooldown()
+        local u = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+        if type(u) == "table" and type(u.StarOpenSpeed) == "function" then
+            local ok, v = pcall(function()
+                return u.StarOpenSpeed(_WF.Omni.Data, _WF.Omni.Instance or LocalPlayer)
+            end)
+            if ok and type(v) == "number" and v > 0 then
+                return math.max(3.5 / v, 0.3)
+            end
+        end
+        return 3.5  -- дефолт (без бустов)
+    end
+
+    -- Find the star model in workspace (via CollectionService tag, fallback to Client.Stars)
+    local function findStarModel(starName)
+        for _, m in ipairs(CollectionService:GetTagged("StarModel")) do
+            if m.Name == starName then return m end
+        end
+        local cl = Workspace:FindFirstChild("Client")
+        local st = cl and cl:FindFirstChild("Stars")
+        if st then
+            for _, zone in ipairs(st:GetChildren()) do
+                local match = zone:FindFirstChild(starName)
+                if match then return match end
+                if zone.Name == starName then return zone end
+            end
+        end
+        return nil
+    end
+
+    -- "Remote Star" gamepass lets player open without TP
+    local function hasRemoteStarPass()
+        local gp = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gamepasses or {}
+        for _, name in pairs(gp) do
+            if tostring(name) == "Remote Star" then return true end
+        end
+        if type(gp) == "table" and gp["Remote Star"] then return true end
+        return false
+    end
+
+    local function fireStarOpen(starName, amount)
+        safe(function() _WF.Omni.Signal:Fire("General", "Stars", "Open", starName, amount or 1) end)
+    end
+
+    -- TP near star model. Returns true if TP happened, false if already close.
+    local function tpNearStar(starName)
+        local model = findStarModel(starName)
+        local hrp = getHRP()
+        if not model or not hrp then return false end
+        local pos
+        if model:IsA("BasePart") then pos = model.Position
+        else pcall(function() pos = model:GetPivot().Position end) end
+        if not pos then return false end
+        if (pos - hrp.Position).Magnitude > 8 then
+            hrp.CFrame = CFrame.new(pos + Vector3.new(0, 4, 0))
+            return true
+        end
+        return false
+    end
+
+    -- Get max stars per open (gamepass Multi Star)
+    local function getMaxStarOpen()
+        local u = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+        if type(u) == "table" then
+            for _, fname in ipairs({ "StarOpens", "MaxStarOpen", "Stars" }) do
+                if type(u[fname]) == "function" then
+                    local ok, v = pcall(function() return u[fname](_WF.Omni.Data, _WF.Omni.Instance) end)
+                    if ok and type(v) == "number" and v >= 1 then return math.floor(v) end
+                end
+            end
+        end
+        return 1
+    end
+
+    -- Получить баланс игрока для пары (Type, Name) — как в легаси.
+    -- Currency → Omni.Data[priceName] (Crystals, Gems и т.д. на верхнем уровне Data)
+    -- Item     → Omni.Data.Inventory.Items[priceName]
+    local function getBalance(priceType, priceName)
+        local data = _WF.Omni and _WF.Omni.Data
+        if not data then return 0 end
+        if priceType == "Currency" then
+            local v = data[priceName]
+            return type(v) == "number" and v or 0
+        elseif priceType == "Item" then
+            local items = data.Inventory and data.Inventory.Items or {}
+            local v = items[priceName]
+            if type(v) == "number" then return v end
+            if type(v) == "table" and type(v.Amount) == "number" then return v.Amount end
+            return 0
+        end
+        -- Unknown type — пробуем оба места на всякий случай.
+        if type(data[priceName]) == "number" then return data[priceName] end
+        local items = data.Inventory and data.Inventory.Items or {}
+        local v = items[priceName]
+        if type(v) == "number" then return v end
+        if type(v) == "table" and type(v.Amount) == "number" then return v.Amount end
+        return 0
+    end
+
+    -- Check if player can afford N stars of this name
+    local function canAffordStar(starName, n)
+        local stars = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Stars
+        local cfg = stars and stars[starName]
+        if type(cfg) ~= "table" or type(cfg.Price) ~= "table" then return true end
+        local needed = (cfg.Price.Amount or 0) * n
+        local bal    = getBalance(cfg.Price.Type, cfg.Price.Name)
+        return bal >= needed
+    end
+
+    local function computeStarAmount(starName)
+        local max = getMaxStarOpen()
+        for try = max, 1, -1 do
+            if canAffordStar(starName, try) then return try end
+        end
+        return 0
+    end
+
+    sec.EggsL:Header({ Text = "Stars / Eggs" })
+
+    sec.EggsL:Toggle({
+        Name = "Auto Open Eggs",
+        Default = false,
+        Callback = function(s) _WF.AutoOpenStarEnabled = s; if not s then _WF.StarBusy = false end end,
+    }, "AutoOpenStarToggle")
+
+    local starDropdown = sec.EggsL:Dropdown({
+        Name     = "Target Eggs (multi)",
+        Multi    = true,
+        Required = false,
+        Options  = (function()
+            local out = {}
+            local stars = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Stars
+            if type(stars) == "table" then
+                for k in pairs(stars) do if type(k) == "string" then table.insert(out, k) end end
+            end
+            table.sort(out)
+            return out
+        end)(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.StarTargets = set
+        end,
+    }, "StarTargetsDropdown")
+
+    sec.EggsL:Button({
+        Name = "Open Selected x1 Now",
+        Callback = function()
+            task.spawn(function()
+                for name in pairs(_WF.StarTargets) do
+                    local remote = hasRemoteStarPass()
+                    if not remote then
+                        if tpNearStar(name) then task.wait(STAR_TP_SETTLE) end
+                    end
+                    fireStarOpen(name, 1)
+                    task.wait(STAR_FIRE_SETTLE)
+                end
+            end)
+        end,
+    })
+
+    -- Star UI Hider
+    local starHideConn = nil
+    local function applyStarHide()
+        if not _WF.Omni then return end
+        safe(function()
+            local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
+            if sa then sa.Enabled = false end
+        end)
+        safe(function() _WF.Omni.Frame:Close("Star") end)
+        safe(function() _WF.Omni.Frame:RemoveUIHider("StarAnimation") end)
+        safe(function()
+            if _WF.Omni.Signal and _WF.Omni.Signal.FireSelf then
+                _WF.Omni.Signal:FireSelf("Player", "Camera", "RemoveCameraTypeModifier", "StarAnimation")
+                _WF.Omni.Signal:FireSelf("Player", "FOV", "Enable")
+            end
+        end)
+    end
+
+    sec.EggsL:Toggle({
+        Name = "Hide Star Animation",
+        Default = false,
+        Callback = function(on)
+            _WF.HideStarAnimEnabled = on
+            if on then
+                if starHideConn then starHideConn:Disconnect() end
+                starHideConn = RunService.Heartbeat:Connect(function()
+                    if _WF.HideStarAnimEnabled then applyStarHide() end
+                end)
+                table.insert(_cleanupConns, starHideConn)
+            else
+                if starHideConn then starHideConn:Disconnect(); starHideConn = nil end
+                safe(function()
+                    local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
+                    if sa then sa.Enabled = true end
+                end)
+            end
+        end,
+    }, "HideStarAnimToggle")
+
+    sec.EggsR:Header({ Text = "Status" })
+    local eggStatus = wrapParagraph(sec.EggsR:Paragraph({ Header = "Stars", Body = "—" }))
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(2)
+            safe(function()
+                local sel = {}
+                for n in pairs(_WF.StarTargets) do table.insert(sel, n) end
+                table.sort(sel)
+                local lines = {
+                    "Auto: " .. (_WF.AutoOpenStarEnabled and "ON" or "OFF"),
+                    "Hide anim: " .. (_WF.HideStarAnimEnabled and "ON" or "OFF"),
+                    "Targets: " .. (#sel == 0 and "—" or table.concat(sel, ", ")),
+                    "Busy: " .. (_WF.StarBusy and "yes" or "no"),
+                    "Remote Star pass: " .. (hasRemoteStarPass() and "yes (no TP needed)" or "no (TP mode)"),
+                    "Max/open: " .. tostring(getMaxStarOpen()),
+                }
+                if #sel > 0 then
+                    table.insert(lines, "")
+                    for _, n in ipairs(sel) do
+                        table.insert(lines, string.format("  %s: affordable=%d", n, computeStarAmount(n)))
+                    end
+                end
+                eggStatus:UpdateBody(table.concat(lines, "\n"))
+            end)
+        end
+    end)
+
+    -- Main star loop — coordinates with Farm via _WF.StarBusy mutex
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(0.5)
+            -- Уважаем zone-tp farm'а: не вмешиваемся пока он телепортирует между зонами
+            if _WF.ZoneTpBusy or _WF.TrialBusy then
+                while (_WF.ZoneTpBusy or _WF.TrialBusy) and getgenv()._WFRunning do task.wait(0.15) end
+            end
+            if _WF.AutoOpenStarEnabled and _WF.ModulesLoaded and not _WF.StarBusy and not _WF.TrialBusy then
+                local targets = _WF.StarTargets
+                if next(targets) == nil then
+                    task.wait(1)
+                else
+                    local anyAffordable = false
+                    for name in pairs(targets) do
+                        if computeStarAmount(name) >= 1 then anyAffordable = true; break end
+                    end
+                    if not anyAffordable then
+                        -- Валюта ещё не накопилась — farm продолжает её набивать.
+                        task.wait(5)
+                    else
+                        local remote = hasRemoteStarPass()
+                        local cd     = getStarOpenCooldown()  -- Серверный cooldown: 3.5 / speed
+                        local didAny = false
+                        if remote then
+                            -- Remote Star mode: no TP, fire in parallel with farm
+                            for starName in pairs(targets) do
+                                if not (_WF.AutoOpenStarEnabled and getgenv()._WFRunning) then break end
+                                local amt = computeStarAmount(starName)
+                                if amt >= 1 and shouldFire("star." .. starName, cd) then
+                                    fireStarOpen(starName, amt)
+                                    didAny = true
+                                    task.wait(STAR_BATCH_GAP)
+                                end
+                            end
+                        else
+                            -- No gamepass: acquire HRP, TP to each star, fire, restore position
+                            local hrp     = getHRP()
+                            local savedCF = hrp and hrp.CFrame
+                            _WF.StarBusy = true
+                            task.wait(0.1)  -- let farm exit attack-loop
+                            safe(function()
+                                for starName in pairs(targets) do
+                                    if not (_WF.AutoOpenStarEnabled and getgenv()._WFRunning) then break end
+                                    local amt = computeStarAmount(starName)
+                                    if amt >= 1 and shouldFire("star." .. starName, cd) then
+                                        local tpHappened = tpNearStar(starName)
+                                        if tpHappened then task.wait(STAR_TP_SETTLE) end
+                                        fireStarOpen(starName, amt)
+                                        didAny = true
+                                        task.wait(STAR_FIRE_SETTLE)
+                                    end
+                                end
+                                -- Restore position to wherever farm was
+                                if _WF.AutoFarmEnabled and savedCF then
+                                    local hrp2 = getHRP()
+                                    if hrp2 then hrp2.CFrame = savedCF end
+                                end
+                            end)
+                            _WF.StarBusy = false
+                        end
+                        -- Межцикловая пауза = реальному серверному cooldown'у.
+                        -- С геймпассом "Star Speed" это ~0.5с, без — 3.5с. Farm успеет в любом случае.
+                        if didAny then
+                            task.wait(cd)
+                        end
+                    end
+                end
+            end
+        end
+        -- На выходе гарантированно отпускаем mutex.
+        _WF.StarBusy = false
+    end)
+end)
+if not _ok_eggs then warn("[ApelHub] EGGS tab failed: " .. tostring(_err_eggs)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 11. QUESTS TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_quests, _err_quests = pcall(function()
+    local MISSION_TARGET_KEYS = { "Target", "Name", "Mob", "Enemy", "EnemyName", "MobName", "What" }
+    local MISSION_COUNT_KEYS  = { "Amount", "Count", "Required", "Goal", "Times", "Total" }
+
+    local function getQuestCfg(questName)
+        local s = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Quests
+        if not s then return nil end
+        -- Try Shared.Quests.List first, fallback to direct key
+        if s.List and s.List[questName] then return s.List[questName] end
+        return s[questName]
+    end
+
+    local function getAllQuests()
+        local out = {}
+        local s = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Quests
+        local list = (s and s.List) or s
+        if type(list) == "table" then
+            for k, v in pairs(list) do
+                -- Skip non-quest entries (Shared.Quests can have helper functions)
+                if type(k) == "string" and type(v) == "table" then
                     table.insert(out, k)
                 end
             end
         end
+        table.sort(out)
+        return out
     end
-    if #out == 0 then out = { "Swords Banner" } end
-    table.sort(out)
-    return out
-end
 
-local function getAllRouletteNames()
-    local out = {}
-    pcall(function()
-        local rs = game:GetService("ReplicatedStorage")
-        local r  = rs:FindFirstChild("Omni")
-        r = r and r:FindFirstChild("Shared") and r.Shared:FindFirstChild("Roulette")
-        if r then
-            for _, child in ipairs(r:GetChildren()) do
-                if child:IsA("ModuleScript") then table.insert(out, child.Name) end
-            end
+    local function extractMissionTarget(missionCfg)
+        if type(missionCfg) ~= "table" then return nil, nil end
+        local target, count
+        for _, k in ipairs(MISSION_TARGET_KEYS) do
+            if type(missionCfg[k]) == "string" then target = missionCfg[k]; break end
         end
-    end)
-    if #out == 0 then out = { "Dragon Wish" } end
-    table.sort(out)
-    return out
-end
-
-GachaRight:Toggle({
-    Name     = "Auto Banner Roll",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoBannerRoll = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoBannerRoll and not stopped do
-                local name = getgenv().BannerName
-                if type(name) == "string" and name ~= "" and shouldFire("banner.roll", 1.0) then
-                    if ActivityPriority:CanStart("Banner") then
-                        ActivityPriority:SetActivity("Banner")
-                        pcall(function()
-                            Omni.Signal:Fire("General", "Banner", "Roll", name)
-                        end)
-                        ActivityPriority:ClearActivity("Banner")
-                    end
-                end
-                task.wait(1.0)
-            end
-        end)
-    end,
-}, "AutoBannerRollToggle")
-
-local bannerDropdown = GachaRight:Dropdown({
-    Name     = "Banner",
-    Multi    = false,
-    Required = false,
-    Options  = getAllBannerNames(),
-    Callback = function(v)
-        if type(v) == "string" then getgenv().BannerName = v end
-    end,
-}, "BannerNameDropdown")
-
-GachaRight:Button({
-    Name     = "Refresh Banners",
-    Callback = function()
-        pcall(function()
-            bannerDropdown:ClearOptions()
-            bannerDropdown:InsertOptions(getAllBannerNames())
-        end)
-    end,
-})
-
-GachaRight:Toggle({
-    Name     = "Auto Roulette Roll",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoRouletteRoll = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoRouletteRoll and not stopped do
-                local name = getgenv().RouletteName
-                if type(name) == "string" and name ~= "" and shouldFire("roulette.roll", 3.0) then
-                    if ActivityPriority:CanStart("Roulette") then
-                        ActivityPriority:SetActivity("Roulette")
-                        pcall(function()
-                            Omni.Signal:Fire("General", "Roulette", "Roll", name)
-                        end)
-                        ActivityPriority:ClearActivity("Roulette")
-                    end
-                end
-                task.wait(3.0)
-            end
-        end)
-    end,
-}, "AutoRouletteRollToggle")
-
-local rouletteDropdown = GachaRight:Dropdown({
-    Name     = "Roulette",
-    Multi    = false,
-    Required = false,
-    Options  = getAllRouletteNames(),
-    Callback = function(v)
-        if type(v) == "string" then getgenv().RouletteName = v end
-    end,
-}, "RouletteNameDropdown")
-
-GachaRight:Button({
-    Name     = "Refresh Roulettes",
-    Callback = function()
-        pcall(function()
-            rouletteDropdown:ClearOptions()
-            rouletteDropdown:InsertOptions(getAllRouletteNames())
-        end)
-    end,
-})
-
-getgenv().AutoBannerRoll    = getgenv().AutoBannerRoll    or false
-getgenv().AutoRouletteRoll  = getgenv().AutoRouletteRoll  or false
-getgenv().BannerName        = getgenv().BannerName        or ""
-getgenv().RouletteName      = getgenv().RouletteName      or ""
-end -- end Banner/Roulette do-block
-
--- Status (assigns to top-level local declared above do block)
-gachaStatusPara = GachaRight:Paragraph({
-    Header = "Status",
-    Body   = "—",
-})
-end -- end of Gacha UI do-block
-
-local function updateGachaStatus()
-    if not gachaStatusPara then return end
-    local mp = getMaxGachaPerRoll()
-    local thr = tonumber(getgenv().GachaThreshold) or 0
-    local tr  = getgenv().GachaTargetRarity or "any"
-    local mob = getgenv().GachaFarmMob or ""
-
-    local selected = getgenv().GachaSelection or {}
-    local selNames = {}
-    for n, on in pairs(selected) do
-        if on then table.insert(selNames, n) end
+        for _, k in ipairs(MISSION_COUNT_KEYS) do
+            if type(missionCfg[k]) == "number" then count = missionCfg[k]; break end
+        end
+        return target, count
     end
-    table.sort(selNames)
 
-    local lines = {
-        "Auto Gacha: " .. (getgenv().AutoGacha and "ON" or "OFF"),
-        "Phase: " .. tostring(_gachaStatus.phase),
-        (getgenv().AutoFarm and "Farming: handled by Auto Farm"
-            or ("Farming: internal (mob=" .. (mob == "" and "—" or mob) .. ")")),
-        ("Max/roll: %d   Threshold: %d   Target: %s"):format(mp, thr, tr),
-        ("Last drop: %s"):format(_gachaStatus.lastNewUnit or "—"),
-        "",
-    }
-    if #selNames == 0 then
-        table.insert(lines, "Selected: — (выбери хотя бы одну гачу)")
-    else
-        table.insert(lines, "Selected: " .. table.concat(selNames, ", "))
-        table.insert(lines, "")
-        for _, gn in ipairs(selNames) do
-            local currency = getGachaCurrency(gn)
-            local bal      = getCurrencyBalance(currency)
-            local cost     = getGachaCost(gn)
-            local canRoll  = bal >= math.max(cost, thr)
-            local counts, total = getMyUnitsByRarity(gn)
-            local best = getMyHighestRarity(gn) or "—"
-            local siOk = getGachaSourceInfo(gn) ~= nil
+    -- Data.Quests structure varies; try multiple paths.
+    local function getQuestData(questName)
+        local q = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Quests
+        if not q then return nil end
+        if q.List     and q.List[questName]     then return q.List[questName]     end
+        if q.Active   and q.Active[questName]   then return q.Active[questName]   end
+        if q.Progress and q.Progress[questName] then return q.Progress[questName] end
+        if q.Missions and q.Missions[questName] then return q.Missions[questName] end
+        if q[questName] then return q[questName] end
+        return nil
+    end
 
-            local activeTag = (_gachaRollThreads and _gachaRollThreads[gn]) and "▶" or "○"
-            table.insert(lines, ("%s %s  (cost %d)"):format(activeTag, gn, cost))
-            table.insert(lines, ("   %s: %d %s"):format(currency, bal, canRoll and "✓" or "…"))
-            table.insert(lines, ("   My: %d total | best: %s %s")
-                :format(total, best, siOk and "✓" or "(no SI)"))
+    -- Table access by number OR string key (ReplicaService can serialize either)
+    local function tblGetAny(t, key)
+        if type(t) ~= "table" then return nil end
+        return t[key] or t[tostring(key)] or t[tonumber(key)]
+    end
 
-            if total > 0 then
-                local parts = {}
-                for _, r in ipairs(RARITY_OPTIONS) do
-                    if counts[r] and counts[r] > 0 then
-                        table.insert(parts, ("%s:%d"):format(r, counts[r]))
-                    end
-                end
-                if #parts > 0 then
-                    table.insert(lines, "   " .. table.concat(parts, "  "))
+    local function getMissionProgress(questName, idx, targetName)
+        local d = getQuestData(questName)
+        if not d then return 0 end
+        local function unwrap(p)
+            if type(p) == "number" then return p end
+            if type(p) == "table" then
+                return p.Progress or p.Current or p.Amount or p.Count or p.Value or p[1] or 0
+            end
+            return nil
+        end
+        if type(d) == "table" and type(d.Missions) == "table" then
+            local p = tblGetAny(d.Missions, idx)
+            local v = unwrap(p)
+            if type(v) == "number" then return v end
+        end
+        if type(d) == "table" then
+            local p = tblGetAny(d, idx)
+            local v = unwrap(p)
+            if type(v) == "number" then return v end
+        end
+        if targetName and type(d) == "table" and type(d.Kills) == "table" then
+            local v = d.Kills[targetName]
+            if type(v) == "number" then return v end
+        end
+        return 0
+    end
+
+    -- Find first incomplete mission — returns {name=mobName, progress=N, required=M, idx=I} or nil
+    local function getActiveMission(questName)
+        local cfg = getQuestCfg(questName)
+        if not cfg or not cfg.Missions then return nil end
+        local indices = {}
+        for k in pairs(cfg.Missions) do if type(k) == "number" then table.insert(indices, k) end end
+        table.sort(indices)
+        for _, idx in ipairs(indices) do
+            local target, required = extractMissionTarget(cfg.Missions[idx])
+            if target and required then
+                local progress = getMissionProgress(questName, idx, target)
+                if progress < required then
+                    return { name = target, required = required, progress = progress, idx = idx }
                 end
             end
         end
+        return nil
     end
-    pcall(function() gachaStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
 
--- =========================================================
--- [7g] UI — Misc Tab (Walk Speed, Disable Anti-AFK, etc.)
--- =========================================================
-local MiscTab   = MainTabGroup:Tab({ Name = "Misc" })
-local MiscLeft  = MiscTab:Section({ Side = "Left"  })
-local MiscRight = MiscTab:Section({ Side = "Right" })
+    local function isInQuestZone(questName)
+        local cfg = getQuestCfg(questName)
+        if not cfg then return true end
+        local curMap = _WF.Omni.Data and _WF.Omni.Data.Map
+        local curZone = _WF.Omni.Data and _WF.Omni.Data.Zone
+        local wantMap = cfg.MapName
+        if not wantMap then return true end
+        if curMap ~= wantMap then return false end
+        if cfg.ZoneIndex and curZone ~= cfg.ZoneIndex then return false end
+        return true
+    end
 
--- Walk Speed slider — сохраняется через Humanoid:GetPropertyChangedSignal
--- чтобы сервер не сбрасывал
-do
-    local currentSpeed = 16
-    local walkSpeedConn
-    local function applyWalkSpeed(char)
-        if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
-        local hum = char:WaitForChild("Humanoid", 5)
-        if not hum then return end
-        hum.WalkSpeed = currentSpeed
-        walkSpeedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-            if hum.WalkSpeed ~= currentSpeed then hum.WalkSpeed = currentSpeed end
+    local function tpToQuestZone(questName)
+        local cfg = getQuestCfg(questName)
+        if not cfg or not cfg.MapName then return false end
+        if not shouldFire("quest.tp." .. questName, 3) then return false end
+        safe(function()
+            _WF.Omni.Signal:Fire("Player", "Teleport", "Teleport", cfg.MapName, cfg.ZoneIndex or 1)
+        end)
+        return true
+    end
+
+    local function pinQuest(questName)
+        local pinned = _WF.Omni.Data and _WF.Omni.Data.Quests and _WF.Omni.Data.Quests.Pinned
+        if pinned == questName then return end
+        if not shouldFire("quest.pin." .. questName, 5) then return end
+        safe(function()
+            _WF.Omni.Signal:Fire("General", "Quests", "Pin", questName)
         end)
     end
 
-    pcall(function()
-        MiscLeft:Slider({
-            Name          = "Walk Speed",
-            Default       = 16,
-            Minimum       = 16,
-            Maximum       = 200,
-            Precision     = 0,
-            DisplayMethod = "Value",
-            Callback      = function(v)
-                currentSpeed = tonumber(v) or 16
-                if LocalPlayer.Character then applyWalkSpeed(LocalPlayer.Character) end
-            end,
-        }, "WalkSpeedSlider")
+    sec.QuestsL:Header({ Text = "Quests" })
+
+    sec.QuestsL:Toggle({ Name = "Auto Quest", Default = false,
+        Callback = function(s) _WF.AutoQuestEnabled = s end }, "AutoQuestToggle")
+
+    local questDropdown = sec.QuestsL:Dropdown({
+        Name = "Quests to do (multi)", Multi = true, Required = false,
+        Options = getAllQuests(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.QuestSelections = set
+        end,
+    }, "QuestsMultiDropdown")
+
+    sec.QuestsL:Toggle({ Name = "Auto Pin Quest", Default = true,
+        Callback = function(s) _WF.AutoPinQuestEnabled = s end }, "AutoPinQuestToggle")
+    sec.QuestsL:Toggle({ Name = "Auto TP to Quest Zone", Default = true,
+        Callback = function(s) _WF.AutoTpToQuestZoneEnabled = s end }, "AutoTpToQuestZoneToggle")
+
+    sec.QuestsL:Button({ Name = "Refresh Quest List",
+        Callback = function()
+            pcall(function()
+                questDropdown:ClearOptions()
+                questDropdown:InsertOptions(getAllQuests())
+            end)
+            Notify("Quest list refreshed", 2)
+        end,
+    })
+
+    sec.QuestsL:Button({
+        Name = "Debug: Dump Quest State",
+        Callback = function()
+            local d, buf = newDump()
+            d("========== [WF] QUEST DEBUG ==========")
+            local all = getAllQuests()
+            d(("All quests: %d"):format(#all))
+            for _, n in ipairs(all) do
+                local m = getActiveMission(n)
+                local info = m and string.format("%s (%d/%d)", m.name, m.progress, m.required) or "(no active)"
+                d(("  %s → %s"):format(n, info))
+            end
+            local sel = {}
+            for n in pairs(_WF.QuestSelections) do table.insert(sel, n) end
+            table.sort(sel)
+            d("Selected: " .. (#sel == 0 and "(none)" or table.concat(sel, ", ")))
+
+            d("-- Data.Quests dump --")
+            local dq = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Quests
+            if type(dq) == "table" then
+                for k, v in pairs(dq) do
+                    d(("  [%s] = %s"):format(tostring(k), typeof(v)))
+                end
+            end
+            d("=======================================")
+            flushDump(buf, "Quest Debug")
+        end,
+    })
+
+    sec.QuestsR:Header({ Text = "Status" })
+    local questStatus = wrapParagraph(sec.QuestsR:Paragraph({ Header = "Quests", Body = "—" }))
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(2)
+            safe(function()
+                local sel = {}
+                for n in pairs(_WF.QuestSelections) do table.insert(sel, n) end
+                local lines = {
+                    "Auto: " .. (_WF.AutoQuestEnabled and "ON" or "OFF"),
+                    "Pin: "  .. (_WF.AutoPinQuestEnabled and "ON" or "OFF"),
+                    "TP: "   .. (_WF.AutoTpToQuestZoneEnabled and "ON" or "OFF"),
+                    "Selected: " .. (#sel == 0 and "—" or table.concat(sel, ", ")),
+                }
+                if #sel > 0 then
+                    table.insert(lines, "")
+                    for _, q in ipairs(sel) do
+                        local m = getActiveMission(q)
+                        if m then
+                            table.insert(lines, string.format("  %s: %s (%d/%d)",
+                                q, m.name, m.progress, m.required))
+                        else
+                            table.insert(lines, ("  %s: ✓ complete or not active"):format(q))
+                        end
+                    end
+                end
+                questStatus:UpdateBody(table.concat(lines, "\n"))
+            end)
+        end
     end)
 
-    LocalPlayer.CharacterAdded:Connect(applyWalkSpeed)
-    if LocalPlayer.Character then applyWalkSpeed(LocalPlayer.Character) end
-end
-
--- Disable Game Anti-AFK toggle — вызывает killGameAntiAfk() и периодически пере-применяет
-do
-    local disableAntiAfkEnabled = false
-    local disableAntiAfkLoop
-
-    MiscLeft:Toggle({
-        Name     = "Disable Game Anti-AFK",
-        Default  = false,
-        Callback = function(on)
-            disableAntiAfkEnabled = on
-            if on then
-                killGameAntiAfk()
-                disableAntiAfkLoop = task.spawn(function()
-                    while disableAntiAfkEnabled and not stopped do
-                        task.wait(30)
-                        killGameAntiAfk()
-                    end
-                end)
-                pcall(function()
-                    Window:Notify({
-                        Title       = "Anti-AFK disabled",
-                        Description = "Game's anti-AFK (Reconnect on idle) отключён. 24/7 farm OK.",
-                        Lifetime    = 4,
-                    })
-                end)
+    -- Main quest loop — САМОДОСТАТОЧНЫЙ, как в легаси v0.37. Делает свою атаку через
+    -- _WF.runTargetFarmStep с собственной gate-функцией. НЕ зависит от того включён
+    -- ли Auto Farm toggle — квест будет фармить миссию в любом случае.
+    task.spawn(function()
+        local function questGate() return _WF.AutoQuestEnabled end
+        while getgenv()._WFRunning do
+            -- Уважаем star-open / zone-tp / trial (mutex'ы)
+            if _WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy then
+                while (_WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy)
+                    and getgenv()._WFRunning and _WF.AutoQuestEnabled
+                do
+                    task.wait(0.1)
+                end
+            end
+            if not (_WF.AutoQuestEnabled and _WF.ModulesLoaded) then
+                task.wait(0.5)
             else
-                if disableAntiAfkLoop then
-                    pcall(task.cancel, disableAntiAfkLoop)
-                    disableAntiAfkLoop = nil
+                safe(function()
+                    -- [1] Находим активный квест и миссию
+                    local selected = _WF.QuestSelections or {}
+                    local names = {}
+                    for n in pairs(selected) do table.insert(names, n) end
+                    table.sort(names)
+
+                    local activeQuestName, activeMission
+                    for _, qn in ipairs(names) do
+                        local m = getActiveMission(qn)
+                        if m then activeQuestName, activeMission = qn, m; break end
+                    end
+
+                    if not activeQuestName then
+                        -- Нет активных миссий — ждём 3с и пробуем снова
+                        _WF._lastQuestNotified = nil
+                        task.wait(3)
+                        return
+                    end
+
+                    -- Уведомляем при смене активного квеста/миссии (без спама)
+                    local notifyKey = activeQuestName .. "|" .. tostring(activeMission.name)
+                    if _WF._lastQuestNotified ~= notifyKey then
+                        _WF._lastQuestNotified = notifyKey
+                        Notify(("Quest: %s → %s (%d/%d)"):format(
+                            activeQuestName,
+                            tostring(activeMission.name),
+                            tonumber(activeMission.progress) or 0,
+                            tonumber(activeMission.required) or 0
+                        ), 3)
+                    end
+
+                    -- [2] Pin
+                    if _WF.AutoPinQuestEnabled then pinQuest(activeQuestName) end
+
+                    -- [3] Target (для отображения в Farm-status + для любых observer'ов)
+                    local targetSet = { [activeMission.name] = true }
+                    _WF.Targets = targetSet
+
+                    -- [4] TP в зону квеста если нужно
+                    if _WF.AutoTpToQuestZoneEnabled and not isInQuestZone(activeQuestName) then
+                        _WF.ZoneTpBusy = true
+                        tpToQuestZone(activeQuestName)
+                        task.wait(1.5)
+                        _WF.ZoneTpBusy = false
+                    end
+
+                    -- [5] Одна итерация фарма миссии (атака / streaming / zone routing)
+                    _WF.runTargetFarmStep(targetSet, questGate)
+                end)
+            end
+        end
+    end)
+end)
+if not _ok_quests then warn("[ApelHub] QUESTS tab failed: " .. tostring(_err_quests)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 12. TRIALS TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_trials, _err_trials = pcall(function()
+    local TRIAL_NAME_PATTERN = "^Trial "
+    local function isTrialName(n) return type(n) == "string" and n:match(TRIAL_NAME_PATTERN) ~= nil end
+
+    -- Только трайлы с реальными конфигами в Shared.Gamemodes.
+    -- workspace.Server.Enemies.Gamemodes содержит стаб-папки "Trial Hard"/"Trial Medium"
+    -- как задел на будущий контент — их конфиг ещё не добавлен разработчиками, играть в них
+    -- нельзя. Когда игра добавит их в Shared.Gamemodes — сканер подхватит автоматически.
+    local function getAllTrials()
+        local out, seen = {}, {}
+        local function add(n) if isTrialName(n) and not seen[n] then seen[n] = true; table.insert(out, n) end end
+        local sg = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gamemodes
+        if type(sg) == "table" then
+            for k, v in pairs(sg) do
+                if type(v) == "table" then
+                    if v.OpenTimes or v.MapName or v.EnterTime or v.MaxWave then add(k)
+                    else
+                        -- Подпапка типа Shared.Gamemodes["For Updates"] — перебираем её содержимое
+                        for k2, v2 in pairs(v) do
+                            if type(v2) == "table" and (v2.OpenTimes or v2.MapName or v2.EnterTime or v2.MaxWave) then add(k2) end
+                        end
+                    end
                 end
-                -- Восстанавливаем игровую настройку обратно
-                pcall(function() fire("General", "Settings", "Set", "Anti Afk", true) end)
+            end
+        end
+        table.sort(out)
+        return out
+    end
+
+    -- Trial-specific mob folder (в отличие от обычных зон — трайл'ы лежат в Gamemodes/)
+    local function getTrialEnemiesFolder(name)
+        local ok, f = pcall(function()
+            return Workspace.Server.Enemies.Gamemodes:FindFirstChild(name)
+        end)
+        if ok then return f end
+        return nil
+    end
+
+    -- Двойной heuristic: Data.Gamemode ИЛИ папка с мобами непустая.
+    -- Data.Gamemode может иногда быть nil пока игрок телепортируется, а мобы уже заспавнились.
+    local function isInTrial(name)
+        local f = getTrialEnemiesFolder(name)
+        if f and #f:GetChildren() > 0 then return true end
+        local d = _WF.Omni and _WF.Omni.Data
+        if d and d.Gamemode == name then return true end
+        return false
+    end
+
+    -- Выход из gamemode — TP через Signal. Сервер автоматом снимает Gamemode статус
+    -- при смене зоны (если зона != текущая trial зона).
+    -- ПАТТЕРН из рабочей версии: всегда fire, ждём 4с, не проверяем успех.
+    local function leaveTrial()
+        _WF.ZoneTpBusy = true
+        if _WF.SavedPosition then
+            tpToSavedPosition()  -- сам фаирит signal + 4с wait + CFrame
+        else
+            -- Fallback: просто TP в Fruits Verse 1 с 4с wait
+            safe(function()
+                _WF.Omni.Signal:Fire("Player", "Teleport", "Teleport", "Fruits Verse", 1)
+            end)
+            task.wait(4)
+        end
+        _WF.ZoneTpBusy = false
+        return true  -- успех подразумевается — signal выпустили, сервер делает что делает
+    end
+
+    -- Один тик фарма внутри трайла: бьём ближайшего живого моба из gamemode-folder.
+    -- Все мобы в трайле считаются таргетом (нет "селекта имени").
+    local function runTrialFarmStep(trialName, gateFn)
+        gateFn = gateFn or function() return true end
+        local folder = getTrialEnemiesFolder(trialName)
+        if not folder then return end
+        local hrp0 = getHRP()
+        local myPos = (hrp0 and hrp0.Position) or Vector3.new()
+        local candidates = {}
+        for _, mob in ipairs(folder:GetChildren()) do
+            if _WF.isAlive(mob) then
+                local p = _WF.getMobPos(mob)
+                if p then
+                    table.insert(candidates, { mob = mob, dist = (p - myPos).Magnitude })
+                end
+            end
+        end
+        if #candidates == 0 then
+            task.wait(1)  -- волна закончилась / следующая спавнится
+            return
+        end
+        -- Ближайший первый
+        table.sort(candidates, function(a, b) return a.dist < b.dist end)
+        local mob = candidates[1].mob
+        _WF.teleportTo(mob)
+        task.wait(0.08)
+        local cd         = _WF.getClickCooldown()
+        local started    = tick()
+        local lastHP     = _WF.getMobHP(mob)
+        local lastHPTick = tick()
+        while gateFn() and getgenv()._WFRunning
+            and not _WF.StarBusy and not _WF.ZoneTpBusy
+            and _WF.isAlive(mob) and tick() - started < 15
+        do
+            local hrp = getHRP()
+            local mp  = _WF.getMobPos(mob)
+            if hrp and mp then
+                local my = hrp.Position
+                if (mp - my).Magnitude > 12 then
+                    _WF.teleportTo(mob)
+                    task.wait(0.05)
+                end
+                _WF.attackOnce()
+            end
+            local curHP = _WF.getMobHP(mob)
+            if curHP and lastHP and curHP < lastHP then
+                lastHP = curHP; lastHPTick = tick()
+            elseif tick() - lastHPTick > 1.5 then
+                break
+            end
+            task.wait(cd)
+        end
+    end
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- Dragon Defense — отдельный event-gamemode.
+    -- Отличия от Trial:
+    --   * Нет OpenTimes — доступен всегда. Гейт = наличие Saiyan Key (Item).
+    --   * У игрока 3 жизни, мобы идут к базе — её надо защищать.
+    --   * Farm по расстоянию к БАЗЕ (не к игроку) — чем ближе моб к базе тем приоритетнее.
+    -- Наш mutex `_WF.TrialBusy` reuse'ится семантически (= "event-gamemode активен").
+    -- ═══════════════════════════════════════════════════════════════════
+
+    -- Saiyan Key check — через тот же Utils.Info:GetPriceAmount что игра использует.
+    local function hasSaiyanKey()
+        local data = _WF.Omni and _WF.Omni.Data
+        local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
+        if not (data and util and type(util.GetPriceAmount) == "function") then return false end
+        local ok, amount = pcall(function() return util:GetPriceAmount("Item", "Saiyan Key", data) end)
+        return ok and type(amount) == "number" and amount >= 1
+    end
+
+    -- База DD — ищем несколько способов, `children[71]` ненадёжен
+    -- (индекс может меняться между билдами). Пробуем по порядку:
+    --   1. FindFirstChild("Base") / "HQ" / "Tower" / "Main"
+    --   2. Child с атрибутом IsBase=true
+    --   3. Child чьё имя содержит "base"/"hq"/"tower"
+    --   4. children[71] как last-resort
+    --   5. Самый большой BasePart в модели (база обычно центральная крупная часть)
+    local function getDragonDefenseBasePos()
+        local model
+        safe(function()
+            local mapsRoot = Workspace:FindFirstChild("Client") and Workspace.Client:FindFirstChild("Maps")
+            local mapFolder = mapsRoot and mapsRoot:FindFirstChild("Dragon Defense")
+            local mapNode = mapFolder and mapFolder:FindFirstChild("Map")
+            local defense = mapNode and mapNode:FindFirstChild("Defense")
+            model = defense and defense:FindFirstChild("Model")
+        end)
+        if not model then return nil end
+
+        local function extract(obj)
+            if not obj then return nil end
+            if obj:IsA("BasePart") then return obj.Position end
+            if obj:IsA("Model") then
+                if obj.PrimaryPart then return obj.PrimaryPart.Position end
+                local ok, p = pcall(function() return obj:GetPivot().Position end)
+                if ok and p then return p end
+                for _, desc in ipairs(obj:GetDescendants()) do
+                    if desc:IsA("BasePart") then return desc.Position end
+                end
+            end
+            return nil
+        end
+
+        local children = model:GetChildren()
+        -- [1] Known names
+        for _, name in ipairs({ "Base", "HQ", "Tower", "Main", "Dragon" }) do
+            local c = model:FindFirstChild(name)
+            if c then local p = extract(c); if p then return p end end
+        end
+        -- [2] Attribute + [3] name pattern
+        for _, c in ipairs(children) do
+            if c:GetAttribute("IsBase") then
+                local p = extract(c); if p then return p end
+            end
+            local lname = c.Name:lower()
+            if lname:match("base") or lname:match("hq") or lname:match("tower") then
+                local p = extract(c); if p then return p end
+            end
+        end
+        -- [4] Legacy children[71]
+        if children[71] then
+            local p = extract(children[71]); if p then return p end
+        end
+        -- [5] Largest BasePart as last-resort
+        local biggest, biggestSize = nil, 0
+        for _, desc in ipairs(model:GetDescendants()) do
+            if desc:IsA("BasePart") then
+                local s = desc.Size.X * desc.Size.Y * desc.Size.Z
+                if s > biggestSize then biggestSize = s; biggest = desc end
+            end
+        end
+        if biggest then return biggest.Position end
+        return nil
+    end
+
+    -- В режиме? Двойной heuristic как у isInTrial.
+    local function isInDragonDefense()
+        local d = _WF.Omni and _WF.Omni.Data
+        if d and d.Gamemode == "Dragon Defense" then return true end
+        local f = getTrialEnemiesFolder("Dragon Defense")
+        if f and #f:GetChildren() > 0 then return true end
+        return false
+    end
+
+    local function getDragonDefenseWave()
+        if _WF.Omni and _WF.Omni.Libs and _WF.Omni.Libs.DataContainer then
+            local ok, c = pcall(function() return _WF.Omni.Libs.DataContainer:Get("GamemodeData - Dragon Defense") end)
+            if ok and c and c.Data and type(c.Data.Wave) == "number" then return c.Data.Wave end
+        end
+        return nil
+    end
+
+    -- Farm-step для DD. Приоритет целей:
+    --   * Если нашли базу → sort по расстоянию к БАЗЕ (ближайший = приоритет)
+    --   * Если базы нет → fallback на closest-to-PLAYER (чтобы не стоять)
+    -- DD особенность: мобы бегут к базе постоянно. Если threshold движения большой
+    -- (12 studs), моб убегает между attack-тиками → мы промахиваемся → можем
+    -- случайно TP за arena bounds. Жёсткий re-TP каждый тик + малый threshold (6).
+    local function runDragonDefenseFarmStep(gateFn)
+        gateFn = gateFn or function() return true end
+        local folder = getTrialEnemiesFolder("Dragon Defense")
+        if not folder then
+            dbg("DD: enemies folder missing")
+            task.wait(1); return
+        end
+        local basePos = getDragonDefenseBasePos()
+        local hrp0 = getHRP()
+        local myPos = hrp0 and hrp0.Position
+        local refPos = basePos or myPos
+        if not refPos then
+            dbg("DD: no base and no HRP — skipping tick")
+            task.wait(0.5); return
+        end
+
+        local candidates = {}
+        for _, mob in ipairs(folder:GetChildren()) do
+            if _WF.isAlive(mob) then
+                local p = _WF.getMobPos(mob)
+                if p then
+                    table.insert(candidates, { mob = mob, dist = (p - refPos).Magnitude })
+                end
+            end
+        end
+        if #candidates == 0 then
+            dbg(("DD: no attackable mobs (folder has %d children)"):format(#folder:GetChildren()))
+            task.wait(1); return
+        end
+        table.sort(candidates, function(a, b) return a.dist < b.dist end)
+        local mob = candidates[1].mob
+        _WF.teleportTo(mob)
+        task.wait(0.08)
+        local cd         = _WF.getClickCooldown()
+        local started    = tick()
+        local lastHP     = _WF.getMobHP(mob)
+        local lastHPTick = tick()
+        while gateFn() and getgenv()._WFRunning
+            and not _WF.StarBusy and not _WF.ZoneTpBusy
+            and _WF.isAlive(mob) and tick() - started < 15
+        do
+            local hrp = getHRP()
+            local mp  = _WF.getMobPos(mob)
+            if hrp and mp then
+                -- DD-specific: мобы ДВИГАЮТСЯ к базе, поэтому re-TP АГРЕССИВНО.
+                -- threshold=6 (не 12) — моба легко унесёт за 0.3с тика. Каждый тик
+                -- проверяем distance + TP если надо, ТОЛЬКО ПОТОМ attack.
+                if (mp - hrp.Position).Magnitude > 6 then
+                    _WF.teleportTo(mob)
+                    task.wait(0.05)
+                end
+                _WF.attackOnce()
+            end
+            local curHP = _WF.getMobHP(mob)
+            if curHP and lastHP and curHP < lastHP then
+                lastHP = curHP; lastHPTick = tick()
+            elseif tick() - lastHPTick > 1.5 then
+                break
+            end
+            task.wait(cd)
+        end
+    end
+
+    -- Wave detection: DataContainer primary, fallbacks below
+    local function getCurrentWave(name)
+        if _WF.Omni and _WF.Omni.Libs and _WF.Omni.Libs.DataContainer then
+            local ok, c = pcall(function() return _WF.Omni.Libs.DataContainer:Get("GamemodeData - " .. name) end)
+            if ok and c and c.Data and type(c.Data.Wave) == "number" and c.Data.Wave > 0 then
+                return c.Data.Wave
+            end
+        end
+        local d = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gamemodes
+        if type(d) == "table" and type(d[name]) == "table" then
+            for _, key in ipairs({ "Wave", "CurrentWave" }) do
+                if type(d[name][key]) == "number" then return d[name][key] end
+            end
+        end
+        -- PlayerGui HUD text fallback
+        local pg = LocalPlayer:FindFirstChild("PlayerGui")
+        local ui = pg and pg:FindFirstChild("UI")
+        local hud = ui and ui:FindFirstChild("HUD")
+        local gms = hud and hud:FindFirstChild("Gamemodes")
+        local modeUI = gms and gms:FindFirstChild(name)
+        local valueNode = modeUI and modeUI:FindFirstChild("Main")
+            and modeUI.Main:FindFirstChild("Wave") and modeUI.Main.Wave:FindFirstChild("Value")
+        if valueNode and valueNode:IsA("TextLabel") then
+            local cur = valueNode.Text:match("^(%d+)")
+            if cur then return tonumber(cur) end
+        end
+        return nil
+    end
+
+    local trialDropdown -- forward
+
+    -- Приоритет по сложности: Hard > Medium > Easy (первым в join-очереди идёт Hard).
+    -- Для кастомных трайлов (Trial Insane etc.) — fallback на алфавит.
+    local DIFFICULTY_RANK = {
+        ["Trial Secret"] = 1, ["Trial Boss"] = 2, ["Trial Insane"] = 3,
+        ["Trial Hard"] = 4, ["Trial Medium"] = 5, ["Trial Easy"] = 6,
+    }
+    local function difficultyRank(name) return DIFFICULTY_RANK[name] or 99 end
+
+    -- Runtime-статус трайла через игровой API.
+    -- Возвращает { opened = bool, secondsToNext = number }
+    --   opened        — DataContainer.Data.Opened (игра сама этот флаг использует для AutoRoll)
+    --   secondsToNext — секунд до следующего окна (0 = открыт сейчас)
+    local function getTrialStatus(name)
+        local out = { opened = false, secondsToNext = nil }
+        local SG = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gamemodes
+        if not SG then return out end
+
+        -- Проверяем что трайл реально таймерный в этой версии игры.
+        if type(SG.IsTimedGamemode) ~= "function" then return out end
+        local okT, timed = pcall(SG.IsTimedGamemode, name)
+        if not (okT and timed) then return out end  -- не сконфигурирован → статус недоступен
+
+        local lastStart = 0
+        if _WF.Omni.Libs and _WF.Omni.Libs.DataContainer then
+            local ok, c = pcall(function() return _WF.Omni.Libs.DataContainer:Get("GamemodeData - " .. name) end)
+            if ok and c and c.Data then
+                if c.Data.Opened == true then out.opened = true end
+                if type(c.Data.LastStart) == "number" then lastStart = c.Data.LastStart end
+            end
+        end
+
+        if type(SG.GetTimeForNextOpen) == "function" then
+            local okS, secs = pcall(SG.GetTimeForNextOpen, name, lastStart)
+            if okS and type(secs) == "number" then out.secondsToNext = secs end
+        end
+
+        return out
+    end
+
+    local function formatSeconds(s)
+        if type(s) ~= "number" then return "—" end
+        if s <= 0 then return "now" end
+        local m = math.floor(s / 60)
+        local sec = math.floor(s - m * 60)
+        if m > 0 then return ("%dm %ds"):format(m, sec) end
+        return ("%ds"):format(sec)
+    end
+
+    sec.TrialsL:Header({ Text = "Trials" })
+
+    sec.TrialsL:Toggle({ Name = "Auto Trial", Default = false,
+        Callback = function(s)
+            _WF.AutoTrialEnabled = s
+            if not s then _WF.TrialBusy = false end  -- снимаем mutex когда отключили
+        end,
+    }, "AutoTrialToggle")
+
+    trialDropdown = sec.TrialsL:Dropdown({
+        Name = "Trials to run (multi)", Multi = true, Required = false,
+        Options = getAllTrials(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.TrialSelections = set
+        end,
+    }, "TrialSelectionsDropdown")
+
+    sec.TrialsL:Button({
+        Name = "Refresh Trial List",
+        Callback = function()
+            pcall(function()
+                trialDropdown:ClearOptions()
+                trialDropdown:InsertOptions(getAllTrials())
+            end)
+            Notify("Trial list refreshed", 2)
+        end,
+    })
+
+    sec.TrialsL:Slider({
+        Name = "Auto Leave on Wave (0=off)", Default = 0,
+        Minimum = 0, Maximum = 50, Precision = 0, DisplayMethod = "Value",
+        Callback = function(v) _WF.TrialAutoLeaveWave = tonumber(v) or 0 end,
+    }, "TrialAutoLeaveWaveSlider")
+
+    sec.TrialsL:Button({ Name = "Leave Trial Now",
+        Callback = function() leaveTrial() end,
+    })
+
+    -- ── Saved Position (для возврата после event-gamemode'ов) ──
+    sec.TrialsL:Header({ Text = "Saved Position" })
+    local positionLabel = wrapParagraph(sec.TrialsL:Paragraph({
+        Header = "Position",
+        Body = _WF.SavedPosition and (
+            ("%s\n(%.0f, %.0f, %.0f)"):format(
+                _WF.SavedLocation or "—",
+                _WF.SavedPosition.Position.X,
+                _WF.SavedPosition.Position.Y,
+                _WF.SavedPosition.Position.Z
+            )
+        ) or "not saved — set by 'Save Current Position'",
+    }))
+    sec.TrialsL:Button({
+        Name = "Save Current Position",
+        Callback = function()
+            local hrp = getHRP()
+            if not hrp then Notify("No character", 3); return end
+            local d = _WF.Omni and _WF.Omni.Data or {}
+            _WF.SavedPosition = hrp.CFrame
+            _WF.SavedLocation = ("%s | Zone %s"):format(d.Map or "?", tostring(d.Zone or 1))
+            savePositionToFile(_WF.SavedPosition, _WF.SavedLocation)
+            local p = _WF.SavedPosition.Position
+            positionLabel:UpdateBody(("%s\n(%.0f, %.0f, %.0f)"):format(_WF.SavedLocation, p.X, p.Y, p.Z))
+            Notify("Position saved: " .. _WF.SavedLocation, 3)
+        end,
+    })
+    sec.TrialsL:Button({
+        Name = "TP to Saved Position",
+        Callback = function()
+            if not _WF.SavedPosition then Notify("No saved position", 3); return end
+            _WF.ZoneTpBusy = true
+            task.spawn(function()
+                tpToSavedPosition()
+                _WF.ZoneTpBusy = false
+            end)
+        end,
+    })
+
+    -- ── Dragon Defense UI ──
+    sec.TrialsL:Header({ Text = "Dragon Defense" })
+    sec.TrialsL:Toggle({ Name = "Auto Dragon Defense", Default = false,
+        Callback = function(s)
+            _WF.AutoDragonDefenseEnabled = s
+            if not s then _WF.TrialBusy = false end  -- снимаем mutex при отключении
+        end,
+    }, "AutoDragonDefenseToggle")
+    sec.TrialsL:Slider({
+        Name = "DD: Leave at Wave (0 = run full)", Default = 0,
+        Minimum = 0, Maximum = 100, Precision = 0, DisplayMethod = "Value",
+        Callback = function(v) _WF.DragonDefenseLeaveWave = tonumber(v) or 0 end,
+    }, "DragonDefenseLeaveWaveSlider")
+    sec.TrialsL:Button({ Name = "Leave DD Now",
+        Callback = function() leaveTrial() end,
+    })
+
+    -- ── Gamemode Priority ──
+    -- Когда ВКЛЮЧЕНЫ И Auto Trial И Auto Dragon Defense — какой из них делать первым.
+    -- Без этого оба цикла параллельно пытались Join → конфликт: ты не попадаешь
+    -- стабильно ни в один. Теперь только выбранный запускается.
+    sec.TrialsL:Divider()
+    sec.TrialsL:Header({ Text = "Priority (when both ON)" })
+    sec.TrialsL:Dropdown({
+        Name = "Gamemode Priority",
+        Options = { "DragonDefense", "Trial" },
+        Default = "DragonDefense",
+        Callback = function(v)
+            if v == "Trial" or v == "DragonDefense" then
+                _WF.GamemodePriority = v
             end
         end,
-    }, "DisableGameAntiAfkToggle")
-end
+    }, "GamemodePriorityDropdown")
 
--- Info label справа
-local miscInfoPara = MiscRight:Paragraph({
-    Header = "Info",
-    Body   =
-        "Walk Speed: slider слева.\n" ..
-        "Anti-AFK: отключает игровой kick-after-15min. Client-side idle bypass работает всегда (безусловно).\n" ..
-        "\n" ..
-        "Client-side anti-idle активен ВСЕГДА (нельзя отключить — это базовая защита).\n" ..
-        "Toggle здесь управляет только game-level Anti-AFK.",
-})
+    -- Per-trial retry tracking — don't spam Join when the server rejects.
+    local TRIAL_JOIN_RETRY = 20  -- seconds between retry attempts for the same trial
+    local _lastJoinAttempt = {}
+    local function canTryJoin(name)
+        local last = _lastJoinAttempt[name] or 0
+        return (tick() - last) >= TRIAL_JOIN_RETRY
+    end
 
--- ============ Auto Potions ============
--- Discovery: зелья из Omni.Shared.Items.Potion (имена зелий).
--- Логика: раз в 5с для каждого выбранного зелья проверить:
---   (a) Data.UsedPotions[name]           — если активно сейчас, пропускаем
---   (b) Data.Inventory.Potions[name] > 0 — если есть в инвентаре
---  Если оба ок — fire UsePotion.
-do
-local function getAllPotionNames()
-    local out = {}
-    local p = Omni and Omni.Shared and Omni.Shared.Items and Omni.Shared.Items.Potion
-    if type(p) == "table" then
-        for k in pairs(p) do
-            if type(k) == "string" then table.insert(out, k) end
+    sec.TrialsR:Header({ Text = "Status" })
+    local trialStatus = wrapParagraph(sec.TrialsR:Paragraph({ Header = "Trials", Body = "—" }))
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(1)
+            safe(function()
+                local sel = {}
+                for n in pairs(_WF.TrialSelections) do table.insert(sel, n) end
+                table.sort(sel, function(a, b) return difficultyRank(a) < difficultyRank(b) end)
+                local inGm = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                local curWave = inGm and getCurrentWave(inGm)
+                local lines = {
+                    "Auto: " .. (_WF.AutoTrialEnabled and "ON" or "OFF"),
+                    "Leave wave: " .. tostring(_WF.TrialAutoLeaveWave),
+                    "Current: " .. tostring(inGm or "—"),
+                    "Wave: " .. tostring(curWave or "—"),
+                }
+                -- Per-trial status: Running / Opens in Xm Ys (читаем игровой DataContainer)
+                if #sel > 0 then
+                    table.insert(lines, "")
+                    table.insert(lines, "Status (Hard → Easy):")
+                    for _, n in ipairs(sel) do
+                        local st = getTrialStatus(n)
+                        local statusStr
+                        if st.opened then
+                            statusStr = "⏺ RUNNING"
+                        elseif st.secondsToNext then
+                            statusStr = "⏱ opens in " .. formatSeconds(st.secondsToNext)
+                        else
+                            statusStr = "—"
+                        end
+                        table.insert(lines, ("  %s: %s"):format(n, statusStr))
+                    end
+                end
+                trialStatus:UpdateBody(table.concat(lines, "\n"))
+            end)
         end
+    end)
+
+    -- Main trial loop — самодостаточный (как в легаси v0.37):
+    -- [A] если в трайле — check leave threshold, иначе бьём мобов (runTrialFarmStep)
+    -- [B] если не в трайле — пробуем join с retry backoff
+    task.spawn(function()
+        local function trialGate() return _WF.AutoTrialEnabled end
+        local wasInTrial = false  -- отслеживаем transition "был в трайле → вышел" для auto-TP назад
+        while getgenv()._WFRunning do
+            -- Уважаем star-open / zone-tp мьютекс
+            if _WF.StarBusy or _WF.ZoneTpBusy then
+                while (_WF.StarBusy or _WF.ZoneTpBusy) and getgenv()._WFRunning and _WF.AutoTrialEnabled do
+                    task.wait(0.1)
+                end
+            end
+
+            -- Priority gate: если DD приоритет и DD-toggle включён — Trial loop ждёт.
+            -- Exception: если физически уже В трайле (прошлая сессия), обрабатываем
+            -- выход/natural-end чтобы не застрять.
+            local priorityBlocked = false
+            if _WF.AutoDragonDefenseEnabled and _WF.GamemodePriority == "DragonDefense" then
+                local inAnyTrial = false
+                for n in pairs(_WF.TrialSelections or {}) do
+                    if isInTrial(n) then inAnyTrial = true; break end
+                end
+                if not inAnyTrial then priorityBlocked = true end
+            end
+
+            if not (_WF.AutoTrialEnabled and _WF.ModulesLoaded) then
+                task.wait(0.5)
+            elseif priorityBlocked then
+                task.wait(1)
+            else
+                safe(function()
+                    local selected = _WF.TrialSelections or {}
+                    local names = {}
+                    for n in pairs(selected) do table.insert(names, n) end
+                    table.sort(names)
+
+                    if #names == 0 then
+                        task.wait(2)
+                        return
+                    end
+
+                    -- [A] Уже в одном из выбранных трайлов?
+                    local inTrialName
+                    for _, n in ipairs(names) do
+                        if isInTrial(n) then inTrialName = n; break end
+                    end
+
+                    -- Natural-end detection: если были в трайле а теперь нет — ждём Results
+                    -- screen, TP'аемся на saved position. Не путать с leaveTrial() который
+                    -- сам ставит wasInTrial=false после выхода.
+                    if wasInTrial and not inTrialName then
+                        wasInTrial = false
+                        if _WF.SavedPosition then
+                            Notify("Trial ended — returning to saved position", 3)
+                            task.wait(4)  -- Results screen / респавн персонажа
+                            _WF.ZoneTpBusy = true
+                            tpToSavedPosition()
+                            _WF.ZoneTpBusy = false
+                        end
+                        return  -- следующая итерация попробует Join заново
+                    end
+
+                    if inTrialName then
+                        wasInTrial = true
+                        -- Мы в трайле — блочим farm/egg/quest. Приоритет Trial выше всех.
+                        _WF.TrialBusy = true
+                        local wave = getCurrentWave(inTrialName)
+                        local leaveThr = tonumber(_WF.TrialAutoLeaveWave) or 0
+                        if leaveThr > 0 and type(wave) == "number" and wave >= leaveThr then
+                            -- Target wave достигнут. TP через Signal — сервер сам
+                            -- очистит Gamemode status при смене зоны.
+                            Notify(("Trial %s: wave %d ≥ %d — leaving"):format(
+                                inTrialName, wave, leaveThr), 4)
+                            leaveTrial()  -- always-on signal + 4с wait внутри
+                            _WF.TrialSelections[inTrialName] = nil
+                            if not next(_WF.TrialSelections) then
+                                _WF.AutoTrialEnabled = false
+                                Notify("Auto Trial: all targets reached — disabled", 4)
+                            end
+                            _WF.TrialBusy = false
+                            task.wait(2)
+                        else
+                            runTrialFarmStep(inTrialName, trialGate)
+                        end
+                    else
+                        -- Не в трайле — mutex снят, другие фичи могут работать
+                        _WF.TrialBusy = false
+                        -- [B] Не в трайле. Считываем runtime-статусы, фильтруем
+                        -- только реально открытые, сортируем по сложности (Hard первый).
+                        local openNow, soonest = {}, nil
+                        for _, n in ipairs(names) do
+                            local st = getTrialStatus(n)
+                            if st.opened then
+                                table.insert(openNow, n)
+                            end
+                            if type(st.secondsToNext) == "number" and st.secondsToNext > 0 then
+                                if not soonest or st.secondsToNext < soonest then
+                                    soonest = st.secondsToNext
+                                end
+                            end
+                        end
+                        -- Sort по сложности: Hard → Medium → Easy
+                        table.sort(openNow, function(a, b) return difficultyRank(a) < difficultyRank(b) end)
+
+                        local joined = false
+                        for _, n in ipairs(openNow) do
+                            if canTryJoin(n) then
+                                _lastJoinAttempt[n] = tick()
+                                -- TRANSITION: если сейчас в другом gamemode (например DD или
+                                -- другом трайле), сначала выходим в обычный мир. Сервер не
+                                -- любит Join из гейммода в гейммод — игрок застревает.
+                                local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                                if curGm and curGm ~= n then
+                                    dbg(("Trial: transitioning via normal world (from %s)"):format(curGm))
+                                    leaveTrial()  -- signal + 4с wait
+                                    task.wait(0.5)
+                                end
+                                safe(function()
+                                    _WF.Omni.Signal:Fire("General", "Gamemodes", "Join", n)
+                                end)
+                                task.wait(1.2)
+                                if isInTrial(n) then
+                                    joined = true
+                                    Notify("Entered " .. n, 3)
+                                    break
+                                end
+                            end
+                        end
+                        if not joined then
+                            -- Умный wait: до ближайшего открытия любого из выбранных
+                            -- (но минимум 3с, максимум 60с — чтобы не уснуть слишком надолго
+                            -- если у нас вдруг устаревший timer).
+                            if soonest then
+                                task.wait(math.clamp(soonest + 1, 3, 60))
+                            else
+                                task.wait(5)
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- Dragon Defense main loop — отдельный task.spawn, не пересекается с Trial loop.
+    -- Структура: mutex-wait → если в DD фармим → иначе если есть ключ и не в другом
+    -- gamemode → Join.
+    -- ═══════════════════════════════════════════════════════════════════
+    task.spawn(function()
+        local DD = "Dragon Defense"
+        local function ddGate() return _WF.AutoDragonDefenseEnabled end
+        local DD_JOIN_RETRY = 8  -- секунд между попытками Join
+        local lastJoinAttempt = 0
+        local lastKeyWarn = 0
+        local wasInDD = false  -- natural-end tracking
+        while getgenv()._WFRunning do
+            -- Уважаем star-open / zone-tp мьютексы
+            if _WF.StarBusy or _WF.ZoneTpBusy then
+                while (_WF.StarBusy or _WF.ZoneTpBusy) and getgenv()._WFRunning and _WF.AutoDragonDefenseEnabled do
+                    task.wait(0.1)
+                end
+            end
+
+            -- Priority gate: Trial приоритет + Trial-toggle включён + выбран трайл →
+            -- DD ждёт. Exception: если мы УЖЕ в DD физически, обрабатываем выход.
+            local priorityBlocked = false
+            if _WF.AutoTrialEnabled and _WF.GamemodePriority == "Trial" then
+                local hasSel = _WF.TrialSelections and next(_WF.TrialSelections)
+                if hasSel and not isInDragonDefense() then
+                    priorityBlocked = true
+                end
+            end
+
+            if not (_WF.AutoDragonDefenseEnabled and _WF.ModulesLoaded) then
+                task.wait(0.5)
+            elseif priorityBlocked then
+                task.wait(1)
+            else
+                safe(function()
+                    local currentlyInDD = isInDragonDefense()
+
+                    -- Natural-end: был в DD → сервер нас выбросил (закончились жизни / победа)
+                    if wasInDD and not currentlyInDD then
+                        wasInDD = false
+                        _WF.TrialBusy = false
+                        if _WF.SavedPosition then
+                            Notify("Dragon Defense ended — returning to saved position", 3)
+                            task.wait(4)
+                            _WF.ZoneTpBusy = true
+                            tpToSavedPosition()
+                            _WF.ZoneTpBusy = false
+                        end
+                        lastJoinAttempt = 0  -- сбрасываем retry чтобы next tick попробовал Join снова
+                        return
+                    end
+
+                    if currentlyInDD then
+                        wasInDD = true
+                        -- [A] В режиме — фармим или уходим
+                        _WF.TrialBusy = true
+                        local wave = getDragonDefenseWave()
+                        local leaveAt = tonumber(_WF.DragonDefenseLeaveWave) or 0
+                        if leaveAt > 0 and type(wave) == "number" and wave >= leaveAt then
+                            Notify(("Dragon Defense: wave %d ≥ %d — leaving"):format(wave, leaveAt), 4)
+                            leaveTrial()  -- signal + 4с wait
+                            _WF.AutoDragonDefenseEnabled = false
+                            _WF.TrialBusy = false
+                            wasInDD = false  -- вышли сами, не natural-end
+                            task.wait(2)
+                        else
+                            runDragonDefenseFarmStep(ddGate)
+                        end
+                    else
+                        -- [B] Не в режиме — mutex сбрасываем (если DD выключался сам)
+                        _WF.TrialBusy = false
+                        -- Если мы уже в другом gamemode (Trial etc.) — не трогаем.
+                        local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                        if curGm and curGm ~= DD then
+                            task.wait(2)
+                            return
+                        end
+                        -- Нет Saiyan Key → тихо ждём (notify раз в 60с)
+                        if not hasSaiyanKey() then
+                            if tick() - lastKeyWarn > 60 then
+                                lastKeyWarn = tick()
+                                Notify("Dragon Defense: no Saiyan Key — waiting", 3)
+                            end
+                            task.wait(5)
+                            return
+                        end
+                        -- Есть ключ — пробуем Join (с retry cooldown)
+                        if tick() - lastJoinAttempt < DD_JOIN_RETRY then
+                            task.wait(1); return
+                        end
+                        lastJoinAttempt = tick()
+                        -- TRANSITION: если в другом gamemode (трайл) — сначала выходим
+                        -- в обычный мир. Иначе Join DD из трайла даст race condition.
+                        local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                        if curGm and curGm ~= DD then
+                            dbg(("DD: transitioning via normal world (from %s)"):format(curGm))
+                            leaveTrial()  -- signal + 4с wait
+                            task.wait(0.5)
+                        end
+                        safe(function()
+                            _WF.Omni.Signal:Fire("General", "Gamemodes", "Join", DD)
+                        end)
+                        task.wait(1.5)
+                        if isInDragonDefense() then
+                            Notify("Entered Dragon Defense", 3)
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end)
+if not _ok_trials then warn("[ApelHub] TRIALS tab failed: " .. tostring(_err_trials)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 13. GACHA TAB  (multi-gacha: Race, Dragon Power, Fruit, Haki, Slime Power)
+-- ════════════════════════════════════════════════════════════════
+local _ok_gacha, _err_gacha = pcall(function()
+    local RARITY_ORDER = { Common=1, Uncommon=2, Rare=3, Epic=4, Mythical=5, Legendary=6, Secret=7 }
+    local RARITY_OPTIONS = { "Common","Uncommon","Rare","Epic","Mythical","Legendary","Secret" }
+
+    local function getAllGachaNames()
+        local out = {}
+        local list = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gacha and _WF.Omni.Shared.Gacha.List
+        if type(list) == "table" then
+            for k in pairs(list) do if type(k) == "string" then table.insert(out, k) end end
+        end
+        if #out == 0 then out = { "Race", "Dragon Power", "Fruit", "Haki", "Slime Power" } end
+        table.sort(out)
+        return out
     end
-    table.sort(out)
-    return out
-end
 
-local function isPotionActive(name)
-    local up = Omni and Omni.Data and Omni.Data.UsedPotions
-    if type(up) ~= "table" then return false end
-    local v = up[name]
-    if v == nil then return false end
-    if type(v) == "table" then
-        -- обычно: {EndTime=<tick>, Amount=N} — активно если EndTime > tick()
-        local et = v.EndTime or v.endTime or v.ExpiresAt
-        if type(et) == "number" then return et > tick() end
-        return next(v) ~= nil
+    local function getGachaCfg(name)
+        local sg = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gacha
+        if type(sg) ~= "table" then return nil end
+        if type(sg.List) == "table" and type(sg.List[name]) == "table" then return sg.List[name] end
+        if type(sg[name]) == "table" then return sg[name] end
+        return nil
     end
-    return v == true or (type(v) == "number" and v > 0)
-end
 
-local function getPotionCount(name)
-    local inv = Omni and Omni.Data and Omni.Data.Inventory and Omni.Data.Inventory.Potions
-    if type(inv) ~= "table" then return 0 end
-    local v = inv[name]
-    if type(v) == "number" then return v end
-    if type(v) == "table" then
-        return tonumber(v.Amount or v.Count or v.Quantity) or 0
+    local function getGachaCurrency(name)
+        local cfg = getGachaCfg(name)
+        if type(cfg) == "table" and type(cfg.Price) == "table" and type(cfg.Price.Name) == "string" then
+            return cfg.Price.Name
+        end
+        local defaults = {
+            Haki = "Haki Token", Fruit = "Fruit Token", Race = "Race Token",
+            ["Dragon Power"] = "Dragon Balls Token", ["Slime Power"] = "Slime Token",
+        }
+        return defaults[name] or (name .. " Token")
     end
-    return 0
-end
 
-MiscRight:Header({ Text = "Auto Potions" })
+    local function getGachaCost(name)
+        local cfg = getGachaCfg(name)
+        if cfg then
+            if type(cfg.Price) == "table" and type(cfg.Price.Amount) == "number" then return cfg.Price.Amount end
+            if type(cfg.Cost) == "number" then return cfg.Cost end
+        end
+        return 1
+    end
 
-MiscRight:Toggle({
-    Name     = "Auto Use Potions",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoPotions = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoPotions and not stopped do
-                for potionName, enabled in pairs(getgenv().PotionSelection or {}) do
-                    if enabled and not isPotionActive(potionName) and getPotionCount(potionName) > 0 then
-                        if shouldFire("potion." .. potionName, 2) then
-                            pcall(function()
-                                Omni.Signal:Fire("General", "Items", "UsePotion", potionName, 1)
-                            end)
+    local function getCurrencyBalance(currencyName)
+        local inv = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Inventory
+        if type(inv) == "table" and type(inv.Items) == "table" then
+            local v = inv.Items[currencyName]
+            if type(v) == "number" then return v end
+            if type(v) == "table" and type(v.Amount) == "number" then return v.Amount end
+        end
+        local d = _WF.Omni and _WF.Omni.Data
+        if d and type(d[currencyName]) == "number" then return d[currencyName] end
+        return 0
+    end
+
+    local function getMaxGachaPerRoll()
+        local u = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+        if type(u) == "table" then
+            for _, fname in ipairs({ "GachaRolls", "MaxGachaRoll", "Rolls" }) do
+                if type(u[fname]) == "function" then
+                    local ok, val = pcall(function() return u[fname](_WF.Omni.Data, _WF.Omni.Instance) end)
+                    if ok and type(val) == "number" and val >= 1 then return math.floor(val) end
+                end
+            end
+        end
+        return 1
+    end
+
+    -- Rarity tracking via SourceInfo (Haki stores in .Vault, others in Inventory)
+    local function getSourceInfo(name)
+        local cfg = getGachaCfg(name)
+        if type(cfg) == "table" and type(cfg.SourceInfo) == "table" then return cfg.SourceInfo end
+        return nil
+    end
+
+    local function hasRarityOrHigher(gachaName, targetR)
+        local targetOrder = RARITY_ORDER[targetR] or 0
+        local si = getSourceInfo(gachaName)
+        if not si then return false end
+        -- 1) Vault (Haki-style: booleans in Data.Gacha.<name>.Vault)
+        local dg = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gacha
+        if type(dg) == "table" and type(dg[gachaName]) == "table" then
+            local vault = dg[gachaName].Vault
+            if type(vault) == "table" then
+                for rewardName, owned in pairs(vault) do
+                    if owned and si[rewardName] and (RARITY_ORDER[si[rewardName].Rarity] or 0) >= targetOrder then
+                        return true, si[rewardName].Rarity
+                    end
+                end
+            end
+        end
+        -- 2) Inventory scan (non-Vault gachas like Fruit store directly)
+        local inv = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Inventory
+        if type(inv) == "table" then
+            local cats = { "Units", "Swords", "Accessories", "Mounts", "Avatars", "Hakis", "Fruits", "Powers" }
+            for _, cat in ipairs(cats) do
+                local t = inv[cat]
+                if type(t) == "table" then
+                    for k, v in pairs(t) do
+                        local nm = (type(v) == "table" and (v.Name or tostring(k))) or tostring(k)
+                        if si[nm] and (RARITY_ORDER[si[nm].Rarity] or 0) >= targetOrder then
+                            return true, si[nm].Rarity
+                        end
+                    end
+                end
+            end
+        end
+        return false
+    end
+
+    local function getMyUnitsByRarity(gachaName)
+        local counts, total = {}, 0
+        local si = getSourceInfo(gachaName)
+        if not si then return counts, total end
+        local dg = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gacha
+        if type(dg) == "table" and type(dg[gachaName]) == "table" and type(dg[gachaName].Vault) == "table" then
+            for rname, owned in pairs(dg[gachaName].Vault) do
+                if owned and si[rname] then
+                    local r = si[rname].Rarity
+                    if r then counts[r] = (counts[r] or 0) + 1; total = total + 1 end
+                end
+            end
+        end
+        local inv = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Inventory
+        if type(inv) == "table" then
+            for _, cat in ipairs({ "Units","Swords","Accessories","Mounts","Avatars","Hakis","Fruits","Powers" }) do
+                local t = inv[cat]
+                if type(t) == "table" then
+                    for k, v in pairs(t) do
+                        local nm = (type(v) == "table" and (v.Name or tostring(k))) or tostring(k)
+                        if si[nm] then
+                            local r = si[nm].Rarity
+                            if r then counts[r] = (counts[r] or 0) + 1; total = total + 1 end
+                        end
+                    end
+                end
+            end
+        end
+        return counts, total
+    end
+
+    sec.GachaL:Header({ Text = "Auto Gacha" })
+
+    sec.GachaL:Toggle({
+        Name = "Auto Gacha", Default = false,
+        Callback = function(s)
+            _WF.AutoGachaEnabled = s
+            if s and not next(_WF.GachaSelection) then
+                _WF.AutoGachaEnabled = false
+                Notify("Сначала выбери гачу в дропдауне", 4)
+            end
+        end,
+    }, "AutoGachaToggle")
+
+    gachaSelDropdown = sec.GachaL:Dropdown({
+        Name = "Select Gachas (multi)", Multi = true, Required = false,
+        Options = getAllGachaNames(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.GachaSelection = set
+        end,
+    }, "GachaSelectionDropdown")
+
+    sec.GachaL:Dropdown({
+        Name = "Target Rarity (stop on ≥)", Multi = false, Required = false,
+        Options = RARITY_OPTIONS,
+        Callback = function(v)
+            if type(v) == "string" and v ~= "" then _WF.GachaTargetRarity = v
+            else _WF.GachaTargetRarity = nil end
+        end,
+    }, "GachaTargetRarityDropdown")
+
+    sec.GachaL:Slider({
+        Name = "Min Tokens Before Roll", Default = 100,
+        Minimum = 0, Maximum = 1000, Precision = 0, DisplayMethod = "Value",
+        Callback = function(v) _WF.GachaThreshold = tonumber(v) or 100 end,
+    }, "GachaThresholdSlider")
+
+    -- Banner + Roulette (right side)
+    local function getAllBanners()
+        local out = {}
+        local d = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Banner
+        if type(d) == "table" then for k in pairs(d) do if type(k) == "string" then table.insert(out, k) end end end
+        if #out == 0 then out = { "Swords Banner" } end
+        table.sort(out)
+        return out
+    end
+    local function getAllRoulettes()
+        local out = {}
+        safe(function()
+            local r = RS:FindFirstChild("Omni")
+            r = r and r:FindFirstChild("Shared") and r.Shared:FindFirstChild("Roulette")
+            if r then for _, c in ipairs(r:GetChildren()) do if c:IsA("ModuleScript") then table.insert(out, c.Name) end end end
+        end)
+        if #out == 0 then out = { "Dragon Wish" } end
+        table.sort(out)
+        return out
+    end
+
+    local gachaSelDropdown -- forward for refresh button
+
+    sec.GachaL:Button({
+        Name = "Refresh Gacha List",
+        Callback = function()
+            pcall(function()
+                gachaSelDropdown:ClearOptions()
+                gachaSelDropdown:InsertOptions(getAllGachaNames())
+            end)
+            Notify("Gacha list refreshed", 2)
+        end,
+    })
+
+    sec.GachaL:Button({
+        Name = "Roll Selected x1 Each (now)",
+        Callback = function()
+            task.spawn(function()
+                for gn, on in pairs(_WF.GachaSelection) do
+                    if on then
+                        local bal = getCurrencyBalance(getGachaCurrency(gn))
+                        if bal >= getGachaCost(gn) then
+                            safe(function() _WF.Omni.Signal:Fire("General", "Gacha", "Roll", gn, 1) end)
                             task.wait(0.5)
                         end
                     end
                 end
-                task.wait(5)
-            end
-        end)
-    end,
-}, "AutoPotionsToggle")
-
-local potionDropdown = MiscRight:Dropdown({
-    Name     = "Potions to use (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllPotionNames(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
-            end
-        end
-        getgenv().PotionSelection = set
-    end,
-}, "PotionSelectionDropdown")
-
-MiscRight:Button({
-    Name     = "Refresh Potion List",
-    Callback = function()
-        pcall(function()
-            potionDropdown:ClearOptions()
-            potionDropdown:InsertOptions(getAllPotionNames())
-        end)
-    end,
-})
-
--- ============ Auto Codes ============
--- Раз в 5 мин прогоняет список известных кодов через Redeem.
--- Сервер отклонит уже-использованные коды тихо — не страшно.
-local KNOWN_CODES = {
-    "RELEASE", "WORLDFIGHTERS", "FREE100", "UPDATE1", "DEV", "ADMIN",
-    "WELCOME", "SHUTDOWN", "THXSUB", "100KLIKES", "1MVISITS", "SORRY",
-    "FIX", "BUGFIX", "20KLIKES", "50KLIKES", "1KLIKES", "5KLIKES",
-    "10KLIKES", "200KLIKES", "500KLIKES",
-}
-
-MiscRight:Header({ Text = "Auto Codes" })
-
-MiscRight:Toggle({
-    Name     = "Auto Redeem Codes (every 5min)",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoCodes = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoCodes and not stopped do
-                for _, code in ipairs(KNOWN_CODES) do
-                    pcall(function()
-                        Omni.Signal:Fire("General", "Codes", "Redeem", code)
-                    end)
-                    task.wait(0.4)
-                end
-                -- spin sleep 300s с проверкой флага каждые 2s
-                local waited = 0
-                while getgenv().AutoCodes and not stopped and waited < 300 do
-                    task.wait(2)
-                    waited = waited + 2
-                end
-            end
-        end)
-    end,
-}, "AutoCodesToggle")
-
-MiscRight:Button({
-    Name     = "Redeem Now",
-    Callback = function()
-        task.spawn(function()
-            for _, code in ipairs(KNOWN_CODES) do
-                pcall(function()
-                    Omni.Signal:Fire("General", "Codes", "Redeem", code)
-                end)
-                task.wait(0.4)
-            end
-        end)
-    end,
-})
-
-getgenv().AutoPotions      = getgenv().AutoPotions      or false
-getgenv().PotionSelection  = getgenv().PotionSelection  or {}
-getgenv().AutoCodes        = getgenv().AutoCodes        or false
-end -- end Potions/Codes do-block
-
--- =========================================================
--- [7h] UI — Webhook Tab (Discord drop logger)
--- =========================================================
--- Шлёт Discord webhook при новом предмете в инвентаре ИЛИ новом юните в
--- Data.Gacha.<name>.Vault. Фильтры по rarity + category. Ping через Discord ID
--- для заданных редкостей.
-
-local webhookStatusPara  -- top-level: used by updateWebhookStatus() below
-do
-local WebhookTab   = MainTabGroup:Tab({ Name = "Webhook" })
-local WebhookLeft  = WebhookTab:Section({ Side = "Left"  })
-local WebhookRight = WebhookTab:Section({ Side = "Right" })
-
--- HTTP request function (exploit-specific)
-local webhookRequest = http_request or request
-    or (syn and syn.request) or (http and http.request)
-
-local RARITY_COLORS = {
-    Common    = 0xADB5BD, Uncommon  = 0x4C956C, Rare      = 0x3498DB,
-    Epic      = 0x9B59B6, Legendary = 0xFFD700, Mythical  = 0xE74C3C,
-    Secret    = 0xFFFFFF, Limited   = 0xFF8C00, Exclusive = 0xFF00FF,
-}
-
-local WEBHOOK_STATE = {
-    url             = "",
-    discordId       = "",
-    enabled         = false,
-    selectedRarities   = { Mythical = true, Secret = true, Legendary = true, Limited = true, Exclusive = true },
-    selectedCategories = { Units = true, Swords = true, Accessories = true, Mounts = true, Avatars = true, Hakis = true },
-    pingRarities    = { Mythical = true, Secret = true, Limited = true, Exclusive = true },
-    snapshot        = {},
-    listeners       = {},
-    sentCount       = 0,
-    lastSent        = nil,
-}
-
-local function whShouldLog(category, rarity)
-    if WEBHOOK_STATE.selectedCategories[category] ~= true then return false end
-    if rarity and WEBHOOK_STATE.selectedRarities[rarity] == false then
-        -- если есть хотя бы одна включённая rarity-галочка — фильтруем строго
-        local anyOn = false
-        for _, v in pairs(WEBHOOK_STATE.selectedRarities) do
-            if v == true then anyOn = true; break end
-        end
-        if anyOn then return false end
-    end
-    return true
-end
-
-local function whSendDiscord(itemName, category, rarity, extra)
-    if WEBHOOK_STATE.url == "" or not webhookRequest then return end
-    local color = RARITY_COLORS[rarity] or 0xFFFFFF
-
-    local pingText = ""
-    if WEBHOOK_STATE.discordId ~= "" and rarity and WEBHOOK_STATE.pingRarities[rarity] then
-        pingText = "<@" .. WEBHOOK_STATE.discordId .. ">"
-    end
-
-    local fields = {
-        { name = "Item",     value = tostring(itemName), inline = true },
-        { name = "Category", value = tostring(category), inline = true },
-        { name = "Rarity",   value = tostring(rarity or "?"), inline = true },
-        { name = "Player",   value = LocalPlayer.Name,     inline = true },
-    }
-    if extra then
-        for k, v in pairs(extra) do
-            table.insert(fields, { name = tostring(k), value = tostring(v), inline = true })
-        end
-    end
-
-    local body = HttpService:JSONEncode({
-        content = pingText,
-        embeds  = { {
-            title     = (rarity or "?") .. " — " .. tostring(itemName),
-            color     = color,
-            fields    = fields,
-            footer    = { text = "WF Hub" },
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-        } },
+            end)
+        end,
     })
 
-    pcall(function()
-        webhookRequest({
-            Url     = WEBHOOK_STATE.url,
-            Method  = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body    = body,
-        })
-    end)
-    WEBHOOK_STATE.sentCount = WEBHOOK_STATE.sentCount + 1
-    WEBHOOK_STATE.lastSent  = itemName .. " (" .. tostring(rarity or "?") .. ")"
-end
-
--- Извлекаем rarity предмета из всех возможных путей
-local function whGetRarity(category, name, item)
-    if type(item) == "table" then
-        if item.Rarity then return item.Rarity end
-        if item.rarity then return item.rarity end
-    end
-    -- Unified rarity lookup через наш getRewardRarity (поддерживает SourceInfo)
-    if category == "Hakis" or category:find("Gacha") then
-        for _, gname in ipairs({ "Haki", "Fruit", "Dragon Power", "Slime Power", "Race" }) do
-            local si = getGachaSourceInfo(gname)
-            if si and si[name] then return si[name].Rarity end
-        end
-    end
-    -- fallback — пробуем Shared[category].List[name].Rarity
-    if Omni and Omni.Shared and Omni.Shared[category] then
-        local cfg = Omni.Shared[category]
-        if type(cfg) == "table" then
-            if cfg[name] and type(cfg[name]) == "table" and cfg[name].Rarity then
-                return cfg[name].Rarity
-            end
-            if type(cfg.List) == "table" and type(cfg.List[name]) == "table" then
-                return cfg.List[name].Rarity
-            end
-        end
-    end
-    return "Unknown"
-end
-
--- Снапшот — ключом служит `cat::name`
-local function whSnapshot()
-    local snap = {}
-    local data = Omni and Omni.Data
-    if type(data) ~= "table" then return snap end
-
-    -- Inventory.* категории
-    if type(data.Inventory) == "table" then
-        for cat, items in pairs(data.Inventory) do
-            if type(items) == "table" then
-                for k, item in pairs(items) do
-                    local name = (type(item) == "table" and (item.Name or item.name)) or tostring(k)
-                    snap[cat .. "::" .. tostring(k)] = true
+    sec.GachaL:Button({
+        Name = "Debug: Dump All Gachas",
+        Callback = function()
+            local d, buf = newDump()
+            d("========== [WF] GACHA DEBUG (all) ==========")
+            for _, gn in ipairs(getAllGachaNames()) do
+                d(("\n=========== %s ==========="):format(gn))
+                local cfg = getGachaCfg(gn)
+                local currency = getGachaCurrency(gn)
+                d(("  Currency: %s  (balance: %d)"):format(currency, getCurrencyBalance(currency)))
+                d(("  Cost/roll: %d  Max/roll: %d"):format(getGachaCost(gn), getMaxGachaPerRoll()))
+                d(("  cfg.Source: %s"):format(tostring(cfg and cfg.Source)))
+                local si = getSourceInfo(gn)
+                if type(si) == "table" then
+                    local n = 0; for _ in pairs(si) do n = n + 1 end
+                    d(("  SourceInfo: %d rewards"):format(n))
+                    local names = {}
+                    for k in pairs(si) do table.insert(names, k) end
+                    table.sort(names)
+                    for _, nm in ipairs(names) do
+                        d(("    %s (%s)"):format(nm, tostring(si[nm].Rarity)))
+                    end
+                else
+                    d("  SourceInfo: MISSING")
+                end
+                -- Data.Gacha[gn] dump
+                local dg = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gacha
+                if type(dg) == "table" and type(dg[gn]) == "table" then
+                    d(("  Data.Gacha.%s:"):format(gn))
+                    for k, v in pairs(dg[gn]) do
+                        if type(v) == "table" then
+                            local n = 0; for _ in pairs(v) do n = n + 1 end
+                            d(("    .%s = table (%d keys)"):format(tostring(k), n))
+                            if n > 0 and n <= 30 then
+                                for k2, v2 in pairs(v) do
+                                    d(("      [%s] = %s"):format(tostring(k2), tostring(v2)))
+                                end
+                            end
+                        else
+                            d(("    .%s = %s"):format(tostring(k), tostring(v)))
+                        end
+                    end
+                end
+                local counts, total = getMyUnitsByRarity(gn)
+                d(("  My rewards: %d total"):format(total))
+                for _, r in ipairs(RARITY_OPTIONS) do
+                    if counts[r] and counts[r] > 0 then
+                        d(("    %s: %d"):format(r, counts[r]))
+                    end
                 end
             end
-        end
-    end
+            d("\n=======================================")
+            flushDump(buf, "Gacha Debug (all)")
+        end,
+    })
 
-    -- Data.Gacha.<name>.Vault — сюда падают Haki и т.п.
-    if type(data.Gacha) == "table" then
-        for gname, gdata in pairs(data.Gacha) do
-            if type(gdata) == "table" and type(gdata.Vault) == "table" then
-                for vname in pairs(gdata.Vault) do
-                    snap["Gacha." .. gname .. "::" .. tostring(vname)] = true
-                end
-            end
-        end
-    end
-    return snap
-end
+    sec.GachaR:Header({ Text = "Banner / Roulette" })
 
-local function whProcessDiff(oldSnap, newSnap)
-    for key in pairs(newSnap) do
-        if not oldSnap[key] then
-            -- Новый ключ
-            local prefix, name = key:match("^(.-)::(.+)$")
-            if prefix and name then
-                local cat = prefix
-                -- для Gacha.Haki используем category = "Hakis" (канон)
-                if prefix:match("^Gacha%.") then
-                    local gachaName = prefix:match("^Gacha%.(.+)$")
-                    if gachaName == "Haki"        then cat = "Hakis"
-                    elseif gachaName == "Fruit"   then cat = "Fruits"
-                    else cat = gachaName .. " (Gacha)" end
-                end
-
-                local rarity = whGetRarity(cat, name, nil)
-                if whShouldLog(cat, rarity) then
-                    task.spawn(function() whSendDiscord(name, cat, rarity, nil) end)
-                end
-            end
-        end
-    end
-end
-
-local function whPollingLoop()
-    while WEBHOOK_STATE.enabled and not stopped do
-        task.wait(2)
-        local newSnap = whSnapshot()
-        whProcessDiff(WEBHOOK_STATE.snapshot, newSnap)
-        WEBHOOK_STATE.snapshot = newSnap
-    end
-end
-
-local function startWebhookEngine()
-    if not webhookRequest then
-        pcall(function()
-            Window:Notify({
-                Title       = "Webhook",
-                Description = "http_request недоступен у твоего executor'а",
-                Lifetime    = 5,
-            })
-        end)
-        return false
-    end
-    if WEBHOOK_STATE.url == "" then
-        pcall(function()
-            Window:Notify({
-                Title       = "Webhook",
-                Description = "Сначала вставь URL!",
-                Lifetime    = 4,
-            })
-        end)
-        return false
-    end
-    WEBHOOK_STATE.snapshot = whSnapshot()
-    task.spawn(whPollingLoop)
-    return true
-end
-
--- UI
-WebhookLeft:Input({
-    Name        = "Webhook URL",
-    Default     = "",
-    Placeholder = "https://discord.com/api/webhooks/…",
-    Callback    = function(v) WEBHOOK_STATE.url = tostring(v or "") end,
-})
-
-WebhookLeft:Input({
-    Name        = "Discord User ID (for ping)",
-    Default     = "",
-    Placeholder = "123456789012345678",
-    Callback    = function(v) WEBHOOK_STATE.discordId = tostring(v or "") end,
-})
-
-WebhookLeft:Dropdown({
-    Name     = "Log Rarities",
-    Multi    = true,
-    Required = false,
-    Options  = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythical", "Secret", "Limited", "Exclusive" },
-    Callback = function(v)
-        local set = {}
-        if type(v) == "table" then
-            for k, on in pairs(v) do if on and type(k) == "string" then set[k] = true end end
-        end
-        WEBHOOK_STATE.selectedRarities = next(set) and set or { Mythical = true, Secret = true, Legendary = true }
-    end,
-})
-
-WebhookLeft:Dropdown({
-    Name     = "Log Categories",
-    Multi    = true,
-    Required = false,
-    Options  = { "Units", "Swords", "Accessories", "Mounts", "Avatars", "Hakis", "Fruits" },
-    Callback = function(v)
-        local set = {}
-        if type(v) == "table" then
-            for k, on in pairs(v) do if on and type(k) == "string" then set[k] = true end end
-        end
-        WEBHOOK_STATE.selectedCategories = next(set) and set or { Units = true, Hakis = true }
-    end,
-})
-
-WebhookLeft:Dropdown({
-    Name     = "Ping Me On (rarities)",
-    Multi    = true,
-    Required = false,
-    Options  = { "Legendary", "Mythical", "Secret", "Limited", "Exclusive" },
-    Callback = function(v)
-        local set = {}
-        if type(v) == "table" then
-            for k, on in pairs(v) do if on and type(k) == "string" then set[k] = true end end
-        end
-        WEBHOOK_STATE.pingRarities = set
-    end,
-})
-
-WebhookLeft:Toggle({
-    Name     = "Enable Webhook",
-    Default  = false,
-    Callback = function(on)
-        WEBHOOK_STATE.enabled = on
-        if on then
-            local ok = startWebhookEngine()
-            if not ok then
-                WEBHOOK_STATE.enabled = false
-            else
-                pcall(function()
-                    Window:Notify({
-                        Title       = "Webhook enabled",
-                        Description = "Monitoring new items…",
-                        Lifetime    = 3,
-                    })
-                end)
-            end
-        end
-    end,
-}, "EnableWebhookToggle")
-
-WebhookLeft:Button({
-    Name     = "Send Test Message",
-    Callback = function()
-        task.spawn(function()
-            whSendDiscord("Test Item", "Debug", "Legendary", { Note = "Webhook test from WF Hub" })
+    sec.GachaR:Toggle({ Name = "Auto Banner Roll", Default = false,
+        Callback = function(s) _WF.AutoBannerRollEnabled = s end }, "AutoBannerRollToggle")
+    local bannerDropdown = sec.GachaR:Dropdown({ Name = "Banner", Multi = false, Required = false,
+        Options = getAllBanners(),
+        Callback = function(v) if type(v) == "string" then _WF.BannerName = v end end,
+    }, "BannerNameDropdown")
+    sec.GachaR:Button({ Name = "Refresh Banners",
+        Callback = function()
             pcall(function()
-                Window:Notify({
-                    Title       = "Webhook test",
-                    Description = "Отправлен тестовый embed (проверь Discord)",
-                    Lifetime    = 3,
-                })
+                bannerDropdown:ClearOptions()
+                bannerDropdown:InsertOptions(getAllBanners())
             end)
-        end)
-    end,
-})
+        end,
+    })
 
--- Status
-webhookStatusPara = WebhookRight:Paragraph({
-    Header = "Status",
-    Body   = "—",
-})
-end -- end of Webhook UI do-block
+    sec.GachaR:Toggle({ Name = "Auto Roulette Roll", Default = false,
+        Callback = function(s) _WF.AutoRouletteRollEnabled = s end }, "AutoRouletteRollToggle")
+    local rouletteDropdown = sec.GachaR:Dropdown({ Name = "Roulette", Multi = false, Required = false,
+        Options = getAllRoulettes(),
+        Callback = function(v) if type(v) == "string" then _WF.RouletteName = v end end,
+    }, "RouletteNameDropdown")
+    sec.GachaR:Button({ Name = "Refresh Roulettes",
+        Callback = function()
+            pcall(function()
+                rouletteDropdown:ClearOptions()
+                rouletteDropdown:InsertOptions(getAllRoulettes())
+            end)
+        end,
+    })
 
-local function updateWebhookStatus()
-    if not webhookStatusPara then return end
-    local lines = {
-        "Enabled: " .. (WEBHOOK_STATE.enabled and "ON" or "OFF"),
-        "http_request: " .. (webhookRequest and "available ✓" or "MISSING ✗"),
-        ("URL: %s"):format(WEBHOOK_STATE.url ~= "" and "set" or "—"),
-        ("Discord ID: %s"):format(WEBHOOK_STATE.discordId ~= "" and "set" or "—"),
-        ("Sent: %d"):format(WEBHOOK_STATE.sentCount),
-        ("Last: %s"):format(WEBHOOK_STATE.lastSent or "—"),
-    }
-    pcall(function() webhookStatusPara:UpdateBody(table.concat(lines, "\n")) end)
-end
+    -- Status (detailed per-rarity breakdown per gacha)
+    sec.GachaR:Header({ Text = "Status" })
+    local gachaStatus = wrapParagraph(sec.GachaR:Paragraph({ Header = "Gacha", Body = "—" }))
 
--- =========================================================
--- [7j] UI — Progression Tab
--- =========================================================
--- Fires:
---   Auto Progression       → General/Progression/Upgrade/<name>
---   Auto Trial Upgrades    → General/Upgrade/Upgrade/"Trial Upgrades"/<name>
---   Auto Skill Tree        → General/SkillTree/Unlock/<tree>/<node>   (parent-aware, multi-pass)
---   Auto Equip Best        → General/<cat>/EquipBest/<stat>
---   Auto Index All         → General/Index/Set/<cat>/<item>/<nextVal>
-
-local ProgressTab   = MainTabGroup:Tab({ Name = "Progress" })
-local ProgressLeft  = ProgressTab:Section({ Side = "Left"  })
-local ProgressRight = ProgressTab:Section({ Side = "Right" })
-
-do
--- ============ Auto Progression ============
-local function getAllProgressionNames()
-    local out = {}
-    local p = Omni and Omni.Shared and Omni.Shared.Progression and Omni.Shared.Progression.List
-    if type(p) == "table" then
-        for k in pairs(p) do
-            if type(k) == "string" then table.insert(out, k) end
-        end
-    end
-    table.sort(out)
-    return out
-end
-
-ProgressLeft:Header({ Text = "Progression" })
-
-ProgressLeft:Toggle({
-    Name     = "Auto Progression (spam Upgrade)",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoProgression = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoProgression and not stopped do
-                for prog, enabled in pairs(getgenv().ProgressionSelection or {}) do
-                    if enabled then
-                        pcall(function()
-                            Omni.Signal:Fire("General", "Progression", "Upgrade", prog)
-                        end)
-                        task.wait(0.3)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(2)
+            safe(function()
+                local sel = {}
+                for n in pairs(_WF.GachaSelection) do table.insert(sel, n) end
+                table.sort(sel)
+                local lines = {
+                    "Auto: " .. (_WF.AutoGachaEnabled and "ON" or "OFF"),
+                    "Target: " .. tostring(_WF.GachaTargetRarity or "any"),
+                    "Threshold: " .. tostring(_WF.GachaThreshold),
+                    "Max/roll: " .. tostring(getMaxGachaPerRoll()),
+                    "",
+                }
+                if #sel == 0 then
+                    table.insert(lines, "Selected: — (выбери гачу)")
+                else
+                    table.insert(lines, "Selected: " .. table.concat(sel, ", "))
+                    table.insert(lines, "")
+                    for _, gn in ipairs(sel) do
+                        local currency = getGachaCurrency(gn)
+                        local bal = getCurrencyBalance(currency)
+                        local cost = getGachaCost(gn)
+                        local counts, total = getMyUnitsByRarity(gn)
+                        local canRoll = bal >= math.max(cost, _WF.GachaThreshold)
+                        local siOk = getSourceInfo(gn) ~= nil
+                        table.insert(lines, string.format("%s (%d owned, SI %s)",
+                            gn, total, siOk and "✓" or "?"))
+                        table.insert(lines, string.format("   %s: %d %s",
+                            currency, bal, canRoll and "✓" or "…"))
+                        if total > 0 then
+                            local parts = {}
+                            for _, r in ipairs(RARITY_OPTIONS) do
+                                if counts[r] and counts[r] > 0 then
+                                    table.insert(parts, string.format("%s:%d", r, counts[r]))
+                                end
+                            end
+                            if #parts > 0 then
+                                table.insert(lines, "   " .. table.concat(parts, "  "))
+                            end
+                        end
                     end
                 end
-                task.wait(2)
-            end
-        end)
-    end,
-}, "AutoProgressionToggle")
-
-local progDropdown = ProgressLeft:Dropdown({
-    Name     = "Progressions (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllProgressionNames(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
-            end
+                gachaStatus:UpdateBody(table.concat(lines, "\n"))
+            end)
         end
-        getgenv().ProgressionSelection = set
-    end,
-}, "ProgressionSelectionDropdown")
+    end)
 
-ProgressLeft:Button({
-    Name     = "Refresh Progressions",
-    Callback = function()
-        pcall(function()
-            progDropdown:ClearOptions()
-            progDropdown:InsertOptions(getAllProgressionNames())
-        end)
-    end,
-})
-end do -- scope break to release locals
-
--- ============ Auto Trial Upgrades ============
-local function getAllTrialUpgradeNames()
-    local out = {}
-    local u = Omni and Omni.Shared and Omni.Shared.Upgrade
-    local tu = u and u["Trial Upgrades"]
-    local list = tu and tu.Upgrades
-    if type(list) == "table" then
-        for k in pairs(list) do
-            if type(k) == "string" then table.insert(out, k) end
-        end
-    end
-    if #out == 0 then
-        out = { "Power", "Attack Distance", "Crystals", "Attack Speed", "Damage" }
-    end
-    table.sort(out)
-    return out
-end
-
-ProgressLeft:Header({ Text = "Trial Upgrades" })
-
-ProgressLeft:Toggle({
-    Name     = "Auto Trial Upgrades",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoTrialUpgrades = on
-        if not on then return end
+    -- Gacha roll loop: per-gacha thread
+    -- Adaptive cost-check: фаирим только то количество roll'ов которое можем купить.
+    -- Если даже на 1 roll не хватает — ждём дольше (3с вместо 0.5с), чтобы не спамить
+    -- тиками пока currency копится из фарма.
+    local _spawnedThreads = {}
+    local function ensureRollThread(gachaName)
+        if _spawnedThreads[gachaName] then return end
+        _spawnedThreads[gachaName] = true
         task.spawn(function()
-            while getgenv().AutoTrialUpgrades and not stopped do
-                for up, enabled in pairs(getgenv().TrialUpgradeSelection or {}) do
-                    if enabled then
-                        pcall(function()
-                            Omni.Signal:Fire("General", "Upgrade", "Upgrade", "Trial Upgrades", up)
-                        end)
-                        task.wait(0.3)
+            while getgenv()._WFRunning do
+                task.wait(0.5)
+                if _WF.AutoGachaEnabled and _WF.GachaSelection[gachaName] and _WF.ModulesLoaded then
+                    local longWait = false
+                    safe(function()
+                        -- Target owned? stop this gacha
+                        if _WF.GachaTargetRarity then
+                            local owned = hasRarityOrHigher(gachaName, _WF.GachaTargetRarity)
+                            if owned then
+                                _WF.GachaSelection[gachaName] = nil
+                                Notify(gachaName .. ": target rarity reached!", 5)
+                                if not next(_WF.GachaSelection) then _WF.AutoGachaEnabled = false end
+                                return
+                            end
+                        end
+                        local currency = getGachaCurrency(gachaName)
+                        local bal = getCurrencyBalance(currency)
+                        local cost = math.max(1, getGachaCost(gachaName))
+                        local thr = math.max(cost, _WF.GachaThreshold or 0)
+                        if bal < cost then
+                            -- Не хватает даже на 1 roll — ждём фарма. Не спамим fire'ы.
+                            longWait = true
+                            return
+                        end
+                        if bal >= thr then
+                            local maxPer = getMaxGachaPerRoll()
+                            local canBuy = math.floor(bal / cost)
+                            local amount = math.min(maxPer, canBuy)  -- adaptive: столько roll'ов сколько реально купим
+                            if amount >= 1 then
+                                -- Gacha — pure remote fire, не трогает HRP. Крутим где угодно,
+                                -- даже внутри трайла / во время star-open / во время zone-TP.
+                                _WF.Omni.Signal:Fire("General", "Gacha", "Roll", gachaName, amount)
+                                task.wait(1.0)
+                            end
+                        else
+                            -- balance ниже threshold (хватает на rolls, но юзер выставил
+                            -- минимальный баланс) — ждём покрупнее
+                            longWait = true
+                        end
+                    end)
+                    if longWait then task.wait(3) end
+                end
+            end
+        end)
+    end
+
+    -- Spawn threads on-demand
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(1)
+            for gn in pairs(_WF.GachaSelection or {}) do ensureRollThread(gn) end
+        end
+    end)
+
+    -- Banner loop
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(1)
+            if _WF.AutoBannerRollEnabled and _WF.BannerName ~= "" and _WF.ModulesLoaded
+                and shouldFire("banner.roll", 1)
+            then
+                -- Banner roll — pure remote fire, крутим где угодно.
+                safe(function() _WF.Omni.Signal:Fire("General", "Banner", "Roll", _WF.BannerName) end)
+            end
+        end
+    end)
+
+    -- Roulette loop
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(3)
+            if _WF.AutoRouletteRollEnabled and _WF.RouletteName ~= "" and _WF.ModulesLoaded
+                and shouldFire("roulette.roll", 3)
+            then
+                -- Roulette roll — pure remote fire, крутим где угодно.
+                safe(function() _WF.Omni.Signal:Fire("General", "Roulette", "Roll", _WF.RouletteName) end)
+            end
+        end
+    end)
+end)
+if not _ok_gacha then warn("[ApelHub] GACHA tab failed: " .. tostring(_err_gacha)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 14. PROGRESS TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_prog, _err_prog = pcall(function()
+    local function getAllProgressionNames()
+        local out = {}
+        local p = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Progression and _WF.Omni.Shared.Progression.List
+        if type(p) == "table" then for k in pairs(p) do if type(k) == "string" then table.insert(out, k) end end end
+        table.sort(out); return out
+    end
+    local function getAllTrialUpgradeNames()
+        local out = {}
+        local u = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
+        local tu = u and u["Trial Upgrades"]
+        local list = tu and tu.Upgrades
+        if type(list) == "table" then for k in pairs(list) do if type(k) == "string" then table.insert(out, k) end end end
+        if #out == 0 then out = { "Power","Attack Distance","Crystals","Attack Speed","Damage" } end
+        table.sort(out); return out
+    end
+    local function getAllSkillTreeNames()
+        local out = {}
+        local st = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.SkillTree and _WF.Omni.Shared.SkillTree.List
+        if type(st) == "table" then for k in pairs(st) do if type(k) == "string" then table.insert(out, k) end end end
+        table.sort(out); return out
+    end
+
+    local function isNodeUnlocked(treeName, nodeName)
+        local d = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.SkillTree
+        local tree = type(d) == "table" and d[treeName]
+        if type(tree) ~= "table" then return false end
+        local v = tree[nodeName]
+        if v == true or (type(v) == "number" and v > 0) then return true end
+        if type(v) == "table" and (v.Unlocked == true or (type(v.Level) == "number" and v.Level > 0)) then return true end
+        return false
+    end
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- Pre-flight balance checks. Игра сама проверяет цену перед Upgrade —
+    -- дублируем ту же логику чтобы не спамить сервер Fire'ами без валюты.
+    -- Возвращают (canAfford, reason) где reason: "maxed" / "no_balance" / "no_api"
+    -- ═══════════════════════════════════════════════════════════════════
+
+    -- Auto Progression (GetLevelInformation(name, level) → {Price={Type,Name,Amount}})
+    local function canAffordProgression(name)
+        local data = _WF.Omni and _WF.Omni.Data
+        local sp = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Progression
+        local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
+        if not (data and sp and util) then return false, "no_api" end
+        if type(sp.GetLevelInformation) ~= "function" or type(util.GetPriceAmount) ~= "function" then
+            return false, "no_api"
+        end
+        -- Zone-lock check. Без него fire на locked-зону → сервер отвергает +
+        -- локальный notify "You don't have access to this progression". Даём юзеру
+        -- заранее выбрать progression под зону которую он скоро откроет — до разблока
+        -- мы тихо скипаем, после — автоматически начнём прокачивать.
+        local cfg = sp.List and sp.List[name]
+        if type(cfg) == "table" and cfg.MapName then
+            local PS = _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+            if PS and type(PS.HasMapZone) == "function" then
+                local okZ, has = pcall(PS.HasMapZone, data, cfg.MapName, cfg.ZoneIndex)
+                if okZ and not has then return false, "zone_locked" end
+            end
+        end
+        local cur = (data.Progression and data.Progression[name]) or 0
+        local ok, info = pcall(sp.GetLevelInformation, name, cur + 1)
+        if not ok or type(info) ~= "table" then return false, "maxed" end  -- нет следующего уровня
+        if type(info.Price) ~= "table" then return true end  -- без цены — фаирим
+        local okBal, bal = pcall(function() return util:GetPriceAmount(info.Price.Type, info.Price.Name, data) end)
+        if not okBal or type(bal) ~= "number" then return false, "no_api" end
+        if bal >= (info.Price.Amount or 0) then return true end
+        return false, "no_balance"
+    end
+
+    -- Trial Upgrades (Shared.Upgrade["Trial Upgrades"].Upgrades[n].
+    -- GetLevelInformation(category, name, level))
+    local function canAffordTrialUpgrade(upgradeName)
+        local CAT = "Trial Upgrades"
+        local data = _WF.Omni and _WF.Omni.Data
+        local su = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
+        local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
+        if not (data and su and util) then return false, "no_api" end
+        if type(su.GetLevelInformation) ~= "function" or type(util.GetPriceAmount) ~= "function" then
+            return false, "no_api"
+        end
+        local cur = (data.Upgrade and data.Upgrade[CAT] and data.Upgrade[CAT][upgradeName]) or 0
+        local ok, info = pcall(su.GetLevelInformation, CAT, upgradeName, cur + 1)
+        if not ok or type(info) ~= "table" then return false, "maxed" end
+        if type(info.Price) ~= "table" then return true end
+        local okBal, bal = pcall(function() return util:GetPriceAmount(info.Price.Type, info.Price.Name, data) end)
+        if not okBal or type(bal) ~= "number" then return false, "no_api" end
+        if bal >= (info.Price.Amount or 0) then return true end
+        return false, "no_balance"
+    end
+
+    -- Игра имеет СВОЙ встроенный "Auto Roll" для progression'ов, хранится в
+    -- Omni.Data.ProgressionsAuto. На каждый ItemsChanged event (каждое убийство/награда)
+    -- игра перебирает этот список и для ЗАЛОЧЕННЫХ progression'ов (HasMapZone=false)
+    -- шлёт локальный notify "You don't have access to this progression".
+    -- Когда наш farm работает быстро — убийств много → спам. Чистим такие entries.
+    local function disableLockedProgressionsAuto()
+        local d = _WF.Omni and _WF.Omni.Data
+        if not d or type(d.ProgressionsAuto) ~= "table" then return 0 end
+        local shared = _WF.Omni.Shared and _WF.Omni.Shared.Progression and _WF.Omni.Shared.Progression.List
+        if not shared then return 0 end
+        local PS = _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+        local hasMapZone = PS and PS.HasMapZone
+        local cleared = 0
+        -- Snapshot список ключей (игровая таблица может мутироваться пока мы итерируем)
+        local names = {}
+        for name, on in pairs(d.ProgressionsAuto) do
+            if on then table.insert(names, name) end
+        end
+        for _, name in ipairs(names) do
+            local cfg = shared[name]
+            local locked = false
+            if cfg then
+                if hasMapZone then
+                    local ok, has = pcall(hasMapZone, d, cfg.MapName, cfg.ZoneIndex)
+                    if ok and not has then locked = true end
+                end
+            else
+                -- Конфига нет вообще (устаревшее имя / removed progression) — тоже чистим.
+                locked = true
+            end
+            if locked then
+                -- Toggle off через "Progression/Auto" signal (тот же что игра юзает на клик UI)
+                safe(function() _WF.Omni.Signal:Fire("General", "Progression", "Auto", name) end)
+                cleared = cleared + 1
+                task.wait(0.15)
+            end
+        end
+        return cleared
+    end
+
+    sec.ProgressL:Header({ Text = "Progression" })
+    sec.ProgressL:Toggle({ Name = "Auto Progression", Default = false,
+        Callback = function(s) _WF.AutoProgressionEnabled = s end }, "AutoProgressionToggle")
+    local progDropdown = sec.ProgressL:Dropdown({ Name = "Progressions (multi)", Multi = true, Required = false,
+        Options = getAllProgressionNames(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.ProgressionSelection = set
+        end,
+    }, "ProgressionSelectionDropdown")
+    sec.ProgressL:Button({ Name = "Refresh Progressions",
+        Callback = function()
+            pcall(function()
+                progDropdown:ClearOptions()
+                progDropdown:InsertOptions(getAllProgressionNames())
+            end)
+        end,
+    })
+    sec.ProgressL:Button({
+        Name = "Fix 'no access' spam (clear locked Auto Roll)",
+        Callback = function()
+            local n = disableLockedProgressionsAuto()
+            Notify(("Cleared %d locked Auto Roll entries"):format(n), 4)
+        end,
+    })
+
+    -- Автоочистка при загрузке скрипта — даём игре 3с устаканиться с Data, потом чистим.
+    task.spawn(function()
+        task.wait(3)
+        if _WF.ModulesLoaded then
+            local n = disableLockedProgressionsAuto()
+            if n > 0 then
+                Notify(("Disabled %d locked Auto Roll(s) to stop spam"):format(n), 4)
+            end
+        end
+    end)
+
+    sec.ProgressL:Header({ Text = "Trial Upgrades" })
+    sec.ProgressL:Toggle({ Name = "Auto Trial Upgrades", Default = false,
+        Callback = function(s) _WF.AutoTrialUpgradesEnabled = s end }, "AutoTrialUpgradesToggle")
+    sec.ProgressL:Dropdown({ Name = "Upgrades (multi)", Multi = true, Required = false,
+        Options = getAllTrialUpgradeNames(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.TrialUpgradeSelection = set
+        end,
+    }, "TrialUpgradeSelectionDropdown")
+
+    sec.ProgressR:Header({ Text = "Skill Tree" })
+    sec.ProgressR:Toggle({ Name = "Auto Skill Tree (parent-aware)", Default = false,
+        Callback = function(s) _WF.AutoSkillTreeEnabled = s end }, "AutoSkillTreeToggle")
+    local stDropdown = sec.ProgressR:Dropdown({ Name = "Skill Trees (multi)", Multi = true, Required = false,
+        Options = getAllSkillTreeNames(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.SkillTreeSelection = set
+        end,
+    }, "SkillTreeSelectionDropdown")
+    sec.ProgressR:Button({ Name = "Refresh Skill Trees",
+        Callback = function()
+            pcall(function()
+                stDropdown:ClearOptions()
+                stDropdown:InsertOptions(getAllSkillTreeNames())
+            end)
+        end,
+    })
+
+    sec.ProgressR:Header({ Text = "Auto Equip" })
+    sec.ProgressR:Toggle({ Name = "Auto Equip Best", Default = false,
+        Callback = function(s) _WF.AutoEquipBestEnabled = s end }, "AutoEquipBestToggle")
+    sec.ProgressR:Dropdown({ Name = "Equip Stat", Multi = false, Required = false,
+        Options = { "Power","Damage","Crystals","Drops","Luck","Attack Speed" },
+        Callback = function(v) if type(v) == "string" then _WF.EquipBestStat = v end end,
+    }, "EquipBestStatDropdown")
+    sec.ProgressR:Dropdown({ Name = "Categories (multi)", Multi = true, Required = false,
+        Options = { "Swords","Units","Accessories","Avatars","Mounts","Gacha" },
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.EquipBestCategories = set
+        end,
+    }, "EquipBestCategoriesDropdown")
+
+    -- Loops
+    -- Status tracking для Progress paragraph
+    _WF.ProgressStatus = { progressionMaxed = {}, trialMaxed = {} }
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(2)
+            if _WF.AutoProgressionEnabled and _WF.ModulesLoaded then
+                for n, on in pairs(_WF.ProgressionSelection) do
+                    if on then
+                        local ok, reason = canAffordProgression(n)
+                        if ok then
+                            safe(function() _WF.Omni.Signal:Fire("General", "Progression", "Upgrade", n) end)
+                            task.wait(0.3)
+                        elseif reason == "maxed" then
+                            -- Прокачан до максимума — снимаем из selection чтобы не проверять каждые 2с
+                            _WF.ProgressionSelection[n] = nil
+                            _WF.ProgressStatus.progressionMaxed[n] = true
+                            Notify(("Progression %s: MAXED"):format(n), 3)
+                        end
+                        -- reason == "no_balance" → тихо пропускаем, попробуем позже
                     end
                 end
-                task.wait(3)
-            end
-        end)
-    end,
-}, "AutoTrialUpgradesToggle")
-
-local trialUpDropdown = ProgressLeft:Dropdown({
-    Name     = "Trial Upgrades (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllTrialUpgradeNames(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
             end
         end
-        getgenv().TrialUpgradeSelection = set
-    end,
-}, "TrialUpgradeSelectionDropdown")
-end do -- scope break
-
--- ============ Auto Skill Tree (parent-aware, multi-pass) ============
-local function getAllSkillTreeNames()
-    local out = {}
-    local st = Omni and Omni.Shared and Omni.Shared.SkillTree and Omni.Shared.SkillTree.List
-    if type(st) == "table" then
-        for k in pairs(st) do
-            if type(k) == "string" then table.insert(out, k) end
+    end)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(3)
+            if _WF.AutoTrialUpgradesEnabled and _WF.ModulesLoaded then
+                for n, on in pairs(_WF.TrialUpgradeSelection) do
+                    if on then
+                        local ok, reason = canAffordTrialUpgrade(n)
+                        if ok then
+                            safe(function() _WF.Omni.Signal:Fire("General", "Upgrade", "Upgrade", "Trial Upgrades", n) end)
+                            task.wait(0.3)
+                        elseif reason == "maxed" then
+                            _WF.TrialUpgradeSelection[n] = nil
+                            _WF.ProgressStatus.trialMaxed[n] = true
+                            Notify(("Trial Upgrade %s: MAXED"):format(n), 3)
+                        end
+                    end
+                end
+            end
         end
-    end
-    table.sort(out)
-    return out
-end
-
-local function isNodeUnlocked(treeName, nodeName)
-    local d = Omni and Omni.Data and Omni.Data.SkillTree
-    if type(d) ~= "table" then return false end
-    local tree = d[treeName]
-    if type(tree) ~= "table" then return false end
-    local v = tree[nodeName]
-    if v == nil then return false end
-    if type(v) == "boolean" then return v end
-    if type(v) == "number" then return v > 0 end
-    if type(v) == "table" then
-        if v.Unlocked == true then return true end
-        if type(v.Level) == "number" and v.Level > 0 then return true end
-    end
-    return false
-end
-
-local function getTreeNodes(treeName)
-    local st = Omni and Omni.Shared and Omni.Shared.SkillTree and Omni.Shared.SkillTree.List
-    local tree = st and st[treeName]
-    if type(tree) ~= "table" then return nil end
-    -- Список нод: если есть tree.Nodes — берём оттуда; иначе сам tree.
-    return tree.Nodes or tree.List or tree
-end
-
-ProgressRight:Header({ Text = "Skill Tree" })
-
-ProgressRight:Toggle({
-    Name     = "Auto Skill Tree (parent-aware)",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoSkillTree = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoSkillTree and not stopped do
+    end)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(5)
+            if _WF.AutoSkillTreeEnabled and _WF.ModulesLoaded then
                 local progressed = false
-                for treeName, enabled in pairs(getgenv().SkillTreeSelection or {}) do
-                    if enabled then
-                        local nodes = getTreeNodes(treeName)
+                -- Helper: хватит ли валюты на цену ноды?
+                -- (Price может быть nil → тогда bесплатно; может быть строкой "25" → tonumber)
+                local util = _WF.Omni.Utils and _WF.Omni.Utils.Info
+                local function canAffordNode(nodeData)
+                    if type(nodeData) ~= "table" then return true end
+                    local price = nodeData.Price
+                    if type(price) ~= "table" or not price.Type or not price.Name then return true end
+                    local amount = tonumber(price.Amount) or 0
+                    if amount <= 0 then return true end
+                    if not util or type(util.GetPriceAmount) ~= "function" then return true end
+                    local ok, have = pcall(function() return util:GetPriceAmount(price.Type, price.Name, _WF.Omni.Data) end)
+                    if not ok or type(have) ~= "number" then return true end  -- API fail → не блокируем
+                    return have >= amount
+                end
+                for treeName, on in pairs(_WF.SkillTreeSelection) do
+                    if on then
+                        local st = _WF.Omni.Shared.SkillTree and _WF.Omni.Shared.SkillTree.List
+                        local tree = st and st[treeName]
+                        local nodes = tree and (tree.Nodes or tree.List or tree)
                         if type(nodes) == "table" then
-                            -- multi-pass: в одном цикле прогоняем до 10 проходов, пока есть что разлочить
                             for pass = 1, 10 do
-                                if not (getgenv().AutoSkillTree and not stopped) then break end
-                                local anyThisPass = false
+                                local any = false
                                 for nodeName, nodeData in pairs(nodes) do
-                                    local skip = (type(nodeName) ~= "string")
-                                        or isNodeUnlocked(treeName, nodeName)
-
-                                    -- Проверка parent: если есть Parent и он НЕ unlock'нут — пропуск
-                                    if not skip then
+                                    if type(nodeName) == "string" and not isNodeUnlocked(treeName, nodeName) then
                                         local parent
                                         if type(nodeData) == "table" then
-                                            parent = nodeData.Parent or nodeData.Requires or nodeData.RequiresNode
+                                            parent = nodeData.Parent or nodeData.Requires
                                         end
-                                        if parent and not isNodeUnlocked(treeName, parent) then
-                                            skip = true
+                                        local parentOk = not parent or isNodeUnlocked(treeName, parent)
+                                        -- ✅ Price check — не фаирим Unlock если не хватает валюты.
+                                        -- Без этого каждые 5с сервер отвергает fire + локальный
+                                        -- notify "not enough X".
+                                        local priceOk = canAffordNode(nodeData)
+                                        if parentOk and priceOk then
+                                            safe(function() _WF.Omni.Signal:Fire("General", "SkillTree", "Unlock", treeName, nodeName) end)
+                                            any = true; progressed = true
+                                            task.wait(0.4)
                                         end
-                                    end
-
-                                    if not skip then
-                                        pcall(function()
-                                            Omni.Signal:Fire("General", "SkillTree", "Unlock", treeName, nodeName)
-                                        end)
-                                        anyThisPass = true
-                                        progressed  = true
-                                        task.wait(0.4)  -- ждём Replica propagation
                                     end
                                 end
-                                if not anyThisPass then break end
+                                if not any then break end
                             end
                         end
                     end
                 end
-                task.wait(progressed and 5 or 15)
-            end
-        end)
-    end,
-}, "AutoSkillTreeToggle")
-
-local skillTreeDropdown = ProgressRight:Dropdown({
-    Name     = "Skill Trees (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = getAllSkillTreeNames(),
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
+                if not progressed then task.wait(10) end
             end
         end
-        getgenv().SkillTreeSelection = set
-    end,
-}, "SkillTreeSelectionDropdown")
-
-ProgressRight:Button({
-    Name     = "Refresh Skill Trees",
-    Callback = function()
-        pcall(function()
-            skillTreeDropdown:ClearOptions()
-            skillTreeDropdown:InsertOptions(getAllSkillTreeNames())
-        end)
-    end,
-})
-end do -- scope break
-
--- ============ Auto Equip Best ============
-local EQUIP_CATS = { "Swords", "Units", "Accessories", "Avatars", "Mounts", "Gacha" }
-local EQUIP_STATS = { "Power", "Damage", "Crystals", "Drops", "Luck", "Attack Speed" }
-
-ProgressRight:Header({ Text = "Auto Equip" })
-
-ProgressRight:Toggle({
-    Name     = "Auto Equip Best",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoEquipBest = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoEquipBest and not stopped do
-                local stat = getgenv().EquipBestStat
-                if type(stat) == "string" and stat ~= "" then
-                    for cat, enabled in pairs(getgenv().EquipBestCategories or {}) do
-                        if enabled and shouldFire("equip." .. cat, 5) then
-                            pcall(function()
-                                Omni.Signal:Fire("General", cat, "EquipBest", stat)
-                            end)
-                            task.wait(0.25)
-                        end
+    end)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(30)
+            if _WF.AutoEquipBestEnabled and _WF.ModulesLoaded and _WF.EquipBestStat ~= "" then
+                for cat, on in pairs(_WF.EquipBestCategories) do
+                    if on and shouldFire("equip." .. cat, 5) then
+                        safe(function() _WF.Omni.Signal:Fire("General", cat, "EquipBest", _WF.EquipBestStat) end)
+                        task.wait(0.25)
                     end
                 end
-                task.wait(30)
-            end
-        end)
-    end,
-}, "AutoEquipBestToggle")
-
-ProgressRight:Dropdown({
-    Name     = "Equip Stat",
-    Multi    = false,
-    Required = false,
-    Options  = EQUIP_STATS,
-    Callback = function(v)
-        if type(v) == "string" then getgenv().EquipBestStat = v end
-    end,
-}, "EquipBestStatDropdown")
-
-ProgressRight:Dropdown({
-    Name     = "Equip Categories (multi)",
-    Multi    = true,
-    Required = false,
-    Options  = EQUIP_CATS,
-    Callback = function(values)
-        local set = {}
-        if type(values) == "table" then
-            for k, v in pairs(values) do
-                if v and type(k) == "string" then set[k] = true end
             end
         end
-        getgenv().EquipBestCategories = set
-    end,
-}, "EquipBestCategoriesDropdown")
-
-ProgressRight:Button({
-    Name     = "Equip Best Now",
-    Callback = function()
-        local stat = getgenv().EquipBestStat
-        if type(stat) ~= "string" or stat == "" then return end
-        for cat, enabled in pairs(getgenv().EquipBestCategories or {}) do
-            if enabled then
-                pcall(function()
-                    Omni.Signal:Fire("General", cat, "EquipBest", stat)
-                end)
-                task.wait(0.2)
-            end
-        end
-    end,
-})
-end do -- scope break
-
--- ============ Auto Index All Owned ============
-local INDEX_CATS = { "Units", "Swords", "Accessories", "Mounts", "Avatars" }
-
-ProgressLeft:Header({ Text = "Index" })
-
-ProgressLeft:Toggle({
-    Name     = "Auto Index All Owned",
-    Default  = false,
-    Callback = function(on)
-        getgenv().AutoIndex = on
-        if not on then return end
-        task.spawn(function()
-            while getgenv().AutoIndex and not stopped do
-                local inv = Omni and Omni.Data and Omni.Data.Inventory
-                local index = Omni and Omni.Shared and Omni.Shared.Index
-                if type(inv) == "table" and type(index) == "table" and index.GetNextValueForIdentifier then
-                    for _, cat in ipairs(INDEX_CATS) do
-                        local items = inv[cat]
-                        if type(items) == "table" then
-                            for itemKey, itemData in pairs(items) do
-                                if not (getgenv().AutoIndex and not stopped) then break end
-                                local name = (type(itemData) == "table" and itemData.Name) or itemKey
-                                if type(name) == "string" then
-                                    local okGet, nextVal = pcall(function()
-                                        return index.GetNextValueForIdentifier(cat, name, Omni.Data)
-                                    end)
-                                    if okGet and nextVal ~= nil then
-                                        if shouldFire("index." .. cat .. "." .. name, 30) then
-                                            pcall(function()
-                                                Omni.Signal:Fire("General", "Index", "Set", cat, name, nextVal)
-                                            end)
-                                            task.wait(0.1)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                task.wait(60)
-            end
-        end)
-    end,
-}, "AutoIndexToggle")
-
-ProgressLeft:Paragraph({
-    Header = "Index info",
-    Body   =
-        "Индексирует все owned items в Units/Swords/Accessories/Mounts/Avatars.\n" ..
-        "Каждые 60с проходит по инвентарю и выставляет next value через\n" ..
-        "Shared.Index.GetNextValueForIdentifier. Завершение Index даёт бонусы\n" ..
-        "(stat boosts, новые слоты). Throttle 30с per-item.",
-})
-
-getgenv().AutoProgression           = getgenv().AutoProgression           or false
-getgenv().ProgressionSelection      = getgenv().ProgressionSelection      or {}
-getgenv().AutoTrialUpgrades         = getgenv().AutoTrialUpgrades         or false
-getgenv().TrialUpgradeSelection     = getgenv().TrialUpgradeSelection     or {}
-getgenv().AutoSkillTree             = getgenv().AutoSkillTree             or false
-getgenv().SkillTreeSelection        = getgenv().SkillTreeSelection        or {}
-getgenv().AutoEquipBest             = getgenv().AutoEquipBest             or false
-getgenv().EquipBestStat             = getgenv().EquipBestStat             or ""
-getgenv().EquipBestCategories       = getgenv().EquipBestCategories       or {}
-getgenv().AutoIndex                 = getgenv().AutoIndex                 or false
-end -- end Progression tab do-block
-
--- =========================================================
--- [7i] UI — Settings Tab
--- =========================================================
-local SettingsTab   = MainTabGroup:Tab({ Name = "Settings" })
-local SettingsLeft  = SettingsTab:Section({ Side = "Left"  })
-local SettingsRight = SettingsTab:Section({ Side = "Right" })
-
-SettingsLeft:Header({ Text = "UI" })
-
-pcall(function()
-    SettingsLeft:Slider({
-        Name          = "UI Size",
-        Default       = 0.85,
-        Minimum       = 0.5,
-        Maximum       = 2.0,
-        Precision     = 2,
-        DisplayMethod = "Value",
-        Callback      = function(v)
-            pcall(function() Window:SetScale(v) end)
-        end,
-    }, "UISizeSlider")
+    end)
+    -- Auto Index loop УДАЛЁН (баг): GetNextValueForIdentifier циклит
+    -- nil → Delete → Lock → Delete Shiny → Lock Shiny → nil → ... По факту ломал
+    -- ручные Delete/Lock юзера каждые 60с. При этом toggle автозагружался из MacLib
+    -- config (если был хоть раз включён), создавая скрытый демон.
 end)
+if not _ok_prog then warn("[ApelHub] PROGRESS tab failed: " .. tostring(_err_prog)) end
 
--- GlobalSetting (blur + notifications) — вынесем отдельным task.spawn после
--- инициализации потому что MacLib создаёт эти элементы на окне, а не на табе
-task.spawn(function()
-    task.wait(0.15)
-    pcall(function()
-        if Window.GlobalSetting then
-            Window:GlobalSetting({
-                Name     = "UI Blur",
-                Default  = (Window.GetAcrylicBlurState and Window:GetAcrylicBlurState()) or false,
-                Callback = function(b) pcall(function() Window:SetAcrylicBlurState(b) end) end,
-            })
-            Window:GlobalSetting({
-                Name     = "Notifications",
-                Default  = (Window.GetNotificationsState and Window:GetNotificationsState()) or true,
-                Callback = function(b) pcall(function() Window:SetNotificationsState(b) end) end,
-            })
+-- ════════════════════════════════════════════════════════════════
+-- // 15. MISC TAB (Walk Speed, Anti-AFK, Potions, Codes)
+-- ════════════════════════════════════════════════════════════════
+local _ok_misc, _err_misc = pcall(function()
+    -- Walk Speed — periodic re-apply (not signal-based).
+    -- Signal-based GetPropertyChangedSignal can crash client after re-injection
+    -- if old handler's connection survives. Periodic poll is safer.
+    local function applyWalkSpeed()
+        local ch = LocalPlayer.Character
+        local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+        if hum and hum.WalkSpeed ~= _WF.WalkSpeed then
+            hum.WalkSpeed = _WF.WalkSpeed
+        end
+    end
+
+    sec.MiscL:Header({ Text = "Character" })
+    sec.MiscL:Slider({
+        Name = "Walk Speed", Default = 16,
+        Minimum = 16, Maximum = 200, Precision = 0, DisplayMethod = "Value",
+        Callback = function(v)
+            _WF.WalkSpeed = tonumber(v) or 16
+            applyWalkSpeed()
+        end,
+    }, "WalkSpeedSlider")
+
+    -- Background loop applies walk speed periodically — no per-property signal connection
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(0.5)
+            if _WF.WalkSpeed ~= 16 then applyWalkSpeed() end
+        end
+    end)
+    -- Apply on respawn — track connection for cleanup
+    table.insert(_cleanupConns, LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)  -- wait for Humanoid to be ready
+        if _WF.WalkSpeed ~= 16 then applyWalkSpeed() end
+    end))
+
+    -- NoClip — проходим сквозь стены/пол. Решает проблему DD: teleportTo(mob)
+    -- может поставить игрока в/за стену arena → падение в void → respawn → loop.
+    -- Auto режим (default): включается сам когда активен любой фарм-toggle.
+    sec.MiscL:Dropdown({
+        Name = "NoClip (pass through walls)",
+        Options = { "auto", "on", "off" },
+        Default = "auto",
+        Callback = function(v)
+            if v == "auto" or v == "on" or v == "off" then
+                _WF.NoClipMode = v
+            end
+        end,
+    }, "NoClipModeDropdown")
+
+    -- Game Anti-AFK (bypass). Игра авто-открывает звёзды/гачу через 900с idle
+    -- (AntiAfk.LastStar/LastGacha/LastBanner сохраняются для auto-resume). Убиваем
+    -- это на трёх уровнях:
+    --  1. Settings.Anti Afk = false
+    --  2. Disconnect всех LocalPlayer.Idled connections
+    --  3. Reset AntiAfk.LastStar/LastGacha/LastBanner = "None" (стоп auto-resume)
+    local function killGameAntiAfk()
+        safe(function()
+            local d = _WF.Omni and _WF.Omni.Data
+            if d and (d.Settings or {})["Anti Afk"] == true then
+                _WF.Omni.Signal:Fire("General", "Settings", "Set", "Anti Afk", false)
+            end
+        end)
+        -- Disconnect Idled connections (если executor поддерживает getconnections)
+        safe(function()
+            local GC = getconnections or get_signal_cons
+            if GC then
+                for _, c in pairs(GC(LocalPlayer.Idled)) do
+                    if c.Disable then c:Disable()
+                    elseif c.Disconnect then c:Disconnect() end
+                end
+            end
+        end)
+        -- Сброс LastStar/LastGacha/LastBanner чтобы игра не "resume"нула что-то
+        safe(function()
+            local d = _WF.Omni and _WF.Omni.Data
+            if d and d.AntiAfk then
+                for _, field in ipairs({ "LastStar", "LastGacha", "LastBanner" }) do
+                    if d.AntiAfk[field] and d.AntiAfk[field] ~= "None" then
+                        _WF.Omni.Signal:Fire("Player", "AntiAfk", "SetValue", field, "None")
+                    end
+                end
+            end
+        end)
+    end
+
+    sec.MiscL:Toggle({
+        Name = "Disable Game Anti-AFK (recommended)", Default = false,
+        Callback = function(on)
+            _WF.DisableGameAntiAfkEnabled = on
+            if on then
+                killGameAntiAfk()
+                Notify("Anti-AFK fully disabled — auto-open stop", 4)
+            else
+                safe(function() _WF.Omni.Signal:Fire("General", "Settings", "Set", "Anti Afk", true) end)
+            end
+        end,
+    }, "DisableGameAntiAfkToggle")
+
+    -- Background re-applier (на случай если игра откатит флаг)
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(30)
+            if _WF.DisableGameAntiAfkEnabled and _WF.ModulesLoaded then
+                killGameAntiAfk()
+            end
+        end
+    end)
+
+    -- Auto Potions
+    local function getAllPotions()
+        local out = {}
+        local p = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Items and _WF.Omni.Shared.Items.Potion
+        if type(p) == "table" then for k in pairs(p) do if type(k) == "string" then table.insert(out, k) end end end
+        table.sort(out); return out
+    end
+    local function isPotionActive(name)
+        local up = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.UsedPotions
+        if type(up) ~= "table" then return false end
+        local v = up[name]
+        if v == nil then return false end
+        if type(v) == "table" then
+            local et = v.EndTime or v.endTime or v.ExpiresAt
+            if type(et) == "number" then return et > tick() end
+            return next(v) ~= nil
+        end
+        return v == true or (type(v) == "number" and v > 0)
+    end
+    local function getPotionCount(name)
+        local inv = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Inventory and _WF.Omni.Data.Inventory.Potions
+        if type(inv) ~= "table" then return 0 end
+        local v = inv[name]
+        if type(v) == "number" then return v end
+        if type(v) == "table" then return tonumber(v.Amount or v.Count) or 0 end
+        return 0
+    end
+
+    sec.MiscR:Header({ Text = "Auto Potions" })
+    sec.MiscR:Toggle({ Name = "Auto Use Potions", Default = false,
+        Callback = function(s) _WF.AutoPotionsEnabled = s end }, "AutoPotionsToggle")
+    sec.MiscR:Dropdown({ Name = "Potions (multi)", Multi = true, Required = false,
+        Options = getAllPotions(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.PotionSelection = set
+        end,
+    }, "PotionSelectionDropdown")
+
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(5)
+            if _WF.AutoPotionsEnabled and _WF.ModulesLoaded then
+                for name, on in pairs(_WF.PotionSelection) do
+                    if on and not isPotionActive(name) and getPotionCount(name) > 0 then
+                        if shouldFire("potion." .. name, 2) then
+                            safe(function() _WF.Omni.Signal:Fire("General", "Items", "UsePotion", name, 1) end)
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    -- Auto Codes
+    local KNOWN_CODES = {
+        "RELEASE", "WORLDFIGHTERS", "FREE100", "UPDATE1", "DEV", "ADMIN",
+        "WELCOME", "SHUTDOWN", "THXSUB", "100KLIKES", "1MVISITS", "SORRY",
+        "FIX", "BUGFIX", "20KLIKES", "50KLIKES", "1KLIKES", "5KLIKES",
+        "10KLIKES", "200KLIKES", "500KLIKES",
+    }
+    sec.MiscR:Header({ Text = "Auto Codes" })
+    sec.MiscR:Toggle({ Name = "Auto Redeem Codes (every 5min)", Default = false,
+        Callback = function(s) _WF.AutoCodesEnabled = s end }, "AutoCodesToggle")
+    sec.MiscR:Button({ Name = "Redeem Now",
+        Callback = function()
+            task.spawn(function()
+                for _, code in ipairs(KNOWN_CODES) do
+                    safe(function() _WF.Omni.Signal:Fire("General", "Codes", "Redeem", code) end)
+                    task.wait(0.4)
+                end
+            end)
+        end,
+    })
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            if _WF.AutoCodesEnabled and _WF.ModulesLoaded then
+                for _, code in ipairs(KNOWN_CODES) do
+                    safe(function() _WF.Omni.Signal:Fire("General", "Codes", "Redeem", code) end)
+                    task.wait(0.4)
+                end
+            end
+            -- 300s sleep with flag check
+            local waited = 0
+            while waited < 300 and getgenv()._WFRunning do task.wait(2); waited = waited + 2 end
         end
     end)
 end)
+if not _ok_misc then warn("[ApelHub] MISC tab failed: " .. tostring(_err_misc)) end
 
-SettingsLeft:Button({
+-- ════════════════════════════════════════════════════════════════
+-- // 16. WEBHOOK TAB
+-- ════════════════════════════════════════════════════════════════
+local _ok_webhook, _err_webhook = pcall(function()
+    sec.WebhookL:Header({ Text = "Discord Webhook" })
+
+    sec.WebhookL:Toggle({ Name = "Enable Webhook", Default = false,
+        Callback = function(on)
+            _WF.WebhookEnabled = on
+            if on and (_WF.WebhookURL == "") then
+                _WF.WebhookEnabled = false
+                Notify("Введи Webhook URL сначала", 4)
+            end
+        end,
+    }, "EnableWebhookToggle")
+
+    sec.WebhookL:Input({ Name = "Webhook URL", Default = "",
+        Callback = function(v) _WF.WebhookURL = tostring(v or "") end,
+    }, "WebhookURLInput")
+
+    sec.WebhookL:Input({ Name = "Discord User ID (for ping)", Default = "",
+        Callback = function(v) _WF.WebhookDiscordUserId = tostring(v or "") end,
+    }, "WebhookDiscordIdInput")
+
+    sec.WebhookL:Dropdown({ Name = "Rarity Filter (log ≥)", Multi = false, Required = false,
+        Options = { "Common","Uncommon","Rare","Epic","Mythical","Legendary","Secret" },
+        Callback = function(v)
+            local set = {}
+            if type(v) == "string" and v ~= "" then
+                local ranks = { Common=1,Uncommon=2,Rare=3,Epic=4,Mythical=5,Legendary=6,Secret=7 }
+                local min = ranks[v] or 0
+                for r, i in pairs(ranks) do if i >= min then set[r] = true end end
+            end
+            _WF.WebhookRarityFilter = set
+        end,
+    }, "WebhookRarityFilterDropdown")
+
+    sec.WebhookL:Toggle({ Name = "Ping on Mythical+", Default = false,
+        Callback = function(s) _WF.WebhookPingOnMythical = s end }, "WebhookPingMythicalToggle")
+
+    sec.WebhookL:Button({ Name = "Test Webhook",
+        Callback = function() sendWebhook("Test", "Apel Hub webhook test", 2672813) end,
+    })
+
+    sec.WebhookR:Header({ Text = "Status" })
+    local whStatus = wrapParagraph(sec.WebhookR:Paragraph({ Header = "Webhook", Body = "—" }))
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(2)
+            safe(function()
+                whStatus:UpdateBody(
+                    "Enabled: " .. (_WF.WebhookEnabled and "yes" or "no") ..
+                    "\nURL: " .. (_WF.WebhookURL ~= "" and "set" or "—") ..
+                    "\nDiscord ID: " .. (_WF.WebhookDiscordUserId ~= "" and "set" or "—") ..
+                    "\nSent: " .. tostring(_WF.WebhookSentCount) ..
+                    "\nLast: " .. tostring(_WF.WebhookLastSent or "—")
+                )
+            end)
+        end
+    end)
+
+    -- Monitor loop: scans Data.Gacha.*.Vault AND Inventory.* for new items.
+    -- First pass records baseline; subsequent iterations notify on diff.
+    local _seen = {}
+    local INV_CATS = { "Units", "Swords", "Accessories", "Mounts", "Avatars", "Hakis", "Fruits", "Powers" }
+
+    -- Resolve rarity for any item by scanning all gacha SourceInfos
+    local function resolveItemRarity(itemName)
+        local sg = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gacha and _WF.Omni.Shared.Gacha.List
+        if type(sg) ~= "table" then return nil end
+        for gn, cfg in pairs(sg) do
+            if type(cfg) == "table" and type(cfg.SourceInfo) == "table" then
+                local info = cfg.SourceInfo[itemName]
+                if info and info.Rarity then return info.Rarity, gn end
+            end
+        end
+        return nil
+    end
+
+    task.spawn(function()
+        task.wait(3)
+        -- Baseline: record everything that's already there (no notify)
+        safe(function()
+            local dg = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Gacha
+            if type(dg) == "table" then
+                for gn, gval in pairs(dg) do
+                    if type(gval) == "table" and type(gval.Vault) == "table" then
+                        for k, v in pairs(gval.Vault) do
+                            if v then _seen["vault:" .. gn .. ":" .. tostring(k)] = true end
+                        end
+                    end
+                end
+            end
+            local inv = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Inventory
+            if type(inv) == "table" then
+                for _, cat in ipairs(INV_CATS) do
+                    local t = inv[cat]
+                    if type(t) == "table" then
+                        for k, v in pairs(t) do
+                            local name = (type(v) == "table" and (v.Name or tostring(k))) or tostring(k)
+                            _seen["inv:" .. cat .. ":" .. name] = true
+                        end
+                    end
+                end
+            end
+        end)
+
+        -- Monitoring loop
+        while getgenv()._WFRunning do
+            task.wait(5)
+            if _WF.WebhookEnabled and _WF.ModulesLoaded then
+                safe(function()
+                    local rarityColors = {
+                        Secret = 15844367, Legendary = 15105570, Mythical = 10181046,
+                        Epic = 10181046, Rare = 3447003, Uncommon = 3066993, Common = 9807270,
+                    }
+
+                    -- Scan Vault
+                    local dg = _WF.Omni.Data.Gacha
+                    if type(dg) == "table" then
+                        for gn, gval in pairs(dg) do
+                            if type(gval) == "table" and type(gval.Vault) == "table" then
+                                for name, owned in pairs(gval.Vault) do
+                                    local key = "vault:" .. gn .. ":" .. tostring(name)
+                                    if owned and not _seen[key] then
+                                        _seen[key] = true
+                                        local rarity = resolveItemRarity(name) or "?"
+                                        if next(_WF.WebhookRarityFilter) == nil or _WF.WebhookRarityFilter[rarity] then
+                                            sendWebhook(
+                                                gn .. " drop!",
+                                                string.format("**%s** (%s)", name, rarity),
+                                                rarityColors[rarity] or 3447003
+                                            )
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    -- Scan Inventory categories (for games that store drops directly
+                    -- in Inventory rather than Vault — like Fruit gacha for swords/units)
+                    local inv = _WF.Omni.Data.Inventory
+                    if type(inv) == "table" then
+                        for _, cat in ipairs(INV_CATS) do
+                            local t = inv[cat]
+                            if type(t) == "table" then
+                                for k, v in pairs(t) do
+                                    local name = (type(v) == "table" and (v.Name or tostring(k))) or tostring(k)
+                                    local key = "inv:" .. cat .. ":" .. name
+                                    if not _seen[key] then
+                                        _seen[key] = true
+                                        local rarity, fromGacha = resolveItemRarity(name)
+                                        rarity = rarity or "?"
+                                        if next(_WF.WebhookRarityFilter) == nil or _WF.WebhookRarityFilter[rarity] then
+                                            sendWebhook(
+                                                (fromGacha or cat) .. " drop!",
+                                                string.format("**%s** (%s)", name, rarity),
+                                                rarityColors[rarity] or 3447003
+                                            )
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end)
+if not _ok_webhook then warn("[ApelHub] WEBHOOK tab failed: " .. tostring(_err_webhook)) end
+
+-- ════════════════════════════════════════════════════════════════
+-- // 17. SETTINGS TAB + UI finalize
+-- ════════════════════════════════════════════════════════════════
+sec.SetL:Header({ Text = "UI Settings" })
+
+sec.SetL:Slider({
+    Name          = "UI Size",
+    Default       = 0.85,
+    Minimum       = 0.5,
+    Maximum       = 2.0,
+    Precision     = 2,
+    DisplayMethod = "Value",
+    Callback      = function(v) pcall(function() Window:SetScale(v) end) end,
+}, "UiSizeSlider")
+
+task.spawn(function()
+    task.wait(0.1)
+    pcall(function()
+        Window:GlobalSetting({
+            Name     = "UI Blur",
+            Default  = Window:GetAcrylicBlurState(),
+            Callback = function(b) pcall(function() Window:SetAcrylicBlurState(b) end) end,
+        })
+        Window:GlobalSetting({
+            Name     = "Notifications",
+            Default  = Window:GetNotificationsState(),
+            Callback = function(b) pcall(function() Window:SetNotificationsState(b) end) end,
+        })
+    end)
+end)
+
+sec.SetL:Button({
     Name     = "Unload Hub",
-    Callback = function() pcall(getgenv()._WF_Stop) end,
+    Callback = function() pcall(getgenv()._WFStop) end,
 })
 
-SettingsRight:Header({ Text = "Info" })
-SettingsRight:Paragraph({
+sec.SetL:Toggle({
+    Name     = "Enable Debug Prints",
+    Default  = false,
+    Callback = function(on) _WF.EnableDebug = on end,
+}, "EnableDebugToggle")
+
+sec.SetR:Header({ Text = "Diagnostics" })
+
+-- ═══════════════════════════════════════════════════════════════════
+-- FULL DEBUG DUMP — комплексный дамп всего состояния скрипта и игры.
+-- Юзер жмёт кнопку → буфер копируется в clipboard → вставляет сюда в чат.
+-- Покрывает: executor env, Omni API, Data snapshot, workspace, Shared
+-- configs, per-gamemode state, script state (_WF.*), character.
+-- ═══════════════════════════════════════════════════════════════════
+sec.SetR:Button({
+    Name = "📋 Full Debug Dump (copy to clipboard)",
+    Callback = function()
+        local d, buf = newDump()
+        d("═══════════════════ APEL HUB FULL DEBUG ═══════════════════")
+        d(("Timestamp: %s | PlaceId: %s"):format(os.date("!%Y-%m-%d %H:%M:%S UTC"), tostring(game.PlaceId)))
+        d(("Player: %s (%d)"):format(LocalPlayer.Name, LocalPlayer.UserId))
+
+        -- ── 1. EXECUTOR ENV ──
+        d("")
+        d("── 1. EXECUTOR ENV ──")
+        d(("  getconnections: %s"):format(tostring(getconnections ~= nil)))
+        d(("  getgenv: %s"):format(tostring(getgenv ~= nil)))
+        d(("  setclipboard: %s"):format(tostring(setclipboard ~= nil)))
+        d(("  http_request: %s"):format(tostring((http_request or request or (syn and syn.request) or (http and http.request)) ~= nil)))
+        d(("  writefile/readfile: %s/%s"):format(tostring(writefile ~= nil), tostring(readfile ~= nil)))
+        d(("  isfolder/makefolder: %s/%s"):format(tostring(isfolder ~= nil), tostring(makefolder ~= nil)))
+        d(("  cloneref: %s"):format(tostring(cloneref ~= nil)))
+        d(("  identifyexecutor: %s"):format(identifyexecutor and tostring(identifyexecutor()) or "n/a"))
+
+        -- ── 2. OMNI FRAMEWORK ──
+        d("")
+        d("── 2. OMNI FRAMEWORK ──")
+        d(("  _WF.ModulesLoaded: %s"):format(tostring(_WF.ModulesLoaded)))
+        d(("  Omni: %s"):format(_WF.Omni and "✓" or "✗ MISSING"))
+        if _WF.Omni then
+            d(("  Omni.Data: %s"):format(_WF.Omni.Data and "✓" or "✗"))
+            d(("  Omni.Signal.Fire: %s"):format(_WF.Omni.Signal and type(_WF.Omni.Signal.Fire) == "function" and "✓" or "✗"))
+            d(("  Omni.Shared: %s"):format(_WF.Omni.Shared and "✓" or "✗"))
+            d(("  Omni.Cache.Get: %s"):format(_WF.Omni.Cache and type(_WF.Omni.Cache.Get) == "function" and "✓" or "✗"))
+            d(("  Omni.Libs.DataContainer: %s"):format(_WF.Omni.Libs and _WF.Omni.Libs.DataContainer and "✓" or "✗"))
+            local util = _WF.Omni.Utils and _WF.Omni.Utils.Info
+            d(("  Omni.Utils.Info.GetPriceAmount: %s"):format(util and type(util.GetPriceAmount) == "function" and "✓" or "✗"))
+            local ps = _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
+            d(("  Omni.Utils.PlayerStats.HasMapZone: %s"):format(ps and type(ps.HasMapZone) == "function" and "✓" or "✗"))
+            d(("  Omni.Utils.PlayerStats.ClickCooldown: %s"):format(ps and type(ps.ClickCooldown) == "function" and "✓" or "✗"))
+            d(("  Omni.Utils.PlayerStats.StarOpenSpeed: %s"):format(ps and type(ps.StarOpenSpeed) == "function" and "✓" or "✗"))
+            d(("  Omni.Utils.PlayerStats.MaxStarOpen: %s"):format(ps and type(ps.MaxStarOpen) == "function" and "✓" or "✗"))
+            local sg = _WF.Omni.Shared and _WF.Omni.Shared.Gamemodes
+            d(("  Shared.Gamemodes.IsTimedGamemode: %s"):format(sg and type(sg.IsTimedGamemode) == "function" and "✓" or "✗"))
+            d(("  Shared.Gamemodes.GetTimeForNextOpen: %s"):format(sg and type(sg.GetTimeForNextOpen) == "function" and "✓" or "✗"))
+            local sp = _WF.Omni.Shared and _WF.Omni.Shared.Progression
+            d(("  Shared.Progression.GetLevelInformation: %s"):format(sp and type(sp.GetLevelInformation) == "function" and "✓" or "✗"))
+            local su = _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
+            d(("  Shared.Upgrade.GetLevelInformation: %s"):format(su and type(su.GetLevelInformation) == "function" and "✓" or "✗"))
+        end
+
+        -- ── 3. DATA SNAPSHOT ──
+        d("")
+        d("── 3. DATA SNAPSHOT ──")
+        local data = _WF.Omni and _WF.Omni.Data
+        if not data then
+            d("  (Data not available)")
+        else
+            d(("  Power: %s | Crystals: %s | Gems: %s (%s paid, %s free) | Aura: %s"):format(
+                tostring(data.Power), tostring(data.Crystals), tostring((data.FreeGems or 0)+(data.PaidGems or 0)),
+                tostring(data.PaidGems), tostring(data.FreeGems), tostring(data.Aura)))
+            d(("  Level: %s"):format(tostring(data.Level and data.Level.Amount or data.Level)))
+            d(("  Map: %s | Zone: %s | Gamemode: %s"):format(tostring(data.Map), tostring(data.Zone), tostring(data.Gamemode)))
+            d(("  Settings.Anti Afk: %s"):format(tostring((data.Settings or {})["Anti Afk"])))
+            if data.AntiAfk then
+                d(("  AntiAfk.LastStar: %s | LastGacha: %s | LastBanner: %s"):format(
+                    tostring(data.AntiAfk.LastStar), tostring(data.AntiAfk.LastGacha), tostring(data.AntiAfk.LastBanner)))
+            end
+            -- Gamepasses relevant to us
+            local gp = data.Gamepasses or {}
+            local gpRelevant = {}
+            for _, name in ipairs({ "Remote Star", "Star Speed", "Gacha Rolls", "Auto Click", "Auto Aura Upgrade", "Auto Awaken" }) do
+                table.insert(gpRelevant, name .. "=" .. tostring(gp[name]))
+            end
+            d("  Gamepasses: " .. table.concat(gpRelevant, " | "))
+            -- Inventory items (ключевые)
+            local items = data.Inventory and data.Inventory.Items or {}
+            local keyItems = {}
+            for _, name in ipairs({ "Saiyan Key", "Haki Token", "Race Token", "Fruit Token", "Slime Token", "Dragon Balls Token" }) do
+                local v = items[name]
+                local amt = (type(v) == "number") and v or (type(v) == "table" and (v.Amount or 0)) or 0
+                table.insert(keyItems, name .. "=" .. tostring(amt))
+            end
+            d("  Items: " .. table.concat(keyItems, " | "))
+            -- Progression/Upgrade/SkillTree counts
+            local pCount, uCount, stCount = 0, 0, 0
+            if type(data.Progression) == "table" then for _ in pairs(data.Progression) do pCount = pCount + 1 end end
+            if type(data.Upgrade) == "table" then for _ in pairs(data.Upgrade) do uCount = uCount + 1 end end
+            if type(data.SkillTree) == "table" then for _ in pairs(data.SkillTree) do stCount = stCount + 1 end end
+            d(("  Progression keys: %d | Upgrade keys: %d | SkillTree keys: %d"):format(pCount, uCount, stCount))
+            local pa = data.ProgressionsAuto
+            if type(pa) == "table" then
+                local onCount, offCount = 0, 0
+                for _, v in pairs(pa) do if v then onCount = onCount + 1 else offCount = offCount + 1 end end
+                d(("  ProgressionsAuto: %d on / %d off"):format(onCount, offCount))
+            end
+            -- Data.Gacha — Current для каждой гачи (для target-rarity detection)
+            if type(data.Gacha) == "table" then
+                local gNames = {}
+                for k, v in pairs(data.Gacha) do
+                    if type(v) == "table" and v.Current then
+                        table.insert(gNames, k .. "→" .. tostring(v.Current))
+                    end
+                end
+                d(("  Data.Gacha.Current: %s"):format(#gNames > 0 and table.concat(gNames, ", ") or "(none rolled)"))
+            end
+        end
+
+        -- ── 4. WORKSPACE ──
+        d("")
+        d("── 4. WORKSPACE ──")
+        local enemies = Workspace:FindFirstChild("Server") and Workspace.Server:FindFirstChild("Enemies")
+        d(("  Server.Enemies: %s"):format(enemies and "✓" or "✗ MISSING"))
+        if enemies then
+            local gms = enemies:FindFirstChild("Gamemodes")
+            if gms then
+                local gmList = {}
+                for _, c in ipairs(gms:GetChildren()) do
+                    table.insert(gmList, ("%s=%d"):format(c.Name, #c:GetChildren()))
+                end
+                d(("  Enemies.Gamemodes: %s"):format(#gmList > 0 and table.concat(gmList, ", ") or "(empty)"))
+            end
+            local world = enemies:FindFirstChild("World")
+            if world and data and data.Map then
+                local mapFolder = world:FindFirstChild(data.Map)
+                if mapFolder then
+                    local zoneFolder = mapFolder:FindFirstChild(tostring(data.Zone or 1))
+                    if zoneFolder then
+                        d(("  Enemies.World.%s.%s: %d mobs"):format(data.Map, tostring(data.Zone), #zoneFolder:GetChildren()))
+                    end
+                end
+            end
+        end
+        -- Dragon Defense base lookup
+        safe(function()
+            local mapsRoot = Workspace:FindFirstChild("Client") and Workspace.Client:FindFirstChild("Maps")
+            local ddMap = mapsRoot and mapsRoot:FindFirstChild("Dragon Defense")
+            if ddMap then
+                local model = ddMap.Map and ddMap.Map.Defense and ddMap.Map.Defense:FindFirstChild("Model")
+                if model then
+                    local children = model:GetChildren()
+                    d(("  DD base path: Client.Maps.Dragon Defense.Map.Defense.Model (%d children)"):format(#children))
+                    local base71 = children[71]
+                    if base71 then
+                        d(("    [71]: %s (%s, %s)"):format(base71.Name, base71.ClassName,
+                            base71:IsA("BasePart") and tostring(base71.Position) or "not BasePart"))
+                    end
+                else
+                    d("  DD base: Map.Defense.Model not found")
+                end
+            else
+                d("  DD base: Client.Maps.Dragon Defense not found (map unloaded)")
+            end
+        end)
+
+        -- ── 5. SHARED CONFIGS ──
+        d("")
+        d("── 5. SHARED CONFIGS ──")
+        if _WF.Omni and _WF.Omni.Shared then
+            local sh = _WF.Omni.Shared
+            local function countTable(t) local n=0; if type(t)=="table" then for _ in pairs(t) do n=n+1 end end; return n end
+            d(("  Gamemodes: %d entries"):format(countTable(sh.Gamemodes)))
+            -- Имена gamemode'ов лежат в Shared.Gamemodes.List, НЕ на верхнем уровне.
+            -- На верхнем только методы (List/IsTimedGamemode/GetTimeForNextOpen).
+            local gmList = sh.Gamemodes and sh.Gamemodes.List
+            if type(gmList) == "table" then
+                local gmNames = {}
+                for k in pairs(gmList) do
+                    if type(k) == "string" then table.insert(gmNames, k) end
+                end
+                table.sort(gmNames)
+                d(("    List: %d → %s"):format(#gmNames, table.concat(gmNames, ", ")))
+            end
+            d(("  Progression.List: %d"):format(countTable(sh.Progression and sh.Progression.List)))
+            d(("  SkillTree.List: %d"):format(countTable(sh.SkillTree and sh.SkillTree.List)))
+            d(("  Gacha.List: %d"):format(countTable(sh.Gacha and sh.Gacha.List)))
+            d(("  Banner.List: %d"):format(countTable(sh.Banner and sh.Banner.List)))
+            d(("  Roulette.List: %d"):format(countTable(sh.Roulette and sh.Roulette.List)))
+            -- Trial Upgrades
+            local tu = sh.Upgrade and sh.Upgrade.List and sh.Upgrade.List["Trial Upgrades"]
+            if tu and tu.Upgrades then
+                local names = {}
+                for k in pairs(tu.Upgrades) do table.insert(names, k) end
+                table.sort(names)
+                d("  Upgrade['Trial Upgrades'].Upgrades: " .. table.concat(names, ", "))
+            end
+            -- Stars
+            if type(sh.Stars) == "table" then
+                local sNames = {}
+                for k, v in pairs(sh.Stars) do
+                    if type(v) == "table" and v.Price then table.insert(sNames, k) end
+                end
+                table.sort(sNames)
+                d(("  Stars: %d (%s)"):format(#sNames, table.concat(sNames, ", ")))
+            end
+        end
+
+        -- ── 6. PER-GAMEMODE STATE ──
+        d("")
+        d("── 6. PER-GAMEMODE STATE ──")
+        local sg = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Gamemodes
+        local sgList = sg and sg.List  -- конфиги живут в .List, не на верхнем уровне
+        local dc = _WF.Omni and _WF.Omni.Libs and _WF.Omni.Libs.DataContainer
+        local gmNamesToCheck = {}
+        if type(sgList) == "table" then
+            for k, v in pairs(sgList) do
+                if type(k) == "string" and type(v) == "table" and
+                   (v.OpenTimes or v.OpenEvery or v.MapName or v.MaxWave or v.EnterTime) then
+                    table.insert(gmNamesToCheck, k)
+                end
+            end
+        end
+        table.sort(gmNamesToCheck)
+        for _, name in ipairs(gmNamesToCheck) do
+            d(("  [%s]"):format(name))
+            local cfg = sgList[name]
+            d(("    OpenTimes=%s | OpenEvery=%s | EnterTime=%s | MapName=%s | MaxWave=%s"):format(
+                cfg.OpenTimes and table.concat(cfg.OpenTimes, ",") or "nil",
+                tostring(cfg.OpenEvery), tostring(cfg.EnterTime),
+                tostring(cfg.MapName), tostring(cfg.MaxWave)))
+            if sg.IsTimedGamemode then
+                local ok, t = pcall(sg.IsTimedGamemode, name)
+                d(("    IsTimedGamemode: %s (ok=%s)"):format(tostring(t), tostring(ok)))
+            end
+            if dc then
+                local ok, c = pcall(function() return dc:Get("GamemodeData - " .. name) end)
+                if ok and c and c.Data then
+                    d(("    Data: Opened=%s LastStart=%s Wave=%s/%s Enemies=%s Health=%s"):format(
+                        tostring(c.Data.Opened), tostring(c.Data.LastStart),
+                        tostring(c.Data.Wave), tostring(c.Data.MaxWave),
+                        tostring(c.Data.Enemies), tostring(c.Data.Health)))
+                else
+                    d("    DataContainer: not available")
+                end
+            end
+            if sg.GetTimeForNextOpen then
+                local ls = 0
+                if dc then
+                    local _, c = pcall(function() return dc:Get("GamemodeData - " .. name) end)
+                    if c and c.Data and type(c.Data.LastStart) == "number" then ls = c.Data.LastStart end
+                end
+                local ok, s = pcall(sg.GetTimeForNextOpen, name, ls)
+                d(("    GetTimeForNextOpen: %s (ok=%s)"):format(tostring(s), tostring(ok)))
+            end
+        end
+
+        -- ── 7. SCRIPT STATE (_WF.*) ──
+        d("")
+        d("── 7. SCRIPT STATE ──")
+        d("  Toggles ON:")
+        local toggles = {
+            "AutoFarmEnabled","AutoOpenStarEnabled","AutoQuestEnabled","AutoPinQuestEnabled",
+            "AutoTpToQuestZoneEnabled","AutoTrialEnabled","AutoDragonDefenseEnabled",
+            "AutoGachaEnabled","AutoBannerRollEnabled","AutoRouletteRollEnabled",
+            "AutoAchievementsEnabled","AutoTimeRewardsEnabled","AutoDailyRewardsEnabled",
+            "AutoFollowRewardsEnabled","AutoDailyChestEnabled","AutoGroupChestEnabled",
+            "AutoVIPChestEnabled","AutoProgressionEnabled","AutoTrialUpgradesEnabled",
+            "AutoSkillTreeEnabled","AutoEquipBestEnabled","AutoPotionsEnabled",
+            "AutoCodesEnabled","HideStarAnimEnabled","DisableGameAntiAfkEnabled",
+            "WebhookEnabled",
+        }
+        local onList = {}
+        for _, name in ipairs(toggles) do
+            if _WF[name] then table.insert(onList, name) end
+        end
+        d("    " .. (#onList > 0 and table.concat(onList, ", ") or "(none)"))
+        -- Selections
+        local function listKeys(t) local o={}; if type(t)=="table" then for k in pairs(t) do table.insert(o,tostring(k)) end end; table.sort(o); return o end
+        d("  Selections:")
+        d(("    Targets (farm): %s"):format(table.concat(listKeys(_WF.Targets), ", ")))
+        d(("    StarTargets: %s"):format(table.concat(listKeys(_WF.StarTargets), ", ")))
+        d(("    QuestSelections: %s"):format(table.concat(listKeys(_WF.QuestSelections), ", ")))
+        d(("    TrialSelections: %s"):format(table.concat(listKeys(_WF.TrialSelections), ", ")))
+        d(("    GachaSelection: %s"):format(table.concat(listKeys(_WF.GachaSelection), ", ")))
+        d(("    ProgressionSelection: %s"):format(table.concat(listKeys(_WF.ProgressionSelection), ", ")))
+        d(("    TrialUpgradeSelection: %s"):format(table.concat(listKeys(_WF.TrialUpgradeSelection), ", ")))
+        d(("    SkillTreeSelection: %s"):format(table.concat(listKeys(_WF.SkillTreeSelection), ", ")))
+        d("  Mutexes:")
+        d(("    StarBusy=%s | ZoneTpBusy=%s | TrialBusy=%s"):format(
+            tostring(_WF.StarBusy), tostring(_WF.ZoneTpBusy), tostring(_WF.TrialBusy)))
+        d("  Config:")
+        d(("    TrialAutoLeaveWave=%s | DragonDefenseLeaveWave=%s"):format(
+            tostring(_WF.TrialAutoLeaveWave), tostring(_WF.DragonDefenseLeaveWave)))
+        d(("    GachaTargetRarity=%s | GachaThreshold=%s"):format(
+            tostring(_WF.GachaTargetRarity), tostring(_WF.GachaThreshold)))
+        d(("    BannerName=%s | RouletteName=%s"):format(
+            tostring(_WF.BannerName), tostring(_WF.RouletteName)))
+        d(("    EquipBestStat=%s"):format(tostring(_WF.EquipBestStat)))
+        d("  Saved Position:")
+        if _WF.SavedPosition then
+            local p = _WF.SavedPosition.Position
+            d(("    Location: %s"):format(tostring(_WF.SavedLocation)))
+            d(("    CFrame: (%.1f, %.1f, %.1f)"):format(p.X, p.Y, p.Z))
+        else
+            d("    (not saved)")
+        end
+
+        -- ── 8. CHARACTER ──
+        d("")
+        d("── 8. CHARACTER ──")
+        local char = LocalPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hrp then
+                d(("  HRP: (%.1f, %.1f, %.1f) anchored=%s"):format(
+                    hrp.Position.X, hrp.Position.Y, hrp.Position.Z, tostring(hrp.Anchored)))
+            end
+            if hum then
+                d(("  Humanoid: Health=%s/%s WalkSpeed=%s"):format(
+                    tostring(math.floor(hum.Health)), tostring(math.floor(hum.MaxHealth)), tostring(hum.WalkSpeed)))
+            end
+        else
+            d("  Character: nil (respawning?)")
+        end
+
+        d("")
+        d("═══════════════════ END ═══════════════════")
+        flushDump(buf, "Full Debug Dump")
+    end,
+})
+
+sec.SetR:Header({ Text = "Info" })
+sec.SetR:Paragraph({
     Header = "World Fighters Hub",
     Body   =
-        "Version: v0.37\n" ..
+        "Version: v1.0\n" ..
         "Framework: Omni (BridgeNet wrapper)\n" ..
         "Toggle UI: LeftCtrl\n" ..
         "Drag: free window (DragStyle=2)\n" ..
         "\n" ..
-        "Конфиг сохраняется автоматом в workspace/ApelHub/\n" ..
-        "после первого Save Config (или при включении auto-load).",
+        "Конфиг автосохраняется в workspace/ApelHub/.",
 })
 
--- =========================================================
--- [8] AUTO-REFRESH LOOP (динамический — фолдер меняется при смене зоны)
--- =========================================================
-local folderConns = {}
+-- // ========================================== \\ --
+-- //               FINALIZATION                 \\ --
+-- // ========================================== \\ --
 
-local function clearFolderConns()
-    for _, c in ipairs(folderConns) do pcall(function() c:Disconnect() end) end
-    table.clear(folderConns)
-end
+-- _WFStop — master kill-switch. Turns off every feature flag, disconnects signals, unloads window.
+getgenv()._WFStop = function()
+    -- Turn off every flag
+    _WF.AutoFarmEnabled          = false
+    _WF.AutoOpenStarEnabled      = false
+    _WF.AutoQuestEnabled         = false
+    _WF.AutoTrialEnabled         = false
+    _WF.AutoDragonDefenseEnabled = false
+    _WF.AutoGachaEnabled         = false
+    _WF.AutoBannerRollEnabled    = false
+    _WF.AutoRouletteRollEnabled  = false
+    _WF.AutoAchievementsEnabled  = false
+    _WF.AutoTimeRewardsEnabled   = false
+    _WF.AutoDailyRewardsEnabled  = false
+    _WF.AutoFollowRewardsEnabled = false
+    _WF.AutoDailyChestEnabled    = false
+    _WF.AutoGroupChestEnabled    = false
+    _WF.AutoVIPChestEnabled      = false
+    _WF.AutoProgressionEnabled   = false
+    _WF.AutoTrialUpgradesEnabled = false
+    _WF.AutoSkillTreeEnabled     = false
+    _WF.AutoEquipBestEnabled     = false
+    _WF.DisableGameAntiAfkEnabled = false
+    _WF.AutoPotionsEnabled       = false
+    _WF.AutoCodesEnabled         = false
+    _WF.HideStarAnimEnabled      = false
+    _WF.WebhookEnabled           = false
 
--- Dropdown теперь из мобов ТЕКУЩЕЙ зоны. Обновляем его при:
---  (A) появлении/исчезновении мобов в текущей папке (ChildAdded/ChildRemoved)
---  (B) смене карты/зоны (Omni:OnDataChanged на Map/Zone)
--- Debounce 2с чтобы не дёргать перестроение на каждую смерть.
-local _refreshDebounceAt = 0
-local function debouncedRefresh()
-    local now = tick()
-    if now - _refreshDebounceAt < 2 then return end
-    _refreshDebounceAt = now
-    task.defer(refreshDropdown)
-end
+    _WF.Targets          = {}
+    _WF.StarTargets      = {}
+    _WF.QuestSelections  = {}
+    _WF.TrialSelections  = {}
+    _WF.GachaSelection   = {}
 
-local function attachFolderListeners()
-    clearFolderConns()
-    local f = getEnemiesFolder()
-    if not f then return end
-    table.insert(folderConns, f.ChildAdded:Connect(function()
-        task.wait(0.2)
-        debouncedRefresh()
-    end))
-    table.insert(folderConns, f.ChildRemoved:Connect(function()
-        task.defer(debouncedRefresh)
-    end))
-end
-attachFolderListeners()
-
--- При смене зоны/карты: переподписываемся на новую папку + перестраиваем дропдаун
-pcall(function()
-    local c1 = Omni:OnDataChanged({ "Map" }, function()
-        task.wait(0.2)
-        attachFolderListeners()
-        debouncedRefresh()
-    end)
-    local c2 = Omni:OnDataChanged({ "Zone" }, function()
-        task.wait(0.2)
-        attachFolderListeners()
-        debouncedRefresh()
-    end)
-    -- OnDataChanged может возвращать connection — добавим в общий cleanup, если он disconnect'абельный
-    for _, c in ipairs({ c1, c2 }) do
-        if typeof(c) == "RBXScriptConnection" or (type(c) == "table" and c.Disconnect) then
-            table.insert(connections, c)
-        end
-    end
-end)
-
-task.spawn(function()
-    while not stopped do
-        task.wait(1)
-        updateStatus()
-        updatePlayerInfo()
-        updateChestStatus()
-        updateEggStatus()
-        updateQuestStatus()
-        updateTrialStatus()
-        updateGachaStatus()
-        updateWebhookStatus()
-    end
-end)
-
--- =========================================================
--- [9] UNLOAD
--- =========================================================
-getgenv()._WF_Stop = function()
-    stopped = true
-    getgenv().AutoFarm      = false
-    getgenv().AutoOpenStar  = false
-    getgenv().AutoQuest     = false
-    getgenv().AutoTrial     = false
-    getgenv().AutoGacha     = false
-    getgenv().GachaSelection = {}
-    getgenv()._StarBusy     = false
-    getgenv()._ZoneTpBusy   = false
-    -- Webhook off
-    if WEBHOOK_STATE then
-        WEBHOOK_STATE.enabled = false
-        for _, c in ipairs(WEBHOOK_STATE.listeners or {}) do
-            pcall(function() c:Disconnect() end)
-        end
-        WEBHOOK_STATE.listeners = {}
-    end
-    for _, c in ipairs(connections) do
-        pcall(function() c:Disconnect() end)
-    end
-    table.clear(connections)
-    clearFolderConns()
+    if getgenv()._WFCleanup then pcall(getgenv()._WFCleanup); getgenv()._WFCleanup = nil end
     pcall(function() Window:Unload() end)
 end
 
-pcall(function()
-    local f = getEnemiesFolder()
-    Window:Notify({
-        Title       = "World Fighters Hub",
-        Description = ("Загружен. Мобов в зоне: %d"):format(f and #f:GetChildren() or 0),
-        Lifetime    = 4,
-    })
-end)
-
--- Минимайзер (иконка справа у края экрана чтоб вернуть окно)
 task.spawn(function()
-    task.wait(0.25)
+    task.wait(0.2)
     pcall(function()
-        if Window.CreateMinimizer then
-            Window:CreateMinimizer({
-                Size     = UDim2.fromOffset(50, 50),
-                Position = UDim2.new(1, -10, 0.5, 0),
-                Icon     = "rbxassetid://138310609771261",
-            })
-        end
+        Window:CreateMinimizer({
+            Size = UDim2.fromOffset(50, 50),
+            Position = UDim2.new(1, -10, 0.5, 0),
+            Icon = "rbxassetid://138310609771261",
+        })
     end)
 end)
 
--- Конфиг персистентность (MacLib fork). Флаги на toggle'ах/слайдерах сохраняют
--- состояние между сессиями. LoadAutoLoadConfig вызывается в конце, чтобы ВСЕ
--- элементы UI уже были созданы до загрузки сохранённых значений.
-pcall(function()
-    if MacLib.SetFolder then MacLib:SetFolder("ApelHub") end
-    if MacLib.LoadAutoLoadConfig then MacLib:LoadAutoLoadConfig() end
+task.spawn(function()
+    task.wait(0.5)
+    print("Apel Hub | " .. GameName .. " loaded!")
+    task.wait(0.5)
+    if _G.KeyExpiresAt then pcall(function() Window:SetKeyTimer(_G.KeyExpiresAt) end) end
 end)
 
-warn(("[WF] Hub v0.37 loaded. %d mobs detected."):format(#(getEnemiesFolder() and getEnemiesFolder():GetChildren() or {})))
+MacLib:SetFolder("ApelHub")
+task.spawn(function() pcall(function() MacLib:LoadAutoLoadConfig() end) end)
+task.spawn(function() pcall(function() tabs.Farm:Select() end) end)
+
+Window.onUnloaded(function()
+    getgenv()._WFRunning = false
+    if getgenv()._WFCleanup then pcall(getgenv()._WFCleanup); getgenv()._WFCleanup = nil end
+    getgenv()._WFStop = nil
+    print("Apel Hub | " .. GameName .. " unloaded!")
+end)
