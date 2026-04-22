@@ -55,10 +55,15 @@ _WF.FillerRadius    = 80    -- studs (радиус поиска ближайше
 --   "on"    — всегда вкл
 _WF.NoClipMode      = "auto"
 
+-- Auto Click — 20 Hz fire (0.05с) на General/Attack/Click. Обходит игровой
+-- gamepass-cooldown (без gamepass игра режет до 0.5с). Работает независимо
+-- от Auto Farm: можно стоять около моба и бить, без TP. attackOnce() сам
+-- игнорит пустой EnemiesOnRangeIds, так что в фоне практически бесплатно.
+_WF.AutoClickEnabled = false
+
 -- Eggs (Stars)
 _WF.AutoOpenStarEnabled = false
 _WF.StarTargets         = {}
-_WF.HideStarAnimEnabled = false
 _WF.StarBusy            = false   -- mutex for star TP
 
 -- Quests
@@ -79,9 +84,14 @@ _WF.TrialAbandoned       = false
 _WF.AutoDragonDefenseEnabled = false
 _WF.DragonDefenseLeaveWave   = 0  -- 0 = пройти до конца, >0 = выход на волне
 _WF.DragonDefenseAbandoned   = false
--- Приоритет когда включены ОБА (Auto Trial + Auto DD):
---   "Trial"         — делаем трайлы, DD игнорится пока есть активный трайл
---   "DragonDefense" — делаем DD, трайлы игнорятся (default, у DD требуется ключ)
+-- Tempest Invasion (event-gamemode, требует Slime Key, аналог Dragon Defense)
+_WF.AutoTempestInvasionEnabled = false
+_WF.TempestInvasionLeaveWave   = 0  -- 0 = full run, >0 = выход на волне
+_WF.TempestInvasionAbandoned   = false
+-- Приоритет когда включены два или больше из (Auto Trial + Auto DD + Auto TI):
+--   "Trial"           — делаем трайлы, остальные ждут
+--   "DragonDefense"   — делаем DD, остальные ждут (default, у DD требуется ключ)
+--   "TempestInvasion" — делаем TI, остальные ждут (требует Slime Key)
 _WF.GamemodePriority = "DragonDefense"
 -- Saved player position (для возврата после трайлов/DD на точное место фарма)
 _WF.SavedPosition     = nil  -- CFrame
@@ -112,6 +122,8 @@ _WF.AutoProgressionEnabled   = false
 _WF.ProgressionSelection     = {}
 _WF.AutoTrialUpgradesEnabled = false
 _WF.TrialUpgradeSelection    = {}
+_WF.AutoTempestUpgradesEnabled = false
+_WF.TempestUpgradeSelection    = {}
 _WF.AutoSkillTreeEnabled     = false
 _WF.SkillTreeSelection       = {}
 _WF.AutoEquipBestEnabled     = false
@@ -139,6 +151,11 @@ _WF.ZoneTpBusy = false
 -- Mutex: когда мы внутри trial'а (AutoTrial активен + игрок реально в gamemode),
 -- блокируем farm/egg/quest чтобы они не дёргали HRP и не портили прохождение волн.
 _WF.TrialBusy  = false
+-- Race-window mutex: set ПЕРЕД Fire("General","Gamemodes","Join", ...) и снимается
+-- когда Data.Gamemode появилось (или таймаут 5с). Без него Auto Farm в эту 1-2с
+-- дыру видит "не в трайле, в зоне нет таргетов" → ТП в свою фарм-зону →
+-- выкидывает нас из трайла В МОМЕНТ захода. Тот же гейт уважают Star loop и Quest.
+_WF.GamemodeJoinBusy = false
 
 -- File system
 local RootFolder = "ApelHub"
@@ -453,6 +470,28 @@ function _WF.attackOnce()
     end)
 end
 
+-- Безопасный Join в gamemode. Ставит мьютекс ПЕРЕД Fire, снимает после того
+-- как Data.Gamemode реально появился (или после timeout). Все loop'ы (Farm,
+-- Star, Quest) видят флаг и не дёргают HRP в окне Join. Возвращает true если
+-- сервер подтвердил вход.
+function _WF.fireGamemodeJoin(modeName, timeout)
+    timeout = timeout or 5
+    if not (_WF.Omni and _WF.Omni.Signal) then return false end
+    _WF.GamemodeJoinBusy = true
+    safe(function()
+        _WF.Omni.Signal:Fire("General", "Gamemodes", "Join", modeName)
+    end)
+    local deadline = tick() + timeout
+    while tick() < deadline do
+        local d = _WF.Omni.Data
+        if d and d.Gamemode == modeName then break end
+        task.wait(0.1)
+    end
+    _WF.GamemodeJoinBusy = false
+    local d = _WF.Omni.Data
+    return d and d.Gamemode == modeName
+end
+
 function _WF.getClickCooldown()
     local u = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.PlayerStats
     if type(u) == "table" and type(u.ClickCooldown) == "function" then
@@ -741,6 +780,7 @@ function _WF.fillerHit(mob, maxDuration, gateFn)
     local lastHPTick = tick()
     while gateFn() and getgenv()._WFRunning
         and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+        and not _WF.GamemodeJoinBusy
         and _WF.isAlive(mob) and tick() - started < (maxDuration or 1.5)
     do
         _WF.attackOnce()
@@ -836,6 +876,7 @@ function _WF.runTargetFarmStep(targetSet, gateFn)
             local lastHPTick = tick()
             while gateFn() and getgenv()._WFRunning
                 and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+                and not _WF.GamemodeJoinBusy
                 and _WF.isAlive(mob) and tick() - started < 15
             do
                 local hrp = getHRP()
@@ -1095,6 +1136,29 @@ sec.SetL      = tabs.Settings:Section({ Side = "Left"  })
 sec.SetR      = tabs.Settings:Section({ Side = "Right" })
 
 -- ════════════════════════════════════════════════════════════════
+-- SETTINGS PROXY HELPER (глобальный, чтоб любой таб мог использовать)
+-- ════════════════════════════════════════════════════════════════
+-- Прокси на серверные Data.Settings. Default берётся из текущего значения
+-- на сервере. Aura/Awaken/Auto Click/Auto Attack — gamepass-gated на стороне
+-- сервера; если нет пасса — тогл выставится, но эффекта не будет (это норма).
+local function makeSettingToggle(parent, label, settingKey, flagId)
+    local default = false
+    safe(function()
+        local s = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Settings
+        if s then default = s[settingKey] == true end
+    end)
+    parent:Toggle({
+        Name    = label,
+        Default = default,
+        Callback = function(on)
+            safe(function()
+                _WF.Omni.Signal:Fire("General", "Settings", "Set", settingKey, on)
+            end)
+        end,
+    }, flagId)
+end
+
+-- ════════════════════════════════════════════════════════════════
 -- GLOBAL UI UNLOCKER
 -- ════════════════════════════════════════════════════════════════
 -- Gacha roll и Star open добавляют Frame:AddUIHider(...) + camera modifier
@@ -1188,6 +1252,51 @@ end
 -- // 8. FARM TAB
 -- ════════════════════════════════════════════════════════════════
 local _ok_farm, _err_farm = pcall(function()
+    -- // AUTO CLICK \\ --
+    sec.FarmL:Header({ Text = "Auto Click" })
+
+    sec.FarmL:Toggle({
+        Name    = "Auto Click (20Hz, custom)",
+        Default = false,
+        Callback = function(on)
+            _WF.AutoClickEnabled = on
+            if on then
+                -- Гасим игровой Auto Click если был включён — иначе в параллель с
+                -- нашим loop'ом = двойной fire rate, сервер рейтлимитит, лишний
+                -- трафик. Игра хранит в persistent Data.Settings, юзер сможет
+                -- вернуть вручную через игровое меню если захочет.
+                safe(function()
+                    local s = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Settings
+                    if s and s["Auto Click"] then
+                        _WF.Omni.Signal:Fire("General", "Settings", "Set", "Auto Click", false)
+                    end
+                end)
+            end
+        end,
+    }, "AutoClickToggle")
+
+    -- Background: Auto Click loop. attackOnce() сам no-op'ит когда
+    -- EnemiesOnRangeIds пустой, так что в idle-стейте loop стоит дёшево.
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(0.05)
+            if _WF.AutoClickEnabled and _WF.ModulesLoaded then
+                _WF.attackOnce()
+            end
+        end
+    end)
+
+    -- // GAME SETTINGS \\ --
+    -- Прокси на серверные Data.Settings. Aura/Awaken/Auto Attack — gamepass-gated
+    -- (если нет пасса — сервер молча игнорит). Always Run работает у всех.
+    sec.FarmL:Divider()
+    sec.FarmL:Header({ Text = "In-Game Settings" })
+    makeSettingToggle(sec.FarmL, "Auto Aura Upgrade", "Auto Aura Upgrade", "AutoAuraToggle")
+    makeSettingToggle(sec.FarmL, "Auto Awaken",       "Auto Awaken",       "AutoAwakenToggle")
+    makeSettingToggle(sec.FarmL, "Auto Attack",       "Auto Attack",       "AutoAttackToggle")
+    makeSettingToggle(sec.FarmL, "Always Run",        "Always Run",        "AlwaysRunToggle")
+
+    sec.FarmL:Divider()
     sec.FarmL:Header({ Text = "Auto Farm" })
 
     sec.FarmL:Toggle({
@@ -1362,6 +1471,7 @@ local _ok_farm, _err_farm = pcall(function()
             task.wait(0.15)
             if _WF.AutoFarmEnabled and _WF.ModulesLoaded
                 and not _WF.StarBusy and not _WF.ZoneTpBusy and not _WF.TrialBusy
+                and not _WF.GamemodeJoinBusy
             then
                 safe(function()
                     _WF.runTargetFarmStep(_WF.Targets, function() return _WF.AutoFarmEnabled end)
@@ -1724,44 +1834,10 @@ local _ok_eggs, _err_eggs = pcall(function()
         end,
     })
 
-    -- Star UI Hider
-    local starHideConn = nil
-    local function applyStarHide()
-        if not _WF.Omni then return end
-        safe(function()
-            local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
-            if sa then sa.Enabled = false end
-        end)
-        safe(function() _WF.Omni.Frame:Close("Star") end)
-        safe(function() _WF.Omni.Frame:RemoveUIHider("StarAnimation") end)
-        safe(function()
-            if _WF.Omni.Signal and _WF.Omni.Signal.FireSelf then
-                _WF.Omni.Signal:FireSelf("Player", "Camera", "RemoveCameraTypeModifier", "StarAnimation")
-                _WF.Omni.Signal:FireSelf("Player", "FOV", "Enable")
-            end
-        end)
-    end
-
-    sec.EggsL:Toggle({
-        Name = "Hide Star Animation",
-        Default = false,
-        Callback = function(on)
-            _WF.HideStarAnimEnabled = on
-            if on then
-                if starHideConn then starHideConn:Disconnect() end
-                starHideConn = RunService.Heartbeat:Connect(function()
-                    if _WF.HideStarAnimEnabled then applyStarHide() end
-                end)
-                table.insert(_cleanupConns, starHideConn)
-            else
-                if starHideConn then starHideConn:Disconnect(); starHideConn = nil end
-                safe(function()
-                    local sa = LocalPlayer.PlayerGui:FindFirstChild("StarAnimation")
-                    if sa then sa.Enabled = true end
-                end)
-            end
-        end,
-    }, "HideStarAnimToggle")
+    -- Star UI Hider — теперь через нативный игровой Setting "Hide Star Animation"
+    -- (раньше был кастомный hack с RunService.Heartbeat + RemoveUIHider).
+    -- Игра сама хайдит анимацию и снимает камеру-модификатор когда setting=true.
+    makeSettingToggle(sec.EggsL, "Hide Star Animation", "Hide Star Animation", "HideStarAnimToggle")
 
     sec.EggsR:Header({ Text = "Status" })
     local eggStatus = wrapParagraph(sec.EggsR:Paragraph({ Header = "Stars", Body = "—" }))
@@ -1773,9 +1849,14 @@ local _ok_eggs, _err_eggs = pcall(function()
                 local sel = {}
                 for n in pairs(_WF.StarTargets) do table.insert(sel, n) end
                 table.sort(sel)
+                local hideAnim = false
+                pcall(function()
+                    local s = _WF.Omni and _WF.Omni.Data and _WF.Omni.Data.Settings
+                    if s then hideAnim = s["Hide Star Animation"] == true end
+                end)
                 local lines = {
                     "Auto: " .. (_WF.AutoOpenStarEnabled and "ON" or "OFF"),
-                    "Hide anim: " .. (_WF.HideStarAnimEnabled and "ON" or "OFF"),
+                    "Hide anim: " .. (hideAnim and "ON (native)" or "OFF"),
                     "Targets: " .. (#sel == 0 and "—" or table.concat(sel, ", ")),
                     "Busy: " .. (_WF.StarBusy and "yes" or "no"),
                     "Remote Star pass: " .. (hasRemoteStarPass() and "yes (no TP needed)" or "no (TP mode)"),
@@ -1797,10 +1878,10 @@ local _ok_eggs, _err_eggs = pcall(function()
         while getgenv()._WFRunning do
             task.wait(0.5)
             -- Уважаем zone-tp farm'а: не вмешиваемся пока он телепортирует между зонами
-            if _WF.ZoneTpBusy or _WF.TrialBusy then
-                while (_WF.ZoneTpBusy or _WF.TrialBusy) and getgenv()._WFRunning do task.wait(0.15) end
+            if _WF.ZoneTpBusy or _WF.TrialBusy or _WF.GamemodeJoinBusy then
+                while (_WF.ZoneTpBusy or _WF.TrialBusy or _WF.GamemodeJoinBusy) and getgenv()._WFRunning do task.wait(0.15) end
             end
-            if _WF.AutoOpenStarEnabled and _WF.ModulesLoaded and not _WF.StarBusy and not _WF.TrialBusy then
+            if _WF.AutoOpenStarEnabled and _WF.ModulesLoaded and not _WF.StarBusy and not _WF.TrialBusy and not _WF.GamemodeJoinBusy then
                 local targets = _WF.StarTargets
                 if next(targets) == nil then
                     task.wait(1)
@@ -2105,9 +2186,9 @@ local _ok_quests, _err_quests = pcall(function()
     task.spawn(function()
         local function questGate() return _WF.AutoQuestEnabled end
         while getgenv()._WFRunning do
-            -- Уважаем star-open / zone-tp / trial (mutex'ы)
-            if _WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy then
-                while (_WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy)
+            -- Уважаем star-open / zone-tp / trial / join-window (mutex'ы)
+            if _WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy or _WF.GamemodeJoinBusy then
+                while (_WF.StarBusy or _WF.ZoneTpBusy or _WF.TrialBusy or _WF.GamemodeJoinBusy)
                     and getgenv()._WFRunning and _WF.AutoQuestEnabled
                 do
                     task.wait(0.1)
@@ -2386,6 +2467,34 @@ local _ok_trials, _err_trials = pcall(function()
         return false
     end
 
+    -- ═══════════════════════════════════════════════════════════════════
+    -- TEMPEST INVASION хелперы (event-gamemode, аналог Dragon Defense)
+    -- ═══════════════════════════════════════════════════════════════════
+    -- Slime Key check (аналог hasSaiyanKey) — для запуска Tempest Invasion.
+    local function hasSlimeKey()
+        local data = _WF.Omni and _WF.Omni.Data
+        local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
+        if not (data and util and type(util.GetPriceAmount) == "function") then return false end
+        local ok, amount = pcall(function() return util:GetPriceAmount("Item", "Slime Key", data) end)
+        return ok and type(amount) == "number" and amount >= 1
+    end
+
+    local function isInTempestInvasion()
+        local d = _WF.Omni and _WF.Omni.Data
+        if d and d.Gamemode == "Tempest Invasion" then return true end
+        local f = getTrialEnemiesFolder("Tempest Invasion")
+        if f and #f:GetChildren() > 0 then return true end
+        return false
+    end
+
+    local function getTempestInvasionWave()
+        if _WF.Omni and _WF.Omni.Libs and _WF.Omni.Libs.DataContainer then
+            local ok, c = pcall(function() return _WF.Omni.Libs.DataContainer:Get("GamemodeData - Tempest Invasion") end)
+            if ok and c and c.Data and type(c.Data.Wave) == "number" then return c.Data.Wave end
+        end
+        return nil
+    end
+
     local function getDragonDefenseWave()
         if _WF.Omni and _WF.Omni.Libs and _WF.Omni.Libs.DataContainer then
             local ok, c = pcall(function() return _WF.Omni.Libs.DataContainer:Get("GamemodeData - Dragon Defense") end)
@@ -2645,13 +2754,13 @@ local _ok_trials, _err_trials = pcall(function()
     -- Без этого оба цикла параллельно пытались Join → конфликт: ты не попадаешь
     -- стабильно ни в один. Теперь только выбранный запускается.
     sec.TrialsL:Divider()
-    sec.TrialsL:Header({ Text = "Priority (when both ON)" })
+    sec.TrialsL:Header({ Text = "Priority (when 2+ ON)" })
     sec.TrialsL:Dropdown({
         Name = "Gamemode Priority",
-        Options = { "DragonDefense", "Trial" },
+        Options = { "DragonDefense", "TempestInvasion", "Trial" },
         Default = "DragonDefense",
         Callback = function(v)
-            if v == "Trial" or v == "DragonDefense" then
+            if v == "Trial" or v == "DragonDefense" or v == "TempestInvasion" then
                 _WF.GamemodePriority = v
             end
         end,
@@ -2719,11 +2828,18 @@ local _ok_trials, _err_trials = pcall(function()
                 end
             end
 
-            -- Priority gate: если DD приоритет и DD-toggle включён — Trial loop ждёт.
+            -- Priority gate: если DD/TI приоритет и тогл их включён — Trial loop ждёт.
             -- Exception: если физически уже В трайле (прошлая сессия), обрабатываем
             -- выход/natural-end чтобы не застрять.
             local priorityBlocked = false
             if _WF.AutoDragonDefenseEnabled and _WF.GamemodePriority == "DragonDefense" then
+                local inAnyTrial = false
+                for n in pairs(_WF.TrialSelections or {}) do
+                    if isInTrial(n) then inAnyTrial = true; break end
+                end
+                if not inAnyTrial then priorityBlocked = true end
+            end
+            if _WF.AutoTempestInvasionEnabled and _WF.GamemodePriority == "TempestInvasion" then
                 local inAnyTrial = false
                 for n in pairs(_WF.TrialSelections or {}) do
                     if isInTrial(n) then inAnyTrial = true; break end
@@ -2823,11 +2939,8 @@ local _ok_trials, _err_trials = pcall(function()
                                     leaveTrial()  -- signal + 4с wait
                                     task.wait(0.5)
                                 end
-                                safe(function()
-                                    _WF.Omni.Signal:Fire("General", "Gamemodes", "Join", n)
-                                end)
-                                task.wait(1.2)
-                                if isInTrial(n) then
+                                local entered = _WF.fireGamemodeJoin(n, 5)
+                                if entered or isInTrial(n) then
                                     joined = true
                                     Notify("Entered " .. n, 3)
                                     break
@@ -2870,12 +2983,17 @@ local _ok_trials, _err_trials = pcall(function()
                 end
             end
 
-            -- Priority gate: Trial приоритет + Trial-toggle включён + выбран трайл →
+            -- Priority gate: Trial/TI приоритет + соответствующий тогл включён →
             -- DD ждёт. Exception: если мы УЖЕ в DD физически, обрабатываем выход.
             local priorityBlocked = false
             if _WF.AutoTrialEnabled and _WF.GamemodePriority == "Trial" then
                 local hasSel = _WF.TrialSelections and next(_WF.TrialSelections)
                 if hasSel and not isInDragonDefense() then
+                    priorityBlocked = true
+                end
+            end
+            if _WF.AutoTempestInvasionEnabled and _WF.GamemodePriority == "TempestInvasion" then
+                if not isInDragonDefense() then
                     priorityBlocked = true
                 end
             end
@@ -2950,12 +3068,127 @@ local _ok_trials, _err_trials = pcall(function()
                             leaveTrial()  -- signal + 4с wait
                             task.wait(0.5)
                         end
-                        safe(function()
-                            _WF.Omni.Signal:Fire("General", "Gamemodes", "Join", DD)
-                        end)
-                        task.wait(1.5)
-                        if isInDragonDefense() then
+                        local entered = _WF.fireGamemodeJoin(DD, 5)
+                        if entered or isInDragonDefense() then
                             Notify("Entered Dragon Defense", 3)
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- TEMPEST INVASION (event-gamemode, аналог DD, требует Slime Key)
+    -- ═══════════════════════════════════════════════════════════════════
+    sec.TrialsL:Divider()
+    sec.TrialsL:Header({ Text = "Tempest Invasion" })
+
+    sec.TrialsL:Toggle({
+        Name = "Auto Tempest Invasion",
+        Default = false,
+        Callback = function(s)
+            _WF.AutoTempestInvasionEnabled = s
+            if not s then _WF.TempestInvasionAbandoned = false end
+        end,
+    }, "AutoTempestInvasionToggle")
+
+    sec.TrialsL:Slider({
+        Name = "TI Leave at Wave (0 = full run)",
+        Default = 0, Minimum = 0, Maximum = 200, Increment = 1, Suffix = "",
+        Callback = function(v) _WF.TempestInvasionLeaveWave = math.floor(v) end,
+    }, "TempestInvasionLeaveWaveSlider")
+
+    sec.TrialsL:Button({
+        Name = "Leave Tempest Invasion",
+        Callback = function() leaveTrial() end,
+    })
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- TI main loop — структура копирует DD: mutex-wait → priority-gate →
+    -- если в TI: leave-at-wave check / atom фарма → иначе Join (с Slime Key check).
+    -- ═══════════════════════════════════════════════════════════════════
+    task.spawn(function()
+        local TI = "Tempest Invasion"
+        local TI_JOIN_RETRY = 8  -- секунд между попытками Join
+        local lastJoinAttempt = 0
+        local lastKeyWarn = 0
+        local wasInTI = false  -- для natural-end notification
+        while getgenv()._WFRunning do
+            -- Уважаем star-open / zone-tp мьютексы
+            if _WF.StarBusy or _WF.ZoneTpBusy then
+                while (_WF.StarBusy or _WF.ZoneTpBusy)
+                    and getgenv()._WFRunning and _WF.AutoTempestInvasionEnabled
+                do task.wait(0.1) end
+            end
+
+            -- Priority gate: если приоритет на Trial/DD и они активны — TI ждёт.
+            -- Exception: если уже физически В TI — обрабатываем выход/leave чтобы не застрять.
+            local priorityBlocked = false
+            if _WF.AutoTrialEnabled and _WF.GamemodePriority == "Trial" then
+                if not isInTempestInvasion() then priorityBlocked = true end
+            end
+            if _WF.AutoDragonDefenseEnabled and _WF.GamemodePriority == "DragonDefense" then
+                if not isInTempestInvasion() then priorityBlocked = true end
+            end
+
+            if not (_WF.AutoTempestInvasionEnabled and _WF.ModulesLoaded) then
+                task.wait(0.5)
+            elseif priorityBlocked then
+                task.wait(1)
+            else
+                safe(function()
+                    if isInTempestInvasion() then
+                        wasInTI = true
+                        -- Leave at wave check
+                        if _WF.TempestInvasionLeaveWave > 0 and not _WF.TempestInvasionAbandoned then
+                            local wave = getTempestInvasionWave()
+                            if wave and wave >= _WF.TempestInvasionLeaveWave then
+                                _WF.TempestInvasionAbandoned = true
+                                Notify(("Tempest Invasion: leave at wave %d"):format(wave), 3)
+                                leaveTrial()
+                                task.wait(2)
+                                return
+                            end
+                        end
+                        -- Inside TI — atom фарма (используем generic farm step c
+                        -- любым набором таргетов из _WF.Targets — мобы спавнятся
+                        -- в Workspace.Server.Enemies.Gamemodes["Tempest Invasion"]).
+                        _WF.TrialBusy = true
+                        safe(function()
+                            _WF.runTargetFarmStep(_WF.Targets, function() return _WF.AutoTempestInvasionEnabled end)
+                        end)
+                        _WF.TrialBusy = false
+                    else
+                        -- Был в TI и вышел (natural end или ручной leave)
+                        if wasInTI then
+                            wasInTI = false
+                            _WF.TempestInvasionAbandoned = false
+                            Notify("Tempest Invasion ended", 3)
+                        end
+                        -- Не в TI — пытаемся войти, если есть Slime Key
+                        if not hasSlimeKey() then
+                            if tick() - lastKeyWarn > 30 then
+                                lastKeyWarn = tick()
+                                Notify("Tempest Invasion: no Slime Key — waiting", 3)
+                            end
+                            task.wait(5)
+                            return
+                        end
+                        if tick() - lastJoinAttempt < TI_JOIN_RETRY then
+                            task.wait(1); return
+                        end
+                        lastJoinAttempt = tick()
+                        -- TRANSITION: если в другом gamemode (трайл / DD) — выходим в норм. мир
+                        local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                        if curGm and curGm ~= TI then
+                            dbg(("TI: transitioning via normal world (from %s)"):format(curGm))
+                            leaveTrial()
+                            task.wait(0.5)
+                        end
+                        local entered = _WF.fireGamemodeJoin(TI, 5)
+                        if entered or isInTempestInvasion() then
+                            Notify("Entered Tempest Invasion", 3)
                         end
                     end
                 end)
@@ -3451,6 +3684,16 @@ local _ok_prog, _err_prog = pcall(function()
         if #out == 0 then out = { "Power","Attack Distance","Crystals","Attack Speed","Damage" } end
         table.sort(out); return out
     end
+    -- Tempest Upgrades — зеркальная функция для Shared.Upgrade["Tempest Upgrades"]
+    local function getAllTempestUpgradeNames()
+        local out = {}
+        local u = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
+        local tu = u and u["Tempest Upgrades"]
+        local list = tu and tu.Upgrades
+        if type(list) == "table" then for k in pairs(list) do if type(k) == "string" then table.insert(out, k) end end end
+        if #out == 0 then out = { "Power","Attack Distance","Crystals","Attack Speed","Damage" } end
+        table.sort(out); return out
+    end
     local function getAllSkillTreeNames()
         local out = {}
         local st = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.SkillTree and _WF.Omni.Shared.SkillTree.List
@@ -3509,6 +3752,26 @@ local _ok_prog, _err_prog = pcall(function()
     -- GetLevelInformation(category, name, level))
     local function canAffordTrialUpgrade(upgradeName)
         local CAT = "Trial Upgrades"
+        local data = _WF.Omni and _WF.Omni.Data
+        local su = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
+        local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
+        if not (data and su and util) then return false, "no_api" end
+        if type(su.GetLevelInformation) ~= "function" or type(util.GetPriceAmount) ~= "function" then
+            return false, "no_api"
+        end
+        local cur = (data.Upgrade and data.Upgrade[CAT] and data.Upgrade[CAT][upgradeName]) or 0
+        local ok, info = pcall(su.GetLevelInformation, CAT, upgradeName, cur + 1)
+        if not ok or type(info) ~= "table" then return false, "maxed" end
+        if type(info.Price) ~= "table" then return true end
+        local okBal, bal = pcall(function() return util:GetPriceAmount(info.Price.Type, info.Price.Name, data) end)
+        if not okBal or type(bal) ~= "number" then return false, "no_api" end
+        if bal >= (info.Price.Amount or 0) then return true end
+        return false, "no_balance"
+    end
+
+    -- Tempest Upgrades — структура такая же как Trial Upgrades, валюта Slime Shard
+    local function canAffordTempestUpgrade(upgradeName)
+        local CAT = "Tempest Upgrades"
         local data = _WF.Omni and _WF.Omni.Data
         local su = _WF.Omni and _WF.Omni.Shared and _WF.Omni.Shared.Upgrade
         local util = _WF.Omni and _WF.Omni.Utils and _WF.Omni.Utils.Info
@@ -3620,6 +3883,21 @@ local _ok_prog, _err_prog = pcall(function()
         end,
     }, "TrialUpgradeSelectionDropdown")
 
+    sec.ProgressL:Divider()
+    sec.ProgressL:Header({ Text = "Tempest Upgrades" })
+    sec.ProgressL:Toggle({ Name = "Auto Tempest Upgrades", Default = false,
+        Callback = function(s) _WF.AutoTempestUpgradesEnabled = s end }, "AutoTempestUpgradesToggle")
+    sec.ProgressL:Dropdown({ Name = "Tempest Upgrades (multi)", Multi = true, Required = false,
+        Options = getAllTempestUpgradeNames(),
+        Callback = function(values)
+            local set = {}
+            if type(values) == "table" then
+                for k, v in pairs(values) do if v and type(k) == "string" then set[k] = true end end
+            end
+            _WF.TempestUpgradeSelection = set
+        end,
+    }, "TempestUpgradeSelectionDropdown")
+
     sec.ProgressR:Header({ Text = "Skill Tree" })
     sec.ProgressR:Toggle({ Name = "Auto Skill Tree (parent-aware)", Default = false,
         Callback = function(s) _WF.AutoSkillTreeEnabled = s end }, "AutoSkillTreeToggle")
@@ -3700,6 +3978,28 @@ local _ok_prog, _err_prog = pcall(function()
                             _WF.TrialUpgradeSelection[n] = nil
                             _WF.ProgressStatus.trialMaxed[n] = true
                             Notify(("Trial Upgrade %s: MAXED"):format(n), 3)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    -- Tempest Upgrades loop (зеркальная копия Trial Upgrades, валюта Slime Shard)
+    _WF.ProgressStatus.tempestMaxed = _WF.ProgressStatus.tempestMaxed or {}
+    task.spawn(function()
+        while getgenv()._WFRunning do
+            task.wait(3)
+            if _WF.AutoTempestUpgradesEnabled and _WF.ModulesLoaded then
+                for n, on in pairs(_WF.TempestUpgradeSelection) do
+                    if on then
+                        local ok, reason = canAffordTempestUpgrade(n)
+                        if ok then
+                            safe(function() _WF.Omni.Signal:Fire("General", "Upgrade", "Upgrade", "Tempest Upgrades", n) end)
+                            task.wait(0.3)
+                        elseif reason == "maxed" then
+                            _WF.TempestUpgradeSelection[n] = nil
+                            _WF.ProgressStatus.tempestMaxed[n] = true
+                            Notify(("Tempest Upgrade %s: MAXED"):format(n), 3)
                         end
                     end
                 end
@@ -3982,6 +4282,20 @@ local _ok_misc, _err_misc = pcall(function()
             while waited < 300 and getgenv()._WFRunning do task.wait(2); waited = waited + 2 end
         end
     end)
+
+    -- ═══════════════════════════════════════════════════════════════════
+    -- GAME UI / PERFORMANCE — прокси на нативные игровые Settings
+    -- ═══════════════════════════════════════════════════════════════════
+    -- Все шлются через тот же Signal:Fire("General","Settings","Set",key,on).
+    -- Сервер хранит в Data.Settings, persistent между сессиями. Тогглы тут —
+    -- зеркало того что есть в игровом UI Settings (Performance + Gameplay + Others
+    -- категории). Default берётся из текущего значения на сервере.
+    sec.MiscR:Header({ Text = "Game UI / Performance" })
+    makeSettingToggle(sec.MiscR, "Hide Effects",            "Hide Effects",            "HideEffectsToggle")
+    makeSettingToggle(sec.MiscR, "Low Mode",                "Low Mode",                "LowModeToggle")
+    makeSettingToggle(sec.MiscR, "Hide Pop Ups",            "Hide Pop Ups",            "HidePopUpsToggle")
+    makeSettingToggle(sec.MiscR, "Hide Drop Notifications", "Hide Drop Notifications", "HideDropNotifToggle")
+    makeSettingToggle(sec.MiscR, "Enable Gifts",            "Enable Gifts",            "EnableGiftsToggle")
 end)
 if not _ok_misc then warn("[ApelHub] MISC tab failed: " .. tostring(_err_misc)) end
 
@@ -4455,14 +4769,14 @@ sec.SetR:Button({
         d("── 7. SCRIPT STATE ──")
         d("  Toggles ON:")
         local toggles = {
-            "AutoFarmEnabled","AutoOpenStarEnabled","AutoQuestEnabled","AutoPinQuestEnabled",
-            "AutoTpToQuestZoneEnabled","AutoTrialEnabled","AutoDragonDefenseEnabled",
+            "AutoFarmEnabled","AutoClickEnabled","AutoOpenStarEnabled","AutoQuestEnabled","AutoPinQuestEnabled",
+            "AutoTpToQuestZoneEnabled","AutoTrialEnabled","AutoDragonDefenseEnabled","AutoTempestInvasionEnabled",
             "AutoGachaEnabled","AutoBannerRollEnabled","AutoRouletteRollEnabled",
             "AutoAchievementsEnabled","AutoTimeRewardsEnabled","AutoDailyRewardsEnabled",
             "AutoFollowRewardsEnabled","AutoDailyChestEnabled","AutoGroupChestEnabled",
-            "AutoVIPChestEnabled","AutoProgressionEnabled","AutoTrialUpgradesEnabled",
+            "AutoVIPChestEnabled","AutoProgressionEnabled","AutoTrialUpgradesEnabled","AutoTempestUpgradesEnabled",
             "AutoSkillTreeEnabled","AutoEquipBestEnabled","AutoPotionsEnabled",
-            "AutoCodesEnabled","HideStarAnimEnabled","DisableGameAntiAfkEnabled",
+            "AutoCodesEnabled","DisableGameAntiAfkEnabled",
             "WebhookEnabled",
         }
         local onList = {}
@@ -4480,10 +4794,12 @@ sec.SetR:Button({
         d(("    GachaSelection: %s"):format(table.concat(listKeys(_WF.GachaSelection), ", ")))
         d(("    ProgressionSelection: %s"):format(table.concat(listKeys(_WF.ProgressionSelection), ", ")))
         d(("    TrialUpgradeSelection: %s"):format(table.concat(listKeys(_WF.TrialUpgradeSelection), ", ")))
+        d(("    TempestUpgradeSelection: %s"):format(table.concat(listKeys(_WF.TempestUpgradeSelection), ", ")))
         d(("    SkillTreeSelection: %s"):format(table.concat(listKeys(_WF.SkillTreeSelection), ", ")))
         d("  Mutexes:")
-        d(("    StarBusy=%s | ZoneTpBusy=%s | TrialBusy=%s"):format(
-            tostring(_WF.StarBusy), tostring(_WF.ZoneTpBusy), tostring(_WF.TrialBusy)))
+        d(("    StarBusy=%s | ZoneTpBusy=%s | TrialBusy=%s | GamemodeJoinBusy=%s"):format(
+            tostring(_WF.StarBusy), tostring(_WF.ZoneTpBusy),
+            tostring(_WF.TrialBusy), tostring(_WF.GamemodeJoinBusy)))
         d("  Config:")
         d(("    TrialAutoLeaveWave=%s | DragonDefenseLeaveWave=%s"):format(
             tostring(_WF.TrialAutoLeaveWave), tostring(_WF.DragonDefenseLeaveWave)))
@@ -4546,10 +4862,13 @@ sec.SetR:Paragraph({
 getgenv()._WFStop = function()
     -- Turn off every flag
     _WF.AutoFarmEnabled          = false
+    _WF.AutoClickEnabled         = false
     _WF.AutoOpenStarEnabled      = false
     _WF.AutoQuestEnabled         = false
     _WF.AutoTrialEnabled         = false
     _WF.AutoDragonDefenseEnabled = false
+    _WF.AutoTempestInvasionEnabled = false
+    _WF.TempestInvasionAbandoned   = false
     _WF.AutoGachaEnabled         = false
     _WF.AutoBannerRollEnabled    = false
     _WF.AutoRouletteRollEnabled  = false
@@ -4562,12 +4881,12 @@ getgenv()._WFStop = function()
     _WF.AutoVIPChestEnabled      = false
     _WF.AutoProgressionEnabled   = false
     _WF.AutoTrialUpgradesEnabled = false
+    _WF.AutoTempestUpgradesEnabled = false
     _WF.AutoSkillTreeEnabled     = false
     _WF.AutoEquipBestEnabled     = false
     _WF.DisableGameAntiAfkEnabled = false
     _WF.AutoPotionsEnabled       = false
     _WF.AutoCodesEnabled         = false
-    _WF.HideStarAnimEnabled      = false
     _WF.WebhookEnabled           = false
 
     _WF.Targets          = {}
@@ -4575,6 +4894,12 @@ getgenv()._WFStop = function()
     _WF.QuestSelections  = {}
     _WF.TrialSelections  = {}
     _WF.GachaSelection   = {}
+
+    -- Mutexes
+    _WF.GamemodeJoinBusy = false
+    _WF.StarBusy         = false
+    _WF.ZoneTpBusy       = false
+    _WF.TrialBusy        = false
 
     if getgenv()._WFCleanup then pcall(getgenv()._WFCleanup); getgenv()._WFCleanup = nil end
     pcall(function() Window:Unload() end)
