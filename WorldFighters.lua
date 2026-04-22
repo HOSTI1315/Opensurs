@@ -3109,14 +3109,20 @@ local _ok_trials, _err_trials = pcall(function()
 
     -- ═══════════════════════════════════════════════════════════════════
     -- TI main loop — структура копирует DD: mutex-wait → priority-gate →
-    -- если в TI: leave-at-wave check / atom фарма → иначе Join (с Slime Key check).
+    -- natural-end check → если в TI: leave-wave / runTrialFarmStep("TI") →
+    -- иначе Join (с Slime Key + retry cooldown).
+    --
+    -- ВАЖНО: фарм через runTrialFarmStep("Tempest Invasion", gateFn), а НЕ
+    -- через runTargetFarmStep(_WF.Targets, ...). Последний может через
+    -- findBestZoneForTargets ТП в обычную зону → выкидывает из TI → краш.
     -- ═══════════════════════════════════════════════════════════════════
     task.spawn(function()
         local TI = "Tempest Invasion"
+        local function tiGate() return _WF.AutoTempestInvasionEnabled end
         local TI_JOIN_RETRY = 8  -- секунд между попытками Join
         local lastJoinAttempt = 0
         local lastKeyWarn = 0
-        local wasInTI = false  -- для natural-end notification
+        local wasInTI = false  -- natural-end tracking
         while getgenv()._WFRunning do
             -- Уважаем star-open / zone-tp мьютексы
             if _WF.StarBusy or _WF.ZoneTpBusy then
@@ -3125,11 +3131,12 @@ local _ok_trials, _err_trials = pcall(function()
                 do task.wait(0.1) end
             end
 
-            -- Priority gate: если приоритет на Trial/DD и они активны — TI ждёт.
-            -- Exception: если уже физически В TI — обрабатываем выход/leave чтобы не застрять.
+            -- Priority gate: Trial/DD приоритет + соответствующий тогл включён → TI ждёт.
+            -- Exception: если уже физически В TI — обрабатываем выход чтобы не застрять.
             local priorityBlocked = false
             if _WF.AutoTrialEnabled and _WF.GamemodePriority == "Trial" then
-                if not isInTempestInvasion() then priorityBlocked = true end
+                local hasSel = _WF.TrialSelections and next(_WF.TrialSelections)
+                if hasSel and not isInTempestInvasion() then priorityBlocked = true end
             end
             if _WF.AutoDragonDefenseEnabled and _WF.GamemodePriority == "DragonDefense" then
                 if not isInTempestInvasion() then priorityBlocked = true end
@@ -3141,54 +3148,68 @@ local _ok_trials, _err_trials = pcall(function()
                 task.wait(1)
             else
                 safe(function()
-                    if isInTempestInvasion() then
-                        wasInTI = true
-                        -- Leave at wave check
-                        if _WF.TempestInvasionLeaveWave > 0 and not _WF.TempestInvasionAbandoned then
-                            local wave = getTempestInvasionWave()
-                            if wave and wave >= _WF.TempestInvasionLeaveWave then
-                                _WF.TempestInvasionAbandoned = true
-                                Notify(("Tempest Invasion: leave at wave %d"):format(wave), 3)
-                                leaveTrial()
-                                task.wait(2)
-                                return
-                            end
-                        end
-                        -- Inside TI — atom фарма (используем generic farm step c
-                        -- любым набором таргетов из _WF.Targets — мобы спавнятся
-                        -- в Workspace.Server.Enemies.Gamemodes["Tempest Invasion"]).
-                        _WF.TrialBusy = true
-                        safe(function()
-                            _WF.runTargetFarmStep(_WF.Targets, function() return _WF.AutoTempestInvasionEnabled end)
-                        end)
+                    local currentlyInTI = isInTempestInvasion()
+
+                    -- Natural-end: был в TI → сервер выбросил (закончился invasion / победа / смерть)
+                    if wasInTI and not currentlyInTI then
+                        wasInTI = false
                         _WF.TrialBusy = false
-                    else
-                        -- Был в TI и вышел (natural end или ручной leave)
-                        if wasInTI then
-                            wasInTI = false
-                            _WF.TempestInvasionAbandoned = false
+                        _WF.TempestInvasionAbandoned = false
+                        if _WF.SavedPosition then
+                            Notify("Tempest Invasion ended — returning to saved position", 3)
+                            task.wait(4)  -- даём серверу завершить teleport-анимацию
+                            _WF.ZoneTpBusy = true
+                            tpToSavedPosition()
+                            _WF.ZoneTpBusy = false
+                        else
                             Notify("Tempest Invasion ended", 3)
                         end
-                        -- Не в TI — пытаемся войти, если есть Slime Key
+                        lastJoinAttempt = 0  -- сбрасываем retry чтобы next tick попробовал Join снова
+                        return
+                    end
+
+                    if currentlyInTI then
+                        wasInTI = true
+                        -- [A] В режиме — фармим или уходим
+                        _WF.TrialBusy = true
+                        local wave = getTempestInvasionWave()
+                        local leaveAt = tonumber(_WF.TempestInvasionLeaveWave) or 0
+                        if leaveAt > 0 and type(wave) == "number" and wave >= leaveAt then
+                            Notify(("Tempest Invasion: wave %d ≥ %d — leaving"):format(wave, leaveAt), 4)
+                            leaveTrial()  -- signal + 4с wait + tpToSavedPosition
+                            _WF.AutoTempestInvasionEnabled = false  -- выключаем тогл, иначе зайдём снова
+                            _WF.TrialBusy = false
+                            wasInTI = false  -- вышли сами, не natural-end
+                            task.wait(2)
+                        else
+                            -- Бьём мобов из gamemode-folder ("Tempest Invasion") — без teleport
+                            -- между зонами. runTrialFarmStep работает с любым gamemode-folder
+                            -- через getTrialEnemiesFolder(name).
+                            runTrialFarmStep(TI, tiGate)
+                        end
+                    else
+                        -- [B] Не в режиме — mutex сбрасываем (если тогл выключился сам)
+                        _WF.TrialBusy = false
+                        -- Если уже в другом gamemode (Trial / DD) — не трогаем, ждём
+                        local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
+                        if curGm and curGm ~= TI then
+                            task.wait(2)
+                            return
+                        end
+                        -- Нет Slime Key → тихо ждём (notify раз в 60с)
                         if not hasSlimeKey() then
-                            if tick() - lastKeyWarn > 30 then
+                            if tick() - lastKeyWarn > 60 then
                                 lastKeyWarn = tick()
                                 Notify("Tempest Invasion: no Slime Key — waiting", 3)
                             end
                             task.wait(5)
                             return
                         end
+                        -- Есть ключ — пробуем Join (с retry cooldown)
                         if tick() - lastJoinAttempt < TI_JOIN_RETRY then
                             task.wait(1); return
                         end
                         lastJoinAttempt = tick()
-                        -- TRANSITION: если в другом gamemode (трайл / DD) — выходим в норм. мир
-                        local curGm = _WF.Omni.Data and _WF.Omni.Data.Gamemode
-                        if curGm and curGm ~= TI then
-                            dbg(("TI: transitioning via normal world (from %s)"):format(curGm))
-                            leaveTrial()
-                            task.wait(0.5)
-                        end
                         local entered = _WF.fireGamemodeJoin(TI, 5)
                         if entered or isInTempestInvasion() then
                             Notify("Entered Tempest Invasion", 3)
