@@ -463,8 +463,11 @@ function _WF.attackOnce()
     if not (_WF.Omni and _WF.Omni.Signal) then return end
     if not _WF.Omni.Cache then return end   -- рано, Cache ещё не готов
     local ids = _WF.Omni.Cache:Get({"EnemiesOnRangeIds"}) or {}
-    -- Пустой список = сервер проигнорирует атаку. Не тратим fire, ждём следующего тика.
-    if #ids == 0 then return end
+    -- EnemiesOnRangeIds — это DICTIONARY ({[mob_id]=true, ...}), не array.
+    -- В Luau # на хэш-таблицу всегда возвращает 0, поэтому проверяем через next().
+    -- Раньше тут было `if #ids == 0 then return end` — функция всегда выходила
+    -- рано, и Auto Click не работал. Auto Farm маскировал это благодаря teleportTo().
+    if type(ids) ~= "table" or not next(ids) then return end
     safe(function()
         _WF.Omni.Signal:Fire("General", "Attack", "Click", ids)
     end)
