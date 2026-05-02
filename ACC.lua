@@ -51,6 +51,7 @@ getgenv()._ACCRunning = true
 getgenv()._ACCHooks = {}
 
 local _ACC = {}
+getgenv()._ACC = _ACC   -- expose for debug probes
 _ACC.Debug = false
 
 -- ── Auto Farm state ────────────────────────────────────────────────────────
@@ -72,23 +73,31 @@ _ACC.AutoTrait             = false
 _ACC.AutoArmor             = false
 _ACC.SelectedTraitCards    = {}   -- map
 _ACC.SelectedWantedTraits  = {}   -- map
-_ACC.WantedArmorGrade      = nil
+_ACC.WantedArmorGrades     = {}        -- map { ["S+"]=true, ["SR"]=true }
+_ACC.ArmorMaterials        = {}        -- map { ["Bronze"]=true, ... }
 
 _ACC.STAutoStart           = false
 _ACC.STAutoAttack          = false
 _ACC.STHideAnim            = false
 _ACC.STSelectedCard        = nil
 _ACC.STSelectedDifficulty  = nil
+_ACC.AutoStarEvolve        = false
+_ACC.StarEvolveCards       = {}     -- map { [internal cardName] = true }
+_ACC.STUpgDamage           = false
+_ACC.STUpgHealth           = false
+_ACC.STUpgBattleSpeed      = false
+_ACC.STUpgTicketChance     = false
+_ACC.STEvolveTarget        = ""
 
 _ACC.AutoGrade             = false
 _ACC.GradeUseTokensFirst   = true
 _ACC.SelectedGradeCards    = {}   -- map
 _ACC.SelectedWantedGrades  = {}   -- map
 
-_ACC.RaidQuickStart        = false
-_ACC.RaidAutoVote          = false
-_ACC.RaidAutoJoin          = false
-_ACC.RaidSelectedCards     = {}   -- map
+_ACC.AutoRaid              = false
+_ACC.RaidEquipBest         = true
+_ACC.RaidMode              = "Auto pick (max we can beat)"
+_ACC.RaidSpecific          = nil
 
 -- ── Auto Claim ────────────────────────────────────────────────────────────
 _ACC.CodesInput            = ""
@@ -198,6 +207,7 @@ local function tryRequire(path)
     if ok then return mod end
     return nil
 end
+_ACC._tryRequire = tryRequire
 local function dbg(msg)
     if _ACC.Debug then print("[ACC] " .. tostring(msg)) end
 end
@@ -469,16 +479,64 @@ do
     end
     Lists.PacksFull = packsFull
 
+    -- ── Build cards in IN-GAME ORDER ──
+    -- For each Pack (sorted by .Page), iterate its List and add cards
+    -- by .Layout. Result: Pirate cards (Luffy, Zoro, Nami...) → Ninja
+    -- cards (Naruto, Sasuke...) → ... in the same order as the index UI.
     local cards = {}
-    if CardConfig and CardConfig.Packs then
-        for _, packData in pairs(CardConfig.Packs) do
-            if type(packData) == "table" and type(packData.List) == "table" then
-                for cardName in pairs(packData.List) do table.insert(cards, cardName) end
+    do
+        local seen = {}
+        if CardConfig and CardConfig.Packs then
+            local sortedPacks = {}
+            for packName, packData in pairs(CardConfig.Packs) do
+                if type(packData) == "table" then
+                    table.insert(sortedPacks, {
+                        name = packName,
+                        page = packData.Page or 999,
+                        data = packData,
+                    })
+                end
+            end
+            table.sort(sortedPacks, function(a, b)
+                if a.page == b.page then return a.name < b.name end
+                return a.page < b.page
+            end)
+
+            for _, pack in ipairs(sortedPacks) do
+                if type(pack.data.List) == "table" then
+                    local entries = {}
+                    for cardName, cardInfo in pairs(pack.data.List) do
+                        table.insert(entries, {
+                            name = cardName,
+                            layout = (type(cardInfo) == "table" and cardInfo.Layout) or 9999,
+                        })
+                    end
+                    table.sort(entries, function(a, b)
+                        if a.layout == b.layout then return a.name < b.name end
+                        return a.layout < b.layout
+                    end)
+                    for _, e in ipairs(entries) do
+                        if not seen[e.name] then
+                            seen[e.name] = true
+                            table.insert(cards, e.name)
+                        end
+                    end
+                end
+            end
+        end
+
+        -- supplement with replica cards (handles updates / new cards)
+        local owned = Data.Get("Cards")
+        if type(owned) == "table" then
+            for cardName in pairs(owned) do
+                if not seen[cardName] then
+                    seen[cardName] = true
+                    table.insert(cards, cardName)
+                end
             end
         end
     end
-    table.sort(cards)
-    Lists.Cards = cards   -- internal names (kept for backwards compat / loops)
+    Lists.Cards = cards   -- internal names in IN-GAME ORDER (no alpha sort)
     Lists.CardsAll = { "All" }
     for _, c in ipairs(cards) do table.insert(Lists.CardsAll, c) end
 
@@ -506,7 +564,7 @@ do
     for _, c in ipairs(cards) do
         table.insert(Lists.CardsDisplay, buildDisplay(c))
     end
-    table.sort(Lists.CardsDisplay)
+    -- NO alpha sort: keep the in-game order from Lists.Cards
 
     Lists.CardsAllDisplay = { "All" }
     for _, lbl in ipairs(Lists.CardsDisplay) do
@@ -897,6 +955,13 @@ sec.TowerL:Toggle({
 sec.TowerL:Divider()
 sec.TowerL:Header({ Text = "Trait Roll" })
 
+local traitStatus = sec.TowerL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetTraitStatus(text)
+    if traitStatus then
+        pcall(function() traitStatus:UpdateBody(text) end)
+    end
+end
+
 makeSearchableDropdown(sec.TowerL, {
     Name = "Cards",
     Multi = true,
@@ -929,12 +994,29 @@ sec.TowerL:Toggle({
 sec.TowerL:Divider()
 sec.TowerL:Header({ Text = "Armor Roll" })
 
+local armorStatus = sec.TowerL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetArmorStatus(text)
+    if armorStatus then
+        pcall(function() armorStatus:UpdateBody(text) end)
+    end
+end
+
+-- Materials ordered best-to-worst (Diamond is rarest/strongest, Bronze cheapest).
+-- User picks which to use; loop walks them in this priority order — when one
+-- runs out, falls through to next.
 sec.TowerL:Dropdown({
-    Name = "Wanted Grade",
+    Name = "Materials (best→worst)",
+    Multi = true,
+    Options = { "Diamond", "Platinum", "Gold", "Silver", "Bronze" },
+    Callback = function(selected) _ACC.ArmorMaterials = mapFromMulti(selected) end,
+}, "ArmorMaterialsDropdown")
+
+sec.TowerL:Dropdown({
+    Name = "Wanted Grades",
+    Multi = true,
     Options = Lists.Grades,
-    Default = Lists.Grades[1] or nil,
-    Callback = function(v) _ACC.WantedArmorGrade = v end,
-}, "ArmorGradeDropdown")
+    Callback = function(selected) _ACC.WantedArmorGrades = mapFromMulti(selected) end,
+}, "ArmorGradesDropdown")
 
 sec.TowerL:Toggle({
     Name = "Auto Armor Roll",
@@ -973,6 +1055,29 @@ sec.STR:Toggle({
     Default = false,
     Callback = function(v) _ACC.STAutoAttack = v end,
 }, "STAutoAttackToggle")
+
+sec.STR:Divider()
+sec.STR:Header({ Text = "Star Upgrades (auto-buy with Star Tokens)" })
+sec.STR:Toggle({
+    Name = "Damage",
+    Default = false,
+    Callback = function(v) _ACC.STUpgDamage = v end,
+}, "STUpgDamageToggle")
+sec.STR:Toggle({
+    Name = "Health",
+    Default = false,
+    Callback = function(v) _ACC.STUpgHealth = v end,
+}, "STUpgHealthToggle")
+sec.STR:Toggle({
+    Name = "Battle Speed",
+    Default = false,
+    Callback = function(v) _ACC.STUpgBattleSpeed = v end,
+}, "STUpgBattleSpeedToggle")
+sec.STR:Toggle({
+    Name = "Ticket Chance",
+    Default = false,
+    Callback = function(v) _ACC.STUpgTicketChance = v end,
+}, "STUpgTicketChanceToggle")
 
 sec.STR:Toggle({
     Name = "Hide attack animations",
@@ -1016,6 +1121,36 @@ sec.STR:Toggle({
 }, "STHideAnimToggle")
 
 sec.STR:Divider()
+sec.STR:Header({ Text = "Auto Star Evolve" })
+
+local starEvolveStatus = sec.STR:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetStarEvolveStatus(text)
+    if starEvolveStatus then
+        pcall(function() starEvolveStatus:UpdateBody(text) end)
+    end
+end
+
+makeSearchableDropdown(sec.STR, {
+    Name = "Cards to evolve",
+    Multi = true,
+    Options = Lists.CardsDisplay,
+    OnChange = function(map)
+        local internalMap = {}
+        for displayLabel in pairs(map) do
+            local internal = Lists.CardDisplayToInternal[displayLabel] or displayLabel
+            internalMap[internal] = true
+        end
+        _ACC.StarEvolveCards = internalMap
+    end,
+}, "StarEvolveCardsDropdown")
+
+sec.STR:Toggle({
+    Name = "Auto Evolve (runs trials & evolves)",
+    Default = false,
+    Callback = function(v) _ACC.AutoStarEvolve = v end,
+}, "AutoStarEvolveToggle")
+
+sec.STR:Divider()
 sec.STR:Button({ Name = "Send AFK ON",  Callback = function() Net.Fire(R.StarTrial, "AFK", true) end })
 sec.STR:Button({ Name = "Send AFK OFF", Callback = function() Net.Fire(R.StarTrial, "AFK", false) end })
 sec.STR:Button({ Name = "Exit Trial",   Callback = function() Net.Fire(R.StarTrial, "Exit") end })
@@ -1023,6 +1158,13 @@ sec.STR:Button({ Name = "Stream lobby", Callback = function() Net.Fire(R.StarTri
 
 -- ── Grade ─────────────────────────────────────────────────────────────────
 sec.GradeL:Header({ Text = "Grade" })
+
+local gradeStatus = sec.GradeL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetGradeStatus(text)
+    if gradeStatus then
+        pcall(function() gradeStatus:UpdateBody(text) end)
+    end
+end
 
 makeSearchableDropdown(sec.GradeL, {
     Name = "Cards",
@@ -1067,38 +1209,39 @@ sec.GradeL:Button({
 -- ── Raid ──────────────────────────────────────────────────────────────────
 sec.RaidR:Header({ Text = "Raid" })
 
-sec.RaidR:Toggle({
-    Name = "Auto Quick Start",
-    Default = false,
-    Callback = function(v) _ACC.RaidQuickStart = v end,
-}, "RaidQuickStartToggle")
+local raidStatus = sec.RaidR:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetRaidStatus(text)
+    if raidStatus then pcall(function() raidStatus:UpdateBody(text) end) end
+end
+
+sec.RaidR:Dropdown({
+    Name = "Mode",
+    Options = { "Auto pick (max we can beat)", "Specific raid" },
+    Default = "Auto pick (max we can beat)",
+    Callback = function(v) _ACC.RaidMode = v end,
+}, "RaidModeDropdown")
+
+local activeRaidsList = (RaidConfig and RaidConfig.ActiveRaids) or {}
+sec.RaidR:Dropdown({
+    Name = "Specific raid",
+    Options = activeRaidsList,
+    Default = activeRaidsList[1],
+    Callback = function(v) _ACC.RaidSpecific = v end,
+}, "RaidSpecificDropdown")
 
 sec.RaidR:Toggle({
-    Name = "Auto Vote (any raid)",
-    Default = false,
-    Callback = function(v) _ACC.RaidAutoVote = v end,
-}, "RaidAutoVoteToggle")
+    Name = "Equip Best (auto-pick top 3 per raid)",
+    Default = true,
+    Callback = function(v) _ACC.RaidEquipBest = v end,
+}, "RaidEquipBestToggle")
 
 sec.RaidR:Toggle({
-    Name = "Auto Join (with selected cards)",
+    Name = "Auto Raid Farm",
     Default = false,
-    Callback = function(v) _ACC.RaidAutoJoin = v end,
-}, "RaidAutoJoinToggle")
+    Callback = function(v) _ACC.AutoRaid = v end,
+}, "AutoRaidToggle")
 
-makeSearchableDropdown(sec.RaidR, {
-    Name = "Cards for Raid",
-    Multi = true,
-    Options = Lists.CardsDisplay,
-    OnChange = function(map)
-        local internalMap = {}
-        for displayLabel in pairs(map) do
-            local internal = Lists.CardDisplayToInternal[displayLabel] or displayLabel
-            internalMap[internal] = true
-        end
-        _ACC.RaidSelectedCards = internalMap
-    end,
-}, "RaidCardsDropdown")
-
+sec.RaidR:Divider()
 sec.RaidR:Button({ Name = "Exit Raid", Callback = function() Net.Fire(R.Raid, "Exit") end })
 -- ============================================================================
 -- // 13. TAB: AUTO CLAIM
@@ -1808,19 +1951,157 @@ local function setClip(text)
 end
 
 sec.UtilL:Button({
-    Name = "Copy Debug Info",
+    Name = "Copy Raid Debug",
     Callback = function()
         task.spawn(function()
-            Notify("Probing remotes... wait", 3)
-            local text = buildDebugDump({ invokeRemotes = true })
-            local ok = setClip(text)
-            if ok then
-                Notify(("Copied %d chars to clipboard"):format(#text), 5)
-            else
-                Notify("setclipboard not available — see console", 5)
-                print("=== ACC HUB DEBUG DUMP ===")
-                print(text)
+            local out = {}
+            local function L(s) table.insert(out, tostring(s or "")) end
+            local function H(t) L(""); L(("──── %s ────"):format(t)) end
+
+            local _tr = _ACC._tryRequire
+            local UIC = RS:FindFirstChild("Client")
+                        and RS.Client:FindFirstChild("UI")
+            local raidH  = UIC and _tr and _tr(UIC:FindFirstChild("RaidHandler"))
+            local stH    = UIC and _tr and _tr(UIC:FindFirstChild("StarTrialHandler"))
+            local stockH = UIC and _tr and _tr(UIC:FindFirstChild("StockHandler"))
+
+            L("ACC RAID DEBUG  " .. os.date("%H:%M:%S"))
+            L("ServerTimeNow: " .. tostring(workspace:GetServerTimeNow()))
+
+            H("HUB STATE")
+            for _, f in ipairs({ "AutoRaid", "RaidMode", "RaidSpecific", "RaidEquipBest" }) do
+                L(("%s = %s"):format(f, tostring(_ACC[f])))
             end
+
+            H("HANDLERS")
+            L("RaidHandler: " .. tostring(raidH ~= nil))
+            L("StarTrialHandler: " .. tostring(stH ~= nil))
+            if raidH then
+                L(("RaidActive=%s  InRaid=%s  InBattle=%s")
+                    :format(tostring(raidH.RaidActive),
+                            tostring(raidH.InRaid),
+                            tostring(raidH.InBattle)))
+                L(("RaidStart=%s  Boss=%s")
+                    :format(tostring(raidH.RaidStart), tostring(raidH.RaidBossCard)))
+            end
+            if stH then L("StarTrial.InTrial=" .. tostring(stH.InTrial)) end
+            if stockH then
+                L("StockHandler.RaidTimeLeft=" .. tostring(stockH.RaidTimeLeft)
+                  .. " (seconds until next raid cycle)")
+            end
+
+            -- Multipliers module check
+            local multCheck
+            pcall(function()
+                local m = RS:FindFirstChild("Modules") and RS.Modules:FindFirstChild("Shared")
+                          and RS.Modules.Shared:FindFirstChild("Multipliers")
+                multCheck = m and _tr and _tr(m)
+            end)
+            L("Multipliers module: " .. (multCheck and "loaded" or "MISSING"))
+
+            H("WORKSPACE")
+            L("RaidVoteTime=" .. tostring(workspace:GetAttribute("RaidVoteTime")))
+            L("RaidStart="    .. tostring(workspace:GetAttribute("RaidStart")))
+
+            H("DETECTED RAID")
+            local actualRaid
+            if raidH and raidH.RaidBossCard and CardConfig and CardConfig.Packs then
+                for packName, packData in pairs(CardConfig.Packs) do
+                    if type(packData) == "table" and type(packData.List) == "table"
+                       and packData.List[raidH.RaidBossCard]
+                    then actualRaid = packName; break end
+                end
+            end
+            L("From RaidBossCard: " .. tostring(actualRaid))
+            local rsf = PlayerGui:FindFirstChild("RaidSelect")
+            rsf = rsf and rsf:FindFirstChild("Frame")
+            local pn = rsf and rsf:FindFirstChild("PackName")
+            L("RaidSelect.Frame.PackName.Text = " .. tostring(pn and pn.Text))
+
+            H("REPLICA")
+            local rep = Data.GetReplica()
+            local d = rep and rep.Data
+            if d then
+                L("RaidJoinTime=" .. tostring(d.RaidJoinTime))
+                if d.RaidJoinTime then
+                    local since = workspace:GetServerTimeNow() - d.RaidJoinTime
+                    L(("sinceJoin=%.0fs  cooldown=%ss  passed=%s")
+                        :format(since,
+                                tostring((RaidConfig and RaidConfig.RaidJoinWait) or 600),
+                                tostring(since >= ((RaidConfig and RaidConfig.RaidJoinWait) or 600))))
+                end
+                L("MangaTokens=" .. tostring(d.MangaTokens))
+                if d.RaidsDefeated and type(d.RaidsDefeated.Packs) == "table" then
+                    local lines = {}
+                    for k, v in pairs(d.RaidsDefeated.Packs) do
+                        table.insert(lines, k .. "=" .. tostring(v))
+                    end
+                    L("RaidsDefeated.Packs: " .. table.concat(lines, ", "))
+                end
+            else
+                L("Replica unavailable")
+            end
+
+            H("RAID PACKS — OWNED CARDS PER ACTIVE RAID")
+            local cc
+            pcall(function()
+                local m = RS.Modules.Config.Core:FindFirstChild("CardConfig")
+                cc = m and _tr and _tr(m)
+            end)
+            local rep_ = Data.GetReplica()
+            local ownedCards = (rep_ and rep_.Data and rep_.Data.Cards) or {}
+            if cc and cc.Packs and RaidConfig and RaidConfig.ActiveRaids then
+                for _, raidName in ipairs(RaidConfig.ActiveRaids) do
+                    local pack = cc.Packs[raidName]
+                    if pack and type(pack.List) == "table" then
+                        local count = 0
+                        local samples = {}
+                        for cardName in pairs(pack.List) do
+                            if ownedCards[cardName] then
+                                count = count + 1
+                                if #samples < 3 then table.insert(samples, cardName) end
+                            end
+                        end
+                        L(("  %s: %d owned (%s)"):format(raidName, count,
+                            table.concat(samples, ", ") .. (count > 3 and "..." or "")))
+                    else
+                        L(("  %s: <pack data missing>"):format(raidName))
+                    end
+                end
+            end
+
+            H("WHY NOT JOINED")
+            -- mirror the loop's gating logic
+            if not _ACC.AutoRaid then
+                L("AutoRaid is OFF")
+            elseif not raidH then
+                L("RaidHandler not loaded")
+            elseif not raidH.RaidActive then
+                L("Raid not active yet (waiting for cycle)")
+            elseif _ACC.RaidMode == "Specific raid"
+                   and _ACC.RaidSpecific
+                   and actualRaid ~= _ACC.RaidSpecific then
+                L(("Specific mode: active=%s ≠ specific=%s")
+                    :format(tostring(actualRaid), tostring(_ACC.RaidSpecific)))
+            elseif d and d.RaidJoinTime then
+                local since = workspace:GetServerTimeNow() - d.RaidJoinTime
+                local jw = (RaidConfig and RaidConfig.RaidJoinWait) or 600
+                if since < jw then
+                    L(("Cooldown: %ds left"):format(jw - since))
+                elseif raidH.InRaid then
+                    L("InRaid=true (already inside, just waiting)")
+                else
+                    L("All checks PASS — should be joining. If not, look for runtime errors.")
+                end
+            end
+
+            local text = table.concat(out, "\n")
+            local copied = false
+            if setclipboard then pcall(setclipboard, text); copied = true
+            elseif toclipboard then pcall(toclipboard, text); copied = true end
+            print(text)
+            Notify(copied and ("Copied %d chars"):format(#text)
+                          or "Copy from console manually", 5)
         end)
     end,
 })
@@ -1869,6 +2150,40 @@ sec.CtrlR:Button({
             end
         end
     end,
+})
+
+sec.InfoL:Divider()
+sec.InfoL:Header({ Text = "Quick Actions" })
+sec.InfoL:Button({
+    Name = "Skip Tutorial",
+    Callback = function()
+        local rem = R.TutorialFinished or RS.Remotes:FindFirstChild("TutorialFinished")
+        if rem then
+            pcall(function() rem:FireServer() end)
+            Notify("Tutorial finish sent")
+        else
+            Notify("TutorialFinished remote not found")
+        end
+    end,
+})
+sec.InfoL:Input({
+    Name = "Star Evolve card (internal name)",
+    Default = "",
+    Placeholder = "e.g. Hisoka",
+    Callback = function(v) _ACC.STEvolveTarget = (v or ""):gsub("^%s+", ""):gsub("%s+$", "") end,
+}, "STEvolveInput")
+sec.InfoL:Button({
+    Name = "Evolve selected card (Star)",
+    Callback = function()
+        local n = _ACC.STEvolveTarget
+        if not n or n == "" then Notify("Type a card name first"); return end
+        Net.Fire(R.StarTrial, "Star", n)
+        Notify("Sent Star evolve: " .. n)
+    end,
+})
+sec.InfoL:Button({
+    Name = "Claim Group Reward",
+    Callback = function() Net.Fire(R.Card, "ClaimReward"); Notify("Group reward claim sent") end,
 })
 -- ============================================================================
 -- // 18. LOOPS — AUTO FARM
@@ -2351,7 +2666,8 @@ end)
 -- Mirrors the in-game "Hide Battle" HUD button. While enabled, whenever
 -- TowerHandler.InBattle becomes true we close the battle UI immediately.
 task.spawn(function()
-    local TowerHandlerLocal = UIClient and tryRequire(UIClient:FindFirstChild("TowerHandler"))
+    local _tr = _ACC._tryRequire
+    local TowerHandlerLocal = UIClient and _tr and _tr(UIClient:FindFirstChild("TowerHandler"))
     while getgenv()._ACCRunning do
         if _ACC.HideBattle and TowerHandlerLocal and TowerHandlerLocal.InBattle == true then
             safe(function()
@@ -2372,59 +2688,231 @@ end)
 -- (this is what the in-game Auto Roll button toggles). Without it, server
 -- treats it as if no UI is open and may reject. So we set ToggleAT(true)
 -- before the sweep and ToggleAT(nil) after.
+-- ── Trait/Grade roll loops ────────────────────────────────────────────────
+-- Status reporters show what's currently being rolled and the live value
+-- read directly from replica each iteration.
+
 task.spawn(function()
+    local SetStatus = function(t) if _ACC.SetTraitStatus then _ACC.SetTraitStatus(t) end end
+    local function displayName(internal)
+        return Lists.CardInternalToDisplay and Lists.CardInternalToDisplay[internal] or internal
+    end
+    local rolls = 0
+
     while getgenv()._ACCRunning do
-        if _ACC.AutoTrait and (Data.Get("TraitTokens") or 0) > 0
-           and not mapEmpty(_ACC.SelectedTraitCards) and not mapEmpty(_ACC.SelectedWantedTraits)
-        then
-            local list
-            if mapHas(_ACC.SelectedTraitCards, "All") then
-                list = Lists.Cards
-            else
-                list = {}
-                for _, name in iterMap(_ACC.SelectedTraitCards) do
-                    if name ~= "All" then table.insert(list, name) end
+        if not _ACC.AutoTrait then
+            SetStatus("Off")
+        elseif mapEmpty(_ACC.SelectedTraitCards) then
+            SetStatus("⚠ No cards selected")
+        elseif mapEmpty(_ACC.SelectedWantedTraits) then
+            SetStatus("⚠ No wanted traits selected")
+        elseif (Data.Get("TraitTokens") or 0) <= 0 then
+            SetStatus("⏸ Out of TraitTokens — waiting")
+        else
+            -- iterate Lists.Cards in IN-GAME ORDER (Pirate first, then Ninja...)
+            -- and keep only cards that are both selected AND owned. This gives
+            -- a deterministic Pack-by-Pack roll sequence.
+            local selectAll = mapHas(_ACC.SelectedTraitCards, "All")
+            local ownedCards = (Data.GetReplica() and Data.GetReplica().Data
+                                and Data.GetReplica().Data.Cards) or {}
+            local list = {}
+            for _, name in ipairs(Lists.Cards) do
+                if (selectAll or _ACC.SelectedTraitCards[name]) and ownedCards[name] then
+                    table.insert(list, name)
                 end
             end
 
-            -- enable server-side auto-roll session
+            if #list == 0 then
+                SetStatus("⚠ None of the selected cards are owned")
+                task.wait(2.0)
+            else
+
             Net.Fire(R.Tower, "ToggleAT", true)
             task.wait(0.1)
 
-            for _, name in ipairs(list) do
+            local total = #list
+            for idx, name in ipairs(list) do
                 if not _ACC.AutoTrait or not getgenv()._ACCRunning then break end
                 while _ACC.AutoTrait and getgenv()._ACCRunning do
-                    if (Data.Get("TraitTokens") or 0) <= 0 then break end
+                    local tokens = Data.Get("TraitTokens") or 0
+                    if tokens <= 0 then break end
                     local cd = Data.Get("Cards", name)
-                    if not cd then break end
-                    local cur = cd.Trait
-                    if cur and mapHas(_ACC.SelectedWantedTraits, cur) then
+                    if not cd then
+                        SetStatus(("⏭ %s — not owned, skipping"):format(displayName(name)))
                         break
                     end
+                    local cur = cd.Trait
+                    if cur and mapHas(_ACC.SelectedWantedTraits, cur) then
+                        SetStatus(("✅ %s\nTrait: %s\n(card %d/%d done)\nRolls: %d  Tokens: %d")
+                                  :format(displayName(name), cur, idx, total, rolls, tokens))
+                        break
+                    end
+                    SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nRolls: %d  Tokens: %d")
+                              :format(idx, total, displayName(name),
+                                      cur or "(none)", rolls, tokens))
+                    -- final check before fire
+                    if not _ACC.AutoTrait or not getgenv()._ACCRunning then break end
                     Net.FireRL(R.Tower, "Tower:Roll:" .. name, 0.4, "Roll", name)
+                    rolls = rolls + 1
                     task.wait(0.4)
                 end
             end
 
-            -- disable server-side auto-roll session
             Net.Fire(R.Tower, "ToggleAT", nil)
+            SetStatus(("✓ Sweep done\nRolls: %d  Tokens left: %d")
+                      :format(rolls, Data.Get("TraitTokens") or 0))
+            end -- if #list == 0 else
         end
         task.wait(1.0)
     end
 end)
 
 -- ── Tower auto armor roll ─────────────────────────────────────────────────
+-- ── Tower auto armor roll ─────────────────────────────────────────────────
+-- Server signature: Tower:FireServer("Armor", piece, material). Server reads
+-- Data.AutoArmorGrades — when current piece grade is in this list, server
+-- treats it as Auto Stop. So we sync the list to contain exactly the wanted
+-- grades user selected (toggle remote: AutoArmorGrade adds/removes one grade).
+--
+-- Materials are chosen best-to-worst (Diamond > Platinum > Gold > Silver >
+-- Bronze). Loop picks first selected material with count >= 1 each iteration —
+-- when Diamond runs out it falls through to Platinum, etc.
 task.spawn(function()
+    local SetStatus = function(t) if _ACC.SetArmorStatus then _ACC.SetArmorStatus(t) end end
+    local ARMOR_PIECES = { "Helmet", "Necklace", "Chestplate", "Gauntlets", "Sword", "Shoes" }
+    local MATERIAL_PRIORITY = { "Diamond", "Platinum", "Gold", "Silver", "Bronze" }
+    local rolls = 0
+    local lastSyncedKey
+
+    local function gradeOf(entry)
+        if type(entry) == "table" then return entry.Grade end
+        return entry
+    end
+
+    local function pickMaterial(rd)
+        local mats = (rd and rd.Materials) or {}
+        local picked = _ACC.ArmorMaterials or {}
+        for _, m in ipairs(MATERIAL_PRIORITY) do
+            if picked[m] and (mats[m] or 0) >= 1 then
+                return m, mats[m]
+            end
+        end
+        return nil, 0
+    end
+
+    -- sync server's AutoArmorGrades to match user wanted grades exactly
+    local function syncAutoStopList(wanted)
+        local key = ""
+        local wantedKeys = {}
+        for g in pairs(wanted) do table.insert(wantedKeys, g) end
+        table.sort(wantedKeys)
+        key = table.concat(wantedKeys, ",")
+        if key == lastSyncedKey then return end
+
+        local replica = Data.GetReplica()
+        local cur = (replica and replica.Data and replica.Data.AutoArmorGrades) or {}
+        local has = {}
+        for _, g in ipairs(cur) do has[g] = true end
+        -- remove anything that's not wanted
+        for g in pairs(has) do
+            if not wanted[g] then
+                Net.Fire(R.Tower, "AutoArmorGrade", g)
+                task.wait(0.1)
+            end
+        end
+        -- add wanted that aren't yet in list
+        for g in pairs(wanted) do
+            if not has[g] then
+                Net.Fire(R.Tower, "AutoArmorGrade", g)
+                task.wait(0.1)
+            end
+        end
+        lastSyncedKey = key
+    end
+
     while getgenv()._ACCRunning do
-        if _ACC.AutoArmor and _ACC.WantedArmorGrade then
-            local armor = Data.Get("Armor")
-            if type(armor) == "table" then
-                for piece, info in pairs(armor) do
-                    if not _ACC.AutoArmor or not getgenv()._ACCRunning then break end
-                    if type(info) == "table" and info.Grade ~= _ACC.WantedArmorGrade then
-                        Net.FireRL(R.Tower, "Tower:Armor:" .. piece, 0.45, "Armor", piece)
-                        task.wait(0.4)
+        local replica = Data.GetReplica()
+        local rd      = replica and replica.Data
+        local armor   = (rd and rd.Armor) or {}
+        local wanted  = _ACC.WantedArmorGrades or {}
+
+        local pieceCount = 0
+        for _ in pairs(armor) do pieceCount = pieceCount + 1 end
+
+        -- per-piece overview
+        local lines = {}
+        local needsRoll
+        for _, piece in ipairs(ARMOR_PIECES) do
+            local entry = armor[piece]
+            if entry ~= nil then
+                local g = tostring(gradeOf(entry) or "-")
+                local marker
+                if wanted[g] then
+                    marker = "✅"
+                else
+                    marker = "▫"
+                    if not needsRoll then needsRoll = piece end
+                end
+                table.insert(lines, ("%s %-11s %s"):format(marker, piece, g))
+            end
+        end
+
+        if not _ACC.AutoArmor then
+            if pieceCount == 0 then
+                SetStatus("Off\n\n(no armor pieces yet)")
+            else
+                SetStatus("Off\n\n" .. table.concat(lines, "\n"))
+            end
+        elseif pieceCount == 0 then
+            SetStatus("⚠ Data.Armor is empty\nVisit Tower to acquire pieces")
+        elseif mapEmpty(wanted) then
+            SetStatus("⚠ Select wanted grades first\n\n" .. table.concat(lines, "\n"))
+        elseif mapEmpty(_ACC.ArmorMaterials) then
+            SetStatus("⚠ Select at least one material\n\n" .. table.concat(lines, "\n"))
+        else
+            local material, matCount = pickMaterial(rd)
+            if not material then
+                -- show what materials are picked but exhausted
+                local picked = {}
+                for _, m in ipairs(MATERIAL_PRIORITY) do
+                    if _ACC.ArmorMaterials[m] then
+                        local c = (rd and rd.Materials and rd.Materials[m]) or 0
+                        table.insert(picked, ("%s: %d"):format(m, c))
                     end
+                end
+                SetStatus(("⏸ All selected materials exhausted\n%s\n\n%s")
+                          :format(table.concat(picked, "  "), table.concat(lines, "\n")))
+            elseif not needsRoll then
+                SetStatus(("✅ All pieces match wanted\nRolls: %d  %s left: %d\n\n%s")
+                          :format(rolls, material, matCount, table.concat(lines, "\n")))
+            else
+                syncAutoStopList(wanted)
+
+                local cur = tostring(gradeOf(armor[needsRoll]) or "-")
+                for i, line in ipairs(lines) do
+                    if line:find(needsRoll, 1, true) and line:sub(1, 1) == "▫" then
+                        lines[i] = line:gsub("^▫", "🎲", 1)
+                        break
+                    end
+                end
+
+                local wantedList = {}
+                for g in pairs(wanted) do table.insert(wantedList, g) end
+                table.sort(wantedList)
+
+                SetStatus(("🎲 Rolling %s\nCurrent: %s\nWanted: %s\nMaterial: %s (%d left)\nRolls: %d\n\n%s")
+                          :format(needsRoll, cur, table.concat(wantedList, ", "),
+                                  material, matCount, rolls, table.concat(lines, "\n")))
+                if _ACC.Debug then
+                    print(("[ACC Armor] piece=%s material=%s curGrade=%s mat=%d")
+                          :format(needsRoll, material, cur, matCount))
+                end
+
+                if not _ACC.AutoArmor or not getgenv()._ACCRunning then
+                    -- toggle disabled during wait window
+                else
+                    Net.FireRL(R.Tower, "Tower:Armor:" .. needsRoll, 0.4, "Armor", needsRoll, material)
+                    rolls = rolls + 1
                 end
             end
         end
@@ -2482,78 +2970,654 @@ task.spawn(function()
     end
 end)
 
--- ── Auto Grade (focused roll per card, Cash → Tokens fallback) ────────────
--- Same pattern as AutoTrait. Cash by default; if GradeUseTokensFirst is on
--- and GradeTokens > 0, server is told to deduct tokens instead.
--- Grade has no server-side AutoToggle remote — Roll is accepted directly.
+-- ── Auto Star Evolve ──────────────────────────────────────────────────────
+-- Walks selected cards and evolves them up to ⭐5 by:
+--   1. Reading nextStar requirements from StarTrialConfig.StarEvolutions
+--   2. Running trials at the required difficulty until 5 completions
+--   3. Once Completions and Currency both met → fire "Star" to evolve
+-- Stays on the same card until ⭐5 OR 3 consecutive fails on a difficulty
+-- (then marks card+difficulty as failed, moves on).
+-- Auto-enables _ACC.STAutoAttack while running so trials actually win.
 task.spawn(function()
+    local SetStatus = function(t) if _ACC.SetStarEvolveStatus then _ACC.SetStarEvolveStatus(t) end end
+    local function displayName(internal)
+        return Lists.CardInternalToDisplay and Lists.CardInternalToDisplay[internal] or internal
+    end
+
+    -- StarTrialConfig.StarEvolutions: tonumberKey → {Currency, Completions}
+    local function getEvolutionReq(nextStar)
+        if not StarTrialConfig or not StarTrialConfig.StarEvolutions then return nil end
+        return StarTrialConfig.StarEvolutions[tostring(nextStar)]
+    end
+
+    local TRIAL_TIMEOUT = 330   -- StarTrialConfig.Data.Time = 300, +30s buffer
+    local FAIL_LIMIT    = 3
+    local failed = {}           -- failed[card][diff] = true → skip this combo
+    local function markFail(card, diff)
+        failed[card] = failed[card] or {}
+        failed[card][diff] = (failed[card][diff] or 0) + 1
+        return failed[card][diff]
+    end
+    local function isFailed(card, diff)
+        return failed[card] and (failed[card][diff] or 0) >= FAIL_LIMIT
+    end
+
     while getgenv()._ACCRunning do
-        if _ACC.AutoGrade and not mapEmpty(_ACC.SelectedGradeCards)
-           and not mapEmpty(_ACC.SelectedWantedGrades)
-        then
-            local list
-            if mapHas(_ACC.SelectedGradeCards, "All") then
-                list = Lists.Cards
-            else
-                list = {}
-                for _, n in iterMap(_ACC.SelectedGradeCards) do
-                    if n ~= "All" then table.insert(list, n) end
+        if not _ACC.AutoStarEvolve then
+            SetStatus("Off")
+            task.wait(1.0)
+        elseif mapEmpty(_ACC.StarEvolveCards) then
+            SetStatus("⚠ Select cards to evolve first")
+            task.wait(1.5)
+        else
+            -- ensure auto-attack is on so trials actually clear
+            if not _ACC.STAutoAttack then
+                _ACC.STAutoAttack = true
+                pcall(function()
+                    if MacLib.Options.STAutoAttackToggle
+                       and MacLib.Options.STAutoAttackToggle.UpdateState then
+                        MacLib.Options.STAutoAttackToggle:UpdateState(true)
+                    end
+                end)
+            end
+
+            -- build candidate list in in-game order, owned only
+            local replica  = Data.GetReplica()
+            local rd       = replica and replica.Data
+            local owned    = (rd and rd.Cards) or {}
+            local starData = (rd and rd.StarData) or {}
+            local starCur  = (rd and rd.StarCurrency) or {}
+
+            local candidates = {}
+            for _, name in ipairs(Lists.Cards) do
+                if _ACC.StarEvolveCards[name] and owned[name] then
+                    table.insert(candidates, name)
                 end
             end
 
-            for _, name in ipairs(list) do
+            if #candidates == 0 then
+                SetStatus("⚠ None of selected cards are owned")
+                task.wait(2.0)
+            else
+                local processed = false
+                for _, name in ipairs(candidates) do
+                    if not _ACC.AutoStarEvolve or not getgenv()._ACCRunning then break end
+
+                    local cardData = owned[name]
+                    local curStar  = tonumber(cardData.Star or 0) or 0
+                    if curStar >= 5 then
+                        -- already maxed
+                    else
+                        local nextStar = curStar + 1
+                        local req = getEvolutionReq(nextStar)
+                        if not req then break end
+
+                        -- which difficulty needed for completions
+                        local targetDiff, neededComps
+                        for diff, cnt in pairs(req.Completions or {}) do
+                            targetDiff   = diff
+                            neededComps  = cnt
+                            break
+                        end
+
+                        if isFailed(name, targetDiff) then
+                            SetStatus(("⚠ %s — too weak for %s (%d fails), skipping")
+                                      :format(displayName(name), targetDiff, FAIL_LIMIT))
+                            task.wait(1.0)
+                        else
+                            local cardStarData = starData[name] or {}
+                            local doneComps    = cardStarData[targetDiff] or 0
+
+                            local currencyOK = true
+                            local missingCur = {}
+                            for cur, amt in pairs(req.Currency or {}) do
+                                local have = starCur[cur] or 0
+                                if have < amt then
+                                    currencyOK = false
+                                    table.insert(missingCur, ("%s %d/%d"):format(cur, have, amt))
+                                end
+                            end
+
+                            if doneComps >= neededComps and currencyOK then
+                                -- READY to evolve
+                                SetStatus(("🌟 %s ⭐%d → ⭐%d\nEvolving..."):format(
+                                    displayName(name), curStar, nextStar))
+                                Net.Fire(R.StarTrial, "Star", name)
+                                task.wait(1.5)
+                                processed = true
+                                break  -- restart outer loop, same card likely now ⭐+1
+                            else
+                                -- need more trials OR currency from trials
+                                local before = doneComps
+                                local stage  = (doneComps < neededComps)
+                                    and ("Completions: %d/%d"):format(doneComps, neededComps)
+                                    or  ("Need currency: " .. table.concat(missingCur, ", "))
+
+                                SetStatus(("🎲 %s ⭐%d → ⭐%d\nRunning %s\n%s\nFails so far: %d/%d")
+                                    :format(displayName(name), curStar, nextStar, targetDiff,
+                                            stage,
+                                            (failed[name] and failed[name][targetDiff]) or 0,
+                                            FAIL_LIMIT))
+
+                                -- launch the trial
+                                _ACC.STSelectedCard       = name
+                                _ACC.STSelectedDifficulty = targetDiff
+                                Net.Fire(R.StarTrial, "Start", targetDiff, name)
+                                task.wait(2.0)   -- let the trial UI come up
+
+                                -- locate the Results panel — same frame shows on win AND loss
+                                local resultsFrame
+                                pcall(function()
+                                    local stGui = PlayerGui:FindFirstChild("StarTrial")
+                                    local f = stGui and stGui:FindFirstChild("Frame")
+                                    resultsFrame = f and f:FindFirstChild("Results")
+                                end)
+
+                                -- wait for trial end: Results panel shown OR completions grew OR timeout
+                                local elapsed = 0
+                                while elapsed < TRIAL_TIMEOUT do
+                                    if not _ACC.AutoStarEvolve or not getgenv()._ACCRunning then break end
+                                    task.wait(2)
+                                    elapsed = elapsed + 2
+
+                                    -- end-of-trial signal: results panel becomes visible
+                                    if resultsFrame and resultsFrame.Visible then break end
+
+                                    -- (also catch direct counter increase as backup)
+                                    local newRep = Data.GetReplica()
+                                    local nowComps = (newRep and newRep.Data
+                                                      and newRep.Data.StarData
+                                                      and newRep.Data.StarData[name]
+                                                      and newRep.Data.StarData[name][targetDiff]) or 0
+                                    if nowComps > before then break end
+
+                                    SetStatus(("🎲 %s ⭐%d → ⭐%d\nTrial: %s (%ds left)\nCompletions: %d → %d/%d")
+                                        :format(displayName(name), curStar, nextStar, targetDiff,
+                                                TRIAL_TIMEOUT - elapsed, before, nowComps, neededComps))
+                                end
+
+                                -- give server a beat to commit any counter increment
+                                task.wait(1.0)
+
+                                -- evaluate result: counter delta is authoritative
+                                local rep2 = Data.GetReplica()
+                                local after = (rep2 and rep2.Data and rep2.Data.StarData
+                                               and rep2.Data.StarData[name]
+                                               and rep2.Data.StarData[name][targetDiff]) or 0
+                                if after > before then
+                                    failed[name] = failed[name] or {}
+                                    failed[name][targetDiff] = 0
+                                    SetStatus(("✓ %s — %s WON (%d/%d)")
+                                        :format(displayName(name), targetDiff, after, neededComps))
+                                else
+                                    local fc = markFail(name, targetDiff)
+                                    SetStatus(("✗ %s — %s LOST (fail %d/%d)")
+                                        :format(displayName(name), targetDiff, fc, FAIL_LIMIT))
+                                end
+                                task.wait(2.0)
+                                processed = true
+                                break -- restart with fresh data
+                            end
+                        end
+                    end
+                end
+
+                if not processed then
+                    -- nothing actionable in this pass — maybe all maxed/failed
+                    local maxed, failedCnt = 0, 0
+                    for _, name in ipairs(candidates) do
+                        local cs = tonumber((owned[name] or {}).Star or 0) or 0
+                        if cs >= 5 then maxed = maxed + 1 end
+                        if failed[name] then
+                            for _, f in pairs(failed[name]) do
+                                if f >= FAIL_LIMIT then failedCnt = failedCnt + 1; break end
+                            end
+                        end
+                    end
+                    SetStatus(("✓ Nothing to do\nMaxed ⭐5: %d  Stuck: %d  Total selected: %d")
+                        :format(maxed, failedCnt, #candidates))
+                    task.wait(5)
+                end
+            end
+        end
+    end
+end)
+
+-- ── Star Upgrades auto-buy ────────────────────────────────────────────────
+-- Each upgrade is bought via R.StarTrial:FireServer("Upgrade", upgradeName).
+-- Costs scale per level — we always try, server rejects if not enough.
+-- Cost source is StarCurrency.Tokens (and StarTickets for TicketChance).
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        local picks = {}
+        if _ACC.STUpgDamage        then table.insert(picks, "Damage")        end
+        if _ACC.STUpgHealth        then table.insert(picks, "Health")        end
+        if _ACC.STUpgBattleSpeed   then table.insert(picks, "BattleSpeed")   end
+        if _ACC.STUpgTicketChance  then table.insert(picks, "TicketChance")  end
+
+        if #picks > 0 then
+            for _, name in ipairs(picks) do
+                if not getgenv()._ACCRunning then break end
+                Net.FireRL(R.StarTrial, "ST:Upg:" .. name, 1.0, "Upgrade", name)
+                task.wait(0.3)
+            end
+        end
+        task.wait(2.0)
+    end
+end)
+-- Grade has no server-side AutoToggle remote — Roll is accepted directly.
+task.spawn(function()
+    local SetStatus = function(t) if _ACC.SetGradeStatus then _ACC.SetGradeStatus(t) end end
+    local function displayName(internal)
+        return Lists.CardInternalToDisplay and Lists.CardInternalToDisplay[internal] or internal
+    end
+    local rolls = 0
+
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoGrade then
+            SetStatus("Off")
+        elseif mapEmpty(_ACC.SelectedGradeCards) then
+            SetStatus("⚠ No cards selected")
+        elseif mapEmpty(_ACC.SelectedWantedGrades) then
+            SetStatus("⚠ No wanted grades selected")
+        else
+            -- iterate Lists.Cards in IN-GAME ORDER, keep only selected+owned
+            local selectAll = mapHas(_ACC.SelectedGradeCards, "All")
+            local ownedCards = (Data.GetReplica() and Data.GetReplica().Data
+                                and Data.GetReplica().Data.Cards) or {}
+            local list = {}
+            for _, n in ipairs(Lists.Cards) do
+                if (selectAll or _ACC.SelectedGradeCards[n]) and ownedCards[n] then
+                    table.insert(list, n)
+                end
+            end
+
+            if #list == 0 then
+                SetStatus("⚠ None of the selected cards are owned")
+                task.wait(2.0)
+            else
+
+            local total = #list
+            for idx, name in ipairs(list) do
                 if not _ACC.AutoGrade or not getgenv()._ACCRunning then break end
                 while _ACC.AutoGrade and getgenv()._ACCRunning do
-                    local cd = Data.Get("Cards", name)
-                    if not cd then break end
-                    if cd.Grade and mapHas(_ACC.SelectedWantedGrades, cd.Grade) then
+                    -- re-check immediately before any fire (wait window may have ended toggle)
+                    if not _ACC.AutoGrade then break end
+                    local replica = Data.GetReplica()
+                    local cd = replica and replica.Data and replica.Data.Cards
+                               and replica.Data.Cards[name]
+                    if not cd then
+                        SetStatus(("⏭ %s — not owned"):format(displayName(name)))
                         break
                     end
-                    local tokens = Data.Get("GradeTokens") or 0
-                    local source
-                    if _ACC.GradeUseTokensFirst and tokens > 0 then source = "Tokens" end
+                    local curGrade = cd.Grade
+                    if curGrade and mapHas(_ACC.SelectedWantedGrades, curGrade) then
+                        SetStatus(("✅ %s\nGrade: %s\n(card %d/%d done)\nRolls: %d")
+                                  :format(displayName(name), curGrade, idx, total, rolls))
+                        break
+                    end
+                    local tokens = (replica and replica.Data and replica.Data.GradeTokens) or 0
+                    local cash   = (replica and replica.Data and replica.Data.Cash) or 0
+                    local source, using
+                    if _ACC.GradeUseTokensFirst and tokens > 0 then
+                        source = "Tokens"; using = ("Tokens: %d"):format(tokens)
+                    else
+                        using = "Cash"
+                    end
+
+                    SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nUsing: %s\nRolls: %d\nCash: %s")
+                              :format(idx, total, displayName(name),
+                                      tostring(curGrade or "(none)"),
+                                      using, rolls, tostring(cash)))
+                    if _ACC.Debug then
+                        print(("[ACC Grade] %s | grade=%s | rolls=%d | source=%s")
+                              :format(name, tostring(curGrade), rolls, tostring(source)))
+                    end
+
+                    -- final check before fire
+                    if not _ACC.AutoGrade or not getgenv()._ACCRunning then break end
                     Net.FireRL(R.Grade, "Grade:Roll:" .. name, 0.4, "Roll", name, source)
+                    rolls = rolls + 1
                     task.wait(0.4)
                 end
             end
+            SetStatus(("✓ Sweep done\nRolls: %d"):format(rolls))
+            end -- if #list == 0 else
         end
         task.wait(1.0)
     end
 end)
 
--- ── Raid loops ────────────────────────────────────────────────────────────
+-- ── Auto Raid Farm ────────────────────────────────────────────────────────
+-- State machine: VOTE → JOIN → IN_RAID → RESULT → cooldown
+--
+-- Server gating from RaidHandler decompile:
+--   * Vote phase: workspace:GetAttribute("RaidVoteTime") ~= nil
+--   * Join phase: RaidHandler.RaidActive == true
+--   * Cooldown:  workspace:GetServerTimeNow() - Data.RaidJoinTime >= RaidJoinWait (600s)
+--   * Cards param to "Join": ARRAY of internal names (not map)
+--
+-- Win/loss detection (per user spec):
+--   MangaTokens > before  → "we tanked it" — reset fail counter
+--   MangaTokens unchanged → real loss (died in first seconds, no damage)
+-- RaidsDefeated.Packs[raid] only goes up on full kill — used for stats only.
 task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.RaidQuickStart then
-            Net.FireRL(R.Raid, "Raid:QuickStart", 4, "QuickStart")
-        end
-        task.wait(2)
-    end
-end)
+    local SetStatus = function(t) if _ACC.SetRaidStatus then _ACC.SetRaidStatus(t) end end
+    local FAIL_LIMIT = 3
+    local failed = {}    -- failed[raidName] = consecutive zero-manga losses
 
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.RaidAutoVote and RaidConfig and RaidConfig.Raids then
-            for raidId in pairs(RaidConfig.Raids) do
-                if not _ACC.RaidAutoVote or not getgenv()._ACCRunning then break end
-                Net.FireRL(R.Raid, "Raid:Vote:" .. raidId, 8, "Vote", raidId)
-                task.wait(0.5)
+    -- locate handlers (RaidHandler.RaidActive, StarTrialHandler.InTrial)
+    local tryReq = _ACC._tryRequire
+    local UIC = RS:FindFirstChild("Client")
+                and RS.Client:FindFirstChild("UI")
+    local raidH  = UIC and tryReq and tryReq(UIC:FindFirstChild("RaidHandler"))
+    local stH    = UIC and tryReq and tryReq(UIC:FindFirstChild("StarTrialHandler"))
+    local stockH = UIC and tryReq and tryReq(UIC:FindFirstChild("StockHandler"))
+
+    -- m:ss formatter
+    local function fmtMinSec(secs)
+        secs = math.max(0, math.ceil(secs or 0))
+        return ("%d:%02d"):format(math.floor(secs / 60), secs % 60)
+    end
+
+    -- load Multipliers utility module (used by game's own EquipBest)
+    local multipliers
+    pcall(function()
+        local mod = RS:FindFirstChild("Modules")
+                    and RS.Modules:FindFirstChild("Shared")
+                    and RS.Modules.Shared:FindFirstChild("Multipliers")
+        multipliers = mod and tryReq and tryReq(mod)
+    end)
+
+    -- mirror of game's EquipBest (line 35549 in decompile):
+    -- For each card in CardConfig.Packs[raidName].List that we own, compute
+    -- multiplier = TowerCashPerSecond(cash, mut, lvl, grade, star) * TraitHealthBuff
+    -- Sort desc, return top 3 internal names.
+    local function computeEquipBest(raidName)
+        if not raidName then return nil end
+        if not (CardConfig and CardConfig.Packs and CardConfig.Packs[raidName]) then
+            return nil
+        end
+        local rep = Data.GetReplica()
+        local owned = rep and rep.Data and rep.Data.Cards
+        if type(owned) ~= "table" then return nil end
+
+        local list = CardConfig.Packs[raidName].List
+        if type(list) ~= "table" then return nil end
+
+        local scored = {}
+        for cardName, packEntry in pairs(list) do
+            local cd = owned[cardName]
+            if cd and packEntry and packEntry.Cash then
+                local score = 0
+                if multipliers and multipliers.GetTowerCashPerSecond then
+                    pcall(function()
+                        local cps = multipliers.GetTowerCashPerSecond(packEntry.Cash,
+                            cd.Mutation, cd.Level, cd.Grade, cd.Star)
+                        local trait = 1
+                        if multipliers.GetTraitBuff then
+                            trait = multipliers.GetTraitBuff("Health", cd.Trait) or 1
+                        end
+                        score = math.ceil(cps * trait)
+                    end)
+                end
+                if score == 0 then
+                    -- fallback when Multipliers missing: cash × level proxy
+                    score = (packEntry.Cash or 0) * (tonumber(cd.Level) or 1)
+                end
+                table.insert(scored, { name = cardName, mult = score })
             end
         end
-        task.wait(5)
-    end
-end)
 
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.RaidAutoJoin and not mapEmpty(_ACC.RaidSelectedCards) then
-            local arr = {}
-            for _, n in iterMap(_ACC.RaidSelectedCards) do table.insert(arr, n) end
-            if #arr > 0 then
-                Net.FireRL(R.Raid, "Raid:Join", 8, "Join", arr)
+        table.sort(scored, function(a, b) return a.mult > b.mult end)
+
+        local top = {}
+        for i = 1, math.min(3, #scored) do
+            table.insert(top, scored[i].name)
+        end
+        return (#top > 0) and top or nil
+    end
+
+    local function pickRaid()
+        local active = (RaidConfig and RaidConfig.ActiveRaids) or {}
+        local base   = (RaidConfig and RaidConfig.Base) or {}
+
+        if _ACC.RaidMode == "Specific raid" and _ACC.RaidSpecific then
+            for _, r in ipairs(active) do
+                if r == _ACC.RaidSpecific then return r end
+            end
+            return nil
+        end
+
+        -- Auto pick: max Base from raids where we actually own ≥3 cards
+        -- (EquipBest needs 3 cards to send a full team)
+        local best, bestBase = nil, -1
+        for _, r in ipairs(active) do
+            if (failed[r] or 0) < FAIL_LIMIT then
+                local team = computeEquipBest(r)
+                if team and #team >= 3 and (base[r] or 0) > bestBase then
+                    best, bestBase = r, base[r] or 0
+                end
             end
         end
-        task.wait(3)
+        return best
+    end
+
+    -- Vote dedup — vote only once per voting session.
+    -- workspace.RaidVoteTime is the timestamp set when voting opens; it changes
+    -- each session, so we use it as session id.
+    local votedAtStamp
+
+    -- Read which raid is currently active. Game's RaidHandler holds pack name
+    -- in a local upvalue; not exposed. But it DOES expose RaidBossCard (the
+    -- boss character name). We look up which pack that card belongs to.
+    -- Fallback: PlayerGui.RaidSelect.Frame.PackName.Text (set during selection
+    -- screen, may be empty after join).
+    local function getActiveRaidName()
+        -- 1) primary: derive from RaidBossCard via CardConfig.Packs
+        if raidH and raidH.RaidBossCard and CardConfig and CardConfig.Packs then
+            local boss = raidH.RaidBossCard
+            for packName, packData in pairs(CardConfig.Packs) do
+                if type(packData) == "table"
+                   and type(packData.List) == "table"
+                   and packData.List[boss]
+                then
+                    return packName
+                end
+            end
+        end
+        -- 2) fallback: RaidSelect UI label
+        local ok, name = pcall(function()
+            local f = PlayerGui:FindFirstChild("RaidSelect")
+            f = f and f:FindFirstChild("Frame")
+            local lbl = f and f:FindFirstChild("PackName")
+            return lbl and lbl.Text or nil
+        end)
+        if ok and name and name ~= "" then return name end
+        return nil
+    end
+
+    -- Dedicated fast Vote watcher: polls every 2s to never miss the 60s window.
+    -- Fires once per voteTime stamp (same session id as main loop).
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.AutoRaid then
+                local voteTime = workspace:GetAttribute("RaidVoteTime")
+                if voteTime and voteTime ~= votedAtStamp
+                   and (not raidH or not raidH.RaidActive)
+                then
+                    local picked = pickRaid()
+                    if picked then
+                        Net.Fire(R.Raid, "Vote", picked)
+                        votedAtStamp = voteTime
+                        if _ACC.Debug then
+                            print(("[ACC Raid] Vote fired: %s (voteTime=%s)")
+                                :format(picked, tostring(voteTime)))
+                        end
+                    end
+                end
+            end
+            task.wait(2)
+        end
+    end)
+
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoRaid then
+            SetStatus("Off")
+            task.wait(1.0)
+        else
+            local picked = pickRaid()
+            if not picked then
+                SetStatus("⚠ No raid available\n(all selected raids stuck or none active)")
+                task.wait(8)
+            else
+                local raidActive = (raidH and raidH.RaidActive) == true
+                local voteTime   = workspace:GetAttribute("RaidVoteTime")
+                local raidStartA = workspace:GetAttribute("RaidStart")
+                local lastJoin   = Data.Get("RaidJoinTime") or 0
+                local joinWait   = (RaidConfig and RaidConfig.RaidJoinWait) or 600
+                local raidDur    = (RaidConfig and RaidConfig.RaidDuration) or 450
+                local sinceJoin  = workspace:GetServerTimeNow() - lastJoin
+                local now        = workspace:GetServerTimeNow()
+
+                -- VOTE phase: only fire once per voting session.
+                -- workspace.RaidVoteTime changes per session, used as session id.
+                -- Vote duration is 60s (from decompile).
+                if voteTime and not raidActive then
+                    local voteLeft = math.max(0, math.ceil(60 - (now - voteTime)))
+                    if voteTime ~= votedAtStamp then
+                        Net.Fire(R.Raid, "Vote", picked)
+                        votedAtStamp = voteTime
+                        SetStatus(("🗳 VOTING — %ds left\nVoted for: %s\nMode: %s")
+                                  :format(voteLeft, picked, _ACC.RaidMode))
+                    else
+                        SetStatus(("🗳 VOTING — %ds left\nAlready voted: %s")
+                                  :format(voteLeft, picked))
+                    end
+                    task.wait(3)
+
+                -- JOIN phase: detect what's actually active (server-decided)
+                elseif raidActive then
+                    local actualRaid = getActiveRaidName() or picked
+
+                    -- Skip stuck raids (3 fails) even in Auto mode
+                    if (failed[actualRaid] or 0) >= FAIL_LIMIT then
+                        SetStatus(("⏸ %s is marked stuck\nWaiting for next cycle")
+                                  :format(actualRaid))
+                        task.wait(15)
+                    elseif sinceJoin < joinWait then
+                        local left = math.floor(joinWait - sinceJoin)
+                        SetStatus(("⏸ Join cooldown: %ds left\nActive: %s")
+                                  :format(left, actualRaid))
+                        task.wait(5)
+                    elseif raidH and raidH.InRaid then
+                        -- already inside this raid; just wait it out
+                        SetStatus(("⏳ Already in %s\nWaiting for completion")
+                                  :format(actualRaid))
+                        task.wait(10)
+                    else
+                        -- pick cards via EquipBest (top 3 from owned in this pack)
+                        local cardsToUse
+                        if _ACC.RaidEquipBest then
+                            cardsToUse = computeEquipBest(actualRaid)
+                        end
+                        if not cardsToUse or #cardsToUse == 0 then
+                            SetStatus(("⚠ No owned cards from %s pack to bring\nWait for next raid cycle")
+                                      :format(actualRaid))
+                            task.wait(15)
+                        else
+                            local beforeManga = Data.Get("MangaTokens") or 0
+                            local beforeKill  = (Data.Get("RaidsDefeated", "Packs", actualRaid)) or 0
+
+                            local cardLabel = (#cardsToUse <= 3) and table.concat(cardsToUse, ", ")
+                                              or (("%d cards"):format(#cardsToUse))
+                            SetStatus(("⚔ Joining %s\n%s%s\nFails: %d/%d  Manga: %d  Kills: %d")
+                                      :format(actualRaid, cardLabel,
+                                              _ACC.RaidEquipBest and " (auto-best)" or "",
+                                              failed[actualRaid] or 0, FAIL_LIMIT,
+                                              beforeManga, beforeKill))
+                            Net.Fire(R.Raid, "Join", cardsToUse)
+                            task.wait(5)
+
+                        -- IN_RAID phase: wait until raid ends
+                        local elapsed = 0
+                        local timeout = ((RaidConfig and RaidConfig.RaidDuration) or 450) + 30
+                        while elapsed < timeout do
+                            if not _ACC.AutoRaid or not getgenv()._ACCRunning then break end
+                            task.wait(5)
+                            elapsed = elapsed + 5
+
+                            local stillActive = raidH and raidH.RaidActive
+                            local nowManga    = Data.Get("MangaTokens") or 0
+                            local nowKill     = (Data.Get("RaidsDefeated", "Packs", actualRaid)) or 0
+
+                            if not stillActive or nowKill > beforeKill or nowManga > beforeManga then
+                                if elapsed > 30 then break end
+                            end
+
+                            SetStatus(("⚔ In %s (%ds left)\nManga: %d (+%d)  Kills: %d (+%d)")
+                                      :format(actualRaid, timeout - elapsed,
+                                              nowManga, nowManga - beforeManga,
+                                              nowKill, nowKill - beforeKill))
+                        end
+                        task.wait(2)
+
+                        -- RESULT
+                        local afterManga = Data.Get("MangaTokens") or 0
+                        local afterKill  = (Data.Get("RaidsDefeated", "Packs", actualRaid)) or 0
+                        local mangaGain  = afterManga - beforeManga
+                        local killed     = afterKill > beforeKill
+
+                        if mangaGain > 0 then
+                            failed[actualRaid] = 0
+                            if killed then
+                                SetStatus(("✓ %s KILLED\n+%d Manga  +1 kill (total %d)")
+                                          :format(actualRaid, mangaGain, afterKill))
+                            else
+                                SetStatus(("✓ %s — partial damage\n+%d Manga (no kill)")
+                                          :format(actualRaid, mangaGain))
+                            end
+                        else
+                            failed[actualRaid] = (failed[actualRaid] or 0) + 1
+                            SetStatus(("✗ %s TOTAL FAIL\n0 Manga (fail %d/%d)")
+                                      :format(actualRaid, failed[actualRaid], FAIL_LIMIT))
+                        end
+                        task.wait(3)
+                        end -- if no cards else
+                    end
+
+                -- IDLE — neither vote nor active raid
+                else
+                    -- next-raid timer comes from StockHandler.RaidTimeLeft
+                    -- (game uses this for "Raid will start in X" notification)
+                    local nextIn
+                    if stockH and stockH.RaidTimeLeft and stockH.RaidTimeLeft > 0 then
+                        nextIn = stockH.RaidTimeLeft
+                    end
+
+                    if sinceJoin < joinWait then
+                        local cdLeft = math.ceil(joinWait - sinceJoin)
+                        local extra = nextIn and ("\nNext raid in %s"):format(fmtMinSec(nextIn)) or ""
+                        SetStatus(("⏸ JOIN COOLDOWN — %ds left%s\nNext target: %s")
+                                  :format(cdLeft, extra, picked))
+                    elseif raidStartA and (now - raidStartA) < raidDur then
+                        local left = math.ceil(raidDur - (now - raidStartA))
+                        SetStatus(("⚔ RAID IN PROGRESS — %ds left\nYou can still try to join: %s")
+                                  :format(left, picked))
+                    elseif nextIn then
+                        SetStatus(("⏳ Next raid in %s\nNext target: %s")
+                                  :format(fmtMinSec(nextIn), picked))
+                    else
+                        local lastJoinAge = (lastJoin > 0)
+                            and (("%dm ago"):format(math.floor(sinceJoin / 60)))
+                            or "never"
+                        SetStatus(("⏸ Waiting for next raid cycle\nLast raid: %s\nNext target: %s")
+                                  :format(lastJoinAge, picked))
+                    end
+                    task.wait(5)
+                end
+            end
+        end
     end
 end)
 -- ============================================================================
@@ -2573,7 +3637,7 @@ do
         :FindFirstChild("Config")
         and ModulesFolder.Config:FindFirstChild("Rewards")
         and ModulesFolder.Config.Rewards:FindFirstChild("AchievementConfig")
-    if achMod then AchievementConfig = tryRequire(achMod) end
+    if achMod then AchievementConfig = _ACC._tryRequire and _ACC._tryRequire(achMod) end
 end
 
 -- progress checkers replicated from decompiled AchievementHandler v_u_43
@@ -2683,12 +3747,110 @@ task.spawn(function()
     end
 end)
 
+-- ── Auto Rewards: clan + daily quests + login + wheelspin + group + index ──
+-- One toggle covers everything because none of them have a cooldown problem
+-- on the server side — each is gated by data.* fields. We just probe each
+-- channel and fire if claimable. Server ignores duplicates silently.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoRewards then
-            Net.FireRL(R.Card, "Card:ClaimReward", 14, "ClaimReward")
+            local rep = Data.GetReplica()
+            local d = rep and rep.Data
+
+            -- 1. Group reward (one-shot, never resets)
+            if d and d.GroupRewardClaimed == false
+               and RL_Allow("Reward:Group", 60)
+            then
+                Net.Fire(R.Card, "ClaimReward")
+            end
+
+            -- 2. Clan rewards: ClanRewards is array of claimed level numbers,
+            --    ClanLevel says highest level reached. Claim everything up to it.
+            if d and d.ClanLevel then
+                local claimed = {}
+                for _, lvl in ipairs(d.ClanRewards or {}) do claimed[lvl] = true end
+                for lvl = 1, d.ClanLevel do
+                    if not claimed[lvl] and RL_Allow("Reward:Clan:" .. lvl, 30) then
+                        Net.Fire(R.Clan, "ClaimReward", lvl)
+                        task.wait(0.15)
+                    end
+                end
+            end
+
+            -- 3. Daily Quests: each Quest has Completed=true, Saved field marks
+            --    it claimed. Fire Claim for completed-but-unsaved.
+            if d and type(d.DailyQuests) == "table" then
+                local saved = d.ClanDailyQuestsSaved or {} -- field naming clue from data
+                for qid, info in pairs(d.DailyQuests) do
+                    if type(info) == "table" and info.Completed and not saved[qid]
+                       and RL_Allow("Reward:DailyQuest:" .. qid, 30)
+                    then
+                        Net.Fire(R.Card, "Claim", qid)
+                        task.wait(0.1)
+                    end
+                end
+            end
+
+            -- 4. Clan Daily/Weekly quests — completed but unsaved
+            if d and type(d.ClanDailyQuests) == "table" then
+                local saved = d.ClanDailyQuestsSaved or {}
+                for qid, info in pairs(d.ClanDailyQuests) do
+                    if type(info) == "table" and info.Completed and not saved[qid]
+                       and RL_Allow("Reward:ClanDQ:" .. qid, 30)
+                    then
+                        Net.Fire(R.Clan, "ClaimReward", qid)
+                        task.wait(0.1)
+                    end
+                end
+            end
+            if d and type(d.ClanWeeklyQuests) == "table" then
+                local saved = d.ClanWeeklyQuestsSaved or {}
+                for qid, info in pairs(d.ClanWeeklyQuests) do
+                    if type(info) == "table" and info.Completed and not saved[qid]
+                       and RL_Allow("Reward:ClanWQ:" .. qid, 30)
+                    then
+                        Net.Fire(R.Clan, "ClaimReward", qid)
+                        task.wait(0.1)
+                    end
+                end
+            end
+
+            -- 5. Login streak: server marks ClaimedLoginRewards keys as we claim
+            if d and type(d.ClaimedLoginRewards) == "table" then
+                local streak = d.LoginStreak or 0
+                local claimed = {}
+                for _, day in ipairs(d.ClaimedLoginRewards) do claimed[day] = true end
+                for day = 1, streak do
+                    if not claimed[day] and RL_Allow("Reward:Login:" .. day, 30) then
+                        Net.Fire(R.Card, "Claim", "Login" .. day)
+                        task.wait(0.1)
+                    end
+                end
+            end
+
+            -- 6. Wheelspin: Wheelspins is the count of available spins
+            if d and (d.Wheelspins or 0) > 0 and RL_Allow("Reward:Wheelspin", 5) then
+                Net.Fire(R.Card, "Claim", "Wheelspin")
+            end
+
+            -- 7. Index discoveries: CardsDiscovered grew past CardsClaimed?
+            if d and type(d.CardsDiscovered) == "table" and type(d.CardsClaimed) == "table" then
+                local claimed = {}
+                for _, c in ipairs(d.CardsClaimed) do claimed[c] = true end
+                for _, c in ipairs(d.CardsDiscovered) do
+                    if not claimed[c] and RL_Allow("Reward:Index:" .. c, 30) then
+                        Net.Fire(R.Card, "ClaimCard", c)
+                        task.wait(0.05)
+                    end
+                end
+            end
+
+            -- 8. Generic safety net for any plain rewards bucket
+            if RL_Allow("Reward:GenericClaim", 14) then
+                Net.Fire(R.Card, "ClaimReward")
+            end
         end
-        task.wait(15)
+        task.wait(8)
     end
 end)
 
@@ -2953,31 +4115,80 @@ end)
 -- // 23. LOOPS — MISC (ESP, AntiAFK, Webhook, HUD hide)
 -- ============================================================================
 
--- Anti-AFK
+-- ── Anti-AFK ──────────────────────────────────────────────────────────────
+-- Two layers — both target Roblox's idle/kick system:
+--  1. VirtualUser jiggle every 60s — synthetic mouse click resets Roblox's
+--     own idle timer. Click is at off-screen coords so it doesn't interact
+--     with any UI. This is what prevents the 20-minute auto-kick.
+--  2. Idled signal fallback — if jiggle missed a tick, Roblox eventually
+--     fires Idled (~17min of no input); we click then to reset.
 table.insert(_ACC._connections, LocalPlayer.Idled:Connect(function()
     if _ACC.AntiAFK and getgenv()._ACCRunning then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
     end
 end))
 
--- Webhook on rare drops
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.AntiAFK then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+        end
+        task.wait(60)
+    end
+end)
+
+-- ── Webhook: rare drop notifications ──────────────────────────────────────
+-- Triggers on:
+--   • New card discovered           (CardsDiscovered grew)
+--   • New pet claimed               (PetsClaimed grew)
+--   • New achievement               (Achievements grew)
+--   • Diamond / Rainbow mutation    (Cards.<name>.Mutation went up to rare)
+--   • Raid completion               (RaidsDefeated grew)
+local lastMutations = {}
+local function rareSend(title, desc, color)
+    if not _ACC.WebhookDrops or _ACC.WebhookURL == "" then return end
+    local req = (syn and syn.request) or http_request or request or (http and http.request)
+    if not req then return end
+    local body = HttpService:JSONEncode({
+        username = "ACC Hub — " .. LocalPlayer.Name,
+        embeds = {{ title = title, description = desc, color = color,
+                    footer = { text = ("plot %s"):format(Plot.GetName()) } }},
+    })
+    safe(req, { Url = _ACC.WebhookURL, Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" }, Body = body })
+end
+
 Data.OnChange(function(opType, path, newVal, oldVal)
     if not _ACC.WebhookDrops or _ACC.WebhookURL == "" then return end
-    if opType ~= "ArrayInsert" then return end
-    local req = (syn and syn.request) or http_request or request
-        or (http and http.request)
-    if not req then return end
-    local function send(title, desc, color)
-        local body = HttpService:JSONEncode({
-            username = "ACC Hub",
-            embeds = {{ title = title, description = desc, color = color }},
-        })
-        safe(req, { Url = _ACC.WebhookURL, Method = "POST",
-                    Headers = { ["Content-Type"] = "application/json" }, Body = body })
+
+    if opType == "ArrayInsert" then
+        if path[1] == "CardsDiscovered" then rareSend("📚 New card discovered", tostring(newVal), 0xFEE75C) end
+        if path[1] == "PetsClaimed"     then rareSend("🐾 New pet claimed",      tostring(newVal), 0x57F287) end
+        if path[1] == "Achievements"    then rareSend("🏆 Achievement unlocked", tostring(newVal), 0xEB459E) end
     end
-    if path[1] == "CardsDiscovered" then send("New card discovered", tostring(newVal), 0xFEE75C) end
-    if path[1] == "PetsClaimed"     then send("New pet claimed",     tostring(newVal), 0x57F287) end
+
+    -- Mutation upgrade (Diamond / Rainbow only — common ones not worth pinging)
+    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Mutation" then
+        local cardName = path[2]
+        local prev = lastMutations[cardName]
+        lastMutations[cardName] = newVal
+        if newVal == "Diamond" or newVal == "Rainbow" then
+            local color = newVal == "Rainbow" and 0xFF06EA or 0x10D7FF
+            rareSend("✨ " .. newVal .. " mutation",
+                     ("**%s** → %s"):format(tostring(cardName), newVal), color)
+        end
+    end
+
+    -- Raid completion
+    if _ACC.WebhookRaid and opType == "ArrayInsert" and path[1] == "RaidsDefeated" then
+        rareSend("⚔️ Raid completed", tostring(newVal), 0xED4245)
+    end
 end)
 
 -- HUD popup hider
@@ -3033,8 +4244,60 @@ end
 -- // 25. INIT FINISH — config save/load + default tab
 -- ============================================================================
 
+task.spawn(function()
+    task.wait(0.2)
+    pcall(function()
+        Window:CreateMinimizer({
+            Size = UDim2.fromOffset(50, 50),
+            Position = UDim2.new(1, -10, 0.5, 0),
+            Icon = "rbxassetid://138310609771261",
+        })
+    end)
+end)
+
 -- 1. set MacLib autosave folder for this hub
-pcall(function() MacLib:SetFolder("ACCHub") end)
+pcall(function() MacLib:SetFolder("ApelHub") end)
+
+-- 1a. backwards-compat: migrate configs from old folder name "ACCHub"
+-- to new "ApelHub" so users keep their saved settings on first launch.
+-- One-shot: removes the old folder after successful copy.
+-- Marker file prevents re-running the migration.
+pcall(function()
+    if not (isfolder and isfile and listfiles and writefile and readfile) then
+        return  -- executor lacks file IO
+    end
+    local OLD = "MacLib/ACCHub"
+    local NEW = "MacLib/ApelHub"
+    local MARKER = NEW .. "/.migrated_from_ACCHub"
+
+    if not isfolder(OLD) then return end          -- nothing to migrate
+    if isfile(MARKER) then return end             -- already migrated
+
+    if not isfolder(NEW) then
+        pcall(makefolder, NEW)
+    end
+
+    local migrated = 0
+    for _, path in ipairs(listfiles(OLD)) do
+        local fname = path:match("[^/\\]+$")
+        if fname and not isfile(NEW .. "/" .. fname) then
+            local ok, contents = pcall(readfile, path)
+            if ok and contents then
+                pcall(writefile, NEW .. "/" .. fname, contents)
+                migrated = migrated + 1
+            end
+        end
+    end
+
+    pcall(writefile, MARKER, tostring(os.time()))
+
+    -- best-effort cleanup of old folder
+    if delfolder then pcall(delfolder, OLD) end
+
+    if migrated > 0 then
+        print(("[ACC_HUB] migrated %d config file(s) ACCHub → ApelHub"):format(migrated))
+    end
+end)
 
 -- 2. wrap AutoSave to no-op during initial load — restore-time callbacks
 -- would otherwise spam the JSON file once per element
