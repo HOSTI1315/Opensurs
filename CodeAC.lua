@@ -54,6 +54,7 @@ local codes = {
     "WCODESW",
     "OFFICIALCODEABUSE",
     "HAILMARYCODES",
+    "CODE1LOL",
     "JOJOUPDATE",
     "STONEFREE",
     "WEATHERREPORT",
