@@ -14,6 +14,10 @@ if getgenv()._ACCCleanup then
     pcall(getgenv()._ACCCleanup)
     getgenv()._ACCCleanup = nil
 end
+if getgenv()._ACCNamecallRestore then
+    pcall(getgenv()._ACCNamecallRestore)
+    getgenv()._ACCNamecallRestore = nil
+end
 if getgenv()._ACCUI then
     pcall(function() getgenv()._ACCUI:Unload() end)
     getgenv()._ACCUI = nil
@@ -34,7 +38,8 @@ local TweenService       = game:GetService("TweenService")
 local UserInputService   = game:GetService("UserInputService")
 local HttpService        = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
-local VirtualUser        = game:GetService("VirtualUser")
+local VirtualUser        = (cloneref and cloneref(game:GetService("VirtualUser")))
+                            or game:GetService("VirtualUser")
 local CollectionService  = game:GetService("CollectionService")
 local Workspace          = workspace
 
@@ -100,8 +105,6 @@ _ACC.RaidMode              = "Auto pick (max we can beat)"
 _ACC.RaidSpecific          = nil
 
 -- ── Auto Claim ────────────────────────────────────────────────────────────
-_ACC.CodesInput            = ""
-_ACC.CodesURL              = ""
 _ACC.AutoAchievements      = false
 _ACC.AutoRewards           = false
 _ACC.AutoExpSend           = false
@@ -111,12 +114,14 @@ _ACC.SkipExpedition        = false
 -- ── Shops ─────────────────────────────────────────────────────────────────
 _ACC.AutoStock             = false
 _ACC.AutoMerchant          = false
-_ACC.StockSpecific         = ""
-_ACC.MerchantSpecific      = ""
+_ACC.SelectedStockItems    = {}   -- map { ["Pirate-Gold"] = true, ... }
+_ACC.SelectedMerchantItems = {}   -- map { ["Pirate-Gold"] = true, ... }
+_ACC.MerchantPaymentMode   = "Trade -> Tokens"  -- Trade (Cash/packs) first, fall back to TravelTokens
 _ACC.SelectedPetEggs       = {}   -- map
 _ACC.PetRoll1              = false
 _ACC.PetRoll5              = false
 _ACC.DragonBallAuto        = false
+_ACC.DBWishType            = "Cash"  -- which wish to make when 7 balls collected
 
 -- ── Inventory ─────────────────────────────────────────────────────────────
 _ACC.PEMethod              = "Upgrade"
@@ -125,10 +130,9 @@ _ACC.PEFromRarity          = "Regular"
 _ACC.PEEnabled             = false
 _ACC.SelectedPotions       = {}   -- map
 _ACC.AutoCraftPotions      = false
+_ACC.AutoUsePotions        = false
 _ACC.SelectedUpgrades      = {}   -- map
 _ACC.AutoUpgrade           = false
-_ACC.RelicApply            = false
-_ACC.RelicApply10          = false
 _ACC.RelicCraft            = false
 
 -- ── Misc ──────────────────────────────────────────────────────────────────
@@ -266,6 +270,13 @@ local GradesConfig    = Config.Grades
 local RaidConfig      = Config.RaidConfig
 local ProductConfig   = Config.ProductConfig
 local ImageConfig     = Config.ImageConfig
+-- Mutations: data-only module (no requires, no WaitForChild). Safe to load.
+local Mutations       = Config.Mutations  -- RS.Modules.Config.Core.Mutations
+
+-- Shop price reduction is the constant 0.6 in Modules.GameUtils.Configuration.
+-- We hardcode it instead of requiring Configuration — that module pulls in
+-- a chain of services that can hang during early load.
+local ShopPriceReduction = 0.6
 
 -- // 5. DATA WRAPPER  ―  Madwork Replica via debug.getupvalues hack
 local Data = {}
@@ -479,6 +490,24 @@ do
     end
     Lists.PacksFull = packsFull
 
+    -- ── PacksFullWithBundles: same family/rarity order, with bundle inline ──
+    -- Bundle storage key is "<Family>-<Mutation>-Bundle" (mutation always
+    -- present, Regular included). Display label uses spaces.
+    -- Order matches the place-priority sort: each pack is followed by its
+    -- bundle of the same rarity, so the dropdown reads naturally:
+    --   Pirate, Pirate Bundle, Pirate Gold, Pirate Gold Bundle, ...
+    -- Used by Auto Place, Card Market, Travel Merchant.
+    local packsBundles = {}
+    for _, family in ipairs(Lists.Packs) do
+        table.insert(packsBundles, family)                          -- Regular
+        table.insert(packsBundles, family .. " Regular Bundle")     -- Regular Bundle
+        for _, rarity in ipairs(rarityOrder) do
+            table.insert(packsBundles, family .. " " .. rarity)              -- mutated pack
+            table.insert(packsBundles, family .. " " .. rarity .. " Bundle") -- mutated bundle
+        end
+    end
+    Lists.PacksFullWithBundles = packsBundles
+
     -- ── Build cards in IN-GAME ORDER ──
     -- For each Pack (sorted by .Page), iterate its List and add cards
     -- by .Layout. Result: Pirate cards (Luffy, Zoro, Nami...) → Ninja
@@ -606,12 +635,42 @@ do
     table.sort(upgrades)
     Lists.Upgrades = upgrades
 
+    -- Potions: 5 categories × 3 tiers = 15 (Luck, HatchTime, MutationChance,
+    -- XP, PetLuck). Totem entries live in Consumables too — filter them out
+    -- since they're shop-buy items, not personal potions.
     local potions = {}
+    Lists.PotionCategories = {}   -- map: category -> [{name, layout}, ...] sorted highest tier first
     if Consumables then
-        for k in pairs(Consumables) do table.insert(potions, k) end
+        for k, cfg in pairs(Consumables) do
+            if not tostring(k):find("Totem") and type(cfg) == "table" then
+                table.insert(potions, k)
+                local cat = cfg.Category
+                if cat then
+                    Lists.PotionCategories[cat] = Lists.PotionCategories[cat] or {}
+                    table.insert(Lists.PotionCategories[cat], {
+                        name   = k,
+                        layout = cfg.Layout or 0,
+                    })
+                end
+            end
+        end
     end
-    table.sort(potions)
+    -- Sort: by category, then by tier (Layout) ascending — produces
+    -- Luck I, Luck II, Luck III, HatchTime I, HatchTime II, ... in dropdown.
+    table.sort(potions, function(a, b)
+        local ca = (Consumables[a] and Consumables[a].Category) or ""
+        local cb = (Consumables[b] and Consumables[b].Category) or ""
+        if ca ~= cb then return ca < cb end
+        local la = (Consumables[a] and Consumables[a].Layout) or 0
+        local lb = (Consumables[b] and Consumables[b].Layout) or 0
+        return la < lb
+    end)
     Lists.Potions = potions
+    -- Inside each category, highest tier first (so apply-loop can grab the
+    -- best owned tier with one walk).
+    for _, list in pairs(Lists.PotionCategories) do
+        table.sort(list, function(a, b) return a.layout > b.layout end)
+    end
 end
 
 -- // 10. LIBRARY SETUP
@@ -654,7 +713,11 @@ local sec = {
     GradeL    = tabs.Combat:Section({ Side = "Left" }),
     RaidR     = tabs.Combat:Section({ Side = "Right" }),
     -- Auto Claim
-    CodesL    = tabs.AutoClaim:Section({ Side = "Left" }),
+    -- NOTE: this fork lays sections into Left/Right columns in declaration
+    -- order and pairs them visually row-by-row. Auto Claim must keep 4
+    -- sections (2 Left + 2 Right) to stay aligned. ManualL is the renamed
+    -- ex-CodesL slot — codes UI was removed but the slot stays for layout.
+    ManualL   = tabs.AutoClaim:Section({ Side = "Left" }),
     AchR      = tabs.AutoClaim:Section({ Side = "Right" }),
     RewL      = tabs.AutoClaim:Section({ Side = "Left" }),
     ExpR      = tabs.AutoClaim:Section({ Side = "Right" }),
@@ -873,9 +936,9 @@ if replica0 and replica0.OnChange then
 end
 
 makeSearchableDropdown(sec.AFPlaceL, {
-    Name = "Packs",
+    Name = "Packs (incl. Bundles)",
     Multi = true,
-    Options = Lists.PacksFull,
+    Options = Lists.PacksFullWithBundles,
     OnChange = function(map) _ACC.SelectedPlacePacks = map end,
 }, "AutoPlacePacksDropdown")
 
@@ -1246,50 +1309,22 @@ sec.RaidR:Button({ Name = "Exit Raid", Callback = function() Net.Fire(R.Raid, "E
 -- ============================================================================
 -- // 13. TAB: AUTO CLAIM
 -- ============================================================================
-sec.CodesL:Header({ Text = "Codes" })
-sec.CodesL:Input({
-    Name = "Codes (comma-separated)",
-    Default = "",
-    Placeholder = "code1, code2, ...",
-    Callback = function(v) _ACC.CodesInput = v or "" end,
-}, "CodesInput")
-sec.CodesL:Input({
-    Name = "Code list URL (raw)",
-    Default = "",
-    Placeholder = "https://raw.githubusercontent.com/.../codes.txt",
-    Callback = function(v) _ACC.CodesURL = v or "" end,
-}, "CodesURLInput")
-sec.CodesL:Button({
-    Name = "Redeem now",
-    Callback = function()
-        local codes = {}
-        for token in tostring(_ACC.CodesInput):gmatch("[^,%s]+") do
-            table.insert(codes, token)
-        end
-        if _ACC.CodesURL ~= "" then
-            local ok, body = pcall(game.HttpGet, game, _ACC.CodesURL)
-            if ok and body then
-                for line in body:gmatch("[^\r\n]+") do
-                    local trimmed = line:match("^%s*(.-)%s*$")
-                    if trimmed ~= "" and not trimmed:match("^#") then
-                        table.insert(codes, trimmed)
-                    end
-                end
-            end
-        end
-        task.spawn(function()
-            local n = 0
-            for _, c in ipairs(codes) do
-                if not getgenv()._ACCRunning then break end
-                if #c > 0 and #c <= 25 then
-                    Net.Fire(R.Codes, c)
-                    n = n + 1
-                    task.wait(2.5)
-                end
-            end
-            Notify(("Tried %d code(s)"):format(n))
-        end)
-    end,
+sec.ManualL:Header({ Text = "Manual" })
+sec.ManualL:Button({
+    Name = "Trigger ClaimReward",
+    -- Single fire-and-forget claim; useful when an event drop / Robux
+    -- product / login bundle is sitting unclaimed and the auto-loop is off.
+    Callback = function() Net.Fire(R.Card, "ClaimReward"); Notify("Sent ClaimReward") end,
+})
+sec.ManualL:Button({
+    Name = "Claim Daily Login",
+    -- Login rewards path is unverified after the v38 update (handler missing
+    -- from decompile). Best-effort.
+    Callback = function() Net.Fire(R.Card, "Claim", "Login"); Notify("Sent Claim Login") end,
+})
+sec.ManualL:Button({
+    Name = "Claim Wheelspin",
+    Callback = function() Net.Fire(R.Card, "Claim", "Wheelspin"); Notify("Sent Claim Wheelspin") end,
 })
 
 sec.AchR:Header({ Text = "Achievements" })
@@ -1335,68 +1370,309 @@ sec.ExpR:Toggle({
     Default = false,
     Callback = function(v)
         _ACC.SkipExpedition = v
-        Net.Fire(R.Relic, "SetSkipExpedition", v)
+        -- SetSkipExpedition lives on StarTrial remote, not Relic
+        -- (StarTrialHandler.ExpeditionHandler binds Remotes.StarTrial).
+        Net.Fire(R.StarTrial, "SetSkipExpedition", v)
     end,
 }, "SkipExpToggle")
 
 -- ============================================================================
 -- // 14. TAB: SHOPS
 -- ============================================================================
-sec.StockL:Header({ Text = "Stock" })
+-- Stock: GetStock:InvokeServer() returns
+--   { ["Pack-Mutation"] = {Layout=N, Amount=N}, DragonBall = bool }
+-- Price = CardConfig.Packs[family].Price
+--       * (Mutations[mut].PriceMultiplier or 1)
+--       * ShopPriceReduction (0.6),  floored.
+-- Game's "BuyAll" remote action is broken — we implement our own by spamming
+-- "Buy" per id while we have cash.
+--
+-- Merchant: GetMerchantItems:InvokeServer() returns array
+--   { {Item, Category, Price, Token}, ... }   Category ∈ Packs|Bundle|Consumables|Totem
+--   Price  = cash cost (number) for non-Totem; for Totem it's a {pack=count} table.
+--   Token  = TravelTokens cost.
+--   Buy: Merchant:FireServer("Buy", item)         -- pays Cash (or pack-trade for Totem)
+--        Merchant:FireServer("Buy", item, "Token") -- pays TravelTokens
+
+-- ── Snapshot helpers ─────────────────────────────────────────────────────
+local Shops = {}
+Shops.StockSnap     = {}   -- array of {id, family, mut, price}
+Shops.MerchantSnap  = {}   -- array of {item, category, cashPrice, tokenPrice}
+
+local function stockPrice(family, mut)
+    if not (CardConfig and CardConfig.Packs and CardConfig.Packs[family]) then return nil end
+    local base = CardConfig.Packs[family].Price
+    if not base then return nil end
+    local mul = 1
+    if mut and Mutations and Mutations[mut] and Mutations[mut].PriceMultiplier then
+        mul = Mutations[mut].PriceMultiplier
+    end
+    return math.floor(base * mul * ShopPriceReduction)
+end
+
+-- Refresh = pull current stock from server. Result is a map id -> entry where
+-- entry.price is the cash cost (computed locally). DragonBall is excluded;
+-- it has its own dedicated button.
+function Shops.RefreshStock()
+    Shops.StockSnap = {}
+    if not R.GetStock then return Shops.StockSnap end
+    local items = Net.Invoke(R.GetStock)
+    if type(items) ~= "table" then return Shops.StockSnap end
+    for id, info in pairs(items) do
+        if id == "DragonBall" then
+            -- skip — handled by its own button
+        elseif type(info) == "table" then
+            local family, mut = unpack(tostring(id):split("-"))
+            local price = stockPrice(family, mut)
+            table.insert(Shops.StockSnap, {
+                id = tostring(id),
+                family = family,
+                mut = mut,
+                price = price,
+                amount = info.Amount,
+            })
+        end
+    end
+    return Shops.StockSnap
+end
+
+-- Merchant item entry: {item, category, cashPrice (number|nil),
+--                       tokenPrice (number|nil), rawPrice (table|nil for Totem)}
+function Shops.RefreshMerchant()
+    Shops.MerchantSnap = {}
+    if not R.GetMerchantItems then return Shops.MerchantSnap end
+    local items = Net.Invoke(R.GetMerchantItems)
+    if type(items) ~= "table" then return Shops.MerchantSnap end
+    for _, info in ipairs(items) do
+        if type(info) == "table" and info.Item then
+            table.insert(Shops.MerchantSnap, {
+                item       = info.Item,
+                category   = info.Category,
+                cashPrice  = (type(info.Price) == "number") and info.Price or nil,
+                tokenPrice = (type(info.Token) == "number") and info.Token or nil,
+                rawPrice   = info.Price,  -- keep table form for Totem
+            })
+        end
+    end
+    return Shops.MerchantSnap
+end
+
+-- ── Build static option lists (every item that could ever appear in shops) ──
+-- Card Market (Stock): all Pack-Mutation combos + DragonBall.
+-- Display uses spaces, server uses dashes; convert with gsub(" ", "-").
+local function buildStockOptions()
+    local out = {}
+    for _, label in ipairs(Lists.PacksFull) do
+        table.insert(out, label)
+    end
+    table.insert(out, "DragonBall")
+    return out
+end
+local function stockLabelToId(label)
+    if label == "DragonBall" then return "DragonBall" end
+    return tostring(label):gsub(" ", "-")
+end
+
+-- Travel Merchant: all packs + bundles (interleaved) + all consumables + 3 totem tiers.
+-- Reuses Lists.PacksFullWithBundles so dropdown order matches Auto Place exactly.
+local function buildMerchantOptions()
+    local out = {}
+    for _, label in ipairs(Lists.PacksFullWithBundles) do
+        table.insert(out, label)
+    end
+    for _, name in ipairs(Lists.Potions or {}) do
+        table.insert(out, name)
+    end
+    -- Totem tiers (3 known from ImageConfig.Totems)
+    table.insert(out, "Totem1")
+    table.insert(out, "Totem2")
+    table.insert(out, "Totem3")
+    return out
+end
+local function merchantLabelToItem(label)
+    return tostring(label):gsub(" ", "-")
+end
+
+-- Initial snapshot
+Shops.RefreshStock()
+Shops.RefreshMerchant()
+
+-- ── Card Market UI (was: Stock) ──────────────────────────────────────────
+sec.StockL:Header({ Text = "Card Market" })
+sec.StockL:Paragraph({
+    Header = "Whitelist mode",
+    Body = "Pick everything you'd ever want to auto-buy. The script polls the market every few seconds and buys whatever you've selected, IF it's currently in stock and you have enough Cash.",
+})
+
+makeSearchableDropdown(sec.StockL, {
+    Name = "Allow-list (auto-buy when in stock)",
+    Multi = true,
+    Options = buildStockOptions(),
+    OnChange = function(map)
+        local out = {}
+        for label in pairs(map) do
+            out[stockLabelToId(label)] = true
+        end
+        _ACC.SelectedStockItems = out
+    end,
+}, "StockItemsDropdown")
+
 sec.StockL:Toggle({
-    Name = "Auto Buy Stock (cash)",
+    Name = "Auto Buy Card Market (Cash)",
     Default = false,
     Callback = function(v) _ACC.AutoStock = v end,
 }, "AutoStockToggle")
+
 sec.StockL:Button({
-    Name = "BuyAll Stock",
-    Callback = function() Net.Fire(R.Stock, "BuyAll") Notify("Sent BuyAll") end,
-})
-sec.StockL:Input({
-    Name = "Specific stock id",
-    Default = "",
-    Placeholder = "Pack-Mutation",
-    Callback = function(v) _ACC.StockSpecific = v or "" end,
-}, "StockSpecificInput")
-sec.StockL:Button({
-    Name = "Buy specific (cash)",
+    Name = "Buy Selected Now",
     Callback = function()
-        if _ACC.StockSpecific ~= "" then
-            Net.Fire(R.Stock, "Buy", _ACC.StockSpecific)
+        if mapEmpty(_ACC.SelectedStockItems) then
+            Notify("Nothing selected"); return
         end
+        Shops.RefreshStock()
+        local n = 0
+        for _, e in ipairs(Shops.StockSnap) do
+            if _ACC.SelectedStockItems[e.id] then
+                if e.price and (Data.Get("Cash") or 0) >= e.price then
+                    Net.Fire(R.Stock, "Buy", e.id)
+                    n = n + 1
+                    task.wait(0.25)
+                end
+            end
+        end
+        Notify("Sent " .. n .. " buy requests")
     end,
 })
 
-sec.MerR:Header({ Text = "Merchant" })
+sec.StockL:Button({
+    Name = "Buy ALL in stock now (custom — fixes BuyAll bug)",
+    Callback = function()
+        Shops.RefreshStock()
+        local n = 0
+        for _, e in ipairs(Shops.StockSnap) do
+            if e.price and (Data.Get("Cash") or 0) >= e.price then
+                Net.Fire(R.Stock, "Buy", e.id)
+                n = n + 1
+                task.wait(0.25)
+            end
+        end
+        Notify("Bought " .. n .. " items")
+    end,
+})
+
+-- ── Travel Merchant UI ────────────────────────────────────────────────────
+sec.MerR:Header({ Text = "Travel Merchant" })
+sec.MerR:Paragraph({
+    Header = "Whitelist mode",
+    Body = "Pick everything you'd ever want to auto-buy. The script polls the merchant every few seconds and buys what's selected. Default payment: Trade (Cash/packs) first, fall back to TravelTokens.",
+})
+
+makeSearchableDropdown(sec.MerR, {
+    Name = "Allow-list (auto-buy when offered)",
+    Multi = true,
+    Options = buildMerchantOptions(),
+    OnChange = function(map)
+        local out = {}
+        for label in pairs(map) do
+            out[merchantLabelToItem(label)] = true
+        end
+        _ACC.SelectedMerchantItems = out
+    end,
+}, "MerchantItemsDropdown")
+
+sec.MerR:Dropdown({
+    Name = "Payment priority",
+    Multi = false,
+    Options = {
+        "Trade -> Tokens",   -- (default) Cash / pack-trade first, then TravelTokens
+        "Tokens -> Trade",
+        "Trade only",
+        "Tokens only",
+    },
+    Default = _ACC.MerchantPaymentMode,
+    Callback = function(v) _ACC.MerchantPaymentMode = v end,
+}, "MerchantPayModeDropdown")
+
+-- Returns true if a buy was sent. Honors payment-mode preference.
+-- "Trade" = Merchant:FireServer("Buy", item)            — uses Cash for Pack/Bundle/Consumables,
+--                                                          consumes packs for Totem
+-- "Tokens" = Merchant:FireServer("Buy", item, "Token")  — uses TravelTokens
+local function buyMerchantItem(entry)
+    local mode = _ACC.MerchantPaymentMode or "Trade -> Tokens"
+    local cash   = Data.Get("Cash")        or 0
+    local tokens = Data.Get("TravelTokens") or 0
+    local hasCash   = entry.cashPrice  and cash   >= entry.cashPrice
+    local hasTokens = entry.tokenPrice and tokens >= entry.tokenPrice
+    -- Totem trade path: cashPrice is nil; server validates pack inventory.
+    -- We can't pre-check pack count without parsing rawPrice, so we let it through
+    -- when "Trade" is preferred and assume server-side validation handles it.
+    local function tryTrade()
+        if entry.category == "Totem" and not entry.cashPrice then
+            Net.Fire(R.Merchant, "Buy", entry.item); return true
+        end
+        if hasCash then
+            Net.Fire(R.Merchant, "Buy", entry.item); return true
+        end
+        return false
+    end
+    local function tryTokens()
+        if hasTokens then
+            Net.Fire(R.Merchant, "Buy", entry.item, "Token"); return true
+        end
+        return false
+    end
+    if mode == "Trade -> Tokens" then
+        if tryTrade()  then return true end
+        if tryTokens() then return true end
+    elseif mode == "Tokens -> Trade" then
+        if tryTokens() then return true end
+        if tryTrade()  then return true end
+    elseif mode == "Trade only" then
+        return tryTrade()
+    elseif mode == "Tokens only" then
+        return tryTokens()
+    end
+    return false
+end
+
 sec.MerR:Toggle({
-    Name = "Auto Buy Merchant (TravelTokens)",
+    Name = "Auto Buy Travel Merchant",
     Default = false,
     Callback = function(v) _ACC.AutoMerchant = v end,
 }, "AutoMerchantToggle")
+
 sec.MerR:Button({
-    Name = "BuyAll Merchant",
-    Callback = function() Net.Fire(R.Merchant, "BuyAll") end,
-})
-sec.MerR:Input({
-    Name = "Specific item",
-    Default = "",
-    Placeholder = "ItemName",
-    Callback = function(v) _ACC.MerchantSpecific = v or "" end,
-}, "MerSpecificInput")
-sec.MerR:Button({
-    Name = "Buy (TravelTokens)",
+    Name = "Buy Selected Now",
     Callback = function()
-        if _ACC.MerchantSpecific ~= "" then
-            Net.Fire(R.Merchant, "Buy", _ACC.MerchantSpecific)
+        if mapEmpty(_ACC.SelectedMerchantItems) then
+            Notify("Nothing selected"); return
         end
+        Shops.RefreshMerchant()
+        local n = 0
+        for _, e in ipairs(Shops.MerchantSnap) do
+            if _ACC.SelectedMerchantItems[e.item] then
+                if buyMerchantItem(e) then
+                    n = n + 1
+                    task.wait(0.3)
+                end
+            end
+        end
+        Notify("Sent " .. n .. " buy requests")
     end,
 })
+
 sec.MerR:Button({
-    Name = "Buy (Token currency)",
+    Name = "Buy ALL offered (using payment priority)",
     Callback = function()
-        if _ACC.MerchantSpecific ~= "" then
-            Net.Fire(R.Merchant, "Buy", _ACC.MerchantSpecific, "Token")
+        Shops.RefreshMerchant()
+        local n = 0
+        for _, e in ipairs(Shops.MerchantSnap) do
+            if buyMerchantItem(e) then
+                n = n + 1
+                task.wait(0.3)
+            end
         end
+        Notify("Bought " .. n .. " items")
     end,
 })
 
@@ -1425,10 +1701,23 @@ sec.PetL:Button({
 sec.DBR:Header({ Text = "Dragon Ball" })
 sec.DBR:Button({
     Name = "Buy DragonBall (one-time)",
-    Callback = function() Net.Fire(R.DragonBall, "Buy", "DragonBall") end,
+    -- "Buy DragonBall" goes through the Stock remote, not the DragonBall one
+    -- (verified in StockHandler decompile: v_u_9.Stock:FireServer("Buy", "DragonBall")).
+    Callback = function() Net.Fire(R.Stock, "Buy", "DragonBall") end,
 })
+-- DragonBallHandler.MakeWish (decompile L37028-37046) requires:
+--   DragonBall:FireServer("Use", wishType[, extraArg])
+-- where extraArg is needed only for "PetMutation" (the pet name to mutate).
+-- Server enforces 24h cooldown via DragonBallTime attribute.
+sec.DBR:Dropdown({
+    Name = "Wish type (when 7 balls collected)",
+    Multi = false,
+    Options = { "Cash", "GradeTokens", "PetTokens", "TraitTokens", "Card", "RainbowCard", "PetMutation" },
+    Default = "Cash",
+    Callback = function(v) _ACC.DBWishType = v end,
+}, "DBWishTypeDropdown")
 sec.DBR:Toggle({
-    Name = "Auto collect/claim DB events",
+    Name = "Auto collect DB events + auto-wish when full set",
     Default = false,
     Callback = function(v) _ACC.DragonBallAuto = v end,
 }, "DBAutoToggle")
@@ -1499,6 +1788,11 @@ sec.PotL:Toggle({
     Default = false,
     Callback = function(v) _ACC.AutoCraftPotions = v end,
 }, "AutoCraftPotionsToggle")
+sec.PotL:Toggle({
+    Name = "Auto Use (drain all selected, then 5s recheck)",
+    Default = false,
+    Callback = function(v) _ACC.AutoUsePotions = v end,
+}, "AutoUsePotionsToggle")
 sec.PotL:Button({
     Name = "Apply x1 (selected)",
     Callback = function()
@@ -1536,16 +1830,10 @@ sec.UpgR:Toggle({
 }, "AutoUpgradeToggle")
 
 sec.RelL:Header({ Text = "Relics" })
-sec.RelL:Toggle({
-    Name = "Auto Apply (1)",
-    Default = false,
-    Callback = function(v) _ACC.RelicApply = v end,
-}, "RelicApplyToggle")
-sec.RelL:Toggle({
-    Name = "Auto Apply (10)",
-    Default = false,
-    Callback = function(v) _ACC.RelicApply10 = v end,
-}, "RelicApply10Toggle")
+-- Relics are passive buffs that activate automatically once Crafted (verified
+-- in RelicHandler decompile — only "Craft" action exists). The previous
+-- "Apply" / "Apply10" toggles fired actions that do not exist on the Relic
+-- remote, so they did nothing. Removed.
 sec.RelL:Toggle({
     Name = "Auto Craft",
     Default = false,
@@ -2509,12 +2797,17 @@ task.spawn(function()
     end
 
     local function parsePackKey(displayName)
+        -- Strip "Bundle" suffix first if present
+        local body = displayName:match("^(.-) Bundle$") or displayName
         -- "<family> <rarity>" if last token is a known rarity, else family only
-        local prefix, last = displayName:match("^(.+) (%S+)$")
+        local prefix, last = body:match("^(.+) (%S+)$")
         if prefix and last and rarityIdx[last] and last ~= "Regular" then
             return prefix, last
         end
-        return displayName, "Regular"
+        if prefix and last == "Regular" then
+            return prefix, "Regular"
+        end
+        return body, "Regular"
     end
 
     local function priorityOf(displayName)
@@ -2562,6 +2855,11 @@ task.spawn(function()
                 local toPlace = {}
                 for displayName in pairs(_ACC.SelectedPlacePacks) do
                     local serverName = displayName:gsub(" ", "-")
+                    -- Bundle detection: serverName ends with "-Bundle"
+                    -- (Bundle key format: "<Family>-<Mutation>-Bundle", always has Mutation
+                    --  even for Regular variant)
+                    local isBundle = serverName:match("%-Bundle$") ~= nil
+                    local slotCost = isBundle and 5 or 1
                     if (ownedPacks[serverName] or 0) > 0 then
                         local page, rIdx, family, rarity = priorityOf(displayName)
                         table.insert(toPlace, {
@@ -2571,6 +2869,8 @@ task.spawn(function()
                             rIdx = rIdx,
                             family = family,
                             rarity = rarity,
+                            isBundle = isBundle,
+                            slotCost = slotCost,
                         })
                     end
                 end
@@ -2581,16 +2881,24 @@ task.spawn(function()
                     return
                 end
 
-                -- highest Page first, then highest rarity
+                -- Order within a family: rarity ascending (Regular -> Gold -> ... -> Rainbow),
+                -- and for the same rarity the regular pack goes BEFORE its bundle.
+                -- Across families: higher Page first (newer families like Slayer/Sorcerer
+                -- before Pirate/Ninja).
+                --
+                -- Example (Pirate selected, all variants):
+                --   Pirate -> Pirate Bundle -> Pirate Gold -> Pirate Gold Bundle -> ...
                 table.sort(toPlace, function(a, b)
-                    if a.page ~= b.page then return a.page > b.page end
-                    return a.rIdx > b.rIdx
+                    if a.page  ~= b.page  then return a.page > b.page  end   -- newer family first
+                    if a.rIdx  ~= b.rIdx  then return a.rIdx < b.rIdx  end   -- low rarity first
+                    if a.isBundle ~= b.isBundle then return not a.isBundle end -- pack before bundle
+                    return false
                 end)
 
                 if _ACC.Debug then
                     local order = {}
                     for _, e in ipairs(toPlace) do
-                        table.insert(order, ("%s(p=%d r=%d)"):format(e.display, e.page, e.rIdx))
+                        table.insert(order, ("%s(p=%d r=%d cost=%d)"):format(e.display, e.page, e.rIdx, e.slotCost))
                     end
                     warn("[ACC AutoPlace] order: " .. table.concat(order, " > "))
                 end
@@ -2600,37 +2908,42 @@ task.spawn(function()
 
                 for _, entry in ipairs(toPlace) do
                     if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
-                    if free < 1 then break end
-
-                    Net.Fire(R.Card, "Equip", entry.server)
-                    task.wait(0.3)
-
-                    local before = countPlaced()
-                    local success = false
-                    for attempt = 1, 10 do
-                        if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
-                        local rx = (math.random() - 0.5) * fSize.X * 0.7
-                        local rz = (math.random() - 0.5) * fSize.Z * 0.7
-                        local pos = (floor.CFrame * CFrame.new(rx, 5, rz)).Position
-                        hrp.CFrame = CFrame.new(pos)
-                        task.wait(0.2)
-
-                        Net.Fire(R.Card, "Place", entry.server)
-                        task.wait(0.4)
-
-                        if countPlaced() > before then
-                            success = true
-                            break
-                        end
-                    end
-
-                    if success then
-                        free = free - 1
+                    if free < entry.slotCost then
                         if _ACC.Debug then
-                            warn(("[ACC AutoPlace] placed '%s' (free=%d)"):format(entry.server, free))
+                            warn(("[ACC AutoPlace] skip '%s' (need %d slots, have %d)"):format(entry.server, entry.slotCost, free))
                         end
-                    elseif _ACC.Debug then
-                        warn(("[ACC AutoPlace] failed '%s' after 10 tries"):format(entry.server))
+                        -- don't break — maybe a non-bundle later fits
+                    else
+                        Net.Fire(R.Card, "Equip", entry.server)
+                        task.wait(0.3)
+
+                        local before = countPlaced()
+                        local success = false
+                        for attempt = 1, 10 do
+                            if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
+                            local rx = (math.random() - 0.5) * fSize.X * 0.7
+                            local rz = (math.random() - 0.5) * fSize.Z * 0.7
+                            local pos = (floor.CFrame * CFrame.new(rx, 5, rz)).Position
+                            hrp.CFrame = CFrame.new(pos)
+                            task.wait(0.2)
+
+                            Net.Fire(R.Card, "Place", entry.server)
+                            task.wait(0.4)
+
+                            if countPlaced() > before then
+                                success = true
+                                break
+                            end
+                        end
+
+                        if success then
+                            free = free - entry.slotCost
+                            if _ACC.Debug then
+                                warn(("[ACC AutoPlace] placed '%s' (cost=%d, free=%d)"):format(entry.server, entry.slotCost, free))
+                            end
+                        elseif _ACC.Debug then
+                            warn(("[ACC AutoPlace] failed '%s' after 10 tries"):format(entry.server))
+                        end
                     end
                 end
 
@@ -3866,7 +4179,8 @@ task.spawn(function()
                         local cards = Data.Get("Cards")
                         if cards then
                             for cardName in pairs(cards) do
-                                Net.FireRL(R.Relic, "Exp:Send:" .. tostring(slot), 1.0,
+                                -- SendExpedition is on StarTrial remote, not Relic
+                                Net.FireRL(R.StarTrial, "Exp:Send:" .. tostring(slot), 1.0,
                                            "SendExpedition", slot, cardName)
                                 break
                             end
@@ -3889,7 +4203,8 @@ task.spawn(function()
                 for slot, info in pairs(exps) do
                     if not _ACC.AutoExpClaim or not getgenv()._ACCRunning then break end
                     if type(info) == "table" and info.Ready then
-                        Net.FireRL(R.Relic, "Exp:Claim:" .. tostring(slot), 0.6,
+                        -- ClaimExpedition is on StarTrial remote, not Relic
+                        Net.FireRL(R.StarTrial, "Exp:Claim:" .. tostring(slot), 0.6,
                                    "ClaimExpedition", slot)
                         task.wait(0.3)
                     end
@@ -3903,19 +4218,19 @@ end)
 -- ============================================================================
 -- // 21. LOOPS — SHOPS
 -- ============================================================================
+-- Auto Stock: only buy items in _ACC.SelectedStockItems, gated by Cash >= price.
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.AutoStock and R.GetStock then
-            local items = Net.Invoke(R.GetStock)
-            if type(items) == "table" then
-                for id, info in pairs(items) do
-                    if not _ACC.AutoStock or not getgenv()._ACCRunning then break end
-                    if type(info) == "table" and info.Cost
-                       and (Data.Get("Cash") or 0) >= info.Cost
-                    then
-                        Net.FireRL(R.Stock, "Stock:Buy:" .. tostring(id), 0.6, "Buy", id)
-                        task.wait(0.4)
-                    end
+        if _ACC.AutoStock and R.GetStock and not mapEmpty(_ACC.SelectedStockItems) then
+            Shops.RefreshStock()
+            for _, e in ipairs(Shops.StockSnap) do
+                if not _ACC.AutoStock or not getgenv()._ACCRunning then break end
+                if _ACC.SelectedStockItems[e.id]
+                   and e.price
+                   and (Data.Get("Cash") or 0) >= e.price
+                then
+                    Net.FireRL(R.Stock, "Stock:Buy:" .. e.id, 0.6, "Buy", e.id)
+                    task.wait(0.4)
                 end
             end
         end
@@ -3923,17 +4238,16 @@ task.spawn(function()
     end
 end)
 
+-- Auto Merchant: only buy items in _ACC.SelectedMerchantItems, using payment mode.
+-- Cash → Tokens fallback (default): try cash first, then TravelTokens.
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.AutoMerchant and R.GetMerchantItems then
-            local items = Net.Invoke(R.GetMerchantItems)
-            if type(items) == "table" then
-                for id, info in pairs(items) do
-                    if not _ACC.AutoMerchant or not getgenv()._ACCRunning then break end
-                    if type(info) == "table" and info.Cost
-                       and (Data.Get("TravelTokens") or 0) >= info.Cost
-                    then
-                        Net.FireRL(R.Merchant, "Mer:Buy:" .. tostring(id), 0.6, "Buy", id)
+        if _ACC.AutoMerchant and R.GetMerchantItems and not mapEmpty(_ACC.SelectedMerchantItems) then
+            Shops.RefreshMerchant()
+            for _, e in ipairs(Shops.MerchantSnap) do
+                if not _ACC.AutoMerchant or not getgenv()._ACCRunning then break end
+                if _ACC.SelectedMerchantItems[e.item] then
+                    if buyMerchantItem(e) then
                         task.wait(0.4)
                     end
                 end
@@ -3981,13 +4295,13 @@ task.spawn(function()
     end
 end)
 
--- Dragon Ball: real schema is { [id]=true } map of OWNED ball ids.
--- Physical balls spawn in the world during DB events; player walks up
--- and triggers a ProximityPrompt. There's no remote to "collect by id"
--- without the prompt. So we only:
---   - claim full set (all 7 owned) via "Claim"
---   - one-time "Buy DragonBall" through Stock (manual button already exists)
--- This loop just auto-claims the set when complete.
+-- Dragon Ball: schema = { ["1"]=true, ["2"]=true, ... } — owned ball IDs.
+-- Physical balls spawn in the world during DB events; player walks up and
+-- triggers a ProximityPrompt to collect (no remote-based collect by id).
+-- When all 7 owned: DragonBallHandler.MakeWish fires
+--   DragonBall:FireServer("Use", wishType[, petName for "PetMutation"])
+-- Server enforces 24h cooldown via DragonBallTime — our 60s rate-limit is
+-- harmless safety on top.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.DragonBallAuto then
@@ -3998,11 +4312,39 @@ task.spawn(function()
                     if v == true then count = count + 1 end
                 end
                 if count >= 7 then
-                    Net.FireRL(R.DragonBall, "DB:Claim", 5, "Claim")
+                    -- 24h server cooldown: don't bother retrying often
+                    local last = Data.Get("DragonBallTime")
+                    local cooldownOk = true
+                    if last and workspace.GetServerTimeNow then
+                        local now = workspace:GetServerTimeNow()
+                        cooldownOk = (now - last) >= 86400
+                    end
+                    if cooldownOk then
+                        local wish = _ACC.DBWishType or "Cash"
+                        if wish == "PetMutation" then
+                            -- needs a pet name; try to grab any owned non-Rainbow
+                            local pets = Data.Get("Pets")
+                            local petName
+                            if type(pets) == "table" then
+                                for name, info in pairs(pets) do
+                                    if type(info) == "table" and info.Mutation ~= "Rainbow" then
+                                        petName = name; break
+                                    end
+                                end
+                            end
+                            if petName then
+                                Net.FireRL(R.DragonBall, "DB:Wish", 60,
+                                           "Use", wish, petName)
+                            end
+                        else
+                            -- Cash, GradeTokens, PetTokens, TraitTokens, Card, RainbowCard
+                            Net.FireRL(R.DragonBall, "DB:Wish", 60, "Use", wish)
+                        end
+                    end
                 end
             end
         end
-        task.wait(3)
+        task.wait(5)
     end
 end)
 
@@ -4074,6 +4416,40 @@ task.spawn(function()
     end
 end)
 
+-- Auto Use Potions
+-- Behaviour: walk every selected potion in order; for each, spam Apply
+-- (or Apply10 when there's enough stock) until the inventory count hits
+-- zero, then move to the next selected potion. Once all are drained, wait
+-- 5 seconds and re-poll the inventory — new potions might come in from
+-- Auto Craft, Travel Merchant, drops, etc.
+--
+-- No buff-active check: the user explicitly asked to drink everything
+-- selected. Server will simply overwrite the active buff with the latest
+-- one in the same category — desired behaviour for stockpile burns.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.AutoUsePotions and not mapEmpty(_ACC.SelectedPotions) then
+            for _, potionName in iterMap(_ACC.SelectedPotions) do
+                if not _ACC.AutoUsePotions or not getgenv()._ACCRunning then break end
+                local owned = Data.Get("Consumables") or {}
+                local count = tonumber(owned[potionName]) or 0
+                while count > 0 and _ACC.AutoUsePotions and getgenv()._ACCRunning do
+                    if count >= 10 then
+                        Net.Fire(R.Potion, "Apply10", potionName)
+                        task.wait(0.4)
+                    else
+                        Net.Fire(R.Potion, "Apply", potionName)
+                        task.wait(0.25)
+                    end
+                    owned = Data.Get("Consumables") or {}
+                    count = tonumber(owned[potionName]) or 0
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)
+
 -- Auto Upgrade
 task.spawn(function()
     while getgenv()._ACCRunning do
@@ -4088,26 +4464,40 @@ task.spawn(function()
     end
 end)
 
--- Relics (Apply / Apply10 / Craft)
+-- Auto Craft Relics — RelicHandler decompile:
+--   relics = Data.Get("Relics")  -- ARRAY of owned relic names in craft order
+--   list = Config.Relics.List    -- canonical craft order
+--   next-to-craft = list[#owned + 1]   (must own previous before crafting next)
+--   Relic:FireServer("Craft", relicName)
+-- Apply / Apply10 are NOT real actions on the Relic remote — once crafted,
+-- relics are passive buffs that activate automatically.
 task.spawn(function()
+    local Relics = Config.Relics
     while getgenv()._ACCRunning do
-        if _ACC.RelicApply or _ACC.RelicApply10 or _ACC.RelicCraft then
-            local relics = Data.Get("Relics") or {}
-            for relicName in pairs(relics) do
-                if not getgenv()._ACCRunning then break end
-                if not (_ACC.RelicApply or _ACC.RelicApply10 or _ACC.RelicCraft) then break end
-                if _ACC.RelicApply10 then
-                    Net.FireRL(R.Relic, "Rel:A10:" .. relicName, 0.4, "Apply10", relicName)
-                elseif _ACC.RelicApply then
-                    Net.FireRL(R.Relic, "Rel:A:"  .. relicName, 0.4, "Apply",   relicName)
+        if _ACC.RelicCraft and Relics and type(Relics.List) == "table" then
+            local owned = Data.Get("Relics") or {}
+            -- Build owned set (Data is array, but we lookup by name)
+            local ownedSet = {}
+            if type(owned) == "table" then
+                for _, name in pairs(owned) do
+                    if type(name) == "string" then ownedSet[name] = true end
                 end
-                if _ACC.RelicCraft then
-                    Net.FireRL(R.Relic, "Rel:C:"  .. relicName, 0.4, "Craft",   relicName)
+            end
+            -- Find first relic in List that's not owned and whose predecessor IS owned.
+            for i, relicName in ipairs(Relics.List) do
+                if not _ACC.RelicCraft or not getgenv()._ACCRunning then break end
+                if not ownedSet[relicName] then
+                    local prev = i > 1 and Relics.List[i - 1] or nil
+                    if prev == nil or ownedSet[prev] then
+                        Net.FireRL(R.Relic, "Rel:C:" .. relicName, 1.5,
+                                   "Craft", relicName)
+                        task.wait(0.5)
+                    end
+                    break  -- one craft per iteration
                 end
-                task.wait(0.3)
             end
         end
-        task.wait(1)
+        task.wait(2)
     end
 end)
 
@@ -4116,32 +4506,96 @@ end)
 -- ============================================================================
 
 -- ── Anti-AFK ──────────────────────────────────────────────────────────────
--- Two layers — both target Roblox's idle/kick system:
---  1. VirtualUser jiggle every 60s — synthetic mouse click resets Roblox's
---     own idle timer. Click is at off-screen coords so it doesn't interact
---     with any UI. This is what prevents the 20-minute auto-kick.
---  2. Idled signal fallback — if jiggle missed a tick, Roblox eventually
---     fires Idled (~17min of no input); we click then to reset.
-table.insert(_ACC._connections, LocalPlayer.Idled:Connect(function()
-    if _ACC.AntiAFK and getgenv()._ACCRunning then
+-- The game runs its OWN anti-AFK in CardHandler.AntiAFK:
+--     while time() - lastInput <= 1020 do task.wait(5) end
+--     Remotes.Card:FireServer("TP", autoRollGrade, autoRollTower)  -- TP to AFK place
+-- `lastInput` is reset only by UserInputService.InputBegan / TouchTap.
+-- VirtualUser:ClickButton2 does NOT fire those signals, so the timer keeps
+-- counting and the player gets teleported to the AFK universe → kicked → rejoin.
+--
+-- Fix: hook __namecall and drop Card:FireServer("TP", ...) when AntiAFK is on.
+-- Verified: "TP" is the only action sent through the Card remote (single grep
+-- match in decompiled), so this block is safe.
+--
+-- The VirtualUser:ClickButton2 path is kept as well — it handles Roblox's
+-- engine-level 20-min idle kick (separate from the game's custom AntiAFK).
+do
+    local Card = R.Card
+    local hooked = false
+
+    -- Preferred path: hookmetamethod (most modern executors).
+    if hookmetamethod then
+        local oldNC
+        oldNC = hookmetamethod(game, "__namecall", function(self, ...)
+            if _ACC.AntiAFK and self == Card then
+                local method = getnamecallmethod and getnamecallmethod()
+                if method == "FireServer" and (...) == "TP" then
+                    return
+                end
+            end
+            return oldNC(self, ...)
+        end)
+        hooked = true
+        getgenv()._ACCNamecallRestore = function()
+            -- hookmetamethod returns the original; we can't cleanly unhook,
+            -- but disabling _ACC.AntiAFK already neutralizes the hook.
+        end
+
+    -- Fallback: raw metatable manipulation.
+    elseif getrawmetatable and (setreadonly or make_writeable) then
+        local mt = getrawmetatable(game)
+        local protect = setreadonly or make_writeable
+        pcall(protect, mt, false)
+        local oldNC = mt.__namecall
+        local nc = function(self, ...)
+            if _ACC.AntiAFK and self == Card then
+                local method = getnamecallmethod and getnamecallmethod()
+                if method == "FireServer" and (...) == "TP" then
+                    return
+                end
+            end
+            return oldNC(self, ...)
+        end
+        mt.__namecall = newcclosure and newcclosure(nc) or nc
+        pcall(protect, mt, true)
+        hooked = true
+        getgenv()._ACCNamecallRestore = function()
+            pcall(protect, mt, false)
+            mt.__namecall = oldNC
+            pcall(protect, mt, true)
+        end
+    end
+
+    if not hooked then
+        warn("[ACC_HUB] anti-AFK namecall hook unsupported by this executor")
+    end
+end
+
+-- ── VirtualUser fallback for Roblox engine-level Idled kick (20 min) ───────
+-- VirtualUser:ClickButton2() only works when called from inside an Idled
+-- signal callback — Roblox ignores synthetic input outside that context.
+do
+    local GC = getconnections or get_signal_cons
+
+    -- silence Roblox's built-in Idled connections (auto-kick engine)
+    if GC then
         pcall(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
+            for _, c in ipairs(GC(LocalPlayer.Idled)) do
+                if c.Disable then c:Disable()
+                elseif c.Disconnect then c:Disconnect() end
+            end
         end)
     end
-end))
 
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.AntiAFK then
+    table.insert(_ACC._connections, LocalPlayer.Idled:Connect(function()
+        if _ACC.AntiAFK and getgenv()._ACCRunning then
             pcall(function()
                 VirtualUser:CaptureController()
                 VirtualUser:ClickButton2(Vector2.new())
             end)
         end
-        task.wait(60)
-    end
-end)
+    end))
+end
 
 -- ── Webhook: rare drop notifications ──────────────────────────────────────
 -- Triggers on:
@@ -4227,6 +4681,10 @@ getgenv()._ACCCleanup = function()
             pcall(function() h.holder[h.name] = h.original end)
         end
         getgenv()._ACCHooks = {}
+    end
+    if getgenv()._ACCNamecallRestore then
+        pcall(getgenv()._ACCNamecallRestore)
+        getgenv()._ACCNamecallRestore = nil
     end
 
     -- 4. unload UI window
