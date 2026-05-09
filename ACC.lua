@@ -5393,18 +5393,58 @@ task.spawn(function()
     end
 end)
 
--- ── Auto Collect cash from active gallery slots ──────────────────────────
--- Active = top 10 owned figurines sorted by Chance ASC. Server accepts
--- Collect("1") .. Collect("10") for slot indices.
+-- ── Auto Collect cash from all gallery pages ────────────────────────────
+-- Pages mechanic (decompile L29920, L30043):
+--   Plot has physical "LeftArrowFigurine" / "RightArrowFigurine" parts
+--   tagged "<UserName>-Panels". Clicking them fires
+--     Card:FireServer("Page", "RightArrowFigurine")
+--   Server flips to next page → fires Gallery:FireClient("PageFlipped", newSlots).
+--
+-- A page = the current set of figurines mapped onto the plot's physical
+-- slots (up to 10). Owned figurines are paginated server-side; user can
+-- have many pages (≤16 in practice).
+--
+-- Strategy: collect slots 1..10 on the current page, flip right, repeat.
+-- We stop after 2 consecutive empty pages (no Cash / Diamonds delta) — that
+-- means we've cycled back to already-collected pages. Hard cap at 20 flips
+-- as a safety net.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoGalleryCollect then
-            local slots = galleryActiveSlots()
-            for i = 1, #slots do
+            local MAX_FLIPS  = 20
+            local prevCash   = Data.Get("Cash")     or 0
+            local prevDiams  = Data.Get("Diamonds") or 0
+            local emptyRuns  = 0
+
+            for flip = 0, MAX_FLIPS do
                 if not _ACC.AutoGalleryCollect or not getgenv()._ACCRunning then break end
-                Net.FireRL(R.Gallery, "Gal:Coll:" .. i, 0.2,
-                           "Collect", tostring(i))
-                task.wait(0.05)
+
+                -- collect every slot (1..10); server ignores inactive slots
+                for slot = 1, 10 do
+                    if not _ACC.AutoGalleryCollect or not getgenv()._ACCRunning then break end
+                    Net.FireRL(R.Gallery, "Gal:Coll:" .. slot, 0.15,
+                               "Collect", tostring(slot))
+                    task.wait(0.04)
+                end
+                task.wait(0.35)   -- let server replicate Cash/Diamonds change
+
+                -- did the page give us anything?
+                local nowCash  = Data.Get("Cash")     or 0
+                local nowDiams = Data.Get("Diamonds") or 0
+                if nowCash == prevCash and nowDiams == prevDiams then
+                    emptyRuns = emptyRuns + 1
+                    if emptyRuns >= 2 then
+                        -- 2 in a row = full cycle complete or no figurines
+                        break
+                    end
+                else
+                    emptyRuns = 0
+                end
+                prevCash, prevDiams = nowCash, nowDiams
+
+                -- flip to the next page (Card remote, Page action)
+                Net.Fire(R.Card, "Page", "RightArrowFigurine")
+                task.wait(0.45)
             end
         end
         task.wait(4)
