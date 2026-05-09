@@ -5400,21 +5400,23 @@ end)
 --     Card:FireServer("Page", "RightArrowFigurine")
 --   Server flips to next page → fires Gallery:FireClient("PageFlipped", newSlots).
 --
--- A page = the current set of figurines mapped onto the plot's physical
--- slots (up to 10). Owned figurines are paginated server-side; user can
--- have many pages (≤16 in practice).
+-- Page state is persistent between sweeps — if we leave the player parked
+-- on the last page, the next sweep starts there and never re-visits earlier
+-- pages. So at the end of every sweep we UNWIND with LeftArrowFigurine
+-- flips equal to the number of forward flips we made, returning to page 1.
 --
--- Strategy: collect slots 1..10 on the current page, flip right, repeat.
--- We stop after 2 consecutive empty pages (no Cash / Diamonds delta) — that
--- means we've cycled back to already-collected pages. Hard cap at 20 flips
--- as a safety net.
+-- A page = the current set of figurines mapped onto the plot's physical
+-- slots (up to 10). User can have many pages (≤16 in practice). Strategy:
+-- collect slots 1..10 on the current page, flip right, repeat until 2
+-- consecutive empty pages (Cash + Diamonds delta = 0) or 20-flip cap.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoGalleryCollect then
-            local MAX_FLIPS  = 20
-            local prevCash   = Data.Get("Cash")     or 0
-            local prevDiams  = Data.Get("Diamonds") or 0
-            local emptyRuns  = 0
+            local MAX_FLIPS    = 20
+            local prevCash     = Data.Get("Cash")     or 0
+            local prevDiams    = Data.Get("Diamonds") or 0
+            local emptyRuns    = 0
+            local flipsForward = 0
 
             for flip = 0, MAX_FLIPS do
                 if not _ACC.AutoGalleryCollect or not getgenv()._ACCRunning then break end
@@ -5444,7 +5446,17 @@ task.spawn(function()
 
                 -- flip to the next page (Card remote, Page action)
                 Net.Fire(R.Card, "Page", "RightArrowFigurine")
+                flipsForward = flipsForward + 1
                 task.wait(0.45)
+            end
+
+            -- Unwind: flip Left as many times as we went Right, so the next
+            -- sweep starts from page 1. Without this we get stuck on the
+            -- last page and never re-collect earlier pages.
+            for _ = 1, flipsForward do
+                if not getgenv()._ACCRunning then break end
+                Net.Fire(R.Card, "Page", "LeftArrowFigurine")
+                task.wait(0.25)
             end
         end
         task.wait(4)
