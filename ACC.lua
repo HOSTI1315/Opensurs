@@ -735,7 +735,7 @@ local Window = MacLib:Window({
 getgenv()._ACCUI = Window
 
 local function Notify(text, lifetime)
-    Window:Notify({ Title = "ACC Hub", Description = text, Lifetime = lifetime or 3 })
+    Window:Notify({ Title = "ACC Hub v2", Description = text, Lifetime = lifetime or 3 })
 end
 
 local tabGroups = { Main = Window:TabGroup() }
