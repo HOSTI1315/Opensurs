@@ -109,7 +109,10 @@ _ACC.AutoAchievements      = false
 _ACC.AutoRewards           = false
 _ACC.AutoExpSend           = false
 _ACC.AutoExpClaim          = false
-_ACC.SkipExpedition        = false
+_ACC.SelectedExpPacks      = {}     -- map { ["Pirate Gold"] = true, ... }
+_ACC.SelectedExpNPCs       = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true }
+_ACC.RespectExpDaily       = true   -- stop sending when daily cap reached
+_ACC.ExpStrategy           = "Cheapest first"  -- or "Most expensive first" / "Highest mutation first"
 
 -- ── Shops ─────────────────────────────────────────────────────────────────
 _ACC.AutoStock             = false
@@ -141,6 +144,30 @@ _ACC.WebhookDrops          = false
 _ACC.WebhookRaid           = false
 _ACC.AntiAFK               = true
 _ACC.HideHUDPopups         = false
+
+-- ── Gallery ───────────────────────────────────────────────────────────────
+-- Auto Buy Packs
+_ACC.AutoGalleryBuy            = false
+_ACC.SelectedGalleryPacks      = {}        -- map ["Basic"]=true ...
+_ACC.GalleryBuyStrategy        = "Highest first"  -- / "Lowest first" / "Spread"
+-- Auto Upgrade per-card buff
+_ACC.AutoGalleryUpgrade        = false
+_ACC.SelectedUpgradeCards      = {}        -- map ["Pirate"]=true ...
+_ACC.SelectedUpgradeKinds      = {}        -- map ["Cash"]=true ...
+_ACC.GalleryUpgradeMode        = "Multi-select"   -- / "Specific card"
+_ACC.GalleryUpgradeFocusCard   = nil       -- when mode = Specific
+_ACC.GalleryUpgradeStrategy    = "Highest first"  -- / "Lowest first" / "Spread"
+-- Auto Levelup figurines
+_ACC.AutoGalleryLevelup        = false
+_ACC.SelectedLevelupFigurines  = {}        -- map of figurine names
+_ACC.GalleryLevelupStrategy    = "Highest mult first"  -- / "Lowest mult first" / "Spread"
+-- Misc auto
+_ACC.AutoGalleryClaim          = false     -- claim discovered figurine bonuses
+_ACC.AutoGalleryCollect        = false     -- collect cash from active slots
+-- Internal: spread-mode round-robin counters
+_ACC._GallerySpreadIdxBuy      = 0
+_ACC._GallerySpreadIdxUpg      = 0
+_ACC._GallerySpreadIdxLvl      = 0
 
 -- ── Internal ──────────────────────────────────────────────────────────────
 _ACC._connections          = {}
@@ -272,6 +299,7 @@ local ProductConfig   = Config.ProductConfig
 local ImageConfig     = Config.ImageConfig
 -- Mutations: data-only module (no requires, no WaitForChild). Safe to load.
 local Mutations       = Config.Mutations  -- RS.Modules.Config.Core.Mutations
+local GalleryConfig   = Config.GalleryConfig  -- RS.Modules.Config.Core.GalleryConfig (Gallery system)
 
 -- Shop price reduction is the constant 0.6 in Modules.GameUtils.Configuration.
 -- We hardcode it instead of requiring Configuration — that module pulls in
@@ -352,9 +380,11 @@ do
     R.Codes       = get("Codes")
     R.Raid        = get("Raid")
     R.StarTrial   = get("StarTrial")
+    R.Gallery          = get("Gallery")
     R.GetClanInfo      = get("GetClanInfo")
     R.GetMerchantItems = get("GetMerchantItems")
     R.GetStock         = get("GetStock")
+    R.GetGalleryStock  = get("GetGalleryStock")
 end
 
 -- // 7. PLOT HELPERS
@@ -671,6 +701,25 @@ do
     for _, list in pairs(Lists.PotionCategories) do
         table.sort(list, function(a, b) return a.layout > b.layout end)
     end
+
+    -- Gallery: pack tiers ordered cheap→expensive (used in priorities)
+    Lists.GalleryPacks = { "Basic", "Common", "Uncommon", "Rare", "Epic", "Legendary" }
+    -- Gallery upgrade kinds (per-card buffs)
+    Lists.GalleryUpgradeKinds = { "Cash", "XP", "Health", "Damage" }
+    -- Gallery figurines: list every figurine sorted by Multiplier ASC (so
+    -- "Highest first" picks Sun God etc.)
+    Lists.GalleryFigurines = {}
+    if GalleryConfig and type(GalleryConfig.Figurines) == "table" then
+        for name in pairs(GalleryConfig.Figurines) do
+            table.insert(Lists.GalleryFigurines, name)
+        end
+        table.sort(Lists.GalleryFigurines, function(a, b)
+            local ma = (GalleryConfig.Figurines[a] or {}).Multiplier or 0
+            local mb = (GalleryConfig.Figurines[b] or {}).Multiplier or 0
+            if ma ~= mb then return ma < mb end
+            return a < b
+        end)
+    end
 end
 
 -- // 10. LIBRARY SETUP
@@ -696,6 +745,7 @@ local tabs = {
     AutoClaim = tabGroups.Main:Tab({ Name = "Auto Claim", Image = "rbxassetid://10723348925" }),
     Shops     = tabGroups.Main:Tab({ Name = "Shops",      Image = "rbxassetid://10747372992" }),
     Inventory = tabGroups.Main:Tab({ Name = "Inventory",  Image = "rbxassetid://10723396225" }),
+    Gallery   = tabGroups.Main:Tab({ Name = "Gallery",    Image = "rbxassetid://10747372992" }),
     Misc      = tabGroups.Main:Tab({ Name = "Misc",       Image = "rbxassetid://10734932295" }),
     Settings  = tabGroups.Main:Tab({ Name = "Settings",   Image = "rbxassetid://10734950309" }),
 }
@@ -733,6 +783,11 @@ local sec = {
     UpgR      = tabs.Inventory:Section({ Side = "Right" }),
     RelL      = tabs.Inventory:Section({ Side = "Left" }),
     CardsR    = tabs.Inventory:Section({ Side = "Right" }),
+    -- Gallery
+    GalBuyL   = tabs.Gallery:Section({ Side = "Left" }),
+    GalUpgR   = tabs.Gallery:Section({ Side = "Right" }),
+    GalLvlL   = tabs.Gallery:Section({ Side = "Left" }),
+    GalMiscR  = tabs.Gallery:Section({ Side = "Right" }),
     -- Misc
     WHR       = tabs.Misc:Section({ Side = "Right" }),
     UtilL     = tabs.Misc:Section({ Side = "Left" }),
@@ -1354,27 +1409,79 @@ sec.RewL:Button({
     Callback = function() Net.Fire(R.Card, "ClaimReward") end,
 })
 
+-- ── Expedition (Auto Claim tab, right side) ──────────────────────────────
+-- Uses Remotes.StarTrial:
+--   FireServer("SendExpedition",  { Reward=packKey, Category="Pack", NPC=npc })
+--   FireServer("ClaimExpedition", npc)
+--   FireServer("SetSkipExpedition", npc)  ← only useful with Robux DevProduct
+--
+-- Cost & gating: Modules.Config.Core.ExpeditionConfig
+--   Cash    = GetPackPrice(packKey, replica)
+--   Tickets = GetTicketCost(packKey)            -- "StarTickets" currency
+--   Time    = GetPackTime(packKey) / GetBuff("Time", TotalExpeditions)
+--   Daily   = 4 + GetBuff("MoreExpeditions", TotalExpeditions)
+--
+-- NPC unlocks: "1" always, "2" at 50 total, "3" at 100 total, "4" via
+-- gamepass GamepassValues.ExtraMarine.
 sec.ExpR:Header({ Text = "Expedition" })
+
+makeSearchableDropdown(sec.ExpR, {
+    Name = "Packs to send (must be opened at least once)",
+    Multi = true,
+    Options = Lists.PacksFull,   -- bundles are not eligible for expeditions
+    OnChange = function(map) _ACC.SelectedExpPacks = map end,
+}, "ExpPacksDropdown")
+
+sec.ExpR:Dropdown({
+    Name = "Marines (NPCs)",
+    Multi = true,
+    Options = { "1", "2", "3", "4" },
+    Default = { "1", "2", "3", "4" },
+    Callback = function(selected)
+        _ACC.SelectedExpNPCs = mapFromMulti(selected)
+    end,
+}, "ExpNPCsDropdown")
+
+sec.ExpR:Dropdown({
+    Name = "Pick strategy",
+    Multi = false,
+    Options = {
+        "Cheapest first",            -- save cash & tickets
+        "Most expensive first",      -- chase higher reward tier
+        "Highest mutation first",    -- prefer Diamond/Rainbow over Regular
+    },
+    Default = _ACC.ExpStrategy,
+    Callback = function(v) _ACC.ExpStrategy = v end,
+}, "ExpStrategyDropdown")
+
 sec.ExpR:Toggle({
-    Name = "Auto send expeditions",
+    Name = "Auto send (when NPC free + resources available)",
     Default = false,
     Callback = function(v) _ACC.AutoExpSend = v end,
 }, "AutoExpSendToggle")
 sec.ExpR:Toggle({
-    Name = "Auto claim expeditions",
+    Name = "Auto claim (when expedition done)",
     Default = false,
     Callback = function(v) _ACC.AutoExpClaim = v end,
 }, "AutoExpClaimToggle")
 sec.ExpR:Toggle({
-    Name = "Skip expedition (server-side flag)",
-    Default = false,
-    Callback = function(v)
-        _ACC.SkipExpedition = v
-        -- SetSkipExpedition lives on StarTrial remote, not Relic
-        -- (StarTrialHandler.ExpeditionHandler binds Remotes.StarTrial).
-        Net.Fire(R.StarTrial, "SetSkipExpedition", v)
-    end,
-}, "SkipExpToggle")
+    Name = "Respect daily limit",
+    Default = true,
+    Callback = function(v) _ACC.RespectExpDaily = v end,
+}, "RespectExpDailyToggle")
+
+sec.ExpR:Button({
+    Name = "Send to all free Marines now",
+    Callback = function() _ACC._ExpForceSend = true end,
+})
+sec.ExpR:Button({
+    Name = "Claim all ready expeditions",
+    Callback = function() _ACC._ExpForceClaim = true end,
+})
+sec.ExpR:Button({
+    Name = "Print status (Output)",
+    Callback = function() _ACC._ExpPrintStatus = true end,
+})
 
 -- ============================================================================
 -- // 14. TAB: SHOPS
@@ -1843,6 +1950,245 @@ sec.RelL:Toggle({
 sec.CardsR:Header({ Text = "Cards" })
 sec.CardsR:Button({ Name = "Equip Best (Tower)", Callback = function() Net.Fire(R.Tower, "EquipBest") end })
 sec.CardsR:Button({ Name = "Unequip All packs", Callback = function() Net.Fire(R.Card, "UnequipAll") end })
+
+-- ============================================================================
+-- // 15.5 TAB: GALLERY
+-- ============================================================================
+-- New system from the latest update. Diamond economy with 6 pack tiers,
+-- ~110 figurines (mult 1..350), per-card upgrades (Cash/XP/Health/Damage),
+-- and on-floor cash collect.
+--
+-- Remotes:
+--   Gallery:FireServer("Buy",            packKey)              -- Diamonds
+--   Gallery:FireServer("StockBuy",       packKey)              -- Robux (skip)
+--   Gallery:FireServer("Levelup",        figurineName)         -- Diamonds
+--   Gallery:FireServer("Upgrade",        cardName, kind)       -- Diamonds (per-card)
+--   Gallery:FireServer("ClaimFigurine",  figurineName)         -- free, +10 💎
+--   Gallery:FireServer("ShowRoll")                             -- toggle UI
+--   Gallery:FireServer("Collect",        slotNumberStr "1".."10") -- collect cash
+--   GetGalleryStock:InvokeServer() → { [packKey] = stockAmount, ... }
+--
+-- Replica: Diamonds, DiamondsPerSecond, Figurines (map), FigurinesDiscovered
+-- (array), FigurinesClaimed (array), FigurineUpgrades (map of map), etc.
+
+-- Local helpers (config formulas mirror GalleryConfig at L59843+59859)
+local function galleryUpgradeCost(level, multiplier)
+    -- GetUpgradeCost(level+1, page); page is multiplier here
+    multiplier = multiplier or 1
+    local v6
+    if level == 0 then
+        v6 = 250
+    else
+        local v8 = level * 250
+        local v9 = math.log(level, 2.3)
+        local v10 = v8 + math.pow(level, v9)
+        v6 = math.round(v10)  -- approx Round5
+    end
+    return math.round(v6 * multiplier)
+end
+local function galleryLevelupCost(figMultiplier, figLevel)
+    return math.round(figMultiplier * (figLevel ^ 1.3) * 10)
+end
+local function galleryRefreshStock()
+    if not R.GetGalleryStock then return {} end
+    local items = Net.Invoke(R.GetGalleryStock)
+    return (type(items) == "table") and items or {}
+end
+-- Mirror of GalleryHandler InitActiveFigurines: top 10 owned by Chance ASC
+local function galleryActiveSlots()
+    local figs = Data.Get("Figurines") or {}
+    local list = {}
+    for name, info in pairs(figs) do
+        table.insert(list, { name = name, chance = info.Chance or 0 })
+    end
+    table.sort(list, function(a, b) return a.chance < b.chance end)
+    local slots = {}
+    for i = 1, math.min(10, #list) do slots[i] = list[i].name end
+    return slots
+end
+
+-- Cards list: every card name from CardConfig.Packs[*].List, plus pack name itself
+-- as a column hint (so display says "Pirate (Pirate)" etc).
+-- For simplicity we let user pick by card name; cost formula uses the card's pack Page.
+local cardsByPack = {}
+local allCardNames = {}
+if CardConfig and CardConfig.Packs then
+    for packName, packData in pairs(CardConfig.Packs) do
+        if type(packData) == "table" and type(packData.List) == "table" then
+            for cardName in pairs(packData.List) do
+                table.insert(allCardNames, cardName)
+                cardsByPack[cardName] = { pack = packName, page = packData.Page or 0 }
+            end
+        end
+    end
+end
+table.sort(allCardNames)
+
+-- ── GalBuyL: Auto Buy Packs ──────────────────────────────────────────────
+sec.GalBuyL:Header({ Text = "Auto Buy Figurine Packs" })
+
+local galBuyStatus = sec.GalBuyL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetGalleryBuyStatus(t)
+    if galBuyStatus then pcall(function() galBuyStatus:UpdateBody(t) end) end
+end
+
+sec.GalBuyL:Dropdown({
+    Name = "Pack tiers",
+    Multi = true,
+    Options = Lists.GalleryPacks,
+    Callback = function(s) _ACC.SelectedGalleryPacks = mapFromMulti(s) end,
+}, "GalleryPacksDropdown")
+
+sec.GalBuyL:Dropdown({
+    Name = "Priority",
+    Multi = false,
+    Options = { "Highest first", "Lowest first", "Spread" },
+    Default = _ACC.GalleryBuyStrategy,
+    Callback = function(v) _ACC.GalleryBuyStrategy = v end,
+}, "GalleryBuyStrategyDropdown")
+
+sec.GalBuyL:Toggle({
+    Name = "Auto Buy (Diamonds, when in stock)",
+    Default = false,
+    Callback = function(v) _ACC.AutoGalleryBuy = v end,
+}, "AutoGalleryBuyToggle")
+
+sec.GalBuyL:Button({
+    Name = "Buy selected once",
+    Callback = function() _ACC._GalleryBuyForce = true end,
+})
+sec.GalBuyL:Button({
+    Name = "Refresh + print stock",
+    Callback = function()
+        local stock = galleryRefreshStock()
+        local lines = {}
+        for _, k in ipairs(Lists.GalleryPacks) do
+            table.insert(lines, ("%s: %d"):format(k, stock[k] or 0))
+        end
+        local msg = ("Diamonds: %s\n%s"):format(
+            tostring(Data.Get("Diamonds") or 0),
+            table.concat(lines, "  "))
+        Notify(msg)
+        print("[ACC Gallery] " .. msg)
+    end,
+})
+
+-- ── GalUpgR: Per-card Upgrades ───────────────────────────────────────────
+sec.GalUpgR:Header({ Text = "Per-Card Upgrades" })
+
+local galUpgStatus = sec.GalUpgR:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetGalleryUpgStatus(t)
+    if galUpgStatus then pcall(function() galUpgStatus:UpdateBody(t) end) end
+end
+
+sec.GalUpgR:Dropdown({
+    Name = "Mode",
+    Multi = false,
+    Options = { "Multi-select", "Specific card" },
+    Default = _ACC.GalleryUpgradeMode,
+    Callback = function(v) _ACC.GalleryUpgradeMode = v end,
+}, "GalleryUpgradeModeDropdown")
+
+makeSearchableDropdown(sec.GalUpgR, {
+    Name = "Cards (Multi-select mode)",
+    Multi = true,
+    Options = allCardNames,
+    OnChange = function(map) _ACC.SelectedUpgradeCards = map end,
+}, "GalleryUpgCardsDropdown")
+
+makeSearchableDropdown(sec.GalUpgR, {
+    Name = "Specific card (Specific-card mode)",
+    Multi = false,
+    Options = allCardNames,
+    OnChange = function(v) _ACC.GalleryUpgradeFocusCard = v end,
+}, "GalleryUpgFocusCardDropdown")
+
+sec.GalUpgR:Dropdown({
+    Name = "Upgrade kinds",
+    Multi = true,
+    Options = Lists.GalleryUpgradeKinds,
+    Default = Lists.GalleryUpgradeKinds,   -- pre-select all
+    Callback = function(s) _ACC.SelectedUpgradeKinds = mapFromMulti(s) end,
+}, "GalleryUpgKindsDropdown")
+
+sec.GalUpgR:Dropdown({
+    Name = "Priority",
+    Multi = false,
+    Options = { "Highest first", "Lowest first", "Spread" },
+    Default = _ACC.GalleryUpgradeStrategy,
+    Callback = function(v) _ACC.GalleryUpgradeStrategy = v end,
+}, "GalleryUpgStrategyDropdown")
+
+sec.GalUpgR:Toggle({
+    Name = "Auto Upgrade (Diamonds, max 20/level)",
+    Default = false,
+    Callback = function(v) _ACC.AutoGalleryUpgrade = v end,
+}, "AutoGalleryUpgradeToggle")
+
+-- ── GalLvlL: Figurine Levelup ────────────────────────────────────────────
+sec.GalLvlL:Header({ Text = "Auto Levelup Figurines" })
+
+local galLvlStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetGalleryLvlStatus(t)
+    if galLvlStatus then pcall(function() galLvlStatus:UpdateBody(t) end) end
+end
+
+makeSearchableDropdown(sec.GalLvlL, {
+    Name = "Figurines (sorted by multiplier)",
+    Multi = true,
+    Options = Lists.GalleryFigurines,
+    OnChange = function(map) _ACC.SelectedLevelupFigurines = map end,
+}, "GalleryLvlFiguresDropdown")
+
+sec.GalLvlL:Dropdown({
+    Name = "Priority",
+    Multi = false,
+    Options = { "Highest mult first", "Lowest mult first", "Spread" },
+    Default = _ACC.GalleryLevelupStrategy,
+    Callback = function(v) _ACC.GalleryLevelupStrategy = v end,
+}, "GalleryLvlStrategyDropdown")
+
+sec.GalLvlL:Toggle({
+    Name = "Auto Levelup (Diamonds, max lv. 50)",
+    Default = false,
+    Callback = function(v) _ACC.AutoGalleryLevelup = v end,
+}, "AutoGalleryLevelupToggle")
+
+-- ── GalMiscR: Claim + Collect ────────────────────────────────────────────
+sec.GalMiscR:Header({ Text = "Misc" })
+sec.GalMiscR:Toggle({
+    Name = "Auto Claim discovered figurines (+10 💎 each)",
+    Default = false,
+    Callback = function(v) _ACC.AutoGalleryClaim = v end,
+}, "AutoGalleryClaimToggle")
+sec.GalMiscR:Toggle({
+    Name = "Auto Collect cash from active figurines (slots 1-10)",
+    Default = false,
+    Callback = function(v) _ACC.AutoGalleryCollect = v end,
+}, "AutoGalleryCollectToggle")
+sec.GalMiscR:Button({
+    Name = "Toggle ShowRoll animation (server-side)",
+    Callback = function() Net.Fire(R.Gallery, "ShowRoll"); Notify("Toggled ShowRoll") end,
+})
+sec.GalMiscR:Button({
+    Name = "Print Gallery state",
+    Callback = function()
+        local d = Data.GetTable() or {}
+        local figs = d.Figurines or {}
+        local nFigs = 0; for _ in pairs(figs) do nFigs = nFigs + 1 end
+        local discovered = d.FigurinesDiscovered or {}
+        local claimed    = d.FigurinesClaimed or {}
+        local upgrades   = d.FigurineUpgrades or {}
+        local nUpg = 0; for _ in pairs(upgrades) do nUpg = nUpg + 1 end
+        local msg = ("[Gallery] Diamonds: %s | DPS: %s\n" ..
+                     "Figurines owned: %d | Discovered: %d | Claimed: %d\n" ..
+                     "Cards with upgrades: %d")
+                    :format(tostring(d.Diamonds or 0),
+                            tostring(d.DiamondsPerSecond or 0),
+                            nFigs, #discovered, #claimed, nUpg)
+        print(msg); Notify(msg)
+    end,
+})
 
 -- ============================================================================
 -- // 16. TAB: MISC
@@ -2826,6 +3172,94 @@ task.spawn(function()
         return n
     end
 
+    -- ── pack footprints (read once from Assets, scaled by mutation Size) ──
+    -- Server-side spawn (decompile L19618): mutated packs scale by
+    --   1 + (Mutations[mut].Size - 1) * 0.6
+    -- so collision check must use the scaled footprint, not just the base.
+    local PACK_FOOTPRINT, BUNDLE_FOOTPRINT
+    do
+        local function modelFootprint(model)
+            if not (model and model:IsA("Model")) then return nil end
+            local _, size = model:GetBoundingBox()
+            return Vector3.new(size.X * 0.95, 0.5, size.Z * 0.95)
+        end
+        local assets = RS:FindFirstChild("Assets")
+        local packsF = assets and assets:FindFirstChild("Packs")
+        if packsF then
+            for _, m in ipairs(packsF:GetChildren()) do
+                if m:IsA("Model") and m.PrimaryPart then
+                    PACK_FOOTPRINT = modelFootprint(m); break
+                end
+            end
+        end
+        local bundleAsset = assets and assets:FindFirstChild("Misc")
+                            and assets.Misc:FindFirstChild("Bundle")
+        BUNDLE_FOOTPRINT = modelFootprint(bundleAsset)
+        PACK_FOOTPRINT   = PACK_FOOTPRINT   or Vector3.new(4.5, 0.5, 4.5)
+        BUNDLE_FOOTPRINT = BUNDLE_FOOTPRINT or Vector3.new(7.5, 0.5, 7.5)
+    end
+
+    local function entryFootprint(entry)
+        -- Plain base footprint — server-side scale-by-mutation (1+(Size-1)*0.6)
+        -- only affects visual; collision uses the un-scaled bbox at place
+        -- time, so probing with the base footprint matches what the server
+        -- actually checks. (Pre-fix the scaled probe was over-blocking
+        -- otherwise-free cells for Diamond/Rainbow packs.)
+        return entry.isBundle and BUNDLE_FOOTPRINT or PACK_FOOTPRINT
+    end
+
+    -- ── overlap params: only PlayerPack-tagged BaseParts ─────────────────
+    local function buildPlayerPackParams()
+        local params = OverlapParams.new()
+        params.FilterType                 = Enum.RaycastFilterType.Include
+        params.MaxParts                   = 200
+        params.RespectCanCollide          = false
+        local list = {}
+        for _, inst in ipairs(CollectionService:GetTagged("PlayerPack")) do
+            if inst:IsDescendantOf(workspace) then
+                if inst:IsA("Model") then
+                    if inst.PrimaryPart then table.insert(list, inst.PrimaryPart) end
+                elseif inst:IsA("BasePart") then
+                    table.insert(list, inst)
+                end
+            end
+        end
+        params.FilterDescendantsInstances = list
+        return params
+    end
+
+    -- ── grid-aware free cell picker ──────────────────────────────────────
+    -- Walks an N×N grid over the floor; for each cell asks
+    --   "if I dropped a pack with `footprint` centred here, would it overlap
+    --    any tagged PlayerPack?"  Returns cell positions sorted by distance
+    --   from `hintPos` (so we tend to fill close to the player first).
+    local function findFreeCells(floor, footprint, params, hintPos, gridN)
+        gridN = gridN or 18
+        local cellSizeX = floor.Size.X / gridN
+        local cellSizeZ = floor.Size.Z / gridN
+        -- Light edge inset so packs aren't placed half-off the plot.
+        -- Don't set this aggressive — small floors collapse the usable area.
+        local pad = 0.05
+        local cells = {}
+        for ix = 1, gridN do
+            for iz = 1, gridN do
+                local localX = (ix - 0.5 - gridN / 2) * cellSizeX * (1 - pad)
+                local localZ = (iz - 0.5 - gridN / 2) * cellSizeZ * (1 - pad)
+                local cf = floor.CFrame * CFrame.new(localX,
+                                                     floor.Size.Y / 2 + 0.5,
+                                                     localZ)
+                local hits = workspace:GetPartBoundsInBox(cf, footprint, params)
+                if #hits == 0 then
+                    local pos  = cf.Position
+                    local dist = hintPos and (pos - hintPos).Magnitude or 0
+                    table.insert(cells, { pos = pos, dist = dist })
+                end
+            end
+        end
+        table.sort(cells, function(a, b) return a.dist < b.dist end)
+        return cells
+    end
+
     while getgenv()._ACCRunning do
         if _ACC.AutoPlaceEnabled and not mapEmpty(_ACC.SelectedPlacePacks) then
             safe(function()
@@ -2851,103 +3285,156 @@ task.spawn(function()
                               and plotModel.Misc:FindFirstChild("Floor")
                 if not floor then return end
 
-                -- build candidate list with priority info
+                -- build candidate list (unique pack types user selected, owned > 0)
                 local toPlace = {}
                 for displayName in pairs(_ACC.SelectedPlacePacks) do
                     local serverName = displayName:gsub(" ", "-")
-                    -- Bundle detection: serverName ends with "-Bundle"
-                    -- (Bundle key format: "<Family>-<Mutation>-Bundle", always has Mutation
-                    --  even for Regular variant)
-                    local isBundle = serverName:match("%-Bundle$") ~= nil
-                    local slotCost = isBundle and 5 or 1
+                    local isBundle   = serverName:match("%-Bundle$") ~= nil
+                    local slotCost   = isBundle and 5 or 1
                     if (ownedPacks[serverName] or 0) > 0 then
                         local page, rIdx, family, rarity = priorityOf(displayName)
                         table.insert(toPlace, {
-                            server = serverName,
-                            display = displayName,
-                            page = page,
-                            rIdx = rIdx,
-                            family = family,
-                            rarity = rarity,
+                            server   = serverName,
+                            display  = displayName,
+                            page     = page,
+                            rIdx     = rIdx,
+                            family   = family,
+                            rarity   = rarity,
                             isBundle = isBundle,
                             slotCost = slotCost,
                         })
                     end
                 end
                 if #toPlace == 0 then
-                    if _ACC.Debug then
-                        warn("[ACC AutoPlace] none of the selected packs are owned")
-                    end
+                    if _ACC.Debug then warn("[ACC AutoPlace] none owned") end
                     return
                 end
 
-                -- Order within a family: rarity ascending (Regular -> Gold -> ... -> Rainbow),
-                -- and for the same rarity the regular pack goes BEFORE its bundle.
-                -- Across families: higher Page first (newer families like Slayer/Sorcerer
-                -- before Pirate/Ninja).
-                --
-                -- Example (Pirate selected, all variants):
-                --   Pirate -> Pirate Bundle -> Pirate Gold -> Pirate Gold Bundle -> ...
+                -- Sort: family Page DESC -> rarity DESC -> pack-before-bundle.
+                -- Rarity priority is highest-first per user spec:
+                --   Rainbow > Diamond > Void > Emerald > Gold > Regular
+                -- Within the same rarity the un-bundled pack goes first.
+                -- Example (Pirate selected, all variants) — placement order:
+                --   Pirate Rainbow -> Pirate Rainbow Bundle ->
+                --   Pirate Diamond -> Pirate Diamond Bundle -> ... ->
+                --   Pirate -> Pirate Regular Bundle
                 table.sort(toPlace, function(a, b)
                     if a.page  ~= b.page  then return a.page > b.page  end   -- newer family first
-                    if a.rIdx  ~= b.rIdx  then return a.rIdx < b.rIdx  end   -- low rarity first
+                    if a.rIdx  ~= b.rIdx  then return a.rIdx > b.rIdx  end   -- HIGH rarity first
                     if a.isBundle ~= b.isBundle then return not a.isBundle end -- pack before bundle
                     return false
                 end)
 
-                if _ACC.Debug then
-                    local order = {}
-                    for _, e in ipairs(toPlace) do
-                        table.insert(order, ("%s(p=%d r=%d cost=%d)"):format(e.display, e.page, e.rIdx, e.slotCost))
-                    end
-                    warn("[ACC AutoPlace] order: " .. table.concat(order, " > "))
-                end
-
                 local startCFrame = hrp.CFrame
-                local fSize = floor.Size
+                local totalPlaced = 0
+                local lastEquipped
 
                 for _, entry in ipairs(toPlace) do
                     if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
-                    if free < entry.slotCost then
-                        if _ACC.Debug then
-                            warn(("[ACC AutoPlace] skip '%s' (need %d slots, have %d)"):format(entry.server, entry.slotCost, free))
-                        end
-                        -- don't break — maybe a non-bundle later fits
+
+                    local stillOwned = ownedPacks[entry.server] or 0
+                    if stillOwned <= 0 or free < entry.slotCost then
+                        -- skip but DON'T break — a later entry may still fit
                     else
-                        Net.Fire(R.Card, "Equip", entry.server)
-                        task.wait(0.3)
+                        -- Equip is required: every Place callsite in the game
+                        -- decompile (L27256, L27272, L27373) checks the
+                        -- equipped slot; without prior Equip server-side state
+                        -- isn't aligned and Place silently no-ops. Equip once
+                        -- per stack (skip when already equipped).
+                        if lastEquipped ~= entry.server then
+                            Net.Fire(R.Card, "Equip", entry.server)
+                            lastEquipped = entry.server
+                            task.wait(0.25)
+                        end
 
-                        local before = countPlaced()
-                        local success = false
-                        for attempt = 1, 10 do
-                            if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
-                            local rx = (math.random() - 0.5) * fSize.X * 0.7
-                            local rz = (math.random() - 0.5) * fSize.Z * 0.7
-                            local pos = (floor.CFrame * CFrame.new(rx, 5, rz)).Position
-                            hrp.CFrame = CFrame.new(pos)
-                            task.wait(0.2)
+                        local footprint     = entryFootprint(entry)
+                        local consecFails   = 0
+                        local placedHere    = 0
+                        local FAIL_LIMIT    = 4
+                        local gridDensities = { 18, 24, 32 }   -- escalate if no cells found
+                        local densityIdx    = 1
 
-                            Net.Fire(R.Card, "Place", entry.server)
-                            task.wait(0.4)
+                        while stillOwned > 0
+                              and free >= entry.slotCost
+                              and _ACC.AutoPlaceEnabled
+                              and getgenv()._ACCRunning
+                        do
+                            local params = buildPlayerPackParams()
+                            local cells  = findFreeCells(floor, footprint, params,
+                                                         hrp.Position,
+                                                         gridDensities[densityIdx])
+                            if #cells == 0 then
+                                -- try a finer grid before giving up — coarse cells
+                                -- might be "blocked" by a single pack edge
+                                if densityIdx < #gridDensities then
+                                    densityIdx = densityIdx + 1
+                                else
+                                    if _ACC.Debug then
+                                        warn(("[ACC AutoPlace] %s — no free cell at any density")
+                                             :format(entry.server))
+                                    end
+                                    break
+                                end
+                            else
+                                local cellPos = cells[1].pos
+                                hrp.CFrame = CFrame.new(cellPos + Vector3.new(0, 3, 0))
+                                task.wait(0.12)
 
-                            if countPlaced() > before then
-                                success = true
-                                break
+                                local before = (Data.GetReplica()
+                                                and Data.GetReplica().Data
+                                                and Data.GetReplica().Data.PacksPlaced
+                                                and (function()
+                                                    local n = 0
+                                                    for _ in pairs(Data.GetReplica().Data.PacksPlaced) do
+                                                        n = n + 1
+                                                    end
+                                                    return n
+                                                end)()) or 0
+
+                                Net.Fire(R.Card, "Place", entry.server)
+                                task.wait(0.45)   -- wait for server replication so the freshly-placed pack appears in CollectionService:GetTagged before the next scan
+
+                                local rep2 = Data.GetReplica()
+                                local rd2  = rep2 and rep2.Data
+                                local plc2 = rd2 and rd2.PacksPlaced or {}
+                                local now = 0
+                                for _ in pairs(plc2) do now = now + 1 end
+
+                                if now > before then
+                                    -- success
+                                    free        = free - entry.slotCost
+                                    placedHere  = placedHere + 1
+                                    totalPlaced = totalPlaced + 1
+                                    consecFails = 0
+                                    -- refetch inventory — other features may consume packs
+                                    ownedPacks  = rd2 and rd2.Packs or ownedPacks
+                                    stillOwned  = ownedPacks[entry.server] or 0
+                                else
+                                    consecFails = consecFails + 1
+                                    if consecFails >= FAIL_LIMIT then
+                                        if _ACC.Debug then
+                                            warn(("[ACC AutoPlace] %s — %d consecutive fails, moving on")
+                                                 :format(entry.server, FAIL_LIMIT))
+                                        end
+                                        break
+                                    end
+                                end
                             end
                         end
 
-                        if success then
-                            free = free - entry.slotCost
-                            if _ACC.Debug then
-                                warn(("[ACC AutoPlace] placed '%s' (cost=%d, free=%d)"):format(entry.server, entry.slotCost, free))
-                            end
-                        elseif _ACC.Debug then
-                            warn(("[ACC AutoPlace] failed '%s' after 10 tries"):format(entry.server))
+                        if _ACC.Debug and placedHere > 0 then
+                            warn(("[ACC AutoPlace] %s × %d placed (free=%d, owned=%d)")
+                                 :format(entry.server, placedHere, free, stillOwned))
                         end
                     end
                 end
 
                 if hrp.Parent then hrp.CFrame = startCFrame end
+
+                if _ACC.Debug and totalPlaced > 0 then
+                    warn(("[ACC AutoPlace] cycle done: placed %d packs total, %d slots free")
+                         :format(totalPlaced, free))
+                end
             end)
         end
         task.wait(2.0)
@@ -4167,51 +4654,194 @@ task.spawn(function()
     end
 end)
 
--- Expedition send
+-- ============================================================================
+-- // EXPEDITION — full impl
+-- ============================================================================
+-- Verified flow (StarTrialHandler.ExpeditionHandler L38893 + ExpeditionConfig):
+--   * Send payload is a TABLE: { Reward = packKey, Category = "Pack", NPC = npc }
+--   * Server checks: enough StarTickets, enough Cash, daily cap not hit,
+--     pack opened at least once, NPC unlocked.
+--   * Active state lives in Data.Get("Expeditions", npc) = { Start, Duration, ... }
+--   * Done when (workspace:GetServerTimeNow() - Start) >= Duration.
+--   * Skip = Robux DevProduct ("SkipExpedition") — exploits can't trigger it.
+local ExpConfig = Config.ExpeditionConfig
+
+local function expCosts(packKey, replica, total)
+    if not ExpConfig then return nil end
+    local cash    = ExpConfig.GetPackPrice  and ExpConfig.GetPackPrice(packKey, replica) or nil
+    local tickets = ExpConfig.GetTicketCost and ExpConfig.GetTicketCost(packKey)         or nil
+    local timeRaw = ExpConfig.GetPackTime   and ExpConfig.GetPackTime(packKey)           or nil
+    local timeBuff = (ExpConfig.GetBuff and ExpConfig.GetBuff("Time", total or 0)) or 1
+    local timeAdj = timeRaw and math.ceil(timeRaw / timeBuff) or nil
+    return cash, tickets, timeAdj
+end
+
+local function expNPCUnlocked(npc, total, hasGamepass)
+    if npc == "1" then return true end
+    if npc == "4" then return hasGamepass end
+    if not ExpConfig or not ExpConfig.GetBuff then
+        -- conservative fallback
+        if npc == "2" then return (total or 0) >= 50 end
+        if npc == "3" then return (total or 0) >= 100 end
+        return false
+    end
+    local extraNpc = ExpConfig.GetBuff("ExtraNPC", total or 0) or 1
+    return ExpConfig.CheckNPCUnlocked and ExpConfig.CheckNPCUnlocked(extraNpc, npc) or false
+end
+
+-- "Pirate Gold" -> "Pirate-Gold"; "Pirate" -> "Pirate"
+local function expDisplayToKey(displayName)
+    return tostring(displayName):gsub(" ", "-")
+end
+
+-- Mutation tier: 0 = Regular, 1 = Gold, 2 = Emerald, 3 = Void, 4 = Diamond, 5 = Rainbow
+local EXP_MUTATION_RANK = { Gold=1, Emerald=2, Void=3, Diamond=4, Rainbow=5 }
+local function expMutationOf(packKey)
+    local _, mut = unpack(packKey:split("-"))
+    return EXP_MUTATION_RANK[mut or ""] or 0
+end
+
+-- Score a candidate based on chosen strategy. Lower score = sooner.
+local function expScore(strategy, cash, tickets, packKey)
+    if strategy == "Most expensive first" then
+        return -((cash or 0) + (tickets or 0) * 1000)
+    elseif strategy == "Highest mutation first" then
+        return -expMutationOf(packKey) * 1e9 - ((cash or 0) + (tickets or 0) * 1000)
+    end
+    -- default: Cheapest first
+    return (cash or 0) + (tickets or 0) * 1000
+end
+
+-- Pick the best affordable pack for current resources from selectedPacks.
+local function expPickPack(selectedPacks, replica, total)
+    if not ExpConfig then return nil end
+    local data = (replica and replica.Data) or {}
+    local cashOwn    = data.Cash        or 0
+    local ticketsOwn = data.StarTickets or 0
+    local opened    -- approximation: HasOpenedPack iterates Cards;
+                     -- we trust user selection — if they pick something they
+                     -- haven't opened, server will reject and we'll move on.
+
+    local candidates = {}
+    for displayName in pairs(selectedPacks) do
+        local key = expDisplayToKey(displayName)
+        local cash, tickets, _ = expCosts(key, replica, total)
+        if cash and tickets and cashOwn >= cash and ticketsOwn >= tickets then
+            table.insert(candidates, {
+                key = key, display = displayName,
+                cash = cash, tickets = tickets,
+            })
+        end
+    end
+    if #candidates == 0 then return nil end
+
+    local strategy = _ACC.ExpStrategy or "Cheapest first"
+    table.sort(candidates, function(a, b)
+        return expScore(strategy, a.cash, a.tickets, a.key)
+             < expScore(strategy, b.cash, b.tickets, b.key)
+    end)
+    return candidates[1]
+end
+
+-- Human-readable status snapshot
+local function expBuildStatus()
+    local exps  = Data.Get("Expeditions") or {}
+    local total = Data.Get("TotalExpeditions") or 0
+    local daily = Data.Get("DailyExpeditions") or 0
+    local maxDailyBuff = (ExpConfig and ExpConfig.GetBuff and ExpConfig.GetBuff("MoreExpeditions", total)) or 0
+    local maxDaily = 4 + maxDailyBuff
+    local hasGP = ((Data.Get("GamepassValues") or {}).ExtraMarine == true)
+    local now = workspace:GetServerTimeNow()
+
+    local lines = {}
+    table.insert(lines, ("[Expedition] daily %d/%d, total lifetime %d"):format(daily, maxDaily, total))
+    for _, npc in ipairs({ "1", "2", "3", "4" }) do
+        local locked = not expNPCUnlocked(npc, total, hasGP)
+        local info = exps[npc]
+        local state
+        if locked then
+            state = "locked"
+        elseif type(info) == "table" and info.Start and info.Duration then
+            local left = info.Duration - (now - info.Start)
+            if left <= 0 then state = ("READY (%s)"):format(tostring(info.Reward or "?"))
+            else state = ("busy %ds left (%s)"):format(math.ceil(left), tostring(info.Reward or "?")) end
+        else
+            state = "free"
+        end
+        table.insert(lines, ("  Marine %s — %s"):format(npc, state))
+    end
+    return table.concat(lines, "\n")
+end
+
+-- ── Send / Claim loop ─────────────────────────────────────────────────────
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.AutoExpSend then
-            local exps = Data.Get("Expeditions")
-            if type(exps) == "table" then
-                for slot, info in pairs(exps) do
-                    if not _ACC.AutoExpSend or not getgenv()._ACCRunning then break end
-                    if type(info) == "table" and not info.Started and not info.Ready then
-                        local cards = Data.Get("Cards")
-                        if cards then
-                            for cardName in pairs(cards) do
-                                -- SendExpedition is on StarTrial remote, not Relic
-                                Net.FireRL(R.StarTrial, "Exp:Send:" .. tostring(slot), 1.0,
-                                           "SendExpedition", slot, cardName)
-                                break
-                            end
-                        end
+        local doSend  = _ACC.AutoExpSend  or _ACC._ExpForceSend
+        local doClaim = _ACC.AutoExpClaim or _ACC._ExpForceClaim
+        local doPrint = _ACC._ExpPrintStatus
+        _ACC._ExpForceSend  = false
+        _ACC._ExpForceClaim = false
+        _ACC._ExpPrintStatus = false
+
+        if doPrint then print(expBuildStatus()) end
+
+        if doSend or doClaim then
+            local exps   = Data.Get("Expeditions") or {}
+            local total  = Data.Get("TotalExpeditions") or 0
+            local hasGP  = ((Data.Get("GamepassValues") or {}).ExtraMarine == true)
+            local now    = workspace:GetServerTimeNow()
+
+            -- 1) Claim ready first (frees up NPCs for new sends in same iteration)
+            if doClaim then
+                for _, npc in ipairs({ "1", "2", "3", "4" }) do
+                    if not getgenv()._ACCRunning then break end
+                    local info = exps[npc]
+                    if type(info) == "table" and info.Start and info.Duration
+                       and (now - info.Start) >= info.Duration
+                    then
+                        Net.FireRL(R.StarTrial, "Exp:Claim:" .. npc, 0.6,
+                                   "ClaimExpedition", npc)
                         task.wait(0.4)
                     end
                 end
             end
-        end
-        task.wait(2)
-    end
-end)
 
--- Expedition claim
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.AutoExpClaim then
-            local exps = Data.Get("Expeditions")
-            if type(exps) == "table" then
-                for slot, info in pairs(exps) do
-                    if not _ACC.AutoExpClaim or not getgenv()._ACCRunning then break end
-                    if type(info) == "table" and info.Ready then
-                        -- ClaimExpedition is on StarTrial remote, not Relic
-                        Net.FireRL(R.StarTrial, "Exp:Claim:" .. tostring(slot), 0.6,
-                                   "ClaimExpedition", slot)
-                        task.wait(0.3)
+            -- 2) Send to free NPCs
+            if doSend and not mapEmpty(_ACC.SelectedExpPacks)
+               and not mapEmpty(_ACC.SelectedExpNPCs)
+            then
+                exps = Data.Get("Expeditions") or {}  -- re-fetch after claims
+                local daily       = Data.Get("DailyExpeditions") or 0
+                local maxDaily    = 4 + ((ExpConfig and ExpConfig.GetBuff and ExpConfig.GetBuff("MoreExpeditions", total)) or 0)
+                local replica     = Data.GetReplica()
+
+                for _, npc in ipairs({ "1", "2", "3", "4" }) do
+                    if not getgenv()._ACCRunning then break end
+                    if _ACC.SelectedExpNPCs[npc]
+                       and not exps[npc]                          -- NPC free
+                       and expNPCUnlocked(npc, total, hasGP)
+                       and (not _ACC.RespectExpDaily or daily < maxDaily)
+                    then
+                        local pick = expPickPack(_ACC.SelectedExpPacks, replica, total)
+                        if pick then
+                            Net.FireRL(R.StarTrial, "Exp:Send:" .. npc, 2.0,
+                                       "SendExpedition", {
+                                           Reward   = pick.key,
+                                           Category = "Pack",
+                                           NPC      = npc,
+                                       })
+                            daily = daily + 1
+                            task.wait(0.6)
+                        else
+                            -- nothing affordable in selection; bail this cycle
+                            break
+                        end
                     end
                 end
             end
         end
-        task.wait(2)
+
+        task.wait(5)
     end
 end)
 
@@ -4498,6 +5128,286 @@ task.spawn(function()
             end
         end
         task.wait(2)
+    end
+end)
+
+-- ============================================================================
+-- // 22.5 LOOPS — GALLERY
+-- ============================================================================
+
+-- Stock cache: pulled by buy loop, reused by status helpers
+local galleryStockCache = {}
+
+-- ── Auto Buy Packs ────────────────────────────────────────────────────────
+-- Loop strategy:
+--   1. Refresh stock via GetGalleryStock (skip cycle if server unavailable).
+--   2. Build affordable+selected+in-stock+req-met list.
+--   3. Sort by chosen strategy (Highest/Lowest/Spread).
+--   4. Buy ONE per cycle (server side throttles, and we want to give Diamonds
+--      time to refresh between buys); cycle every 4s.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        local force = _ACC._GalleryBuyForce
+        _ACC._GalleryBuyForce = false
+
+        if (_ACC.AutoGalleryBuy or force) and not mapEmpty(_ACC.SelectedGalleryPacks) then
+            local stock = galleryRefreshStock()
+            galleryStockCache = stock
+
+            -- nothing in stock at all → wait, don't spam
+            local anyStock = false
+            for _, k in ipairs(Lists.GalleryPacks) do
+                if (stock[k] or 0) > 0 then anyStock = true; break end
+            end
+
+            if not anyStock then
+                _ACC.SetGalleryBuyStatus("⏳ Shop empty — waiting for restock")
+            else
+                local diamonds   = Data.Get("Diamonds") or 0
+                local discovered = Data.Get("FigurinesDiscovered") or {}
+                local nDisc      = #discovered
+
+                local candidates = {}
+                for tier in pairs(_ACC.SelectedGalleryPacks) do
+                    local cfg = GalleryConfig and GalleryConfig.FigurinePacks
+                                and GalleryConfig.FigurinePacks[tier]
+                    if cfg and (stock[tier] or 0) > 0 then
+                        local price = cfg.Price or 0
+                        local needDisc = cfg.FigurinesDiscovered or 0
+                        if diamonds >= price and nDisc >= needDisc then
+                            table.insert(candidates, { tier = tier, price = price })
+                        end
+                    end
+                end
+
+                if #candidates == 0 then
+                    _ACC.SetGalleryBuyStatus(
+                        ("⏸ Nothing affordable\n💎 %s | discovered %d")
+                        :format(tostring(diamonds), nDisc))
+                else
+                    -- Apply priority strategy
+                    local strat = _ACC.GalleryBuyStrategy or "Highest first"
+                    if strat == "Highest first" then
+                        table.sort(candidates, function(a, b) return a.price > b.price end)
+                    elseif strat == "Lowest first" then
+                        table.sort(candidates, function(a, b) return a.price < b.price end)
+                    end
+                    -- Spread = round-robin: rotate so a different tier leads each cycle
+                    local pickIdx = 1
+                    if strat == "Spread" then
+                        _ACC._GallerySpreadIdxBuy = (_ACC._GallerySpreadIdxBuy + 1) % #candidates
+                        pickIdx = _ACC._GallerySpreadIdxBuy + 1
+                    end
+
+                    local pick = candidates[pickIdx] or candidates[1]
+                    Net.FireRL(R.Gallery, "Gal:Buy:" .. pick.tier, 1.0,
+                               "Buy", pick.tier)
+                    _ACC.SetGalleryBuyStatus(("🛒 Bought %s (%d 💎)\n💎 %s | strat: %s")
+                        :format(pick.tier, pick.price,
+                                tostring(diamonds - pick.price), strat))
+                end
+            end
+        elseif _ACC.AutoGalleryBuy then
+            _ACC.SetGalleryBuyStatus("⚠ Select tier(s) first")
+        else
+            _ACC.SetGalleryBuyStatus("Off")
+        end
+        task.wait(4)
+    end
+end)
+
+-- ── Auto Upgrade Per-Card ────────────────────────────────────────────────
+-- Each (card, kind) pair has its own level (max 20). Cost scales with the
+-- card's pack Page (newer family = pricier). One upgrade fired per cycle.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoGalleryUpgrade then
+            _ACC.SetGalleryUpgStatus("Off")
+            task.wait(1)
+        else
+            local upgrades = Data.Get("FigurineUpgrades") or {}
+            local diamonds = Data.Get("Diamonds") or 0
+
+            -- Build (card, kind) candidate list based on selected mode
+            local cards = {}
+            if _ACC.GalleryUpgradeMode == "Specific card" then
+                if _ACC.GalleryUpgradeFocusCard
+                   and cardsByPack[_ACC.GalleryUpgradeFocusCard]
+                then
+                    table.insert(cards, _ACC.GalleryUpgradeFocusCard)
+                end
+            else
+                for c in pairs(_ACC.SelectedUpgradeCards) do
+                    if cardsByPack[c] then table.insert(cards, c) end
+                end
+            end
+
+            local kinds = {}
+            for k in pairs(_ACC.SelectedUpgradeKinds) do
+                table.insert(kinds, k)
+            end
+
+            if #cards == 0 then
+                _ACC.SetGalleryUpgStatus("⚠ No cards selected")
+                task.wait(1)
+            elseif #kinds == 0 then
+                _ACC.SetGalleryUpgStatus("⚠ No upgrade kinds selected")
+                task.wait(1)
+            else
+                local candidates = {}
+                for _, card in ipairs(cards) do
+                    local page = cardsByPack[card].page or 1
+                    local cardUpg = upgrades[card] or {}
+                    for _, kind in ipairs(kinds) do
+                        local lvl = cardUpg[kind] or 0
+                        if lvl < 20 then
+                            local cost = galleryUpgradeCost(lvl + 1, page)
+                            if diamonds >= cost then
+                                table.insert(candidates, {
+                                    card = card, kind = kind,
+                                    level = lvl, cost = cost,
+                                })
+                            end
+                        end
+                    end
+                end
+
+                if #candidates == 0 then
+                    _ACC.SetGalleryUpgStatus(
+                        ("⏸ Nothing to upgrade (max'd or 💎 short)\n💎 %s")
+                        :format(tostring(diamonds)))
+                    task.wait(2)
+                else
+                    local strat = _ACC.GalleryUpgradeStrategy or "Highest first"
+                    if strat == "Highest first" then
+                        table.sort(candidates, function(a, b) return a.cost > b.cost end)
+                    elseif strat == "Lowest first" then
+                        table.sort(candidates, function(a, b) return a.cost < b.cost end)
+                    end
+                    local pickIdx = 1
+                    if strat == "Spread" then
+                        _ACC._GallerySpreadIdxUpg = (_ACC._GallerySpreadIdxUpg + 1) % #candidates
+                        pickIdx = _ACC._GallerySpreadIdxUpg + 1
+                    end
+
+                    local p = candidates[pickIdx] or candidates[1]
+                    Net.FireRL(R.Gallery,
+                               ("Gal:Upg:%s:%s"):format(p.card, p.kind), 0.4,
+                               "Upgrade", p.card, p.kind)
+                    _ACC.SetGalleryUpgStatus(
+                        ("⬆ %s/%s lv %d→%d (cost %d 💎)\n💎 %s | strat: %s")
+                        :format(p.card, p.kind, p.level, p.level + 1,
+                                p.cost, tostring(diamonds - p.cost), strat))
+                    task.wait(0.6)
+                end
+            end
+        end
+    end
+end)
+
+-- ── Auto Levelup Figurines ───────────────────────────────────────────────
+-- Each owned figurine has a level (max 50). Cost = mult * lvl^1.3 * 10.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoGalleryLevelup then
+            _ACC.SetGalleryLvlStatus("Off")
+            task.wait(1)
+        elseif mapEmpty(_ACC.SelectedLevelupFigurines) then
+            _ACC.SetGalleryLvlStatus("⚠ No figurines selected")
+            task.wait(1)
+        else
+            local owned    = Data.Get("Figurines") or {}
+            local diamonds = Data.Get("Diamonds") or 0
+
+            local candidates = {}
+            for name in pairs(_ACC.SelectedLevelupFigurines) do
+                local info = owned[name]
+                if info then
+                    local lvl  = tonumber(info.Level) or 0
+                    local mult = (GalleryConfig and GalleryConfig.Figurines
+                                  and GalleryConfig.Figurines[name]
+                                  and GalleryConfig.Figurines[name].Multiplier) or 1
+                    if lvl < (GalleryConfig and GalleryConfig.Data and GalleryConfig.Data.MaxLevelup or 50) then
+                        local cost = galleryLevelupCost(mult, lvl)
+                        if diamonds >= cost then
+                            table.insert(candidates, {
+                                name = name, level = lvl,
+                                mult = mult, cost = cost,
+                            })
+                        end
+                    end
+                end
+            end
+
+            if #candidates == 0 then
+                _ACC.SetGalleryLvlStatus(
+                    ("⏸ Nothing affordable / all max\n💎 %s"):format(tostring(diamonds)))
+                task.wait(2)
+            else
+                local strat = _ACC.GalleryLevelupStrategy or "Highest mult first"
+                if strat == "Highest mult first" then
+                    table.sort(candidates, function(a, b) return a.mult > b.mult end)
+                elseif strat == "Lowest mult first" then
+                    table.sort(candidates, function(a, b) return a.mult < b.mult end)
+                end
+                local pickIdx = 1
+                if strat == "Spread" then
+                    _ACC._GallerySpreadIdxLvl = (_ACC._GallerySpreadIdxLvl + 1) % #candidates
+                    pickIdx = _ACC._GallerySpreadIdxLvl + 1
+                end
+
+                local p = candidates[pickIdx] or candidates[1]
+                Net.FireRL(R.Gallery, "Gal:Lvl:" .. p.name, 0.4,
+                           "Levelup", p.name)
+                _ACC.SetGalleryLvlStatus(
+                    ("⬆ %s lv %d→%d (×%d, cost %d 💎)\n💎 %s | strat: %s")
+                    :format(p.name, p.level, p.level + 1, p.mult,
+                            p.cost, tostring(diamonds - p.cost), strat))
+                task.wait(0.6)
+            end
+        end
+    end
+end)
+
+-- ── Auto Claim discovered figurines ──────────────────────────────────────
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.AutoGalleryClaim then
+            local discovered = Data.Get("FigurinesDiscovered") or {}
+            local claimed    = Data.Get("FigurinesClaimed")    or {}
+            local cset = {}
+            for _, n in ipairs(claimed) do cset[n] = true end
+            local n = 0
+            for _, name in ipairs(discovered) do
+                if not _ACC.AutoGalleryClaim or not getgenv()._ACCRunning then break end
+                if not cset[name] then
+                    Net.FireRL(R.Gallery, "Gal:Claim:" .. name, 1.0,
+                               "ClaimFigurine", name)
+                    n = n + 1
+                    task.wait(0.4)
+                end
+            end
+            if n > 0 then Notify(("Gallery: claimed %d figurine bonus(es)"):format(n)) end
+        end
+        task.wait(15)
+    end
+end)
+
+-- ── Auto Collect cash from active gallery slots ──────────────────────────
+-- Active = top 10 owned figurines sorted by Chance ASC. Server accepts
+-- Collect("1") .. Collect("10") for slot indices.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.AutoGalleryCollect then
+            local slots = galleryActiveSlots()
+            for i = 1, #slots do
+                if not _ACC.AutoGalleryCollect or not getgenv()._ACCRunning then break end
+                Net.FireRL(R.Gallery, "Gal:Coll:" .. i, 0.2,
+                           "Collect", tostring(i))
+                task.wait(0.05)
+            end
+        end
+        task.wait(4)
     end
 end)
 
