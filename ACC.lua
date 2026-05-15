@@ -18,6 +18,10 @@ if getgenv()._ACCNamecallRestore then
     pcall(getgenv()._ACCNamecallRestore)
     getgenv()._ACCNamecallRestore = nil
 end
+if getgenv()._ACCNotifyRestore then
+    pcall(getgenv()._ACCNotifyRestore)
+    getgenv()._ACCNotifyRestore = nil
+end
 if getgenv()._ACCUI then
     pcall(function() getgenv()._ACCUI:Unload() end)
     getgenv()._ACCUI = nil
@@ -164,7 +168,7 @@ _ACC.GalleryLevelupStrategy    = "Highest mult first"  -- / "Lowest mult first" 
 -- Misc auto
 _ACC.AutoGalleryClaim          = false     -- claim discovered figurine bonuses
 _ACC.AutoGalleryCollect        = false     -- collect cash from active slots
--- Auto Boosts (new in update — figurine boost system)
+-- Auto Boosts (NEW — game update: figurine boost system)
 _ACC.AutoFigurineStockBoost    = false     -- auto-upgrade per-pack stock boost
 _ACC.SelectedStockBoostPacks   = {}        -- map ["Basic"]=true ...
 _ACC.AutoFigurineGenericBoost  = false     -- auto-upgrade DiamondMultiplier / FigurineLuck
@@ -393,58 +397,89 @@ do
     R.Notify           = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("Notify")
 end
 
--- // 6.5 NOTIFY FILTER — kill "No Stock Left" toast spam
--- Server fires Remotes.Notify (UnreliableRemoteEvent) on every failed
--- purchase. The game's client handler shows a toast. We replace existing
--- handlers with our own filtered wrapper that drops "No Stock Left" /
--- "No Stock" / "not enough" messages while passing everything else through.
---
--- Pattern: getconnections(remote.OnClientEvent) returns existing listeners.
--- We Disable each and reconnect a wrapper that re-invokes the original
--- handler iff the message passes the filter.
+-- // 6.5 NOTIFY FILTER — suppress "No Stock Left" toast spam
+-- Method: hook GUIDirectoryHandler.CreateTopNotification via getgc.
+-- This is the central in-game toast function — every notification (from
+-- Notify remote, local rejections, server messages) routes through here.
+-- We patch the table-level field with a wrapper that drops blocked text.
+-- Confirmed working over getconnections-based filtering for this game.
 do
-    if R.Notify and R.Notify.OnClientEvent then
-        local GC = getconnections
-        if GC then
-            local conns = GC(R.Notify.OnClientEvent)
-            local origHandlers = {}
-            for _, c in ipairs(conns) do
-                if c.Function then
-                    table.insert(origHandlers, c.Function)
-                end
-                if c.Disable then pcall(function() c:Disable() end)
-                elseif c.Disconnect then pcall(function() c:Disconnect() end)
+    local BLOCK_PATTERNS = {
+        "no stock left",
+        "no stock",
+        "out of stock",
+        "sold out",
+        "not in stock",
+    }
+    local function shouldBlock(msg)
+        if type(msg) ~= "string" or msg == "" then return false end
+        -- strip rich-text tags so "<font color=..>No Stock Left</font>" matches
+        msg = msg:gsub("<[^>]->", "")
+        local low = msg:lower()
+        for _, p in ipairs(BLOCK_PATTERNS) do
+            if low:find(p, 1, true) then return true end
+        end
+        return false
+    end
+
+    local function applyHooks()
+        if not getgc then return 0 end
+        local patched = 0
+        for _, v in pairs(getgc(true)) do
+            if type(v) == "table" then
+                local orig = rawget(v, "CreateTopNotification")
+                -- Skip already-wrapped: marked with __ACC_wrapped flag
+                if type(orig) == "function" and not rawget(v, "__ACC_NotifyHookApplied") then
+                    v.CreateTopNotification = function(a, ...)
+                        local args = { a, ... }
+                        local text
+                        for _, x in ipairs(args) do
+                            if type(x) == "string" then text = x; break end
+                        end
+                        if shouldBlock(text) then return end
+                        return orig(a, ...)
+                    end
+                    rawset(v, "__ACC_NotifyHookApplied", true)
+                    -- Save original so cleanup can restore
+                    rawset(v, "__ACC_NotifyOriginal", orig)
+                    patched = patched + 1
                 end
             end
+        end
+        return patched
+    end
 
-            local BLOCK_PATTERNS = {
-                "no stock left",
-                "no stock",
-                "out of stock",
-                "sold out",
-                "not in stock",
-            }
-            local function shouldBlock(msg)
-                if type(msg) ~= "string" then return false end
-                local low = msg:lower()
-                for _, p in ipairs(BLOCK_PATTERNS) do
-                    if low:find(p, 1, true) then return true end
+    local n = applyHooks()
+    if _ACC.Debug then print("[ACC NotifyFilter] patched", n, "handlers") end
+
+    -- Re-scan once after a short delay — GUIDirectoryHandler module may not
+    -- be in getgc yet on cold script load.
+    if n == 0 then
+        task.spawn(function()
+            for _ = 1, 5 do
+                task.wait(1)
+                if not getgenv()._ACCRunning then return end
+                local more = applyHooks()
+                if more > 0 then
+                    if _ACC.Debug then print("[ACC NotifyFilter] late-patched", more) end
+                    break
                 end
-                return false
             end
+        end)
+    end
 
-            local conn = R.Notify.OnClientEvent:Connect(function(...)
-                local args = { ... }
-                -- Notify payload is typically (text, ...) — check first 2 args
-                if shouldBlock(args[1]) or shouldBlock(args[2]) then
-                    return  -- swallow
+    -- Cleanup hook for re-runs (idempotent)
+    getgenv()._ACCNotifyRestore = function()
+        if not getgc then return end
+        for _, v in pairs(getgc(true)) do
+            if type(v) == "table" and rawget(v, "__ACC_NotifyHookApplied") then
+                local orig = rawget(v, "__ACC_NotifyOriginal")
+                if type(orig) == "function" then
+                    rawset(v, "CreateTopNotification", orig)
                 end
-                for _, fn in ipairs(origHandlers) do
-                    pcall(fn, ...)
-                end
-            end)
-            table.insert(_ACC._connections or {}, conn)
-            getgenv()._ACCNotifyConn = conn
+                rawset(v, "__ACC_NotifyHookApplied", nil)
+                rawset(v, "__ACC_NotifyOriginal", nil)
+            end
         end
     end
 end
@@ -896,8 +931,7 @@ end
 -- Programmatic deselect: the fork has no public SetValue/UpdateSelection
 -- API for dropdowns. The reliable workaround is ClearOptions + InsertOptions
 -- with the same options — the fork rebuilds the selection state, which
--- clears all checked items. Default = {} on re-insert makes "Select All"
--- followed by "Deselect All" work too.
+-- clears all checked items visually.
 -- params: { Name, Options, Multi=true|false, Default, OnChange(map_or_value) }
 -- flag:   string ID for MacLib.Options[flag]
 local function makeSearchableDropdown(section, params, flag)
@@ -923,14 +957,14 @@ local function makeSearchableDropdown(section, params, flag)
     if not isMulti then return dd end
 
     -- Rebuild dropdown options to force MacLib to reset internal selection
-    -- state. We also seed `stored` to a known value so subsequent Select All
-    -- works without needing the user to re-open the dropdown.
-    local function rebuildWith(sel_map)
-        if dd and dd.ClearOptions then
+    -- state. The fork doesn't expose SetValue/UpdateSelection on dropdowns,
+    -- but ClearOptions + InsertOptions effectively wipes selections.
+    local function rebuildOptions()
+        if dd and type(dd.ClearOptions) == "function" then
             pcall(function() dd:ClearOptions() end)
             task.wait(0.05)
         end
-        if dd and dd.InsertOptions then
+        if dd and type(dd.InsertOptions) == "function" then
             pcall(function() dd:InsertOptions(params.Options) end)
         end
     end
@@ -940,11 +974,6 @@ local function makeSearchableDropdown(section, params, flag)
         Callback = function()
             stored = {}
             for _, n in ipairs(params.Options) do stored[n] = true end
-            -- Rebuild to clear UI, then no easy way to "re-check" in UI,
-            -- so we only sync the script-side state. User sees options
-            -- visually unchecked but loops use the map. Tradeoff: simpler
-            -- and reliable. (Most users hit Select All once at startup and
-            -- never check the UI again.)
             params.OnChange(stored)
         end,
     })
@@ -953,7 +982,7 @@ local function makeSearchableDropdown(section, params, flag)
         Name = "Deselect All",
         Callback = function()
             stored = {}
-            rebuildWith(stored)   -- visually clears all checks
+            rebuildOptions()    -- visually clears all checks
             params.OnChange(stored)
         end,
     })
@@ -2147,10 +2176,11 @@ sec.GalBuyL:Button({
     end,
 })
 
--- ── Stock Boosts (new in update) ──────────────────────────────────────
--- Gallery:FireServer("Boost", "Stock", packName) — each pack has its own
--- stock boost level. Higher level = more items of that pack in market
--- refresh. Cap = GalleryConfig.Boosts.Stock.MaxLevel. Cost grows per pack.
+-- ── Stock Boosts (NEW) ────────────────────────────────────────────────────
+-- Gallery:FireServer("Boost", "Stock", packName)
+-- Increases how many of that pack appear in market refreshes.
+-- Cost: GalleryConfig.GetStockBoostCost(level+1, packName)
+-- Cap:  GalleryConfig.Boosts.Stock.MaxLevel
 sec.GalBuyL:Divider()
 sec.GalBuyL:Header({ Text = "Auto Boost Pack Stock" })
 
@@ -2270,12 +2300,12 @@ sec.GalMiscR:Button({
     Callback = function() Net.Fire(R.Gallery, "ShowRoll"); Notify("Toggled ShowRoll") end,
 })
 
--- ── Generic Boosts (new in update) ────────────────────────────────────
--- Gallery:FireServer("Boost", boostName) — non-stock boosts.
--- Found in GalleryConfig.Boosts: DiamondMultiplier, FigurineLuck
--- (Stock is handled separately on the Auto Buy panel.)
+-- ── Generic Boosts (NEW) ──────────────────────────────────────────────────
+-- Gallery:FireServer("Boost", boostName)
+-- GalleryConfig.Boosts has: DiamondMultiplier, FigurineLuck (and Stock,
+-- which is handled separately above).
 sec.GalMiscR:Divider()
-sec.GalMiscR:Header({ Text = "Auto Boost (DiamondMultiplier / Luck)" })
+sec.GalMiscR:Header({ Text = "Auto Boost (DiamondMult / Luck)" })
 
 local genericBoostStatus = sec.GalMiscR:Paragraph({ Header = "Status", Body = "Idle" })
 function _ACC.SetGenericBoostStatus(t)
@@ -2893,13 +2923,12 @@ sec.InfoL:Label({ Text = "Plot:   " .. Plot.GetName() })
 
 sec.CtrlR:Header({ Text = "Control" })
 
--- ── UI Size ───────────────────────────────────────────────────────────────
--- MacLib fork exposes Window:SetScale(0.5..2.0). Mobile auto-detect: if
--- the device has touch input AND no keyboard, start at 0.6. Desktop: 1.0.
+-- ── UI Size (mobile-friendly) ─────────────────────────────────────────────
+-- MacLib fork exposes Window:SetScale(0.5..2.0). Auto-detect mobile by
+-- TouchEnabled + no keyboard → start at 0.6, otherwise 1.0.
 local _isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local _defaultScale = _isMobile and 0.6 or 1.0
 
--- Apply default scale immediately so mobile users see fitted UI on load
 task.spawn(function()
     task.wait(0.1)
     if Window.SetScale then pcall(function() Window:SetScale(_defaultScale) end) end
@@ -5002,15 +5031,12 @@ end)
 -- // 21. LOOPS — SHOPS
 -- ============================================================================
 -- Auto Stock: only buy items in _ACC.SelectedStockItems, gated by Cash >= price.
--- After each successful buy we refresh stock so the next iteration won't try
--- to re-buy a sold-out item (which would trigger the server's "No Stock Left"
--- notification spam). We track local stock counts within a single cycle.
+-- Track local stock per cycle so we don't re-fire on sold-out items (server
+-- responds with "No Stock Left" toast — caused user-visible spam).
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoStock and R.GetStock and not mapEmpty(_ACC.SelectedStockItems) then
             Shops.RefreshStock()
-            -- Build local stock map so we can decrement as we buy without
-            -- needing a server round-trip each time.
             local localStock = {}
             for _, e in ipairs(Shops.StockSnap) do
                 localStock[e.id] = (localStock[e.id] or 0) + 1
@@ -5304,15 +5330,14 @@ local galleryStockCache = {}
 
 -- ── Auto Buy Packs ────────────────────────────────────────────────────────
 -- Loop strategy (rewritten):
---   1. Refresh stock via GetGalleryStock (skip cycle if server unavailable).
---   2. Build affordable+selected+in-stock+req-met list.
+--   1. Refresh stock via GetGalleryStock.
+--   2. Build affordable+selected+in-stock+req-met candidate list.
 --   3. Sort by chosen strategy (Highest/Lowest/Spread).
---   4. Buy ALL of them in this cycle — decrement stock locally after each
---      buy and recheck affordability. This fixes:
---        a) "buys very slowly" — previously bought 1 per 4s; now buys
---           everything affordable per pass.
---        b) "spams No Stock Left" — by tracking stock locally and only
---           firing when stock > 0, we don't send doomed requests anymore.
+--   4. Buy ALL candidates this pass — decrement local stock after each buy
+--      and re-read diamonds. This fixes:
+--        - "buys very slowly": was 1 buy / 4s, now buys everything available.
+--        - "spams No Stock Left": local stock counter prevents firing on
+--           sold-out tiers within the same cycle.
 --   5. Short pause (1.5s) before next polling cycle.
 task.spawn(function()
     while getgenv()._ACCRunning do
@@ -5357,15 +5382,13 @@ task.spawn(function()
                         ("⏸ Nothing affordable\n💎 %s | discovered %d")
                         :format(tostring(diamonds), nDisc))
                 else
-                    -- Apply priority strategy (only matters when budget is
-                    -- limited; otherwise we'll buy every candidate anyway)
+                    -- Apply priority strategy
                     local strat = _ACC.GalleryBuyStrategy or "Highest first"
                     if strat == "Highest first" then
                         table.sort(candidates, function(a, b) return a.price > b.price end)
                     elseif strat == "Lowest first" then
                         table.sort(candidates, function(a, b) return a.price < b.price end)
                     elseif strat == "Spread" then
-                        -- Round-robin starting position
                         _ACC._GallerySpreadIdxBuy = (_ACC._GallerySpreadIdxBuy + 1) % #candidates
                         local rot = _ACC._GallerySpreadIdxBuy
                         local rotated = {}
@@ -5376,31 +5399,23 @@ task.spawn(function()
                     end
 
                     -- Buy ALL affordable+in-stock candidates this pass.
-                    -- Each iteration:
-                    --   - re-check live diamonds (server replicates fast)
-                    --   - decrement local stock count after each fire
-                    --   - stop on first unaffordable pick
                     local bought = 0
                     local lastTier, lastPrice = "", 0
                     for _, c in ipairs(candidates) do
                         if not _ACC.AutoGalleryBuy and not force then break end
                         if not getgenv()._ACCRunning then break end
-                        if c.stock <= 0 then ;-- nothing to do for this tier
-                        else
-                            local liveDi = Data.Get("Diamonds") or 0
-                            -- buy as many as affordable AND in stock
-                            while c.stock > 0
-                                  and liveDi >= c.price
-                                  and (_ACC.AutoGalleryBuy or force)
-                                  and getgenv()._ACCRunning
-                            do
-                                Net.Fire(R.Gallery, "Buy", c.tier)
-                                bought = bought + 1
-                                lastTier, lastPrice = c.tier, c.price
-                                c.stock = c.stock - 1
-                                task.wait(0.25)
-                                liveDi = Data.Get("Diamonds") or 0
-                            end
+                        local liveDi = Data.Get("Diamonds") or 0
+                        while c.stock > 0
+                              and liveDi >= c.price
+                              and (_ACC.AutoGalleryBuy or force)
+                              and getgenv()._ACCRunning
+                        do
+                            Net.Fire(R.Gallery, "Buy", c.tier)
+                            bought = bought + 1
+                            lastTier, lastPrice = c.tier, c.price
+                            c.stock = c.stock - 1
+                            task.wait(0.25)
+                            liveDi = Data.Get("Diamonds") or 0
                         end
                     end
 
@@ -5673,12 +5688,10 @@ task.spawn(function()
     end
 end)
 
--- ── Auto Boost: per-pack Stock (new in update) ───────────────────────────
+-- ── Auto Boost: per-pack Stock (NEW) ─────────────────────────────────────
 -- Gallery:FireServer("Boost", "Stock", packName)
 -- Cost: GalleryConfig.GetStockBoostCost(level+1, packName)  [Diamonds]
 -- Cap:  GalleryConfig.Boosts.Stock.MaxLevel
--- One upgrade fired per inner iter (server validates), short delay,
--- live diamonds re-read between fires.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if not _ACC.AutoFigurineStockBoost
@@ -5688,20 +5701,21 @@ task.spawn(function()
            or not GalleryConfig.Boosts.Stock
            or type(GalleryConfig.GetStockBoostCost) ~= "function"
         then
-            _ACC.SetStockBoostStatus(_ACC.AutoFigurineStockBoost
-                and "⚠ Pick pack(s) first" or "Off")
+            if _ACC.SetStockBoostStatus then
+                _ACC.SetStockBoostStatus(_ACC.AutoFigurineStockBoost
+                    and "⚠ Pick pack(s) first" or "Off")
+            end
             task.wait(1)
         else
             local maxLv  = GalleryConfig.Boosts.Stock.MaxLevel or 50
             local boosts = Data.Get("FigurineBoosts") or {}
             local diLive = Data.Get("Diamonds") or 0
-            local fired, skipped, lastPack, lastLv = 0, 0, "", 0
+            local fired, lastPack, lastLv = 0, "", 0
 
             for pack in pairs(_ACC.SelectedStockBoostPacks) do
                 if not _ACC.AutoFigurineStockBoost or not getgenv()._ACCRunning then break end
                 local lv = boosts[pack] or 0
                 if lv < maxLv then
-                    -- compute next-level cost, guard against errors in formula
                     local okCost, cost = pcall(GalleryConfig.GetStockBoostCost, lv + 1, pack)
                     if okCost and type(cost) == "number" and diLive >= cost then
                         Net.FireRL(R.Gallery, "Gal:SB:" .. pack, 0.5,
@@ -5709,32 +5723,28 @@ task.spawn(function()
                         fired = fired + 1
                         lastPack, lastLv = pack, lv + 1
                         task.wait(0.35)
-                        -- refresh diamonds + boost map for next iter
                         diLive = Data.Get("Diamonds") or 0
                         boosts = Data.Get("FigurineBoosts") or {}
-                    else
-                        skipped = skipped + 1
                     end
                 end
             end
 
-            if fired > 0 then
-                _ACC.SetStockBoostStatus(
-                    ("⬆ %d boost(s) — last: %s Lv. %d\n💎 %s")
-                    :format(fired, lastPack, lastLv, tostring(diLive)))
-            elseif skipped > 0 then
-                _ACC.SetStockBoostStatus(
-                    ("⏸ Can't afford / max'd\n💎 %s"):format(tostring(diLive)))
-            else
-                _ACC.SetStockBoostStatus(
-                    ("⏸ All max'd\n💎 %s"):format(tostring(diLive)))
+            if _ACC.SetStockBoostStatus then
+                if fired > 0 then
+                    _ACC.SetStockBoostStatus(
+                        ("⬆ %d boost(s) — last: %s Lv. %d\n💎 %s")
+                        :format(fired, lastPack, lastLv, tostring(diLive)))
+                else
+                    _ACC.SetStockBoostStatus(
+                        ("⏸ Can't afford / max'd\n💎 %s"):format(tostring(diLive)))
+                end
             end
             task.wait(2)
         end
     end
 end)
 
--- ── Auto Boost: generic (DiamondMultiplier / FigurineLuck) ───────────────
+-- ── Auto Boost: generic (DiamondMultiplier / FigurineLuck) (NEW) ─────────
 -- Gallery:FireServer("Boost", boostName)
 -- Cost: GalleryConfig.GetBoostCost(level+1)  [Diamonds]
 -- Cap:  GalleryConfig.Boosts[boostName].MaxLevel
@@ -5746,8 +5756,10 @@ task.spawn(function()
            or not GalleryConfig.Boosts
            or type(GalleryConfig.GetBoostCost) ~= "function"
         then
-            _ACC.SetGenericBoostStatus(_ACC.AutoFigurineGenericBoost
-                and "⚠ Pick boost(s) first" or "Off")
+            if _ACC.SetGenericBoostStatus then
+                _ACC.SetGenericBoostStatus(_ACC.AutoFigurineGenericBoost
+                    and "⚠ Pick boost(s) first" or "Off")
+            end
             task.wait(1)
         else
             local boosts = Data.Get("FigurineBoosts") or {}
@@ -5773,13 +5785,15 @@ task.spawn(function()
                 end
             end
 
-            if fired > 0 then
-                _ACC.SetGenericBoostStatus(
-                    ("⬆ %d boost(s) — last: %s Lv. %d\n💎 %s")
-                    :format(fired, lastName, lastLv, tostring(diLive)))
-            else
-                _ACC.SetGenericBoostStatus(
-                    ("⏸ Can't afford / max'd\n💎 %s"):format(tostring(diLive)))
+            if _ACC.SetGenericBoostStatus then
+                if fired > 0 then
+                    _ACC.SetGenericBoostStatus(
+                        ("⬆ %d boost(s) — last: %s Lv. %d\n💎 %s")
+                        :format(fired, lastName, lastLv, tostring(diLive)))
+                else
+                    _ACC.SetGenericBoostStatus(
+                        ("⏸ Can't afford / max'd\n💎 %s"):format(tostring(diLive)))
+                end
             end
             task.wait(2)
         end
