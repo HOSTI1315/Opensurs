@@ -822,8 +822,8 @@ end
 -- // 10. LIBRARY SETUP
 local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac"))()
 local Window = MacLib:Window({
-    Title    = "Anime Card Collection",
-    Subtitle = "ACC Hub",
+    Title    = "Anime Card Collection | ApelHub",
+    Subtitle = "",
     Size     = UDim2.fromOffset(865, 650),
     DragStyle = 2,
     Keybind  = Enum.KeyCode.LeftControl,
@@ -832,7 +832,7 @@ local Window = MacLib:Window({
 getgenv()._ACCUI = Window
 
 local function Notify(text, lifetime)
-    Window:Notify({ Title = "ACC Hub v2", Description = text, Lifetime = lifetime or 3 })
+    Window:Notify({ Title = "ApelHub", Description = text, Lifetime = lifetime or 3 })
 end
 
 local tabGroups = { Main = Window:TabGroup() }
@@ -1581,10 +1581,6 @@ sec.ExpR:Button({
     Name = "Claim all ready expeditions",
     Callback = function() _ACC._ExpForceClaim = true end,
 })
-sec.ExpR:Button({
-    Name = "Print status (Output)",
-    Callback = function() _ACC._ExpPrintStatus = true end,
-})
 
 -- ============================================================================
 -- // 14. TAB: SHOPS
@@ -1742,10 +1738,12 @@ sec.StockL:Button({
         Shops.RefreshStock()
         local n = 0
         for _, e in ipairs(Shops.StockSnap) do
-            if _ACC.SelectedStockItems[e.id] then
-                if e.price and (Data.Get("Cash") or 0) >= e.price then
+            if _ACC.SelectedStockItems[e.id] and e.price then
+                local amt = tonumber(e.amount) or 1
+                while amt > 0 and (Data.Get("Cash") or 0) >= e.price do
                     Net.Fire(R.Stock, "Buy", e.id)
                     n = n + 1
+                    amt = amt - 1
                     task.wait(0.25)
                 end
             end
@@ -1760,10 +1758,14 @@ sec.StockL:Button({
         Shops.RefreshStock()
         local n = 0
         for _, e in ipairs(Shops.StockSnap) do
-            if e.price and (Data.Get("Cash") or 0) >= e.price then
-                Net.Fire(R.Stock, "Buy", e.id)
-                n = n + 1
-                task.wait(0.25)
+            if e.price then
+                local amt = tonumber(e.amount) or 1
+                while amt > 0 and (Data.Get("Cash") or 0) >= e.price do
+                    Net.Fire(R.Stock, "Buy", e.id)
+                    n = n + 1
+                    amt = amt - 1
+                    task.wait(0.25)
+                end
             end
         end
         Notify("Bought " .. n .. " items")
@@ -2074,28 +2076,54 @@ sec.CardsR:Button({ Name = "Unequip All packs", Callback = function() Net.Fire(R
 -- Replica: Diamonds, DiamondsPerSecond, Figurines (map), FigurinesDiscovered
 -- (array), FigurinesClaimed (array), FigurineUpgrades (map of map), etc.
 
--- Local helpers (config formulas mirror GalleryConfig at L59843+59859)
+-- Local helpers — config formulas mirror GalleryConfig (decompile: GetUpgradeCost
+-- / GetLevelupCost / Round5). The update changed both formulas; keep them in sync.
+local function round5(n)
+    return math.round((tonumber(n) or 0) / 5) * 5
+end
 local function galleryUpgradeCost(level, multiplier)
-    -- GetUpgradeCost(level+1, page); page is multiplier here
+    -- mirrors GalleryConfig.GetUpgradeCost(level, page); page is multiplier here.
+    -- Called with (currentLevel + 1, page) — same as the game's own UI.
     multiplier = multiplier or 1
     local v6
     if level == 0 then
         v6 = 250
     else
         local v8 = level * 250
-        local v9 = math.log(level, 2.3)
+        local v9 = math.log(level, 2)            -- update: log base 2 (was 2.3)
         local v10 = v8 + math.pow(level, v9)
-        v6 = math.round(v10)  -- approx Round5
+        v6 = round5(math.round(v10))             -- update: real Round5
     end
     return math.round(v6 * multiplier)
 end
 local function galleryLevelupCost(figMultiplier, figLevel)
-    return math.round(figMultiplier * (figLevel ^ 1.3) * 10)
+    -- mirrors GalleryConfig.GetLevelupCost(multiplier, level)
+    return round5(figMultiplier * (figLevel ^ 1.35) * 10)   -- update: ^1.35 (was 1.3) + Round5
 end
+-- GetGalleryStock:InvokeServer() returns (baseStock, overrideStock). Effective
+-- purchasable stock per box mirrors GalleryHandler.NewStock:
+--   overrideStock[box]                          when the server sent an override
+--   else baseStock[box] + FigurineBoosts[box]   (the Stock boost adds spawns)
+-- Reading only the 1st value (old behaviour) under-counted boosted stock and
+-- mis-fired Buy on sold-out tiers — the "No Stock Left" / "buys not all" bugs.
 local function galleryRefreshStock()
-    if not R.GetGalleryStock then return {} end
-    local items = Net.Invoke(R.GetGalleryStock)
-    return (type(items) == "table") and items or {}
+    if not R.GetGalleryStock or not getgenv()._ACCRunning then return {} end
+    local ok, base, override = pcall(function()
+        return R.GetGalleryStock:InvokeServer()
+    end)
+    if not ok or type(base) ~= "table" then return {} end
+    local boosts = Data.Get("FigurineBoosts") or {}
+    local eff = {}
+    for _, box in ipairs(Lists.GalleryPacks) do
+        local n
+        if type(override) == "table" and override[box] ~= nil then
+            n = tonumber(override[box])
+        else
+            n = (tonumber(base[box]) or 0) + (tonumber(boosts[box]) or 0)
+        end
+        eff[box] = n or 0
+    end
+    return eff
 end
 -- Mirror of GalleryHandler InitActiveFigurines: top 10 owned by Chance ASC
 local function galleryActiveSlots()
@@ -2161,18 +2189,16 @@ sec.GalBuyL:Button({
     Callback = function() _ACC._GalleryBuyForce = true end,
 })
 sec.GalBuyL:Button({
-    Name = "Refresh + print stock",
+    Name = "Show current stock",
     Callback = function()
         local stock = galleryRefreshStock()
         local lines = {}
         for _, k in ipairs(Lists.GalleryPacks) do
             table.insert(lines, ("%s: %d"):format(k, stock[k] or 0))
         end
-        local msg = ("Diamonds: %s\n%s"):format(
+        Notify(("Diamonds: %s\n%s"):format(
             tostring(Data.Get("Diamonds") or 0),
-            table.concat(lines, "  "))
-        Notify(msg)
-        print("[ACC Gallery] " .. msg)
+            table.concat(lines, "  ")), 6)
     end,
 })
 
@@ -2328,26 +2354,6 @@ sec.GalMiscR:Toggle({
     Callback = function(v) _ACC.AutoFigurineGenericBoost = v end,
 }, "AutoGenericBoostToggle")
 
-sec.GalMiscR:Button({
-    Name = "Print Gallery state",
-    Callback = function()
-        local d = Data.GetTable() or {}
-        local figs = d.Figurines or {}
-        local nFigs = 0; for _ in pairs(figs) do nFigs = nFigs + 1 end
-        local discovered = d.FigurinesDiscovered or {}
-        local claimed    = d.FigurinesClaimed or {}
-        local upgrades   = d.FigurineUpgrades or {}
-        local nUpg = 0; for _ in pairs(upgrades) do nUpg = nUpg + 1 end
-        local msg = ("[Gallery] Diamonds: %s | DPS: %s\n" ..
-                     "Figurines owned: %d | Discovered: %d | Claimed: %d\n" ..
-                     "Cards with upgrades: %d")
-                    :format(tostring(d.Diamonds or 0),
-                            tostring(d.DiamondsPerSecond or 0),
-                            nFigs, #discovered, #claimed, nUpg)
-        print(msg); Notify(msg)
-    end,
-})
-
 -- ============================================================================
 -- // 16. TAB: MISC
 -- ============================================================================
@@ -2367,7 +2373,7 @@ sec.WHR:Button({
             or (http and http.request)
         if not req or _ACC.WebhookURL == "" then Notify("No exec request fn / URL empty"); return end
         local body = HttpService:JSONEncode({
-            username = "ACC Hub",
+            username = "ApelHub",
             embeds = {{ title = "Test", description = "Webhook works", color = 0x57F287 }},
         })
         safe(req, { Url = _ACC.WebhookURL, Method = "POST",
@@ -2383,520 +2389,6 @@ sec.UtilL:Toggle({
     Callback = function(v) _ACC.AntiAFK = v end,
 }, "AntiAFKToggle")
 
-sec.UtilL:Divider()
-sec.UtilL:Header({ Text = "Debug Dump" })
-
--- ── Debug dump helpers ────────────────────────────────────────────────────
-local function dumpValue(v, depth, maxDepth, lines, indent)
-    depth = depth or 0
-    maxDepth = maxDepth or 4
-    local t = type(v)
-
-    if t == "nil" or t == "boolean" or t == "number" then
-        return tostring(v)
-    elseif t == "string" then
-        if #v > 120 then return ("%q...(+%d chars)"):format(v:sub(1, 120), #v - 120) end
-        return ("%q"):format(v)
-    elseif t == "function" then
-        return "<function>"
-    elseif t == "userdata" then
-        local ok, cls = pcall(function() return v.ClassName end)
-        if ok and cls then
-            local name = pcall(function() return v.Name end) and v.Name or "?"
-            return ("<Instance %s.%s>"):format(cls, tostring(name))
-        end
-        return "<userdata>"
-    elseif t == "table" then
-        if depth >= maxDepth then return "{...maxDepth}" end
-        local count = 0; for _ in pairs(v) do count = count + 1 end
-        if count == 0 then return "{}" end
-        local out = { "{" }
-        local i = 0
-        local maxKeys = 60
-        local keys = {}
-        for k in pairs(v) do table.insert(keys, k) end
-        table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
-        for _, k in ipairs(keys) do
-            i = i + 1
-            if i > maxKeys then
-                table.insert(out, indent .. "  ...+" .. (count - maxKeys) .. " more")
-                break
-            end
-            local keyStr = type(k) == "string" and k or ("[" .. tostring(k) .. "]")
-            local val = v[k]
-            local valStr = dumpValue(val, depth + 1, maxDepth, lines, indent .. "  ")
-            table.insert(out, indent .. "  " .. keyStr .. " = " .. valStr)
-        end
-        table.insert(out, indent .. "}")
-        return table.concat(out, "\n")
-    end
-    return ("<%s>"):format(t)
-end
-
-local function dumpInstanceTree(inst, depth, maxDepth, indent)
-    if not inst or depth > maxDepth then return "" end
-    local lines = {}
-    table.insert(lines, ("%s[%s] %s"):format(indent, inst.ClassName, inst.Name))
-    if depth < maxDepth then
-        for _, c in ipairs(inst:GetChildren()) do
-            table.insert(lines, dumpInstanceTree(c, depth + 1, maxDepth, indent .. "  "))
-        end
-    end
-    return table.concat(lines, "\n")
-end
-
-local function buildDebugDump(opts)
-    opts = opts or {}
-    local out = {}
-    local function add(s) table.insert(out, s or "") end
-
-    add("================================================================")
-    add("  ACC HUB  ―  DEBUG DUMP")
-    add("================================================================")
-    add("Time:        " .. os.date("%Y-%m-%d %H:%M:%S"))
-    add("PlaceId:     " .. tostring(game.PlaceId))
-    add("JobId:       " .. tostring(game.JobId))
-    add("Player:      " .. LocalPlayer.Name)
-    add("UserId:      " .. tostring(LocalPlayer.UserId))
-    add("Plot:        " .. Plot.GetName())
-    add("Hub running: " .. tostring(getgenv()._ACCRunning))
-    add("")
-
-    -- ── Replica data full dump ──
-    add("================================================================")
-    add("  REPLICA  (full Data tree, depth 4)")
-    add("================================================================")
-    local replica = Data.GetReplica()
-    if replica then
-        add("Replica.Id:   " .. tostring(replica.Id))
-        add("Replica.Class:" .. tostring(replica.Class or "?"))
-        add("Replica.Tags: " .. dumpValue(replica.Tags, 0, 2, nil, ""))
-        add("")
-        add("Replica.Data:")
-        add(dumpValue(replica.Data, 0, 4, nil, ""))
-    else
-        add("(Replica unavailable)")
-    end
-    add("")
-
-    -- ── All top-level data keys with type/size summary ──
-    add("================================================================")
-    add("  DATA KEYS  (top-level summary)")
-    add("================================================================")
-    local data = Data.GetTable()
-    if data then
-        local rows = {}
-        for k, v in pairs(data) do
-            local t = type(v)
-            local extra = ""
-            if t == "table" then
-                local sz = 0
-                for _ in pairs(v) do sz = sz + 1 end
-                extra = ("(%d keys)"):format(sz)
-            elseif t == "string" or t == "number" or t == "boolean" then
-                extra = "= " .. tostring(v):sub(1, 80)
-            end
-            table.insert(rows, ("  %-32s %-8s %s"):format(k, t, extra))
-        end
-        table.sort(rows)
-        add(table.concat(rows, "\n"))
-    end
-    add("")
-
-    -- ── RS.Remotes catalog ──
-    add("================================================================")
-    add("  REMOTES  (RS.Remotes children)")
-    add("================================================================")
-    if RemotesFolder then
-        for _, c in ipairs(RemotesFolder:GetChildren()) do
-            add(("  [%-22s] %s"):format(c.ClassName, c.Name))
-        end
-    end
-    add("")
-
-    -- ── Plot model tree (3 levels) ──
-    add("================================================================")
-    add("  PLOT MODEL TREE")
-    add("================================================================")
-    local pm = Plot.GetModel()
-    if pm then
-        add(dumpInstanceTree(pm, 0, 3, ""))
-    else
-        add("(plot model not found)")
-    end
-    add("")
-
-    -- ── Conveyor packs (active) ──
-    add("================================================================")
-    add("  CONVEYOR PACKS  (workspace.Client.Packs)")
-    add("================================================================")
-    local conv = Plot.GetConveyorPacks()
-    if conv then
-        for _, p in ipairs(conv:GetChildren()) do
-            local mesh = p:FindFirstChildOfClass("MeshPart")
-            local rarity = "Regular"
-            for _, c in ipairs(p:GetChildren()) do
-                if c:IsA("Folder") then rarity = c.Name; break end
-            end
-            local prc = mesh and mesh:FindFirstChild("ConveyorDisplay")
-                and mesh.ConveyorDisplay:FindFirstChild("Price")
-            local priceText = prc and prc.Text or "?"
-            add(("  %-30s family=%-12s rarity=%-10s price=%s"):format(
-                p.Name, mesh and mesh.Name or "?", rarity, priceText))
-        end
-    else
-        add("(workspace.Client.Packs not found)")
-    end
-    add("")
-
-    -- ── PlayerGui list ──
-    add("================================================================")
-    add("  PLAYERGUI ScreenGui list")
-    add("================================================================")
-    for _, gui in ipairs(PlayerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") or gui:IsA("Frame") then
-            add(("  [%-12s] %-30s enabled=%s"):format(gui.ClassName, gui.Name,
-                tostring(gui:IsA("ScreenGui") and gui.Enabled or "n/a")))
-        end
-    end
-    add("")
-
-    -- ── Workspace key paths (for ESP path verification) ──
-    add("================================================================")
-    add("  WORKSPACE KEY PATHS (ESP target paths)")
-    add("================================================================")
-    local function probePath(...)
-        local path = { ... }
-        local node = Workspace
-        local trail = "workspace"
-        for _, name in ipairs(path) do
-            if not node then return ("  workspace%s → MISSING at %s"):format(
-                table.concat(path, "."):gsub("^", "."), name) end
-            node = node:FindFirstChild(name)
-            trail = trail .. "." .. name
-        end
-        if not node then
-            return ("  %s → not found"):format(trail)
-        end
-        local count = #node:GetChildren()
-        return ("  %s → [%s] (%d children)"):format(trail, node.ClassName, count)
-    end
-    add(probePath("Items", "Tokens", "Server"))
-    add(probePath("Items", "Misc", "Collectables"))
-    add(probePath("Map", "StarTrial", "Dungeon", "EnemySpawns"))
-    add(probePath("Plots"))
-    add(probePath("Client", "Packs"))
-    add("")
-
-    -- ── Active hooks ──
-    add("================================================================")
-    add("  ACTIVE HOOKS")
-    add("================================================================")
-    local hcount = 0
-    for _, h in pairs(getgenv()._ACCHooks or {}) do
-        hcount = hcount + 1
-        add(("  hooked: %s  (original type: %s)"):format(
-            h.name, type(h.original)))
-    end
-    if hcount == 0 then add("  (none)") end
-    add("")
-
-    -- ── Module load status ──
-    add("================================================================")
-    add("  CONFIG MODULES")
-    add("================================================================")
-    local mods = { "CardConfig", "TowerConfig", "PetConfig", "StarTrialConfig",
-        "PackExchange", "Consumables", "Upgrades", "Grades", "RaidConfig",
-        "ProductConfig", "Mutations", "Stock", "ImageConfig", "Relics",
-        "Merchant", "ClanConfig", "DragonBalls", "ExpeditionConfig",
-        "WeatherConfig", "QuestConfig", "RebirthConfig" }
-    for _, n in ipairs(mods) do
-        local m = Config[n]
-        if m then
-            local sz = 0
-            for _ in pairs(m) do sz = sz + 1 end
-            add(("  %-22s LOADED  (%d keys)"):format(n, sz))
-        else
-            add(("  %-22s NOT LOADED"):format(n))
-        end
-    end
-    add("")
-
-    -- ── Achievements / Expeditions / DragonBalls full sample ──
-    add("================================================================")
-    add("  SAMPLE STRUCTURES (for hub schema verification)")
-    add("================================================================")
-    local function sampleStruct(label, getter)
-        add("--- " .. label .. " ---")
-        local v = getter()
-        if v == nil then
-            add("  (nil)")
-        elseif type(v) ~= "table" then
-            add("  type=" .. type(v) .. " value=" .. tostring(v))
-        else
-            -- show first 3 entries with full structure
-            local i = 0
-            for k, info in pairs(v) do
-                i = i + 1
-                if i > 3 then add(("  ... +%d more entries"):format(0)); break end
-                add(("  [%s] = %s"):format(tostring(k),
-                    dumpValue(info, 0, 3, nil, "  ")))
-            end
-            if i == 0 then add("  (empty table)") end
-        end
-        add("")
-    end
-    sampleStruct("Achievements", function() return Data.Get("Achievements") end)
-    sampleStruct("Expeditions",  function() return Data.Get("Expeditions") end)
-    sampleStruct("DragonBalls",  function() return Data.Get("DragonBalls") end)
-    sampleStruct("Cards (1st)",  function() return Data.Get("Cards") end)
-    sampleStruct("Pets (1st)",   function() return Data.Get("Pets") end)
-    sampleStruct("Armor",        function() return Data.Get("Armor") end)
-    sampleStruct("Settings",     function() return Data.Get("Settings") end)
-    sampleStruct("Stats",        function() return Data.Get("Stats") end)
-    sampleStruct("Upgrades",     function() return Data.Get("Upgrades") end)
-    sampleStruct("StarUpgrades", function() return Data.Get("StarUpgrades") end)
-
-    -- ── full Packs (inventory) and PacksPlaced (full) ──
-    add("--- Data.Packs FULL (inventory keys → counts) ---")
-    local pp = Data.Get("Packs") or {}
-    local packKeys = {}
-    for k, v in pairs(pp) do table.insert(packKeys, { k = k, v = v }) end
-    table.sort(packKeys, function(a, b) return tostring(a.k) < tostring(b.k) end)
-    for _, e in ipairs(packKeys) do
-        add(("  [%-40s] = %s"):format(tostring(e.k), tostring(e.v)))
-    end
-    if #packKeys == 0 then add("  (empty)") end
-    add("")
-
-    add("--- Data.PacksPlaced FULL ---")
-    local placed = Data.Get("PacksPlaced") or {}
-    local placedKeys = {}
-    for k, info in pairs(placed) do table.insert(placedKeys, { k = k, info = info }) end
-    table.sort(placedKeys, function(a, b) return tostring(a.k) < tostring(b.k) end)
-    for _, e in ipairs(placedKeys) do
-        add(("  [%s] = %s"):format(tostring(e.k), dumpValue(e.info, 0, 2, nil, "  ")))
-    end
-    if #placedKeys == 0 then add("  (empty)") end
-    add("")
-    add("--- Data.Hotbar ---")
-    add(dumpValue(Data.Get("Hotbar"), 0, 2, nil, "  "))
-    add("")
-
-    -- ── InvokeServer probes (carefully, only on remotes that should be safe) ──
-    if opts.invokeRemotes then
-        add("================================================================")
-        add("  REMOTE INVOKE PROBES")
-        add("================================================================")
-        local function probe(name, remote, ...)
-            local args = { ... }
-            local started = os.clock()
-            local ret = Net.Invoke(remote, table.unpack(args))
-            local dur = os.clock() - started
-            add(("--- %s (%dms) ---"):format(name, dur * 1000))
-            if ret == nil then
-                add("  result: nil")
-            else
-                add("  result type: " .. type(ret))
-                add(dumpValue(ret, 0, 3, nil, "  "))
-            end
-            add("")
-        end
-        if R.GetStock          then probe("GetStock",          R.GetStock) end
-        if R.GetMerchantItems  then probe("GetMerchantItems",  R.GetMerchantItems) end
-        if R.GetClanInfo       then probe("GetClanInfo:GetClanData", R.GetClanInfo, "GetClanData") end
-    end
-
-    -- ── Last 50 hub state values ──
-    add("================================================================")
-    add("  HUB STATE  (_ACC.*)")
-    add("================================================================")
-    local stKeys = {}
-    for k, v in pairs(_ACC) do
-        if not k:match("^_") and not k:match("^[A-Z][a-z]+Loaded") then
-            table.insert(stKeys, k)
-        end
-    end
-    table.sort(stKeys)
-    for _, k in ipairs(stKeys) do
-        add(("  %-30s = %s"):format(k, dumpValue(_ACC[k], 0, 2, nil, "  ")))
-    end
-    add("")
-
-    add("================================================================")
-    add("  END OF DUMP")
-    add("================================================================")
-
-    return table.concat(out, "\n")
-end
-
--- detect setclipboard variants across executors
-local function setClip(text)
-    local fn = setclipboard or set_clipboard or toclipboard
-        or (Clipboard and Clipboard.set)
-        or (syn and syn.write_clipboard)
-    if fn then
-        local ok = pcall(fn, text)
-        return ok
-    end
-    return false
-end
-
-sec.UtilL:Button({
-    Name = "Copy Raid Debug",
-    Callback = function()
-        task.spawn(function()
-            local out = {}
-            local function L(s) table.insert(out, tostring(s or "")) end
-            local function H(t) L(""); L(("──── %s ────"):format(t)) end
-
-            local _tr = _ACC._tryRequire
-            local UIC = RS:FindFirstChild("Client")
-                        and RS.Client:FindFirstChild("UI")
-            local raidH  = UIC and _tr and _tr(UIC:FindFirstChild("RaidHandler"))
-            local stH    = UIC and _tr and _tr(UIC:FindFirstChild("StarTrialHandler"))
-            local stockH = UIC and _tr and _tr(UIC:FindFirstChild("StockHandler"))
-
-            L("ACC RAID DEBUG  " .. os.date("%H:%M:%S"))
-            L("ServerTimeNow: " .. tostring(workspace:GetServerTimeNow()))
-
-            H("HUB STATE")
-            for _, f in ipairs({ "AutoRaid", "RaidMode", "RaidSpecific", "RaidEquipBest" }) do
-                L(("%s = %s"):format(f, tostring(_ACC[f])))
-            end
-
-            H("HANDLERS")
-            L("RaidHandler: " .. tostring(raidH ~= nil))
-            L("StarTrialHandler: " .. tostring(stH ~= nil))
-            if raidH then
-                L(("RaidActive=%s  InRaid=%s  InBattle=%s")
-                    :format(tostring(raidH.RaidActive),
-                            tostring(raidH.InRaid),
-                            tostring(raidH.InBattle)))
-                L(("RaidStart=%s  Boss=%s")
-                    :format(tostring(raidH.RaidStart), tostring(raidH.RaidBossCard)))
-            end
-            if stH then L("StarTrial.InTrial=" .. tostring(stH.InTrial)) end
-            if stockH then
-                L("StockHandler.RaidTimeLeft=" .. tostring(stockH.RaidTimeLeft)
-                  .. " (seconds until next raid cycle)")
-            end
-
-            -- Multipliers module check
-            local multCheck
-            pcall(function()
-                local m = RS:FindFirstChild("Modules") and RS.Modules:FindFirstChild("Shared")
-                          and RS.Modules.Shared:FindFirstChild("Multipliers")
-                multCheck = m and _tr and _tr(m)
-            end)
-            L("Multipliers module: " .. (multCheck and "loaded" or "MISSING"))
-
-            H("WORKSPACE")
-            L("RaidVoteTime=" .. tostring(workspace:GetAttribute("RaidVoteTime")))
-            L("RaidStart="    .. tostring(workspace:GetAttribute("RaidStart")))
-
-            H("DETECTED RAID")
-            local actualRaid
-            if raidH and raidH.RaidBossCard and CardConfig and CardConfig.Packs then
-                for packName, packData in pairs(CardConfig.Packs) do
-                    if type(packData) == "table" and type(packData.List) == "table"
-                       and packData.List[raidH.RaidBossCard]
-                    then actualRaid = packName; break end
-                end
-            end
-            L("From RaidBossCard: " .. tostring(actualRaid))
-            local rsf = PlayerGui:FindFirstChild("RaidSelect")
-            rsf = rsf and rsf:FindFirstChild("Frame")
-            local pn = rsf and rsf:FindFirstChild("PackName")
-            L("RaidSelect.Frame.PackName.Text = " .. tostring(pn and pn.Text))
-
-            H("REPLICA")
-            local rep = Data.GetReplica()
-            local d = rep and rep.Data
-            if d then
-                L("RaidJoinTime=" .. tostring(d.RaidJoinTime))
-                if d.RaidJoinTime then
-                    local since = workspace:GetServerTimeNow() - d.RaidJoinTime
-                    L(("sinceJoin=%.0fs  cooldown=%ss  passed=%s")
-                        :format(since,
-                                tostring((RaidConfig and RaidConfig.RaidJoinWait) or 600),
-                                tostring(since >= ((RaidConfig and RaidConfig.RaidJoinWait) or 600))))
-                end
-                L("MangaTokens=" .. tostring(d.MangaTokens))
-                if d.RaidsDefeated and type(d.RaidsDefeated.Packs) == "table" then
-                    local lines = {}
-                    for k, v in pairs(d.RaidsDefeated.Packs) do
-                        table.insert(lines, k .. "=" .. tostring(v))
-                    end
-                    L("RaidsDefeated.Packs: " .. table.concat(lines, ", "))
-                end
-            else
-                L("Replica unavailable")
-            end
-
-            H("RAID PACKS — OWNED CARDS PER ACTIVE RAID")
-            local cc
-            pcall(function()
-                local m = RS.Modules.Config.Core:FindFirstChild("CardConfig")
-                cc = m and _tr and _tr(m)
-            end)
-            local rep_ = Data.GetReplica()
-            local ownedCards = (rep_ and rep_.Data and rep_.Data.Cards) or {}
-            if cc and cc.Packs and RaidConfig and RaidConfig.ActiveRaids then
-                for _, raidName in ipairs(RaidConfig.ActiveRaids) do
-                    local pack = cc.Packs[raidName]
-                    if pack and type(pack.List) == "table" then
-                        local count = 0
-                        local samples = {}
-                        for cardName in pairs(pack.List) do
-                            if ownedCards[cardName] then
-                                count = count + 1
-                                if #samples < 3 then table.insert(samples, cardName) end
-                            end
-                        end
-                        L(("  %s: %d owned (%s)"):format(raidName, count,
-                            table.concat(samples, ", ") .. (count > 3 and "..." or "")))
-                    else
-                        L(("  %s: <pack data missing>"):format(raidName))
-                    end
-                end
-            end
-
-            H("WHY NOT JOINED")
-            -- mirror the loop's gating logic
-            if not _ACC.AutoRaid then
-                L("AutoRaid is OFF")
-            elseif not raidH then
-                L("RaidHandler not loaded")
-            elseif not raidH.RaidActive then
-                L("Raid not active yet (waiting for cycle)")
-            elseif _ACC.RaidMode == "Specific raid"
-                   and _ACC.RaidSpecific
-                   and actualRaid ~= _ACC.RaidSpecific then
-                L(("Specific mode: active=%s ≠ specific=%s")
-                    :format(tostring(actualRaid), tostring(_ACC.RaidSpecific)))
-            elseif d and d.RaidJoinTime then
-                local since = workspace:GetServerTimeNow() - d.RaidJoinTime
-                local jw = (RaidConfig and RaidConfig.RaidJoinWait) or 600
-                if since < jw then
-                    L(("Cooldown: %ds left"):format(jw - since))
-                elseif raidH.InRaid then
-                    L("InRaid=true (already inside, just waiting)")
-                else
-                    L("All checks PASS — should be joining. If not, look for runtime errors.")
-                end
-            end
-
-            local text = table.concat(out, "\n")
-            local copied = false
-            if setclipboard then pcall(setclipboard, text); copied = true
-            elseif toclipboard then pcall(toclipboard, text); copied = true end
-            print(text)
-            Notify(copied and ("Copied %d chars"):format(#text)
-                          or "Copy from console manually", 5)
-        end)
-    end,
-})
 
 sec.VisR:Header({ Text = "Visual" })
 sec.VisR:Toggle({
@@ -2916,7 +2408,7 @@ sec.VisR:Button({
 -- // 17. TAB: SETTINGS
 -- ============================================================================
 sec.InfoL:Header({ Text = "Info" })
-sec.InfoL:Label({ Text = "ACC Hub v1.0" })
+sec.InfoL:Label({ Text = "Anime Card Collection | ApelHub" })
 sec.InfoL:Label({ Text = "Player: " .. LocalPlayer.Name })
 sec.InfoL:Label({ Text = "UserId: " .. tostring(LocalPlayer.UserId) })
 sec.InfoL:Label({ Text = "Plot:   " .. Plot.GetName() })
@@ -2950,21 +2442,6 @@ sec.CtrlR:Button({
     Name = "Unload Hub",
     Callback = function()
         if getgenv()._ACCCleanup then getgenv()._ACCCleanup() end
-    end,
-})
-sec.CtrlR:Toggle({
-    Name = "Debug logs",
-    Default = false,
-    Callback = function(v) _ACC.Debug = v end,
-}, "DebugToggle")
-sec.CtrlR:Button({
-    Name = "Print state",
-    Callback = function()
-        for k, v in pairs(_ACC) do
-            if not k:match("^_") then
-                print(("[ACC] %s = %s"):format(k, tostring(v)))
-            end
-        end
     end,
 })
 
@@ -4925,47 +4402,13 @@ local function expPickPack(selectedPacks, replica, total)
     return candidates[1]
 end
 
--- Human-readable status snapshot
-local function expBuildStatus()
-    local exps  = Data.Get("Expeditions") or {}
-    local total = Data.Get("TotalExpeditions") or 0
-    local daily = Data.Get("DailyExpeditions") or 0
-    local maxDailyBuff = (ExpConfig and ExpConfig.GetBuff and ExpConfig.GetBuff("MoreExpeditions", total)) or 0
-    local maxDaily = 4 + maxDailyBuff
-    local hasGP = ((Data.Get("GamepassValues") or {}).ExtraMarine == true)
-    local now = workspace:GetServerTimeNow()
-
-    local lines = {}
-    table.insert(lines, ("[Expedition] daily %d/%d, total lifetime %d"):format(daily, maxDaily, total))
-    for _, npc in ipairs({ "1", "2", "3", "4" }) do
-        local locked = not expNPCUnlocked(npc, total, hasGP)
-        local info = exps[npc]
-        local state
-        if locked then
-            state = "locked"
-        elseif type(info) == "table" and info.Start and info.Duration then
-            local left = info.Duration - (now - info.Start)
-            if left <= 0 then state = ("READY (%s)"):format(tostring(info.Reward or "?"))
-            else state = ("busy %ds left (%s)"):format(math.ceil(left), tostring(info.Reward or "?")) end
-        else
-            state = "free"
-        end
-        table.insert(lines, ("  Marine %s — %s"):format(npc, state))
-    end
-    return table.concat(lines, "\n")
-end
-
 -- ── Send / Claim loop ─────────────────────────────────────────────────────
 task.spawn(function()
     while getgenv()._ACCRunning do
         local doSend  = _ACC.AutoExpSend  or _ACC._ExpForceSend
         local doClaim = _ACC.AutoExpClaim or _ACC._ExpForceClaim
-        local doPrint = _ACC._ExpPrintStatus
         _ACC._ExpForceSend  = false
         _ACC._ExpForceClaim = false
-        _ACC._ExpPrintStatus = false
-
-        if doPrint then print(expBuildStatus()) end
 
         if doSend or doClaim then
             local exps   = Data.Get("Expeditions") or {}
@@ -5031,26 +4474,28 @@ end)
 -- // 21. LOOPS — SHOPS
 -- ============================================================================
 -- Auto Stock: only buy items in _ACC.SelectedStockItems, gated by Cash >= price.
--- Track local stock per cycle so we don't re-fire on sold-out items (server
--- responds with "No Stock Left" toast — caused user-visible spam).
+-- Uses server-reported e.amount from GetStock (set during Shops.RefreshStock).
+-- Won't fire on sold-out tiers — that was the cause of "No Stock Left" spam.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoStock and R.GetStock and not mapEmpty(_ACC.SelectedStockItems) then
             Shops.RefreshStock()
-            local localStock = {}
-            for _, e in ipairs(Shops.StockSnap) do
-                localStock[e.id] = (localStock[e.id] or 0) + 1
-            end
             for _, e in ipairs(Shops.StockSnap) do
                 if not _ACC.AutoStock or not getgenv()._ACCRunning then break end
-                if _ACC.SelectedStockItems[e.id]
-                   and e.price
-                   and (localStock[e.id] or 0) > 0
-                   and (Data.Get("Cash") or 0) >= e.price
-                then
-                    Net.FireRL(R.Stock, "Stock:Buy:" .. e.id, 0.6, "Buy", e.id)
-                    localStock[e.id] = (localStock[e.id] or 1) - 1
-                    task.wait(0.4)
+                if _ACC.SelectedStockItems[e.id] and e.price then
+                    -- e.amount is the server's current count for this item.
+                    -- Buy the whole stack this pass; never fire on a sold-out
+                    -- item (Amount 0) — that is what triggers "No Stock Left".
+                    -- Fallback 1 only if the Amount field is ever missing.
+                    local amt = tonumber(e.amount) or 1
+                    while amt > 0
+                          and (Data.Get("Cash") or 0) >= e.price
+                          and _ACC.AutoStock and getgenv()._ACCRunning
+                    do
+                        Net.Fire(R.Stock, "Buy", e.id)
+                        amt = amt - 1
+                        task.wait(0.4)
+                    end
                 end
             end
         end
@@ -5909,7 +5354,7 @@ local function rareSend(title, desc, color)
     local req = (syn and syn.request) or http_request or request or (http and http.request)
     if not req then return end
     local body = HttpService:JSONEncode({
-        username = "ACC Hub — " .. LocalPlayer.Name,
+        username = "ApelHub — " .. LocalPlayer.Name,
         embeds = {{ title = title, description = desc, color = color,
                     footer = { text = ("plot %s"):format(Plot.GetName()) } }},
     })
