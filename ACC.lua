@@ -800,8 +800,25 @@ do
         table.sort(list, function(a, b) return a.layout > b.layout end)
     end
 
-    -- Gallery: pack tiers ordered cheap→expensive (used in priorities)
-    Lists.GalleryPacks = { "Basic", "Common", "Uncommon", "Rare", "Epic", "Legendary" }
+    -- Gallery: pack tiers ordered cheap→expensive (used in priorities).
+    -- Built dynamically from the live GalleryConfig.FigurinePacks so game
+    -- updates that add new tiers (e.g. "Eternal") are picked up without a
+    -- script change. Falls back to the known set if the config is missing.
+    Lists.GalleryPacks = {}
+    if GalleryConfig and type(GalleryConfig.FigurinePacks) == "table" then
+        for tier in pairs(GalleryConfig.FigurinePacks) do
+            table.insert(Lists.GalleryPacks, tier)
+        end
+        table.sort(Lists.GalleryPacks, function(a, b)
+            local pa = (GalleryConfig.FigurinePacks[a] or {}).Price or 0
+            local pb = (GalleryConfig.FigurinePacks[b] or {}).Price or 0
+            if pa ~= pb then return pa < pb end
+            return a < b
+        end)
+    end
+    if #Lists.GalleryPacks == 0 then
+        Lists.GalleryPacks = { "Basic", "Common", "Uncommon", "Rare", "Epic", "Legendary", "Eternal" }
+    end
     -- Gallery upgrade kinds (per-card buffs)
     Lists.GalleryUpgradeKinds = { "Cash", "XP", "Health", "Damage" }
     -- Gallery figurines: list every figurine sorted by Multiplier ASC (so
@@ -958,12 +975,18 @@ local function makeSearchableDropdown(section, params, flag)
     if not isMulti then return dd end
 
     -- Rebuild dropdown options to force MacLib to reset internal selection
-    -- state. The fork doesn't expose SetValue/UpdateSelection on dropdowns,
-    -- but ClearOptions + InsertOptions effectively wipes selections.
+    -- state. ClearOptions wipes the internal Selected list but NOT the
+    -- DropdownFunctions.Value field — for a multi dropdown Value still
+    -- references the old selection table. InsertOptions then restores
+    -- Value visually, re-checking everything. So we must null Value out
+    -- between the two calls, otherwise "Deselect All" re-selects all.
     local function rebuildOptions()
         if dd and type(dd.ClearOptions) == "function" then
             pcall(function() dd:ClearOptions() end)
             task.wait(0.05)
+        end
+        if dd then
+            pcall(function() dd.Value = nil end)
         end
         if dd and type(dd.InsertOptions) == "function" then
             pcall(function() dd:InsertOptions(params.Options) end)
@@ -2894,12 +2917,62 @@ task.spawn(function()
         return params
     end
 
+    -- ── avoid zones: machine boxes whose ProximityPrompt UI annoys players ─
+    -- AutoCollect / CollectTen / DoubleXP / GradeMachine / OpenAllPacks /
+    -- UpgradeMachine sit under plot.Misc, and GalleryPortal under plot.Map —
+    -- all on the SAME platform where packs are placed. Teleporting a cell
+    -- center next to one pops its prompt UI. We build a circular keep-out
+    -- zone per machine (= prompt activation distance + margin) and reject any
+    -- placement cell that lands inside.
+    local AVOID_MISC = {
+        "AutoCollect", "CollectTen", "DoubleXP",
+        "GradeMachine", "OpenAllPacks", "UpgradeMachine",
+    }
+    local function buildAvoidZones(plotModel)
+        local zones = {}
+        if not plotModel then return zones end
+        local function add(inst)
+            if not inst then return end
+            local ok, pivot = pcall(function() return inst:GetPivot() end)
+            if not ok or not pivot then return end
+            -- radius = prompt activation distance (default 10) + character/footprint margin
+            local activation = 10
+            for _, d in ipairs(inst:GetDescendants()) do
+                if d:IsA("ProximityPrompt") then
+                    activation = math.max(activation, d.MaxActivationDistance)
+                end
+            end
+            table.insert(zones, { pos = pivot.Position, radius = activation + 6 })
+        end
+        local misc = plotModel:FindFirstChild("Misc")
+        if misc then
+            for _, name in ipairs(AVOID_MISC) do
+                add(misc:FindFirstChild(name))
+            end
+        end
+        local map = plotModel:FindFirstChild("Map")
+        if map then
+            add(map:FindFirstChild("GalleryPortal"))
+        end
+        return zones
+    end
+
+    -- ── pack spacing ─────────────────────────────────────────────────────
+    -- The footprint overlap test only stops packs from physically clipping —
+    -- it still lets them sit edge-to-edge in a cramped cluster. Packs are
+    -- rectangular, so to keep cards out of a "milli" gap we just probe each
+    -- placement cell with an INFLATED footprint (pack size + PACK_SPACING on
+    -- every side) — pretend the pack is bigger and the existing rectangular
+    -- overlap test does the rest. No circular zones needed.
+    -- PACK_SPACING is the clear gap, in studs, kept between pack edges.
+    local PACK_SPACING = 10
+
     -- ── grid-aware free cell picker ──────────────────────────────────────
     -- Walks an N×N grid over the floor; for each cell asks
     --   "if I dropped a pack with `footprint` centred here, would it overlap
     --    any tagged PlayerPack?"  Returns cell positions sorted by distance
     --   from `hintPos` (so we tend to fill close to the player first).
-    local function findFreeCells(floor, footprint, params, hintPos, gridN)
+    local function findFreeCells(floor, footprint, params, hintPos, gridN, avoidZones)
         gridN = gridN or 18
         local cellSizeX = floor.Size.X / gridN
         local cellSizeZ = floor.Size.Z / gridN
@@ -2917,8 +2990,21 @@ task.spawn(function()
                 local hits = workspace:GetPartBoundsInBox(cf, footprint, params)
                 if #hits == 0 then
                     local pos  = cf.Position
-                    local dist = hintPos and (pos - hintPos).Magnitude or 0
-                    table.insert(cells, { pos = pos, dist = dist })
+                    -- reject cells inside a machine keep-out zone (XZ distance)
+                    local blocked = false
+                    if avoidZones then
+                        for _, z in ipairs(avoidZones) do
+                            local dx, dz = pos.X - z.pos.X, pos.Z - z.pos.Z
+                            if (dx * dx + dz * dz) <= (z.radius * z.radius) then
+                                blocked = true
+                                break
+                            end
+                        end
+                    end
+                    if not blocked then
+                        local dist = hintPos and (pos - hintPos).Magnitude or 0
+                        table.insert(cells, { pos = pos, dist = dist })
+                    end
                 end
             end
         end
@@ -2950,6 +3036,9 @@ task.spawn(function()
                 local floor = plotModel and plotModel:FindFirstChild("Misc")
                               and plotModel.Misc:FindFirstChild("Floor")
                 if not floor then return end
+
+                -- keep-out zones around plot machines (prompt UI is annoying)
+                local avoidZones = buildAvoidZones(plotModel)
 
                 -- build candidate list (unique pack types user selected, owned > 0)
                 local toPlace = {}
@@ -3026,9 +3115,14 @@ task.spawn(function()
                               and getgenv()._ACCRunning
                         do
                             local params = buildPlayerPackParams()
-                            local cells  = findFreeCells(floor, footprint, params,
+                            -- probe with an inflated footprint so placed packs
+                            -- keep a PACK_SPACING gap instead of sitting flush
+                            local probeFootprint = footprint
+                                + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
+                            local cells  = findFreeCells(floor, probeFootprint, params,
                                                          hrp.Position,
-                                                         gridDensities[densityIdx])
+                                                         gridDensities[densityIdx],
+                                                         avoidZones)
                             if #cells == 0 then
                                 -- try a finer grid before giving up — coarse cells
                                 -- might be "blocked" by a single pack edge
