@@ -2897,15 +2897,21 @@ task.spawn(function()
         return entry.isBundle and BUNDLE_FOOTPRINT or PACK_FOOTPRINT
     end
 
-    -- ── overlap params: only PlayerPack-tagged BaseParts ─────────────────
-    local function buildPlayerPackParams()
+    -- ── overlap params: only PlayerPack-tagged BaseParts on OUR plot ─────
+    -- Scoped to plotModel, NOT the whole workspace. On a populated server the
+    -- global PlayerPack tag set grows into the hundreds (every player's packs),
+    -- and every GetPartBoundsInBox probe runs against that filter list — so the
+    -- cost crept up the longer the session ran. Restricting the filter to our
+    -- own plot keeps it flat. This was the "lags more over time" cause.
+    local function buildPlayerPackParams(plotModel)
+        local scope = plotModel or workspace
         local params = OverlapParams.new()
         params.FilterType                 = Enum.RaycastFilterType.Include
         params.MaxParts                   = 200
         params.RespectCanCollide          = false
         local list = {}
         for _, inst in ipairs(CollectionService:GetTagged("PlayerPack")) do
-            if inst:IsDescendantOf(workspace) then
+            if inst:IsDescendantOf(scope) then
                 if inst:IsA("Model") then
                     if inst.PrimaryPart then table.insert(list, inst.PrimaryPart) end
                 elseif inst:IsA("BasePart") then
@@ -2965,7 +2971,7 @@ task.spawn(function()
     -- every side) — pretend the pack is bigger and the existing rectangular
     -- overlap test does the rest. No circular zones needed.
     -- PACK_SPACING is the clear gap, in studs, kept between pack edges.
-    local PACK_SPACING = 10
+    local PACK_SPACING = 1
 
     -- ── grid-aware free cell picker ──────────────────────────────────────
     -- Walks an N×N grid over the floor; for each cell asks
@@ -3007,6 +3013,8 @@ task.spawn(function()
                     end
                 end
             end
+            -- yield every few rows so a dense (32×32) scan doesn't freeze a frame
+            if ix % 8 == 0 then task.wait() end
         end
         table.sort(cells, function(a, b) return a.dist < b.dist end)
         return cells
@@ -3109,16 +3117,19 @@ task.spawn(function()
                         local gridDensities = { 18, 24, 32 }   -- escalate if no cells found
                         local densityIdx    = 1
 
+                        -- Overlap filter is built ONCE per pack stack and
+                        -- rebuilt only after a successful Place (a new pack
+                        -- appeared) — not on every probe. Probe footprint is a
+                        -- per-entry constant, so hoist it out of the loop too.
+                        local params = buildPlayerPackParams(plotModel)
+                        local probeFootprint = footprint
+                            + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
+
                         while stillOwned > 0
                               and free >= entry.slotCost
                               and _ACC.AutoPlaceEnabled
                               and getgenv()._ACCRunning
                         do
-                            local params = buildPlayerPackParams()
-                            -- probe with an inflated footprint so placed packs
-                            -- keep a PACK_SPACING gap instead of sitting flush
-                            local probeFootprint = footprint
-                                + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
                             local cells  = findFreeCells(floor, probeFootprint, params,
                                                          hrp.Position,
                                                          gridDensities[densityIdx],
@@ -3169,6 +3180,9 @@ task.spawn(function()
                                     -- refetch inventory — other features may consume packs
                                     ownedPacks  = rd2 and rd2.Packs or ownedPacks
                                     stillOwned  = ownedPacks[entry.server] or 0
+                                    -- a new pack now exists on the plot — rebuild
+                                    -- the overlap filter so the next probe sees it
+                                    params      = buildPlayerPackParams(plotModel)
                                 else
                                     consecFails = consecFails + 1
                                     if consecFails >= FAIL_LIMIT then
