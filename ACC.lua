@@ -131,9 +131,10 @@ _ACC.DragonBallAuto        = false
 _ACC.DBWishType            = "Cash"  -- which wish to make when 7 balls collected
 
 -- ── Inventory ─────────────────────────────────────────────────────────────
-_ACC.PEMethod              = "Upgrade"
+_ACC.PEMethod              = "Upgrade"   -- Upgrade / Downgrade / Bundle / Unbundle
 _ACC.PESelectedPacks       = {}   -- map
 _ACC.PEFromRarity          = "Regular"
+_ACC.PEBatch               = "1x" -- Bundle/Unbundle batch size: 1x / 10x / 100x
 _ACC.PEEnabled             = false
 _ACC.SelectedPotions       = {}   -- map
 _ACC.AutoCraftPotions      = false
@@ -1939,7 +1940,7 @@ sec.DBR:Toggle({
 sec.PEL:Header({ Text = "Pack Exchange" })
 sec.PEL:Dropdown({
     Name = "Method",
-    Options = { "Upgrade", "Downgrade" },
+    Options = { "Upgrade", "Downgrade", "Bundle", "Unbundle" },
     Default = "Upgrade",
     Callback = function(v) _ACC.PEMethod = v end,
 }, "PEMethodDropdown")
@@ -1951,11 +1952,17 @@ sec.PEL:Dropdown({
     Callback = function(selected) _ACC.PESelectedPacks = mapFromMulti(selected) end,
 }, "PEPacksDropdown")
 sec.PEL:Dropdown({
-    Name = "From rarity",
+    Name = "Rarity (from / to bundle)",
     Options = Lists.Rarities,
     Default = "Regular",
     Callback = function(v) _ACC.PEFromRarity = v end,
 }, "PEFromDropdown")
+sec.PEL:Dropdown({
+    Name = "Bundle/Unbundle batch",
+    Options = { "1x", "10x", "100x" },
+    Default = "1x",
+    Callback = function(v) _ACC.PEBatch = v end,
+}, "PEBatchDropdown")
 sec.PEL:Toggle({
     Name = "Run Pack Exchange",
     Default = false,
@@ -4617,15 +4624,62 @@ end)
 -- // 22. LOOPS — INVENTORY
 -- ============================================================================
 
--- Pack Exchange (chains via PackExchange config, no hardcoded "Gold")
+-- Pack Exchange — Upgrade / Downgrade / Bundle / Unbundle (all via R.Card).
+-- All 4 actions accept an optional batch arg "10"/"100" (verified by RemoteSpy
+-- + decompile L31571-31896). Costs (Cash), mirrored from the decompiled UI:
+--   upgrade   1x = ceil(packPrice * Requirement * mut)
+--   downgrade 1x = ceil( ceil(packPrice * Requirement * mut) * 0.25 )
+--   bundle    1x = ceil( round(packPrice * mut * 2) )
+--   unbundle  1x = ceil( round(packPrice * mut * 2) * 0.5 )
+--   10x / 100x = the 1x unit cost × 10 / × 100 (rounded).
+-- Pack requirement per fire:
+--   upgrade   = round(Requirement * batchMult)   of the source rarity
+--   downgrade = batchMult                        of the source rarity
+--   bundle    = 5 * batchMult                    of the source rarity
+--   unbundle  = 1 * batchMult                    of the "<f>-<r>-Bundle" key
 task.spawn(function()
+    local PE_BATCH = {
+        ["1x"]   = { arg = nil,   mult = 1   },
+        ["10x"]  = { arg = "10",  mult = 10  },
+        ["100x"] = { arg = "100", mult = 100 },
+    }
+
+    local function peMutMult(rarity)
+        if not rarity or rarity == "Regular" then return 1 end
+        if Mutations and Mutations[rarity] and Mutations[rarity].PriceMultiplier then
+            return Mutations[rarity].PriceMultiplier
+        end
+        return 1
+    end
+    -- PackExchange[rarity].Requirement — packs needed to make one of `rarity`
+    local function peReq(rarity)
+        if PackExchange and type(PackExchange[rarity]) == "table" then
+            return PackExchange[rarity].Requirement
+        end
+        return nil
+    end
+    -- round(packPrice * mut * 2) — bundle/unbundle price base before ceil
+    local function peBundleBase(family, rarity)
+        local p = CardConfig and CardConfig.Packs and CardConfig.Packs[family]
+        if not (p and p.Price) then return nil end
+        return math.round(p.Price * peMutMult(rarity) * 2)
+    end
+
     while getgenv()._ACCRunning do
         if _ACC.PEEnabled and not mapEmpty(_ACC.PESelectedPacks) then
             local method = _ACC.PEMethod or "Upgrade"
             local from   = _ACC.PEFromRarity or "Regular"
+            local batch  = PE_BATCH[_ACC.PEBatch or "1x"] or PE_BATCH["1x"]
+            local cash   = Data.Get("Cash") or 0
+
             for _, packName in iterMap(_ACC.PESelectedPacks) do
                 if not _ACC.PEEnabled or not getgenv()._ACCRunning then break end
+                local price = CardConfig and CardConfig.Packs
+                              and CardConfig.Packs[packName]
+                              and CardConfig.Packs[packName].Price
+
                 if method == "Upgrade" then
+                    -- find target rarity from chain: PackExchange[target].Pack == from
                     local target
                     if PackExchange then
                         for rarity, cfg in pairs(PackExchange) do
@@ -4637,18 +4691,81 @@ task.spawn(function()
                             end
                         end
                     end
-                    if target then
-                        Net.FireRL(R.Card, "PE:Up:" .. packName, 0.5,
-                                   "Exchange", packName, from, target)
+                    local req = target and peReq(target)
+                    if target and req and price then
+                        local srcKey  = (from == "Regular") and packName
+                                                              or (packName .. "-" .. from)
+                        local owned   = tonumber(Data.Get("Packs", srcKey)) or 0
+                        local needPk  = math.round(req * batch.mult)
+                        local cost    = math.ceil(price * req * peMutMult(target)) * batch.mult
+                        if owned >= needPk and cash >= cost then
+                            if batch.arg then
+                                Net.FireRL(R.Card, "PE:Up:" .. srcKey, 0.5,
+                                           "Exchange", packName, from, target, batch.arg)
+                            else
+                                Net.FireRL(R.Card, "PE:Up:" .. srcKey, 0.5,
+                                           "Exchange", packName, from, target)
+                            end
+                        end
                     end
-                else
-                    local downCfg = PackExchange and PackExchange.Downgrade
-                                      and PackExchange.Downgrade[from]
-                    if downCfg and downCfg.Pack then
-                        Net.FireRL(R.Card, "PE:Dn:" .. packName, 0.5,
-                                   "Downgrade", packName, from)
+
+                elseif method == "Downgrade" then
+                    -- `from` is the rarity being downgraded (cannot be Regular)
+                    local req = peReq(from)
+                    if from ~= "Regular" and req and price then
+                        local srcKey = packName .. "-" .. from
+                        local owned  = tonumber(Data.Get("Packs", srcKey)) or 0
+                        local unit   = math.ceil(math.ceil(price * req * peMutMult(from)) * 0.25)
+                        local cost   = unit * batch.mult
+                        if owned >= batch.mult and cash >= cost then
+                            if batch.arg then
+                                Net.FireRL(R.Card, "PE:Dn:" .. srcKey, 0.5,
+                                           "Downgrade", packName, from, batch.arg)
+                            else
+                                Net.FireRL(R.Card, "PE:Dn:" .. srcKey, 0.5,
+                                           "Downgrade", packName, from)
+                            end
+                        end
+                    end
+
+                elseif method == "Bundle" then
+                    -- 5 / 50 / 500 packs of source rarity → 1 / 10 / 100 bundles
+                    local srcKey = (from == "Regular") and packName
+                                                         or (packName .. "-" .. from)
+                    local owned  = tonumber(Data.Get("Packs", srcKey)) or 0
+                    local base   = peBundleBase(packName, from)
+                    if base and owned >= (5 * batch.mult) then
+                        local cost = math.ceil(base) * batch.mult
+                        if cash >= cost then
+                            if batch.arg then
+                                Net.FireRL(R.Card, "PE:Bn:" .. srcKey, 0.5,
+                                           "Bundle", packName, from, batch.arg)
+                            else
+                                Net.FireRL(R.Card, "PE:Bn:" .. srcKey, 0.5,
+                                           "Bundle", packName, from)
+                            end
+                        end
+                    end
+
+                elseif method == "Unbundle" then
+                    -- 1 / 10 / 100 bundles → packs
+                    local bundleKey = packName .. "-" .. from .. "-Bundle"
+                    local owned     = tonumber(Data.Get("Packs", bundleKey)) or 0
+                    local base      = peBundleBase(packName, from)
+                    if base and owned >= batch.mult then
+                        local cost = math.ceil(base * 0.5) * batch.mult
+                        if cash >= cost then
+                            if batch.arg then
+                                Net.FireRL(R.Card, "PE:Un:" .. bundleKey, 0.5,
+                                           "Unbundle", bundleKey, batch.arg)
+                            else
+                                Net.FireRL(R.Card, "PE:Un:" .. bundleKey, 0.5,
+                                           "Unbundle", bundleKey)
+                            end
+                        end
                     end
                 end
+
                 task.wait(0.4)
             end
         end
