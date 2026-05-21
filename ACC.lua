@@ -136,7 +136,8 @@ _ACC.PESelectedPacks       = {}   -- map
 _ACC.PEFromRarity          = "Regular"
 _ACC.PEBatch               = "1x" -- Bundle/Unbundle batch size: 1x / 10x / 100x
 _ACC.PEEnabled             = false
-_ACC.SelectedPotions       = {}   -- map
+_ACC.SelectedCraftPotions  = {}   -- map — potions to auto-craft
+_ACC.SelectedUsePotions    = {}   -- map — potions to auto-drink / apply via buttons
 _ACC.AutoCraftPotions      = false
 _ACC.AutoUsePotions        = false
 _ACC.SelectedUpgrades      = {}   -- map
@@ -147,6 +148,9 @@ _ACC.RelicCraft            = false
 _ACC.WebhookURL            = ""
 _ACC.WebhookDrops          = false
 _ACC.WebhookRaid           = false
+_ACC.WebhookDBComplete     = false   -- DragonBalls reached 7/7
+_ACC.WebhookPetMutation    = false   -- Pet got Rainbow/Diamond/Emerald/Void mutation
+_ACC.WebhookCardMax        = false   -- Card reached ⭐5
 _ACC.AntiAFK               = true
 _ACC.HideHUDPopups         = false
 
@@ -946,10 +950,16 @@ end
 -- our own. This helper adds Select All / Deselect All buttons next to a
 -- multi-dropdown.
 --
--- Programmatic deselect: the fork has no public SetValue/UpdateSelection
--- API for dropdowns. The reliable workaround is ClearOptions + InsertOptions
--- with the same options — the fork rebuilds the selection state, which
--- clears all checked items visually.
+-- Select All uses the fork's public DropdownFunctions:UpdateSelection(arr)
+-- which syncs Selected/Checkmarks/Value AND fires the dropdown Callback
+-- (so our wrapper-OnChange writes through to backend state).
+--
+-- Deselect All can't use UpdateSelection({}) — the fork's isAnyValid check
+-- rejects empty selections and stashes them as pending. So deselect goes
+-- via ClearOptions + null Value + InsertOptions, which rebuilds the widget
+-- with no items checked. The null between Clear and Insert is required:
+-- DropdownFunctions.Value survives ClearOptions, and InsertOptions would
+-- otherwise visually re-check everything from the old Value.
 -- params: { Name, Options, Multi=true|false, Default, OnChange(map_or_value) }
 -- flag:   string ID for MacLib.Options[flag]
 local function makeSearchableDropdown(section, params, flag)
@@ -996,6 +1006,17 @@ local function makeSearchableDropdown(section, params, flag)
     section:Button({
         Name = "Select All",
         Callback = function()
+            -- Public fork API: updates Selected/Checkmarks/Value AND fires
+            -- our wrapper Callback (which calls params.OnChange). Without
+            -- this, MacLib's internal Selected stays empty — subsequent
+            -- user clicks then *add* the clicked option (since it wasn't
+            -- "selected") and overwrite backend to that single item.
+            if dd and type(dd.UpdateSelection) == "function"
+               and params.Options and #params.Options > 0 then
+                local ok = pcall(function() dd:UpdateSelection(params.Options) end)
+                if ok then return end
+            end
+            -- Fallback: backend-only update (UI will be out of sync).
             stored = {}
             for _, n in ipairs(params.Options) do stored[n] = true end
             params.OnChange(stored)
@@ -1020,10 +1041,21 @@ end
 -- ── Auto Buy ──────────────────────────────────────────────────────────────
 sec.AFBuyL:Header({ Text = "Auto Buy" })
 
+-- AutoBuyPacks options: PacksFull + DragonBall. DragonBall spawns on the
+-- conveyor as a separate "Dragon Wish Ball" model (Assets.Misc.DragonBalls.<n>)
+-- with Primary Part (not MeshPart) and the model name = full conveyor ID
+-- like "<plot>-<spawn>-DragonBall-<ballNum>". Conveyor loop has a dedicated
+-- branch for it (matched by name pattern), keyed off this "DragonBall" entry.
+-- Not added to Lists.PacksFull globally because Auto Place / Expedition /
+-- Pack Exchange would mis-handle it.
+local AutoBuyPacksOptions = {}
+for _, n in ipairs(Lists.PacksFull) do table.insert(AutoBuyPacksOptions, n) end
+table.insert(AutoBuyPacksOptions, "DragonBall")
+
 makeSearchableDropdown(sec.AFBuyL, {
     Name = "Packs",
     Multi = true,
-    Options = Lists.PacksFull,
+    Options = AutoBuyPacksOptions,
     OnChange = function(map) _ACC.SelectedBuyPacks = map end,
 }, "AutoBuyPacksDropdown")
 
@@ -1641,8 +1673,11 @@ local function stockPrice(family, mut)
 end
 
 -- Refresh = pull current stock from server. Result is a map id -> entry where
--- entry.price is the cash cost (computed locally). DragonBall is excluded;
--- it has its own dedicated button.
+-- entry.price is the cash cost (computed locally).
+-- DragonBall is special: server returns a boolean (true = already purchased
+-- this cycle). When it's absent/false, the ball is buyable — but its price
+-- isn't in CardConfig.Packs, so we leave price=nil and the auto-buy loop
+-- fires once without a client-side cash check (server validates).
 function Shops.RefreshStock()
     Shops.StockSnap = {}
     if not R.GetStock then return Shops.StockSnap end
@@ -1650,7 +1685,15 @@ function Shops.RefreshStock()
     if type(items) ~= "table" then return Shops.StockSnap end
     for id, info in pairs(items) do
         if id == "DragonBall" then
-            -- skip — handled by its own button
+            if info ~= true then
+                table.insert(Shops.StockSnap, {
+                    id = "DragonBall",
+                    family = "DragonBall",
+                    mut = nil,
+                    price = nil,
+                    amount = 1,
+                })
+            end
         elseif type(info) == "table" then
             local family, mut = unpack(tostring(id):split("-"))
             local price = stockPrice(family, mut)
@@ -2017,19 +2060,29 @@ sec.PetsR:Button({
     end,
 })
 
-sec.PotL:Header({ Text = "Potions" })
-sec.PotL:Dropdown({
-    Name = "Potions",
+-- Potions: craft and use are independent selections so a user can craft one
+-- set of potions while draining a different one (e.g. craft Mutation,
+-- drink Luck from a stockpile).
+sec.PotL:Header({ Text = "Potions — Craft" })
+makeSearchableDropdown(sec.PotL, {
+    Name = "Potions to craft",
     Multi = true,
-    Search = true,
     Options = Lists.Potions,
-    Callback = function(selected) _ACC.SelectedPotions = mapFromMulti(selected) end,
-}, "PotionsDropdown")
+    OnChange = function(map) _ACC.SelectedCraftPotions = map end,
+}, "CraftPotionsDropdown")
 sec.PotL:Toggle({
     Name = "Auto Craft (when affordable)",
     Default = false,
     Callback = function(v) _ACC.AutoCraftPotions = v end,
 }, "AutoCraftPotionsToggle")
+
+sec.PotL:Header({ Text = "Potions — Use" })
+makeSearchableDropdown(sec.PotL, {
+    Name = "Potions to use",
+    Multi = true,
+    Options = Lists.Potions,
+    OnChange = function(map) _ACC.SelectedUsePotions = map end,
+}, "UsePotionsDropdown")
 sec.PotL:Toggle({
     Name = "Auto Use (drain all selected, then 5s recheck)",
     Default = false,
@@ -2039,7 +2092,7 @@ sec.PotL:Button({
     Name = "Apply x1 (selected)",
     Callback = function()
         task.spawn(function()
-            for _, p in iterMap(_ACC.SelectedPotions) do
+            for _, p in iterMap(_ACC.SelectedUsePotions) do
                 Net.FireRL(R.Potion, "Pot:Apply:" .. p, 0.4, "Apply", p)
                 task.wait(0.3)
             end
@@ -2050,7 +2103,7 @@ sec.PotL:Button({
     Name = "Apply x10",
     Callback = function()
         task.spawn(function()
-            for _, p in iterMap(_ACC.SelectedPotions) do
+            for _, p in iterMap(_ACC.SelectedUsePotions) do
                 Net.FireRL(R.Potion, "Pot:Apply10:" .. p, 0.4, "Apply10", p)
                 task.wait(0.3)
             end
@@ -2394,21 +2447,31 @@ sec.WHR:Input({
     Placeholder = "https://discord.com/api/webhooks/...",
     Callback = function(v) _ACC.WebhookURL = v or "" end,
 }, "WebhookURLInput")
-sec.WHR:Toggle({ Name = "Notify rare drops",  Default = false, Callback = function(v) _ACC.WebhookDrops = v end }, "WebhookDropsToggle")
-sec.WHR:Toggle({ Name = "Notify raid wins",   Default = false, Callback = function(v) _ACC.WebhookRaid  = v end }, "WebhookRaidToggle")
+sec.WHR:Toggle({ Name = "Notify rare drops (new cards/pets/achievements + card mutations)",
+                 Default = false, Callback = function(v) _ACC.WebhookDrops = v end },
+               "WebhookDropsToggle")
+sec.WHR:Toggle({ Name = "Notify raid wins",
+                 Default = false, Callback = function(v) _ACC.WebhookRaid = v end },
+               "WebhookRaidToggle")
+sec.WHR:Toggle({ Name = "Notify DragonBall set 7/7 (ready to wish)",
+                 Default = false, Callback = function(v) _ACC.WebhookDBComplete = v end },
+               "WebhookDBCompleteToggle")
+sec.WHR:Toggle({ Name = "Notify pet mutations (Rainbow / Diamond / Emerald / Void)",
+                 Default = false, Callback = function(v) _ACC.WebhookPetMutation = v end },
+               "WebhookPetMutationToggle")
+sec.WHR:Toggle({ Name = "Notify card reaches ⭐5",
+                 Default = false, Callback = function(v) _ACC.WebhookCardMax = v end },
+               "WebhookCardMaxToggle")
 sec.WHR:Button({
     Name = "Test webhook",
     Callback = function()
-        local req = (syn and syn.request) or http_request or request
-            or (http and http.request)
-        if not req or _ACC.WebhookURL == "" then Notify("No exec request fn / URL empty"); return end
-        local body = HttpService:JSONEncode({
-            username = "ApelHub",
-            embeds = {{ title = "Test", description = "Webhook works", color = 0x57F287 }},
-        })
-        safe(req, { Url = _ACC.WebhookURL, Method = "POST",
-                    Headers = { ["Content-Type"] = "application/json" }, Body = body })
-        Notify("Sent test webhook")
+        if _ACC.WebhookURL == "" then Notify("URL empty"); return end
+        if _ACC._WebhookTest then
+            _ACC._WebhookTest()
+            Notify("Sent test webhook")
+        else
+            Notify("Webhook helper not ready")
+        end
     end,
 })
 
@@ -2528,29 +2591,49 @@ task.spawn(function()
 
                 for _, pack in ipairs(conveyor:GetChildren()) do
                     if not _ACC.AutoBuyEnabled or not getgenv()._ACCRunning then break end
-                    local mesh = pack:FindFirstChildOfClass("MeshPart")
-                    if mesh then
-                        local family = mesh.Name
-                        local rarity = "Regular"
-                        for _, c in ipairs(pack:GetChildren()) do
-                            if c:IsA("Folder") then rarity = c.Name; break end
-                        end
-                        local key = (rarity == "Regular") and family
-                                                          or (family .. " " .. rarity)
 
-                        if mapHas(_ACC.SelectedBuyPacks, key) then
-                            local priceLbl = mesh:FindFirstChild("ConveyorDisplay")
-                                             and mesh.ConveyorDisplay:FindFirstChild("Price")
+                    -- DragonBall: SpawnDragonBall (decompile) parents its model
+                    -- to workspace.Client.Packs, names it "<plot>-<spawn>-DragonBall-<n>",
+                    -- and uses a Primary Part (not MeshPart) + DragonBallDisplay.
+                    -- Match by name pattern so we don't depend on the part class.
+                    if pack:IsA("Model") and tostring(pack.Name):find("-DragonBall-") then
+                        if mapHas(_ACC.SelectedBuyPacks, "DragonBall") then
+                            local prim = pack.PrimaryPart or pack:FindFirstChild("Primary")
+                            local priceLbl = prim
+                                             and prim:FindFirstChild("DragonBallDisplay")
+                                             and prim.DragonBallDisplay:FindFirstChild("Price")
                             local price = priceLbl and parseAbbreviated(priceLbl.Text) or 0
+                            if price == 0 or price <= cash then
+                                Net.Fire(R.Card, "BuyPack", pack.Name)
+                                if price > 0 then cash = cash - price end
+                                task.wait(0.15)
+                            end
+                        end
+                    else
+                        local mesh = pack:FindFirstChildOfClass("MeshPart")
+                        if mesh then
+                            local family = mesh.Name
+                            local rarity = "Regular"
+                            for _, c in ipairs(pack:GetChildren()) do
+                                if c:IsA("Folder") then rarity = c.Name; break end
+                            end
+                            local key = (rarity == "Regular") and family
+                                                              or (family .. " " .. rarity)
 
-                            if price > 0 and price <= cash then
-                                Net.Fire(R.Card, "BuyPack", pack.Name)
-                                cash = cash - price            -- optimistic
-                                task.wait(0.15)
-                            elseif price == 0 then
-                                -- couldn't read price — fall back to firing once
-                                Net.Fire(R.Card, "BuyPack", pack.Name)
-                                task.wait(0.15)
+                            if mapHas(_ACC.SelectedBuyPacks, key) then
+                                local priceLbl = mesh:FindFirstChild("ConveyorDisplay")
+                                                 and mesh.ConveyorDisplay:FindFirstChild("Price")
+                                local price = priceLbl and parseAbbreviated(priceLbl.Text) or 0
+
+                                if price > 0 and price <= cash then
+                                    Net.Fire(R.Card, "BuyPack", pack.Name)
+                                    cash = cash - price            -- optimistic
+                                    task.wait(0.15)
+                                elseif price == 0 then
+                                    -- couldn't read price — fall back to firing once
+                                    Net.Fire(R.Card, "BuyPack", pack.Name)
+                                    task.wait(0.15)
+                                end
                             end
                         end
                     end
@@ -4591,25 +4674,32 @@ end)
 -- Auto Stock: only buy items in _ACC.SelectedStockItems, gated by Cash >= price.
 -- Uses server-reported e.amount from GetStock (set during Shops.RefreshStock).
 -- Won't fire on sold-out tiers — that was the cause of "No Stock Left" spam.
+-- DragonBall has no client-known price (server returns boolean availability);
+-- when selected and available, fire once and let the server validate cash.
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoStock and R.GetStock and not mapEmpty(_ACC.SelectedStockItems) then
             Shops.RefreshStock()
             for _, e in ipairs(Shops.StockSnap) do
                 if not _ACC.AutoStock or not getgenv()._ACCRunning then break end
-                if _ACC.SelectedStockItems[e.id] and e.price then
-                    -- e.amount is the server's current count for this item.
-                    -- Buy the whole stack this pass; never fire on a sold-out
-                    -- item (Amount 0) — that is what triggers "No Stock Left".
-                    -- Fallback 1 only if the Amount field is ever missing.
-                    local amt = tonumber(e.amount) or 1
-                    while amt > 0
-                          and (Data.Get("Cash") or 0) >= e.price
-                          and _ACC.AutoStock and getgenv()._ACCRunning
-                    do
-                        Net.Fire(R.Stock, "Buy", e.id)
-                        amt = amt - 1
+                if _ACC.SelectedStockItems[e.id] then
+                    if e.id == "DragonBall" then
+                        Net.Fire(R.Stock, "Buy", "DragonBall")
                         task.wait(0.4)
+                    elseif e.price then
+                        -- e.amount is the server's current count for this item.
+                        -- Buy the whole stack this pass; never fire on a sold-out
+                        -- item (Amount 0) — that is what triggers "No Stock Left".
+                        -- Fallback 1 only if the Amount field is ever missing.
+                        local amt = tonumber(e.amount) or 1
+                        while amt > 0
+                              and (Data.Get("Cash") or 0) >= e.price
+                              and _ACC.AutoStock and getgenv()._ACCRunning
+                        do
+                            Net.Fire(R.Stock, "Buy", e.id)
+                            amt = amt - 1
+                            task.wait(0.4)
+                        end
                     end
                 end
             end
@@ -4884,9 +4974,9 @@ end)
 -- Auto Craft Potions
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.AutoCraftPotions and not mapEmpty(_ACC.SelectedPotions) then
+        if _ACC.AutoCraftPotions and not mapEmpty(_ACC.SelectedCraftPotions) then
             local replicaPacks = (Data.GetTable() or {}).Packs or {}
-            for _, p in iterMap(_ACC.SelectedPotions) do
+            for _, p in iterMap(_ACC.SelectedCraftPotions) do
                 if not _ACC.AutoCraftPotions or not getgenv()._ACCRunning then break end
                 local cfg = Consumables and Consumables[p]
                 if cfg and type(cfg.Requirements) == "table" then
@@ -4918,8 +5008,8 @@ end)
 -- one in the same category — desired behaviour for stockpile burns.
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.AutoUsePotions and not mapEmpty(_ACC.SelectedPotions) then
-            for _, potionName in iterMap(_ACC.SelectedPotions) do
+        if _ACC.AutoUsePotions and not mapEmpty(_ACC.SelectedUsePotions) then
+            for _, potionName in iterMap(_ACC.SelectedUsePotions) do
                 if not _ACC.AutoUsePotions or not getgenv()._ACCRunning then break end
                 local owned = Data.Get("Consumables") or {}
                 local count = tonumber(owned[potionName]) or 0
@@ -5566,51 +5656,197 @@ do
     end))
 end
 
--- ── Webhook: rare drop notifications ──────────────────────────────────────
--- Triggers on:
---   • New card discovered           (CardsDiscovered grew)
---   • New pet claimed               (PetsClaimed grew)
---   • New achievement               (Achievements grew)
---   • Diamond / Rainbow mutation    (Cards.<name>.Mutation went up to rare)
---   • Raid completion               (RaidsDefeated grew)
-local lastMutations = {}
-local function rareSend(title, desc, color)
-    if not _ACC.WebhookDrops or _ACC.WebhookURL == "" then return end
+-- ── Webhook: rare event notifications ────────────────────────────────────
+-- Compact-embed style: author = player, color sidebar, title + description,
+-- inline fields with stats, footer = plot, ISO timestamp (Discord renders
+-- it as relative — "5 min ago"). One unified sender; each event picks its
+-- own emoji/color/fields.
+--
+-- Triggers (each gated by its own toggle):
+--   _ACC.WebhookDrops      → new card/pet/achievement, rare card mutations
+--   _ACC.WebhookRaid       → raid completion
+--   _ACC.WebhookDBComplete → DragonBalls reached 7/7
+--   _ACC.WebhookPetMutation→ pet got Rainbow/Diamond/Emerald/Void mutation
+--   _ACC.WebhookCardMax    → card hit ⭐5
+local lastMutations    = {}   -- Cards.<name>.Mutation
+local lastPetMutations = {}   -- Pets.<name>.Mutation
+local lastCardStars    = {}   -- Cards.<name>.Star
+local dbCompleteFired  = false
+
+local MUTATION_COLOR = {
+    Rainbow = 0xFF06EA,
+    Diamond = 0x10D7FF,
+    Emerald = 0x2ECC71,
+    Void    = 0x9B59B6,
+    Gold    = 0xF1C40F,
+}
+
+local function sendEmbed(opts)
+    -- opts: { emoji, title, desc?, color, fields? }
+    if _ACC.WebhookURL == "" then return end
     local req = (syn and syn.request) or http_request or request or (http and http.request)
     if not req then return end
+
+    local displayName = LocalPlayer.DisplayName ~= nil
+                        and LocalPlayer.DisplayName ~= LocalPlayer.Name
+                        and (LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")")
+                        or LocalPlayer.Name
+
     local body = HttpService:JSONEncode({
-        username = "ApelHub — " .. LocalPlayer.Name,
-        embeds = {{ title = title, description = desc, color = color,
-                    footer = { text = ("plot %s"):format(Plot.GetName()) } }},
+        username = "ApelHub",
+        embeds = {{
+            author = { name = displayName },
+            title = (opts.emoji and (opts.emoji .. "  ") or "") .. tostring(opts.title or ""),
+            description = opts.desc,
+            color = opts.color,
+            fields = opts.fields,
+            footer = { text = ("plot %s • ACC"):format(Plot.GetName()) },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        }},
     })
     safe(req, { Url = _ACC.WebhookURL, Method = "POST",
                 Headers = { ["Content-Type"] = "application/json" }, Body = body })
 end
 
+-- Test-webhook handler used by the Misc tab button.
+_ACC._WebhookTest = function()
+    sendEmbed({
+        emoji = "🔧",
+        title = "Test webhook",
+        desc  = "If you see this, the URL works.",
+        color = 0x57F287,
+        fields = {
+            { name = "Status", value = "OK",      inline = true },
+            { name = "Hub",    value = "ApelHub", inline = true },
+        },
+    })
+end
+
 Data.OnChange(function(opType, path, newVal, oldVal)
-    if not _ACC.WebhookDrops or _ACC.WebhookURL == "" then return end
+    if _ACC.WebhookURL == "" then return end
 
-    if opType == "ArrayInsert" then
-        if path[1] == "CardsDiscovered" then rareSend("📚 New card discovered", tostring(newVal), 0xFEE75C) end
-        if path[1] == "PetsClaimed"     then rareSend("🐾 New pet claimed",      tostring(newVal), 0x57F287) end
-        if path[1] == "Achievements"    then rareSend("🏆 Achievement unlocked", tostring(newVal), 0xEB459E) end
-    end
-
-    -- Mutation upgrade (Diamond / Rainbow only — common ones not worth pinging)
-    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Mutation" then
-        local cardName = path[2]
-        local prev = lastMutations[cardName]
-        lastMutations[cardName] = newVal
-        if newVal == "Diamond" or newVal == "Rainbow" then
-            local color = newVal == "Rainbow" and 0xFF06EA or 0x10D7FF
-            rareSend("✨ " .. newVal .. " mutation",
-                     ("**%s** → %s"):format(tostring(cardName), newVal), color)
+    -- ── Rare drops bucket (WebhookDrops) ───────────────────────────────────
+    if _ACC.WebhookDrops and opType == "ArrayInsert" then
+        if path[1] == "CardsDiscovered" then
+            sendEmbed({ emoji = "📚", title = "New card discovered",
+                        color = 0xFEE75C,
+                        fields = { { name = "Card", value = tostring(newVal), inline = true } } })
+        elseif path[1] == "PetsClaimed" then
+            sendEmbed({ emoji = "🐾", title = "New pet claimed",
+                        color = 0x57F287,
+                        fields = { { name = "Pet", value = tostring(newVal), inline = true } } })
+        elseif path[1] == "Achievements" then
+            sendEmbed({ emoji = "🏆", title = "Achievement unlocked",
+                        color = 0xEB459E,
+                        fields = { { name = "Name", value = tostring(newVal), inline = true } } })
         end
     end
 
-    -- Raid completion
+    -- ── Card mutation (WebhookDrops, Diamond/Rainbow only) ────────────────
+    -- Dedupe on prev value so repeat SetValue with the same mutation (e.g.
+    -- replica re-sync after rejoin) doesn't re-ping.
+    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Mutation" then
+        local cardName = tostring(path[2])
+        local prev = lastMutations[cardName]
+        lastMutations[cardName] = newVal
+        if _ACC.WebhookDrops and prev ~= newVal
+           and (newVal == "Diamond" or newVal == "Rainbow") then
+            sendEmbed({
+                emoji = "✨",
+                title = newVal .. " mutation",
+                desc  = ("**%s** ascended to **%s** tier"):format(cardName, newVal),
+                color = MUTATION_COLOR[newVal] or 0xFFFFFF,
+                fields = {
+                    { name = "Card",     value = cardName, inline = true },
+                    { name = "Mutation", value = newVal,   inline = true },
+                },
+            })
+        end
+    end
+
+    -- ── Raid completion ───────────────────────────────────────────────────
     if _ACC.WebhookRaid and opType == "ArrayInsert" and path[1] == "RaidsDefeated" then
-        rareSend("⚔️ Raid completed", tostring(newVal), 0xED4245)
+        sendEmbed({ emoji = "⚔️", title = "Raid completed",
+                    color = 0xED4245,
+                    fields = { { name = "Raid", value = tostring(newVal), inline = true } } })
+    end
+
+    -- ── DragonBalls 7/7 (WebhookDBComplete) ───────────────────────────────
+    -- Replica stores DragonBalls as { ["1"]=assetId, ..., ["7"]=assetId }.
+    -- Fire once when count transitions from <7 to 7; reset the flag when
+    -- count drops back below 7 (after wish, server clears the set).
+    if opType == "SetValue" and path[1] == "DragonBalls" then
+        local balls = Data.Get("DragonBalls") or {}
+        local n = 0
+        for _ in pairs(balls) do n = n + 1 end
+        if n >= 7 then
+            if _ACC.WebhookDBComplete and not dbCompleteFired then
+                dbCompleteFired = true
+                sendEmbed({
+                    emoji = "🐉",
+                    title = "Dragon Ball set complete — 7/7",
+                    desc  = "Ready to make a wish.",
+                    color = 0xFF8C00,
+                    fields = {
+                        { name = "Wish type", value = tostring(_ACC.DBWishType or "Cash"), inline = true },
+                        { name = "Auto-wish", value = _ACC.DragonBallAuto and "on" or "off", inline = true },
+                    },
+                })
+            end
+        else
+            dbCompleteFired = false
+        end
+    end
+
+    -- ── Pet mutation (WebhookPetMutation) ─────────────────────────────────
+    if opType == "SetValue" and path[1] == "Pets" and path[3] == "Mutation" then
+        local petName = tostring(path[2])
+        local prev = lastPetMutations[petName]
+        lastPetMutations[petName] = newVal
+        if _ACC.WebhookPetMutation and prev ~= newVal
+           and (newVal == "Rainbow" or newVal == "Diamond"
+                or newVal == "Emerald" or newVal == "Void") then
+            sendEmbed({
+                emoji = "🐾",
+                title = newVal .. " pet mutation",
+                desc  = ("**%s** rolled **%s**"):format(petName, newVal),
+                color = MUTATION_COLOR[newVal] or 0xFFFFFF,
+                fields = {
+                    { name = "Pet",      value = petName, inline = true },
+                    { name = "Mutation", value = newVal,  inline = true },
+                },
+            })
+        end
+    end
+
+    -- ── Card ⭐5 (WebhookCardMax) ──────────────────────────────────────────
+    -- Cards.<name>.Star is a string ("1".."5"). Fire once per transition
+    -- to "5"; track last value so re-imports don't re-trigger.
+    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Star" then
+        local cardName = tostring(path[2])
+        local prev = lastCardStars[cardName]
+        lastCardStars[cardName] = newVal
+        if _ACC.WebhookCardMax and tostring(newVal) == "5" and tostring(prev) ~= "5" then
+            local cardData = (Data.GetTable() or {}).Cards or {}
+            local entry = cardData[cardName] or {}
+            local fields = {
+                { name = "Card",  value = cardName,                                inline = true },
+                { name = "Stars", value = "⭐⭐⭐⭐⭐",                             inline = true },
+            }
+            if entry.Mutation then
+                table.insert(fields, { name = "Mutation", value = tostring(entry.Mutation), inline = true })
+            end
+            if entry.Grade then
+                table.insert(fields, { name = "Grade",    value = tostring(entry.Grade),    inline = true })
+            end
+            sendEmbed({
+                emoji = "⭐",
+                title = "Card reached ⭐5",
+                desc  = ("**%s** is now max-star."):format(cardName),
+                color = 0xFFD700,
+                fields = fields,
+            })
+        end
     end
 end)
 
