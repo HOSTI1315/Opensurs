@@ -5867,6 +5867,415 @@ task.spawn(function()
     end
 end)
 -- ============================================================================
+-- // 23.5 v44 UPDATE — Figurine Grade/Trait roll, Live Event, Ad Restock
+-- ============================================================================
+
+-- ── new remotes ──────────────────────────────────────────────────────────
+R.LiveEvent = RemotesFolder:FindFirstChild("LiveEvent")
+R.GetEvent  = RemotesFolder:FindFirstChild("GetEvent")
+R.Ads       = RemotesFolder:FindFirstChild("Ads")
+
+-- ── new config: Shared.LiveEvents (data-only) ──────────────────────────────
+local LiveEvents
+do
+    local sharedF = ModulesFolder:FindFirstChild("Shared")
+    local m = sharedF and sharedF:FindFirstChild("LiveEvents")
+    LiveEvents = m and tryRequire(m) or nil
+end
+
+local AD_COOLDOWN = 900  -- Configuration/Merchant.AdCooldown (v44)
+
+-- ── new state ──────────────────────────────────────────────────────────────
+_ACC.AutoFigGrade         = false
+_ACC.SelectedFigGradeFigs = {}   -- map of figurine names
+_ACC.WantedFigGrades      = {}   -- map of grades
+_ACC.AutoFigTrait         = false
+_ACC.SelectedFigTraitFigs = {}   -- map
+_ACC.WantedFigTraits      = {}   -- map
+
+_ACC.LiveEventAutoVote     = false
+_ACC.LiveEventWanted       = {}  -- map of event names (priority via Lists order)
+_ACC.LiveEventAutoBuy      = false
+_ACC.SelectedLiveEventItems= {}  -- map of shop item keys
+
+_ACC.AutoAdRestock         = false
+
+-- ── new lists ──────────────────────────────────────────────────────────────
+do
+    -- Figurine Grades, best→worst (UR rarest). Filter to what config actually has.
+    local gradeOrder = { "UR", "SR", "SS", "S+", "S", "A", "B", "C", "D", "E", "F" }
+    Lists.FigGrades = {}
+    local gcfg = GalleryConfig and GalleryConfig.Grades
+    for _, g in ipairs(gradeOrder) do
+        if not gcfg or gcfg[g] then table.insert(Lists.FigGrades, g) end
+    end
+    if #Lists.FigGrades == 0 then Lists.FigGrades = gradeOrder end
+
+    -- Figurine Traits, best→worst (diamond income multiplier).
+    local traitOrder = { "Prismatic", "Royal", "Diamond3", "Diamond2", "Diamond1" }
+    Lists.FigTraits = {}
+    local tcfg = GalleryConfig and GalleryConfig.Traits
+    for _, t in ipairs(traitOrder) do
+        if not tcfg or tcfg[t] then table.insert(Lists.FigTraits, t) end
+    end
+    if #Lists.FigTraits == 0 then Lists.FigTraits = traitOrder end
+
+    -- Live Event types — fixed priority order (best farm value first), filtered
+    -- to what the config offers.
+    local evOrder = { "Cash", "Diamonds", "Luck", "XP", "MutationChance",
+                      "FigurineLuck", "PetLuck", "PackDiscount" }
+    Lists.LiveEventTypes = {}
+    local ecfg = LiveEvents and LiveEvents.Events
+    for _, e in ipairs(evOrder) do
+        if not ecfg or ecfg[e] then table.insert(Lists.LiveEventTypes, e) end
+    end
+    if ecfg then
+        for k in pairs(ecfg) do
+            local seen = false
+            for _, e in ipairs(Lists.LiveEventTypes) do if e == k then seen = true break end end
+            if not seen then table.insert(Lists.LiveEventTypes, k) end
+        end
+    end
+
+    -- Live Event shop items (sorted by price asc).
+    Lists.LiveEventShop = {}
+    if LiveEvents and type(LiveEvents.Shop) == "table" then
+        for k in pairs(LiveEvents.Shop) do table.insert(Lists.LiveEventShop, k) end
+        table.sort(Lists.LiveEventShop, function(a, b)
+            local pa = (LiveEvents.Shop[a] or {}).Price or 0
+            local pb = (LiveEvents.Shop[b] or {}).Price or 0
+            if pa ~= pb then return pa < pb end
+            return a < b
+        end)
+    end
+end
+
+-- ============================================================================
+-- UI — Gallery tab: Figurine Grade Roll + Trait Roll (left column)
+-- ============================================================================
+sec.GalLvlL:Divider()
+sec.GalLvlL:Header({ Text = "Figurine Grade Roll (Diamonds)" })
+
+local figGradeStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetFigGradeStatus(t)
+    if figGradeStatus then pcall(function() figGradeStatus:UpdateBody(t) end) end
+end
+
+makeSearchableDropdown(sec.GalLvlL, {
+    Name = "Figurines to grade-roll",
+    Multi = true,
+    Options = Lists.GalleryFigurines,
+    OnChange = function(map) _ACC.SelectedFigGradeFigs = map end,
+}, "FigGradeFigsDropdown")
+
+sec.GalLvlL:Dropdown({
+    Name = "Wanted Grades (stop on)",
+    Multi = true,
+    Options = Lists.FigGrades,
+    Callback = function(s) _ACC.WantedFigGrades = mapFromMulti(s) end,
+}, "FigGradeWantedDropdown")
+
+sec.GalLvlL:Toggle({
+    Name = "Auto Grade Roll",
+    Default = false,
+    Callback = function(v) _ACC.AutoFigGrade = v end,
+}, "AutoFigGradeToggle")
+
+sec.GalLvlL:Divider()
+sec.GalLvlL:Header({ Text = "Figurine Trait Roll (Figurine Tokens)" })
+
+local figTraitStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetFigTraitStatus(t)
+    if figTraitStatus then pcall(function() figTraitStatus:UpdateBody(t) end) end
+end
+
+makeSearchableDropdown(sec.GalLvlL, {
+    Name = "Figurines to trait-roll",
+    Multi = true,
+    Options = Lists.GalleryFigurines,
+    OnChange = function(map) _ACC.SelectedFigTraitFigs = map end,
+}, "FigTraitFigsDropdown")
+
+sec.GalLvlL:Dropdown({
+    Name = "Wanted Traits (stop on)",
+    Multi = true,
+    Options = Lists.FigTraits,
+    Callback = function(s) _ACC.WantedFigTraits = mapFromMulti(s) end,
+}, "FigTraitWantedDropdown")
+
+sec.GalLvlL:Toggle({
+    Name = "Auto Trait Roll",
+    Default = false,
+    Callback = function(v) _ACC.AutoFigTrait = v end,
+}, "AutoFigTraitToggle")
+
+-- ============================================================================
+-- UI — Shops tab: Live Event (new Left + Right sections, keeps L/R pairing)
+-- ============================================================================
+sec.LEL = tabs.Shops:Section({ Side = "Left" })
+sec.LER = tabs.Shops:Section({ Side = "Right" })
+
+sec.LEL:Header({ Text = "Live Event — Vote" })
+local liveEventStatus = sec.LEL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetLiveEventStatus(t)
+    if liveEventStatus then pcall(function() liveEventStatus:UpdateBody(t) end) end
+end
+
+sec.LEL:Dropdown({
+    Name = "Vote for (priority order)",
+    Multi = true,
+    Options = Lists.LiveEventTypes,
+    Callback = function(s) _ACC.LiveEventWanted = mapFromMulti(s) end,
+}, "LiveEventWantedDropdown")
+
+sec.LEL:Toggle({
+    Name = "Auto Vote (when vote phase opens)",
+    Default = false,
+    Callback = function(v) _ACC.LiveEventAutoVote = v end,
+}, "LiveEventAutoVoteToggle")
+
+sec.LER:Header({ Text = "Live Event — Shop" })
+sec.LER:Paragraph({
+    Header = "Whitelist mode",
+    Body = "Pick items to auto-buy with Live Event Tokens whenever you can afford them.",
+})
+
+makeSearchableDropdown(sec.LER, {
+    Name = "Items to auto-buy",
+    Multi = true,
+    Options = Lists.LiveEventShop,
+    OnChange = function(map) _ACC.SelectedLiveEventItems = map end,
+}, "LiveEventItemsDropdown")
+
+sec.LER:Toggle({
+    Name = "Auto Buy shop (Live Event Tokens)",
+    Default = false,
+    Callback = function(v) _ACC.LiveEventAutoBuy = v end,
+}, "LiveEventAutoBuyToggle")
+
+sec.LER:Button({
+    Name = "Buy Selected Now",
+    Callback = function()
+        if not (LiveEvents and LiveEvents.Shop) then Notify("Live Event config missing"); return end
+        if mapEmpty(_ACC.SelectedLiveEventItems) then Notify("Nothing selected"); return end
+        local tokens = Data.Get("LiveEventTokens") or 0
+        local n = 0
+        for item in pairs(_ACC.SelectedLiveEventItems) do
+            local cfg = LiveEvents.Shop[item]
+            if cfg and cfg.Price and tokens >= cfg.Price then
+                Net.Fire(R.LiveEvent, "Buy", item)
+                tokens = tokens - cfg.Price
+                n = n + 1
+                task.wait(0.3)
+            end
+        end
+        Notify("Sent " .. n .. " buy requests")
+    end,
+})
+
+-- ============================================================================
+-- UI — Shops tab: Ad restock toggle (appended to existing Travel Merchant)
+-- ============================================================================
+sec.MerR:Divider()
+sec.MerR:Toggle({
+    Name = "Free ad restock (watch-ad bypass, 15m CD)",
+    Default = false,
+    Callback = function(v) _ACC.AutoAdRestock = v end,
+}, "AutoAdRestockToggle")
+
+-- ============================================================================
+-- LOOPS
+-- ============================================================================
+
+-- ── Figurine Grade roll (Diamonds) ──────────────────────────────────────
+-- Client-driven, mirrors the card Grade roller: for each selected+owned
+-- figurine, spam RollGrade until its Grade is one of the wanted grades,
+-- gated by Diamonds >= GetGradeCost(figurine).
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoFigGrade then
+            _ACC.SetFigGradeStatus("Off")
+        elseif mapEmpty(_ACC.SelectedFigGradeFigs) then
+            _ACC.SetFigGradeStatus("⚠ No figurines selected")
+        elseif mapEmpty(_ACC.WantedFigGrades) then
+            _ACC.SetFigGradeStatus("⚠ No wanted grades selected")
+        else
+            local owned = Data.Get("Figurines") or {}
+            local list = {}
+            -- highest multiplier first: GalleryFigurines is sorted mult ASC,
+            -- so walk it in reverse to grade the strongest figurines first.
+            for i = #Lists.GalleryFigurines, 1, -1 do
+                local name = Lists.GalleryFigurines[i]
+                if _ACC.SelectedFigGradeFigs[name] and owned[name] then
+                    table.insert(list, name)
+                end
+            end
+            if #list == 0 then
+                _ACC.SetFigGradeStatus("⚠ None of the selected figurines are owned")
+                task.wait(2)
+            else
+                local total = #list
+                for idx, name in ipairs(list) do
+                    if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then break end
+                    while _ACC.AutoFigGrade and getgenv()._ACCRunning do
+                        local cur = Data.Get("Figurines", name, "Grade")
+                        if cur and mapHas(_ACC.WantedFigGrades, cur) then
+                            _ACC.SetFigGradeStatus(("✅ %s = %s\n(%d/%d done)")
+                                :format(name, cur, idx, total))
+                            break
+                        end
+                        local cost = 0
+                        if GalleryConfig and type(GalleryConfig.GetGradeCost) == "function" then
+                            local ok, c = pcall(GalleryConfig.GetGradeCost, name)
+                            if ok and type(c) == "number" then cost = c end
+                        end
+                        local dia = Data.Get("Diamonds") or 0
+                        if cost > 0 and dia < cost then
+                            _ACC.SetFigGradeStatus(("⏸ %s — need %d 💎 (have %d)")
+                                :format(name, cost, dia))
+                            break
+                        end
+                        _ACC.SetFigGradeStatus(("🎲 [%d/%d] %s\nGrade: %s  cost %d 💎  (have %d)")
+                            :format(idx, total, name, tostring(cur or "none"), cost, dia))
+                        if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then break end
+                        Net.FireRL(R.Gallery, "Gal:RollGrade:" .. name, 0.4, "RollGrade", name)
+                        task.wait(0.4)
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- ── Figurine Trait roll (Figurine Tokens, 1 per roll) ────────────────────
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if not _ACC.AutoFigTrait then
+            _ACC.SetFigTraitStatus("Off")
+        elseif mapEmpty(_ACC.SelectedFigTraitFigs) then
+            _ACC.SetFigTraitStatus("⚠ No figurines selected")
+        elseif mapEmpty(_ACC.WantedFigTraits) then
+            _ACC.SetFigTraitStatus("⚠ No wanted traits selected")
+        else
+            local owned = Data.Get("Figurines") or {}
+            local list = {}
+            -- highest multiplier first (walk the ASC-sorted list in reverse)
+            for i = #Lists.GalleryFigurines, 1, -1 do
+                local name = Lists.GalleryFigurines[i]
+                if _ACC.SelectedFigTraitFigs[name] and owned[name] then
+                    table.insert(list, name)
+                end
+            end
+            if #list == 0 then
+                _ACC.SetFigTraitStatus("⚠ None of the selected figurines are owned")
+                task.wait(2)
+            else
+                local total = #list
+                for idx, name in ipairs(list) do
+                    if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then break end
+                    while _ACC.AutoFigTrait and getgenv()._ACCRunning do
+                        local cur = Data.Get("Figurines", name, "Trait")
+                        if cur and mapHas(_ACC.WantedFigTraits, cur) then
+                            _ACC.SetFigTraitStatus(("✅ %s = %s\n(%d/%d done)")
+                                :format(name, cur, idx, total))
+                            break
+                        end
+                        local toks = Data.Get("FigurineTokens") or 0
+                        if toks < 1 then
+                            _ACC.SetFigTraitStatus(("⏸ Out of Figurine Tokens\n%s — trait: %s")
+                                :format(name, tostring(cur or "none")))
+                            break
+                        end
+                        _ACC.SetFigTraitStatus(("🎲 [%d/%d] %s\nTrait: %s  FigTokens: %d")
+                            :format(idx, total, name, tostring(cur or "none"), toks))
+                        if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then break end
+                        Net.FireRL(R.Gallery, "Gal:RollTrait:" .. name, 0.4, "RollTrait", name)
+                        task.wait(0.4)
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- ── Live Event: auto-vote + auto-buy shop ────────────────────────────────
+-- Vote phase: workspace attribute "EventVoteStart" set; GetEvent:InvokeServer()
+-- returns an array of the offered event names. We vote once per session for
+-- the highest-priority wanted event that's actually offered.
+task.spawn(function()
+    local votedStamp
+    while getgenv()._ACCRunning do
+        -- VOTE
+        if _ACC.LiveEventAutoVote and R.LiveEvent and not mapEmpty(_ACC.LiveEventWanted) then
+            local voteStart = workspace:GetAttribute("EventVoteStart")
+            if voteStart and voteStart ~= votedStamp then
+                local opts = R.GetEvent and Net.Invoke(R.GetEvent) or nil
+                if type(opts) == "table" then
+                    local offered = {}
+                    for _, ev in pairs(opts) do
+                        if type(ev) == "string" then offered[ev] = true end
+                    end
+                    local pick
+                    for _, ev in ipairs(Lists.LiveEventTypes) do  -- priority order
+                        if _ACC.LiveEventWanted[ev] and offered[ev] then pick = ev; break end
+                    end
+                    if pick then
+                        Net.Fire(R.LiveEvent, "Vote", pick)
+                        votedStamp = voteStart
+                        _ACC.SetLiveEventStatus("🗳 Voted: " .. pick)
+                    else
+                        _ACC.SetLiveEventStatus("🗳 Vote open — none of wanted offered")
+                    end
+                end
+            elseif not voteStart then
+                local active = workspace:GetAttribute("Event")
+                _ACC.SetLiveEventStatus(active and ("⚡ Active event: " .. tostring(active))
+                                               or "Idle (no vote / event)")
+            end
+        elseif _ACC.LiveEventAutoVote then
+            _ACC.SetLiveEventStatus("⚠ Pick events to vote for")
+        end
+
+        -- BUY SHOP
+        if _ACC.LiveEventAutoBuy and R.LiveEvent and LiveEvents and LiveEvents.Shop
+           and not mapEmpty(_ACC.SelectedLiveEventItems)
+        then
+            local tokens = Data.Get("LiveEventTokens") or 0
+            for item in pairs(_ACC.SelectedLiveEventItems) do
+                if not _ACC.LiveEventAutoBuy or not getgenv()._ACCRunning then break end
+                local cfg = LiveEvents.Shop[item]
+                if cfg and cfg.Price and tokens >= cfg.Price then
+                    Net.FireRL(R.LiveEvent, "LE:Buy:" .. item, 0.5, "Buy", item)
+                    tokens = tokens - cfg.Price
+                    task.wait(0.4)
+                end
+            end
+        end
+
+        task.wait(3)
+    end
+end)
+
+-- ── Ads: free Travel Merchant restock ────────────────────────────────────
+-- Fires Ads:FireServer("Watch","RestockMerchant"). Server gates on
+-- Data.AdWatchTime + 900s cooldown; we respect the same cooldown so we don't
+-- spam. On executors that can't show a rewarded ad the server usually grants
+-- the restock from the "Watch" call anyway; if not, it's a silent no-op.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.AutoAdRestock and R.Ads then
+            local last = Data.Get("AdWatchTime") or 0
+            local now  = workspace:GetServerTimeNow()
+            if (now - last) >= AD_COOLDOWN then
+                Net.FireRL(R.Ads, "Ads:Restock", 30, "Watch", "RestockMerchant")
+            end
+        end
+        task.wait(20)
+    end
+end)
+-- ============================================================================
 -- // 24. CLEANUP / UNLOAD
 -- ============================================================================
 getgenv()._ACCCleanup = function()
