@@ -1685,7 +1685,14 @@ function Shops.RefreshStock()
     if type(items) ~= "table" then return Shops.StockSnap end
     for id, info in pairs(items) do
         if id == "DragonBall" then
-            if info ~= true then
+            -- v44: GetStock().DragonBall == true  → ball is IN STOCK (buyable).
+            -- "already purchased" is tracked separately in Data.StockItems
+            -- .DragonBall and DragonBalls["7"]. The old logic was inverted
+            -- (added it when NOT in stock), so it never bought the real one.
+            local stockItems = Data.Get("StockItems") or {}
+            local owned7     = (Data.Get("DragonBalls") or {})["7"] == true
+            local alreadyBought = stockItems.DragonBall == true or owned7
+            if info == true and not alreadyBought then
                 table.insert(Shops.StockSnap, {
                     id = "DragonBall",
                     family = "DragonBall",
