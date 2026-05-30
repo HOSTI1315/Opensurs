@@ -75,6 +75,12 @@ _ACC.OpenViaPrompt         = true
 _ACC.SelectedBuyPacks      = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
 _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
 
+-- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
+_ACC.LvlFarmEnabled        = false
+_ACC._FarmPlacing          = false   -- engines (AutoPlace/Hatch) act on farm sets when true
+_ACC._FarmPlacePacks       = {}      -- phase set AutoPlace actually places now (bundles OR singles)
+_ACC._FarmPlaceAll         = {}      -- bundles+singles of focus family (for placementDone test)
+
 -- ── Combat state ──────────────────────────────────────────────────────────
 _ACC.TowerAutoStart        = false
 _ACC.HideBattle            = false
@@ -133,7 +139,7 @@ _ACC.DBWishType            = "Cash"  -- which wish to make when 7 balls collecte
 -- ── Inventory ─────────────────────────────────────────────────────────────
 _ACC.PEMethod              = "Upgrade"   -- Upgrade / Downgrade / Bundle / Unbundle
 _ACC.PESelectedPacks       = {}   -- map
-_ACC.PEFromRarity          = "Regular"
+_ACC.PEFromRarities        = { Regular = true }   -- multi-select map of rarities
 _ACC.PEBatch               = "1x" -- Bundle/Unbundle batch size: 1x / 10x / 100x
 _ACC.PEEnabled             = false
 _ACC.SelectedCraftPotions  = {}   -- map — potions to auto-craft
@@ -1493,7 +1499,12 @@ end
 
 sec.RaidR:Dropdown({
     Name = "Mode",
-    Options = { "Auto pick (max we can beat)", "Specific raid" },
+    Options = {
+        "Auto pick (max we can beat)",
+        "Specific raid",
+        "Grind badges (each raid 1x)",
+        "Grind manga (each raid to max card layout)",
+    },
     Default = "Auto pick (max we can beat)",
     Callback = function(v) _ACC.RaidMode = v end,
 }, "RaidModeDropdown")
@@ -2025,10 +2036,11 @@ sec.PEL:Dropdown({
     Callback = function(selected) _ACC.PESelectedPacks = mapFromMulti(selected) end,
 }, "PEPacksDropdown")
 sec.PEL:Dropdown({
-    Name = "Rarity (from / to bundle)",
+    Name = "Rarity (from / to bundle) — multi",
+    Multi = true,
     Options = Lists.Rarities,
-    Default = "Regular",
-    Callback = function(v) _ACC.PEFromRarity = v end,
+    Default = { "Regular" },
+    Callback = function(selected) _ACC.PEFromRarities = mapFromMulti(selected) end,
 }, "PEFromDropdown")
 sec.PEL:Dropdown({
     Name = "Bundle/Unbundle batch",
@@ -3111,7 +3123,8 @@ task.spawn(function()
     end
 
     while getgenv()._ACCRunning do
-        if _ACC.AutoPlaceEnabled and not mapEmpty(_ACC.SelectedPlacePacks) then
+        local placeSel = (_ACC._FarmPlacing and _ACC._FarmPlacePacks) or _ACC.SelectedPlacePacks
+        if (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing) and not mapEmpty(placeSel) then
             safe(function()
                 local replica = Data.GetReplica()
                 if not (replica and replica.Data) then return end
@@ -3140,7 +3153,7 @@ task.spawn(function()
 
                 -- build candidate list (unique pack types user selected, owned > 0)
                 local toPlace = {}
-                for displayName in pairs(_ACC.SelectedPlacePacks) do
+                for displayName in pairs(placeSel) do
                     local serverName = displayName:gsub(" ", "-")
                     local isBundle   = serverName:match("%-Bundle$") ~= nil
                     local slotCost   = isBundle and 5 or 1
@@ -3183,7 +3196,7 @@ task.spawn(function()
                 local lastEquipped
 
                 for _, entry in ipairs(toPlace) do
-                    if not _ACC.AutoPlaceEnabled or not getgenv()._ACCRunning then break end
+                    if not (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing) or not getgenv()._ACCRunning then break end
 
                     local stillOwned = ownedPacks[entry.server] or 0
                     if stillOwned <= 0 or free < entry.slotCost then
@@ -3217,7 +3230,7 @@ task.spawn(function()
 
                         while stillOwned > 0
                               and free >= entry.slotCost
-                              and _ACC.AutoPlaceEnabled
+                              and (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing)
                               and getgenv()._ACCRunning
                         do
                             local cells  = findFreeCells(floor, probeFootprint, params,
@@ -4042,6 +4055,40 @@ task.spawn(function()
         return (#top > 0) and top or nil
     end
 
+    -- Grind targets per raid pack: highest card Layout in the pack. A card
+    -- needs RaidsDefeated.Packs[pack] >= its Layout to qualify for Manga, so
+    -- grinding to the MAX layout clears the raid-defeat requirement for every
+    -- card in that pack at once.
+    local RaidMaxLayout = {}
+    if CardConfig and CardConfig.Packs then
+        for packName, packData in pairs(CardConfig.Packs) do
+            if type(packData) == "table" and type(packData.List) == "table" then
+                local mx = 0
+                for _, info in pairs(packData.List) do
+                    local l = (type(info) == "table" and info.Layout) or 0
+                    if l > mx then mx = l end
+                end
+                RaidMaxLayout[packName] = mx
+            end
+        end
+    end
+
+    -- Is this raid's grind target already met (badge owned / defeats reached)?
+    local function gridTargetMet(raid)
+        if _ACC.RaidMode == "Grind badges (each raid 1x)" then
+            local badges = Data.Get("RaidBadges") or {}
+            if type(badges) == "table" then
+                for _, b in ipairs(badges) do if b == raid then return true end end
+            end
+            -- fallback if badge list not populated yet: 1 defeat = badge earned
+            return ((Data.Get("RaidsDefeated", "Packs", raid)) or 0) >= 1
+        elseif _ACC.RaidMode == "Grind manga (each raid to max card layout)" then
+            local need = RaidMaxLayout[raid] or 0
+            return need > 0 and ((Data.Get("RaidsDefeated", "Packs", raid)) or 0) >= need
+        end
+        return false
+    end
+
     local function pickRaid()
         local active = (RaidConfig and RaidConfig.ActiveRaids) or {}
         local base   = (RaidConfig and RaidConfig.Base) or {}
@@ -4051,6 +4098,25 @@ task.spawn(function()
                 if r == _ACC.RaidSpecific then return r end
             end
             return nil
+        end
+
+        -- Grind modes: sweep EASIEST-first (lowest Base) among raids that
+        -- aren't at target yet, aren't marked stuck, and we have a 3-card team
+        -- for. pickRaid keeps returning the same raid until its target is met
+        -- (or it fails out), so we grind one raid fully then move up.
+        if _ACC.RaidMode == "Grind badges (each raid 1x)"
+           or _ACC.RaidMode == "Grind manga (each raid to max card layout)"
+        then
+            local best, bestBase = nil, math.huge
+            for _, r in ipairs(active) do
+                if (failed[r] or 0) < FAIL_LIMIT and not gridTargetMet(r) then
+                    local team = computeEquipBest(r)
+                    if team and #team >= 3 and (base[r] or 0) < bestBase then
+                        best, bestBase = r, base[r] or 0
+                    end
+                end
+            end
+            return best
         end
 
         -- Auto pick: max Base from raids where we actually own ≥3 cards
@@ -4066,6 +4132,22 @@ task.spawn(function()
         end
         return best
     end
+
+    -- Grind progress summary for status display (badges X/N, or packs done).
+    local function gridProgress()
+        local active = (RaidConfig and RaidConfig.ActiveRaids) or {}
+        if _ACC.RaidMode == "Grind badges (each raid 1x)" then
+            local badges = Data.Get("RaidBadges") or {}
+            local have = (type(badges) == "table") and #badges or 0
+            return ("Badges: %d/%d"):format(have, #active)
+        elseif _ACC.RaidMode == "Grind manga (each raid to max card layout)" then
+            local done = 0
+            for _, r in ipairs(active) do if gridTargetMet(r) then done = done + 1 end end
+            return ("Manga packs cleared: %d/%d"):format(done, #active)
+        end
+        return ""
+    end
+    _ACC._RaidGridProgress = gridProgress
 
     -- Vote dedup — vote only once per voting session.
     -- workspace.RaidVoteTime is the timestamp set when voting opens; it changes
@@ -4132,7 +4214,14 @@ task.spawn(function()
         else
             local picked = pickRaid()
             if not picked then
-                SetStatus("⚠ No raid available\n(all selected raids stuck or none active)")
+                local isGrind = _ACC.RaidMode == "Grind badges (each raid 1x)"
+                    or _ACC.RaidMode == "Grind manga (each raid to max card layout)"
+                if isGrind then
+                    SetStatus(("✓ Grind complete (or no beatable raid left)\n%s")
+                        :format(_ACC._RaidGridProgress and _ACC._RaidGridProgress() or ""))
+                else
+                    SetStatus("⚠ No raid available\n(all selected raids stuck or none active)")
+                end
                 task.wait(8)
             else
                 local raidActive = (raidH and raidH.RaidActive) == true
@@ -4873,9 +4962,15 @@ task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.PEEnabled and not mapEmpty(_ACC.PESelectedPacks) then
             local method = _ACC.PEMethod or "Upgrade"
-            local from   = _ACC.PEFromRarity or "Regular"
             local batch  = PE_BATCH[_ACC.PEBatch or "1x"] or PE_BATCH["1x"]
             local cash   = Data.Get("Cash") or 0
+
+            -- selected rarities in progression order (multi-select)
+            local rarities = {}
+            for _, r in ipairs(Lists.Rarities) do
+                if _ACC.PEFromRarities[r] then table.insert(rarities, r) end
+            end
+            if #rarities == 0 then rarities = { "Regular" } end
 
             for _, packName in iterMap(_ACC.PESelectedPacks) do
                 if not _ACC.PEEnabled or not getgenv()._ACCRunning then break end
@@ -4883,6 +4978,8 @@ task.spawn(function()
                               and CardConfig.Packs[packName]
                               and CardConfig.Packs[packName].Price
 
+              for _, from in ipairs(rarities) do
+                if not _ACC.PEEnabled or not getgenv()._ACCRunning then break end
                 if method == "Upgrade" then
                     -- find target rarity from chain: PackExchange[target].Pack == from
                     local target
@@ -4972,6 +5069,7 @@ task.spawn(function()
                 end
 
                 task.wait(0.4)
+              end
             end
         end
         task.wait(1)
@@ -6282,6 +6380,470 @@ task.spawn(function()
         task.wait(20)
     end
 end)
+-- ============================================================================
+-- // 23.6 v44 — AUTO HATCH POTIONS (speed up / instant-open placed packs)
+-- ============================================================================
+-- HatchTime potions cut a FIXED number of seconds off EVERY placed pack at once
+-- (1 potion → all packs). Tiers: HatchTime1 -120s, HatchTime2 -360s,
+-- HatchTime3 -900s. Each pack can absorb at most MaxHatchPotions (=25 + the
+-- HatchPotions upgrade, up to 45) potions, after which it stops reducing.
+--
+-- A placed pack's remaining time is read live from its timer label
+-- (tagged "<Name>-PackTimer"): remaining = Hatch - (now - Time), where
+--   Time  = placement timestamp, Hatch = total hatch duration (seconds).
+--
+-- This is the SMART counterpart to "Auto Use Potions": it drinks only as many
+-- as needed to clear the slowest pack, in chunks, and detects when a pack hits
+-- its cap (drop << expected) so it never pours hundreds of potions into a pack
+-- that can't be reduced further.
+
+-- HatchTime tiers, smallest buff first
+local HatchTiers = {}
+do
+    for _, key in ipairs({ "HatchTime1", "HatchTime2", "HatchTime3" }) do
+        local cfg = Consumables and Consumables[key]
+        if cfg and cfg.Buff then
+            table.insert(HatchTiers, {
+                key     = key,
+                buff    = cfg.Buff,                       -- seconds removed per potion
+                display = cfg.Display or key,
+            })
+        end
+    end
+    table.sort(HatchTiers, function(a, b) return a.buff < b.buff end)
+end
+local HatchTierDisplays = {}
+local HatchDisplayToKey = {}
+for _, t in ipairs(HatchTiers) do
+    table.insert(HatchTierDisplays, t.display)
+    HatchDisplayToKey[t.display] = t.key
+end
+
+_ACC.AutoHatchPotions = false
+_ACC.HatchTiersAllowed = {}                  -- map of allowed tier KEYS
+for _, t in ipairs(HatchTiers) do _ACC.HatchTiersAllowed[t.key] = true end
+_ACC.HatchStrategy     = "Auto (conserve, finish within cap)"
+_ACC.HatchAfterPlaceDone = true   -- drink only once AutoPlace can't place anything more
+
+-- per-pack potion cap = base 25 + HatchPotions upgrade buff (1/level, max 20)
+local function hatchCap()
+    local up = (Data.GetTable() or {}).Upgrades
+    local bonus = (up and up.HatchPotions and up.HatchPotions.Buff) or 0
+    return 25 + bonus
+end
+
+-- ── UI (Auto Farm tab, appended under Auto Place) ─────────────────────────
+sec.AFPlaceL:Divider()
+sec.AFPlaceL:Header({ Text = "Auto Hatch Potions" })
+
+local hatchStatus = sec.AFPlaceL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetHatchStatus(t)
+    if hatchStatus then pcall(function() hatchStatus:UpdateBody(t) end) end
+end
+
+sec.AFPlaceL:Dropdown({
+    Name = "Allowed HatchTime tiers",
+    Multi = true,
+    Options = HatchTierDisplays,
+    Default = HatchTierDisplays,
+    Callback = function(selected)
+        local out = {}
+        for disp, on in pairs(mapFromMulti(selected)) do
+            if on then out[HatchDisplayToKey[disp] or disp] = true end
+        end
+        _ACC.HatchTiersAllowed = out
+    end,
+}, "HatchTiersDropdown")
+
+sec.AFPlaceL:Dropdown({
+    Name = "Tier strategy",
+    Multi = false,
+    Options = {
+        "Auto (conserve, finish within cap)",
+        "Smallest first",
+        "Largest first",
+    },
+    Default = _ACC.HatchStrategy,
+    Callback = function(v) _ACC.HatchStrategy = v end,
+}, "HatchStrategyDropdown")
+
+sec.AFPlaceL:Toggle({
+    Name = "Only after AutoPlace can't place more",
+    Default = true,
+    Callback = function(v) _ACC.HatchAfterPlaceDone = v end,
+}, "HatchAfterPlaceDoneToggle")
+
+sec.AFPlaceL:Toggle({
+    Name = "Enable Auto Hatch Potions",
+    Default = false,
+    Callback = function(v) _ACC.AutoHatchPotions = v end,
+}, "AutoHatchPotionsToggle")
+
+-- ── loop ──────────────────────────────────────────────────────────────────
+task.spawn(function()
+    local cappedSet = setmetatable({}, { __mode = "k" })  -- weak: drops opened packs
+
+    -- count free placement slots (Bundle counts as 5)
+    local function freeSlots()
+        local rep = Data.GetReplica()
+        if not (rep and rep.Data) then return nil end
+        local maxP = rep.Data.MaxPlacements or 25
+        local used = 0
+        for _, info in pairs(rep.Data.PacksPlaced or {}) do
+            used = used + ((type(info) == "table" and info.Category == "Bundle") and 5 or 1)
+        end
+        return maxP - used
+    end
+
+    -- read placed pack timers → { {label, remaining}, ... }
+    local function readPacks()
+        local now  = workspace:GetServerTimeNow()
+        local out  = {}
+        for _, lbl in ipairs(CollectionService:GetTagged(LocalPlayer.Name .. "-PackTimer")) do
+            if lbl:IsDescendantOf(workspace) then
+                local hatch = lbl:GetAttribute("Hatch")
+                local startT = lbl:GetAttribute("Time")
+                if hatch and startT then
+                    out[#out + 1] = { label = lbl, remaining = hatch - (now - startT) }
+                end
+            end
+        end
+        return out
+    end
+
+    -- placement saturated: nothing AutoPlace could place right now. True when
+    -- the board is full OR no selected pack still fits the free space (e.g.
+    -- 55/58 used, 3 free, but only bundles owned which need 5; or no cards).
+    -- Uses the SAME selection + slot math as AutoPlace.
+    local function placementDone()
+        local rep = Data.GetReplica()
+        if not (rep and rep.Data) then return false end
+        local fs = freeSlots()
+        if fs == nil then return false end
+        if fs <= 0 then return true end
+        -- during the level farm, test against the focus family's full set
+        -- (bundles+singles) so we only open once NEITHER fits the free space.
+        local sel = _ACC._FarmPlacing and (_ACC._FarmPlaceAll or {}) or (_ACC.SelectedPlacePacks or {})
+        local ownedPacks = rep.Data.Packs or {}
+        for displayName in pairs(sel) do
+            local serverName = tostring(displayName):gsub(" ", "-")
+            local isBundle   = serverName:match("%-Bundle$") ~= nil
+            local slotCost   = isBundle and 5 or 1
+            if (ownedPacks[serverName] or 0) > 0 and slotCost <= fs then
+                return false   -- something still fits → not done
+            end
+        end
+        return true            -- nothing selected can be placed into free space
+    end
+
+    -- pick a tier by strategy among allowed + owned (>0). maxRem drives "Auto".
+    local function pickTier(maxRem)
+        local owned = Data.Get("Consumables") or {}
+        local avail = {}
+        for _, t in ipairs(HatchTiers) do
+            if _ACC.HatchTiersAllowed[t.key] and (tonumber(owned[t.key]) or 0) > 0 then
+                table.insert(avail, t)   -- HatchTiers already smallest→largest
+            end
+        end
+        if #avail == 0 then return nil end
+
+        local strat = _ACC.HatchStrategy or "Auto (conserve, finish within cap)"
+        if strat == "Largest first" then
+            return avail[#avail]
+        elseif strat == "Smallest first" then
+            return avail[1]
+        else
+            -- Auto: smallest owned tier that can finish the bottleneck within
+            -- the per-pack cap (cap * buff >= maxRem). Else the largest owned.
+            local cap = hatchCap()
+            for _, t in ipairs(avail) do            -- smallest→largest
+                if cap * t.buff >= maxRem then return t end
+            end
+            return avail[#avail]
+        end
+    end
+
+    local doneStreak = 0
+    while getgenv()._ACCRunning do
+        if not (_ACC.AutoHatchPotions or _ACC._FarmPlacing) then
+            _ACC.SetHatchStatus("Off")
+            doneStreak = 0
+            task.wait(1)
+        else
+            local afterDone = _ACC.HatchAfterPlaceDone or _ACC._FarmPlacing
+            local packs = readPacks()
+            if #packs == 0 then
+                _ACC.SetHatchStatus("⏸ No packs placed")
+                doneStreak = 0
+                task.wait(2)
+            elseif afterDone and not placementDone() then
+                -- AutoPlace can still place something → let it finish first
+                doneStreak = 0
+                _ACC.SetHatchStatus(("⏸ Placement not done yet (%d free slots)")
+                    :format(freeSlots() or 0))
+                task.wait(2)
+            elseif afterDone and doneStreak < 2 then
+                -- debounce: confirm saturation across 2 checks so we don't race
+                -- AutoPlace mid-cycle (inventory/PacksPlaced replicating)
+                doneStreak = doneStreak + 1
+                _ACC.SetHatchStatus("⏳ Confirming placement is done...")
+                task.wait(1.5)
+            else
+                -- active = remaining > 1s and not yet capped
+                local active = {}
+                local maxRem = 0
+                for _, p in ipairs(packs) do
+                    if p.remaining > 1 and not cappedSet[p.label] then
+                        table.insert(active, p)
+                        if p.remaining > maxRem then maxRem = p.remaining end
+                    end
+                end
+
+                if #active == 0 then
+                    -- nothing left to speed up: either all opening or all capped
+                    local stuck = 0
+                    for _, p in ipairs(packs) do
+                        if p.remaining > 1 then stuck = stuck + 1 end
+                    end
+                    _ACC.SetHatchStatus(stuck > 0
+                        and ("✓ Done — %d pack(s) hit the %d-potion cap, finishing on timer")
+                            :format(stuck, hatchCap())
+                        or  "✓ All placed packs ready")
+                    task.wait(4)
+                else
+                    local tier = pickTier(maxRem)
+                    if not tier then
+                        _ACC.SetHatchStatus(("⏸ Out of allowed HatchTime potions\nSlowest pack: ~%ds left")
+                            :format(math.ceil(maxRem)))
+                        task.wait(3)
+                    else
+                        local owned = tonumber((Data.Get("Consumables") or {})[tier.key]) or 0
+                        -- chunk to finish the bottleneck, capped at 10 per Apply10
+                        local need  = math.ceil(maxRem / tier.buff)
+                        local chunk = math.min(need, owned)
+                        if chunk < 1 then chunk = 0 end
+
+                        _ACC.SetHatchStatus(("🧪 %s  (-%ds each)\nSlowest pack: ~%ds  |  active: %d\nDrinking %d (own %d)  cap %d/pack")
+                            :format(tier.display, tier.buff, math.ceil(maxRem),
+                                    #active, chunk, owned, hatchCap()))
+
+                        -- snapshot before
+                        local before = {}
+                        for _, p in ipairs(active) do before[p.label] = p.remaining end
+
+                        local drunk = 0
+                        while chunk > 0 and _ACC.AutoHatchPotions and getgenv()._ACCRunning do
+                            local step = math.min(chunk, 10)
+                            if step >= 10 then
+                                Net.Fire(R.Potion, "Apply10", tier.key)
+                                drunk = drunk + 10
+                            else
+                                for _ = 1, step do
+                                    Net.Fire(R.Potion, "Apply", tier.key)
+                                    drunk = drunk + 1
+                                    task.wait(0.12)
+                                end
+                            end
+                            chunk = chunk - step
+                            task.wait(0.3)
+                        end
+
+                        task.wait(0.4)   -- let server replicate new Hatch/Time
+
+                        -- cap detection: if a pack's remaining dropped far less
+                        -- than expected (drunk * buff), it hit its cap.
+                        local after = readPacks()
+                        local afterMap = {}
+                        for _, p in ipairs(after) do afterMap[p.label] = p.remaining end
+                        local expected = drunk * tier.buff
+                        for lbl, rem0 in pairs(before) do
+                            local rem1 = afterMap[lbl]
+                            if rem1 ~= nil then
+                                local drop = rem0 - rem1
+                                if drop < expected * 0.6 and rem1 > 1 then
+                                    cappedSet[lbl] = true
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================================
+-- // 23.7 v44 — AUTO LEVEL FARM (cards → Lv. 30, weakest family first)
+-- ============================================================================
+-- A macro that DRIVES the existing AutoPlace + AutoHatchPotions engines.
+-- It does NOT buy anything — it only places + opens packs already in inventory.
+--
+-- Per family, walked weakest→strongest (Lists.Packs = Page order, Pirate first):
+--   * place that family's BUNDLES first (5 cards each = most XP/slot), falling
+--     back to its SINGLES when no bundle fits the free space or none are owned;
+--   * once nothing more of the family fits, the hatch engine opens the board;
+--   * repeat until the family's packs run out OR every discovered card in it
+--     is Lv.30, then advance to the next family.
+--
+-- Control handshake: while enabled it sets _ACC._FarmPlacing = true and feeds
+-- _FarmPlacePacks (phase set) + _FarmPlaceAll (whole family) to the engines.
+-- The hatch tier choice / strategy is taken from the existing Auto Hatch
+-- Potions settings, so pick which HatchTime tiers it may drink there.
+local FARM_TARGET_LEVEL = 30   -- hard target per spec
+
+-- owned packs of a family split into bundle/single display-name sets
+local function farmFamilyPacks(family)
+    local rep = Data.GetReplica()
+    local packs = (rep and rep.Data and rep.Data.Packs) or {}
+    local bundles, singles, count = {}, {}, 0
+    local pat = "^" .. family .. "%-"
+    for key, cnt in pairs(packs) do
+        if (tonumber(cnt) or 0) > 0
+           and (key == family or tostring(key):find(pat)) then
+            count = count + (tonumber(cnt) or 0)
+            local disp = tostring(key):gsub("-", " ")
+            if tostring(key):find("%-Bundle$") then
+                bundles[disp] = true
+            else
+                singles[disp] = true
+            end
+        end
+    end
+    return bundles, singles, count
+end
+
+-- family done = every card in its config List is discovered AND ≥ target,
+-- OR we own no more of its packs (supply exhausted — nothing left to farm).
+local function farmFamilyDone(family)
+    local list = (CardConfig and CardConfig.Packs and CardConfig.Packs[family]
+                  and CardConfig.Packs[family].List) or {}
+    local maxed, total = true, 0
+    for cardName in pairs(list) do
+        total = total + 1
+        local cd = Data.Get("Cards", cardName)
+        if not cd or (tonumber(cd.Level) or 0) < FARM_TARGET_LEVEL then
+            maxed = false
+        end
+    end
+    if total > 0 and maxed then return true end          -- all cards at target
+    local _, _, owned = farmFamilyPacks(family)
+    return owned <= 0                                     -- no packs left to open
+end
+
+-- count discovered+leveled cards of a family for status
+local function farmFamilyProgress(family)
+    local list = (CardConfig and CardConfig.Packs and CardConfig.Packs[family]
+                  and CardConfig.Packs[family].List) or {}
+    local at, total = 0, 0
+    for cardName in pairs(list) do
+        total = total + 1
+        local cd = Data.Get("Cards", cardName)
+        if cd and (tonumber(cd.Level) or 0) >= FARM_TARGET_LEVEL then at = at + 1 end
+    end
+    return at, total
+end
+
+-- ── UI (Auto Farm tab, own section) ───────────────────────────────────────
+sec.LvlFarmL = tabs.AutoFarm:Section({ Side = "Left" })
+sec.LvlFarmL:Header({ Text = "Auto Level Farm (cards → Lv. 30)" })
+
+local lvlFarmStatus = sec.LvlFarmL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetLvlFarmStatus(t)
+    if lvlFarmStatus then pcall(function() lvlFarmStatus:UpdateBody(t) end) end
+end
+
+sec.LvlFarmL:Paragraph({
+    Header = "How it works",
+    Body = "Places bundles first (then singles) of the weakest family, opens them with Hatch potions, and moves up family by family until every card is Lv.30 or packs run out. Uses your inventory only — no buying. Pick which HatchTime tiers it may drink in 'Auto Hatch Potions' above. Turning this on disables manual Auto Place.",
+})
+
+sec.LvlFarmL:Toggle({
+    Name = "Enable Auto Level Farm",
+    Default = false,
+    Callback = function(v)
+        _ACC.LvlFarmEnabled = v
+        if v then
+            -- take over: stop manual AutoPlace so it doesn't fight the farm
+            _ACC.AutoPlaceEnabled = false
+            pcall(function()
+                if MacLib.Options.AutoPlaceToggle
+                   and MacLib.Options.AutoPlaceToggle.UpdateState then
+                    MacLib.Options.AutoPlaceToggle:UpdateState(false)
+                end
+            end)
+        else
+            _ACC._FarmPlacing = false
+            _ACC._FarmPlacePacks = {}
+            _ACC._FarmPlaceAll = {}
+        end
+    end,
+}, "LvlFarmToggle")
+
+-- ── controller loop ────────────────────────────────────────────────────────
+task.spawn(function()
+    local function freeSlotsFarm()
+        local rep = Data.GetReplica()
+        if not (rep and rep.Data) then return nil end
+        local maxP = rep.Data.MaxPlacements or 25
+        local used = 0
+        for _, info in pairs(rep.Data.PacksPlaced or {}) do
+            used = used + ((type(info) == "table" and info.Category == "Bundle") and 5 or 1)
+        end
+        return maxP - used
+    end
+
+    while getgenv()._ACCRunning do
+        if not _ACC.LvlFarmEnabled then
+            _ACC._FarmPlacing = false
+            _ACC._FarmPlacePacks = {}
+            _ACC._FarmPlaceAll = {}
+            _ACC.SetLvlFarmStatus("Off")
+            task.wait(1)
+        else
+            _ACC._FarmPlacing = true   -- engines active while farm runs
+
+            -- focus = weakest family not yet done
+            local focus
+            for _, family in ipairs(Lists.Packs) do
+                if not farmFamilyDone(family) then focus = family; break end
+            end
+
+            if not focus then
+                -- nothing left to place; keep engines on so hatch opens any
+                -- residual placed packs, then idle.
+                _ACC._FarmPlacePacks = {}
+                _ACC._FarmPlaceAll   = {}
+                _ACC.SetLvlFarmStatus("✓ All families farmed (cards at Lv.30 or packs exhausted)")
+                task.wait(4)
+            else
+                local bundles, singles, owned = farmFamilyPacks(focus)
+                local all = {}
+                for k in pairs(bundles) do all[k] = true end
+                for k in pairs(singles) do all[k] = true end
+                _ACC._FarmPlaceAll = all
+
+                local free  = freeSlotsFarm() or 0
+                local phase
+                if next(bundles) and free >= 5 then
+                    _ACC._FarmPlacePacks = bundles
+                    phase = "placing bundles"
+                elseif next(singles) and free >= 1 then
+                    _ACC._FarmPlacePacks = singles
+                    phase = "placing singles"
+                else
+                    _ACC._FarmPlacePacks = {}
+                    phase = "opening (board full / no fit)"
+                end
+
+                local at, total = farmFamilyProgress(focus)
+                _ACC.SetLvlFarmStatus(("🎯 %s → Lv.%d\n%s\nCards %d/%d at target  |  packs owned: %d  |  free slots: %d")
+                    :format(focus, FARM_TARGET_LEVEL, phase, at, total, owned, free))
+                task.wait(2)
+            end
+        end
+    end
+end)
+
 -- ============================================================================
 -- // 24. CLEANUP / UNLOAD
 -- ============================================================================
