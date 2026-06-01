@@ -74,6 +74,12 @@ _ACC.SkipOpenAnim          = false
 _ACC.OpenViaPrompt         = true
 _ACC.SelectedBuyPacks      = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
 _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
+-- Cap on USED placement slots while placing SINGLES (1-slot packs). Each single
+-- is its own model, so a board crammed with singles lags Roblox and the bot
+-- stalls retrying Place into the last cramped cells. This cap ONLY gates single
+-- placement — BUNDLES are never limited by it and fill up to MaxPlacements
+-- (e.g. 12 bundles → 60/60 is fine). Effective cap = min(this, MaxPlacements).
+_ACC.SinglePlaceCap        = 55
 
 -- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
 _ACC.LvlFarmEnabled        = false
@@ -1167,6 +1173,16 @@ sec.AFPlaceL:Toggle({
     Default = false,
     Callback = function(v) _ACC.AutoPlaceEnabled = v end,
 }, "AutoPlaceToggle")
+
+sec.AFPlaceL:Slider({
+    Name = "Single-pack slot cap (anti-lag)",
+    Default = 55,
+    Minimum = 30,
+    Maximum = 60,
+    DisplayMethod = "Value",
+    Precision = 0,
+    Callback = function(v) _ACC.SinglePlaceCap = math.floor(tonumber(v) or 55) end,
+}, "SinglePlaceCapSlider")
 
 -- ── Auto Collect ──────────────────────────────────────────────────────────
 sec.AFCollR:Header({ Text = "Auto Collect" })
@@ -3228,8 +3244,15 @@ task.spawn(function()
                         local probeFootprint = footprint
                             + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
 
+                        -- singles are capped at SinglePlaceCap USED slots so we
+                        -- never cram the board with single models (that lags
+                        -- Roblox); bundles may use all remaining slots.
+                        local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+                        local minFree   = entry.isBundle and entry.slotCost
+                            or math.max(entry.slotCost, maxP - singleCap + entry.slotCost)
+
                         while stillOwned > 0
-                              and free >= entry.slotCost
+                              and free >= minFree
                               and (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing)
                               and getgenv()._ACCRunning
                         do
@@ -6525,12 +6548,16 @@ task.spawn(function()
         -- (bundles+singles) so we only open once NEITHER fits the free space.
         local sel = _ACC._FarmPlacing and (_ACC._FarmPlaceAll or {}) or (_ACC.SelectedPlacePacks or {})
         local ownedPacks = rep.Data.Packs or {}
+        local maxP = rep.Data.MaxPlacements or 25
+        local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
         for displayName in pairs(sel) do
             local serverName = tostring(displayName):gsub(" ", "-")
             local isBundle   = serverName:match("%-Bundle$") ~= nil
             local slotCost   = isBundle and 5 or 1
-            if (ownedPacks[serverName] or 0) > 0 and slotCost <= fs then
-                return false   -- something still fits → not done
+            local minFree    = isBundle and slotCost
+                or math.max(slotCost, maxP - singleCap + slotCost)
+            if (ownedPacks[serverName] or 0) > 0 and fs >= minFree then
+                return false   -- something still fits (within single cap) → not done
             end
         end
         return true            -- nothing selected can be placed into free space
@@ -6822,12 +6849,16 @@ task.spawn(function()
                 for k in pairs(singles) do all[k] = true end
                 _ACC._FarmPlaceAll = all
 
+                local rep0  = Data.GetReplica()
+                local maxP  = (rep0 and rep0.Data and rep0.Data.MaxPlacements) or 25
                 local free  = freeSlotsFarm() or 0
+                local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+                local singleMinFree = math.max(1, maxP - singleCap + 1)
                 local phase
                 if next(bundles) and free >= 5 then
                     _ACC._FarmPlacePacks = bundles
                     phase = "placing bundles"
-                elseif next(singles) and free >= 1 then
+                elseif next(singles) and free >= singleMinFree then
                     _ACC._FarmPlacePacks = singles
                     phase = "placing singles"
                 else
