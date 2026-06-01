@@ -79,7 +79,7 @@ _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true
 -- stalls retrying Place into the last cramped cells. This cap ONLY gates single
 -- placement — BUNDLES are never limited by it and fill up to MaxPlacements
 -- (e.g. 12 bundles → 60/60 is fine). Effective cap = min(this, MaxPlacements).
-_ACC.SinglePlaceCap        = 55
+_ACC.SinglePlaceCap        = 50
 
 -- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
 _ACC.LvlFarmEnabled        = false
@@ -1176,12 +1176,12 @@ sec.AFPlaceL:Toggle({
 
 sec.AFPlaceL:Slider({
     Name = "Single-pack slot cap (anti-lag)",
-    Default = 55,
+    Default = 50,
     Minimum = 30,
     Maximum = 60,
     DisplayMethod = "Value",
     Precision = 0,
-    Callback = function(v) _ACC.SinglePlaceCap = math.floor(tonumber(v) or 55) end,
+    Callback = function(v) _ACC.SinglePlaceCap = math.floor(tonumber(v) or 50) end,
 }, "SinglePlaceCapSlider")
 
 -- ── Auto Collect ──────────────────────────────────────────────────────────
