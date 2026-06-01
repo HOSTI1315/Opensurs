@@ -3066,7 +3066,7 @@ task.spawn(function()
                     activation = math.max(activation, d.MaxActivationDistance)
                 end
             end
-            table.insert(zones, { pos = pivot.Position, radius = activation + 6 })
+            table.insert(zones, { pos = pivot.Position, radius = (activation + 6) * 0.5 })
         end
         local misc = plotModel:FindFirstChild("Misc")
         if misc then
