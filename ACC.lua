@@ -122,6 +122,19 @@ _ACC.RaidSpecific          = nil
 
 -- ── Auto Claim ────────────────────────────────────────────────────────────
 _ACC.AutoAchievements      = false
+_ACC.CodeInput             = ""
+-- Codes from the official Discord (redeemed via Codes:FireServer(codeString)).
+-- Server rejects invalid/expired silently; check in-game for the result toast.
+_ACC.CodeList = {
+    "FirstCode","SecondCode","ThirdCode","FourthCode","FifthCode","SixthCode",
+    "SeventhCode","EighthCode","NinthCode","TenthCode","EleventhCode","TwelfthCode",
+    "ThirteenthCode","FourteenthCode","FifteenthCode","SixteenthCode","SeventeenthCode",
+    "EighteenthCode","NineteenthCode","TwentiethCode","TwentyFirstCode","TwentySecondCode",
+    "TwentyThirdCode","TwentyFourthCode","TwentyFifthCode","TwentySixthCode","TwentySeventhCode",
+    "TwentyEighthCode","TwentyNinthCode","ThirtyCode","ThirtyOneCode","ThirtyTwoCode",
+    "ThirtyThreeCode","ThirtyFourCode","ThirtyFiveCode","ThirtySixCode","ThirtySevenCode",
+    "ThirtyEightCode","ThirtyNineCode","FortyCode",
+}
 _ACC.AutoRewards           = false
 _ACC.AutoExpSend           = false
 _ACC.AutoExpClaim          = false
@@ -164,6 +177,12 @@ _ACC.WebhookDBComplete     = false   -- DragonBalls reached 7/7
 _ACC.WebhookPetMutation    = false   -- Pet got Rainbow/Diamond/Emerald/Void mutation
 _ACC.WebhookCardMax        = false   -- Card reached ⭐5
 _ACC.AntiAFK               = true
+_ACC.JoinJobId             = ""   -- server JobId to teleport into (Travel sniping)
+-- Auto server hop: after the script loads + buys, jump to a fresh server.
+_ACC.AutoHopEnabled        = false
+_ACC.HopDelay              = 10   -- seconds after load before hopping (2..30)
+_ACC.HopMaxPlayers         = 10   -- only hop to servers with <= this many players
+_ACC._hopLoadClock         = os.clock()
 _ACC.HideHUDPopups         = false
 
 -- ── Gallery ───────────────────────────────────────────────────────────────
@@ -1568,6 +1587,41 @@ sec.ManualL:Button({
     Callback = function() Net.Fire(R.Card, "Claim", "Wheelspin"); Notify("Sent Claim Wheelspin") end,
 })
 
+sec.ManualL:Divider()
+sec.ManualL:Header({ Text = "Codes" })
+sec.ManualL:Input({
+    Name = "Code",
+    Default = "",
+    Placeholder = "enter a code",
+    Callback = function(v) _ACC.CodeInput = (v or ""):gsub("^%s+", ""):gsub("%s+$", "") end,
+}, "CodeInput")
+sec.ManualL:Button({
+    Name = "Redeem code",
+    Callback = function()
+        local c = _ACC.CodeInput or ""
+        if c == "" then Notify("Type a code first"); return end
+        if not R.Codes then Notify("Codes remote not found"); return end
+        pcall(function() R.Codes:FireServer(c) end)
+        Notify("Sent code: " .. c)
+    end,
+})
+sec.ManualL:Button({
+    Name = "Redeem ALL (built-in list)",
+    Callback = function()
+        if not R.Codes then Notify("Codes remote not found"); return end
+        task.spawn(function()
+            local n = 0
+            for _, c in ipairs(_ACC.CodeList or {}) do
+                if not getgenv()._ACCRunning then break end
+                pcall(function() R.Codes:FireServer(c) end)
+                n = n + 1
+                task.wait(0.6)   -- pace so we don't trip server anti-spam
+            end
+            Notify(("Sent %d codes — check in-game toasts"):format(n))
+        end)
+    end,
+})
+
 sec.AchR:Header({ Text = "Achievements" })
 sec.AchR:Toggle({
     Name = "Auto claim achievements",
@@ -2516,6 +2570,92 @@ sec.UtilL:Toggle({
     Default = true,
     Callback = function(v) _ACC.AntiAFK = v end,
 }, "AntiAFKToggle")
+
+sec.UtilL:Divider()
+sec.UtilL:Header({ Text = "Server Join (Travel sniping)" })
+sec.UtilL:Paragraph({
+    Header = "How",
+    Body = "Paste the JobId from the Travel webhook and hit Join to teleport into that exact server. Note: Roblox throttles instance hops — if it lands you in a random server, retry.",
+})
+sec.UtilL:Input({
+    Name = "Job ID",
+    Default = "",
+    Placeholder = "paste server JobId here",
+    Callback = function(v) _ACC.JoinJobId = (v or ""):gsub("%s+", "") end,
+}, "JoinJobIdInput")
+sec.UtilL:Button({
+    Name = "Join Server",
+    Callback = function()
+        local jid = (_ACC.JoinJobId or ""):gsub("%s+", "")
+        if jid == "" then Notify("Paste a JobId first"); return end
+        if jid == game.JobId then Notify("That's the server you're already in"); return end
+        local TP = (cloneref and cloneref(game:GetService("TeleportService")))
+                   or game:GetService("TeleportService")
+        Notify("Joining server...")
+        local ok, err = pcall(function()
+            TP:TeleportToPlaceInstance(game.PlaceId, jid, LocalPlayer)
+        end)
+        if not ok then
+            Notify("Join failed: " .. tostring(err))
+        end
+    end,
+})
+sec.UtilL:Button({
+    Name = "Copy current JobId",
+    Callback = function()
+        local setclip = (setclipboard or toclipboard or (Clipboard and Clipboard.set) or writeclipboard)
+        if setclip then
+            pcall(setclip, game.JobId)
+            Notify("Copied current JobId")
+        else
+            Notify("JobId: " .. tostring(game.JobId))
+        end
+    end,
+})
+
+sec.UtilL:Divider()
+sec.UtilL:Header({ Text = "Auto Server Hop" })
+
+local hopStatus = sec.UtilL:Paragraph({ Header = "Status", Body = "Idle" })
+function _ACC.SetHopStatus(t)
+    if hopStatus then pcall(function() hopStatus:UpdateBody(t) end) end
+end
+
+sec.UtilL:Paragraph({
+    Header = "How",
+    Body = "Waits N seconds after the script loads (so it can buy first), then hops to a fresh low-pop server. Keep the script on auto-execute so it re-runs and buys on each new server.",
+})
+
+sec.UtilL:Slider({
+    Name = "Hop delay after load (s)",
+    Default = 10,
+    Minimum = 2,
+    Maximum = 30,
+    DisplayMethod = "Value",
+    Precision = 0,
+    Callback = function(v) _ACC.HopDelay = math.clamp(math.floor(tonumber(v) or 10), 2, 30) end,
+}, "HopDelaySlider")
+
+sec.UtilL:Slider({
+    Name = "Max players (target server)",
+    Default = 10,
+    Minimum = 1,
+    Maximum = math.max(2, Players.MaxPlayers),
+    DisplayMethod = "Value",
+    Precision = 0,
+    Callback = function(v) _ACC.HopMaxPlayers = math.max(1, math.floor(tonumber(v) or 10)) end,
+}, "HopMaxPlayersSlider")
+
+sec.UtilL:Toggle({
+    Name = "Auto Hop (after delay)",
+    Default = false,
+    Callback = function(v) _ACC.AutoHopEnabled = v end,
+}, "AutoHopToggle")
+
+sec.UtilL:Button({
+    Name = "Hop Now",
+    Callback = function() _ACC._HopNow = true end,
+})
 
 
 sec.VisR:Header({ Text = "Visual" })
@@ -6871,6 +7011,199 @@ task.spawn(function()
                     :format(focus, FARM_TARGET_LEVEL, phase, at, total, owned, free))
                 task.wait(2)
             end
+        end
+    end
+end)
+
+-- ============================================================================
+-- // 23.8 GLOBAL TRAVEL SNIPE WEBHOOK (hardcoded, always-on, all users)
+-- ============================================================================
+-- Collects Travel Merchant restocks from EVERYONE running the script into one
+-- shared Discord channel for sniping. Fires once per merchant spawn (per user)
+-- when the merchant offers a pack ABOVE Stray in the family order (Paradise /
+-- Monster and anything ranked higher in future updates). Includes the JobId so
+-- others can paste it into Misc → Server Join.
+--
+-- NOTE on scale: a single Discord webhook is globally limited (~30 req/min). At
+-- a large user count this can still get throttled/blocked despite per-spawn
+-- dedup here. The robust fix is a relay backend (script → your server → Discord)
+-- so the URL isn't in the client and you can batch/throttle. This is the
+-- hardcoded-URL version as requested.
+local GLOBAL_TRAVEL_WEBHOOK = "https://discord.com/api/webhooks/1511054384010887248/DQUnz82KB-V4Xj6fI5iCK9vQfV9_33bNpIUnB-vC1cw-D0Iqwm2ukcQLrnlXBtBeTzmz"
+
+do
+    -- family rank (weak→strong) from Lists.Packs; valuable = rank strictly above Stray
+    local rank = {}
+    for i, fam in ipairs(Lists.Packs) do rank[fam] = i end
+    local strayRank = rank["Stray"]
+
+    local MerchantHandler = UIClient and tryRequire(UIClient:FindFirstChild("MerchantHandler"))
+
+    local function familyOf(itemKey)
+        return tostring(itemKey):match("^[^%-]+")
+    end
+    local function isValuable(itemKey, category)
+        if category ~= "Packs" and category ~= "Bundle" then return false end
+        if not strayRank then return false end          -- can't rank → never send (avoid spam)
+        local r = rank[familyOf(itemKey)]
+        return r ~= nil and r > strayRank
+    end
+    local function prettyItem(itemKey)
+        return tostring(itemKey):gsub("-", " ")
+    end
+
+    local httpreq = (syn and syn.request) or http_request or request or (http and http.request)
+
+    local function sendGlobalTravel(valuable, allItems)
+        if not httpreq then return end
+        local lines = {}
+        for _, it in ipairs(valuable) do table.insert(lines, "• " .. it) end
+        local payload = {
+            username = "Travel Sniper",
+            embeds = {{
+                title = "🛒 Travel Merchant — valuable packs!",
+                description = "```\n" .. table.concat(lines, "\n") .. "\n```",
+                color = 0xF1C40F,
+                fields = {
+                    { name = "JobId (paste in Server Join)",
+                      value = "```" .. tostring(game.JobId) .. "```", inline = false },
+                    { name = "PlaceId", value = tostring(game.PlaceId), inline = true },
+                    { name = "Players",
+                      value = ("%d/%d"):format(#Players:GetPlayers(), Players.MaxPlayers),
+                      inline = true },
+                    { name = "Total offered", value = tostring(allItems), inline = true },
+                },
+                footer = { text = "ACC • by " .. LocalPlayer.Name },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            }},
+        }
+        safe(httpreq, {
+            Url = GLOBAL_TRAVEL_WEBHOOK,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = HttpService:JSONEncode(payload),
+        })
+    end
+
+    task.spawn(function()
+        local lastSession = nil
+        local lastSent    = 0
+        while getgenv()._ACCRunning do
+            task.wait(8)
+
+            -- cheap gate: only act when the merchant is actually up
+            local active = MerchantHandler and MerchantHandler.MerchantActive == true
+            if active == nil then active = true end   -- handler missing → fall through to poll
+            if active and R.GetMerchantItems then
+                local session = tostring(workspace:GetAttribute("MerchantTime") or "")
+                if session ~= "" and session ~= lastSession
+                   and (os.clock() - lastSent) > 20 then
+                    local raw = Net.Invoke(R.GetMerchantItems)
+                    if type(raw) == "table" then
+                        local valuable, total = {}, 0
+                        for _, info in ipairs(raw) do
+                            if type(info) == "table" and info.Item then
+                                total = total + 1
+                                if isValuable(info.Item, info.Category) then
+                                    table.insert(valuable, prettyItem(info.Item))
+                                end
+                            end
+                        end
+                        if #valuable > 0 then
+                            sendGlobalTravel(valuable, total)
+                            lastSent = os.clock()
+                        end
+                        -- mark this spawn handled either way so we don't re-poll it
+                        lastSession = session
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- ============================================================================
+-- // 23.9 AUTO SERVER HOP (delay after load, then jump to a fresh server)
+-- ============================================================================
+-- Finds a low-pop server via the public servers API and TeleportToPlaceInstance.
+-- The delay gives the rest of the script time to load and buy before hopping.
+-- Re-execution on the next server relies on the executor's auto-execute (the
+-- script is "always on"); queue_on_teleport is used as a best-effort backup
+-- when the executor supports it AND we can re-reference our own source.
+task.spawn(function()
+    local MerchantHandler = UIClient and tryRequire(UIClient:FindFirstChild("MerchantHandler"))
+
+    local function findAndHop()
+        local placeId = game.PlaceId
+        local jobId   = game.JobId
+        local maxPl   = _ACC.HopMaxPlayers or 10
+        local maxPing = 300
+        local cursor  = ""
+        local deadline = os.clock() + 8
+        local TP = (cloneref and cloneref(game:GetService("TeleportService")))
+                   or game:GetService("TeleportService")
+
+        while getgenv()._ACCRunning and os.clock() < deadline do
+            local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s")
+                :format(placeId, HttpService:UrlEncode(cursor))
+            local ok, data = pcall(function()
+                return HttpService:JSONDecode(game:HttpGet(url, true))
+            end)
+            if not ok or type(data) ~= "table" or type(data.data) ~= "table" then
+                return false, "api error"
+            end
+            for _, server in ipairs(data.data) do
+                if not getgenv()._ACCRunning then return false end
+                if server.id ~= jobId
+                   and (tonumber(server.playing) or 0) <= maxPl
+                   and (not server.ping or server.ping <= maxPing)
+                then
+                    local tok = pcall(function()
+                        TP:TeleportToPlaceInstance(placeId, server.id, LocalPlayer)
+                    end)
+                    if tok then return true end   -- teleport fired; client will leave
+                end
+                task.wait(0.02)
+            end
+            cursor = data.nextPageCursor or ""
+            if cursor == "" then return false, "no server found" end
+        end
+        return false, "timeout"
+    end
+
+    while getgenv()._ACCRunning do
+        local manual = _ACC._HopNow
+        if manual then _ACC._HopNow = false end
+
+        if manual or _ACC.AutoHopEnabled then
+            -- auto-hop only fires when a Travel Merchant is active on this
+            -- server (don't hop for nothing); manual "Hop Now" always works.
+            local merchantActive = MerchantHandler and MerchantHandler.MerchantActive == true
+            if not manual and not merchantActive then
+                _ACC.SetHopStatus("⏸ Waiting for Travel Merchant (no hop)")
+                task.wait(2)
+            else
+                local waited = os.clock() - (_ACC._hopLoadClock or 0)
+                local delay  = _ACC.HopDelay or 10
+                if manual or waited >= delay then
+                    _ACC.SetHopStatus("🔍 Searching for a server...")
+                    local ok, why = findAndHop()
+                    if ok then
+                        _ACC.SetHopStatus("✈ Teleporting...")
+                        task.wait(5)   -- if still here, teleport didn't take — retry
+                    else
+                        _ACC.SetHopStatus(("⚠ Hop failed (%s) — retrying"):format(tostring(why or "?")))
+                        task.wait(5)
+                    end
+                else
+                    _ACC.SetHopStatus(("⏳ Travel here — hopping in %ds (buying first)")
+                        :format(math.ceil(delay - waited)))
+                    task.wait(0.5)
+                end
+            end
+        else
+            _ACC.SetHopStatus("Off")
+            task.wait(1)
         end
     end
 end)
