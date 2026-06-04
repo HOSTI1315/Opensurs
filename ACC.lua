@@ -7054,14 +7054,15 @@ do
 
     local httpreq = (syn and syn.request) or http_request or request or (http and http.request)
 
-    local function sendGlobalTravel(valuable, allItems)
+    local function sendGlobalTravel(items, total)
         if not httpreq then return end
         local lines = {}
-        for _, it in ipairs(valuable) do table.insert(lines, "• " .. it) end
+        for _, it in ipairs(items) do table.insert(lines, "• " .. it) end
+        if #lines == 0 then lines = { "(no items listed)" } end
         local payload = {
             username = "Travel Sniper",
             embeds = {{
-                title = "🛒 Travel Merchant — valuable packs!",
+                title = "🛒 Travel Merchant spawned!",
                 description = "```\n" .. table.concat(lines, "\n") .. "\n```",
                 color = 0xF1C40F,
                 fields = {
@@ -7071,7 +7072,7 @@ do
                     { name = "Players",
                       value = ("%d/%d"):format(#Players:GetPlayers(), Players.MaxPlayers),
                       inline = true },
-                    { name = "Total offered", value = tostring(allItems), inline = true },
+                    { name = "Items offered", value = tostring(total), inline = true },
                 },
                 footer = { text = "ACC • by " .. LocalPlayer.Name },
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
@@ -7086,38 +7087,48 @@ do
     end
 
     task.spawn(function()
-        local lastSession = nil
-        local lastSent    = 0
+        local wasUp    = false
+        local lastSent = 0
         while getgenv()._ACCRunning do
-            task.wait(8)
+            task.wait(6)
 
-            -- cheap gate: only act when the merchant is actually up
-            local active = MerchantHandler and MerchantHandler.MerchantActive == true
-            if active == nil then active = true end   -- handler missing → fall through to poll
-            if active and R.GetMerchantItems then
-                local session = tostring(workspace:GetAttribute("MerchantTime") or "")
-                if session ~= "" and session ~= lastSession
-                   and (os.clock() - lastSent) > 20 then
-                    local raw = Net.Invoke(R.GetMerchantItems)
-                    if type(raw) == "table" then
-                        local valuable, total = {}, 0
-                        for _, info in ipairs(raw) do
-                            if type(info) == "table" and info.Item then
-                                total = total + 1
-                                if isValuable(info.Item, info.Category) then
-                                    table.insert(valuable, prettyItem(info.Item))
-                                end
-                            end
+            -- "Merchant up?" — use the game's OWN live signals, NOT the workspace
+            -- "MerchantTime" attribute. That attribute is read in exactly one spot
+            -- in MerchantHandler (→ a dead MerchantSpawnTime field) and is often
+            -- absent, so the old `session ~= ""` guard silently never fired.
+            -- Authoritative client signal: MerchantHandler.MerchantActive (set true
+            -- in MerchantSpawned, even on mid-merchant injection via Connections).
+            -- Fallback: workspace attribute "Merchant" (the flag the game gates on).
+            local up = MerchantHandler and MerchantHandler.MerchantActive
+            if up == nil then up = workspace:GetAttribute("Merchant") end
+            up = up == true
+
+            -- rising edge (down→up) → a merchant just spawned: fire ONCE for EVERY
+            -- spawn, no value filtering (detect-all mode). wasUp resets on despawn,
+            -- so the next spawn fires again. The 15s guard only protects against flag
+            -- flicker, not normal per-spawn dedup.
+            if up and not wasUp and R.GetMerchantItems and (os.clock() - lastSent) > 15 then
+                local raw = Net.Invoke(R.GetMerchantItems)
+                if type(raw) == "table" then
+                    local items, total = {}, 0
+                    for _, info in ipairs(raw) do
+                        if type(info) == "table" and info.Item then
+                            total = total + 1
+                            local star = isValuable(info.Item, info.Category) and " ⭐" or ""
+                            table.insert(items, ("%s [%s]%s")
+                                :format(prettyItem(info.Item), tostring(info.Category or "?"), star))
                         end
-                        if #valuable > 0 then
-                            sendGlobalTravel(valuable, total)
-                            lastSent = os.clock()
-                        end
-                        -- mark this spawn handled either way so we don't re-poll it
-                        lastSession = session
+                    end
+                    print(("[ACC-Travel] merchant up — %d items: %s")
+                        :format(total, table.concat(items, ", ")))
+                    -- send on ANY spawn (filters removed); still skip a truly empty poll
+                    if total > 0 then
+                        sendGlobalTravel(items, total)
+                        lastSent = os.clock()
                     end
                 end
             end
+            wasUp = up
         end
     end)
 end
