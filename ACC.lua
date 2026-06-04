@@ -2623,11 +2623,11 @@ end
 
 sec.UtilL:Paragraph({
     Header = "How",
-    Body = "Waits N seconds after the script loads (so it can buy first), then hops to a fresh low-pop server. Keep the script on auto-execute so it re-runs and buys on each new server.",
+    Body = "Snipe mode: hops across fresh low-pop servers UNTIL it lands on one where a Travel Merchant is already active, then STAYS so auto-buy (and you) can grab it. When that merchant despawns it hops onward. Settle time = how long to wait on an empty server (for merchant state to replicate) before hopping again — lower = faster scan. Keep the script on auto-execute so it re-runs on each new server.",
 })
 
 sec.UtilL:Slider({
-    Name = "Hop delay after load (s)",
+    Name = "Settle time per server (s)",
     Default = 10,
     Minimum = 2,
     Maximum = 30,
@@ -2647,7 +2647,7 @@ sec.UtilL:Slider({
 }, "HopMaxPlayersSlider")
 
 sec.UtilL:Toggle({
-    Name = "Auto Hop (after delay)",
+    Name = "Auto Hop (snipe: hop until merchant)",
     Default = false,
     Callback = function(v) _ACC.AutoHopEnabled = v end,
 }, "AutoHopToggle")
@@ -7054,11 +7054,14 @@ do
 
     local httpreq = (syn and syn.request) or http_request or request or (http and http.request)
 
-    local function sendGlobalTravel(items, total)
+    local function sendGlobalTravel(items, total, origin)
         if not httpreq then return end
         local lines = {}
         for _, it in ipairs(items) do table.insert(lines, "• " .. it) end
         if #lines == 0 then lines = { "(no items listed)" } end
+        -- origin tells whether detection fired because the merchant was already
+        -- up when the script loaded ("at-load"), or because the script was
+        -- already running and caught a fresh spawn ("live-spawn" — the real test).
         local payload = {
             username = "Travel Sniper",
             embeds = {{
@@ -7074,7 +7077,8 @@ do
                       inline = true },
                     { name = "Items offered", value = tostring(total), inline = true },
                 },
-                footer = { text = "ACC • by " .. LocalPlayer.Name },
+                footer = { text = ("ACC • detect: %s • by %s")
+                    :format(tostring(origin or "?"), LocalPlayer.Name) },
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
             }},
         }
@@ -7089,6 +7093,7 @@ do
     task.spawn(function()
         local wasUp    = false
         local lastSent = 0
+        local sawDown  = false   -- have we observed a NO-merchant state since load?
         while getgenv()._ACCRunning do
             task.wait(6)
 
@@ -7102,6 +7107,7 @@ do
             local up = MerchantHandler and MerchantHandler.MerchantActive
             if up == nil then up = workspace:GetAttribute("Merchant") end
             up = up == true
+            if not up then sawDown = true end   -- proves the script was running with no merchant
 
             -- rising edge (down→up) → a merchant just spawned: fire ONCE for EVERY
             -- spawn, no value filtering (detect-all mode). wasUp resets on despawn,
@@ -7119,11 +7125,15 @@ do
                                 :format(prettyItem(info.Item), tostring(info.Category or "?"), star))
                         end
                     end
-                    print(("[ACC-Travel] merchant up — %d items: %s")
-                        :format(total, table.concat(items, ", ")))
+                    -- origin: "live-spawn" if we'd already seen a no-merchant tick
+                    -- (script was running, caught a fresh spawn — the real test),
+                    -- else "at-load" (merchant was already up when the script loaded).
+                    local origin = sawDown and "live-spawn" or "at-load"
+                    print(("[ACC-Travel] (%s) merchant up — %d items: %s")
+                        :format(origin, total, table.concat(items, ", ")))
                     -- send on ANY spawn (filters removed); still skip a truly empty poll
                     if total > 0 then
-                        sendGlobalTravel(items, total)
+                        sendGlobalTravel(items, total, origin)
                         lastSent = os.clock()
                     end
                 end
@@ -7144,6 +7154,8 @@ end
 task.spawn(function()
     local MerchantHandler = UIClient and tryRequire(UIClient:FindFirstChild("MerchantHandler"))
 
+    pcall(function() math.randomseed(os.clock() * 1e4 % 2147483647) end)
+
     local function findAndHop()
         local placeId = game.PlaceId
         local jobId   = game.JobId
@@ -7154,6 +7166,11 @@ task.spawn(function()
         local TP = (cloneref and cloneref(game:GetService("TeleportService")))
                    or game:GetService("TeleportService")
 
+        -- Collect a pool of eligible servers across pages, then pick one at
+        -- RANDOM. Picking the first match (old behaviour) made the bot bounce
+        -- between the same 1-2 servers; random spreads the hop across the
+        -- server list so sniping actually scans different servers.
+        local candidates = {}
         while getgenv()._ACCRunning and os.clock() < deadline do
             local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s")
                 :format(placeId, HttpService:UrlEncode(cursor))
@@ -7161,55 +7178,80 @@ task.spawn(function()
                 return HttpService:JSONDecode(game:HttpGet(url, true))
             end)
             if not ok or type(data) ~= "table" or type(data.data) ~= "table" then
-                return false, "api error"
+                if #candidates == 0 then return false, "api error" end
+                break
             end
             for _, server in ipairs(data.data) do
-                if not getgenv()._ACCRunning then return false end
                 if server.id ~= jobId
                    and (tonumber(server.playing) or 0) <= maxPl
                    and (not server.ping or server.ping <= maxPing)
                 then
-                    local tok = pcall(function()
-                        TP:TeleportToPlaceInstance(placeId, server.id, LocalPlayer)
-                    end)
-                    if tok then return true end   -- teleport fired; client will leave
+                    candidates[#candidates + 1] = server.id
                 end
-                task.wait(0.02)
             end
+            if #candidates >= 30 then break end   -- enough to randomize over
             cursor = data.nextPageCursor or ""
-            if cursor == "" then return false, "no server found" end
+            if cursor == "" then break end
         end
-        return false, "timeout"
+
+        if not getgenv()._ACCRunning then return false end
+        if #candidates == 0 then return false, "no server found" end
+
+        local pick = candidates[math.random(1, #candidates)]
+        local tok = pcall(function()
+            TP:TeleportToPlaceInstance(placeId, pick, LocalPlayer)
+        end)
+        if tok then return true end       -- teleport fired; client will leave
+        return false, "teleport failed"
+    end
+
+    local function merchantUp()
+        return (MerchantHandler and MerchantHandler.MerchantActive == true)
+            or (workspace:GetAttribute("Merchant") == true)
     end
 
     while getgenv()._ACCRunning do
         local manual = _ACC._HopNow
         if manual then _ACC._HopNow = false end
 
-        if manual or _ACC.AutoHopEnabled then
-            -- auto-hop only fires when a Travel Merchant is active on this
-            -- server (don't hop for nothing); manual "Hop Now" always works.
-            local merchantActive = MerchantHandler and MerchantHandler.MerchantActive == true
-            if not manual and not merchantActive then
-                _ACC.SetHopStatus("⏸ Waiting for Travel Merchant (no hop)")
-                task.wait(2)
+        if manual then
+            -- manual "Hop Now" — hop once, unconditionally.
+            _ACC.SetHopStatus("🔍 Hop Now — searching...")
+            local ok, why = findAndHop()
+            if ok then
+                _ACC.SetHopStatus("✈ Teleporting...")
+                task.wait(5)
             else
+                _ACC.SetHopStatus(("⚠ Hop failed (%s)"):format(tostring(why or "?")))
+                task.wait(3)
+            end
+
+        elseif _ACC.AutoHopEnabled then
+            -- SNIPE MODE: keep hopping to fresh low-pop servers UNTIL we land on
+            -- one where a Travel Merchant is already active, then STAY so auto-buy
+            -- (and you) can grab it. When that merchant despawns we hop onward.
+            if merchantUp() then
+                _ACC.SetHopStatus("🎯 Merchant here — staying (snipe hit)")
+                task.wait(3)
+            else
+                -- give a freshly-joined server a moment for merchant state to
+                -- replicate before deciding to hop onward (HopDelay = settle time).
                 local waited = os.clock() - (_ACC._hopLoadClock or 0)
-                local delay  = _ACC.HopDelay or 10
-                if manual or waited >= delay then
-                    _ACC.SetHopStatus("🔍 Searching for a server...")
+                local settle = _ACC.HopDelay or 10
+                if waited < settle then
+                    _ACC.SetHopStatus(("🔎 No merchant — hopping in %ds")
+                        :format(math.ceil(settle - waited)))
+                    task.wait(0.5)
+                else
+                    _ACC.SetHopStatus("🔍 No merchant — next server...")
                     local ok, why = findAndHop()
                     if ok then
-                        _ACC.SetHopStatus("✈ Teleporting...")
+                        _ACC.SetHopStatus("✈ Hopping to next server...")
                         task.wait(5)   -- if still here, teleport didn't take — retry
                     else
                         _ACC.SetHopStatus(("⚠ Hop failed (%s) — retrying"):format(tostring(why or "?")))
                         task.wait(5)
                     end
-                else
-                    _ACC.SetHopStatus(("⏳ Travel here — hopping in %ds (buying first)")
-                        :format(math.ceil(delay - waited)))
-                    task.wait(0.5)
                 end
             end
         else
