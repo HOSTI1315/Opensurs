@@ -180,7 +180,8 @@ _ACC.AntiAFK               = true
 _ACC.JoinJobId             = ""   -- server JobId to teleport into (Travel sniping)
 -- Auto server hop: after the script loads + buys, jump to a fresh server.
 _ACC.AutoHopEnabled        = false
-_ACC.HopDelay              = 10   -- seconds after load before hopping (2..30)
+_ACC.HopDelay              = 10   -- snipe: settle time on an empty server before hopping (2..30)
+_ACC.HopBuyWindow          = 15   -- snipe: seconds to STAY on a merchant server (buy) before hopping on (3..60)
 _ACC.HopMaxPlayers         = 10   -- only hop to servers with <= this many players
 _ACC._hopLoadClock         = os.clock()
 _ACC.HideHUDPopups         = false
@@ -2623,7 +2624,7 @@ end
 
 sec.UtilL:Paragraph({
     Header = "How",
-    Body = "Snipe mode: hops across fresh low-pop servers UNTIL it lands on one where a Travel Merchant is already active, then STAYS so auto-buy (and you) can grab it. When that merchant despawns it hops onward. Settle time = how long to wait on an empty server (for merchant state to replicate) before hopping again — lower = faster scan. Keep the script on auto-execute so it re-runs on each new server.",
+    Body = "Snipe mode: hops across fresh low-pop servers UNTIL it lands on one with an active Travel Merchant, STAYS the buy window (so Auto Buy Travel Merchant can grab it), then hops onward — cycling merchant → buy → next merchant. Settle time = wait on an EMPTY server (for merchant state to replicate) before hopping; lower = faster scan. Needs Auto Buy Travel Merchant ON (with items picked) to actually buy. Keep the script on auto-execute so it re-runs on each new server.",
 })
 
 sec.UtilL:Slider({
@@ -2635,6 +2636,16 @@ sec.UtilL:Slider({
     Precision = 0,
     Callback = function(v) _ACC.HopDelay = math.clamp(math.floor(tonumber(v) or 10), 2, 30) end,
 }, "HopDelaySlider")
+
+sec.UtilL:Slider({
+    Name = "Buy window on merchant (s)",
+    Default = 15,
+    Minimum = 3,
+    Maximum = 60,
+    DisplayMethod = "Value",
+    Precision = 0,
+    Callback = function(v) _ACC.HopBuyWindow = math.clamp(math.floor(tonumber(v) or 15), 3, 60) end,
+}, "HopBuyWindowSlider")
 
 sec.UtilL:Slider({
     Name = "Max players (target server)",
@@ -7210,12 +7221,27 @@ task.spawn(function()
             or (workspace:GetAttribute("Merchant") == true)
     end
 
+    local function hopOnward(label)
+        _ACC.SetHopStatus(label or "🔍 Searching next server...")
+        local ok, why = findAndHop()
+        if ok then
+            _ACC.SetHopStatus("✈ Hopping to next server...")
+            task.wait(5)   -- if still here, teleport didn't take — retry
+        else
+            _ACC.SetHopStatus(("⚠ Hop failed (%s) — retrying"):format(tostring(why or "?")))
+            task.wait(5)
+        end
+    end
+
+    local stayStart = nil   -- os.clock() when we landed on the current merchant server
+
     while getgenv()._ACCRunning do
         local manual = _ACC._HopNow
         if manual then _ACC._HopNow = false end
 
         if manual then
             -- manual "Hop Now" — hop once, unconditionally.
+            stayStart = nil
             _ACC.SetHopStatus("🔍 Hop Now — searching...")
             local ok, why = findAndHop()
             if ok then
@@ -7227,15 +7253,25 @@ task.spawn(function()
             end
 
         elseif _ACC.AutoHopEnabled then
-            -- SNIPE MODE: keep hopping to fresh low-pop servers UNTIL we land on
-            -- one where a Travel Merchant is already active, then STAY so auto-buy
-            -- (and you) can grab it. When that merchant despawns we hop onward.
+            -- SNIPE MODE: hop fresh low-pop servers UNTIL one has an active Travel
+            -- Merchant, then STAY a buy-window (so Auto Buy Travel Merchant can grab
+            -- it) and hop onward — keeps cycling merchant → buy → next merchant.
             if merchantUp() then
-                _ACC.SetHopStatus("🎯 Merchant here — staying (snipe hit)")
-                task.wait(3)
+                if not stayStart then stayStart = os.clock() end   -- just arrived at a merchant
+                local stayed = os.clock() - stayStart
+                local buyWin = _ACC.HopBuyWindow or 15
+                if stayed >= buyWin then
+                    stayStart = nil
+                    hopOnward("✅ Buy window done — next server...")
+                else
+                    _ACC.SetHopStatus(("🎯 Merchant! buying — hop in %ds")
+                        :format(math.ceil(buyWin - stayed)))
+                    task.wait(0.5)
+                end
             else
-                -- give a freshly-joined server a moment for merchant state to
-                -- replicate before deciding to hop onward (HopDelay = settle time).
+                -- no merchant here: give the freshly-joined server a moment for
+                -- merchant state to replicate (HopDelay = settle), then hop onward.
+                stayStart = nil
                 local waited = os.clock() - (_ACC._hopLoadClock or 0)
                 local settle = _ACC.HopDelay or 10
                 if waited < settle then
@@ -7243,19 +7279,12 @@ task.spawn(function()
                         :format(math.ceil(settle - waited)))
                     task.wait(0.5)
                 else
-                    _ACC.SetHopStatus("🔍 No merchant — next server...")
-                    local ok, why = findAndHop()
-                    if ok then
-                        _ACC.SetHopStatus("✈ Hopping to next server...")
-                        task.wait(5)   -- if still here, teleport didn't take — retry
-                    else
-                        _ACC.SetHopStatus(("⚠ Hop failed (%s) — retrying"):format(tostring(why or "?")))
-                        task.wait(5)
-                    end
+                    hopOnward("🔍 No merchant — next server...")
                 end
             end
         else
             _ACC.SetHopStatus("Off")
+            stayStart = nil
             task.wait(1)
         end
     end
