@@ -289,6 +289,26 @@ local function dbg(msg)
     if _ACC.Debug then print("[ACC] " .. tostring(msg)) end
 end
 
+-- HTTP GET with executor-agnostic fallback. Some executors (and some
+-- auto-execute / post-teleport contexts) don't expose `game:HttpGet`
+-- ("HttpGet is not a valid member of DataModel"), but DO ship a request
+-- function. Try the DataModel method first, then fall back to request().
+-- Returns the body string, or nil + error message on total failure.
+local function httpGet(url)
+    local ok, res = pcall(function() return game:HttpGet(url, true) end)
+    if ok and type(res) == "string" then return res end
+    local req = (syn and syn.request) or http_request or request or (http and http.request)
+    if req then
+        local ok2, resp = pcall(req, { Url = url, Method = "GET" })
+        if ok2 and type(resp) == "table" then
+            local body = resp.Body or resp.body
+            if type(body) == "string" then return body end
+        end
+    end
+    return nil, ("httpGet failed for %s (%s)"):format(tostring(url), tostring(res))
+end
+_ACC._httpGet = httpGet
+
 -- monkey-patch with restore
 local function hookPatch(holder, methodName, replacement)
     if not holder then return end
@@ -874,7 +894,13 @@ do
 end
 
 -- // 10. LIBRARY SETUP
-local MacLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac"))()
+local _macSrc, _macErr = httpGet("https://raw.githubusercontent.com/dvorfkar6-lab/uis/refs/heads/main/Mac")
+if not _macSrc then
+    warn("[ACC_HUB] failed to fetch MacLib: " .. tostring(_macErr))
+    getgenv()._ACCRunning = false
+    return
+end
+local MacLib = loadstring(_macSrc)()
 local Window = MacLib:Window({
     Title    = "Anime Card Collection | ApelHub",
     Subtitle = "",
@@ -7186,7 +7212,8 @@ task.spawn(function()
             local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s")
                 :format(placeId, HttpService:UrlEncode(cursor))
             local ok, data = pcall(function()
-                return HttpService:JSONDecode(game:HttpGet(url, true))
+                local body = httpGet(url)
+                return body and HttpService:JSONDecode(body) or nil
             end)
             if not ok or type(data) ~= "table" or type(data.data) ~= "table" then
                 if #candidates == 0 then return false, "api error" end
