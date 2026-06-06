@@ -94,6 +94,7 @@ _ACC.AutoTrait             = false
 _ACC.AutoArmor             = false
 _ACC.SelectedTraitCards    = {}   -- map
 _ACC.SelectedWantedTraits  = {}   -- map
+_ACC.TraitRollReverse      = false  -- roll the card list last→first instead of first→last
 _ACC.WantedArmorGrades     = {}        -- map { ["S+"]=true, ["SR"]=true }
 _ACC.ArmorMaterials        = {}        -- map { ["Bronze"]=true, ... }
 
@@ -114,6 +115,7 @@ _ACC.AutoGrade             = false
 _ACC.GradeUseTokensFirst   = true
 _ACC.SelectedGradeCards    = {}   -- map
 _ACC.SelectedWantedGrades  = {}   -- map
+_ACC.GradeRollReverse      = false  -- roll the card list last→first instead of first→last
 
 _ACC.AutoRaid              = false
 _ACC.RaidEquipBest         = true
@@ -1332,6 +1334,11 @@ sec.TowerL:Toggle({
     Default = false,
     Callback = function(v) _ACC.AutoTrait = v end,
 }, "AutoTraitToggle")
+sec.TowerL:Toggle({
+    Name = "Roll from end (last → first)",
+    Default = false,
+    Callback = function(v) _ACC.TraitRollReverse = v end,
+}, "TraitRollReverseToggle")
 
 sec.TowerL:Divider()
 sec.TowerL:Header({ Text = "Armor Roll" })
@@ -1525,6 +1532,11 @@ sec.GradeL:Toggle({
     Default = false,
     Callback = function(v) _ACC.AutoGrade = v end,
 }, "AutoGradeToggle")
+sec.GradeL:Toggle({
+    Name = "Roll from end (last → first)",
+    Default = false,
+    Callback = function(v) _ACC.GradeRollReverse = v end,
+}, "GradeRollReverseToggle")
 
 sec.GradeL:Button({
     Name = "Exit grade UI",
@@ -3783,6 +3795,11 @@ task.spawn(function()
                     table.insert(list, name)
                 end
             end
+            if _ACC.TraitRollReverse then
+                for i = 1, math.floor(#list / 2) do
+                    list[i], list[#list - i + 1] = list[#list - i + 1], list[i]
+                end
+            end
             return list
         end,
         preSweep = function()
@@ -4284,6 +4301,11 @@ task.spawn(function()
             for _, n in ipairs(Lists.Cards) do
                 if (selectAll or _ACC.SelectedGradeCards[n]) and ownedCards[n] then
                     table.insert(list, n)
+                end
+            end
+            if _ACC.GradeRollReverse then
+                for i = 1, math.floor(#list / 2) do
+                    list[i], list[#list - i + 1] = list[#list - i + 1], list[i]
                 end
             end
             return list
@@ -7492,10 +7514,13 @@ end)
 local GLOBAL_TRAVEL_WEBHOOK = "https://discord.com/api/webhooks/1511054384010887248/DQUnz82KB-V4Xj6fI5iCK9vQfV9_33bNpIUnB-vC1cw-D0Iqwm2ukcQLrnlXBtBeTzmz"
 
 do
-    -- family rank (weak→strong) from Lists.Packs; valuable = rank strictly above Stray
+    -- family rank (weak→strong) from Lists.Packs. "Valuable" = one of the LAST N
+    -- families (the newest/strongest). Threshold is computed from the list length,
+    -- so a game update that adds pack families auto-raises the bar — no manual edit.
     local rank = {}
     for i, fam in ipairs(Lists.Packs) do rank[fam] = i end
-    local strayRank = rank["Stray"]
+    local TOP_FAMILIES = 5
+    local valuableThreshold = #Lists.Packs - TOP_FAMILIES   -- rank > this ⇒ top-N family
 
     local MerchantHandler = UIClient and tryRequire(UIClient:FindFirstChild("MerchantHandler"))
 
@@ -7504,12 +7529,14 @@ do
     end
     local function isValuable(itemKey, category)
         if category ~= "Packs" and category ~= "Bundle" then return false end
-        if not strayRank then return false end          -- can't rank → never send (avoid spam)
         local r = rank[familyOf(itemKey)]
-        return r ~= nil and r > strayRank
+        return r ~= nil and r > valuableThreshold
     end
     local function prettyItem(itemKey)
         return tostring(itemKey):gsub("-", " ")
+    end
+    local function mutationOf(itemKey)
+        return tostring(itemKey):match("^[^%-]+%-([^%-]+)")   -- 2nd "-" segment = mutation
     end
 
     local httpreq = (syn and syn.request) or http_request or request or (http and http.request)
@@ -7583,9 +7610,17 @@ do
                     for _, info in ipairs(raw) do
                         if type(info) == "table" and info.item then
                             total = total + 1
-                            local star = isValuable(info.item, info.category) and " ⭐" or ""
+                            -- markers ONLY on ⭐ top-4 items (so lower cards don't
+                            -- clutter the search): ⭐ + 💰 bundle + 🌈 Rainbow
+                            local marks = ""
+                            if isValuable(info.item, info.category) then
+                                marks = "⭐"
+                                if info.category == "Bundle" then marks = marks .. "💰" end
+                                if mutationOf(info.item) == "Rainbow" then marks = marks .. "🌈" end
+                                marks = " " .. marks
+                            end
                             table.insert(items, ("%s [%s]%s")
-                                :format(prettyItem(info.item), tostring(info.category or "?"), star))
+                                :format(prettyItem(info.item), tostring(info.category or "?"), marks))
                         end
                     end
                     -- origin: "live-spawn" if we'd already seen a no-merchant tick
