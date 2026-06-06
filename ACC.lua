@@ -5312,7 +5312,28 @@ do
         Tower = { engine = "TowerAutoStart",   ids = { "Quest5", "Quest10" } },
     }
     local managedEngines = {}   -- flag -> true if WE turned it on
-    local managedFill     = {}  -- "Place"/"Craft" -> snapshot map WE auto-filled
+    local managedFill     = {}  -- "Craft" -> snapshot map WE auto-filled
+
+    -- Pack-selection label sets (mirror how Lists.PacksFullWithBundles is built).
+    -- ALL_PACKS = every label; MUTATED_PACKS = only the non-Regular variants +
+    -- their bundles. The "open X packs WITH A MUTATION" quests (Q3/Q8) only
+    -- advance when MUTATED packs are placed+opened, so while those are pending we
+    -- force Place to put down mutated packs (regular packs never advance them).
+    local ALL_PACKS, MUTATED_PACKS = {}, {}
+    for _, label in ipairs(Lists.PacksFullWithBundles or {}) do ALL_PACKS[label] = true end
+    for _, family in ipairs(Lists.Packs or {}) do
+        for _, rarity in ipairs(Lists.Rarities or {}) do
+            if rarity ~= "Regular" then
+                MUTATED_PACKS[family .. " " .. rarity] = true
+                MUTATED_PACKS[family .. " " .. rarity .. " Bundle"] = true
+            end
+        end
+    end
+
+    -- Non-destructive override of the Place selection: the user's own picks are
+    -- stashed (placePrev) and restored when we stop. placeSet = the map we last
+    -- wrote, so we only restore if the user hasn't hand-edited it since.
+    local managingPlace, placePrev, placeSet = false, nil, nil
 
     -- true if both are boolean-maps with the exact same set of true keys
     local function sameMap(a, b)
@@ -5333,13 +5354,21 @@ do
             _ACC[flag] = false; managedEngines[flag] = nil
         end
     end
-    local function fillSelections(needPlace, needOpen, needCraft)
-        if _ACC.PetQuestMode ~= "Zero-config" then return end
-        if (needPlace or needOpen) and mapEmpty(_ACC.SelectedPlacePacks) then
-            local m = {}
-            for _, label in ipairs(Lists.PacksFullWithBundles or {}) do m[label] = true end
-            _ACC.SelectedPlacePacks = m; managedFill.Place = m
+    -- Drive the Place selection to `desired` (a label map) or, with nil, restore
+    -- the user's stashed selection. Snapshots the user's picks the first time we
+    -- override so they're never lost.
+    local function managePlace(desired)
+        if desired then
+            if not managingPlace then placePrev = _ACC.SelectedPlacePacks; managingPlace = true end
+            if not sameMap(_ACC.SelectedPlacePacks, desired) then _ACC.SelectedPlacePacks = desired end
+            placeSet = desired
+        elseif managingPlace then
+            if sameMap(_ACC.SelectedPlacePacks, placeSet) then _ACC.SelectedPlacePacks = placePrev or {} end
+            managingPlace, placePrev, placeSet = false, nil, nil
         end
+    end
+    local function fillCraft(needCraft)
+        if _ACC.PetQuestMode ~= "Zero-config" then return end
         if needCraft and mapEmpty(_ACC.SelectedCraftPotions) then
             local m = {}
             for _, name in ipairs(Lists.Potions or {}) do m[name] = true end
@@ -5349,12 +5378,9 @@ do
     local function releaseAll()
         for flag in pairs(managedEngines) do _ACC[flag] = false end
         managedEngines = {}
-        -- only clear what WE auto-filled; if the user has since edited the
-        -- selection (no longer equals our snapshot), drop ownership but keep it.
-        if managedFill.Place then
-            if sameMap(_ACC.SelectedPlacePacks, managedFill.Place) then _ACC.SelectedPlacePacks = {} end
-            managedFill.Place = nil
-        end
+        managePlace(nil)   -- restore the user's Place selection
+        -- only clear what WE auto-filled; if the user has since edited it
+        -- (no longer equals our snapshot), drop ownership but keep it.
         if managedFill.Craft then
             if sameMap(_ACC.SelectedCraftPotions, managedFill.Craft) then _ACC.SelectedCraftPotions = {} end
             managedFill.Craft = nil
@@ -5418,7 +5444,20 @@ do
                         end
                         need[cat] = incomplete
                     end
-                    fillSelections(need.Place, need.Open, need.Craft)
+                    -- Mutation-pack quests (Q3/Q8) only advance when MUTATED packs
+                    -- are placed+opened — opening regular packs does nothing. So
+                    -- while they're pending, force Place to mutated packs in ANY
+                    -- mode (else the quest is impossible); otherwise Zero-config
+                    -- fills all packs and Smart leaves your own picks alone.
+                    local needMutOpen = (not questDone(pq, "Quest3")) or (not questDone(pq, "Quest8"))
+                    local desiredPlace
+                    if needMutOpen then
+                        desiredPlace = MUTATED_PACKS
+                    elseif (need.Place or need.Open) and _ACC.PetQuestMode == "Zero-config" then
+                        desiredPlace = ALL_PACKS
+                    end
+                    managePlace(desiredPlace)
+                    fillCraft(need.Craft)
                     -- Open quests need placed packs that hatch → keep Place on while Open is needed
                     setEngine("AutoPlaceEnabled", need.Place or need.Open)
                     setEngine("AutoOpenEnabled",  need.Open)
@@ -5429,7 +5468,7 @@ do
                             (_ACC.PetQuestMode or "Smart") .. " — driving engines"))
                     end
                 end
-            elseif next(managedEngines) or next(managedFill) then
+            elseif next(managedEngines) or next(managedFill) or managingPlace then
                 releaseAll()
                 if _ACC.SetPetQuestStatus then _ACC.SetPetQuestStatus("Off") end
             end
