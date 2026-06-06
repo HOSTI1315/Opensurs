@@ -1177,6 +1177,15 @@ local placeCounter = sec.AFPlaceL:Paragraph({
     Header = "Placement slots",
     Body   = "Loading...",
 })
+-- Authoritative weighted count: the update removed info.Category, so manual
+-- (Category=="Bundle" and 5 or 1) miscounts. Use the game's own function, which
+-- iterates the PacksPlaced TABLE (errors on bad arg → pcall). Fallback: 1/entry.
+local function numPacksPlaced(pp)
+    pp = pp or (Data.Get("PacksPlaced") or {})
+    local ok, n = pcall(function() return CardConfig and CardConfig.GetNumPacksPlaced and CardConfig.GetNumPacksPlaced(pp) end)
+    if ok and type(n) == "number" then return n end
+    local used = 0; for _ in pairs(pp) do used = used + 1 end; return used   -- fallback: 1 per entry (Category weighting is gone)
+end
 local function refreshPlaceCounter()
     local replica = Data.GetReplica()
     local txt
@@ -1184,11 +1193,7 @@ local function refreshPlaceCounter()
         txt = "waiting for data..."
     else
         local maxP = replica.Data.MaxPlacements or 25
-        local used = 0
-        for _, info in pairs(replica.Data.PacksPlaced or {}) do
-            local isBundle = type(info) == "table" and info.Category == "Bundle"
-            used = used + (isBundle and 5 or 1)
-        end
+        local used = numPacksPlaced(replica.Data.PacksPlaced)
         txt = ("%d / %d (%d free)"):format(used, maxP, maxP - used)
     end
     if placeCounter then
@@ -1202,6 +1207,9 @@ end
 
 -- Initial paint; live updates come from the replica OnChange hooks below.
 refreshPlaceCounter()
+-- Madwork OnChange does NOT fire on sub-key updates, so poll to keep the
+-- counter live (the OnChange("PacksPlaced") hook below catches whole-table swaps only).
+task.spawn(function() while getgenv()._ACCRunning do task.wait(2); refreshPlaceCounter() end end)
 
 local replica0 = Data.GetReplica()
 if replica0 and replica0.OnChange then
@@ -3460,10 +3468,7 @@ task.spawn(function()
                 local ownedPacks = replica.Data.Packs       or {}
                 local maxP       = replica.Data.MaxPlacements or 25
 
-                local used = 0
-                for _, info in pairs(placed) do
-                    used = used + ((type(info) == "table" and info.Category == "Bundle") and 5 or 1)
-                end
+                local used = numPacksPlaced(placed)
                 local free = maxP - used
                 if free < 1 then return end
 
@@ -5431,11 +5436,7 @@ do
                         local replica = Data.GetReplica()
                         if replica and replica.Data then
                             local maxP = replica.Data.MaxPlacements or 25
-                            local used = 0
-                            for _, info in pairs(replica.Data.PacksPlaced or {}) do
-                                local isBundle = type(info) == "table" and info.Category == "Bundle"
-                                used = used + (isBundle and 5 or 1)
-                            end
+                            local used = numPacksPlaced(replica.Data.PacksPlaced)
                             local cap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
                             hasRoom = used < cap
                         end
@@ -7136,10 +7137,7 @@ task.spawn(function()
         local rep = Data.GetReplica()
         if not (rep and rep.Data) then return nil end
         local maxP = rep.Data.MaxPlacements or 25
-        local used = 0
-        for _, info in pairs(rep.Data.PacksPlaced or {}) do
-            used = used + ((type(info) == "table" and info.Category == "Bundle") and 5 or 1)
-        end
+        local used = numPacksPlaced(rep.Data.PacksPlaced)
         return maxP - used
     end
 
@@ -7434,10 +7432,7 @@ task.spawn(function()
         local rep = Data.GetReplica()
         if not (rep and rep.Data) then return nil end
         local maxP = rep.Data.MaxPlacements or 25
-        local used = 0
-        for _, info in pairs(rep.Data.PacksPlaced or {}) do
-            used = used + ((type(info) == "table" and info.Category == "Bundle") and 5 or 1)
-        end
+        local used = numPacksPlaced(rep.Data.PacksPlaced)
         return maxP - used
     end
 
