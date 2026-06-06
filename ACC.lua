@@ -152,6 +152,8 @@ _ACC.MerchantPaymentMode   = "Trade -> Tokens"  -- Trade (Cash/packs) first, fal
 _ACC.SelectedPetEggs       = {}   -- map
 _ACC.PetRoll1              = false
 _ACC.PetRoll5              = false
+_ACC.AutoPetQuests         = false      -- orchestrate engines to complete pet quests
+_ACC.PetQuestMode          = "Smart"    -- "Smart" (use your selections) / "Zero-config" (auto-pick)
 _ACC.DragonBallAuto        = false
 _ACC.DBWishType            = "Cash"  -- which wish to make when 7 balls collected
 
@@ -176,6 +178,7 @@ _ACC.WebhookRaid           = false
 _ACC.WebhookDBComplete     = false   -- DragonBalls reached 7/7
 _ACC.WebhookPetMutation    = false   -- Pet got Rainbow/Diamond/Emerald/Void mutation
 _ACC.WebhookCardMax        = false   -- Card reached ⭐5
+_ACC.WebhookMerchant       = false   -- log what was bought from the Travel Merchant
 _ACC.AntiAFK               = true
 _ACC.JoinJobId             = ""   -- server JobId to teleport into (Travel sniping)
 -- Auto server hop: after the script loads + buys, jump to a fresh server.
@@ -185,12 +188,14 @@ _ACC.HopBuyWindow          = 15   -- snipe: seconds to STAY on a merchant server
 _ACC.HopMaxPlayers         = 10   -- only hop to servers with <= this many players
 _ACC._hopLoadClock         = os.clock()
 _ACC.HideHUDPopups         = false
+_ACC.FPSBoost              = false   -- low-graphics performance mode (kills FX, drops quality)
 
 -- ── Gallery ───────────────────────────────────────────────────────────────
 -- Auto Buy Packs
 _ACC.AutoGalleryBuy            = false
 _ACC.SelectedGalleryPacks      = {}        -- map ["Basic"]=true ...
 _ACC.GalleryBuyStrategy        = "Highest first"  -- / "Lowest first" / "Spread"
+_ACC.GalleryBuyWholeShop       = false     -- buy entire figurine shop ONLY when 💎 cover all of it
 -- Auto Upgrade per-card buff
 _ACC.AutoGalleryUpgrade        = false
 _ACC.SelectedUpgradeCards      = {}        -- map ["Pirate"]=true ...
@@ -217,6 +222,7 @@ _ACC._GallerySpreadIdxLvl      = 0
 
 -- ── Internal ──────────────────────────────────────────────────────────────
 _ACC._connections          = {}
+_ACC._merchantBuyQueue     = {}    -- pending Travel-Merchant buys awaiting a webhook flush
 _ACC.IsLoadingConfig       = true
 _ACC.ModulesLoaded         = false
 
@@ -1092,6 +1098,11 @@ local function makeSearchableDropdown(section, params, flag)
 
     return dd
 end
+
+local function makeStatus(section, header)
+    local p = section:Paragraph({ Header = header or "Status", Body = "Idle" })
+    return function(t) if p then pcall(function() p:UpdateBody(t) end) end end
+end
 -- ============================================================================
 -- // 11. TAB: AUTO FARM
 -- ============================================================================
@@ -1188,14 +1199,8 @@ local function refreshPlaceCounter()
     end
 end
 
--- Madwork OnChange may not fire on sub-key updates, so also poll periodically
+-- Initial paint; live updates come from the replica OnChange hooks below.
 refreshPlaceCounter()
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        task.wait(2)
-        refreshPlaceCounter()
-    end
-end)
 
 local replica0 = Data.GetReplica()
 if replica0 and replica0.OnChange then
@@ -1300,12 +1305,7 @@ sec.TowerL:Toggle({
 sec.TowerL:Divider()
 sec.TowerL:Header({ Text = "Trait Roll" })
 
-local traitStatus = sec.TowerL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetTraitStatus(text)
-    if traitStatus then
-        pcall(function() traitStatus:UpdateBody(text) end)
-    end
-end
+_ACC.SetTraitStatus = makeStatus(sec.TowerL)
 
 makeSearchableDropdown(sec.TowerL, {
     Name = "Cards",
@@ -1321,13 +1321,11 @@ makeSearchableDropdown(sec.TowerL, {
     end,
 }, "TraitCardsDropdown")
 
-sec.TowerL:Dropdown({
+makeSearchableDropdown(sec.TowerL, {
     Name = "Wanted Traits",
     Multi = true,
     Options = Lists.Traits,
-    Callback = function(selected)
-        _ACC.SelectedWantedTraits = mapFromMulti(selected)
-    end,
+    OnChange = function(map) _ACC.SelectedWantedTraits = map end,
 }, "WantedTraitsDropdown")
 
 sec.TowerL:Toggle({
@@ -1339,28 +1337,23 @@ sec.TowerL:Toggle({
 sec.TowerL:Divider()
 sec.TowerL:Header({ Text = "Armor Roll" })
 
-local armorStatus = sec.TowerL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetArmorStatus(text)
-    if armorStatus then
-        pcall(function() armorStatus:UpdateBody(text) end)
-    end
-end
+_ACC.SetArmorStatus = makeStatus(sec.TowerL)
 
 -- Materials ordered best-to-worst (Diamond is rarest/strongest, Bronze cheapest).
 -- User picks which to use; loop walks them in this priority order — when one
 -- runs out, falls through to next.
-sec.TowerL:Dropdown({
+makeSearchableDropdown(sec.TowerL, {
     Name = "Materials (best→worst)",
     Multi = true,
     Options = { "Diamond", "Platinum", "Gold", "Silver", "Bronze" },
-    Callback = function(selected) _ACC.ArmorMaterials = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.ArmorMaterials = map end,
 }, "ArmorMaterialsDropdown")
 
-sec.TowerL:Dropdown({
+makeSearchableDropdown(sec.TowerL, {
     Name = "Wanted Grades",
     Multi = true,
     Options = Lists.Grades,
-    Callback = function(selected) _ACC.WantedArmorGrades = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.WantedArmorGrades = map end,
 }, "ArmorGradesDropdown")
 
 sec.TowerL:Toggle({
@@ -1468,12 +1461,7 @@ sec.STR:Toggle({
 sec.STR:Divider()
 sec.STR:Header({ Text = "Auto Star Evolve" })
 
-local starEvolveStatus = sec.STR:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetStarEvolveStatus(text)
-    if starEvolveStatus then
-        pcall(function() starEvolveStatus:UpdateBody(text) end)
-    end
-end
+_ACC.SetStarEvolveStatus = makeStatus(sec.STR)
 
 makeSearchableDropdown(sec.STR, {
     Name = "Cards to evolve",
@@ -1504,12 +1492,7 @@ sec.STR:Button({ Name = "Stream lobby", Callback = function() Net.Fire(R.StarTri
 -- ── Grade ─────────────────────────────────────────────────────────────────
 sec.GradeL:Header({ Text = "Grade" })
 
-local gradeStatus = sec.GradeL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetGradeStatus(text)
-    if gradeStatus then
-        pcall(function() gradeStatus:UpdateBody(text) end)
-    end
-end
+_ACC.SetGradeStatus = makeStatus(sec.GradeL)
 
 makeSearchableDropdown(sec.GradeL, {
     Name = "Cards",
@@ -1525,13 +1508,11 @@ makeSearchableDropdown(sec.GradeL, {
     end,
 }, "GradeCardsDropdown")
 
-sec.GradeL:Dropdown({
+makeSearchableDropdown(sec.GradeL, {
     Name = "Wanted Grades",
     Multi = true,
     Options = Lists.Grades,
-    Callback = function(selected)
-        _ACC.SelectedWantedGrades = mapFromMulti(selected)
-    end,
+    OnChange = function(map) _ACC.SelectedWantedGrades = map end,
 }, "WantedGradesDropdown")
 
 sec.GradeL:Toggle({
@@ -1554,10 +1535,7 @@ sec.GradeL:Button({
 -- ── Raid ──────────────────────────────────────────────────────────────────
 sec.RaidR:Header({ Text = "Raid" })
 
-local raidStatus = sec.RaidR:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetRaidStatus(text)
-    if raidStatus then pcall(function() raidStatus:UpdateBody(text) end) end
-end
+_ACC.SetRaidStatus = makeStatus(sec.RaidR)
 
 sec.RaidR:Dropdown({
     Name = "Mode",
@@ -1699,14 +1677,12 @@ makeSearchableDropdown(sec.ExpR, {
     OnChange = function(map) _ACC.SelectedExpPacks = map end,
 }, "ExpPacksDropdown")
 
-sec.ExpR:Dropdown({
+makeSearchableDropdown(sec.ExpR, {
     Name = "Marines (NPCs)",
     Multi = true,
     Options = { "1", "2", "3", "4" },
     Default = { "1", "2", "3", "4" },
-    Callback = function(selected)
-        _ACC.SelectedExpNPCs = mapFromMulti(selected)
-    end,
+    OnChange = function(map) _ACC.SelectedExpNPCs = map end,
 }, "ExpNPCsDropdown")
 
 sec.ExpR:Dropdown({
@@ -1768,6 +1744,12 @@ sec.ExpR:Button({
 local Shops = {}
 Shops.StockSnap     = {}   -- array of {id, family, mut, price}
 Shops.MerchantSnap  = {}   -- array of {item, category, cashPrice, tokenPrice}
+-- Short-TTL cache: many loops/buttons/the webhook ask for the same snapshot in
+-- the same tick. os.clock() timestamp of the last SUCCESSFUL server fetch; a
+-- refresh re-invokes only if older than SHOP_SNAP_TTL (or force=true).
+Shops.StockSnapAt    = 0
+Shops.MerchantSnapAt = 0
+local SHOP_SNAP_TTL  = 2.5
 
 local function stockPrice(family, mut)
     if not (CardConfig and CardConfig.Packs and CardConfig.Packs[family]) then return nil end
@@ -1786,7 +1768,11 @@ end
 -- this cycle). When it's absent/false, the ball is buyable — but its price
 -- isn't in CardConfig.Packs, so we leave price=nil and the auto-buy loop
 -- fires once without a client-side cash check (server validates).
-function Shops.RefreshStock()
+function Shops.RefreshStock(force)
+    if not force and Shops.StockSnapAt > 0
+       and (os.clock() - Shops.StockSnapAt) < SHOP_SNAP_TTL then
+        return Shops.StockSnap
+    end
     Shops.StockSnap = {}
     if not R.GetStock then return Shops.StockSnap end
     local items = Net.Invoke(R.GetStock)
@@ -1821,12 +1807,17 @@ function Shops.RefreshStock()
             })
         end
     end
+    Shops.StockSnapAt = os.clock()
     return Shops.StockSnap
 end
 
 -- Merchant item entry: {item, category, cashPrice (number|nil),
 --                       tokenPrice (number|nil), rawPrice (table|nil for Totem)}
-function Shops.RefreshMerchant()
+function Shops.RefreshMerchant(force)
+    if not force and Shops.MerchantSnapAt > 0
+       and (os.clock() - Shops.MerchantSnapAt) < SHOP_SNAP_TTL then
+        return Shops.MerchantSnap
+    end
     Shops.MerchantSnap = {}
     if not R.GetMerchantItems then return Shops.MerchantSnap end
     local items = Net.Invoke(R.GetMerchantItems)
@@ -1842,6 +1833,7 @@ function Shops.RefreshMerchant()
             })
         end
     end
+    Shops.MerchantSnapAt = os.clock()
     return Shops.MerchantSnap
 end
 
@@ -1911,25 +1903,33 @@ sec.StockL:Toggle({
     Callback = function(v) _ACC.AutoStock = v end,
 }, "AutoStockToggle")
 
+-- Shared stock-buy loop. `filter` is a predicate over the snapshot entry
+-- (or nil = buy everything in stock). Force-refreshes the snapshot, sends
+-- Buy requests while Cash allows, and returns the number of requests sent.
+local function buyStock(filter)
+    Shops.RefreshStock(true)
+    local n = 0
+    for _, e in ipairs(Shops.StockSnap) do
+        if e.price and (filter == nil or filter(e)) then
+            local amt = tonumber(e.amount) or 1
+            while amt > 0 and (Data.Get("Cash") or 0) >= e.price do
+                Net.Fire(R.Stock, "Buy", e.id)
+                n = n + 1
+                amt = amt - 1
+                task.wait(0.25)
+            end
+        end
+    end
+    return n
+end
+
 sec.StockL:Button({
     Name = "Buy Selected Now",
     Callback = function()
         if mapEmpty(_ACC.SelectedStockItems) then
             Notify("Nothing selected"); return
         end
-        Shops.RefreshStock()
-        local n = 0
-        for _, e in ipairs(Shops.StockSnap) do
-            if _ACC.SelectedStockItems[e.id] and e.price then
-                local amt = tonumber(e.amount) or 1
-                while amt > 0 and (Data.Get("Cash") or 0) >= e.price do
-                    Net.Fire(R.Stock, "Buy", e.id)
-                    n = n + 1
-                    amt = amt - 1
-                    task.wait(0.25)
-                end
-            end
-        end
+        local n = buyStock(function(e) return _ACC.SelectedStockItems[e.id] end)
         Notify("Sent " .. n .. " buy requests")
     end,
 })
@@ -1937,19 +1937,7 @@ sec.StockL:Button({
 sec.StockL:Button({
     Name = "Buy ALL in stock now (custom — fixes BuyAll bug)",
     Callback = function()
-        Shops.RefreshStock()
-        local n = 0
-        for _, e in ipairs(Shops.StockSnap) do
-            if e.price then
-                local amt = tonumber(e.amount) or 1
-                while amt > 0 and (Data.Get("Cash") or 0) >= e.price do
-                    Net.Fire(R.Stock, "Buy", e.id)
-                    n = n + 1
-                    amt = amt - 1
-                    task.wait(0.25)
-                end
-            end
-        end
+        local n = buyStock(nil)
         Notify("Bought " .. n .. " items")
     end,
 })
@@ -2000,18 +1988,23 @@ local function buyMerchantItem(entry)
     -- Totem trade path: cashPrice is nil; server validates pack inventory.
     -- We can't pre-check pack count without parsing rawPrice, so we let it through
     -- when "Trade" is preferred and assume server-side validation handles it.
+    local function logBuy(via, price)
+        table.insert(_ACC._merchantBuyQueue, {
+            item = entry.item, category = entry.category, price = price, via = via,
+        })
+    end
     local function tryTrade()
         if entry.category == "Totem" and not entry.cashPrice then
-            Net.Fire(R.Merchant, "Buy", entry.item); return true
+            Net.Fire(R.Merchant, "Buy", entry.item); logBuy("Trade", nil); return true
         end
         if hasCash then
-            Net.Fire(R.Merchant, "Buy", entry.item); return true
+            Net.Fire(R.Merchant, "Buy", entry.item); logBuy("Cash", entry.cashPrice); return true
         end
         return false
     end
     local function tryTokens()
         if hasTokens then
-            Net.Fire(R.Merchant, "Buy", entry.item, "Token"); return true
+            Net.Fire(R.Merchant, "Buy", entry.item, "Token"); logBuy("Tokens", entry.tokenPrice); return true
         end
         return false
     end
@@ -2035,22 +2028,31 @@ sec.MerR:Toggle({
     Callback = function(v) _ACC.AutoMerchant = v end,
 }, "AutoMerchantToggle")
 
+-- Shared merchant-buy loop. `filter` is a predicate over the snapshot entry
+-- (or nil = buy everything offered). Force-refreshes the snapshot, runs each
+-- eligible entry through buyMerchantItem (honoring payment priority), and
+-- returns the number of buys sent.
+local function buyMerchant(filter)
+    Shops.RefreshMerchant(true)
+    local n = 0
+    for _, e in ipairs(Shops.MerchantSnap) do
+        if filter == nil or filter(e) then
+            if buyMerchantItem(e) then
+                n = n + 1
+                task.wait(0.3)
+            end
+        end
+    end
+    return n
+end
+
 sec.MerR:Button({
     Name = "Buy Selected Now",
     Callback = function()
         if mapEmpty(_ACC.SelectedMerchantItems) then
             Notify("Nothing selected"); return
         end
-        Shops.RefreshMerchant()
-        local n = 0
-        for _, e in ipairs(Shops.MerchantSnap) do
-            if _ACC.SelectedMerchantItems[e.item] then
-                if buyMerchantItem(e) then
-                    n = n + 1
-                    task.wait(0.3)
-                end
-            end
-        end
+        local n = buyMerchant(function(e) return _ACC.SelectedMerchantItems[e.item] end)
         Notify("Sent " .. n .. " buy requests")
     end,
 })
@@ -2058,24 +2060,17 @@ sec.MerR:Button({
 sec.MerR:Button({
     Name = "Buy ALL offered (using payment priority)",
     Callback = function()
-        Shops.RefreshMerchant()
-        local n = 0
-        for _, e in ipairs(Shops.MerchantSnap) do
-            if buyMerchantItem(e) then
-                n = n + 1
-                task.wait(0.3)
-            end
-        end
+        local n = buyMerchant(nil)
         Notify("Bought " .. n .. " items")
     end,
 })
 
 sec.PetL:Header({ Text = "Pet Packs" })
-sec.PetL:Dropdown({
+makeSearchableDropdown(sec.PetL, {
     Name = "Eggs",
     Multi = true,
     Options = Lists.PetEggs,
-    Callback = function(selected) _ACC.SelectedPetEggs = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.SelectedPetEggs = map end,
 }, "PetEggsDropdown")
 sec.PetL:Toggle({
     Name = "Auto Roll x1",
@@ -2091,6 +2086,31 @@ sec.PetL:Button({
     Name = "Show Roll toggle",
     Callback = function() Net.Fire(R.Pet, "ShowRoll") end,
 })
+
+-- ── Auto Pet Quests ───────────────────────────────────────────────────────
+-- Pet quests have NO claim button — the server auto-grants Pet Tokens on
+-- completion. They're done by Place/Open/Craft/Tower actions, so this just
+-- drives the matching auto-engines for any incomplete quest and idles when
+-- all 10 are done (re-arming every 3h reset). Reward is collected automatically.
+sec.PetL:Divider()
+sec.PetL:Header({ Text = "Auto Pet Quests" })
+local petQuestStatus = sec.PetL:Paragraph({ Header = "Progress", Body = "Off" })
+function _ACC.SetPetQuestStatus(t)
+    if petQuestStatus then pcall(function() petQuestStatus:UpdateBody(t) end) end
+end
+sec.PetL:Dropdown({
+    Name = "Mode",
+    Multi = false,
+    Options = { "Smart", "Zero-config" },
+    Default = _ACC.PetQuestMode,
+    Callback = function(v) if type(v) == "string" then _ACC.PetQuestMode = v end end,
+}, "PetQuestModeDropdown")
+sec.PetL:Toggle({
+    Name = "Auto-complete Pet Quests",
+    Default = false,
+    Callback = function(v) _ACC.AutoPetQuests = v end,
+}, "AutoPetQuestsToggle")
+sec.PetL:Label({ Text = "Smart = uses YOUR pack/potion picks. Zero-config = auto-picks (place/open all owned, craft any). Tower & mutation-pack quests need owned packs / enough power." })
 
 sec.DBR:Header({ Text = "Dragon Ball" })
 sec.DBR:Button({
@@ -2125,19 +2145,18 @@ sec.PEL:Dropdown({
     Default = "Upgrade",
     Callback = function(v) _ACC.PEMethod = v end,
 }, "PEMethodDropdown")
-sec.PEL:Dropdown({
+makeSearchableDropdown(sec.PEL, {
     Name = "Packs",
     Multi = true,
-    Search = true,
     Options = Lists.Packs,
-    Callback = function(selected) _ACC.PESelectedPacks = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.PESelectedPacks = map end,
 }, "PEPacksDropdown")
-sec.PEL:Dropdown({
+makeSearchableDropdown(sec.PEL, {
     Name = "Rarity (from / to bundle) — multi",
     Multi = true,
     Options = Lists.Rarities,
     Default = { "Regular" },
-    Callback = function(selected) _ACC.PEFromRarities = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.PEFromRarities = map end,
 }, "PEFromDropdown")
 sec.PEL:Dropdown({
     Name = "Bundle/Unbundle batch",
@@ -2228,11 +2247,11 @@ sec.PotL:Button({
 })
 
 sec.UpgR:Header({ Text = "Upgrades" })
-sec.UpgR:Dropdown({
+makeSearchableDropdown(sec.UpgR, {
     Name = "Upgrades",
     Multi = true,
     Options = Lists.Upgrades,
-    Callback = function(selected) _ACC.SelectedUpgrades = mapFromMulti(selected) end,
+    OnChange = function(map) _ACC.SelectedUpgrades = map end,
 }, "UpgradesDropdown")
 sec.UpgR:Toggle({
     Name = "Auto Upgrade",
@@ -2305,7 +2324,12 @@ end
 --   else baseStock[box] + FigurineBoosts[box]   (the Stock boost adds spawns)
 -- Reading only the 1st value (old behaviour) under-counted boosted stock and
 -- mis-fired Buy on sold-out tiers — the "No Stock Left" / "buys not all" bugs.
-local function galleryRefreshStock()
+local gallerySnap, gallerySnapAt = {}, 0
+local function galleryRefreshStock(force)
+    if not force and gallerySnapAt > 0
+       and (os.clock() - gallerySnapAt) < SHOP_SNAP_TTL then
+        return gallerySnap
+    end
     if not R.GetGalleryStock or not getgenv()._ACCRunning then return {} end
     local ok, base, override = pcall(function()
         return R.GetGalleryStock:InvokeServer()
@@ -2322,6 +2346,7 @@ local function galleryRefreshStock()
         end
         eff[box] = n or 0
     end
+    gallerySnap, gallerySnapAt = eff, os.clock()
     return eff
 end
 -- Mirror of GalleryHandler InitActiveFigurines: top 10 owned by Chance ASC
@@ -2354,19 +2379,54 @@ if CardConfig and CardConfig.Packs then
 end
 table.sort(allCardNames)
 
+-- ── Whole-shop buy (only when 💎 cover EVERYTHING) ────────────────────────
+-- Sums every in-stock, discovery-req-met pack (price × qty). Buys the lot in
+-- one shot ONLY if Diamonds ≥ that total — otherwise buys nothing (no slow
+-- one-by-one spend that drains you on a half-shop). Returns: bought, total,
+-- diamonds, status ("ok" | "poor" | "empty").
+_ACC.BuyWholeGalleryShop = function(force)
+    local stock    = galleryRefreshStock(force)
+    local diamonds = Data.Get("Diamonds") or 0
+    local nDisc    = #(Data.Get("FigurinesDiscovered") or {})
+    local plan, total = {}, 0
+    for _, tier in ipairs(Lists.GalleryPacks) do
+        local cfg = GalleryConfig and GalleryConfig.FigurinePacks
+                    and GalleryConfig.FigurinePacks[tier]
+        local qty = stock[tier] or 0
+        if cfg and qty > 0 then
+            local price    = cfg.Price or 0
+            local needDisc = cfg.FigurinesDiscovered or 0
+            if price > 0 and nDisc >= needDisc then
+                total = total + price * qty
+                table.insert(plan, { tier = tier, price = price, stock = qty })
+            end
+        end
+    end
+    if #plan == 0 then return 0, total, diamonds, "empty" end
+    if diamonds < total then return 0, total, diamonds, "poor" end
+    local bought = 0
+    for _, c in ipairs(plan) do
+        for _ = 1, c.stock do
+            if not getgenv()._ACCRunning then break end
+            if (Data.Get("Diamonds") or 0) < c.price then break end  -- safety re-check
+            Net.Fire(R.Gallery, "Buy", c.tier)
+            bought = bought + 1
+            task.wait(0.2)
+        end
+    end
+    return bought, total, diamonds, "ok"
+end
+
 -- ── GalBuyL: Auto Buy Packs ──────────────────────────────────────────────
 sec.GalBuyL:Header({ Text = "Auto Buy Figurine Packs" })
 
-local galBuyStatus = sec.GalBuyL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetGalleryBuyStatus(t)
-    if galBuyStatus then pcall(function() galBuyStatus:UpdateBody(t) end) end
-end
+_ACC.SetGalleryBuyStatus = makeStatus(sec.GalBuyL)
 
-sec.GalBuyL:Dropdown({
+makeSearchableDropdown(sec.GalBuyL, {
     Name = "Pack tiers",
     Multi = true,
     Options = Lists.GalleryPacks,
-    Callback = function(s) _ACC.SelectedGalleryPacks = mapFromMulti(s) end,
+    OnChange = function(map) _ACC.SelectedGalleryPacks = map end,
 }, "GalleryPacksDropdown")
 
 sec.GalBuyL:Dropdown({
@@ -2387,10 +2447,33 @@ sec.GalBuyL:Button({
     Name = "Buy selected once",
     Callback = function() _ACC._GalleryBuyForce = true end,
 })
+
+-- Whole-shop buy: grabs the ENTIRE figurine stock at once, but only if you can
+-- afford all of it (no one-by-one drain). Ignores the tier selection above.
+sec.GalBuyL:Toggle({
+    Name = "Auto buy WHOLE shop (only when 💎 cover all of it)",
+    Default = false,
+    Callback = function(v) _ACC.GalleryBuyWholeShop = v end,
+}, "GalleryWholeShopToggle")
+sec.GalBuyL:Button({
+    Name = "Buy whole shop now",
+    Callback = function() task.spawn(function()
+        local bought, total, diamonds, status = _ACC.BuyWholeGalleryShop(true)
+        if status == "empty" then
+            Notify("Shop empty / nothing buyable")
+        elseif status == "poor" then
+            Notify(("Need %s 💎 for the whole shop, have %s — skipped")
+                :format(tostring(total), tostring(diamonds)))
+        else
+            Notify(("Bought whole shop: %d packs for %s 💎"):format(bought, tostring(total)))
+        end
+    end) end,
+})
+
 sec.GalBuyL:Button({
     Name = "Show current stock",
     Callback = function()
-        local stock = galleryRefreshStock()
+        local stock = galleryRefreshStock(true)
         local lines = {}
         for _, k in ipairs(Lists.GalleryPacks) do
             table.insert(lines, ("%s: %d"):format(k, stock[k] or 0))
@@ -2409,10 +2492,7 @@ sec.GalBuyL:Button({
 sec.GalBuyL:Divider()
 sec.GalBuyL:Header({ Text = "Auto Boost Pack Stock" })
 
-local stockBoostStatus = sec.GalBuyL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetStockBoostStatus(t)
-    if stockBoostStatus then pcall(function() stockBoostStatus:UpdateBody(t) end) end
-end
+_ACC.SetStockBoostStatus = makeStatus(sec.GalBuyL)
 
 makeSearchableDropdown(sec.GalBuyL, {
     Name = "Packs to boost stock (Diamonds)",
@@ -2430,10 +2510,7 @@ sec.GalBuyL:Toggle({
 -- ── GalUpgR: Per-card Upgrades ───────────────────────────────────────────
 sec.GalUpgR:Header({ Text = "Per-Card Upgrades" })
 
-local galUpgStatus = sec.GalUpgR:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetGalleryUpgStatus(t)
-    if galUpgStatus then pcall(function() galUpgStatus:UpdateBody(t) end) end
-end
+_ACC.SetGalleryUpgStatus = makeStatus(sec.GalUpgR)
 
 sec.GalUpgR:Dropdown({
     Name = "Mode",
@@ -2457,12 +2534,12 @@ makeSearchableDropdown(sec.GalUpgR, {
     OnChange = function(v) _ACC.GalleryUpgradeFocusCard = v end,
 }, "GalleryUpgFocusCardDropdown")
 
-sec.GalUpgR:Dropdown({
+makeSearchableDropdown(sec.GalUpgR, {
     Name = "Upgrade kinds",
     Multi = true,
     Options = Lists.GalleryUpgradeKinds,
     Default = Lists.GalleryUpgradeKinds,   -- pre-select all
-    Callback = function(s) _ACC.SelectedUpgradeKinds = mapFromMulti(s) end,
+    OnChange = function(map) _ACC.SelectedUpgradeKinds = map end,
 }, "GalleryUpgKindsDropdown")
 
 sec.GalUpgR:Dropdown({
@@ -2482,10 +2559,7 @@ sec.GalUpgR:Toggle({
 -- ── GalLvlL: Figurine Levelup ────────────────────────────────────────────
 sec.GalLvlL:Header({ Text = "Auto Levelup Figurines" })
 
-local galLvlStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetGalleryLvlStatus(t)
-    if galLvlStatus then pcall(function() galLvlStatus:UpdateBody(t) end) end
-end
+_ACC.SetGalleryLvlStatus = makeStatus(sec.GalLvlL)
 
 makeSearchableDropdown(sec.GalLvlL, {
     Name = "Figurines (sorted by multiplier)",
@@ -2532,19 +2606,14 @@ sec.GalMiscR:Button({
 sec.GalMiscR:Divider()
 sec.GalMiscR:Header({ Text = "Auto Boost (DiamondMult / Luck)" })
 
-local genericBoostStatus = sec.GalMiscR:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetGenericBoostStatus(t)
-    if genericBoostStatus then pcall(function() genericBoostStatus:UpdateBody(t) end) end
-end
+_ACC.SetGenericBoostStatus = makeStatus(sec.GalMiscR)
 
-sec.GalMiscR:Dropdown({
+makeSearchableDropdown(sec.GalMiscR, {
     Name = "Boosts to upgrade",
     Multi = true,
     Options = { "DiamondMultiplier", "FigurineLuck" },
     Default = { ["DiamondMultiplier"] = true, ["FigurineLuck"] = true },
-    Callback = function(s)
-        _ACC.SelectedGenericBoosts = mapFromMulti(s)
-    end,
+    OnChange = function(map) _ACC.SelectedGenericBoosts = map end,
 }, "GenericBoostsDropdown")
 
 sec.GalMiscR:Toggle({
@@ -2578,6 +2647,9 @@ sec.WHR:Toggle({ Name = "Notify pet mutations (Rainbow / Diamond / Emerald / Voi
 sec.WHR:Toggle({ Name = "Notify card reaches ⭐5",
                  Default = false, Callback = function(v) _ACC.WebhookCardMax = v end },
                "WebhookCardMaxToggle")
+sec.WHR:Toggle({ Name = "Notify Travel Merchant purchases (what you bought)",
+                 Default = false, Callback = function(v) _ACC.WebhookMerchant = v end },
+               "WebhookMerchantToggle")
 sec.WHR:Button({
     Name = "Test webhook",
     Callback = function()
@@ -2643,10 +2715,7 @@ sec.UtilL:Button({
 sec.UtilL:Divider()
 sec.UtilL:Header({ Text = "Auto Server Hop" })
 
-local hopStatus = sec.UtilL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetHopStatus(t)
-    if hopStatus then pcall(function() hopStatus:UpdateBody(t) end) end
-end
+_ACC.SetHopStatus = makeStatus(sec.UtilL)
 
 sec.UtilL:Paragraph({
     Header = "How",
@@ -2708,6 +2777,102 @@ sec.VisR:Button({
         if hum then hum.Health = 0 end
     end,
 })
+
+-- ── FPS Boost / Low Graphics ──────────────────────────────────────────────
+-- Helps with the lag spikes when spam-opening cards: drops render quality,
+-- kills post-processing + shadows, and continuously disables particle-type
+-- effects (the bursts every card-open spawns). Effects stay off until rejoin.
+sec.VisR:Toggle({
+    Name = "FPS Boost (low graphics)",
+    Default = false,
+    Callback = function(v) _ACC.FPSBoost = v end,
+}, "FPSBoostToggle")
+sec.VisR:Label({ Text = "Soaps the game: no particles/shadows/post-FX, lowest quality. Reverts on toggle-off." })
+
+do
+    -- effect classes nuked while boost is on (card-open bursts are mostly these)
+    local FPS_KILL = {
+        ParticleEmitter = true, Trail = true, Beam = true,
+        Smoke = true, Fire = true, Sparkles = true, Explosion = true,
+    }
+    local Lighting = game:GetService("Lighting")
+    local applied, conn = false, nil
+    local saved = {}
+
+    local function applyStatic(on)
+        pcall(function()
+            settings().Rendering.QualityLevel =
+                on and Enum.QualityLevel.Level01 or Enum.QualityLevel.Automatic
+        end)
+        if on then
+            if saved.GlobalShadows == nil then saved.GlobalShadows = Lighting.GlobalShadows end
+            if saved.FogEnd       == nil then saved.FogEnd       = Lighting.FogEnd end
+            pcall(function() Lighting.GlobalShadows = false end)
+            pcall(function() Lighting.FogEnd = 1e9 end)
+            for _, e in ipairs(Lighting:GetChildren()) do
+                if e:IsA("BloomEffect") or e:IsA("BlurEffect")
+                   or e:IsA("DepthOfFieldEffect") or e:IsA("SunRaysEffect") then
+                    pcall(function() e.Enabled = false end)
+                end
+            end
+        else
+            if saved.GlobalShadows ~= nil then
+                pcall(function() Lighting.GlobalShadows = saved.GlobalShadows end)
+            end
+            if saved.FogEnd then pcall(function() Lighting.FogEnd = saved.FogEnd end) end
+            for _, e in ipairs(Lighting:GetChildren()) do
+                if e:IsA("BloomEffect") or e:IsA("BlurEffect")
+                   or e:IsA("DepthOfFieldEffect") or e:IsA("SunRaysEffect") then
+                    pcall(function() e.Enabled = true end)
+                end
+            end
+        end
+    end
+
+    local function sweepNow()
+        local ok, ds = pcall(function() return Workspace:GetDescendants() end)
+        if not ok then return end
+        for _, d in ipairs(ds) do
+            if FPS_KILL[d.ClassName] then pcall(function() d.Enabled = false end) end
+        end
+    end
+
+    -- restore hook invoked by _ACCCleanup so lighting/quality/shadows/fog/post-FX
+    -- revert on Unload even while FPS Boost is ON (closure over applyStatic/applied/conn)
+    getgenv()._ACCFPSRestore = function()
+        if conn then pcall(function() conn:Disconnect() end); conn = nil end
+        if applied then
+            applied = false
+            pcall(function() applyStatic(false) end)
+        end
+    end
+
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.FPSBoost and not applied then
+                applied = true
+                applyStatic(true)
+                sweepNow()
+                conn = Workspace.DescendantAdded:Connect(function(d)
+                    if _ACC.FPSBoost and FPS_KILL[d.ClassName] then
+                        pcall(function() d.Enabled = false end)
+                    end
+                end)
+                table.insert(_ACC._connections, conn)
+            elseif (not _ACC.FPSBoost) and applied then
+                applied = false
+                if conn then pcall(function() conn:Disconnect() end); conn = nil end
+                applyStatic(false)
+            end
+            task.wait(1)
+        end
+        -- restore on unload
+        if applied then
+            if conn then pcall(function() conn:Disconnect() end) end
+            pcall(function() applyStatic(false) end)
+        end
+    end)
+end
 
 -- ============================================================================
 -- // 17. TAB: SETTINGS
@@ -2865,6 +3030,31 @@ end)
 --   "<PlayerName>-PackTimer" → TextLabel    — text becomes "Ready!" when ready
 -- Reads attributes "Time" and "Hatch" on the timer label as a safety check
 -- (RenderStepped sets Text, but attribute math is authoritative).
+-- Per-pack cache (weak keys: entries drop when the pack despawns/hatches) so we
+-- resolve the ProximityPrompt + timer label with a SINGLE descendants pass once
+-- instead of two full walks every cycle. Re-resolves only on a cache miss or
+-- when a previously-found child went stale / was not present yet.
+local _autoOpenCache = setmetatable({}, { __mode = "k" })
+local function resolveAutoOpenPack(packPart, timerTag)
+    local cached = _autoOpenCache[packPart]
+    if cached then
+        local p, t = cached.prompt, cached.timer
+        local pOk = p and p.Parent ~= nil
+        local tOk = t and t.Parent ~= nil
+        if pOk and tOk then return cached end
+        -- nil-on-first-resolve or stale child: fall through to re-resolve below
+    end
+    local model = packPart:FindFirstAncestorOfClass("Model") or packPart
+    local prompt, timer
+    for _, d in ipairs(model:GetDescendants()) do
+        if not prompt and d:IsA("ProximityPrompt") then prompt = d end
+        if not timer and CollectionService:HasTag(d, timerTag) then timer = d end
+        if prompt and timer then break end
+    end
+    cached = { prompt = prompt, timer = timer }
+    _autoOpenCache[packPart] = cached
+    return cached
+end
 task.spawn(function()
     while getgenv()._ACCRunning do
         if _ACC.AutoOpenEnabled then
@@ -2874,18 +3064,14 @@ task.spawn(function()
                 local packTag  = LocalPlayer.Name .. "-Pack"
                 local timerTag = LocalPlayer.Name .. "-PackTimer"
 
-                -- gather Ready! packs
+                -- gather Ready! packs (timer label resolved from per-pack cache);
+                -- safe()-wrapped so a pack vanishing mid-gather can't kill the loop
                 local readyPacks = {}
                 local now = workspace:GetServerTimeNow()
                 for _, packPart in ipairs(CollectionService:GetTagged(packTag)) do
-                    if packPart:IsDescendantOf(workspace) then
-                        local model = packPart:FindFirstAncestorOfClass("Model") or packPart
-                        local timerLabel
-                        for _, d in ipairs(model:GetDescendants()) do
-                            if CollectionService:HasTag(d, timerTag) then
-                                timerLabel = d; break
-                            end
-                        end
+                    safe(function()
+                        if not packPart:IsDescendantOf(workspace) then return end
+                        local timerLabel = resolveAutoOpenPack(packPart, timerTag).timer
                         local ready = false
                         if timerLabel then
                             local t = timerLabel:GetAttribute("Time")
@@ -2899,36 +3085,40 @@ task.spawn(function()
                         if ready then
                             table.insert(readyPacks, packPart)
                         end
-                    end
+                    end)
                 end
 
                 if #readyPacks > 0 then
                     local startCFrame = hrp.CFrame
+                    local moved = false
                     for _, packPart in ipairs(readyPacks) do
                         if not _ACC.AutoOpenEnabled or not getgenv()._ACCRunning then break end
-                        if packPart:IsDescendantOf(workspace) then
-                            local model = packPart:FindFirstAncestorOfClass("Model") or packPart
-                            local prompt
-                            for _, d in ipairs(model:GetDescendants()) do
-                                if d:IsA("ProximityPrompt") then prompt = d; break end
-                            end
-                            if prompt then
-                                -- teleport directly onto the pack so the spawned
-                                -- reward lands inside our auto-collect range
-                                hrp.CFrame = CFrame.new(packPart.Position + Vector3.new(0, 3, 0))
+                        -- a destroyed/reparented pack must not kill the loop
+                        safe(function()
+                            if not packPart:IsDescendantOf(workspace) then return end
+                            local prompt = resolveAutoOpenPack(packPart, timerTag).prompt
+                            if not prompt or not prompt.Parent then return end
+                            -- only teleport when out of activation range; landing
+                            -- the spawned reward inside our auto-collect range still
+                            -- needs us nearby, so use the prompt's own reach as the
+                            -- threshold and skip the TP when we're already close
+                            local reach = prompt.MaxActivationDistance
+                            if not reach or reach <= 0 then reach = 10 end
+                            local packPos = packPart.Position
+                            if (hrp.Position - packPos).Magnitude > reach then
+                                hrp.CFrame = CFrame.new(packPos + Vector3.new(0, 3, 0))
+                                moved = true
                                 task.wait(0.15)
-
-                                safe(function()
-                                    prompt:InputHoldBegin()
-                                    task.wait(prompt.HoldDuration + 0.05)
-                                    prompt:InputHoldEnd()
-                                end)
-                                -- linger on the spot so the reward is grabbed
-                                task.wait(0.4)
                             end
-                        end
+
+                            prompt:InputHoldBegin()
+                            task.wait(prompt.HoldDuration + 0.05)
+                            prompt:InputHoldEnd()
+                            -- linger on the spot so the reward is grabbed
+                            task.wait(0.4)
+                        end)
                     end
-                    if hrp.Parent then hrp.CFrame = startCFrame end
+                    if moved and hrp.Parent then hrp.CFrame = startCFrame end
                 end
             end
         end
@@ -2961,26 +3151,19 @@ task.spawn(function()
         return nil
     end
 
+    -- AGGREGATE cap on Collect fires per cycle (per-slot RL_Allow alone does
+    -- not bound total Collect QPS when many slots are active).
+    local MAX_COLLECT_PER_CYCLE = 12
+
     local function snapshotPage(display)
-        -- prefer authoritative Page label
+        -- Authoritative Page label only. The old slot-content fallback meant a
+        -- full Left+Right :GetChildren()+FindFirstChildWhichIsA traversal twice
+        -- per cycle (heavy alloc under card spam). Returns nil when the label is
+        -- genuinely missing; callers treat nil as "unknown" (keep stepping and
+        -- rely on MAX_STEPS), so all pages are still cycled.
         local lbl = readPageLabel(display)
         if lbl then return "L:" .. lbl end
-        -- fallback: include inner content of slots
-        local s = {}
-        for _, sideName in ipairs({ "Left", "Right" }) do
-            local side = display:FindFirstChild(sideName)
-            if side then
-                for _, slot in ipairs(side:GetChildren()) do
-                    local inner = slot:FindFirstChildWhichIsA("BasePart")
-                                  or slot:FindFirstChildWhichIsA("Model")
-                                  or slot:FindFirstChildWhichIsA("MeshPart")
-                    table.insert(s, sideName .. "/" .. slot.Name
-                                    .. ":" .. (inner and inner.Name or "?"))
-                end
-            end
-        end
-        table.sort(s)
-        return "S:" .. table.concat(s, "|")
+        return nil
     end
 
     local function reverse()
@@ -2993,14 +3176,19 @@ task.spawn(function()
         if _ACC.AutoCollectEnabled then
             local display = Plot.GetDisplay()
             if display then
-                -- 1. collect everything visible
+                -- 1. collect everything visible (aggregate-capped per cycle)
+                local collectFires = 0
                 for _, sideName in ipairs({ "Left", "Right" }) do
                     if not _ACC.AutoCollectEnabled or not getgenv()._ACCRunning then break end
+                    if collectFires >= MAX_COLLECT_PER_CYCLE then break end
                     local side = display:FindFirstChild(sideName)
                     if side then
                         for _, slot in ipairs(side:GetChildren()) do
+                            if collectFires >= MAX_COLLECT_PER_CYCLE then break end
                             if RL_Allow("Card:Collect:" .. sideName .. "/" .. slot.Name, 0.1) then
-                                Net.Fire(R.Card, "Collect", slot)
+                                if Net.Fire(R.Card, "Collect", slot) then
+                                    collectFires = collectFires + 1
+                                end
                             end
                         end
                     end
@@ -3013,8 +3201,12 @@ task.spawn(function()
                 local after = snapshotPage(display)
                 stepsInDir = stepsInDir + 1
 
-                -- 3. edge detection: needs TWO consecutive identical readings
-                if before == after then
+                -- 3. edge detection: needs TWO consecutive identical readings.
+                -- A nil reading means the Page label was missing this cycle —
+                -- treat as "unknown", reset the counter and keep stepping (the
+                -- MAX_STEPS hard safety still guarantees a reverse), so all
+                -- pages are still cycled.
+                if before ~= nil and after ~= nil and before == after then
                     sameCount = sameCount + 1
                     if sameCount >= 2 then reverse() end
                 else
@@ -3028,7 +3220,7 @@ task.spawn(function()
             sameCount  = 0
             stepsInDir = 0
         end
-        task.wait(0.1)
+        task.wait(0.35)
     end
 end)
 
@@ -3146,14 +3338,6 @@ task.spawn(function()
                       and CardConfig.Packs[family]
                       and CardConfig.Packs[family].Page) or 0
         return page, rarityIdx[rarity] or 0, family, rarity
-    end
-
-    local function countPlaced()
-        local rep = Data.GetReplica()
-        if not (rep and rep.Data and rep.Data.PacksPlaced) then return 0 end
-        local n = 0
-        for _ in pairs(rep.Data.PacksPlaced) do n = n + 1 end
-        return n
     end
 
     -- ── pack footprints (read once from Assets, scaled by mutation Size) ──
@@ -3565,6 +3749,62 @@ end)
 -- (this is what the in-game Auto Roll button toggles). Without it, server
 -- treats it as if no UI is open and may reject. So we set ToggleAT(true)
 -- before the sweep and ToggleAT(nil) after.
+-- ── Shared roll engine ────────────────────────────────────────────────────
+-- Drives the identical "iterate selected+owned targets, roll each until a
+-- wanted value drops" skeleton shared by the Card Trait, Card Grade, Figurine
+-- Grade and Figurine Trait loops. The variant-specific bits (flag, status
+-- setter, selected/wanted maps, list ordering, currency gates, remote fire,
+-- and every status string) are supplied by cfg. Behavior is byte-for-byte
+-- identical to the previously-inlined loops.
+--
+-- cfg fields:
+--   flag()        -> bool   the _ACC.Auto* enable flag (read fresh)
+--   setStatus(t)  -> ()     status paragraph setter
+--   selected()    -> map    selected targets (re-read each tick)
+--   wanted()      -> map    wanted values (re-read each tick)
+--   noTargetsMsg, noWantedMsg, noneOwnedMsg : guard cascade strings
+--   preGuard()    -> bool?  optional extra top-level guard; if it returns
+--                           truthy it has already set status and the sweep
+--                           is skipped this tick
+--   buildList()   -> {name} owned ∩ selected list in the variant's order
+--   preSweep()    -> ()     optional, run once before the per-target sweep
+--   rollOne(name, idx, total) -> bool : the inner while-body. Returns true to
+--                           keep rolling this target (engine then waits 0.4),
+--                           false to break to the next target.
+--   postSweep()   -> ()     optional, run once after a non-empty sweep
+--   loopWait      -> number per-tick wait (defaults 1.0)
+local function runRollEngine(cfg)
+    while getgenv()._ACCRunning do
+        if not cfg.flag() then
+            cfg.setStatus("Off")
+        elseif mapEmpty(cfg.selected()) then
+            cfg.setStatus(cfg.noTargetsMsg)
+        elseif mapEmpty(cfg.wanted()) then
+            cfg.setStatus(cfg.noWantedMsg)
+        elseif cfg.preGuard and cfg.preGuard() then
+            -- preGuard set its own status; skip the sweep this tick
+        else
+            local list = cfg.buildList()
+            if #list == 0 then
+                cfg.setStatus(cfg.noneOwnedMsg)
+                task.wait(2.0)
+            else
+                if cfg.preSweep then cfg.preSweep() end
+                local total = #list
+                for idx, name in ipairs(list) do
+                    if not cfg.flag() or not getgenv()._ACCRunning then break end
+                    while cfg.flag() and getgenv()._ACCRunning do
+                        if not cfg.rollOne(name, idx, total) then break end
+                        task.wait(0.4)
+                    end
+                end
+                if cfg.postSweep then cfg.postSweep() end
+            end
+        end
+        task.wait(cfg.loopWait or 1.0)
+    end
+end
+
 -- ── Trait/Grade roll loops ────────────────────────────────────────────────
 -- Status reporters show what's currently being rolled and the live value
 -- read directly from replica each iteration.
@@ -3576,72 +3816,70 @@ task.spawn(function()
     end
     local rolls = 0
 
-    while getgenv()._ACCRunning do
-        if not _ACC.AutoTrait then
-            SetStatus("Off")
-        elseif mapEmpty(_ACC.SelectedTraitCards) then
-            SetStatus("⚠ No cards selected")
-        elseif mapEmpty(_ACC.SelectedWantedTraits) then
-            SetStatus("⚠ No wanted traits selected")
-        elseif (Data.Get("TraitTokens") or 0) <= 0 then
-            SetStatus("⏸ Out of TraitTokens — waiting")
-        else
+    runRollEngine({
+        flag      = function() return _ACC.AutoTrait end,
+        setStatus = SetStatus,
+        selected  = function() return _ACC.SelectedTraitCards end,
+        wanted    = function() return _ACC.SelectedWantedTraits end,
+        noTargetsMsg = "⚠ No cards selected",
+        noWantedMsg  = "⚠ No wanted traits selected",
+        noneOwnedMsg = "⚠ None of the selected cards are owned",
+        preGuard = function()
+            if (Data.Get("TraitTokens") or 0) <= 0 then
+                SetStatus("⏸ Out of TraitTokens — waiting")
+                return true
+            end
+            return false
+        end,
+        buildList = function()
             -- iterate Lists.Cards in IN-GAME ORDER (Pirate first, then Ninja...)
             -- and keep only cards that are both selected AND owned. This gives
             -- a deterministic Pack-by-Pack roll sequence.
             local selectAll = mapHas(_ACC.SelectedTraitCards, "All")
-            local ownedCards = (Data.GetReplica() and Data.GetReplica().Data
-                                and Data.GetReplica().Data.Cards) or {}
+            local _rep = Data.GetReplica()
+            local ownedCards = (_rep and _rep.Data and _rep.Data.Cards) or {}
             local list = {}
             for _, name in ipairs(Lists.Cards) do
                 if (selectAll or _ACC.SelectedTraitCards[name]) and ownedCards[name] then
                     table.insert(list, name)
                 end
             end
-
-            if #list == 0 then
-                SetStatus("⚠ None of the selected cards are owned")
-                task.wait(2.0)
-            else
-
+            return list
+        end,
+        preSweep = function()
             Net.Fire(R.Tower, "ToggleAT", true)
             task.wait(0.1)
-
-            local total = #list
-            for idx, name in ipairs(list) do
-                if not _ACC.AutoTrait or not getgenv()._ACCRunning then break end
-                while _ACC.AutoTrait and getgenv()._ACCRunning do
-                    local tokens = Data.Get("TraitTokens") or 0
-                    if tokens <= 0 then break end
-                    local cd = Data.Get("Cards", name)
-                    if not cd then
-                        SetStatus(("⏭ %s — not owned, skipping"):format(displayName(name)))
-                        break
-                    end
-                    local cur = cd.Trait
-                    if cur and mapHas(_ACC.SelectedWantedTraits, cur) then
-                        SetStatus(("✅ %s\nTrait: %s\n(card %d/%d done)\nRolls: %d  Tokens: %d")
-                                  :format(displayName(name), cur, idx, total, rolls, tokens))
-                        break
-                    end
-                    SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nRolls: %d  Tokens: %d")
-                              :format(idx, total, displayName(name),
-                                      cur or "(none)", rolls, tokens))
-                    -- final check before fire
-                    if not _ACC.AutoTrait or not getgenv()._ACCRunning then break end
-                    Net.FireRL(R.Tower, "Tower:Roll:" .. name, 0.4, "Roll", name)
-                    rolls = rolls + 1
-                    task.wait(0.4)
-                end
+        end,
+        rollOne = function(name, idx, total)
+            local tokens = Data.Get("TraitTokens") or 0
+            if tokens <= 0 then return false end
+            local cd = Data.Get("Cards", name)
+            if not cd then
+                SetStatus(("⏭ %s — not owned, skipping"):format(displayName(name)))
+                return false
             end
-
+            local cur = cd.Trait
+            if cur and mapHas(_ACC.SelectedWantedTraits, cur) then
+                SetStatus(("✅ %s\nTrait: %s\n(card %d/%d done)\nRolls: %d  Tokens: %d")
+                          :format(displayName(name), cur, idx, total, rolls, tokens))
+                return false
+            end
+            SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nRolls: %d  Tokens: %d")
+                      :format(idx, total, displayName(name),
+                              cur or "(none)", rolls, tokens))
+            -- final check before fire
+            if not _ACC.AutoTrait or not getgenv()._ACCRunning then return false end
+            Net.FireRL(R.Tower, "Tower:Roll:" .. name, 0.4, "Roll", name)
+            rolls = rolls + 1
+            return true
+        end,
+        postSweep = function()
             Net.Fire(R.Tower, "ToggleAT", nil)
             SetStatus(("✓ Sweep done\nRolls: %d  Tokens left: %d")
                       :format(rolls, Data.Get("TraitTokens") or 0))
-            end -- if #list == 0 else
-        end
-        task.wait(1.0)
-    end
+        end,
+        loopWait = 1.0,
+    })
 end)
 
 -- ── Tower auto armor roll ─────────────────────────────────────────────────
@@ -4090,79 +4328,72 @@ task.spawn(function()
     end
     local rolls = 0
 
-    while getgenv()._ACCRunning do
-        if not _ACC.AutoGrade then
-            SetStatus("Off")
-        elseif mapEmpty(_ACC.SelectedGradeCards) then
-            SetStatus("⚠ No cards selected")
-        elseif mapEmpty(_ACC.SelectedWantedGrades) then
-            SetStatus("⚠ No wanted grades selected")
-        else
+    runRollEngine({
+        flag      = function() return _ACC.AutoGrade end,
+        setStatus = SetStatus,
+        selected  = function() return _ACC.SelectedGradeCards end,
+        wanted    = function() return _ACC.SelectedWantedGrades end,
+        noTargetsMsg = "⚠ No cards selected",
+        noWantedMsg  = "⚠ No wanted grades selected",
+        noneOwnedMsg = "⚠ None of the selected cards are owned",
+        buildList = function()
             -- iterate Lists.Cards in IN-GAME ORDER, keep only selected+owned
             local selectAll = mapHas(_ACC.SelectedGradeCards, "All")
-            local ownedCards = (Data.GetReplica() and Data.GetReplica().Data
-                                and Data.GetReplica().Data.Cards) or {}
+            local _rep = Data.GetReplica()
+            local ownedCards = (_rep and _rep.Data and _rep.Data.Cards) or {}
             local list = {}
             for _, n in ipairs(Lists.Cards) do
                 if (selectAll or _ACC.SelectedGradeCards[n]) and ownedCards[n] then
                     table.insert(list, n)
                 end
             end
-
-            if #list == 0 then
-                SetStatus("⚠ None of the selected cards are owned")
-                task.wait(2.0)
-            else
-
-            local total = #list
-            for idx, name in ipairs(list) do
-                if not _ACC.AutoGrade or not getgenv()._ACCRunning then break end
-                while _ACC.AutoGrade and getgenv()._ACCRunning do
-                    -- re-check immediately before any fire (wait window may have ended toggle)
-                    if not _ACC.AutoGrade then break end
-                    local replica = Data.GetReplica()
-                    local cd = replica and replica.Data and replica.Data.Cards
-                               and replica.Data.Cards[name]
-                    if not cd then
-                        SetStatus(("⏭ %s — not owned"):format(displayName(name)))
-                        break
-                    end
-                    local curGrade = cd.Grade
-                    if curGrade and mapHas(_ACC.SelectedWantedGrades, curGrade) then
-                        SetStatus(("✅ %s\nGrade: %s\n(card %d/%d done)\nRolls: %d")
-                                  :format(displayName(name), curGrade, idx, total, rolls))
-                        break
-                    end
-                    local tokens = (replica and replica.Data and replica.Data.GradeTokens) or 0
-                    local cash   = (replica and replica.Data and replica.Data.Cash) or 0
-                    local source, using
-                    if _ACC.GradeUseTokensFirst and tokens > 0 then
-                        source = "Tokens"; using = ("Tokens: %d"):format(tokens)
-                    else
-                        using = "Cash"
-                    end
-
-                    SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nUsing: %s\nRolls: %d\nCash: %s")
-                              :format(idx, total, displayName(name),
-                                      tostring(curGrade or "(none)"),
-                                      using, rolls, tostring(cash)))
-                    if _ACC.Debug then
-                        print(("[ACC Grade] %s | grade=%s | rolls=%d | source=%s")
-                              :format(name, tostring(curGrade), rolls, tostring(source)))
-                    end
-
-                    -- final check before fire
-                    if not _ACC.AutoGrade or not getgenv()._ACCRunning then break end
-                    Net.FireRL(R.Grade, "Grade:Roll:" .. name, 0.4, "Roll", name, source)
-                    rolls = rolls + 1
-                    task.wait(0.4)
-                end
+            return list
+        end,
+        rollOne = function(name, idx, total)
+            -- re-check immediately before any fire (wait window may have ended toggle)
+            if not _ACC.AutoGrade then return false end
+            local replica = Data.GetReplica()
+            local cd = replica and replica.Data and replica.Data.Cards
+                       and replica.Data.Cards[name]
+            if not cd then
+                SetStatus(("⏭ %s — not owned"):format(displayName(name)))
+                return false
             end
+            local curGrade = cd.Grade
+            if curGrade and mapHas(_ACC.SelectedWantedGrades, curGrade) then
+                SetStatus(("✅ %s\nGrade: %s\n(card %d/%d done)\nRolls: %d")
+                          :format(displayName(name), curGrade, idx, total, rolls))
+                return false
+            end
+            local tokens = (replica and replica.Data and replica.Data.GradeTokens) or 0
+            local cash   = (replica and replica.Data and replica.Data.Cash) or 0
+            local source, using
+            if _ACC.GradeUseTokensFirst and tokens > 0 then
+                source = "Tokens"; using = ("Tokens: %d"):format(tokens)
+            else
+                using = "Cash"
+            end
+
+            SetStatus(("🎲 [%d/%d] %s\nCurrent: %s\nUsing: %s\nRolls: %d\nCash: %s")
+                      :format(idx, total, displayName(name),
+                              tostring(curGrade or "(none)"),
+                              using, rolls, tostring(cash)))
+            if _ACC.Debug then
+                print(("[ACC Grade] %s | grade=%s | rolls=%d | source=%s")
+                      :format(name, tostring(curGrade), rolls, tostring(source)))
+            end
+
+            -- final check before fire
+            if not _ACC.AutoGrade or not getgenv()._ACCRunning then return false end
+            Net.FireRL(R.Grade, "Grade:Roll:" .. name, 0.4, "Roll", name, source)
+            rolls = rolls + 1
+            return true
+        end,
+        postSweep = function()
             SetStatus(("✓ Sweep done\nRolls: %d"):format(rolls))
-            end -- if #list == 0 else
-        end
-        task.wait(1.0)
-    end
+        end,
+        loopWait = 1.0,
+    })
 end)
 
 -- ── Auto Raid Farm ────────────────────────────────────────────────────────
@@ -4188,7 +4419,6 @@ task.spawn(function()
     local UIC = RS:FindFirstChild("Client")
                 and RS.Client:FindFirstChild("UI")
     local raidH  = UIC and tryReq and tryReq(UIC:FindFirstChild("RaidHandler"))
-    local stH    = UIC and tryReq and tryReq(UIC:FindFirstChild("StarTrialHandler"))
     local stockH = UIC and tryReq and tryReq(UIC:FindFirstChild("StockHandler"))
 
     -- m:ss formatter
@@ -4583,8 +4813,6 @@ end)
 -- check helpers (from AchievementHandler) and Claim what's ready & unclaimed.
 local AchievementConfig
 do
-    local rewardsFolder = ConfigFolder.Parent and ConfigFolder.Parent:FindFirstChild("Rewards")
-        or ConfigFolder:FindFirstChild("Rewards")
     -- AchievementConfig sits at Modules.Config.Rewards.AchievementConfig
     local achMod = ModulesFolder
         :FindFirstChild("Config")
@@ -4678,7 +4906,7 @@ end
 _ACC._claimReadyAchievements = claimReadyAchievements
 
 -- Replica change handler: claim when something relevant updates
-Data.OnChange(function(opType, path, newVal, oldVal)
+Data.OnChange(function(_, path, _, _)
     if not _ACC.AutoAchievements then return end
     if path[1] == "Achievements"      then return end -- self-loop on own claim
     if path[1] == "CardsDiscovered" or path[1] == "PetsClaimed"
@@ -4871,9 +5099,9 @@ local function expPickPack(selectedPacks, replica, total)
     local data = (replica and replica.Data) or {}
     local cashOwn    = data.Cash        or 0
     local ticketsOwn = data.StarTickets or 0
-    local opened    -- approximation: HasOpenedPack iterates Cards;
-                     -- we trust user selection — if they pick something they
-                     -- haven't opened, server will reject and we'll move on.
+    -- NB: we don't pre-check HasOpenedPack (it iterates Cards);
+    -- we trust user selection — if they pick something they
+    -- haven't opened, server will reject and we'll move on.
 
     local candidates = {}
     for displayName in pairs(selectedPacks) do
@@ -5037,8 +5265,10 @@ task.spawn(function()
                     toks = Data.Get("PetTokens") or 0
                 end
             end
+            task.wait(0.5)
+        else
+            task.wait(1.5)
         end
-        task.wait(0.5)
     end
 end)
 
@@ -5056,10 +5286,159 @@ task.spawn(function()
                     toks = Data.Get("PetTokens") or 0
                 end
             end
+            task.wait(0.5)
+        else
+            task.wait(1.5)
         end
-        task.wait(0.5)
     end
 end)
+
+-- ── Auto Pet Quests orchestrator ──────────────────────────────────────────
+-- Pet quests auto-grant their reward server-side (no claim remote). They're
+-- completed by Place/Open/Craft/Tower actions, so this drives the matching
+-- existing engines for any INCOMPLETE quest and idles when all are done,
+-- re-arming each 3h reset. Non-destructive: only flips OFF engines/selections
+-- it turned ON itself (your own toggles are left alone).
+--   Smart       — uses YOUR pack/potion selections.
+--   Zero-config — also auto-fills empty selections (place/open all owned packs,
+--                 craft any potion) so it works with no setup.
+do
+    local PETQUEST_RESET = 10800   -- Configuration.PetQuestRefreshTime (3h)
+    -- quest category → engine flag + member quest ids
+    local CATS = {
+        Place = { engine = "AutoPlaceEnabled", ids = { "Quest1", "Quest6" } },
+        Open  = { engine = "AutoOpenEnabled",  ids = { "Quest2", "Quest7", "Quest3", "Quest8" } },
+        Craft = { engine = "AutoCraftPotions", ids = { "Quest4", "Quest9" } },
+        Tower = { engine = "TowerAutoStart",   ids = { "Quest5", "Quest10" } },
+    }
+    local managedEngines = {}   -- flag -> true if WE turned it on
+    local managedFill     = {}  -- "Place"/"Craft" -> snapshot map WE auto-filled
+
+    -- true if both are boolean-maps with the exact same set of true keys
+    local function sameMap(a, b)
+        if type(a) ~= "table" or type(b) ~= "table" then return false end
+        for k, v in pairs(a) do if v and not b[k] then return false end end
+        for k, v in pairs(b) do if v and not a[k] then return false end end
+        return true
+    end
+
+    local function questDone(pq, id)
+        local q = pq[id]
+        return q ~= nil and q.Completed == true
+    end
+    local function setEngine(flag, want)
+        if want then
+            if not _ACC[flag] then _ACC[flag] = true; managedEngines[flag] = true end
+        elseif managedEngines[flag] then
+            _ACC[flag] = false; managedEngines[flag] = nil
+        end
+    end
+    local function fillSelections(needPlace, needOpen, needCraft)
+        if _ACC.PetQuestMode ~= "Zero-config" then return end
+        if (needPlace or needOpen) and mapEmpty(_ACC.SelectedPlacePacks) then
+            local m = {}
+            for _, label in ipairs(Lists.PacksFullWithBundles or {}) do m[label] = true end
+            _ACC.SelectedPlacePacks = m; managedFill.Place = m
+        end
+        if needCraft and mapEmpty(_ACC.SelectedCraftPotions) then
+            local m = {}
+            for _, name in ipairs(Lists.Potions or {}) do m[name] = true end
+            _ACC.SelectedCraftPotions = m; managedFill.Craft = m
+        end
+    end
+    local function releaseAll()
+        for flag in pairs(managedEngines) do _ACC[flag] = false end
+        managedEngines = {}
+        -- only clear what WE auto-filled; if the user has since edited the
+        -- selection (no longer equals our snapshot), drop ownership but keep it.
+        if managedFill.Place then
+            if sameMap(_ACC.SelectedPlacePacks, managedFill.Place) then _ACC.SelectedPlacePacks = {} end
+            managedFill.Place = nil
+        end
+        if managedFill.Craft then
+            if sameMap(_ACC.SelectedCraftPotions, managedFill.Craft) then _ACC.SelectedCraftPotions = {} end
+            managedFill.Craft = nil
+        end
+    end
+    local function buildStatus(pq, quests, done, total, resetIn, header)
+        local lines = {}
+        for i = 1, 10 do
+            local def = quests["Quest" .. i]
+            if def then
+                local q = pq["Quest" .. i]
+                local prog = (q and q.Progress) or 0
+                local comp = q and q.Completed == true
+                lines[#lines + 1] = ("%s %s %d/%d"):format(
+                    comp and "✅" or "⏳", def.Title,
+                    math.min(prog, def.Requirement), def.Requirement)
+            end
+        end
+        return ("%s\nDone %d/%d · reset in %dm\n%s"):format(
+            header, done, total, math.floor(resetIn / 60), table.concat(lines, "\n"))
+    end
+
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            -- per-cycle work is pcall-wrapped: a transient error must never
+            -- strand the managed engines ON by escaping the loop.
+            safe(function()
+            if _ACC.AutoPetQuests then
+                local pq     = Data.Get("PetQuests") or {}
+                local pqTime = Data.Get("PetQuestTime") or 0
+                local quests = (PetConfig and PetConfig.Quests) or {}
+                local done, total = 0, 0
+                for id in pairs(quests) do
+                    total = total + 1
+                    if questDone(pq, id) then done = done + 1 end
+                end
+                local resetIn = math.max(0, (pqTime + PETQUEST_RESET) - workspace:GetServerTimeNow())
+
+                if total == 0 then
+                    -- PetConfig.Quests failed to load: never blindly arm every
+                    -- engine. Release anything we own and wait for a good read.
+                    releaseAll()
+                    if _ACC.SetPetQuestStatus then
+                        _ACC.SetPetQuestStatus("⚠ Pet quest config unavailable — idle")
+                    end
+                    return
+                end
+
+                if total > 0 and done >= total then
+                    releaseAll()   -- all complete → stop the engines we started, wait for reset
+                    if _ACC.SetPetQuestStatus then
+                        _ACC.SetPetQuestStatus(buildStatus(pq, quests, done, total, resetIn,
+                            "✅ All done — idle until reset"))
+                    end
+                else
+                    local need = {}
+                    for cat, info in pairs(CATS) do
+                        local incomplete = false
+                        for _, id in ipairs(info.ids) do
+                            if not questDone(pq, id) then incomplete = true; break end
+                        end
+                        need[cat] = incomplete
+                    end
+                    fillSelections(need.Place, need.Open, need.Craft)
+                    -- Open quests need placed packs that hatch → keep Place on while Open is needed
+                    setEngine("AutoPlaceEnabled", need.Place or need.Open)
+                    setEngine("AutoOpenEnabled",  need.Open)
+                    setEngine("AutoCraftPotions", need.Craft)
+                    setEngine("TowerAutoStart",   need.Tower)
+                    if _ACC.SetPetQuestStatus then
+                        _ACC.SetPetQuestStatus(buildStatus(pq, quests, done, total, resetIn,
+                            (_ACC.PetQuestMode or "Smart") .. " — driving engines"))
+                    end
+                end
+            elseif next(managedEngines) or next(managedFill) then
+                releaseAll()
+                if _ACC.SetPetQuestStatus then _ACC.SetPetQuestStatus("Off") end
+            end
+            end)   -- end safe() per-cycle wrapper
+            task.wait(5)
+        end
+        releaseAll()   -- unload cleanup
+    end)
+end
 
 -- Dragon Ball: schema = { ["1"]=true, ["2"]=true, ... } — owned ball IDs.
 -- Physical balls spawn in the world during DB events; player walks up and
@@ -5390,9 +5769,6 @@ end)
 -- // 22.5 LOOPS — GALLERY
 -- ============================================================================
 
--- Stock cache: pulled by buy loop, reused by status helpers
-local galleryStockCache = {}
-
 -- ── Auto Buy Packs ────────────────────────────────────────────────────────
 -- Loop strategy (rewritten):
 --   1. Refresh stock via GetGalleryStock.
@@ -5411,7 +5787,6 @@ task.spawn(function()
 
         if (_ACC.AutoGalleryBuy or force) and not mapEmpty(_ACC.SelectedGalleryPacks) then
             local stock = galleryRefreshStock()
-            galleryStockCache = stock
 
             -- nothing in stock at all → wait, don't spam
             local anyStock = false
@@ -5499,10 +5874,33 @@ task.spawn(function()
             end
         elseif _ACC.AutoGalleryBuy then
             _ACC.SetGalleryBuyStatus("⚠ Select tier(s) first")
-        else
+        elseif not _ACC.GalleryBuyWholeShop then
             _ACC.SetGalleryBuyStatus("Off")
         end
         task.wait(1.5)
+    end
+end)
+
+-- ── Auto Buy WHOLE shop (only when 💎 cover all of it) ────────────────────
+-- Independent of the tier selection above. Buys the entire in-stock,
+-- discovery-met figurine shop in one shot, but ONLY when Diamonds cover the
+-- whole bill — otherwise it waits and shows what it's saving toward (no
+-- one-by-one spend). Use this OR the selected auto-buy, not both at once.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.GalleryBuyWholeShop and not _ACC.AutoGalleryBuy then
+            local bought, total, diamonds, status = _ACC.BuyWholeGalleryShop()
+            if status == "ok" then
+                _ACC.SetGalleryBuyStatus(("🛒 Whole shop bought: %d packs / %s 💎")
+                    :format(bought, tostring(total)))
+            elseif status == "poor" then
+                _ACC.SetGalleryBuyStatus(("⏳ Saving for whole shop: %s / %s 💎")
+                    :format(tostring(diamonds), tostring(total)))
+            elseif status == "empty" then
+                _ACC.SetGalleryBuyStatus("⏳ Shop empty — waiting for restock")
+            end
+        end
+        task.wait(2)
     end
 end)
 
@@ -5708,7 +6106,7 @@ task.spawn(function()
             local emptyRuns    = 0
             local flipsForward = 0
 
-            for flip = 0, MAX_FLIPS do
+            for _ = 0, MAX_FLIPS do
                 if not _ACC.AutoGalleryCollect or not getgenv()._ACCRunning then break end
 
                 -- collect every slot (1..10); server ignores inactive slots
@@ -5941,11 +6339,16 @@ end
 do
     local GC = getconnections or get_signal_cons
 
-    -- silence Roblox's built-in Idled connections (auto-kick engine)
+    -- silence Roblox's built-in Idled connections (auto-kick engine).
+    -- Remember the ones we :Disable so _ACCCleanup can :Enable them again on
+    -- unload (Disconnect is irreversible, so those are not tracked).
+    getgenv()._ACCDisabledIdled = getgenv()._ACCDisabledIdled or {}
     if GC then
         pcall(function()
             for _, c in ipairs(GC(LocalPlayer.Idled)) do
-                if c.Disable then c:Disable()
+                if c.Disable then
+                    c:Disable()
+                    if c.Enable then table.insert(getgenv()._ACCDisabledIdled, c) end
                 elseif c.Disconnect then c:Disconnect() end
             end
         end)
@@ -6027,7 +6430,51 @@ _ACC._WebhookTest = function()
     })
 end
 
-Data.OnChange(function(opType, path, newVal, oldVal)
+-- ── Travel Merchant purchase webhook (WebhookMerchant) ────────────────────
+-- buyMerchantItem() pushes each successful buy into _ACC._merchantBuyQueue.
+-- This drains the queue every couple seconds so a whole buy-pass collapses
+-- into ONE embed listing exactly what was bought (item × count, price, payment).
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        task.wait(2)
+        local q = _ACC._merchantBuyQueue
+        if q and #q > 0 then
+            _ACC._merchantBuyQueue = {}   -- drain even if toggle off, so it can't grow unbounded
+            if _ACC.WebhookMerchant and _ACC.WebhookURL ~= "" then
+                -- collapse duplicates: item -> { n, price, via }
+                local counts, order = {}, {}
+                for _, b in ipairs(q) do
+                    local c = counts[b.item]
+                    if not c then
+                        c = { n = 0, price = b.price, via = b.via }
+                        counts[b.item] = c
+                        table.insert(order, b.item)
+                    end
+                    c.n = c.n + 1
+                end
+                local lines = {}
+                for _, item in ipairs(order) do
+                    local c = counts[item]
+                    local payTxt = (c.via == "Tokens") and "Tokens"
+                                   or (c.via == "Trade") and "pack-trade" or "Cash"
+                    local priceTxt = c.price and (" — " .. tostring(c.price) .. " " .. payTxt)
+                                     or (" — " .. payTxt)
+                    table.insert(lines, ("• **%s** ×%d%s"):format(
+                        tostring(item):gsub("-", " "), c.n, priceTxt))
+                end
+                sendEmbed({
+                    emoji = "🛒",
+                    title = "Travel Merchant purchase",
+                    desc  = table.concat(lines, "\n"),
+                    color = 0xF1C40F,
+                    fields = { { name = "Items bought", value = tostring(#q), inline = true } },
+                })
+            end
+        end
+    end
+end)
+
+Data.OnChange(function(opType, path, newVal)
     if _ACC.WebhookURL == "" then return end
 
     -- ── Rare drops bucket (WebhookDrops) ───────────────────────────────────
@@ -6155,21 +6602,25 @@ Data.OnChange(function(opType, path, newVal, oldVal)
     end
 end)
 
--- HUD popup hider
+-- HUD popup hider (event-driven: only runs when a new CashChange label spawns)
 task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.HideHUDPopups then
-            local hud = PlayerGui:FindFirstChild("HUD")
-            local frame = hud and hud:FindFirstChild("Frame")
-            local cc = frame and frame:FindFirstChild("CashChange")
-            if cc then
-                for _, c in ipairs(cc:GetChildren()) do
-                    if c:IsA("TextLabel") then c.Visible = false end
-                end
-            end
-        end
-        task.wait(0.5)
+    local cc
+    while getgenv()._ACCRunning and not cc do
+        local hud = PlayerGui:FindFirstChild("HUD")
+        local frame = hud and hud:FindFirstChild("Frame")
+        cc = frame and frame:FindFirstChild("CashChange")
+        if not cc then task.wait(0.5) end
     end
+    if not (cc and getgenv()._ACCRunning) then return end
+    -- hide anything already present
+    for _, c in ipairs(cc:GetChildren()) do
+        if _ACC.HideHUDPopups and c:IsA("TextLabel") then c.Visible = false end
+    end
+    table.insert(_ACC._connections, cc.ChildAdded:Connect(function(c)
+        if _ACC.HideHUDPopups and getgenv()._ACCRunning and c:IsA("TextLabel") then
+            c.Visible = false
+        end
+    end))
 end)
 -- ============================================================================
 -- // 23.5 v44 UPDATE — Figurine Grade/Trait roll, Live Event, Ad Restock
@@ -6261,10 +6712,7 @@ end
 sec.GalLvlL:Divider()
 sec.GalLvlL:Header({ Text = "Figurine Grade Roll (Diamonds)" })
 
-local figGradeStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetFigGradeStatus(t)
-    if figGradeStatus then pcall(function() figGradeStatus:UpdateBody(t) end) end
-end
+_ACC.SetFigGradeStatus = makeStatus(sec.GalLvlL)
 
 makeSearchableDropdown(sec.GalLvlL, {
     Name = "Figurines to grade-roll",
@@ -6273,11 +6721,11 @@ makeSearchableDropdown(sec.GalLvlL, {
     OnChange = function(map) _ACC.SelectedFigGradeFigs = map end,
 }, "FigGradeFigsDropdown")
 
-sec.GalLvlL:Dropdown({
+makeSearchableDropdown(sec.GalLvlL, {
     Name = "Wanted Grades (stop on)",
     Multi = true,
     Options = Lists.FigGrades,
-    Callback = function(s) _ACC.WantedFigGrades = mapFromMulti(s) end,
+    OnChange = function(map) _ACC.WantedFigGrades = map end,
 }, "FigGradeWantedDropdown")
 
 sec.GalLvlL:Toggle({
@@ -6289,10 +6737,7 @@ sec.GalLvlL:Toggle({
 sec.GalLvlL:Divider()
 sec.GalLvlL:Header({ Text = "Figurine Trait Roll (Figurine Tokens)" })
 
-local figTraitStatus = sec.GalLvlL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetFigTraitStatus(t)
-    if figTraitStatus then pcall(function() figTraitStatus:UpdateBody(t) end) end
-end
+_ACC.SetFigTraitStatus = makeStatus(sec.GalLvlL)
 
 makeSearchableDropdown(sec.GalLvlL, {
     Name = "Figurines to trait-roll",
@@ -6301,11 +6746,11 @@ makeSearchableDropdown(sec.GalLvlL, {
     OnChange = function(map) _ACC.SelectedFigTraitFigs = map end,
 }, "FigTraitFigsDropdown")
 
-sec.GalLvlL:Dropdown({
+makeSearchableDropdown(sec.GalLvlL, {
     Name = "Wanted Traits (stop on)",
     Multi = true,
     Options = Lists.FigTraits,
-    Callback = function(s) _ACC.WantedFigTraits = mapFromMulti(s) end,
+    OnChange = function(map) _ACC.WantedFigTraits = map end,
 }, "FigTraitWantedDropdown")
 
 sec.GalLvlL:Toggle({
@@ -6321,16 +6766,13 @@ sec.LEL = tabs.Shops:Section({ Side = "Left" })
 sec.LER = tabs.Shops:Section({ Side = "Right" })
 
 sec.LEL:Header({ Text = "Live Event — Vote" })
-local liveEventStatus = sec.LEL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetLiveEventStatus(t)
-    if liveEventStatus then pcall(function() liveEventStatus:UpdateBody(t) end) end
-end
+_ACC.SetLiveEventStatus = makeStatus(sec.LEL)
 
-sec.LEL:Dropdown({
+makeSearchableDropdown(sec.LEL, {
     Name = "Vote for (priority order)",
     Multi = true,
     Options = Lists.LiveEventTypes,
-    Callback = function(s) _ACC.LiveEventWanted = mapFromMulti(s) end,
+    OnChange = function(map) _ACC.LiveEventWanted = map end,
 }, "LiveEventWantedDropdown")
 
 sec.LEL:Toggle({
@@ -6397,14 +6839,15 @@ sec.MerR:Toggle({
 -- figurine, spam RollGrade until its Grade is one of the wanted grades,
 -- gated by Diamonds >= GetGradeCost(figurine).
 task.spawn(function()
-    while getgenv()._ACCRunning do
-        if not _ACC.AutoFigGrade then
-            _ACC.SetFigGradeStatus("Off")
-        elseif mapEmpty(_ACC.SelectedFigGradeFigs) then
-            _ACC.SetFigGradeStatus("⚠ No figurines selected")
-        elseif mapEmpty(_ACC.WantedFigGrades) then
-            _ACC.SetFigGradeStatus("⚠ No wanted grades selected")
-        else
+    runRollEngine({
+        flag      = function() return _ACC.AutoFigGrade end,
+        setStatus = _ACC.SetFigGradeStatus,
+        selected  = function() return _ACC.SelectedFigGradeFigs end,
+        wanted    = function() return _ACC.WantedFigGrades end,
+        noTargetsMsg = "⚠ No figurines selected",
+        noWantedMsg  = "⚠ No wanted grades selected",
+        noneOwnedMsg = "⚠ None of the selected figurines are owned",
+        buildList = function()
             local owned = Data.Get("Figurines") or {}
             local list = {}
             -- highest multiplier first: GalleryFigurines is sorted mult ASC,
@@ -6415,54 +6858,47 @@ task.spawn(function()
                     table.insert(list, name)
                 end
             end
-            if #list == 0 then
-                _ACC.SetFigGradeStatus("⚠ None of the selected figurines are owned")
-                task.wait(2)
-            else
-                local total = #list
-                for idx, name in ipairs(list) do
-                    if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then break end
-                    while _ACC.AutoFigGrade and getgenv()._ACCRunning do
-                        local cur = Data.Get("Figurines", name, "Grade")
-                        if cur and mapHas(_ACC.WantedFigGrades, cur) then
-                            _ACC.SetFigGradeStatus(("✅ %s = %s\n(%d/%d done)")
-                                :format(name, cur, idx, total))
-                            break
-                        end
-                        local cost = 0
-                        if GalleryConfig and type(GalleryConfig.GetGradeCost) == "function" then
-                            local ok, c = pcall(GalleryConfig.GetGradeCost, name)
-                            if ok and type(c) == "number" then cost = c end
-                        end
-                        local dia = Data.Get("Diamonds") or 0
-                        if cost > 0 and dia < cost then
-                            _ACC.SetFigGradeStatus(("⏸ %s — need %d 💎 (have %d)")
-                                :format(name, cost, dia))
-                            break
-                        end
-                        _ACC.SetFigGradeStatus(("🎲 [%d/%d] %s\nGrade: %s  cost %d 💎  (have %d)")
-                            :format(idx, total, name, tostring(cur or "none"), cost, dia))
-                        if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then break end
-                        Net.FireRL(R.Gallery, "Gal:RollGrade:" .. name, 0.4, "RollGrade", name)
-                        task.wait(0.4)
-                    end
-                end
+            return list
+        end,
+        rollOne = function(name, idx, total)
+            local cur = Data.Get("Figurines", name, "Grade")
+            if cur and mapHas(_ACC.WantedFigGrades, cur) then
+                _ACC.SetFigGradeStatus(("✅ %s = %s\n(%d/%d done)")
+                    :format(name, cur, idx, total))
+                return false
             end
-        end
-        task.wait(1)
-    end
+            local cost = 0
+            if GalleryConfig and type(GalleryConfig.GetGradeCost) == "function" then
+                local ok, c = pcall(GalleryConfig.GetGradeCost, name)
+                if ok and type(c) == "number" then cost = c end
+            end
+            local dia = Data.Get("Diamonds") or 0
+            if cost > 0 and dia < cost then
+                _ACC.SetFigGradeStatus(("⏸ %s — need %d 💎 (have %d)")
+                    :format(name, cost, dia))
+                return false
+            end
+            _ACC.SetFigGradeStatus(("🎲 [%d/%d] %s\nGrade: %s  cost %d 💎  (have %d)")
+                :format(idx, total, name, tostring(cur or "none"), cost, dia))
+            if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then return false end
+            Net.FireRL(R.Gallery, "Gal:RollGrade:" .. name, 0.4, "RollGrade", name)
+            return true
+        end,
+        loopWait = 1,
+    })
 end)
 
 -- ── Figurine Trait roll (Figurine Tokens, 1 per roll) ────────────────────
 task.spawn(function()
-    while getgenv()._ACCRunning do
-        if not _ACC.AutoFigTrait then
-            _ACC.SetFigTraitStatus("Off")
-        elseif mapEmpty(_ACC.SelectedFigTraitFigs) then
-            _ACC.SetFigTraitStatus("⚠ No figurines selected")
-        elseif mapEmpty(_ACC.WantedFigTraits) then
-            _ACC.SetFigTraitStatus("⚠ No wanted traits selected")
-        else
+    runRollEngine({
+        flag      = function() return _ACC.AutoFigTrait end,
+        setStatus = _ACC.SetFigTraitStatus,
+        selected  = function() return _ACC.SelectedFigTraitFigs end,
+        wanted    = function() return _ACC.WantedFigTraits end,
+        noTargetsMsg = "⚠ No figurines selected",
+        noWantedMsg  = "⚠ No wanted traits selected",
+        noneOwnedMsg = "⚠ None of the selected figurines are owned",
+        buildList = function()
             local owned = Data.Get("Figurines") or {}
             local list = {}
             -- highest multiplier first (walk the ASC-sorted list in reverse)
@@ -6472,37 +6908,29 @@ task.spawn(function()
                     table.insert(list, name)
                 end
             end
-            if #list == 0 then
-                _ACC.SetFigTraitStatus("⚠ None of the selected figurines are owned")
-                task.wait(2)
-            else
-                local total = #list
-                for idx, name in ipairs(list) do
-                    if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then break end
-                    while _ACC.AutoFigTrait and getgenv()._ACCRunning do
-                        local cur = Data.Get("Figurines", name, "Trait")
-                        if cur and mapHas(_ACC.WantedFigTraits, cur) then
-                            _ACC.SetFigTraitStatus(("✅ %s = %s\n(%d/%d done)")
-                                :format(name, cur, idx, total))
-                            break
-                        end
-                        local toks = Data.Get("FigurineTokens") or 0
-                        if toks < 1 then
-                            _ACC.SetFigTraitStatus(("⏸ Out of Figurine Tokens\n%s — trait: %s")
-                                :format(name, tostring(cur or "none")))
-                            break
-                        end
-                        _ACC.SetFigTraitStatus(("🎲 [%d/%d] %s\nTrait: %s  FigTokens: %d")
-                            :format(idx, total, name, tostring(cur or "none"), toks))
-                        if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then break end
-                        Net.FireRL(R.Gallery, "Gal:RollTrait:" .. name, 0.4, "RollTrait", name)
-                        task.wait(0.4)
-                    end
-                end
+            return list
+        end,
+        rollOne = function(name, idx, total)
+            local cur = Data.Get("Figurines", name, "Trait")
+            if cur and mapHas(_ACC.WantedFigTraits, cur) then
+                _ACC.SetFigTraitStatus(("✅ %s = %s\n(%d/%d done)")
+                    :format(name, cur, idx, total))
+                return false
             end
-        end
-        task.wait(1)
-    end
+            local toks = Data.Get("FigurineTokens") or 0
+            if toks < 1 then
+                _ACC.SetFigTraitStatus(("⏸ Out of Figurine Tokens\n%s — trait: %s")
+                    :format(name, tostring(cur or "none")))
+                return false
+            end
+            _ACC.SetFigTraitStatus(("🎲 [%d/%d] %s\nTrait: %s  FigTokens: %d")
+                :format(idx, total, name, tostring(cur or "none"), toks))
+            if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then return false end
+            Net.FireRL(R.Gallery, "Gal:RollTrait:" .. name, 0.4, "RollTrait", name)
+            return true
+        end,
+        loopWait = 1,
+    })
 end)
 
 -- ── Live Event: auto-vote + auto-buy shop ────────────────────────────────
@@ -6636,10 +7064,7 @@ end
 sec.AFPlaceL:Divider()
 sec.AFPlaceL:Header({ Text = "Auto Hatch Potions" })
 
-local hatchStatus = sec.AFPlaceL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetHatchStatus(t)
-    if hatchStatus then pcall(function() hatchStatus:UpdateBody(t) end) end
-end
+_ACC.SetHatchStatus = makeStatus(sec.AFPlaceL)
 
 sec.AFPlaceL:Dropdown({
     Name = "Allowed HatchTime tiers",
@@ -6951,10 +7376,7 @@ end
 sec.LvlFarmL = tabs.AutoFarm:Section({ Side = "Left" })
 sec.LvlFarmL:Header({ Text = "Auto Level Farm (cards → Lv. 30)" })
 
-local lvlFarmStatus = sec.LvlFarmL:Paragraph({ Header = "Status", Body = "Idle" })
-function _ACC.SetLvlFarmStatus(t)
-    if lvlFarmStatus then pcall(function() lvlFarmStatus:UpdateBody(t) end) end
-end
+_ACC.SetLvlFarmStatus = makeStatus(sec.LvlFarmL)
 
 sec.LvlFarmL:Paragraph({
     Header = "How it works",
@@ -7151,15 +7573,18 @@ do
             -- so the next spawn fires again. The 15s guard only protects against flag
             -- flicker, not normal per-spawn dedup.
             if up and not wasUp and R.GetMerchantItems and (os.clock() - lastSent) > 15 then
-                local raw = Net.Invoke(R.GetMerchantItems)
+                -- Cached path: reuse the merchant snapshot the auto-buy loop just
+                -- pulled instead of a duplicate GetMerchantItems round-trip. The
+                -- snapshot exposes the server's Item/Category as e.item/e.category.
+                local raw = Shops.RefreshMerchant()
                 if type(raw) == "table" then
                     local items, total = {}, 0
                     for _, info in ipairs(raw) do
-                        if type(info) == "table" and info.Item then
+                        if type(info) == "table" and info.item then
                             total = total + 1
-                            local star = isValuable(info.Item, info.Category) and " ⭐" or ""
+                            local star = isValuable(info.item, info.category) and " ⭐" or ""
                             table.insert(items, ("%s [%s]%s")
-                                :format(prettyItem(info.Item), tostring(info.Category or "?"), star))
+                                :format(prettyItem(info.item), tostring(info.category or "?"), star))
                         end
                     end
                     -- origin: "live-spawn" if we'd already seen a no-merchant tick
@@ -7331,6 +7756,12 @@ getgenv()._ACCCleanup = function()
         _ACC._connections = {}
     end
 
+    -- 2b. revert FPS Boost mutations (lighting/quality/shadows/fog/post-FX)
+    if getgenv()._ACCFPSRestore then
+        pcall(getgenv()._ACCFPSRestore)
+        getgenv()._ACCFPSRestore = nil
+    end
+
     -- 3. restore monkey-patched functions
     if getgenv()._ACCHooks then
         for _, h in pairs(getgenv()._ACCHooks) do
@@ -7341,6 +7772,14 @@ getgenv()._ACCCleanup = function()
     if getgenv()._ACCNamecallRestore then
         pcall(getgenv()._ACCNamecallRestore)
         getgenv()._ACCNamecallRestore = nil
+    end
+
+    -- 3.5. restore Roblox's native Idled (auto-kick) connections we disabled
+    if getgenv()._ACCDisabledIdled then
+        for _, c in ipairs(getgenv()._ACCDisabledIdled) do
+            pcall(function() if c.Enable then c:Enable() end end)
+        end
+        getgenv()._ACCDisabledIdled = nil
     end
 
     -- 4. unload UI window
@@ -7413,14 +7852,30 @@ pcall(function()
     end
 end)
 
--- 2. wrap AutoSave to no-op during initial load — restore-time callbacks
--- would otherwise spam the JSON file once per element
+-- 2. wrap AutoSave to (a) no-op during initial load — restore-time callbacks
+-- would otherwise spam the JSON file once per element — and (b) debounce
+-- post-load writes so a dragged slider coalesces to ~1 disk write / 0.6s
+-- instead of one per step. The final write is never lost: the latest call's
+-- self/args are always flushed when the debounce window elapses.
 local _configLoading = true
 local _origAutoSave = MacLib.AutoSave
 if type(_origAutoSave) == "function" then
+    local _saveQueued = false
+    local _savePending = nil   -- { self, args } of the most recent call
+    local _saveInterval = 0.6
     MacLib.AutoSave = function(self, ...)
         if _configLoading then return end
-        return _origAutoSave(self, ...)
+        _savePending = { self = self, n = select("#", ...), args = { ... } }
+        if _saveQueued then return end
+        _saveQueued = true
+        task.delay(_saveInterval, function()
+            _saveQueued = false
+            local p = _savePending
+            _savePending = nil
+            if p then
+                pcall(function() _origAutoSave(p.self, table.unpack(p.args, 1, p.n)) end)
+            end
+        end)
     end
 end
 
