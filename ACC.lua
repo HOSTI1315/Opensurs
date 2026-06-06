@@ -195,7 +195,6 @@ _ACC.FPSBoost              = false   -- low-graphics performance mode (kills FX,
 _ACC.AutoGalleryBuy            = false
 _ACC.SelectedGalleryPacks      = {}        -- map ["Basic"]=true ...
 _ACC.GalleryBuyStrategy        = "Highest first"  -- / "Lowest first" / "Spread"
-_ACC.GalleryBuyWholeShop       = false     -- buy entire figurine shop ONLY when 💎 cover all of it
 -- Auto Upgrade per-card buff
 _ACC.AutoGalleryUpgrade        = false
 _ACC.SelectedUpgradeCards      = {}        -- map ["Pirate"]=true ...
@@ -2379,44 +2378,6 @@ if CardConfig and CardConfig.Packs then
 end
 table.sort(allCardNames)
 
--- ── Whole-shop buy (only when 💎 cover EVERYTHING) ────────────────────────
--- Sums every in-stock, discovery-req-met pack (price × qty). Buys the lot in
--- one shot ONLY if Diamonds ≥ that total — otherwise buys nothing (no slow
--- one-by-one spend that drains you on a half-shop). Returns: bought, total,
--- diamonds, status ("ok" | "poor" | "empty").
-_ACC.BuyWholeGalleryShop = function(force)
-    local stock    = galleryRefreshStock(force)
-    local diamonds = Data.Get("Diamonds") or 0
-    local nDisc    = #(Data.Get("FigurinesDiscovered") or {})
-    local plan, total = {}, 0
-    for _, tier in ipairs(Lists.GalleryPacks) do
-        local cfg = GalleryConfig and GalleryConfig.FigurinePacks
-                    and GalleryConfig.FigurinePacks[tier]
-        local qty = stock[tier] or 0
-        if cfg and qty > 0 then
-            local price    = cfg.Price or 0
-            local needDisc = cfg.FigurinesDiscovered or 0
-            if price > 0 and nDisc >= needDisc then
-                total = total + price * qty
-                table.insert(plan, { tier = tier, price = price, stock = qty })
-            end
-        end
-    end
-    if #plan == 0 then return 0, total, diamonds, "empty" end
-    if diamonds < total then return 0, total, diamonds, "poor" end
-    local bought = 0
-    for _, c in ipairs(plan) do
-        for _ = 1, c.stock do
-            if not getgenv()._ACCRunning then break end
-            if (Data.Get("Diamonds") or 0) < c.price then break end  -- safety re-check
-            Net.Fire(R.Gallery, "Buy", c.tier)
-            bought = bought + 1
-            task.wait(0.2)
-        end
-    end
-    return bought, total, diamonds, "ok"
-end
-
 -- ── GalBuyL: Auto Buy Packs ──────────────────────────────────────────────
 sec.GalBuyL:Header({ Text = "Auto Buy Figurine Packs" })
 
@@ -2446,28 +2407,6 @@ sec.GalBuyL:Toggle({
 sec.GalBuyL:Button({
     Name = "Buy selected once",
     Callback = function() _ACC._GalleryBuyForce = true end,
-})
-
--- Whole-shop buy: grabs the ENTIRE figurine stock at once, but only if you can
--- afford all of it (no one-by-one drain). Ignores the tier selection above.
-sec.GalBuyL:Toggle({
-    Name = "Auto buy WHOLE shop (only when 💎 cover all of it)",
-    Default = false,
-    Callback = function(v) _ACC.GalleryBuyWholeShop = v end,
-}, "GalleryWholeShopToggle")
-sec.GalBuyL:Button({
-    Name = "Buy whole shop now",
-    Callback = function() task.spawn(function()
-        local bought, total, diamonds, status = _ACC.BuyWholeGalleryShop(true)
-        if status == "empty" then
-            Notify("Shop empty / nothing buyable")
-        elseif status == "poor" then
-            Notify(("Need %s 💎 for the whole shop, have %s — skipped")
-                :format(tostring(total), tostring(diamonds)))
-        else
-            Notify(("Bought whole shop: %d packs for %s 💎"):format(bought, tostring(total)))
-        end
-    end) end,
 })
 
 sec.GalBuyL:Button({
@@ -5458,14 +5397,38 @@ do
                     end
                     managePlace(desiredPlace)
                     fillCraft(need.Craft)
-                    -- Open quests need placed packs that hatch → keep Place on while Open is needed
-                    setEngine("AutoPlaceEnabled", need.Place or need.Open)
+                    -- Open quests need placed packs that hatch → keep Place on while
+                    -- Open is needed, BUT respect AutoPlace's own anti-lag cap: once the
+                    -- plot is full (used >= cap) AutoPlace just re-scans the whole board
+                    -- every cycle finding no free cells (in-game lag). So gate Place on
+                    -- free room; AutoOpen stays on to drain packs and free slots, and a
+                    -- later tick (used < cap) re-enables Place. Used/cap computed EXACTLY
+                    -- like refreshPlaceCounter + AutoPlace's singleCap (Bundle = 5 slots).
+                    local hasRoom = true
+                    do
+                        local replica = Data.GetReplica()
+                        if replica and replica.Data then
+                            local maxP = replica.Data.MaxPlacements or 25
+                            local used = 0
+                            for _, info in pairs(replica.Data.PacksPlaced or {}) do
+                                local isBundle = type(info) == "table" and info.Category == "Bundle"
+                                used = used + (isBundle and 5 or 1)
+                            end
+                            local cap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+                            hasRoom = used < cap
+                        end
+                    end
+                    local wantPlace = (need.Place or need.Open) and hasRoom
+                    setEngine("AutoPlaceEnabled", wantPlace)
                     setEngine("AutoOpenEnabled",  need.Open)
                     setEngine("AutoCraftPotions", need.Craft)
                     setEngine("TowerAutoStart",   need.Tower)
                     if _ACC.SetPetQuestStatus then
-                        _ACC.SetPetQuestStatus(buildStatus(pq, quests, done, total, resetIn,
-                            (_ACC.PetQuestMode or "Smart") .. " — driving engines"))
+                        local header = (_ACC.PetQuestMode or "Smart") .. " — driving engines"
+                        if (need.Place or need.Open) and not hasRoom then
+                            header = header .. " · plot full, opening"
+                        end
+                        _ACC.SetPetQuestStatus(buildStatus(pq, quests, done, total, resetIn, header))
                     end
                 end
             elseif next(managedEngines) or next(managedFill) or managingPlace then
@@ -5824,22 +5787,46 @@ task.spawn(function()
         local force = _ACC._GalleryBuyForce
         _ACC._GalleryBuyForce = false
 
-        if (_ACC.AutoGalleryBuy or force) and not mapEmpty(_ACC.SelectedGalleryPacks) then
-            local stock = galleryRefreshStock()
+        if _ACC.AutoGalleryBuy or force then
+            local stock = galleryRefreshStock(force)
 
-            -- nothing in stock at all → wait, don't spam
+            local diamonds   = Data.Get("Diamonds") or 0
+            local discovered = Data.Get("FigurinesDiscovered") or {}
+            local nDisc      = #discovered
+
+            -- Whole-shop cost = Σ(price × stock) over every in-stock,
+            -- discovery-req-met tier. Matches the native BuyAll spend exactly.
+            local wholeShopCost = 0
             local anyStock = false
             for _, k in ipairs(Lists.GalleryPacks) do
-                if (stock[k] or 0) > 0 then anyStock = true; break end
+                local qty = stock[k] or 0
+                if qty > 0 then
+                    anyStock = true
+                    local cfg = GalleryConfig and GalleryConfig.FigurinePacks
+                                and GalleryConfig.FigurinePacks[k]
+                    if cfg then
+                        local price    = cfg.Price or 0
+                        local needDisc = cfg.FigurinesDiscovered or 0
+                        if price > 0 and nDisc >= needDisc then
+                            wholeShopCost = wholeShopCost + price * qty
+                        end
+                    end
+                end
             end
 
-            if not anyStock then
+            if wholeShopCost > 0 and diamonds >= wholeShopCost then
+                -- Affordable whole shop → one native call clears every tier.
+                Net.Fire(R.Gallery, "BuyAll")
+                _ACC.SetGalleryBuyStatus(
+                    ("🛒 BuyAll — whole shop (%s 💎)"):format(tostring(wholeShopCost)))
+            elseif not anyStock then
                 _ACC.SetGalleryBuyStatus("⏳ Shop empty — waiting for restock")
+            elseif mapEmpty(_ACC.SelectedGalleryPacks) then
+                _ACC.SetGalleryBuyStatus(
+                    ("⏸ Can't afford whole shop — pick tier(s) for per-item\n💎 %s / %s")
+                    :format(tostring(diamonds), tostring(wholeShopCost)))
             else
-                local diamonds   = Data.Get("Diamonds") or 0
-                local discovered = Data.Get("FigurinesDiscovered") or {}
-                local nDisc      = #discovered
-
+                -- Per-item fallback: buy the user's SELECTED tiers.
                 local candidates = {}
                 for tier in pairs(_ACC.SelectedGalleryPacks) do
                     local cfg = GalleryConfig and GalleryConfig.FigurinePacks
@@ -5911,35 +5898,10 @@ task.spawn(function()
                     end
                 end
             end
-        elseif _ACC.AutoGalleryBuy then
-            _ACC.SetGalleryBuyStatus("⚠ Select tier(s) first")
-        elseif not _ACC.GalleryBuyWholeShop then
+        else
             _ACC.SetGalleryBuyStatus("Off")
         end
         task.wait(1.5)
-    end
-end)
-
--- ── Auto Buy WHOLE shop (only when 💎 cover all of it) ────────────────────
--- Independent of the tier selection above. Buys the entire in-stock,
--- discovery-met figurine shop in one shot, but ONLY when Diamonds cover the
--- whole bill — otherwise it waits and shows what it's saving toward (no
--- one-by-one spend). Use this OR the selected auto-buy, not both at once.
-task.spawn(function()
-    while getgenv()._ACCRunning do
-        if _ACC.GalleryBuyWholeShop and not _ACC.AutoGalleryBuy then
-            local bought, total, diamonds, status = _ACC.BuyWholeGalleryShop()
-            if status == "ok" then
-                _ACC.SetGalleryBuyStatus(("🛒 Whole shop bought: %d packs / %s 💎")
-                    :format(bought, tostring(total)))
-            elseif status == "poor" then
-                _ACC.SetGalleryBuyStatus(("⏳ Saving for whole shop: %s / %s 💎")
-                    :format(tostring(diamonds), tostring(total)))
-            elseif status == "empty" then
-                _ACC.SetGalleryBuyStatus("⏳ Shop empty — waiting for restock")
-            end
-        end
-        task.wait(2)
     end
 end)
 
