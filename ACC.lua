@@ -74,11 +74,11 @@ _ACC.SkipOpenAnim          = false
 _ACC.OpenViaPrompt         = true
 _ACC.SelectedBuyPacks      = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
 _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true, ... }
--- Cap on USED placement slots while placing SINGLES (1-slot packs). Each single
--- is its own model, so a board crammed with singles lags Roblox and the bot
--- stalls retrying Place into the last cramped cells. This cap ONLY gates single
--- placement — BUNDLES are never limited by it and fill up to MaxPlacements
--- (e.g. 12 bundles → 60/60 is fine). Effective cap = min(this, MaxPlacements).
+-- GENERAL cap on USED placement slots — applies to singles AND bundles. The
+-- board fills only up to this many used slots, then placing stops (a Bundle
+-- counts as 5 used slots). Keeps the plot a predictable size so it doesn't lag
+-- or stall retrying into a crammed board. Effective cap = min(this, MaxPlacements).
+-- (Flag name kept for config back-compat; it now caps TOTAL slots, not just singles.)
 _ACC.SinglePlaceCap        = 50
 
 -- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
@@ -1235,9 +1235,9 @@ sec.AFPlaceL:Toggle({
 }, "AutoPlaceToggle")
 
 sec.AFPlaceL:Slider({
-    Name = "Single-pack slot cap (anti-lag)",
+    Name = "Placement cap — total used slots (anti-lag)",
     Default = 50,
-    Minimum = 30,
+    Minimum = 10,
     Maximum = 60,
     DisplayMethod = "Value",
     Precision = 0,
@@ -3561,12 +3561,11 @@ task.spawn(function()
                         local probeFootprint = footprint
                             + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
 
-                        -- singles are capped at SinglePlaceCap USED slots so we
-                        -- never cram the board with single models (that lags
-                        -- Roblox); bundles may use all remaining slots.
-                        local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
-                        local minFree   = entry.isBundle and entry.slotCost
-                            or math.max(entry.slotCost, maxP - singleCap + entry.slotCost)
+                        -- GENERAL cap on USED slots (singles AND bundles): place
+                        -- only while used + this pack's slotCost stays <= cap, so
+                        -- the board never grows past the cap (anti-lag).
+                        local cap     = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+                        local minFree = math.max(entry.slotCost, maxP - cap + entry.slotCost)
 
                         while stillOwned > 0
                               and free >= minFree
@@ -5430,7 +5429,7 @@ do
                     -- every cycle finding no free cells (in-game lag). So gate Place on
                     -- free room; AutoOpen stays on to drain packs and free slots, and a
                     -- later tick (used < cap) re-enables Place. Used/cap computed EXACTLY
-                    -- like refreshPlaceCounter + AutoPlace's singleCap (Bundle = 5 slots).
+                    -- like refreshPlaceCounter + AutoPlace's general cap (Bundle = 5 slots).
                     local hasRoom = true
                     do
                         local replica = Data.GetReplica()
@@ -7172,15 +7171,14 @@ task.spawn(function()
         local sel = _ACC._FarmPlacing and (_ACC._FarmPlaceAll or {}) or (_ACC.SelectedPlacePacks or {})
         local ownedPacks = rep.Data.Packs or {}
         local maxP = rep.Data.MaxPlacements or 25
-        local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+        local cap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
         for displayName in pairs(sel) do
             local serverName = tostring(displayName):gsub(" ", "-")
             local isBundle   = serverName:match("%-Bundle$") ~= nil
             local slotCost   = isBundle and 5 or 1
-            local minFree    = isBundle and slotCost
-                or math.max(slotCost, maxP - singleCap + slotCost)
+            local minFree    = math.max(slotCost, maxP - cap + slotCost)
             if (ownedPacks[serverName] or 0) > 0 and fs >= minFree then
-                return false   -- something still fits (within single cap) → not done
+                return false   -- something still fits (within the cap) → not done
             end
         end
         return true            -- nothing selected can be placed into free space
@@ -7469,10 +7467,11 @@ task.spawn(function()
                 local rep0  = Data.GetReplica()
                 local maxP  = (rep0 and rep0.Data and rep0.Data.MaxPlacements) or 25
                 local free  = freeSlotsFarm() or 0
-                local singleCap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
-                local singleMinFree = math.max(1, maxP - singleCap + 1)
+                local cap = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
+                local bundleMinFree = math.max(5, maxP - cap + 5)   -- cap applies to bundles too
+                local singleMinFree = math.max(1, maxP - cap + 1)
                 local phase
-                if next(bundles) and free >= 5 then
+                if next(bundles) and free >= bundleMinFree then
                     _ACC._FarmPlacePacks = bundles
                     phase = "placing bundles"
                 elseif next(singles) and free >= singleMinFree then
@@ -7480,7 +7479,7 @@ task.spawn(function()
                     phase = "placing singles"
                 else
                     _ACC._FarmPlacePacks = {}
-                    phase = "opening (board full / no fit)"
+                    phase = "opening (cap reached / no fit)"
                 end
 
                 local at, total = farmFamilyProgress(focus)
