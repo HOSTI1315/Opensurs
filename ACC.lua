@@ -4080,7 +4080,7 @@ task.spawn(function()
                         local fp = entryFootprint(e)
                         mx = math.max(mx, fp.X, fp.Z)
                     end
-                    STEP = mx + PACK_SPACING + 1.5   -- footprint + gap + character clearance
+                    STEP = mx + PACK_SPACING   -- footprint + small gap (tight; player drops in from +3 so no side clearance needed, avoid-zones handle machine hits)
                 end
                 local freeGrid, gridIdx = {}, 1
                 do
