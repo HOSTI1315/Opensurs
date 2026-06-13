@@ -80,6 +80,7 @@ _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true
 -- or stall retrying into a crammed board. Effective cap = min(this, MaxPlacements).
 -- (Flag name kept for config back-compat; it now caps TOTAL slots, not just singles.)
 _ACC.SinglePlaceCap        = 50
+_ACC.PlaceSkipSingles      = true    -- never place the LAST (count==1) of a type — phantom packs are always 1
 
 -- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
 _ACC.LvlFarmEnabled        = false
@@ -164,8 +165,10 @@ _ACC.VoyageAuto            = false                 -- auto-start voyage + keep A
 _ACC.VoyagePack            = "Auto (MaxWave)"       -- "Auto (MaxWave)"=deepest pack · "Auto (Rotate packs)"=1 run per pack · or a pack name
 _ACC.VoyageUpgradeAuto     = false                 -- auto-buy voyage upgrades (cheapest first)
 _ACC.VoyageEquipAuto       = false                 -- auto-equip best poster per pack
+_ACC.VoyageBuffWeights     = {}                    -- buff name -> priority weight 0-10 (poster equip)
 _ACC.VoyageSmeltAuto       = false                 -- auto-smelt posters of selected rarities (destructive)
-_ACC.VoyageSmeltRarities   = {}                    -- map: which rarities to smelt
+_ACC.VoyageSmeltRarities   = {}                    -- map: limit smelt to these rarities (empty = all)
+_ACC.VoyageSmeltThresholds = {}                    -- buff -> min fraction to KEEP; meets none → smelt
 _ACC.VoyageForgeAuto       = false                 -- auto-forge a poster when ≥5 scrolls of a rarity
 _ACC.VoyageForgePack       = "Auto (deepest eligible)"  -- which pack auto-forge crafts for
 
@@ -1273,6 +1276,12 @@ sec.AFPlaceL:Slider({
     Precision = 0,
     Callback = function(v) _ACC.SinglePlaceCap = math.floor(tonumber(v) or 50) end,
 }, "SinglePlaceCapSlider")
+
+sec.AFPlaceL:Toggle({
+    Name = "Only place when owned > 1 (anti-phantom)",
+    Default = true,
+    Callback = function(v) _ACC.PlaceSkipSingles = v end,
+}, "PlaceSkipSinglesToggle")
 
 -- ── Auto Collect ──────────────────────────────────────────────────────────
 sec.AFCollR:Header({ Text = "Auto Collect" })
@@ -2483,6 +2492,138 @@ do
         end
         return best
     end
+
+    -- ── Priority-weighted equip ───────────────────────────────────────────
+    -- Each buff's slider weight is a TIER. A poster's score = Σ value × BASE^w
+    -- with BASE big enough (50 > the ~20× spread of buff values) that a higher
+    -- weight STRICTLY dominates lower ones: Cash=8 beats Time/Damage=7 even if
+    -- their % is bigger, and among posters that have Cash the max Cash% wins.
+    -- Equal weights = same tier = either/or (their values add). weight 0 = ignore.
+    local WEIGHT_BASE = 50
+    function VoyageHelpers.weightedScore(po, weights)
+        local s = 0
+        if type(po.Buffs) == "table" and type(weights) == "table" then
+            for b, v in pairs(po.Buffs) do
+                local w = tonumber(weights[b]) or 0
+                if w > 0 then s = s + (tonumber(v) or 0) * (WEIGHT_BASE ^ w) end
+            end
+        end
+        return s
+    end
+    -- best poster per pack by the weighted priority (rarity/sum as tiebreak).
+    -- No weights set anywhere → fall back to plain rarity-best.
+    function VoyageHelpers.bestWeighted(posters, weights)
+        local anyW = false
+        if type(weights) == "table" then
+            for _, w in pairs(weights) do if (tonumber(w) or 0) > 0 then anyW = true break end end
+        end
+        if not anyW then return VoyageHelpers.bestPerPack(posters) end
+        local best, bestS = {}, {}
+        for _, po in ipairs(posters or {}) do
+            if type(po) == "table" and po.Pack and po.UUID then
+                local s = VoyageHelpers.weightedScore(po, weights)
+                local cur = best[po.Pack]
+                if not cur then
+                    best[po.Pack], bestS[po.Pack] = po, s
+                elseif s > bestS[po.Pack]
+                       or (s == bestS[po.Pack]
+                           and VoyageHelpers.posterScore(po) > VoyageHelpers.posterScore(cur)) then
+                    best[po.Pack], bestS[po.Pack] = po, s
+                end
+            end
+        end
+        return best
+    end
+    -- best poster per pack maximizing ONE buff; packs with no such poster are skipped
+    function VoyageHelpers.bestByCategory(posters, buff)
+        local best = {}
+        for _, po in ipairs(posters or {}) do
+            if type(po) == "table" and po.Pack and po.UUID and type(po.Buffs) == "table" then
+                local v = tonumber(po.Buffs[buff])
+                if v and v > 0 then
+                    local cur = best[po.Pack]
+                    if not cur or v > (tonumber(cur.Buffs[buff]) or 0) then best[po.Pack] = po end
+                end
+            end
+        end
+        return best
+    end
+    -- fire Equip for each pack where the chosen poster differs from equipped
+    function VoyageHelpers.equipBest(bestMap)
+        local equipped = Data.Get("PostersEquipped") or {}
+        local n = 0
+        for pack, po in pairs(bestMap or {}) do
+            if not getgenv()._ACCRunning then break end
+            local eq = equipped[pack]
+            if po and po.UUID and (not eq or eq.UUID ~= po.UUID) then
+                Net.FireRL(R.Voyage, "Voy:Equip:" .. pack, 0.4, "Equip", po.UUID)
+                n = n + 1
+                task.wait(0.3)
+            end
+        end
+        return n
+    end
+
+    -- ── Smelt % filter ─────────────────────────────────────────────────────
+    -- KEEP a poster if ANY of its buffs is ≥ that buff's threshold; if none of
+    -- the set thresholds are met, the poster is junk → smelt. Buffs without a
+    -- threshold don't count toward keeping. Values are fractions (1.5% = 0.015).
+    function VoyageHelpers.meetsThreshold(po, thr)
+        if type(po.Buffs) ~= "table" or type(thr) ~= "table" then return false end
+        for b, t in pairs(thr) do
+            t = tonumber(t) or 0
+            if t > 0 then
+                local v = tonumber(po.Buffs[b])
+                if v and v >= t then return true end
+            end
+        end
+        return false
+    end
+    function VoyageHelpers.anyThreshold(thr)
+        if type(thr) ~= "table" then return false end
+        for _, t in pairs(thr) do if (tonumber(t) or 0) > 0 then return true end end
+        return false
+    end
+    -- one smelt pass by the % filter → returns count, or (0, reason) if disarmed.
+    -- Always protects equipped / Locked / best-per-pack (rarity + weighted), so
+    -- it can never smelt your best or equipped poster even if it fails the filter.
+    function VoyageHelpers.doSmelt()
+        local thr = _ACC.VoyageSmeltThresholds
+        if not VoyageHelpers.anyThreshold(thr) then return 0, "set a % threshold first" end
+        local posters  = Data.Get("Posters") or {}
+        local equipped = Data.Get("PostersEquipped") or {}
+        local protect  = {}
+        for _, po in pairs(equipped) do
+            if type(po) == "table" and po.UUID then protect[po.UUID] = true end
+        end
+        for _, po in pairs(VoyageHelpers.bestPerPack(posters)) do
+            if po.UUID then protect[po.UUID] = true end
+        end
+        for _, po in pairs(VoyageHelpers.bestWeighted(posters, _ACC.VoyageBuffWeights)) do
+            if po.UUID then protect[po.UUID] = true end
+        end
+        local rl = (not mapEmpty(_ACC.VoyageSmeltRarities)) and _ACC.VoyageSmeltRarities or nil
+        local byPack = {}
+        for _, po in ipairs(posters) do
+            if type(po) == "table" and po.UUID and po.Pack
+               and po.Lock ~= true and not protect[po.UUID]
+               and (rl == nil or rl[po.Rarity])
+               and not VoyageHelpers.meetsThreshold(po, thr) then
+                byPack[po.Pack] = byPack[po.Pack] or {}
+                table.insert(byPack[po.Pack], po.UUID)
+            end
+        end
+        local smelted = 0
+        for pack, uuids in pairs(byPack) do
+            if not getgenv()._ACCRunning then break end
+            if #uuids > 0 then
+                Net.FireRL(R.Voyage, "Voy:Smelt:" .. pack, 1.0, "Smelt", pack, uuids)
+                smelted = smelted + #uuids
+                task.wait(0.5)
+            end
+        end
+        return smelted
+    end
 end
 
 -- ── VoyL: Auto Voyage ──────────────────────────────────────────────────────
@@ -2540,15 +2681,76 @@ sec.VoyR:Paragraph({
 })
 
 -- ── VoyPostL: Posters + Smelt ──────────────────────────────────────────────
-sec.VoyPostL:Header({ Text = "🖼 Posters" })
+sec.VoyPostL:Header({ Text = "🖼 Posters — Equip" })
 _ACC.SetPosterStatus = makeStatus(sec.VoyPostL)
+sec.VoyPostL:Paragraph({
+    Header = "Priority weights",
+    Body = "Each slider = how important that buff is when picking which poster to equip per pack. A HIGHER slider is a strict tier: Cash 8 beats Time/Damage 7 even if their % is bigger, and among posters that have Cash it takes the max Cash%. Equal weights = either/or. 0 = ignore. All 0 → equips highest rarity.\n(HatchTime = open-time reduction; higher % = better.)",
+})
+do
+    local buffs = (VoyageConfig and VoyageConfig.BuffList) or
+                  { "Cash", "Diamonds", "Health", "Damage", "Luck", "HatchTime", "MutationChance", "XP" }
+    for _, buff in ipairs(buffs) do
+        sec.VoyPostL:Slider({
+            Name = "Priority: " .. buff,
+            Default = 0, Minimum = 0, Maximum = 10,
+            DisplayMethod = "Value", Precision = 0,
+            Callback = function(v) _ACC.VoyageBuffWeights[buff] = math.floor(tonumber(v) or 0) end,
+        }, "VoyWeight_" .. buff)
+    end
+end
 sec.VoyPostL:Toggle({
-    Name = "Auto Equip Best Poster (per pack)",
+    Name = "Auto Equip Best Poster (uses weights)",
     Default = false,
     Callback = function(v) _ACC.VoyageEquipAuto = v end,
 }, "VoyageEquipAutoToggle")
+sec.VoyPostL:Button({
+    Name = "⭐ Equip Best now (by priority)",
+    Callback = function()
+        task.spawn(function()
+            local n = VoyageHelpers.equipBest(
+                VoyageHelpers.bestWeighted(Data.Get("Posters") or {}, _ACC.VoyageBuffWeights))
+            Notify(("Equipped %d poster(s) by priority"):format(n))
+            if _ACC.SetPosterStatus then
+                _ACC.SetPosterStatus(("⭐ Equipped %d by priority"):format(n))
+            end
+        end)
+    end,
+})
 sec.VoyPostL:Divider()
-sec.VoyPostL:Header({ Text = "♻ Smelt (PERMANENT)" })
+sec.VoyPostL:Header({ Text = "Equip max single stat" })
+do
+    local buffs = (VoyageConfig and VoyageConfig.BuffList) or
+                  { "Cash", "Diamonds", "Health", "Damage", "Luck", "HatchTime", "MutationChance", "XP" }
+    for _, buff in ipairs(buffs) do
+        sec.VoyPostL:Button({
+            Name = "Equip max " .. buff,
+            Callback = function()
+                task.spawn(function()
+                    local n = VoyageHelpers.equipBest(
+                        VoyageHelpers.bestByCategory(Data.Get("Posters") or {}, buff))
+                    Notify(("Equipped max %s on %d pack(s)"):format(buff, n))
+                    if _ACC.SetPosterStatus then
+                        _ACC.SetPosterStatus(("Equipped max %s → %d pack(s)"):format(buff, n))
+                    end
+                end)
+            end,
+        })
+    end
+end
+sec.VoyPostL:Divider()
+sec.VoyPostL:Header({ Text = "♻ Smelt" })
+do
+    local buffs = (VoyageConfig and VoyageConfig.BuffList) or
+                  { "Cash", "Diamonds", "Health", "Damage", "Luck", "HatchTime", "MutationChance", "XP" }
+    for _, buff in ipairs(buffs) do
+        sec.VoyPostL:Slider({
+            Name = "Keep ≥ " .. buff .. " %",
+            Default = 0, Minimum = 0, Maximum = 10, DisplayMethod = "Value", Precision = 1,
+            Callback = function(v) _ACC.VoyageSmeltThresholds[buff] = (tonumber(v) or 0) / 100 end,
+        }, "VoySmeltThr_" .. buff)
+    end
+end
 do
     local rarOpts = {}
     if VoyageConfig and VoyageConfig.RarityList then
@@ -2557,20 +2759,29 @@ do
         rarOpts = { "Common", "Rare", "Epic", "Legendary", "Mythical" }
     end
     makeSearchableDropdown(sec.VoyPostL, {
-        Name = "Rarities to smelt",
+        Name = "Limit to rarities (optional, empty = all)",
         Multi = true,
         Options = rarOpts,
         OnChange = function(map) _ACC.VoyageSmeltRarities = map end,
     }, "VoyageSmeltRaritiesDropdown")
 end
 sec.VoyPostL:Toggle({
-    Name = "Auto Smelt selected rarities",
+    Name = "Auto Smelt (% filter)",
     Default = false,
     Callback = function(v) _ACC.VoyageSmeltAuto = v end,
 }, "VoyageSmeltAutoToggle")
+sec.VoyPostL:Button({
+    Name = "Smelt now (% filter)",
+    Callback = function()
+        task.spawn(function()
+            local n, why = VoyageHelpers.doSmelt()
+            Notify(why and ("Smelt: " .. why) or ("♻ Smelted " .. tostring(n) .. " poster(s)"))
+        end)
+    end,
+})
 sec.VoyPostL:Paragraph({
-    Header = "Smelt safety",
-    Body = "Never smelts an equipped poster, a Locked poster, or the single best poster of each pack. Only rarities you tick above.",
+    Header = "How the % filter works",
+    Body = "Set a minimum % per buff. A poster is KEPT if ANY of its buffs is ≥ its threshold; if none qualify it's smelted (buffs with no threshold don't count). e.g. Damage 1.5% + Luck 1.5%: a poster with Damage 1.6% → keep; Damage 1.2% / Luck 0.4% → smelt; Damage 1.2% / Luck 1.7% → keep. Posters roll ~0.1–2% per buff, so set thresholds in that range. Never smelts equipped / Locked / your best poster per pack. Needs at least one threshold to arm.",
 })
 
 -- ── VoyForgeR: Forge ───────────────────────────────────────────────────────
@@ -3761,7 +3972,22 @@ task.spawn(function()
         return cells
     end
 
+    -- Phantom-pack guard (cumulative-lag fix): some pack keys keep a stale count
+    -- in Data.Packs (inventory "shows 1" but the pack isn't really there). The
+    -- engine used to retry them EVERY cycle — each retry is a full grid scan +
+    -- failed Place, and phantoms pile up (≈1 per type placed), so lag grows over
+    -- the session. We skip a key after it fails to place WHILE ROOM IS AVAILABLE
+    -- across 2 cycles; we un-skip the instant its inventory count grows (a real
+    -- pack arrived), plus a periodic full retry as a false-positive safety net.
+    local placeSkip    = {}   -- server key -> owned count when we gave up (skip while owned <= it)
+    local placeFailCyc = {}   -- server key -> consecutive failed-with-room cycles
+    local skipClearTick = 0
+
     while getgenv()._ACCRunning do
+        skipClearTick = skipClearTick + 1
+        if skipClearTick >= 30 then   -- ~1 min: retry skipped packs (recover false positives)
+            skipClearTick, placeSkip, placeFailCyc = 0, {}, {}
+        end
         local placeSel = (_ACC._FarmPlacing and _ACC._FarmPlacePacks) or _ACC.SelectedPlacePacks
         if (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing) and not mapEmpty(placeSel) then
             safe(function()
@@ -3793,7 +4019,12 @@ task.spawn(function()
                     local serverName = displayName:gsub(" ", "-")
                     local isBundle   = serverName:match("%-Bundle$") ~= nil
                     local slotCost   = isBundle and 5 or 1
-                    if (ownedPacks[serverName] or 0) > 0 then
+                    local owned      = ownedPacks[serverName] or 0
+                    -- inventory grew past the skip mark → real packs arrived, retry it
+                    if placeSkip[serverName] and owned > placeSkip[serverName] then
+                        placeSkip[serverName], placeFailCyc[serverName] = nil, nil
+                    end
+                    if owned > (_ACC.PlaceSkipSingles and 1 or 0) and not placeSkip[serverName] then
                         local page, rIdx, family, rarity = priorityOf(displayName)
                         table.insert(toPlace, {
                             server   = serverName,
@@ -3831,6 +4062,61 @@ task.spawn(function()
                 local totalPlaced = 0
                 local lastEquipped
 
+                -- ── Serpentine placement grid — built ONCE per cycle ───────────
+                -- Walk a fixed snake grid over the floor placing one pack per cell
+                -- (like a human auto-clicking corner→corner→shift→back). Cells are
+                -- spaced > footprint + character clearance so the player never lands
+                -- ON an already-placed pack (that was the cause of failed Places),
+                -- with only a 0.5-stud edge inset (server just needs you on-floor).
+                -- Machine keep-out zones are removed by a distance check (no scan),
+                -- and ONE overlap pass marks cells blocked by PRE-EXISTING packs
+                -- (skipped entirely when the board starts empty). After this there
+                -- are ZERO grid scans while placing — the per-pack full-grid scan
+                -- was the cumulative-lag source.
+                local STEP
+                do
+                    local mx = 0
+                    for _, e in ipairs(toPlace) do
+                        local fp = entryFootprint(e)
+                        mx = math.max(mx, fp.X, fp.Z)
+                    end
+                    STEP = mx + PACK_SPACING + 1.5   -- footprint + gap + character clearance
+                end
+                local freeGrid, gridIdx = {}, 1
+                do
+                    local pad = 0.5                                  -- only need ~0.5 stud off the edge
+                    local cols = math.max(1, math.floor((floor.Size.X - pad * 2) / STEP))
+                    local rows = math.max(1, math.floor((floor.Size.Z - pad * 2) / STEP))
+                    local raw = {}
+                    for r = 0, rows - 1 do
+                        local zr = (r + 0.5 - rows / 2) * STEP
+                        if r % 2 == 0 then
+                            for c = 0, cols - 1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP, floor.Size.Y / 2 + 0.5, zr) end
+                        else
+                            for c = cols - 1, 0, -1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP, floor.Size.Y / 2 + 0.5, zr) end
+                        end
+                    end
+                    local params      = buildPlayerPackParams(plotModel)
+                    local probeFP     = Vector3.new(math.max(1, STEP - PACK_SPACING), 0.5, math.max(1, STEP - PACK_SPACING))
+                    local boardEmpty  = used <= 0   -- fresh board → no occupancy scan needed at all
+                    for i, lp in ipairs(raw) do
+                        local cf  = floor.CFrame * CFrame.new(lp.X, lp.Y, lp.Z)
+                        local pos = cf.Position
+                        local blocked = false
+                        if avoidZones then
+                            for _, z in ipairs(avoidZones) do
+                                local dx, dz = pos.X - z.pos.X, pos.Z - z.pos.Z
+                                if (dx * dx + dz * dz) <= z.radius * z.radius then blocked = true; break end
+                            end
+                        end
+                        if not blocked and not boardEmpty then
+                            if #workspace:GetPartBoundsInBox(cf, probeFP, params) > 0 then blocked = true end
+                        end
+                        if not blocked then freeGrid[#freeGrid + 1] = pos end
+                        if i % 40 == 0 then task.wait() end   -- yield so the single pass never frame-hitches
+                    end
+                end
+
                 for _, entry in ipairs(toPlace) do
                     if not (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing) or not getgenv()._ACCRunning then break end
 
@@ -3849,94 +4135,57 @@ task.spawn(function()
                             task.wait(0.25)
                         end
 
-                        local footprint     = entryFootprint(entry)
                         local consecFails   = 0
+                        local failedWithRoom = false   -- broke because Place kept failing though cells existed
                         local placedHere    = 0
                         local FAIL_LIMIT    = 4
-                        local gridDensities = { 18, 24, 32 }   -- escalate if no cells found
-                        local densityIdx    = 1
-
-                        -- Overlap filter is built ONCE per pack stack and
-                        -- rebuilt only after a successful Place (a new pack
-                        -- appeared) — not on every probe. Probe footprint is a
-                        -- per-entry constant, so hoist it out of the loop too.
-                        local params = buildPlayerPackParams(plotModel)
-                        local probeFootprint = footprint
-                            + Vector3.new(PACK_SPACING * 2, 0, PACK_SPACING * 2)
 
                         -- GENERAL cap on USED slots (singles AND bundles): place
-                        -- only while used + this pack's slotCost stays <= cap, so
-                        -- the board never grows past the cap (anti-lag).
+                        -- only while used + this pack's slotCost stays <= cap.
                         local cap     = math.min(tonumber(_ACC.SinglePlaceCap) or maxP, maxP)
                         local minFree = math.max(entry.slotCost, maxP - cap + entry.slotCost)
+                        local placeFloor = _ACC.PlaceSkipSingles and 1 or 0   -- leave the last (count==1) → no phantom attempts
 
-                        while stillOwned > 0
+                        -- Place into the pre-built serpentine grid via a SHARED
+                        -- cursor (cells consumed across all entries this cycle).
+                        -- No scanning here — cells are already validated + spaced.
+                        while stillOwned > placeFloor
                               and free >= minFree
+                              and gridIdx <= #freeGrid
                               and (_ACC.AutoPlaceEnabled or _ACC._FarmPlacing)
                               and getgenv()._ACCRunning
                         do
-                            local cells  = findFreeCells(floor, probeFootprint, params,
-                                                         hrp.Position,
-                                                         gridDensities[densityIdx],
-                                                         avoidZones)
-                            if #cells == 0 then
-                                -- try a finer grid before giving up — coarse cells
-                                -- might be "blocked" by a single pack edge
-                                if densityIdx < #gridDensities then
-                                    densityIdx = densityIdx + 1
-                                else
-                                    if _ACC.Debug then
-                                        warn(("[ACC AutoPlace] %s — no free cell at any density")
-                                             :format(entry.server))
-                                    end
-                                    break
-                                end
+                            local cellPos = freeGrid[gridIdx]
+                            gridIdx = gridIdx + 1                 -- consume the cell (shared across entries)
+                            hrp.CFrame = CFrame.new(cellPos + Vector3.new(0, 3, 0))
+                            task.wait(0.12)
+
+                            local repB = Data.GetReplica()
+                            local before = 0
+                            if repB and repB.Data and repB.Data.PacksPlaced then
+                                for _ in pairs(repB.Data.PacksPlaced) do before = before + 1 end
+                            end
+
+                            Net.Fire(R.Card, "Place", entry.server)
+                            task.wait(0.45)   -- wait for server replication
+
+                            local rep2 = Data.GetReplica()
+                            local rd2  = rep2 and rep2.Data
+                            local now  = 0
+                            if rd2 and rd2.PacksPlaced then for _ in pairs(rd2.PacksPlaced) do now = now + 1 end end
+
+                            if now > before then
+                                free        = free - entry.slotCost
+                                placedHere  = placedHere + 1
+                                totalPlaced = totalPlaced + 1
+                                consecFails = 0
+                                ownedPacks  = rd2 and rd2.Packs or ownedPacks
+                                stillOwned  = ownedPacks[entry.server] or 0
                             else
-                                local cellPos = cells[1].pos
-                                hrp.CFrame = CFrame.new(cellPos + Vector3.new(0, 3, 0))
-                                task.wait(0.12)
-
-                                local before = (Data.GetReplica()
-                                                and Data.GetReplica().Data
-                                                and Data.GetReplica().Data.PacksPlaced
-                                                and (function()
-                                                    local n = 0
-                                                    for _ in pairs(Data.GetReplica().Data.PacksPlaced) do
-                                                        n = n + 1
-                                                    end
-                                                    return n
-                                                end)()) or 0
-
-                                Net.Fire(R.Card, "Place", entry.server)
-                                task.wait(0.45)   -- wait for server replication so the freshly-placed pack appears in CollectionService:GetTagged before the next scan
-
-                                local rep2 = Data.GetReplica()
-                                local rd2  = rep2 and rep2.Data
-                                local plc2 = rd2 and rd2.PacksPlaced or {}
-                                local now = 0
-                                for _ in pairs(plc2) do now = now + 1 end
-
-                                if now > before then
-                                    -- success
-                                    free        = free - entry.slotCost
-                                    placedHere  = placedHere + 1
-                                    totalPlaced = totalPlaced + 1
-                                    consecFails = 0
-                                    -- refetch inventory — other features may consume packs
-                                    ownedPacks  = rd2 and rd2.Packs or ownedPacks
-                                    stillOwned  = ownedPacks[entry.server] or 0
-                                    -- a new pack now exists on the plot — rebuild
-                                    -- the overlap filter so the next probe sees it
-                                    params      = buildPlayerPackParams(plotModel)
-                                else
-                                    consecFails = consecFails + 1
-                                    if consecFails >= FAIL_LIMIT then
-                                        if _ACC.Debug then
-                                            warn(("[ACC AutoPlace] %s — %d consecutive fails, moving on")
-                                                 :format(entry.server, FAIL_LIMIT))
-                                        end
-                                        break
-                                    end
+                                consecFails = consecFails + 1
+                                if consecFails >= FAIL_LIMIT then
+                                    failedWithRoom = true   -- cells existed but Place never took → phantom signal
+                                    break
                                 end
                             end
                         end
@@ -3944,6 +4193,23 @@ task.spawn(function()
                         if _ACC.Debug and placedHere > 0 then
                             warn(("[ACC AutoPlace] %s × %d placed (free=%d, owned=%d)")
                                  :format(entry.server, placedHere, free, stillOwned))
+                        end
+
+                        -- phantom guard: placed nothing despite free room across 2
+                        -- cycles → treat as a stale/phantom inventory count and skip
+                        -- it (un-skipped automatically when its count grows).
+                        if placedHere > 0 then
+                            placeFailCyc[entry.server] = nil
+                            placeSkip[entry.server]    = nil
+                        elseif failedWithRoom then
+                            placeFailCyc[entry.server] = (placeFailCyc[entry.server] or 0) + 1
+                            if placeFailCyc[entry.server] >= 2 then
+                                placeSkip[entry.server] = stillOwned
+                                if _ACC.Debug then
+                                    warn(("[ACC AutoPlace] %s unplaceable w/ room ×2 — skipping as phantom (owned=%d)")
+                                         :format(entry.server, stillOwned))
+                                end
+                            end
                         end
                     end
                 end
@@ -6205,7 +6471,7 @@ task.spawn(function()
         if _ACC.VoyageEquipAuto and R.Voyage then
             local posters  = Data.Get("Posters") or {}
             local equipped = Data.Get("PostersEquipped") or {}
-            local best     = VoyageHelpers.bestPerPack(posters)
+            local best     = VoyageHelpers.bestWeighted(posters, _ACC.VoyageBuffWeights)
             local changed  = 0
             for pack, po in pairs(best) do
                 if not _ACC.VoyageEquipAuto or not getgenv()._ACCRunning then break end
@@ -6225,40 +6491,18 @@ task.spawn(function()
     end
 end)
 
--- Auto Smelt selected rarities (PERMANENT). Protects equipped + Locked posters
--- and the single best poster of each pack.
+-- Auto Smelt by the % filter. Keeps any poster with a buff ≥ its threshold,
+-- smelts the rest. Protects equipped / Locked / best-per-pack (rarity+weighted).
 task.spawn(function()
     while getgenv()._ACCRunning do
-        if _ACC.VoyageSmeltAuto and R.Voyage and not mapEmpty(_ACC.VoyageSmeltRarities) then
-            local posters  = Data.Get("Posters") or {}
-            local equipped = Data.Get("PostersEquipped") or {}
-            local best     = VoyageHelpers.bestPerPack(posters)
-            local protect  = {}
-            for _, po in pairs(equipped) do
-                if type(po) == "table" and po.UUID then protect[po.UUID] = true end
-            end
-            for _, po in pairs(best) do if po.UUID then protect[po.UUID] = true end end
-            local byPack = {}
-            for _, po in ipairs(posters) do
-                if type(po) == "table" and po.UUID and po.Pack
-                   and _ACC.VoyageSmeltRarities[po.Rarity]
-                   and po.Lock ~= true
-                   and not protect[po.UUID] then
-                    byPack[po.Pack] = byPack[po.Pack] or {}
-                    table.insert(byPack[po.Pack], po.UUID)
+        if _ACC.VoyageSmeltAuto and R.Voyage then
+            local n, why = VoyageHelpers.doSmelt()
+            if _ACC.SetPosterStatus then
+                if why then
+                    _ACC.SetPosterStatus("♻ Smelt: " .. why)
+                elseif n and n > 0 then
+                    _ACC.SetPosterStatus(("♻ Smelted %d poster(s)"):format(n))
                 end
-            end
-            local smelted = 0
-            for pack, uuids in pairs(byPack) do
-                if not _ACC.VoyageSmeltAuto or not getgenv()._ACCRunning then break end
-                if #uuids > 0 then
-                    Net.FireRL(R.Voyage, "Voy:Smelt:" .. pack, 1.0, "Smelt", pack, uuids)
-                    smelted = smelted + #uuids
-                    task.wait(0.5)
-                end
-            end
-            if _ACC.SetPosterStatus and smelted > 0 then
-                _ACC.SetPosterStatus(("♻ Smelted %d poster(s)"):format(smelted))
             end
         end
         task.wait(3.0)
