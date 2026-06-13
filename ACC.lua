@@ -159,6 +159,16 @@ _ACC.PetQuestMode          = "Smart"    -- "Smart" (use your selections) / "Zero
 _ACC.DragonBallAuto        = false
 _ACC.DBWishType            = "Cash"  -- which wish to make when 7 balls collected
 
+-- ── Voyage (Update 48) ─────────────────────────────────────────────────────
+_ACC.VoyageAuto            = false                 -- auto-start voyage + keep AFK loop running
+_ACC.VoyagePack            = "Auto (MaxWave)"       -- "Auto (MaxWave)"=deepest pack · "Auto (Rotate packs)"=1 run per pack · or a pack name
+_ACC.VoyageUpgradeAuto     = false                 -- auto-buy voyage upgrades (cheapest first)
+_ACC.VoyageEquipAuto       = false                 -- auto-equip best poster per pack
+_ACC.VoyageSmeltAuto       = false                 -- auto-smelt posters of selected rarities (destructive)
+_ACC.VoyageSmeltRarities   = {}                    -- map: which rarities to smelt
+_ACC.VoyageForgeAuto       = false                 -- auto-forge a poster when ≥5 scrolls of a rarity
+_ACC.VoyageForgePack       = "Auto (deepest eligible)"  -- which pack auto-forge crafts for
+
 -- ── Inventory ─────────────────────────────────────────────────────────────
 _ACC.PEMethod              = "Upgrade"   -- Upgrade / Downgrade / Bundle / Unbundle
 _ACC.PESelectedPacks       = {}   -- map
@@ -373,6 +383,7 @@ local ImageConfig     = Config.ImageConfig
 -- Mutations: data-only module (no requires, no WaitForChild). Safe to load.
 local Mutations       = Config.Mutations  -- RS.Modules.Config.Core.Mutations
 local GalleryConfig   = Config.GalleryConfig  -- RS.Modules.Config.Core.GalleryConfig (Gallery system)
+local VoyageConfig    = Config.VoyageConfig    -- RS.Modules.Config.Core.VoyageConfig (Voyage system, Update 48)
 
 -- Shop price reduction is the constant 0.6 in Modules.GameUtils.Configuration.
 -- We hardcode it instead of requiring Configuration — that module pulls in
@@ -453,6 +464,7 @@ do
     R.Codes       = get("Codes")
     R.Raid        = get("Raid")
     R.StarTrial   = get("StarTrial")
+    R.Voyage      = get("Voyage")
     R.Gallery          = get("Gallery")
     R.GetClanInfo      = get("GetClanInfo")
     R.GetMerchantItems = get("GetMerchantItems")
@@ -652,6 +664,18 @@ do
         return pa < pb
     end)
     Lists.Packs = packs
+
+    -- ── Voyage pack order (sequential progression: Pirate → … → Meister) ──
+    -- Mirrors CardConfig.List.Packs (the canonical voyage unlock chain).
+    Lists.VoyagePacks = {}
+    if CardConfig and type(CardConfig.List) == "table"
+       and type(CardConfig.List.Packs) == "table" then
+        for _, p in ipairs(CardConfig.List.Packs) do
+            table.insert(Lists.VoyagePacks, p)
+        end
+    else
+        for _, p in ipairs(packs) do table.insert(Lists.VoyagePacks, p) end
+    end
 
     -- ── Rarity list ordered by progression cost ──
     local rarityOrder = {}
@@ -930,6 +954,7 @@ local tabs = {
     Shops     = tabGroups.Main:Tab({ Name = "Shops",      Image = "rbxassetid://10747372992" }),
     Inventory = tabGroups.Main:Tab({ Name = "Inventory",  Image = "rbxassetid://10723396225" }),
     Gallery   = tabGroups.Main:Tab({ Name = "Gallery",    Image = "rbxassetid://10747372992" }),
+    Voyage    = tabGroups.Main:Tab({ Name = "Voyage",     Image = "rbxassetid://10723415903" }),
     Misc      = tabGroups.Main:Tab({ Name = "Misc",       Image = "rbxassetid://10734932295" }),
     Settings  = tabGroups.Main:Tab({ Name = "Settings",   Image = "rbxassetid://10734950309" }),
 }
@@ -972,6 +997,11 @@ local sec = {
     GalUpgR   = tabs.Gallery:Section({ Side = "Right" }),
     GalLvlL   = tabs.Gallery:Section({ Side = "Left" }),
     GalMiscR  = tabs.Gallery:Section({ Side = "Right" }),
+    -- Voyage
+    VoyL      = tabs.Voyage:Section({ Side = "Left" }),
+    VoyR      = tabs.Voyage:Section({ Side = "Right" }),
+    VoyPostL  = tabs.Voyage:Section({ Side = "Left" }),
+    VoyForgeR = tabs.Voyage:Section({ Side = "Right" }),
     -- Misc
     WHR       = tabs.Misc:Section({ Side = "Right" }),
     UtilL     = tabs.Misc:Section({ Side = "Left" }),
@@ -2294,6 +2324,281 @@ sec.CardsR:Button({ Name = "Equip Best (Tower)", Callback = function() Net.Fire(
 sec.CardsR:Button({ Name = "Unequip All packs", Callback = function() Net.Fire(R.Card, "UnequipAll") end })
 
 -- ============================================================================
+-- // 15.7 TAB: VOYAGE  (Update 48)
+-- ============================================================================
+-- Live-verified remotes (Voyage RemoteEvent, method-string convention):
+--   Voyage:FireServer("Start",   packName)         -- begin a voyage with a pack
+--   Voyage:FireServer("AFK",     bool)             -- game auto-battles + auto-rejoins after cooldown
+--   Voyage:FireServer("Exit")
+--   Voyage:FireServer("Equip",   posterUUID)  / ("Unequip", packName)
+--   Voyage:FireServer("Smelt",   packName, {uuid,…})   -- posters → scroll (PERMANENT)
+--   Voyage:FireServer("SmeltAll",packName | "All")
+--   Voyage:FireServer("Forge",   packName, scrollRarity) -- 5 scrolls → random poster
+--   Voyage:FireServer("Upgrade", upgradeName)
+-- Battle is fully automatic: the game's VoyageHandler.Attack fires AttackDone
+-- itself each round (server-driven via OnClientEvent), so Start + AFK(true) is
+-- a hands-off farm. Start gate: cooldown elapsed + pack has unlocked cards +
+-- previous pack reached stage StageReq (50). Voyage runs as a HUD overlay
+-- (same place, no teleport). Data lives in the replica:
+--   Posters[]={UUID,Buffs,Rarity,Pack,Lock} · PostersEquipped={[pack]=poster}
+--   Scrolls={[rarity]=n} · VoyageTokens=n · VoyageUpgrades={[name]=lvl}
+--   VoyageStages={[pack]=stage} · VoyageTime=lastVoyageTimestamp
+local VoyageHelpers = {}
+do
+    local VHmod
+    function VoyageHelpers.getVH()
+        if not VHmod then VHmod = UIClient and tryRequire(UIClient:FindFirstChild("VoyageHandler")) end
+        return VHmod
+    end
+    local function stageReq()
+        return (VoyageConfig and VoyageConfig.Data and VoyageConfig.Data.StageReq) or 50
+    end
+    function VoyageHelpers.prevPack(pack)
+        local order = Lists.VoyagePacks or {}
+        for i, p in ipairs(order) do if p == pack then return order[i - 1] end end
+        return nil
+    end
+    -- pack is voyageable when it's the first pack, or the previous pack in the
+    -- chain reached StageReq (mirrors the game's own Start gate)
+    function VoyageHelpers.unlocked(pack)
+        local order = Lists.VoyagePacks or {}
+        if not pack then return false end
+        if pack == order[1] then return true end
+        local prev = VoyageHelpers.prevPack(pack)
+        if not prev then return false end
+        local stages = Data.Get("VoyageStages") or {}
+        return (tonumber(stages[prev]) or 0) >= stageReq()
+    end
+    function VoyageHelpers.hasCards(pack)
+        if not (CardConfig and CardConfig.GetCardsInPack and CardConfig.Packs
+                and CardConfig.Packs[pack]) then return true end
+        local rep = Data.GetReplica()
+        local cards = rep and rep.Data and rep.Data.Cards
+        local ok, n = pcall(CardConfig.GetCardsInPack, cards, CardConfig.Packs[pack].List)
+        if ok then return (tonumber(n) or 0) > 0 end
+        return true
+    end
+    -- highest-stage unlocked pack with cards (deepest progress = best posters +
+    -- most tokens). Ties resolve to the later pack in the chain.
+    function VoyageHelpers.autoPick()
+        local order  = Lists.VoyagePacks or {}
+        local stages = Data.Get("VoyageStages") or {}
+        local pick, pickStage = order[1], -1
+        for _, p in ipairs(order) do
+            if VoyageHelpers.unlocked(p) and VoyageHelpers.hasCards(p) then
+                local s = tonumber(stages[p]) or 0
+                if s >= pickStage then pick, pickStage = p, s end
+            end
+        end
+        return pick
+    end
+    -- packs currently voyageable (unlocked + you own cards), in chain order
+    function VoyageHelpers.eligiblePacks()
+        local elig = {}
+        for _, p in ipairs(Lists.VoyagePacks or {}) do
+            if VoyageHelpers.unlocked(p) and VoyageHelpers.hasCards(p) then
+                table.insert(elig, p)
+            end
+        end
+        return elig
+    end
+    -- round-robin: the eligible pack AFTER the last one we voyaged (wraps around)
+    function VoyageHelpers.rotatePick()
+        local elig = VoyageHelpers.eligiblePacks()
+        if #elig == 0 then return (Lists.VoyagePacks or {})[1] end
+        local last = VoyageHelpers._rotLast
+        if not last then return elig[1] end
+        for i, p in ipairs(elig) do
+            if p == last then return elig[(i % #elig) + 1] end
+        end
+        return elig[1]   -- last pack became ineligible → restart the rotation
+    end
+    function VoyageHelpers.resolvePack()
+        local sel = _ACC.VoyagePack
+        if sel == "Auto (Rotate packs)" then return VoyageHelpers.rotatePick() end
+        -- "Auto (MaxWave)" (and legacy "Auto (furthest)") = deepest pack
+        if not sel or sel == "Auto (MaxWave)" or sel == "Auto (furthest)" then
+            return VoyageHelpers.autoPick()
+        end
+        return sel   -- a specific pack name
+    end
+    function VoyageHelpers.cooldownLeft()
+        local last = Data.Get("VoyageTime") or 0
+        local now  = workspace:GetServerTimeNow()
+        local cd   = (VoyageConfig and VoyageConfig.Data and VoyageConfig.Data.VoyageCooldown) or 300
+        if VoyageConfig and VoyageConfig.GetVoyageCooldown then
+            local rep = Data.GetReplica()
+            if rep then
+                local ok, c = pcall(VoyageConfig.GetVoyageCooldown, rep)
+                if ok and c then cd = c end
+            end
+        end
+        return math.max(0, cd - (now - last))
+    end
+    -- true while a voyage is actively running or the game is AFK-waiting to rejoin
+    function VoyageHelpers.busy()
+        local VH = VoyageHelpers.getVH()
+        if not VH then return false end
+        return VH.InBattle == true or VH.AFKStart ~= nil
+    end
+    function VoyageHelpers.startVoyage(pack)
+        pack = pack or VoyageHelpers.resolvePack()
+        if not pack then return false, "no pack" end
+        if not VoyageHelpers.unlocked(pack) then return false, "locked: " .. tostring(pack) end
+        local VH = VoyageHelpers.getVH()
+        if VH and VH.PacksSelected then VH.PacksSelected.VoyagePackSelected = pack end
+        Net.Fire(R.Voyage, "Start", pack)
+        return true, pack
+    end
+    function VoyageHelpers.setAFK(on)
+        on = on and true or false
+        local VH = VoyageHelpers.getVH()
+        if VH then VH.AFK = on end
+        Net.Fire(R.Voyage, "AFK", on)
+    end
+    -- poster value: rarity rank dominates, then total buff magnitude
+    local rank
+    function VoyageHelpers.posterScore(po)
+        if not rank then
+            rank = {}
+            if VoyageConfig and VoyageConfig.RarityList then
+                for i, r in ipairs(VoyageConfig.RarityList) do rank[r] = i end
+            end
+        end
+        local s = (rank[po.Rarity] or 0) * 1e6
+        if type(po.Buffs) == "table" then
+            for _, v in pairs(po.Buffs) do s = s + (tonumber(v) or 0) end
+        end
+        return s
+    end
+    function VoyageHelpers.bestPerPack(posters)
+        local best = {}
+        for _, po in ipairs(posters or {}) do
+            if type(po) == "table" and po.Pack and po.UUID then
+                local cur = best[po.Pack]
+                if not cur or VoyageHelpers.posterScore(po) > VoyageHelpers.posterScore(cur) then
+                    best[po.Pack] = po
+                end
+            end
+        end
+        return best
+    end
+end
+
+-- ── VoyL: Auto Voyage ──────────────────────────────────────────────────────
+sec.VoyL:Header({ Text = "🚢 Auto Voyage" })
+_ACC.SetVoyageStatus = makeStatus(sec.VoyL)
+do
+    local packOpts = { "Auto (MaxWave)", "Auto (Rotate packs)" }
+    for _, p in ipairs(Lists.VoyagePacks or {}) do table.insert(packOpts, p) end
+    sec.VoyL:Dropdown({
+        Name = "Voyage pack",
+        Multi = false,
+        Search = true,
+        Options = packOpts,
+        Default = "Auto (MaxWave)",
+        Callback = function(v) _ACC.VoyagePack = v end,
+    }, "VoyagePackDropdown")
+end
+sec.VoyL:Paragraph({
+    Header = "Pack modes",
+    Body = "Auto (MaxWave): farms your deepest pack for best posters/tokens (game AFK loop).\nAuto (Rotate packs): one full voyage on each unlocked pack, round-robin — levels ALL packs.\nOr pick one pack to farm only it.",
+})
+sec.VoyL:Toggle({
+    Name = "Auto Voyage (AFK farm)",
+    Default = false,
+    -- turning the hub toggle off also stops the game's AFK auto-rejoin so the
+    -- loop ends after the current voyage instead of running unattended
+    Callback = function(v)
+        _ACC.VoyageAuto = v
+        if not v then pcall(function() VoyageHelpers.setAFK(false) end) end
+    end,
+}, "VoyageAutoToggle")
+sec.VoyL:Divider()
+sec.VoyL:Button({
+    Name = "Start voyage (selected pack)",
+    Callback = function()
+        local ok, info = VoyageHelpers.startVoyage()
+        Notify(ok and ("🚢 Voyage started: " .. tostring(info)) or ("⚠ " .. tostring(info)))
+    end,
+})
+sec.VoyL:Button({ Name = "AFK loop ON",  Callback = function() VoyageHelpers.setAFK(true);  Notify("Voyage AFK on")  end })
+sec.VoyL:Button({ Name = "AFK loop OFF", Callback = function() VoyageHelpers.setAFK(false); Notify("Voyage AFK off") end })
+sec.VoyL:Button({ Name = "Exit voyage",  Callback = function() Net.Fire(R.Voyage, "Exit") end })
+
+-- ── VoyR: Voyage Upgrades ──────────────────────────────────────────────────
+sec.VoyR:Header({ Text = "⬆ Voyage Upgrades" })
+_ACC.SetVoyageUpgStatus = makeStatus(sec.VoyR)
+sec.VoyR:Toggle({
+    Name = "Auto Buy Upgrades (cheapest first)",
+    Default = false,
+    Callback = function(v) _ACC.VoyageUpgradeAuto = v end,
+}, "VoyageUpgradeAutoToggle")
+sec.VoyR:Paragraph({
+    Header = "Upgrades (spends Voyage Tokens)",
+    Body = "BattleSpeed / Cooldown / Health / Damage / Rewards → max 50\nTokenChance → max 35\nBuys the cheapest not-maxed upgrade you can afford each cycle.",
+})
+
+-- ── VoyPostL: Posters + Smelt ──────────────────────────────────────────────
+sec.VoyPostL:Header({ Text = "🖼 Posters" })
+_ACC.SetPosterStatus = makeStatus(sec.VoyPostL)
+sec.VoyPostL:Toggle({
+    Name = "Auto Equip Best Poster (per pack)",
+    Default = false,
+    Callback = function(v) _ACC.VoyageEquipAuto = v end,
+}, "VoyageEquipAutoToggle")
+sec.VoyPostL:Divider()
+sec.VoyPostL:Header({ Text = "♻ Smelt (PERMANENT)" })
+do
+    local rarOpts = {}
+    if VoyageConfig and VoyageConfig.RarityList then
+        for _, r in ipairs(VoyageConfig.RarityList) do table.insert(rarOpts, r) end
+    else
+        rarOpts = { "Common", "Rare", "Epic", "Legendary", "Mythical" }
+    end
+    makeSearchableDropdown(sec.VoyPostL, {
+        Name = "Rarities to smelt",
+        Multi = true,
+        Options = rarOpts,
+        OnChange = function(map) _ACC.VoyageSmeltRarities = map end,
+    }, "VoyageSmeltRaritiesDropdown")
+end
+sec.VoyPostL:Toggle({
+    Name = "Auto Smelt selected rarities",
+    Default = false,
+    Callback = function(v) _ACC.VoyageSmeltAuto = v end,
+}, "VoyageSmeltAutoToggle")
+sec.VoyPostL:Paragraph({
+    Header = "Smelt safety",
+    Body = "Never smelts an equipped poster, a Locked poster, or the single best poster of each pack. Only rarities you tick above.",
+})
+
+-- ── VoyForgeR: Forge ───────────────────────────────────────────────────────
+sec.VoyForgeR:Header({ Text = "⚒ Forge" })
+_ACC.SetForgeStatus = makeStatus(sec.VoyForgeR)
+do
+    local forgePackOpts = { "Auto (deepest eligible)" }
+    for _, p in ipairs(Lists.VoyagePacks or {}) do table.insert(forgePackOpts, p) end
+    sec.VoyForgeR:Dropdown({
+        Name = "Forge pack",
+        Multi = false,
+        Search = true,
+        Options = forgePackOpts,
+        Default = "Auto (deepest eligible)",
+        Callback = function(v) _ACC.VoyageForgePack = v end,
+    }, "VoyageForgePackDropdown")
+end
+sec.VoyForgeR:Toggle({
+    Name = "Auto Forge (≥5 scrolls of a rarity)",
+    Default = false,
+    Callback = function(v) _ACC.VoyageForgeAuto = v end,
+}, "VoyageForgeAutoToggle")
+sec.VoyForgeR:Paragraph({
+    Header = "How forge works",
+    Body = "Spends 5 scrolls of a rarity → 1 random poster for the chosen pack. The pack must have reached the rarity's stage (Common1/Rare20/Epic40/Legendary60/Mythical80) — scrolls below that pack's stage are skipped. 'Auto' picks the deepest eligible pack per scroll rarity.",
+})
+
+-- ============================================================================
 -- // 15.5 TAB: GALLERY
 -- ============================================================================
 -- New system from the latest update. Diamond economy with 6 pack tiers,
@@ -3085,101 +3390,99 @@ task.spawn(function()
     end
 end)
 
--- ── Auto Collect cash (with bidirectional page zigzag) ──────────────────
--- Page detection priority:
---   1. Read Display.Page TextLabel (gives exact "N" or "N/M") — most reliable
---   2. Fallback: snapshot of inner content (slot names alone collide between
---      pages, so we include the inner pack/card model name)
--- Edge detection only fires after 2 CONSECUTIVE identical readings to avoid
--- single-frame race conditions. Hard safety: reverse after 35 steps anyway.
+-- ── Auto Collect cash (full-page collect + deterministic page sweep) ─────
+-- FIX (player report "auto collect not working / misses a lot of money"):
+--   Live recon (PlaceId 76285745979410, 2026-06-13) proved the remote+arg
+--   are CORRECT — Card:FireServer("Collect", <slotPart>) drains a slot even
+--   from 196 studs away (no proximity check). The bug was the LOOP:
+--     * Old aggregate cap of 12 fires/cycle, but each page has 18 slots
+--       (Left 1-9 + Right 1-9). Iteration always restarted at Left.1, so
+--       slots Right.4-9 — frequently the RICHEST cards — were NEVER collected
+--       on ANY page. Confirmed live: Right.4-9 sat at $253T-$360T while the
+--       loop ran. Now EVERY visible slot is collected each page.
+--     * Edge detection was a fragile 2-frame snapshot-equality heuristic.
+--       Now we parse the authoritative "Page N/M" label and reverse exactly
+--       at N>=M / N<=1, so any binder size is fully swept (this acct: 27 pp).
+--     * Flip wait is event-driven: poll the page counter until it actually
+--       changes (replication measured ~0.17-0.29s live), capped — faster and
+--       never collects a stale page.
+--     * Light per-fire jitter prevents a single-frame burst of 18 identical
+--       FireServer calls (cheap server-rate-limiter insurance; jitter scoped
+--       to this game only).
 task.spawn(function()
     local direction = "RightArrow"
-    local sameCount = 0
-    local stepsInDir = 0
-    local MAX_STEPS = 35
 
-    local function readPageLabel(display)
+    -- Parse "Page N/M" -> N, M. M is nil on single-page binders.
+    local function readPage(display)
         local p = display:FindFirstChild("Page")
-        if p then
-            for _, d in ipairs(p:GetDescendants()) do
-                if d:IsA("TextLabel") and d.Text and d.Text ~= "" then
-                    return d.Text
+        if not p then return nil, nil end
+        for _, d in ipairs(p:GetDescendants()) do
+            if d:IsA("TextLabel") and d.Text and d.Text ~= "" then
+                local n, m = d.Text:match("(%d+)%s*/%s*(%d+)")
+                if n then return tonumber(n), tonumber(m) end
+                local only = d.Text:match("(%d+)")
+                if only then return tonumber(only), nil end
+            end
+        end
+        return nil, nil
+    end
+
+    -- collect EVERY slot currently bound on both binder sides
+    local function collectVisible(display)
+        for _, sideName in ipairs({ "Left", "Right" }) do
+            local side = display:FindFirstChild(sideName)
+            if side then
+                for _, slot in ipairs(side:GetChildren()) do
+                    if not _ACC.AutoCollectEnabled or not getgenv()._ACCRunning then return end
+                    -- per-slot RL only guards accidental double-fire; flips
+                    -- naturally space same-slot collects >0.1s apart anyway
+                    if RL_Allow("Card:Collect:" .. sideName .. "/" .. slot.Name, 0.05) then
+                        Net.Fire(R.Card, "Collect", slot)
+                        task.wait(0.02 + math.random() * 0.04) -- anti-burst jitter
+                    end
                 end
             end
         end
-        return nil
     end
 
-    -- AGGREGATE cap on Collect fires per cycle (per-slot RL_Allow alone does
-    -- not bound total Collect QPS when many slots are active).
-    local MAX_COLLECT_PER_CYCLE = 12
-
-    local function snapshotPage(display)
-        -- Authoritative Page label only. The old slot-content fallback meant a
-        -- full Left+Right :GetChildren()+FindFirstChildWhichIsA traversal twice
-        -- per cycle (heavy alloc under card spam). Returns nil when the label is
-        -- genuinely missing; callers treat nil as "unknown" (keep stepping and
-        -- rely on MAX_STEPS), so all pages are still cycled.
-        local lbl = readPageLabel(display)
-        if lbl then return "L:" .. lbl end
-        return nil
-    end
-
-    local function reverse()
-        direction = (direction == "RightArrow") and "LeftArrow" or "RightArrow"
-        sameCount = 0
-        stepsInDir = 0
+    -- fire a flip, then wait until the page counter actually changes (capped)
+    local function flipAndWait(display, dir)
+        local n0 = select(1, readPage(display))
+        Net.Fire(R.Card, "Page", dir)
+        local t0 = os.clock()
+        while os.clock() - t0 < 0.6 do
+            task.wait(0.03)
+            if not _ACC.AutoCollectEnabled or not getgenv()._ACCRunning then return end
+            if select(1, readPage(display)) ~= n0 then return end
+        end
     end
 
     while getgenv()._ACCRunning do
         if _ACC.AutoCollectEnabled then
             local display = Plot.GetDisplay()
             if display then
-                -- 1. collect everything visible (aggregate-capped per cycle)
-                local collectFires = 0
-                for _, sideName in ipairs({ "Left", "Right" }) do
-                    if not _ACC.AutoCollectEnabled or not getgenv()._ACCRunning then break end
-                    if collectFires >= MAX_COLLECT_PER_CYCLE then break end
-                    local side = display:FindFirstChild(sideName)
-                    if side then
-                        for _, slot in ipairs(side:GetChildren()) do
-                            if collectFires >= MAX_COLLECT_PER_CYCLE then break end
-                            if RL_Allow("Card:Collect:" .. sideName .. "/" .. slot.Name, 0.1) then
-                                if Net.Fire(R.Card, "Collect", slot) then
-                                    collectFires = collectFires + 1
-                                end
-                            end
-                        end
+                -- 1. collect every visible slot on the current page
+                collectVisible(display)
+
+                -- 2. choose direction from the live page counter, then flip
+                local n, m = readPage(display)
+                if m and m > 1 then
+                    if direction == "RightArrow" and n and n >= m then
+                        direction = "LeftArrow"
+                    elseif direction == "LeftArrow" and n and n <= 1 then
+                        direction = "RightArrow"
                     end
+                    flipAndWait(display, direction)
+                elseif n == nil and m == nil then
+                    -- no readable page label: flip blindly so multi-page binders
+                    -- without a counter are still swept (rare)
+                    Net.FireRL(R.Card, "Card:PageFlip", 0.4, "Page", direction)
+                    task.wait(0.4)
                 end
-
-                -- 2. snapshot, flip, wait, snapshot
-                local before = snapshotPage(display)
-                Net.FireRL(R.Card, "Card:PageFlip", 0.5, "Page", direction)
-                task.wait(0.45)
-                local after = snapshotPage(display)
-                stepsInDir = stepsInDir + 1
-
-                -- 3. edge detection: needs TWO consecutive identical readings.
-                -- A nil reading means the Page label was missing this cycle —
-                -- treat as "unknown", reset the counter and keep stepping (the
-                -- MAX_STEPS hard safety still guarantees a reverse), so all
-                -- pages are still cycled.
-                if before ~= nil and after ~= nil and before == after then
-                    sameCount = sameCount + 1
-                    if sameCount >= 2 then reverse() end
-                else
-                    sameCount = 0
-                end
-
-                -- 4. hard safety: too many steps in one direction
-                if stepsInDir >= MAX_STEPS then reverse() end
+                -- m == 1 (single page): nothing to flip, keep collecting
             end
-        else
-            sameCount  = 0
-            stepsInDir = 0
         end
-        task.wait(0.35)
+        task.wait(0.1)
     end
 end)
 
@@ -5786,6 +6089,230 @@ task.spawn(function()
             end
         end
         task.wait(2)
+    end
+end)
+
+-- ============================================================================
+-- // 22.6 LOOPS — VOYAGE  (Update 48)
+-- ============================================================================
+
+-- Auto Voyage: keep a voyage running using the game's own AFK auto-battle.
+-- We only (re)Start when nothing is active/waiting AND the cooldown elapsed —
+-- the game's JoinFromAFK handles rejoin between voyages, so this mainly kicks
+-- off the first run and recovers if the loop ever stalls.
+task.spawn(function()
+    local lastStart = 0
+    local wasBusy   = false
+    while getgenv()._ACCRunning do
+        if _ACC.VoyageAuto and R.Voyage then
+            local rotate = (_ACC.VoyagePack == "Auto (Rotate packs)")
+            local busy   = VoyageHelpers.busy()
+
+            -- rotate: when a voyage just finished, clear the results screen so the
+            -- next pack queues cleanly (MaxWave lets the game's AFK loop handle it)
+            if rotate and wasBusy and not busy then
+                pcall(function()
+                    local VH = VoyageHelpers.getVH()
+                    if VH and VH.ContinueClicked then VH.ContinueClicked() end
+                end)
+            end
+            wasBusy = busy
+
+            if busy then
+                if _ACC.SetVoyageStatus then
+                    local VH = VoyageHelpers.getVH()
+                    local p  = VH and VH.PacksSelected and VH.PacksSelected.VoyagePackSelected
+                    local stages = Data.Get("VoyageStages") or {}
+                    _ACC.SetVoyageStatus(("%s Running: %s (stage %s)")
+                        :format(rotate and "🔁" or "🚢", tostring(p),
+                                tostring(p and stages[p] or "?")))
+                end
+            else
+                local cd = VoyageHelpers.cooldownLeft()
+                if cd > 0 then
+                    if _ACC.SetVoyageStatus then
+                        _ACC.SetVoyageStatus(("⏳ Cooldown %ds → next: %s")
+                            :format(math.ceil(cd), tostring(VoyageHelpers.resolvePack())))
+                    end
+                elseif os.clock() - lastStart > 8 then
+                    local pack = VoyageHelpers.resolvePack()
+                    if pack and VoyageHelpers.unlocked(pack) and VoyageHelpers.hasCards(pack) then
+                        local ok = VoyageHelpers.startVoyage(pack)
+                        if ok then
+                            lastStart = os.clock()
+                            if rotate then
+                                VoyageHelpers._rotLast = pack
+                                task.wait(0.3)
+                                VoyageHelpers.setAFK(false)  -- single run; engine rotates to next pack
+                                if _ACC.SetVoyageStatus then
+                                    _ACC.SetVoyageStatus(("🔁 Rotate → %s"):format(pack))
+                                end
+                            else
+                                task.wait(0.3)
+                                VoyageHelpers.setAFK(true)   -- game AFK-loops the deepest pack
+                                if _ACC.SetVoyageStatus then
+                                    _ACC.SetVoyageStatus(("🚢 MaxWave → %s (AFK)"):format(pack))
+                                end
+                            end
+                        end
+                    elseif _ACC.SetVoyageStatus then
+                        _ACC.SetVoyageStatus(("⚠ %s not voyageable yet"):format(tostring(pack)))
+                    end
+                end
+            end
+        else
+            wasBusy = false
+        end
+        task.wait(3)
+    end
+end)
+
+-- Auto Buy Voyage Upgrades — cheapest not-maxed upgrade we can afford, per cycle
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.VoyageUpgradeAuto and R.Voyage and VoyageConfig and VoyageConfig.Upgrades then
+            local tokens = tonumber(Data.Get("VoyageTokens")) or 0
+            local levels = Data.Get("VoyageUpgrades") or {}
+            local best
+            for name, cfg in pairs(VoyageConfig.Upgrades) do
+                local lvl  = tonumber(levels[name]) or 0
+                local maxL = cfg.MaxLevel or 50
+                if lvl < maxL then
+                    local cost = VoyageConfig.GetUpgradeCost(lvl + 1)
+                    if cost and tokens >= cost and (not best or cost < best.cost) then
+                        best = { name = name, cost = cost }
+                    end
+                end
+            end
+            if best then
+                Net.FireRL(R.Voyage, "Voy:Upg", 0.4, "Upgrade", best.name)
+                if _ACC.SetVoyageUpgStatus then
+                    _ACC.SetVoyageUpgStatus(("⬆ %s (cost %d · tokens %d)")
+                        :format(best.name, best.cost, tokens))
+                end
+                task.wait(0.4)
+            elseif _ACC.SetVoyageUpgStatus then
+                _ACC.SetVoyageUpgStatus(("Tokens: %d — nothing affordable/left"):format(tokens))
+            end
+        end
+        task.wait(1.0)
+    end
+end)
+
+-- Auto Equip Best Poster (per pack)
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.VoyageEquipAuto and R.Voyage then
+            local posters  = Data.Get("Posters") or {}
+            local equipped = Data.Get("PostersEquipped") or {}
+            local best     = VoyageHelpers.bestPerPack(posters)
+            local changed  = 0
+            for pack, po in pairs(best) do
+                if not _ACC.VoyageEquipAuto or not getgenv()._ACCRunning then break end
+                local eq = equipped[pack]
+                if not eq or eq.UUID ~= po.UUID then
+                    Net.FireRL(R.Voyage, "Voy:Equip:" .. pack, 0.4, "Equip", po.UUID)
+                    changed = changed + 1
+                    task.wait(0.3)
+                end
+            end
+            if _ACC.SetPosterStatus then
+                _ACC.SetPosterStatus(changed > 0 and ("Equipped %d poster(s)"):format(changed)
+                                                  or "Best posters equipped ✓")
+            end
+        end
+        task.wait(2.0)
+    end
+end)
+
+-- Auto Smelt selected rarities (PERMANENT). Protects equipped + Locked posters
+-- and the single best poster of each pack.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.VoyageSmeltAuto and R.Voyage and not mapEmpty(_ACC.VoyageSmeltRarities) then
+            local posters  = Data.Get("Posters") or {}
+            local equipped = Data.Get("PostersEquipped") or {}
+            local best     = VoyageHelpers.bestPerPack(posters)
+            local protect  = {}
+            for _, po in pairs(equipped) do
+                if type(po) == "table" and po.UUID then protect[po.UUID] = true end
+            end
+            for _, po in pairs(best) do if po.UUID then protect[po.UUID] = true end end
+            local byPack = {}
+            for _, po in ipairs(posters) do
+                if type(po) == "table" and po.UUID and po.Pack
+                   and _ACC.VoyageSmeltRarities[po.Rarity]
+                   and po.Lock ~= true
+                   and not protect[po.UUID] then
+                    byPack[po.Pack] = byPack[po.Pack] or {}
+                    table.insert(byPack[po.Pack], po.UUID)
+                end
+            end
+            local smelted = 0
+            for pack, uuids in pairs(byPack) do
+                if not _ACC.VoyageSmeltAuto or not getgenv()._ACCRunning then break end
+                if #uuids > 0 then
+                    Net.FireRL(R.Voyage, "Voy:Smelt:" .. pack, 1.0, "Smelt", pack, uuids)
+                    smelted = smelted + #uuids
+                    task.wait(0.5)
+                end
+            end
+            if _ACC.SetPosterStatus and smelted > 0 then
+                _ACC.SetPosterStatus(("♻ Smelted %d poster(s)"):format(smelted))
+            end
+        end
+        task.wait(3.0)
+    end
+end)
+
+-- Auto Forge — when ≥5 scrolls of a rarity, forge a poster for the chosen pack
+-- (dropdown), or — in "Auto" — the deepest pack in the chain that has reached
+-- that rarity's stage requirement. Scrolls whose stage the pack hasn't reached
+-- are skipped.
+task.spawn(function()
+    while getgenv()._ACCRunning do
+        if _ACC.VoyageForgeAuto and R.Voyage and VoyageConfig and VoyageConfig.Rarities then
+            local scrolls = Data.Get("Scrolls") or {}
+            local stages  = Data.Get("VoyageStages") or {}
+            local order   = Lists.VoyagePacks or {}
+            local sel     = _ACC.VoyageForgePack
+            local auto    = (not sel or sel == "Auto (deepest eligible)")
+            local didForge, blockedSel = false, false
+            for rarity, rcfg in pairs(VoyageConfig.Rarities) do
+                if not _ACC.VoyageForgeAuto or not getgenv()._ACCRunning then break end
+                if (tonumber(scrolls[rarity]) or 0) >= 5 then
+                    local reqStage = rcfg.Stage or 1
+                    local pack
+                    if auto then
+                        -- deepest pack in the chain that meets the stage gate
+                        for _, p in ipairs(order) do
+                            if (tonumber(stages[p]) or 0) >= reqStage then pack = p end
+                        end
+                    elseif (tonumber(stages[sel]) or 0) >= reqStage then
+                        pack = sel
+                    else
+                        blockedSel = true   -- have scrolls, but chosen pack isn't deep enough yet
+                    end
+                    if pack then
+                        Net.FireRL(R.Voyage, "Voy:Forge:" .. rarity, 1.0, "Forge", pack, rarity)
+                        if _ACC.SetForgeStatus then
+                            _ACC.SetForgeStatus(("⚒ Forged %s scroll → %s pack"):format(rarity, pack))
+                        end
+                        didForge = true
+                        task.wait(0.6)
+                    end
+                end
+            end
+            if _ACC.SetForgeStatus and not didForge then
+                if blockedSel then
+                    _ACC.SetForgeStatus(("⏸ %s hasn't reached the stage for your ≥5 scrolls")
+                        :format(tostring(sel)))
+                else
+                    _ACC.SetForgeStatus("Waiting for ≥5 scrolls of an eligible rarity…")
+                end
+            end
+        end
+        task.wait(3.0)
     end
 end)
 
