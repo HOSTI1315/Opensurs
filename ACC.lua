@@ -81,6 +81,7 @@ _ACC.SelectedPlacePacks    = {}   -- map { ["Pirate"]=true, ["Pirate Gold"]=true
 -- (Flag name kept for config back-compat; it now caps TOTAL slots, not just singles.)
 _ACC.SinglePlaceCap        = 50
 _ACC.PlaceSkipSingles      = true    -- never place the LAST (count==1) of a type — phantom packs are always 1
+_ACC.PlaceWaitEmpty        = true    -- collect-first: only place a new batch when the plot is fully cleared (empty)
 
 -- ── Auto Level Farm (cards → Lv.30) — internal override of Place/Hatch ──
 _ACC.LvlFarmEnabled        = false
@@ -1282,6 +1283,12 @@ sec.AFPlaceL:Toggle({
     Default = true,
     Callback = function(v) _ACC.PlaceSkipSingles = v end,
 }, "PlaceSkipSinglesToggle")
+
+sec.AFPlaceL:Toggle({
+    Name = "Place only when plot is empty (collect first)",
+    Default = true,
+    Callback = function(v) _ACC.PlaceWaitEmpty = v end,
+}, "PlaceWaitEmptyToggle")
 
 -- ── Auto Collect ──────────────────────────────────────────────────────────
 sec.AFCollR:Header({ Text = "Auto Collect" })
@@ -4000,6 +4007,9 @@ task.spawn(function()
                 local used = numPacksPlaced(placed)
                 local free = maxP - used
                 if free < 1 then return end
+                -- collect-first rule: don't refill a partially-collected board —
+                -- wait until the plot is fully cleared, then place a fresh batch
+                if _ACC.PlaceWaitEmpty and used > 0 then return end
 
                 local char = LocalPlayer.Character
                 local hrp  = char and char:FindFirstChild("HumanoidRootPart")
