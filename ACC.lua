@@ -1239,21 +1239,14 @@ local function refreshPlaceCounter()
     end
 end
 
--- Initial paint; live updates come from the replica OnChange hooks below.
+-- Counter is kept live by a 2s poll. NOTE: this ReplicaClient's OnChange takes
+-- a SINGLE listener arg — OnChange(listener) — there is no path form. The old
+-- code called OnChange("PacksPlaced", fn)/("MaxPlacements", fn), which registered
+-- the STRING as the listener; every replica change then tried to CALL that string
+-- → "ReplicaClient:192 attempt to call a string value" spam (worst during battle
+-- when many keys change). Removed — the poll already covers it.
 refreshPlaceCounter()
--- Madwork OnChange does NOT fire on sub-key updates, so poll to keep the
--- counter live (the OnChange("PacksPlaced") hook below catches whole-table swaps only).
 task.spawn(function() while getgenv()._ACCRunning do task.wait(2); refreshPlaceCounter() end end)
-
-local replica0 = Data.GetReplica()
-if replica0 and replica0.OnChange then
-    pcall(function()
-        local c1 = replica0:OnChange("PacksPlaced",   refreshPlaceCounter)
-        local c2 = replica0:OnChange("MaxPlacements", refreshPlaceCounter)
-        if c1 then table.insert(getgenv()._ACCHooks, c1) end
-        if c2 then table.insert(getgenv()._ACCHooks, c2) end
-    end)
-end
 
 makeSearchableDropdown(sec.AFPlaceL, {
     Name = "Packs (incl. Bundles)",
@@ -7320,7 +7313,7 @@ Data.OnChange(function(opType, path, newVal)
     -- ── Card mutation (WebhookDrops, Diamond/Rainbow only) ────────────────
     -- Dedupe on prev value so repeat SetValue with the same mutation (e.g.
     -- replica re-sync after rejoin) doesn't re-ping.
-    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Mutation" then
+    if opType == "Set" and path[1] == "Cards" and path[3] == "Mutation" then
         local cardName = tostring(path[2])
         local prev = lastMutations[cardName]
         lastMutations[cardName] = newVal
@@ -7350,7 +7343,7 @@ Data.OnChange(function(opType, path, newVal)
     -- Replica stores DragonBalls as { ["1"]=assetId, ..., ["7"]=assetId }.
     -- Fire once when count transitions from <7 to 7; reset the flag when
     -- count drops back below 7 (after wish, server clears the set).
-    if opType == "SetValue" and path[1] == "DragonBalls" then
+    if opType == "Set" and path[1] == "DragonBalls" then
         local balls = Data.Get("DragonBalls") or {}
         local n = 0
         for _ in pairs(balls) do n = n + 1 end
@@ -7374,7 +7367,7 @@ Data.OnChange(function(opType, path, newVal)
     end
 
     -- ── Pet mutation (WebhookPetMutation) ─────────────────────────────────
-    if opType == "SetValue" and path[1] == "Pets" and path[3] == "Mutation" then
+    if opType == "Set" and path[1] == "Pets" and path[3] == "Mutation" then
         local petName = tostring(path[2])
         local prev = lastPetMutations[petName]
         lastPetMutations[petName] = newVal
@@ -7397,7 +7390,7 @@ Data.OnChange(function(opType, path, newVal)
     -- ── Card ⭐5 (WebhookCardMax) ──────────────────────────────────────────
     -- Cards.<name>.Star is a string ("1".."5"). Fire once per transition
     -- to "5"; track last value so re-imports don't re-trigger.
-    if opType == "SetValue" and path[1] == "Cards" and path[3] == "Star" then
+    if opType == "Set" and path[1] == "Cards" and path[3] == "Star" then
         local cardName = tostring(path[2])
         local prev = lastCardStars[cardName]
         lastCardStars[cardName] = newVal
