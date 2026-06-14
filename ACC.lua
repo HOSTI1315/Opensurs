@@ -2747,13 +2747,32 @@ do
 end
 sec.VoyPostL:Divider()
 sec.VoyPostL:Header({ Text = "♻ Smelt" })
+-- Poster buff % is gated by the poster's RARITY, not the buff type — every buff
+-- rolls in [Low, High] of the rarity. Verified live 2026-06-14 from
+-- VoyageConfig.Rarities (matched observed maxes across 400 posters):
+--   Common 0.1-0.2% · Rare 0.1-0.3% · Epic 0.1-0.5% · Legendary 0.1-1.0% ·
+--   Mythical 0.1-2.0%  → the most ANY buff can reach is 2.0% (Mythical High).
+-- So every "Keep ≥ <buff> %" slider shares one cap = the highest rarity High,
+-- read live (fallback 2.0), at 0.01% precision so values like 1.75% are settable.
+local VOY_SMELT_MAX_PCT = 2.0
+do
+    local hi = 0
+    if VoyageConfig and type(VoyageConfig.Rarities) == "table" then
+        for _, r in pairs(VoyageConfig.Rarities) do
+            if type(r) == "table" and tonumber(r.High) then
+                hi = math.max(hi, tonumber(r.High) * 100)   -- fraction → %
+            end
+        end
+    end
+    if hi > 0 then VOY_SMELT_MAX_PCT = hi end
+end
 do
     local buffs = (VoyageConfig and VoyageConfig.BuffList) or
                   { "Cash", "Diamonds", "Health", "Damage", "Luck", "HatchTime", "MutationChance", "XP" }
     for _, buff in ipairs(buffs) do
         sec.VoyPostL:Slider({
             Name = "Keep ≥ " .. buff .. " %",
-            Default = 0, Minimum = 0, Maximum = 10, DisplayMethod = "Value", Precision = 1,
+            Default = 0, Minimum = 0, Maximum = VOY_SMELT_MAX_PCT, DisplayMethod = "Value", Precision = 2,
             Callback = function(v) _ACC.VoyageSmeltThresholds[buff] = (tonumber(v) or 0) / 100 end,
         }, "VoySmeltThr_" .. buff)
     end
@@ -2788,7 +2807,7 @@ sec.VoyPostL:Button({
 })
 sec.VoyPostL:Paragraph({
     Header = "How the % filter works",
-    Body = "Set a minimum % per buff. A poster is KEPT if ANY of its buffs is ≥ its threshold; if none qualify it's smelted (buffs with no threshold don't count). e.g. Damage 1.5% + Luck 1.5%: a poster with Damage 1.6% → keep; Damage 1.2% / Luck 0.4% → smelt; Damage 1.2% / Luck 1.7% → keep. Posters roll ~0.1–2% per buff, so set thresholds in that range. Never smelts equipped / Locked / your best poster per pack. Needs at least one threshold to arm.",
+    Body = "Set a minimum % per buff. A poster is KEPT if ANY of its buffs is ≥ its threshold; if none qualify it's smelted (buffs with no threshold don't count). e.g. Damage 1.5% + Luck 1.5%: a poster with Damage 1.6% → keep; Damage 1.2% / Luck 0.4% → smelt; Damage 1.2% / Luck 1.75% → keep. Buff % is capped by RARITY (same for every buff type): Common max 0.2% · Rare 0.3% · Epic 0.5% · Legendary 1.0% · Mythical 2.0% — so 2.0% is the highest any buff reaches. Set thresholds accordingly (e.g. ~1.7–1.9% keeps only near-max Mythicals). Never smelts equipped / Locked / your best poster per pack. Needs at least one threshold to arm.",
 })
 
 -- ── VoyForgeR: Forge ───────────────────────────────────────────────────────
