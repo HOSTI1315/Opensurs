@@ -3941,8 +3941,16 @@ task.spawn(function()
     -- placement cell with an INFLATED footprint (pack size + PACK_SPACING on
     -- every side) — pretend the pack is bigger and the existing rectangular
     -- overlap test does the rest. No circular zones needed.
-    -- PACK_SPACING is the clear gap, in studs, kept between pack edges.
-    local PACK_SPACING = 1
+    -- PACK_SPACING_X / _Z are the clear gaps, in studs, between pack edges,
+    -- split PER AXIS for the serpentine grid (top-down view):
+    --   X = horizontal gap WITHIN a row  → smaller = denser columns = the player
+    --       teleports more often along each left↔right sweep.
+    --   Z = vertical gap BETWEEN rows     → a touch larger = more room per row.
+    -- Both must stay >= 0: a cycle's cells are pre-validated ONCE and NOT
+    -- re-probed, so a sub-footprint (negative) step would let same-cycle packs
+    -- overlap and the server Place would fail. Tune these two freely.
+    local PACK_SPACING_X = 0.25   -- horizontal: near edge-to-edge (densest, most teleports). was 1
+    local PACK_SPACING_Z = 2      -- vertical: a bit more spacing between rows. was 1
 
     -- ── grid-aware free cell picker ──────────────────────────────────────
     -- Walks an N×N grid over the floor; for each cell asks
@@ -4095,31 +4103,33 @@ task.spawn(function()
                 -- (skipped entirely when the board starts empty). After this there
                 -- are ZERO grid scans while placing — the per-pack full-grid scan
                 -- was the cumulative-lag source.
-                local STEP
-                do
-                    local mx = 0
-                    for _, e in ipairs(toPlace) do
-                        local fp = entryFootprint(e)
-                        mx = math.max(mx, fp.X, fp.Z)
-                    end
-                    STEP = mx + PACK_SPACING   -- footprint + small gap (tight; player drops in from +3 so no side clearance needed, avoid-zones handle machine hits)
+                local mx = 0
+                for _, e in ipairs(toPlace) do
+                    local fp = entryFootprint(e)
+                    mx = math.max(mx, fp.X, fp.Z)
                 end
+                -- Per-axis serpentine step (footprint + per-axis gap). X tight →
+                -- more teleports per row; Z looser → more space between rows.
+                -- Both >= footprint so same-cycle packs never overlap (player drops
+                -- in from +3 so no side clearance needed; avoid-zones handle machines).
+                local STEP_X = mx + PACK_SPACING_X
+                local STEP_Z = mx + PACK_SPACING_Z
                 local freeGrid, gridIdx = {}, 1
                 do
                     local pad = 0.5                                  -- only need ~0.5 stud off the edge
-                    local cols = math.max(1, math.floor((floor.Size.X - pad * 2) / STEP))
-                    local rows = math.max(1, math.floor((floor.Size.Z - pad * 2) / STEP))
+                    local cols = math.max(1, math.floor((floor.Size.X - pad * 2) / STEP_X))
+                    local rows = math.max(1, math.floor((floor.Size.Z - pad * 2) / STEP_Z))
                     local raw = {}
                     for r = 0, rows - 1 do
-                        local zr = (r + 0.5 - rows / 2) * STEP
+                        local zr = (r + 0.5 - rows / 2) * STEP_Z
                         if r % 2 == 0 then
-                            for c = 0, cols - 1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP, floor.Size.Y / 2 + 0.5, zr) end
+                            for c = 0, cols - 1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP_X, floor.Size.Y / 2 + 0.5, zr) end
                         else
-                            for c = cols - 1, 0, -1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP, floor.Size.Y / 2 + 0.5, zr) end
+                            for c = cols - 1, 0, -1 do raw[#raw + 1] = Vector3.new((c + 0.5 - cols / 2) * STEP_X, floor.Size.Y / 2 + 0.5, zr) end
                         end
                     end
                     local params      = buildPlayerPackParams(plotModel)
-                    local probeFP     = Vector3.new(math.max(1, STEP - PACK_SPACING), 0.5, math.max(1, STEP - PACK_SPACING))
+                    local probeFP     = Vector3.new(math.max(1, mx), 0.5, math.max(1, mx))
                     local boardEmpty  = used <= 0   -- fresh board → no occupancy scan needed at all
                     for i, lp in ipairs(raw) do
                         local cf  = floor.CFrame * CFrame.new(lp.X, lp.Y, lp.Z)
