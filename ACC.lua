@@ -3949,8 +3949,8 @@ task.spawn(function()
     -- Both must stay >= 0: a cycle's cells are pre-validated ONCE and NOT
     -- re-probed, so a sub-footprint (negative) step would let same-cycle packs
     -- overlap and the server Place would fail. Tune these two freely.
-    local PACK_SPACING_X = 0.25   -- horizontal: near edge-to-edge (densest, most teleports). was 1
-    local PACK_SPACING_Z = 2      -- vertical: a bit more spacing between rows. was 1
+    local PACK_SPACING_X = 0.1   -- horizontal: near edge-to-edge (densest, most teleports). was 1
+    local PACK_SPACING_Z = 3      -- vertical: a bit more spacing between rows. was 1
 
     -- ── grid-aware free cell picker ──────────────────────────────────────
     -- Walks an N×N grid over the floor; for each cell asks
