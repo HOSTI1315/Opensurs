@@ -138,6 +138,8 @@ _ACC.CodeList = {
     "TwentyEighthCode","TwentyNinthCode","ThirtyCode","ThirtyOneCode","ThirtyTwoCode",
     "ThirtyThreeCode","ThirtyFourCode","ThirtyFiveCode","ThirtySixCode","ThirtySevenCode",
     "ThirtyEightCode","ThirtyNineCode","FortyCode",
+    "FortyOneCode","FortyTwoCode","FortyThreeCode","FortyFourCode","FortyFiveCode",
+    "FortySixCode","FortySevenCode","FortyEightCode","FortyNineCode",
 }
 _ACC.AutoRewards           = false
 _ACC.AutoExpSend           = false
@@ -469,6 +471,7 @@ do
     R.Raid        = get("Raid")
     R.StarTrial   = get("StarTrial")
     R.Voyage      = get("Voyage")
+    R.Fish        = get("Fish")
     R.Gallery          = get("Gallery")
     R.GetClanInfo      = get("GetClanInfo")
     R.GetMerchantItems = get("GetMerchantItems")
@@ -959,6 +962,7 @@ local tabs = {
     Inventory = tabGroups.Main:Tab({ Name = "Inventory",  Image = "rbxassetid://10723396225" }),
     Gallery   = tabGroups.Main:Tab({ Name = "Gallery",    Image = "rbxassetid://10747372992" }),
     Voyage    = tabGroups.Main:Tab({ Name = "Voyage",     Image = "rbxassetid://10723415903" }),
+    Fishing   = tabGroups.Main:Tab({ Name = "Fishing",    Image = "rbxassetid://10723384360" }),
     Misc      = tabGroups.Main:Tab({ Name = "Misc",       Image = "rbxassetid://10734932295" }),
     Settings  = tabGroups.Main:Tab({ Name = "Settings",   Image = "rbxassetid://10734950309" }),
 }
@@ -3449,7 +3453,9 @@ sec.InfoL:Button({
 -- ── Auto Buy ──────────────────────────────────────────────────────────────
 -- SelectedBuyPacks keys are combined: "Pirate" (Regular), "Pirate Gold",
 -- "Pirate Diamond", ... — match by reconstructing the key from the conveyor
--- pack's mesh.Name (family) and inner Folder.Name (rarity).
+-- pack's family meshpart (mesh.Name) + its ConveyorDisplay.Mutation label text
+-- (rarity). NB: conveyor packs have NO Folder children — rarity lives on the
+-- Mutation TextLabel, not a folder (this was the "rainbow not buying" bug).
 -- Reads price from mesh.ConveyorDisplay.Price.Text BEFORE firing — server
 -- rejects un-affordable buys with a Robux donation prompt, so client-side
 -- gating prevents that popup AND cuts wasted requests.
@@ -3481,19 +3487,38 @@ task.spawn(function()
                             end
                         end
                     else
-                        local mesh = pack:FindFirstChildOfClass("MeshPart")
+                        -- Family meshpart = the one carrying the ConveyorDisplay.
+                        -- A pack also has "Top"/"Bottom" meshparts and
+                        -- FindFirstChildOfClass can return those (live: model
+                        -- "11-3" resolved to "Bottom"), so pick by ConveyorDisplay.
+                        local mesh, cd
+                        for _, m in ipairs(pack:GetChildren()) do
+                            if m:IsA("MeshPart") then
+                                local d = m:FindFirstChild("ConveyorDisplay")
+                                if d then mesh, cd = m, d; break end
+                            end
+                        end
                         if mesh then
                             local family = mesh.Name
+                            -- RARITY: read from ConveyorDisplay.Mutation (TextLabel).
+                            -- Conveyor packs have NO Folder children (the old code
+                            -- scanned for a Folder, found none → rarity stayed
+                            -- "Regular" → mutated packs like "Pirate Rainbow" NEVER
+                            -- matched and were never bought — player report). Live-
+                            -- confirmed: the label text IS the mutation name
+                            -- ("Gold"/"Void"/"Emerald"/"Diamond"/"Rainbow"); empty/
+                            -- "Regular"/"None" → Regular.
                             local rarity = "Regular"
-                            for _, c in ipairs(pack:GetChildren()) do
-                                if c:IsA("Folder") then rarity = c.Name; break end
+                            local mu = cd and cd:FindFirstChild("Mutation")
+                            local mtxt = mu and tostring(mu.Text):match("^%s*(.-)%s*$") or ""
+                            if mtxt ~= "" and mtxt ~= "Regular" and mtxt ~= "None" then
+                                rarity = mtxt
                             end
                             local key = (rarity == "Regular") and family
                                                               or (family .. " " .. rarity)
 
                             if mapHas(_ACC.SelectedBuyPacks, key) then
-                                local priceLbl = mesh:FindFirstChild("ConveyorDisplay")
-                                                 and mesh.ConveyorDisplay:FindFirstChild("Price")
+                                local priceLbl = cd and cd:FindFirstChild("Price")
                                 local price = priceLbl and parseAbbreviated(priceLbl.Text) or 0
 
                                 if price > 0 and price <= cash then
@@ -5880,20 +5905,62 @@ do
     local managedEngines = {}   -- flag -> true if WE turned it on
     local managedFill     = {}  -- "Craft" -> snapshot map WE auto-filled
 
-    -- Pack-selection label sets (mirror how Lists.PacksFullWithBundles is built).
-    -- ALL_PACKS = every label; MUTATED_PACKS = only the non-Regular variants +
-    -- their bundles. The "open X packs WITH A MUTATION" quests (Q3/Q8) only
-    -- advance when MUTATED packs are placed+opened, so while those are pending we
-    -- force Place to put down mutated packs (regular packs never advance them).
-    local ALL_PACKS, MUTATED_PACKS = {}, {}
-    for _, label in ipairs(Lists.PacksFullWithBundles or {}) do ALL_PACKS[label] = true end
-    for _, family in ipairs(Lists.Packs or {}) do
-        for _, rarity in ipairs(Lists.Rarities or {}) do
-            if rarity ~= "Regular" then
-                MUTATED_PACKS[family .. " " .. rarity] = true
-                MUTATED_PACKS[family .. " " .. rarity .. " Bundle"] = true
+    -- ── Quest pack picker — CRASH FIX (bundle-first, low-tier, inventory-aware) ──
+    -- Player report: placing "a lot of packs" for pet quests crashes the game.
+    -- Cause = peak MODEL count on the plot (AutoPlace's general sort lays down the
+    -- most HIGH-rarity SINGLES first = 1 model each + heavy VFX). VERIFIED LIVE: a
+    -- bundle credits +5 toward BOTH the Place and the Open quest yet is 5 slots /
+    -- ONE model — and MaxPlacements is in SLOTS, so a bundle-filled board peaks at
+    -- ~Max/5 models vs Max single-models = 5× fewer models = the fix. So for quest
+    -- placement we feed AutoPlace BUNDLES of the cheapest tier actually owned:
+    --   generic Place/Open → REGULAR bundles (lightest VFX, abundant);
+    --   mutation Q3/Q8     → lowest mutation-tier bundles (Gold→…→Rainbow), since
+    --                        regular packs never advance them (a mutated open also
+    --                        credits the generic open quest).
+    -- Re-reads live inventory each cycle, so a tier rolls to the next as it drains.
+    -- Falls back to singles only if zero bundles of the wanted tier are owned (so a
+    -- quest can't permanently stall). Inventory keys are "Family-Rarity-Bundle" /
+    -- "Family-Rarity" / "Family"; SelectedPlacePacks wants DISPLAY labels (spaces),
+    -- which AutoPlace converts back via gsub(" ","-").
+    local MUT_TIERS = { "Gold", "Emerald", "Void", "Diamond", "Rainbow" }   -- low → high cost/VFX
+    local function classifyKey(key)
+        local bRarity = key:match("^.+%-(%a+)%-Bundle$")
+        if bRarity then return bRarity, true end                 -- "Pirate-Gold-Bundle" → Gold, bundle
+        if key:match("^%a+$") then return "Regular", false end   -- "Pirate"             → Regular, single
+        local sRarity = key:match("^.+%-(%a+)$")
+        if sRarity then return sRarity, false end                -- "Pirate-Gold"        → Gold, single
+        return nil, false
+    end
+    local function ownedSet(wantBundle, rarityPred)
+        local owned = Data.Get("Packs") or {}
+        local set, any = {}, false
+        for key, count in pairs(owned) do
+            if type(count) == "number" and count > 0 then
+                local rarity, isB = classifyKey(key)
+                if rarity and isB == wantBundle and rarityPred(rarity) then
+                    set[(key:gsub("%-", " "))] = true            -- → display label
+                    any = true
+                end
             end
         end
+        return set, any
+    end
+    local function pickRegularBundles()
+        local isReg = function(r) return r == "Regular" end
+        local set, any = ownedSet(true, isReg)                   -- regular bundles (preferred)
+        if any then return set end
+        return (ownedSet(false, isReg))                          -- fallback: regular singles
+    end
+    local function pickMutatedBundles()
+        for _, tier in ipairs(MUT_TIERS) do                      -- bundles, lowest tier first
+            local set, any = ownedSet(true, function(r) return r == tier end)
+            if any then return set end
+        end
+        for _, tier in ipairs(MUT_TIERS) do                      -- fallback: singles, lowest first
+            local set, any = ownedSet(false, function(r) return r == tier end)
+            if any then return set end
+        end
+        return {}
     end
 
     -- Non-destructive override of the Place selection: the user's own picks are
@@ -6012,15 +6079,17 @@ do
                     end
                     -- Mutation-pack quests (Q3/Q8) only advance when MUTATED packs
                     -- are placed+opened — opening regular packs does nothing. So
-                    -- while they're pending, force Place to mutated packs in ANY
-                    -- mode (else the quest is impossible); otherwise Zero-config
-                    -- fills all packs and Smart leaves your own picks alone.
+                    -- while they're pending we force Place to the cheapest MUTATED
+                    -- bundles owned, in ANY mode (else the quest is impossible);
+                    -- otherwise Zero-config auto-picks crash-safe REGULAR bundles
+                    -- and Smart leaves your own picks alone. Both pickers are
+                    -- bundle-first = the crash fix (see picker defs above).
                     local needMutOpen = (not questDone(pq, "Quest3")) or (not questDone(pq, "Quest8"))
                     local desiredPlace
                     if needMutOpen then
-                        desiredPlace = MUTATED_PACKS
+                        desiredPlace = pickMutatedBundles()
                     elseif (need.Place or need.Open) and _ACC.PetQuestMode == "Zero-config" then
-                        desiredPlace = ALL_PACKS
+                        desiredPlace = pickRegularBundles()
                     end
                     managePlace(desiredPlace)
                     fillCraft(need.Craft)
@@ -6593,6 +6662,210 @@ task.spawn(function()
 end)
 
 -- ============================================================================
+-- // 22.7 FISHING  (Update 53) — auto-cast + minigame-skip catch
+-- ============================================================================
+-- The reel minigame is CLIENT-authoritative: the client fires
+-- Fish:FireServer("FishCaught") (NO args) when its progress bar fills, and the
+-- SERVER — which rolled & hooked the fish at CastRod time — credits it. So we
+-- skip the entire click-minigame: EquipRod once, then loop {CastRod → wait past
+-- the server's per-cast bite timer (~2.5–3s) → spam FishCaught until the server
+-- echoes the catch}. A too-early (rejected) FishCaught does NOT lose the fish
+-- (it stays hooked ~120s), so polling is safe & wastes nothing. Works from
+-- anywhere (no need to be on the island; EquipRod is enough). Species is
+-- server-rolled (can't force a specific fish; the Luck upgrade only shifts
+-- odds). All of this LIVE-VERIFIED on the test account (Update 53).
+do
+    local FishConfig
+    pcall(function() FishConfig = require(RS.Modules.Config.Core.FishConfig) end)
+
+    local UPGRADES = {}
+    if FishConfig and type(FishConfig.Upgrades) == "table" then
+        for name in pairs(FishConfig.Upgrades) do table.insert(UPGRADES, name) end
+        table.sort(UPGRADES)
+    else
+        UPGRADES = { "DoubleFish", "Luck", "MutationChance", "ReelSpeed", "TreasureChance" }
+    end
+
+    -- defaults (ReelSpeed is useless to us — we never play the minigame)
+    _ACC.AutoFish           = false
+    _ACC.AutoFishSell       = false
+    _ACC.AutoFishEquipBest  = false
+    _ACC.AutoFishUpgrade    = false
+    _ACC.FishMinWait        = 2.6
+    _ACC.AutoFishUpgradeSel = { Luck = true, DoubleFish = true, MutationChance = true, TreasureChance = true }
+
+    -- ── UI ────────────────────────────────────────────────────────────────
+    sec.FishL = tabs.Fishing:Section({ Side = "Left" })
+    sec.FishR = tabs.Fishing:Section({ Side = "Right" })
+
+    sec.FishL:Header({ Text = "Auto Fishing" })
+    _ACC.SetFishStatus = makeStatus(sec.FishL)
+    sec.FishL:Toggle({
+        Name = "Auto Fish (cast + auto-catch)",
+        Default = false,
+        Callback = function(v) _ACC.AutoFish = v end,
+    }, "AutoFishToggle")
+    sec.FishL:Slider({
+        Name = "Min wait before catch (s)",
+        Default = 2.6, Minimum = 2.0, Maximum = 5.0,
+        DisplayMethod = "Value", Precision = 1,
+        Callback = function(v) _ACC.FishMinWait = tonumber(v) or 2.6 end,
+    }, "FishMinWaitSlider")
+    sec.FishL:Toggle({
+        Name = "Auto Equip Best fish (cash mult)",
+        Default = false,
+        Callback = function(v) _ACC.AutoFishEquipBest = v end,
+    }, "AutoFishEquipToggle")
+    sec.FishL:Toggle({
+        Name = "Auto Sell All (unlocked) fish",
+        Default = false,
+        Callback = function(v) _ACC.AutoFishSell = v end,
+    }, "AutoFishSellToggle")
+    sec.FishL:Button({
+        Name = "Equip best now",
+        Callback = function() Net.Fire(R.Fish, "EquipBest") end,
+    })
+    sec.FishL:Button({
+        Name = "Sell all (unlocked) now",
+        Callback = function() Net.Fire(R.Fish, "SellAllFish") end,
+    })
+
+    sec.FishR:Header({ Text = "Fishing Upgrades (Fish Tokens)" })
+    _ACC.SetFishUpgStatus = makeStatus(sec.FishR)
+    makeSearchableDropdown(sec.FishR, {
+        Name = "Upgrades to auto-buy",
+        Multi = true,
+        Options = UPGRADES,
+        Default = { "Luck", "DoubleFish", "MutationChance", "TreasureChance" },
+        OnChange = function(map) _ACC.AutoFishUpgradeSel = map end,
+    }, "AutoFishUpgradeDropdown")
+    sec.FishR:Toggle({
+        Name = "Auto Buy Upgrades (cheapest first)",
+        Default = false,
+        Callback = function(v) _ACC.AutoFishUpgrade = v end,
+    }, "AutoFishUpgradeToggle")
+
+    -- ── catch detection: server echoes "FishCaught" (arg1 = fish name) on a
+    -- successful credit. Hook the Fish remote once. ──────────────────────────
+    local caughtSignal, lastCaught = false, nil
+    if R.Fish then
+        R.Fish.OnClientEvent:Connect(function(method, a1)
+            if method == "FishCaught" then
+                caughtSignal = true
+                lastCaught = a1
+            end
+        end)
+    end
+
+    local function fishSpecies()
+        local f = Data.Get("Fish")
+        local n = 0
+        if type(f) == "table" then for _ in pairs(f) do n = n + 1 end end
+        return n
+    end
+
+    -- ── main cast → catch loop ────────────────────────────────────────────
+    task.spawn(function()
+        local equipped, caught, fails = false, 0, 0
+        while getgenv()._ACCRunning do
+            if _ACC.AutoFish and R.Fish then
+                if not equipped then
+                    Net.Fire(R.Fish, "EquipRod")
+                    equipped = true
+                    task.wait(0.6)
+                end
+                caughtSignal = false
+                Net.Fire(R.Fish, "CastRod", 1)
+                -- wait past the server bite timer, then poll FishCaught (jittered)
+                local base = math.clamp(tonumber(_ACC.FishMinWait) or 2.6, 2.0, 5.0)
+                local t0 = os.clock()
+                task.wait(base)
+                local got = false
+                while getgenv()._ACCRunning and _ACC.AutoFish and (os.clock() - t0) < 9 do
+                    Net.Fire(R.Fish, "FishCaught")
+                    task.wait(0.3 + math.random() * 0.15)
+                    if caughtSignal then got = true break end
+                end
+                if got then
+                    caught = caught + 1
+                    fails  = 0
+                    if _ACC.SetFishStatus then
+                        _ACC.SetFishStatus(("🎣 Caught #%d: %s\nFish Tokens: %s")
+                            :format(caught, tostring(lastCaught or "?"),
+                                    tostring(Data.Get("FishTokens") or 0)))
+                    end
+                else
+                    fails = fails + 1
+                    if _ACC.SetFishStatus then
+                        _ACC.SetFishStatus(("⚠ No catch (recasting) — %d caught so far"):format(caught))
+                    end
+                    if fails >= 3 then equipped = false; fails = 0 end   -- rod may be gone → re-equip
+                end
+            else
+                equipped = false
+            end
+            task.wait(0.15)
+        end
+    end)
+
+    -- ── auto equip best (periodic) ────────────────────────────────────────
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.AutoFish and _ACC.AutoFishEquipBest and R.Fish and fishSpecies() > 0 then
+                Net.Fire(R.Fish, "EquipBest")
+            end
+            task.wait(10)
+        end
+    end)
+
+    -- ── auto sell all unlocked (equip-best first so the keeper is protected) ─
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.AutoFish and _ACC.AutoFishSell and R.Fish and fishSpecies() > 1 then
+                if _ACC.AutoFishEquipBest then Net.Fire(R.Fish, "EquipBest"); task.wait(0.4) end
+                Net.Fire(R.Fish, "SellAllFish")
+            end
+            task.wait(12)
+        end
+    end)
+
+    -- ── auto-buy upgrades: cheapest not-maxed selected upgrade we can afford ─
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.AutoFishUpgrade and R.Fish and FishConfig then
+                local tokens = tonumber(Data.Get("FishTokens")) or 0
+                local best
+                for _, name in ipairs(UPGRADES) do
+                    if _ACC.AutoFishUpgradeSel[name] then
+                        local u    = FishConfig.Upgrades[name]
+                        local lvl  = tonumber(Data.Get("FishUpgrades", name)) or 0
+                        local maxL = (u and tonumber(u.MaxLevel)) or 50
+                        if lvl < maxL then
+                            local ok, cost = pcall(FishConfig.GetUpgradeCost, lvl + 1)
+                            cost = ok and tonumber(cost) or nil
+                            if cost and tokens >= cost and (not best or cost < best.cost) then
+                                best = { name = name, cost = cost }
+                            end
+                        end
+                    end
+                end
+                if best then
+                    Net.FireRL(R.Fish, "Fish:Upg", 0.4, "Upgrade", best.name)
+                    if _ACC.SetFishUpgStatus then
+                        _ACC.SetFishUpgStatus(("⬆ %s (cost %d · Fish Tokens %d)")
+                            :format(best.name, best.cost, tokens))
+                    end
+                    task.wait(0.4)
+                elseif _ACC.SetFishUpgStatus then
+                    _ACC.SetFishUpgStatus(("Fish Tokens: %d — nothing affordable/left"):format(tokens))
+                end
+            end
+            task.wait(1.0)
+        end
+    end)
+end
+
+-- ============================================================================
 -- // 22.5 LOOPS — GALLERY
 -- ============================================================================
 
@@ -7154,6 +7427,7 @@ do
         end
     end
 
+    getgenv()._ACCAntiAfkHooked = hooked
     if not hooked then
         warn("[ACC_HUB] anti-AFK namecall hook unsupported by this executor")
     end
@@ -7188,6 +7462,63 @@ do
             end)
         end
     end))
+end
+
+-- ── Periodic input keep-alive (robust anti-AFK — fixes both player reports) ──
+-- Reports: "still kicked after 20 min" (Roblox engine idle) and "AFK bounced
+-- off the server" (the game's own ~17-min "TP" teleport to the AFK universe).
+-- The namecall hook + Idled-disable above silently no-op on weak executors
+-- (no hookmetamethod / no getconnections / stubbed VirtualUser) → neither timer
+-- is beaten → kick. DECOMPILE-CONFIRMED (CardHandler.AntiAFK): the game resets
+-- its lastInput on ANY UserInputService.InputBegan (it sets `lastInput = time()`
+-- FIRST, before any type check), and real input also resets Roblox's 20-min
+-- engine idle timer. So we pulse synthetic input every 90s — well under the
+-- ~1020s game / ~1200s engine windows:
+-- LIVE-VERIFIED (this game + executor): VirtualUser does NOT reach
+-- UserInputService.InputBegan, so it canNOT reset the game's lastInput — it only
+-- resets Roblox's engine idle. The two timers therefore need DIFFERENT pokes,
+-- fired together every cycle (not either/or):
+--   • #3 game TP  → firesignal(InputBegan, nil, true): the game resets lastInput
+--     FIRST, then early-returns on gameProcessed=true, so the nil input is never
+--     dereferenced and no other listener acts on it. Pure client-side.
+--   • #1 engine idle → VirtualUser real input (the one thing it DOES do), as a
+--     booster on top of the Idled-disable above.
+do
+    local UIS     = game:GetService("UserInputService")
+    local fireSig = firesignal or fireSignal or (syn and syn.fire_signal)
+    local haveVU  = typeof(VirtualUser) == "Instance"
+
+    local function pulse()
+        -- #3 game custom AntiAFK: only a real InputBegan resets its lastInput
+        if fireSig then
+            pcall(function() fireSig(UIS.InputBegan, nil, true) end)
+        end
+        -- #1 engine 20-min idle: VirtualUser real input (does not reach InputBegan)
+        if haveVU then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+        end
+    end
+
+    task.spawn(function()
+        while getgenv()._ACCRunning do
+            if _ACC.AntiAFK then pulse() end
+            task.wait(90)
+        end
+    end)
+
+    -- Visible warning ONLY when anti-AFK truly can't be guaranteed on this
+    -- executor: the game TP is beaten by the hook OR VirtualUser OR firesignal;
+    -- the 20-min engine idle by VirtualUser OR the Idled-disable (getconnections).
+    local gameTimerOk  = getgenv()._ACCAntiAfkHooked or (fireSig ~= nil)   -- VU can't reset the game timer
+    local engineIdleOk = haveVU or ((getconnections or get_signal_cons) ~= nil)
+    if not (gameTimerOk and engineIdleOk) then
+        task.delay(5, function()
+            Notify("Anti-AFK limited on this executor - you may still be kicked when idle. Use one with VirtualUser / getconnections / hookmetamethod.", 8)
+        end)
+    end
 end
 
 -- ── Webhook: rare event notifications ────────────────────────────────────
@@ -7660,6 +7991,29 @@ sec.MerR:Toggle({
 -- LOOPS
 -- ============================================================================
 
+-- ── FigurineAdditions selected-figurine bridge (Update 53 fix) ───────────
+-- U53 ("Fixed figurine select UI not updating grades and traits") added a
+-- FindFirstChild(v_u_23) call to the CLIENT RollGrade/RollTrait handlers,
+-- where v_u_23 = the in-UI selected figurine. The hub fires these rolls
+-- directly (no UI selection), so v_u_23 was nil → FindFirstChild(nil) →
+-- "Argument 1 missing or nil" spam on every roll (the server roll still went
+-- through — the crash is purely the client's post-roll visual update). We set
+-- v_u_23 ourselves right before firing. v_u_23 = upvalue #3 of
+-- FigurineAdditions.IsRolling (live-verified Update 53); any non-nil string
+-- prevents the crash, and passing the real name also makes the client visual
+-- update the correct figurine.
+local _figAddMod
+local function setFigSelected(name)
+    if _figAddMod == nil then
+        local ok, m = pcall(require, RS.Client.UI.GalleryHandler.FigurineAdditions)
+        _figAddMod = (ok and type(m) == "table" and type(m.IsRolling) == "function") and m or false
+    end
+    if not _figAddMod then return false end
+    local sv = (type(debug) == "table" and debug.setupvalue) or setupvalue
+    if type(sv) ~= "function" then return false end
+    return (pcall(sv, _figAddMod.IsRolling, 3, name))
+end
+
 -- ── Figurine Grade roll (Diamonds) ──────────────────────────────────────
 -- Client-driven, mirrors the card Grade roller: for each selected+owned
 -- figurine, spam RollGrade until its Grade is one of the wanted grades,
@@ -7707,6 +8061,7 @@ task.spawn(function()
             _ACC.SetFigGradeStatus(("🎲 [%d/%d] %s\nGrade: %s  cost %d 💎  (have %d)")
                 :format(idx, total, name, tostring(cur or "none"), cost, dia))
             if not _ACC.AutoFigGrade or not getgenv()._ACCRunning then return false end
+            setFigSelected(name)   -- U53: set client v_u_23 so RollGrade handler won't crash
             Net.FireRL(R.Gallery, "Gal:RollGrade:" .. name, 0.4, "RollGrade", name)
             return true
         end,
@@ -7752,6 +8107,7 @@ task.spawn(function()
             _ACC.SetFigTraitStatus(("🎲 [%d/%d] %s\nTrait: %s  FigTokens: %d")
                 :format(idx, total, name, tostring(cur or "none"), toks))
             if not _ACC.AutoFigTrait or not getgenv()._ACCRunning then return false end
+            setFigSelected(name)   -- U53: set client v_u_23 so RollTrait handler won't crash
             Net.FireRL(R.Gallery, "Gal:RollTrait:" .. name, 0.4, "RollTrait", name)
             return true
         end,
