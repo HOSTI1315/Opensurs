@@ -1,7 +1,7 @@
 --!nonstrict
 --[[
 ================================================================================
-  Nousigi Hub GUI  —  динамическая UI-библиотека + MacLib facade          v3.0
+  Nousigi Hub GUI  —  динамическая UI-библиотека + MacLib facade          v4.1
 ================================================================================
   ОДИН ФАЙЛ. Никаких require / HttpGet / loadstring / внешних ассетов кроме
   штатных rbxassetid. Работает и в Roblox Studio (LocalScript в
@@ -19,20 +19,25 @@
     • секции: сворачивание, собственный поиск по виджетам, «склейка» подряд
       идущих виджетов (bridge + маски углов), вложенные подсекции;
     • виджеты: Toggle, Dropdown (одиночный/мульти/с поиском), Slider, Button,
-      Input, Keybind, Label, Priority-list (drag&drop), Divider, Gap;
+      Input, Keybind, Label, Priority-list (drag&drop), Colorpicker,
+      Divider, Gap, split-row и connected-row;
     • оверлей глобального поиска (Ctrl K) по всем виджетам всех страниц;
-    • второй ScreenGui [ETC]: плавающая кнопка скрытия, уведомления сверху и
-      снизу, всплывающие сообщения, модальные окна с затемнением;
+    • второй ScreenGui [ETC]: плавающая draggable-кнопка minimizer,
+      уведомления сверху/снизу, всплывающие сообщения и модальные окна;
+    • третий ScreenGui [EFFECT]: независимые draggable/resizable popup-окна,
+      canvas и интерактивная карта с кликабельными узлами;
     • ресайз за уголок, перетаскивание за шапку, масштаб UI.
 
   Внизу файла находится совместимый facade для скриптов, написанных под
   MacLib: Window -> TabGroup -> Tab -> Section -> widgets, MacLib.Options,
-  автосохранение и загрузка прежнего JSON-конфига. DEMO в библиотеке нет.
+  автосохранение/autoload, список конфигов и загрузка прежнего JSON-конфига.
+  DEMO в библиотеке нет.
 
 --------------------------------------------------------------------------------
   API
 --------------------------------------------------------------------------------
-  local UI = Nousigi.new{ Title=, Menu=, Size=, Key=, Logo= }
+  local MacLib = loadstring(source)()
+  local UI = MacLib.new{ Title=, Menu=, Size=, Key=, Logo= } -- native Nousigi API
 
   local page  = UI:Page("Macro", { Order=, Hidden=, Icon= })
   local sub   = page:SubPage("Advanced")          -- вложенный пункт сайдбара
@@ -57,14 +62,15 @@
 
   page:Gap()
 
-  UI:Notify{ Title=, Text=, Duration=, Position="top"|"bottom", Color= }
+  UI:Notify{ Title=, Text=, Duration=, Position="top"|"bottom", Color=, Width= }
   UI:Message(text, duration)
   UI:Dialog{ Title=, Text=, Buttons={ {Name=, Callback=, Primary=} } }
+  UI:Popup{ Title=, Size=, Modal=, Draggable=, Resizable= }
+       -> :CreateCanvas(...) / :CreateMap(...):AddNode(...)
   UI:Select("Macro")        UI:SetScale(1.2)      UI:SetVisible(bool)
   UI:GetConfig()            UI:LoadConfig(tbl)    UI:Destroy()
 
   -- drop-in API для существующего хаба:
-  local MacLib = loadstring(source)()
   local Window = MacLib:Window{ Title=, Size=UDim2.fromOffset(...), ... }
   local Group  = Window:TabGroup()
   local Tab    = Group:Tab{ Name=, Image= }
@@ -79,8 +85,39 @@ local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService      = game:GetService("HttpService")
 local GuiService       = game:GetService("GuiService")
+local CoreGui          = game:GetService("CoreGui")
+local Lighting         = game:GetService("Lighting")
 
-local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() or Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+	Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+	LocalPlayer = Players.LocalPlayer
+end
+
+-- ScreenGui может создаваться как обычным LocalScript, так и executor-потоком.
+-- В последнем случае доступный GUI-root зависит от capability конкретного
+-- потока, поэтому один жёстко выбранный parent ненадёжен.
+local function guiParentCandidates()
+	local out, seen = {}, {}
+	local function add(parent)
+		if typeof(parent) == "Instance" and not seen[parent] then
+			seen[parent] = true
+			out[#out + 1] = parent
+		end
+	end
+	local function addFrom(fn)
+		if typeof(fn) ~= "function" then return end
+		local ok, parent = pcall(fn)
+		if ok then add(parent) end
+	end
+
+	addFrom(gethui)
+	addFrom(get_hidden_gui)
+	addFrom(gethiddengui)
+	add(CoreGui)
+	if LocalPlayer then add(LocalPlayer:FindFirstChildOfClass("PlayerGui")) end
+	return out
+end
 
 --==============================================================================
 --  ТЕМА  (значения сняты с оригинала)
@@ -180,8 +217,9 @@ local function stroke(color, thickness, transparency)
 	})
 end
 
-local function list(dir, halign, valign, pad, sort)
+local function list(dir, halign, valign, pad, sort, name)
 	return new("UIListLayout", {
+		Name                = name or "UIListLayout",
 		FillDirection       = Enum.FillDirection[dir or "Vertical"],
 		HorizontalAlignment = Enum.HorizontalAlignment[halign or "Center"],
 		VerticalAlignment   = Enum.VerticalAlignment[valign or "Top"],
@@ -226,7 +264,7 @@ end
 
 -- Стандартная «шапка» виджета: заголовок + описание
 local function widgetHeader(parent, kind, name, desc, titleOffsetY)
-	new("TextLabel", ghost {
+	local titleLabel = new("TextLabel", ghost {
 		Name = kind .. "-title",
 		Size = UDim2.new(1, -10, 0, 20),
 		Position = UDim2.fromOffset(5, titleOffsetY or -5),
@@ -283,6 +321,38 @@ local Nousigi  = {}; Nousigi.__index  = Nousigi
 local Page     = {}; Page.__index     = Page
 local Section  = {}; Section.__index  = Section
 
+-- Контрольные числа исходного MCP-снимка. Это не «заглушки» и не число
+-- создаваемых динамической библиотекой узлов: manifest нужен, чтобы при
+-- последующих правках можно было сверять покрытие шаблонов с оригиналом.
+Nousigi.Snapshot = {
+	Version = "NousigiHubGUI-v3-live-capture",
+	NodeCount = 13970,
+	ScreenGuiCount = 3,
+	PageCount = 9,
+	SectionContainerCount = 158,
+	UniqueSectionNameCount = 137,
+	WidgetCounts = {
+		Toggle = 122,
+		Dropdown = 144,
+		Slider = 126,
+		Button = 25,
+		Input = 6,
+		Keybind = 1,
+		Trello = 7,
+		Label = 260,
+		Split = 24,
+		Connected = 231,
+	},
+	ClassCounts = {
+		ScreenGui = 3, Frame = 5852, CanvasGroup = 284, ScrollingFrame = 169,
+		TextLabel = 1582, TextButton = 564, TextBox = 414,
+		ImageLabel = 634, ImageButton = 158, StringValue = 144,
+		UICorner = 2276, UIListLayout = 1020, UIStroke = 479,
+		UIGradient = 159, UIDragDetector = 171, UISizeConstraint = 59,
+		UIPageLayout = 1, UIAspectRatioConstraint = 1,
+	},
+}
+
 --------------------------------------------------------------------------------
 --  Создание окна
 --------------------------------------------------------------------------------
@@ -296,6 +366,7 @@ function Nousigi.new(cfg)
 	self.BaseSize   = cfg.Size  or Vector2.new(750, 420)
 	self.ToggleKey  = cfg.Key   or Enum.KeyCode.LeftControl
 	self.LogoImage  = cfg.Logo  or ICON.Logo
+	self.DragStyle  = cfg.DragStyle or 1
 
 	self.Pages       = {}
 	self.PageOrder   = {}
@@ -309,6 +380,7 @@ function Nousigi.new(cfg)
 
 	self:_buildMain()
 	self:_buildExtra()
+	self:_buildEffect()
 	self:_wireInput()
 
 	return self
@@ -319,7 +391,9 @@ function Nousigi:_track(conn)
 	return conn
 end
 
--- Родитель ScreenGui: gethui() под экзекьютором, PlayerGui в Studio
+-- Родитель ScreenGui: capability конкретного executor-потока может меняться
+-- между вызовами. Пробуем все известные roots, каждую запись делаем в pcall и
+-- до трёх секунд перепроверяем, что GUI действительно попал в DataModel.
 function Nousigi:_screenGui(name, order)
 	local gui = new("ScreenGui", {
 		Name           = name,
@@ -328,14 +402,48 @@ function Nousigi:_screenGui(name, order)
 		ResetOnSpawn   = false,
 		IgnoreGuiInset = false,
 	})
-	local ok = false
-	if typeof(gethui) == "function" then
-		pcall(function() gui.Parent = gethui(); ok = gui.Parent ~= nil end)
+	local function tryAttach()
+		for _, parent in ipairs(guiParentCandidates()) do
+			local ok, attached = pcall(function()
+				gui.Parent = parent
+				return gui.Parent ~= nil and gui:IsDescendantOf(game)
+			end)
+			if ok and attached then return true end
+			pcall(function() gui.Parent = nil end)
+		end
+		return false
 	end
-	if not ok then
-		local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
-		gui.Parent = pg
+
+	local attached = tryAttach()
+	local deadline = os.clock() + 3
+	while not attached and os.clock() < deadline do
+		task.wait(0.1)
+		attached = tryAttach()
 	end
+	if not attached then
+		pcall(function() gui:Destroy() end)
+		error("Nousigi: unable to parent " .. tostring(name) .. " after 3 seconds", 2)
+	end
+
+	-- Некоторые executors на короткое время снимают GUI с parent при смене
+	-- capability. Не даём окну бесшумно исчезнуть: если это не Destroy(),
+	-- watchdog ещё раз проходит тот же безопасный список roots.
+	local repairing = false
+	self:_track(gui:GetPropertyChangedSignal("Parent"):Connect(function()
+		if self.Destroyed or self.Destroying or repairing then return end
+		local ok, alive = pcall(function() return gui:IsDescendantOf(game) end)
+		if ok and alive then return end
+		repairing = true
+		task.defer(function()
+			local untilTime = os.clock() + 3
+			repeat
+				if self.Destroyed or self.Destroying then break end
+				if tryAttach() then break end
+				task.wait(0.1)
+			until os.clock() >= untilTime
+			repairing = false
+		end)
+	end))
 	return gui
 end
 
@@ -479,6 +587,17 @@ function Nousigi:_buildMain()
 		ClearTextOnFocus = false,
 		Parent = searchRoot,
 	})
+	-- Присутствует в оригинальном дереве даже когда пуст: сюда runtime-код
+	-- может выводить разобранные поисковые токены/подсказки, не трогая TextBox.
+	self.SearchCharHolder = new("Frame", ghost {
+		Name = "search-char-holder",
+		Size = UDim2.new(1, -30, 1, 0),
+		Position = UDim2.fromOffset(25, 0),
+		ClipsDescendants = true,
+		Parent = searchRoot,
+	}, {
+		list("Horizontal", "Left", "Top", 0, "LayoutOrder"),
+	})
 	new("Frame", {
 		Name = "search-shortcut",
 		Size = UDim2.new(0, 50, 1, 0),
@@ -546,7 +665,7 @@ function Nousigi:_buildMain()
 		MidImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 		BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 		Parent = menuRoot,
-	}, { list("Vertical", "Left", "Top", 5) })
+	}, { list("Vertical", "Left", "Top", 5, "LayoutOrder", "menu-root-list-layout") })
 
 	local settingRoot = new("Frame", {
 		Name = "setting-root",
@@ -577,7 +696,13 @@ function Nousigi:_buildMain()
 	})
 	local settingBtn = hitbox { Name = "setting-btn", Size = UDim2.fromScale(1, 1), Parent = settingRoot }
 	self:_track(settingBtn.MouseButton1Click:Connect(function()
-		if self.Pages["UI Setting"] then self:Select("UI Setting") end
+		if self.Pages["UI Setting"] then
+			self:Select("UI Setting")
+		elseif self.Pages["Settings"] then
+			-- MacLib-хабы обычно называют эту страницу "Settings", а в
+			-- Nousigi она открывается отдельной нижней кнопкой "UI Setting".
+			self:Select("Settings")
+		end
 	end))
 
 	---------------------------------------------------------------- контент
@@ -625,7 +750,11 @@ function Nousigi:_buildMain()
 	})
 	new("UIAspectRatioConstraint", { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height, Parent = rzIco })
 
-	self:_wireDrag(top)
+	if self.DragStyle == 2 then
+		self:_wireDrag(root)
+	elseif self.DragStyle == 1 then
+		self:_wireDrag(top)
+	end
 	self:_wireResize(resizeBtn)
 end
 
@@ -665,28 +794,33 @@ function Nousigi:_buildExtra()
 		}),
 	})
 	self.HideButton = hide
-	self:_track(hide.MouseButton1Click:Connect(function() self:SetVisible(not self.Visible) end))
+	self:_track(hide.MouseButton1Click:Connect(function()
+		if hide:GetAttribute("SuppressNextClick") then
+			hide:SetAttribute("SuppressNextClick", false)
+			return
+		end
+		self:SetVisible(not self.Visible)
+	end))
 
-	local function holderFrame(name, halign, valign)
+	local function holderFrame(name, halign, valign, layoutName)
 		return new("Frame", ghost {
 			Name = name,
 			Size = UDim2.new(1, -10, 1, -10),
 			Position = UDim2.fromScale(0.5, 0.5),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Parent = gui,
-		}, { list("Vertical", halign, valign, 5, "Name") })
+		}, { list("Vertical", halign, valign, 5, "Name", layoutName) })
 	end
 
-	self.MessageHolder = holderFrame("message-holder",             "Center", "Top")
-	self.NotifyTop     = holderFrame("notification-holder-top",    "Right",  "Top")
-	self.NotifyBottom  = holderFrame("notification-holder-bottom", "Right",  "Bottom")
+	self.MessageHolder = holderFrame("message-holder",             "Center", "Top",    "message-list-layout")
+	self.NotifyTop     = holderFrame("notification-holder-top",    "Right",  "Top",    "notification-list-layout")
+	self.NotifyBottom  = holderFrame("notification-holder-bottom", "Right",  "Bottom", "notification-list-layout")
 
 	local modal = new("Frame", ghost {
 		Name = "modal-holder",
 		Size = UDim2.new(1, -10, 1, -10),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Visible = false,
 		Parent = gui,
 	})
 	new("Frame", {
@@ -721,7 +855,9 @@ function Nousigi:_wireDrag(handle)
 		if not dragging then return end
 		if input.UserInputType ~= Enum.UserInputType.MouseMovement
 		and input.UserInputType ~= Enum.UserInputType.Touch then return end
-		local d = input.Position - startPos
+		-- Root находится под UIScale: экранный delta надо вернуть в локальные
+		-- координаты, иначе при Scale=0.75 окно убегает от курсора в 1/0.75 раза.
+		local d = (input.Position - startPos) / math.max(0.01, self.Scale)
 		self.Root.Position = UDim2.new(
 			startOffset.X.Scale, startOffset.X.Offset + d.X,
 			startOffset.Y.Scale, startOffset.Y.Offset + d.Y)
@@ -771,13 +907,22 @@ function Nousigi:_wireInput()
 		if input.KeyCode == Enum.KeyCode.K and ctrl then
 			if modifierDown then modifierUsedInChord = true end
 			if not self.Visible then self:SetVisible(true) end
-			if self.SearchOpen then self:CloseSearch() else self:OpenSearch() end
+			if self.SearchOpen then
+				self:CloseSearch()
+			else
+				self:OpenSearch()
+				task.defer(function()
+					if self.SearchOpen then pcall(function() self.TopSearch:CaptureFocus() end) end
+				end)
+			end
+			return
+		end
+		if input.KeyCode == Enum.KeyCode.Escape and self.SearchOpen then
+			self:CloseSearch()
 			return
 		end
 		if gpe then return end
-		if input.KeyCode == Enum.KeyCode.Escape and self.SearchOpen then
-			self:CloseSearch()
-		elseif input.KeyCode == self.ToggleKey then
+		if input.KeyCode == self.ToggleKey then
 			-- Left/RightControl часто используется как клавиша окна, а Ctrl+K —
 			-- поиск. Для модификатора ждём отпускания: так Ctrl+K не прячет UI.
 			if isModifierKey(self.ToggleKey) then
@@ -797,17 +942,74 @@ function Nousigi:_wireInput()
 	end))
 end
 
+--------------------------------------------------------------------------------
+--  Третий ScreenGui [EFFECT]
+--
+--  В снятом дереве это отдельный пустой ScreenGui с DisplayOrder=7. Он нужен
+--  как runtime-слой: оригинальный хаб может временно класть сюда эффекты и
+--  отдельные интерактивные окна, не меняя порядок детей основного GUI/ETC.
+--------------------------------------------------------------------------------
+
+function Nousigi:_buildEffect()
+	local gui = self:_screenGui("Nousigi Hub GUI [EFFECT]", 7)
+	gui.IgnoreGuiInset = true
+	pcall(function() gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets end)
+	self.EffectGui = gui
+	-- Snapshot содержит этот ScreenGui пустым. Runtime root создаётся лениво
+	-- первым Popup(), поэтому сразу после Window дерево остаётся идентичным.
+	self.PopupRoot = nil
+end
+
 function Nousigi:SetVisible(state)
 	self.Visible = state and true or false
+	if not self.Visible and self.SearchOpen then self:CloseSearch() end
 	self.Root.Visible = self.Visible
+	if self._AcrylicEffect then
+		pcall(function() self._AcrylicEffect.Enabled = self.AcrylicBlur == true and self.Visible end)
+	end
 	if self.HideButtonEnabled then
 		self.HideButton.Visible = true
 	end
 end
 
+function Nousigi:SetAcrylicBlur(state)
+	self.AcrylicBlur = state and true or false
+	if self.AcrylicBlur and not self._AcrylicEffect then
+		local ok, effect = pcall(function()
+			local blur = Instance.new("BlurEffect")
+			blur.Name = "NousigiHubGUI-AcrylicBlur"
+			blur.Size = 10
+			blur.Enabled = self.Visible
+			blur.Parent = Lighting
+			return blur
+		end)
+		if ok then self._AcrylicEffect = effect end
+	end
+	if self._AcrylicEffect then
+		pcall(function() self._AcrylicEffect.Enabled = self.AcrylicBlur and self.Visible end)
+	end
+	-- Лёгкая прозрачность делает эффект различимым через корпус, при этом
+	-- выключение возвращает точную непрозрачность исходной темы.
+	pcall(function() self.Holder.BackgroundTransparency = self.AcrylicBlur and 0.08 or 0 end)
+	return self.AcrylicBlur
+end
+
 function Nousigi:SetScale(scale)
-	self.Scale = math.clamp(scale, 0.5, 2)
-	self.UIScale.Scale = self.Scale
+	local target = math.clamp(tonumber(scale) or 1, 0.5, 2)
+	local function apply()
+		local ok = pcall(function() self.UIScale.Scale = target end)
+		if ok then self.Scale = target end
+		return ok
+	end
+	if apply() then return true end
+	task.spawn(function()
+		for _ = 1, 29 do
+			if self.Destroyed then return end
+			task.wait(0.1)
+			if apply() then return end
+		end
+	end)
+	return false
 end
 
 function Nousigi:ToggleSidebar()
@@ -874,19 +1076,6 @@ function Nousigi:_buildSearchOverlay()
 		Parent = box,
 	})
 
-	new("TextLabel", ghost {
-		Name = "search-hint",
-		Size = UDim2.new(1, -40, 0, 25),
-		Position = UDim2.fromOffset(10, 2),
-		Text = "Search results — click an entry to jump to it",
-		TextColor3 = T.Text,
-		TextSize = 15,
-		FontFace = FONT.Light,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 10,
-		Parent = box,
-	})
-
 	self.SearchList = new("ScrollingFrame", ghost {
 		Name = "search-container",
 		Size = UDim2.new(1, 0, 1, -35),
@@ -900,7 +1089,7 @@ function Nousigi:_buildSearchOverlay()
 		VerticalScrollBarInset = Enum.ScrollBarInset.None,
 		ZIndex = 10,
 		Parent = box,
-	}, { list("Vertical", "Center", "Top", 5) })
+	}, { list("Vertical", "Left", "Top", 5, "LayoutOrder", "search-container-list-layout") })
 
 	self.SearchOverlay = overlay
 	self.SearchOpen = false
@@ -918,6 +1107,9 @@ end
 function Nousigi:CloseSearch()
 	if not self.SearchOpen then return end
 	self.SearchOpen = false
+	if UserInputService:GetFocusedTextBox() == self.TopSearch then
+		pcall(function() self.TopSearch:ReleaseFocus() end)
+	end
 	local t = tween(self.SearchOverlay, TW_FAST, { GroupTransparency = 1 })
 	t.Completed:Once(function()
 		if not self.SearchOpen then self.SearchOverlay.Visible = false end
@@ -926,60 +1118,130 @@ end
 
 -- Регистрация виджета в индексе Ctrl+K
 function Nousigi:_index(name, section, instance)
-	local pageName = section.Page.Name
+	local pageKey = section.Page.Name
+	local pageName = section.Page.DisplayName or pageKey
+	local description = ""
+	if instance then
+		for _, d in ipairs(instance:GetDescendants()) do
+			if d:IsA("TextLabel") and d.Name:match("%-description$") and d.Text ~= "" then
+				description = d.Text
+				break
+			end
+		end
+	end
 	local entry = new("Frame", ghost {
 		Name = name,
-		Size = UDim2.new(1, -10, 0, 42),
+		Size = UDim2.new(1, -10, 0, 0),
+		LayoutOrder = #self.Index + 1,
+		AutomaticSize = Enum.AutomaticSize.Y,
 		ZIndex = 10,
 		Parent = self.SearchList,
 	})
-	new("Frame", {
-		Name = "entry-bg",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = T.Widget,
+	local holder = new("Frame", {
+		Name = name .. "-holder",
+		Size = UDim2.new(1, -5, 1, 6),
+		Position = UDim2.fromOffset(5, 0),
+		BackgroundColor3 = Color3.fromRGB(44, 44, 44),
+		BackgroundTransparency = 0.3,
 		BorderSizePixel = 0,
+		AutomaticSize = Enum.AutomaticSize.Y,
 		ZIndex = 10,
 		Parent = entry,
 	}, { corner(4) })
-	new("TextLabel", ghost {
-		Name = name .. "-title",
-		Size = UDim2.new(1, -20, 0, 20),
-		Position = UDim2.fromOffset(10, 2),
-		Text = name,
-		RichText = true,
-		TextColor3 = T.Text,
-		TextSize = 16,
-		FontFace = FONT.SemiBold,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextTruncate = Enum.TextTruncate.AtEnd,
+	local findFrame = new("Frame", ghost {
+		Name = "find-frame",
+		Size = UDim2.fromOffset(25, 25),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		AutomaticSize = Enum.AutomaticSize.Y,
 		ZIndex = 11,
-		Parent = entry,
+		Parent = holder,
 	})
-	new("TextLabel", ghost {
-		Name = name .. "-page",
-		Size = UDim2.new(1, -20, 0, 16),
-		Position = UDim2.fromOffset(10, 22),
-		Text = string.format('<font color="#83b5ff">%s</font>  ›  %s', pageName, stripRich(section.Title)),
-		RichText = true,
-		TextColor3 = T.TextDim,
-		TextSize = 15,
-		FontFace = FONT.Light,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextTruncate = Enum.TextTruncate.AtEnd,
+	sprite("ImageLabel", ICON.SheetUp, Vector2.new(504, 104), {
+		Name = "find-ico",
+		Size = UDim2.fromScale(1, 1),
 		ZIndex = 11,
-		Parent = entry,
+		Parent = findFrame,
 	})
-	local btn = hitbox { Name = "entry-btn", Size = UDim2.fromScale(1, 1), ZIndex = 12, Parent = entry }
+
+	if description ~= "" then
+		new("TextLabel", ghost {
+			Name = name .. "-desc",
+			Size = UDim2.new(1, -50, 0, 0),
+			Position = UDim2.fromOffset(15, 20),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Text = description,
+			RichText = true,
+			TextWrapped = true,
+			TextColor3 = T.TextDim,
+			TextSize = 14,
+			FontFace = FONT.Light,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 11,
+			Parent = holder,
+		})
+	end
+
+	local titleFrame = new("Frame", ghost {
+		Name = name .. "-title-frame",
+		Size = UDim2.new(1, -45, 0, 20),
+		Position = UDim2.fromOffset(10, description ~= "" and 0 or 5),
+		ClipsDescendants = true,
+		ZIndex = 11,
+		Parent = holder,
+	}, { list("Horizontal", "Left", "Center", 0) })
+	local function crumbLabel(suffix, text, order, accent)
+		return new("TextLabel", ghost {
+			Name = name .. suffix,
+			Size = UDim2.fromOffset(0, 20),
+			AutomaticSize = Enum.AutomaticSize.X,
+			LayoutOrder = order,
+			Text = accent and ('<font color="#83b5ff">' .. text .. "</font>") or text,
+			RichText = true,
+			TextColor3 = T.Text,
+			TextSize = 16,
+			FontFace = FONT.Medium,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			ZIndex = 11,
+			Parent = titleFrame,
+		})
+	end
+	local function crumbGap(suffix, order)
+		local g = new("Frame", ghost {
+			Name = "Frame",
+			Size = UDim2.fromOffset(16, 16),
+			LayoutOrder = order,
+			ZIndex = 11,
+			Parent = titleFrame,
+		})
+		new("ImageLabel", ghost {
+			Name = name .. suffix,
+			Size = UDim2.new(1, -4, 1, -4),
+			Position = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Image = "rbxassetid://10709791437",
+			ZIndex = 11,
+			Parent = g,
+		})
+	end
+	crumbLabel("-page", pageName, 0, true)
+	crumbGap("-page-gap", 1)
+	crumbLabel("-section", stripRich(section.Title), 2, false)
+	crumbGap("-section-gap", 3)
+	crumbLabel("-title", stripRich(name), 4, false)
+
+	local btn = hitbox { Name = name .. "-btn", Size = UDim2.new(1, 0, 1, 6), ZIndex = 12, Parent = holder }
 
 	btn.MouseEnter:Connect(function()
-		tween(entry["entry-bg"], TW_FAST, { BackgroundColor3 = T.Section })
+		tween(holder, TW_FAST, { BackgroundTransparency = 0.1 })
 	end)
 	btn.MouseLeave:Connect(function()
-		tween(entry["entry-bg"], TW_FAST, { BackgroundColor3 = T.Widget })
+		tween(holder, TW_FAST, { BackgroundTransparency = 0.3 })
 	end)
 	btn.MouseButton1Click:Connect(function()
 		self:CloseSearch()
-		self:Select(pageName)
+		self:Select(pageKey)
 		-- раскрыть все секции по цепочке вверх и подскроллить к виджету
 		local chain, node = {}, section
 		while node do
@@ -1029,16 +1291,24 @@ function Nousigi:Notify(cfg)
 	cfg = cfg or {}
 	local holder = (cfg.Position == "top") and self.NotifyTop or self.NotifyBottom
 	local accent = cfg.Color or T.Accent
+	local width = math.max(120, tonumber(cfg.Width or cfg.SizeX) or 260)
 
 	local card = new("Frame", {
 		Name = os.clock() .. "-notify",
-		Size = UDim2.new(0, 260, 0, 0),
+		Size = UDim2.new(0, width, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = T.Panel,
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Parent = holder,
 	}, { corner(4), stroke(accent, 1, 0.5), new("UIPadding", { PaddingBottom = UDim.new(0, 10) }) })
+	if cfg.Scale ~= nil then
+		new("UIScale", {
+			Name = "notify-scale",
+			Scale = math.max(0.05, tonumber(cfg.Scale) or 1),
+			Parent = card,
+		})
+	end
 
 	local y = 6
 	local titleLbl
@@ -1074,17 +1344,41 @@ function Nousigi:Notify(cfg)
 		Parent = card,
 	})
 
+	local style = tostring(cfg.Style or "None")
+	if style == "Confirm" or style == "Cancel" then
+		local action = new("TextButton", ghost {
+			Name = "notify-action",
+			Size = UDim2.fromOffset(28, 28),
+			Position = UDim2.new(1, -6, 0, 6),
+			AnchorPoint = Vector2.new(1, 0),
+			Text = style == "Confirm" and "✓" or "✗",
+			TextColor3 = accent,
+			TextSize = 17,
+			FontFace = FONT.Bold,
+			AutoButtonColor = false,
+			Parent = card,
+		})
+		action.MouseButton1Click:Connect(function()
+			if card.Parent then card:Destroy() end
+			if type(cfg.Callback) == "function" then task.spawn(cfg.Callback) end
+		end)
+	end
+
 	tween(card, TW_FAST, { BackgroundTransparency = 0 })
 	tween(bodyLbl, TW_FAST, { TextTransparency = 0 })
 	if titleLbl then tween(titleLbl, TW_FAST, { TextTransparency = 0 }) end
 
-	task.delay(cfg.Duration or 4, function()
-		if not card.Parent then return end
-		tween(card, TW_FAST, { BackgroundTransparency = 1 })
-		if titleLbl then tween(titleLbl, TW_FAST, { TextTransparency = 1 }) end
-		local t = tween(bodyLbl, TW_FAST, { TextTransparency = 1 })
-		t.Completed:Once(function() card:Destroy() end)
-	end)
+	local duration = cfg.Duration
+	if duration == nil then duration = 4 end
+	if tonumber(duration) ~= 0 then
+		task.delay(math.max(0, tonumber(duration) or 4), function()
+			if not card.Parent then return end
+			tween(card, TW_FAST, { BackgroundTransparency = 1 })
+			if titleLbl then tween(titleLbl, TW_FAST, { TextTransparency = 1 }) end
+			local t = tween(bodyLbl, TW_FAST, { TextTransparency = 1 })
+			t.Completed:Once(function() if card.Parent then card:Destroy() end end)
+		end)
+	end
 	return card
 end
 
@@ -1140,7 +1434,7 @@ function Nousigi:Dialog(cfg)
 		Parent = holder,
 	}, { corner(4), stroke(T.Accent, 1, 0.4), new("UIPadding", { PaddingBottom = UDim.new(0, 12) }) })
 
-	new("TextLabel", ghost {
+	local titleLabel = new("TextLabel", ghost {
 		Name = "modal-title",
 		Size = UDim2.new(1, -20, 0, 26),
 		Position = UDim2.fromOffset(10, 6),
@@ -1179,7 +1473,6 @@ function Nousigi:Dialog(cfg)
 		local t = tween(box, TW_FAST, { BackgroundTransparency = 1 })
 		t.Completed:Once(function()
 			box:Destroy()
-			holder.Visible = false
 		end)
 	end
 
@@ -1216,8 +1509,322 @@ function Nousigi:Dialog(cfg)
 	task.defer(layout)
 
 	tween(box, TW_FAST, { BackgroundTransparency = 0 })
-	return { Close = close }
+	local api = { Frame = box, TitleLabel = titleLabel, BodyLabel = body }
+	function api:Close() close() end
+	function api:Cancel() close() end
+	function api:UpdateTitle(text) titleLabel.Text = tostring(text or "") end
+	function api:UpdateDescription(text) body.Text = tostring(text or "") end
+	return api
 end
+
+--------------------------------------------------------------------------------
+--  Отдельные runtime popup-окна / map layer ([EFFECT])
+--------------------------------------------------------------------------------
+
+function Nousigi:Popup(cfg)
+	cfg = cfg or {}
+	local win = self
+	if not self.PopupRoot or not self.PopupRoot.Parent then
+		self.PopupRoot = new("Frame", ghost {
+			Name = "runtime-popup-root",
+			Size = UDim2.fromScale(1, 1),
+			Parent = self.EffectGui,
+		})
+	end
+	local root = new("CanvasGroup", ghost {
+		Name = "popup-" .. tostring(cfg.Name or cfg.Title or math.floor(os.clock() * 1000)),
+		Size = UDim2.fromScale(1, 1),
+		GroupTransparency = 1,
+		Visible = cfg.Visible ~= false,
+		ZIndex = tonumber(cfg.ZIndex) or 20,
+		Parent = self.PopupRoot,
+	})
+
+	local backdrop
+	if cfg.Modal then
+		backdrop = new("TextButton", {
+			Name = "popup-backdrop",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = tonumber(cfg.BackdropTransparency) or 0.45,
+			BorderSizePixel = 0,
+			Text = "",
+			AutoButtonColor = false,
+			ZIndex = root.ZIndex,
+			Parent = root,
+		})
+	end
+
+	local size = cfg.Size
+	if typeof(size) ~= "UDim2" then
+		if typeof(size) == "Vector2" then size = UDim2.fromOffset(size.X, size.Y)
+		else size = UDim2.fromOffset(620, 420) end
+	end
+	local card = new("Frame", {
+		Name = "popup-holder",
+		Size = size,
+		Position = typeof(cfg.Position) == "UDim2" and cfg.Position or UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = cfg.AnchorPoint or Vector2.new(0.5, 0.5),
+		BackgroundColor3 = cfg.BackgroundColor or T.Window,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		ZIndex = root.ZIndex + 1,
+		Parent = root,
+	}, {
+		corner(4),
+		new("UIStroke", {
+			Name = "popup-stroke",
+			Color = cfg.Accent or T.Accent,
+			Transparency = 0.45,
+		}),
+		new("UISizeConstraint", {
+			Name = "popup-size-constraint",
+			MinSize = cfg.MinSize or Vector2.new(260, 160),
+			MaxSize = cfg.MaxSize or Vector2.new(10000, 10000),
+		}),
+	})
+
+	local top = new("Frame", {
+		Name = "popup-top",
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = cfg.TopColor or T.Panel,
+		BorderSizePixel = 0,
+		ZIndex = card.ZIndex + 1,
+		Parent = card,
+	}, { corner(4) })
+	new("Frame", {
+		Name = "popup-top-hide-corner",
+		Size = UDim2.new(1, 0, 0, 2),
+		Position = UDim2.new(0, 0, 1, 0),
+		AnchorPoint = Vector2.new(0, 1),
+		BackgroundColor3 = cfg.TopColor or T.Panel,
+		BorderSizePixel = 0,
+		ZIndex = top.ZIndex,
+		Parent = top,
+	})
+	local title = new("TextLabel", ghost {
+		Name = "popup-title",
+		Size = UDim2.new(1, -42, 1, 0),
+		Position = UDim2.fromOffset(10, 0),
+		Text = tostring(cfg.Title or cfg.Name or "Window"),
+		TextColor3 = cfg.Accent or T.AccentLight,
+		TextSize = 16,
+		FontFace = FONT.SemiBold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		ZIndex = top.ZIndex + 1,
+		Parent = top,
+	})
+	local closeButton = sprite("ImageButton", ICON.SheetClose, ICON.RectClose, {
+		Name = "popup-close-btn",
+		Size = UDim2.fromOffset(24, 24),
+		Position = UDim2.new(1, -3, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		AutoButtonColor = false,
+		ZIndex = top.ZIndex + 2,
+		Parent = top,
+	})
+
+	local content = new("Frame", ghost {
+		Name = "popup-content",
+		Size = UDim2.new(1, -10, 1, -40),
+		Position = UDim2.fromOffset(5, 35),
+		ClipsDescendants = cfg.ClipContent ~= false,
+		ZIndex = card.ZIndex + 1,
+		Parent = card,
+	})
+
+	local resizeHandle
+	if cfg.Resizable ~= false then
+		resizeHandle = sprite("ImageButton", ICON.SheetResize, ICON.RectResize, {
+			Name = "popup-resize-btn",
+			Size = UDim2.fromOffset(24, 24),
+			Position = UDim2.fromScale(1, 1),
+			AnchorPoint = Vector2.new(1, 1),
+			AutoButtonColor = false,
+			ZIndex = card.ZIndex + 4,
+			Parent = card,
+		})
+	end
+
+	-- Popup имеет собственный lifecycle. Глобальные InputChanged/InputEnded
+	-- нельзя оставлять висеть до Unload окна после закрытия отдельного popup.
+	local popupConnections = {}
+	local function trackPopup(conn)
+		popupConnections[#popupConnections + 1] = conn
+		win:_track(conn)
+		return conn
+	end
+
+	local api = {
+		Frame = root,
+		Holder = card,
+		Top = top,
+		Content = content,
+		CloseButton = closeButton,
+		Backdrop = backdrop,
+		Destroyed = false,
+	}
+
+	function api:Show()
+		if self.Destroyed then return end
+		root.Visible = true
+		tween(root, TW_FAST, { GroupTransparency = 0 })
+	end
+	function api:Hide()
+		if self.Destroyed then return end
+		local t = tween(root, TW_FAST, { GroupTransparency = 1 })
+		t.Completed:Once(function() if root.Parent then root.Visible = false end end)
+	end
+	function api:SetVisible(state) if state then self:Show() else self:Hide() end end
+	function api:SetTitle(text) title.Text = tostring(text or "") end
+	function api:SetSize(v)
+		if typeof(v) == "Vector2" then v = UDim2.fromOffset(v.X, v.Y) end
+		if typeof(v) == "UDim2" then card.Size = v end
+	end
+	function api:SetPosition(v) if typeof(v) == "UDim2" then card.Position = v end end
+	function api:GetContent() return content end
+	function api:Mount(instance)
+		if typeof(instance) == "Instance" then instance.Parent = content end
+		return instance
+	end
+	function api:Clear()
+		for _, child in ipairs(content:GetChildren()) do child:Destroy() end
+	end
+	function api:Destroy()
+		if self.Destroyed then return end
+		self.Destroyed = true
+		for _, conn in ipairs(popupConnections) do
+			pcall(function() conn:Disconnect() end)
+		end
+		table.clear(popupConnections)
+		if root.Parent then root:Destroy() end
+	end
+	api.Close = api.Destroy
+
+	-- Удобный интерактивный canvas для карт/графов. Он специально возвращает
+	-- Instance: основной скрипт может свободно добавлять ImageLabel/Frame/
+	-- TextButton и подключать любые события без ограничений API библиотеки.
+	function api:CreateCanvas(canvasCfg)
+		canvasCfg = canvasCfg or {}
+		local scrolling = new("ScrollingFrame", {
+			Name = tostring(canvasCfg.Name or "popup-canvas"),
+			Size = canvasCfg.Size or UDim2.fromScale(1, 1),
+			Position = canvasCfg.Position or UDim2.new(),
+			BackgroundColor3 = canvasCfg.BackgroundColor or T.Panel,
+			BackgroundTransparency = canvasCfg.BackgroundTransparency or 0,
+			BorderSizePixel = 0,
+			CanvasSize = canvasCfg.CanvasSize or UDim2.fromScale(1, 1),
+			AutomaticCanvasSize = canvasCfg.AutomaticCanvasSize or Enum.AutomaticSize.None,
+			ScrollBarThickness = canvasCfg.ScrollBarThickness == nil and 5 or canvasCfg.ScrollBarThickness,
+			ScrollingDirection = canvasCfg.ScrollingDirection or Enum.ScrollingDirection.XY,
+			ZIndex = content.ZIndex + 1,
+			Parent = content,
+		}, { corner(4) })
+		return scrolling
+	end
+
+	function api:CreateMap(mapCfg)
+		mapCfg = mapCfg or {}
+		local canvas = self:CreateCanvas(mapCfg)
+		local image = new("ImageLabel", {
+			Name = "map-image",
+			Size = mapCfg.ImageSize or UDim2.fromScale(1, 1),
+			Position = mapCfg.ImagePosition or UDim2.new(),
+			BackgroundTransparency = 1,
+			Image = tostring(mapCfg.Image or ""),
+			ScaleType = mapCfg.ScaleType or Enum.ScaleType.Fit,
+			ZIndex = canvas.ZIndex + 1,
+			Parent = canvas,
+		})
+		local map = { Canvas = canvas, Image = image, Nodes = {} }
+		function map:AddNode(nodeCfg)
+			nodeCfg = nodeCfg or {}
+			local button = new("TextButton", {
+				Name = "map-node-" .. tostring(nodeCfg.Id or nodeCfg.Name or (#self.Nodes + 1)),
+				Size = nodeCfg.Size or UDim2.fromOffset(28, 28),
+				Position = nodeCfg.Position or UDim2.fromScale(0.5, 0.5),
+				AnchorPoint = nodeCfg.AnchorPoint or Vector2.new(0.5, 0.5),
+				BackgroundColor3 = nodeCfg.Color or T.Accent,
+				BorderSizePixel = 0,
+				Text = tostring(nodeCfg.Text or nodeCfg.Name or ""),
+				TextColor3 = nodeCfg.TextColor or T.Text,
+				TextSize = tonumber(nodeCfg.TextSize) or 12,
+				FontFace = FONT.SemiBold,
+				AutoButtonColor = false,
+				ZIndex = image.ZIndex + 2,
+				Parent = canvas,
+			}, { pill(), stroke(T.Text, 1, 0.35) })
+			self.Nodes[#self.Nodes + 1] = button
+			if type(nodeCfg.Callback) == "function" then
+				trackPopup(button.MouseButton1Click:Connect(function()
+					task.spawn(nodeCfg.Callback, nodeCfg, button)
+				end))
+			end
+			return button
+		end
+		function map:ClearNodes()
+			for _, node in ipairs(self.Nodes) do if node.Parent then node:Destroy() end end
+			table.clear(self.Nodes)
+		end
+		return map
+	end
+
+	trackPopup(closeButton.MouseButton1Click:Connect(function() api:Destroy() end))
+	if backdrop and cfg.CloseOnBackdrop then
+		trackPopup(backdrop.MouseButton1Click:Connect(function() api:Destroy() end))
+	end
+
+	-- Drag topbar.
+	if cfg.Draggable ~= false then
+		local dragging, dragStart, startPos = false, nil, nil
+		trackPopup(top.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+				dragging, dragStart, startPos = true, input.Position, card.Position
+			end
+		end))
+		trackPopup(UserInputService.InputChanged:Connect(function(input)
+			if not dragging then return end
+			if input.UserInputType ~= Enum.UserInputType.MouseMovement
+			and input.UserInputType ~= Enum.UserInputType.Touch then return end
+			local d = input.Position - dragStart
+			card.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
+				startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end))
+		trackPopup(UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+		end))
+	end
+
+	-- Resize corner.
+	if resizeHandle then
+		local resizing, startMouse, startSize = false, nil, nil
+		trackPopup(resizeHandle.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+				resizing, startMouse, startSize = true, input.Position, card.AbsoluteSize
+			end
+		end))
+		trackPopup(UserInputService.InputChanged:Connect(function(input)
+			if not resizing then return end
+			if input.UserInputType ~= Enum.UserInputType.MouseMovement
+			and input.UserInputType ~= Enum.UserInputType.Touch then return end
+			local d = input.Position - startMouse
+			card.Size = UDim2.fromOffset(math.max(260, startSize.X + d.X), math.max(160, startSize.Y + d.Y))
+		end))
+		trackPopup(UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then resizing = false end
+		end))
+	end
+
+	if root.Visible then task.defer(function() api:Show() end) end
+	return api
+end
+
+Nousigi.CreatePopup = Nousigi.Popup
 
 --------------------------------------------------------------------------------
 --  Страницы
@@ -1266,7 +1873,7 @@ function Nousigi:Page(name, opts)
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 		VerticalScrollBarInset = Enum.ScrollBarInset.None,
 		Parent = container,
-	}, { list("Vertical", "Left", "Top", 5) })
+	}, { list("Vertical", "Left", "Top", 5, "LayoutOrder", "content-page-list-layout") })
 
 	p.Container = container
 
@@ -1277,7 +1884,7 @@ function Nousigi:Page(name, opts)
 			AutomaticSize = Enum.AutomaticSize.Y,
 			LayoutOrder = p.Order,
 			Parent = self.Menu,
-		}, { list("Vertical", "Right", "Top", 5) })
+		}, { list("Vertical", "Right", "Top", 5, "LayoutOrder", "menu-list-layout") })
 
 		local sel = new("Frame", ghost {
 			Name = "page-selector",
@@ -1294,12 +1901,13 @@ function Nousigi:Page(name, opts)
 			BorderSizePixel = 0,
 			Parent = sel,
 		}, { corner(4) })
-		new("TextLabel", ghost {
+		p.MenuLabel = new("TextLabel", ghost {
 			Name = "menu-child-label",
 			Size = UDim2.new(1, -10, 1, 0),
 			Position = UDim2.fromOffset(10, 0),
 			Text = name,
 			TextColor3 = T.Text,
+			TextTransparency = 0.3,
 			TextSize = 16,
 			FontFace = FONT.Bold,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -1320,10 +1928,16 @@ function Nousigi:Page(name, opts)
 		p.MenuItem = item
 		btn.MouseButton1Click:Connect(function() win:Select(name) end)
 		btn.MouseEnter:Connect(function()
-			if win.Current ~= name then tween(p.MenuBg, TW_FAST, { BackgroundTransparency = 0.85 }) end
+			if win.Current ~= name then
+				tween(p.MenuBg, TW_FAST, { BackgroundTransparency = 0.85 })
+				tween(p.MenuLabel, TW_FAST, { TextTransparency = 0.1 })
+			end
 		end)
 		btn.MouseLeave:Connect(function()
-			if win.Current ~= name then tween(p.MenuBg, TW_FAST, { BackgroundTransparency = 1 }) end
+			if win.Current ~= name then
+				tween(p.MenuBg, TW_FAST, { BackgroundTransparency = 1 })
+				tween(p.MenuLabel, TW_FAST, { TextTransparency = 0.3 })
+			end
 		end)
 	end
 
@@ -1357,12 +1971,13 @@ function Page:SubPage(name, opts)
 			BorderSizePixel = 0,
 			Parent = sel,
 		}, { corner(4) })
-		new("TextLabel", ghost {
+		sub.MenuLabel = new("TextLabel", ghost {
 			Name = "menu-child-label",
 			Size = UDim2.new(1, -20, 1, 0),
 			Position = UDim2.fromOffset(20, 0),
 			Text = "› " .. name,
 			TextColor3 = T.TextDim,
+			TextTransparency = 0.3,
 			TextSize = 15,
 			FontFace = FONT.Medium,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -1373,10 +1988,16 @@ function Page:SubPage(name, opts)
 		sub.MenuBg = bg
 		btn.MouseButton1Click:Connect(function() win:Select(full) end)
 		btn.MouseEnter:Connect(function()
-			if win.Current ~= full then tween(bg, TW_FAST, { BackgroundTransparency = 0.85 }) end
+			if win.Current ~= full then
+				tween(bg, TW_FAST, { BackgroundTransparency = 0.85 })
+				tween(sub.MenuLabel, TW_FAST, { TextTransparency = 0.1 })
+			end
 		end)
 		btn.MouseLeave:Connect(function()
-			if win.Current ~= full then tween(bg, TW_FAST, { BackgroundTransparency = 1 }) end
+			if win.Current ~= full then
+				tween(bg, TW_FAST, { BackgroundTransparency = 1 })
+				tween(sub.MenuLabel, TW_FAST, { TextTransparency = 0.3 })
+			end
 		end)
 	end
 	return sub
@@ -1389,6 +2010,9 @@ function Nousigi:Select(name)
 	for n, other in pairs(self.Pages) do
 		if other.MenuBg then
 			tween(other.MenuBg, TW_FAST, { BackgroundTransparency = (n == name) and 0 or 1 })
+		end
+		if other.MenuLabel then
+			tween(other.MenuLabel, TW_FAST, { TextTransparency = (n == name) and 0 or 0.3 })
 		end
 	end
 	pcall(function() self.PageLayout:JumpTo(p.Container) end)
@@ -1404,7 +2028,62 @@ function Page:Gap(height)
 end
 
 function Page:SetTitle(text)
-	self.TitleLabel.Text = text
+	self.DisplayName = tostring(text or "")
+	self.TitleLabel.Text = self.DisplayName
+end
+
+-- Native Nousigi страницы остаются одноколоночными. MacLib facade передаёт
+-- Side, и только тогда лениво появляется совместимая раскладка:
+-- Center -> (Left | Right) -> Bottom. Так Side не меняет дерево тех страниц,
+-- которые создаются напрямую через native API.
+function Page:_ensureSideColumns()
+	if self.SideColumns then return self.SideColumns end
+	local center = new("Frame", ghost {
+		Name = "mac-center",
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 0,
+		Parent = self.Holder,
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "mac-center-list-layout") })
+	local sides = new("Frame", ghost {
+		Name = "mac-sides-container",
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 1,
+		Parent = self.Holder,
+	}, { list("Horizontal", "Center", "Top", 10, "LayoutOrder", "mac-sides-list-layout") })
+	local left = new("Frame", ghost {
+		Name = "mac-left",
+		Size = UDim2.new(0.5, -5, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 0,
+		Parent = sides,
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "mac-left-list-layout") })
+	local right = new("Frame", ghost {
+		Name = "mac-right",
+		Size = UDim2.new(0.5, -5, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 1,
+		Parent = sides,
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "mac-right-list-layout") })
+	local bottom = new("Frame", ghost {
+		Name = "mac-bottom",
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 2,
+		Parent = self.Holder,
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "mac-bottom-list-layout") })
+
+	self.SideColumns = { Center = center, Left = left, Right = right, Bottom = bottom }
+	return self.SideColumns
+end
+
+function Page:_sectionParent(side)
+	if side == nil then return self.Holder end
+	local columns = self:_ensureSideColumns()
+	local key = tostring(side)
+	key = key:sub(1, 1):upper() .. key:sub(2):lower()
+	return columns[key] or columns.Left
 end
 
 --------------------------------------------------------------------------------
@@ -1415,6 +2094,7 @@ local function buildSection(page, title, opts, parentSection)
 	opts = opts or {}
 	local win = page.Window
 	local collapsible = opts.Collapsible ~= false
+	local searchable = opts.Searchable == true or opts.Search == true
 	local color = opts.Color or (collapsible and T.AccentSoft or T.AccentLight)
 
 	local s = setmetatable({
@@ -1423,6 +2103,7 @@ local function buildSection(page, title, opts, parentSection)
 		Window = win,
 		ParentSection = parentSection,
 		Collapsible = collapsible,
+		Searchable = searchable,
 		Collapsed = collapsible and (opts.Open ~= true) or false,
 		Widgets = {},
 		Color = color,
@@ -1434,12 +2115,16 @@ local function buildSection(page, title, opts, parentSection)
 		BackgroundColor3 = T.Section,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
-		Parent = parentSection and parentSection.Frame or page.Holder,
+		Parent = parentSection and parentSection.Frame or page:_sectionParent(opts.Side),
 	}, {
 		corner(4),
-		list("Vertical", "Center", "Top", 5),
-		new("UISizeConstraint", { MinSize = Vector2.new(0, 0) }),
+		list("Vertical", "Center", "Top", 5, "LayoutOrder", "section-list-layout"),
 	})
+	-- В dump ровно 59 UISizeConstraint — по одному у каждой секции верхнего
+	-- уровня. Вложенные section-container-* constraint не имеют.
+	if not parentSection then
+		new("UISizeConstraint", { Name = "UISizeConstraint", Parent = frame })
+	end
 	s.Frame  = frame
 	s.Layout = frame:FindFirstChildOfClass("UIListLayout")
 	win.SectionByFrame[frame] = s
@@ -1447,7 +2132,8 @@ local function buildSection(page, title, opts, parentSection)
 	------------------------------------------------------------------ шапка
 	local top = new("Frame", ghost {
 		Name = "section-top",
-		Size = UDim2.new(1, -10, 0, 25),
+		Size = UDim2.new(1, -10, 0, parentSection and 24 or 25),
+		Position = UDim2.fromOffset(10, 0),
 		LayoutOrder = 0,
 		Parent = frame,
 	}, { list("Horizontal", "Left", "Center", 5) })
@@ -1494,7 +2180,7 @@ local function buildSection(page, title, opts, parentSection)
 		TextSize = 16,
 		FontFace = FONT.SemiBold,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 2,
+		LayoutOrder = 3,
 		Parent = top,
 	})
 	s.TitleLabel = titleLabel
@@ -1518,15 +2204,16 @@ local function buildSection(page, title, opts, parentSection)
 		}),
 	})
 
-	-- линия занимает всё, что осталось между заголовком и кнопкой поиска:
-	-- 20(collapse)+5 + 5(line)+5 + title +5 + line1 +5 + 20(search) = ширина строки
-	local reserve = collapsible and 65 or 40
+	-- Резерв справа зависит от реально присутствующих кнопок. В оригинале
+	-- section-search-* есть только у searchable-секций, а не у каждой секции.
+	local reserve = 15 + (collapsible and 25 or 0) + (searchable and 25 or 0)
 	local function fitLine()
 		line.Size = UDim2.new(1, -(math.ceil(titleLabel.AbsoluteSize.X) + reserve), 0, 2)
 	end
 	titleLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitLine)
 	task.defer(fitLine)
 
+	if searchable then
 	local searchChip = new("Frame", {
 		Name = "section-search-top",
 		Size = UDim2.fromOffset(20, 20),
@@ -1568,6 +2255,11 @@ local function buildSection(page, title, opts, parentSection)
 		Position = UDim2.fromOffset(5, 0),
 		Parent = bar,
 	})
+	new("Frame", ghost {
+		Name = "search-container-gap",
+		Size = UDim2.new(1, 0, 1, 6),
+		Parent = barHold,
+	})
 	new("ImageLabel", ghost {
 		Name = "search-ico",
 		Image = ICON.Search,
@@ -1581,7 +2273,7 @@ local function buildSection(page, title, opts, parentSection)
 		Size = UDim2.new(1, -23, 1, 0),
 		Position = UDim2.fromOffset(20, 0),
 		Text = "",
-		PlaceholderText = "Enter keywords to search features....",
+		PlaceholderText = "Keywords...",
 		PlaceholderColor3 = T.Placeholder,
 		TextColor3 = T.Text,
 		TextSize = 16,
@@ -1608,10 +2300,13 @@ local function buildSection(page, title, opts, parentSection)
 	searchValue:GetPropertyChangedSignal("Text"):Connect(function()
 		local q = searchValue.Text:lower()
 		for _, w in ipairs(s.Widgets) do
-			w.Frame.Visible = (q == "") or stripRich(w.Name):lower():find(q, 1, true) ~= nil
+			local explicitlyVisible = w.Frame:GetAttribute("ApelHidden") ~= true
+			w.Frame.Visible = explicitlyVisible
+				and ((q == "") or stripRich(w.Name):lower():find(q, 1, true) ~= nil)
 		end
 		task.defer(function() s:Refresh() end)
 	end)
+	end
 
 	s.Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		if not s.Collapsed then s:Refresh() end
@@ -1671,8 +2366,9 @@ function Section:Refresh()
 	end
 end
 
-function Section:SetCollapsed(state)
+function Section:SetCollapsed(state, silent)
 	if not self.Collapsible then return end
+	local previous = self.Collapsed
 	self.Collapsed = state and true or false
 	self.Frame:SetAttribute("Collapsed", self.Collapsed)
 	if self.Collapsed then
@@ -1691,6 +2387,9 @@ function Section:SetCollapsed(state)
 	if self.ParentSection and not self.ParentSection.Collapsed then
 		task.delay(0.21, function() self.ParentSection:Refresh() end)
 	end
+	if previous ~= self.Collapsed and not silent and type(self.OnCollapsedChanged) == "function" then
+		task.spawn(self.OnCollapsedChanged, self.Collapsed)
+	end
 end
 
 function Section:SetTitle(text)
@@ -1702,37 +2401,84 @@ end
 --  ВИДЖЕТЫ
 --==============================================================================
 
--- «Склейка» подряд идущих виджетов: мостик + маски углов, как
--- connected-background-* в оригинале. Оригинал применяет это ТОЛЬКО к
--- select-input (у остальных обёрток свой UIListLayout, туда мостик не влезет).
-local function connectToPrevious(section, wrap, kind)
+-- «Склейка» подряд идущих виджетов: в snapshot 231 тройка
+-- connected-background-{bridge,left-mask,right-mask}. Она встречается у
+-- select/slider/button/trello и у checkbox (у checkbox parent другой).
+local function connectToPrevious(section, wrap, kind, requested, innerParent)
 	local prev = section.LastKind
 	section.LastKind = kind
-	if kind == nil or prev ~= kind then return end
+	if not prev then return end
+
+	-- Если Connect задан явно — он главный. Без него сохраняем удобное
+	-- поведение исходного порта для длинных серий select/slider; для смешанных
+	-- групп вызывающий код ставит Connect=true на каждом элементе после первого.
+	local shouldConnect = requested
+	if shouldConnect == nil then
+		shouldConnect = (prev == kind and (kind == "select" or kind == "slider"))
+			or (prev == "label" and kind == "select")
+	end
+	if not shouldConnect then return end
+
+	local parent = innerParent or wrap
+	local inset = innerParent and 0 or 5
+	local right = innerParent and -4 or -9
 	new("Frame", {
 		Name = "connected-background-bridge",
-		Size = UDim2.new(1, -10, 0, 5),
-		Position = UDim2.fromOffset(5, -5),
+		Size = UDim2.new(1, innerParent and 0 or -10, 0, 5),
+		Position = UDim2.fromOffset(inset, -5),
 		BackgroundColor3 = T.Widget,
 		BorderSizePixel = 0,
-		Parent = wrap,
+		Parent = parent,
 	})
 	new("Frame", {
 		Name = "connected-background-left-mask",
 		Size = UDim2.fromOffset(4, 13),
-		Position = UDim2.fromOffset(5, -9),
+		Position = UDim2.fromOffset(inset, -9),
 		BackgroundColor3 = T.Widget,
 		BorderSizePixel = 0,
-		Parent = wrap,
+		Parent = parent,
 	})
 	new("Frame", {
 		Name = "connected-background-right-mask",
 		Size = UDim2.fromOffset(4, 13),
-		Position = UDim2.new(1, -9, 0, -9),
+		Position = UDim2.new(1, right, 0, -9),
 		BackgroundColor3 = T.Widget,
 		BorderSizePixel = 0,
-		Parent = wrap,
+		Parent = parent,
 	})
+end
+
+local function connectionSetting(cfg)
+	if not cfg then return nil end
+	if cfg.Connect ~= nil then return cfg.Connect == true end
+	if cfg.Connected ~= nil then return cfg.Connected == true end
+	if cfg.Join ~= nil then return cfg.Join == true end
+	return nil
+end
+
+-- Два полноценных виджета в одной строке. В живом дереве left-bg получает
+-- половину ширины, а split-right-wrapper является его СОСЕДОМ внутри левого
+-- input-*; второй input переносится уже в wrapper. Так обе стороны реально
+-- занимают по половине строки. Такой рисунок встречается 24 раза.
+local function applySplitFrames(leftFrame, rightFrame)
+	if not leftFrame or not rightFrame then return nil end
+	local leftBg
+	for _, name in ipairs({ "select-bg", "slider-bg", "button-bg" }) do
+		leftBg = leftFrame:FindFirstChild(name)
+		if leftBg then break end
+	end
+	if not leftBg then return nil end
+
+	leftBg.Size = UDim2.new(0.5, -7, 1, 15)
+	local wrapper = new("Frame", ghost {
+		Name = "split-right-wrapper",
+		Size = UDim2.new(0.5, 2, 0, 0),
+		Position = UDim2.new(0.5, -2, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Parent = leftFrame,
+	})
+	rightFrame.Parent = wrapper
+	return wrapper
 end
 
 local function registerWidget(section, name, frame, api, flag)
@@ -1748,7 +2494,9 @@ end
 
 function Section:Label(text, opts)
 	opts = opts or {}
-	self.LastKind = nil
+	-- Label сам bridge не рисует, но становится предыдущим фоном. В capture
+	-- все 43 непосредственных пары label -> select склеены следующим select.
+	self.LastKind = "label"
 	local wrap = new("Frame", ghost {
 		Name = "label-" .. stripRich(text):sub(1, 40),
 		Size = UDim2.new(1, 0, 0, 17),
@@ -1779,14 +2527,15 @@ function Section:Label(text, opts)
 		Parent = wrap,
 	})
 
-	self.Widgets[#self.Widgets + 1] = { Name = stripRich(text), Frame = wrap }
-	task.defer(function() self:Refresh() end)
-	return { Frame = wrap, Set = function(_, t) label.Text = t end }
+	local api = { Frame = wrap, Kind = "Label" }
+	function api:Set(t) label.Text = tostring(t or "") end
+	registerWidget(self, stripRich(text), wrap, api, nil)
+	return api
 end
 
 function Section:Divider()
 	self.LastKind = nil
-	new("Frame", {
+	local frame = new("Frame", {
 		Name = "section-divider",
 		Size = UDim2.new(1, -20, 0, 1),
 		BackgroundColor3 = T.Text,
@@ -1795,7 +2544,41 @@ function Section:Divider()
 		Parent = self.Frame,
 	})
 	task.defer(function() self:Refresh() end)
+	local api = { Frame = frame, Kind = "Divider" }
+	function api:Remove()
+		if frame and frame.Parent then frame:Destroy() end
+		task.defer(function() self.Section:Refresh() end)
+	end
+	function api:SetVisibility(state)
+		if frame then frame.Visible = state and true or false end
+		task.defer(function() self.Section:Refresh() end)
+	end
+	api.Section = self
+	return api
 end
+
+function Section:Spacer(height)
+	self.LastKind = nil
+	local frame = new("Frame", ghost {
+		Name = "section-gap",
+		Size = UDim2.new(1, -10, 0, tonumber(height) or 27),
+		ClipsDescendants = true,
+		Parent = self.Frame,
+	})
+	local api = { Frame = frame, Kind = "Spacer", Section = self }
+	function api:Remove()
+		if frame and frame.Parent then frame:Destroy() end
+		task.defer(function() self.Section:Refresh() end)
+	end
+	function api:SetVisibility(state)
+		if frame then frame.Visible = state and true or false end
+		task.defer(function() self.Section:Refresh() end)
+	end
+	task.defer(function() self:Refresh() end)
+	return api
+end
+
+Section.Gap = Section.Spacer
 
 --------------------------------------------------------------------------------
 --  Toggle  (input-checkbox)
@@ -1811,7 +2594,7 @@ function Section:Toggle(cfg)
 		Size = UDim2.new(1, 0, 0, 10),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = self.Frame,
-	}, { list("Vertical", "Center", "Top", 5) })
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "checkbox-list-layout") })
 
 	local container = new("Frame", ghost {
 		Name = "checkbox-container",
@@ -1819,7 +2602,7 @@ function Section:Toggle(cfg)
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
 	})
-	new("Frame", {
+	local containerBg = new("Frame", {
 		Name = "checkbox-container-bg",
 		Size = UDim2.new(1, 0, 1, 6),
 		BackgroundColor3 = T.Widget,
@@ -1894,7 +2677,7 @@ function Section:Toggle(cfg)
 
 	btn.MouseButton1Click:Connect(function() api:Set(not api.Value) end)
 
-	connectToPrevious(self, wrap, nil)  -- у checkbox-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "toggle", connectionSetting(cfg), containerBg)
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	-- Native API может явно запросить callback на дефолте. MacLib facade этого
 	-- не делает: MacLib при создании Toggle выставляет Default без Callback.
@@ -1911,6 +2694,7 @@ function Section:Dropdown(cfg)
 	local section = self
 	local name    = cfg.Name or "Select"
 	local multi   = cfg.Multi and true or false
+	local required = cfg.Required == true
 	local options = cfg.Options or {}
 
 	local wrap = new("Frame", ghost {
@@ -1928,7 +2712,7 @@ function Section:Dropdown(cfg)
 		BorderSizePixel = 0,
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
-	}, { corner(4), list("Vertical", "Center", "Top", 0, "Name") })
+	}, { corner(4), list("Vertical", "Center", "Top", 0, "Name", "select-list") })
 
 	local head = new("Frame", ghost {
 		Name = "select-container",
@@ -1954,7 +2738,7 @@ function Section:Dropdown(cfg)
 		new("TextLabel", ghost {
 			Name = "select-description",
 			Size = UDim2.new(1, -10, 0, 15),
-			Position = UDim2.fromOffset(10, 25),
+			Position = UDim2.fromOffset(10, 23),
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Text = cfg.Desc,
 			RichText = true,
@@ -1982,25 +2766,44 @@ function Section:Dropdown(cfg)
 		ClipsDescendants = true,
 		Parent = value,
 	})
-	local valueBox = new("TextBox", ghost {
-		Name = "selected-value",
-		Size = UDim2.fromScale(1, 1),
-		Text = "",
-		PlaceholderText = cfg.Placeholder or name,
-		PlaceholderColor3 = T.Placeholder,
-		TextColor3 = T.Text,
-		TextSize = 16,
-		FontFace = FONT.Medium,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextTruncate = Enum.TextTruncate.SplitWord,
-		TextEditable = false,
-		ClearTextOnFocus = false,
-		Parent = valueHold,
-	})
+	local valueBox
+	if cfg.Search then
+		-- Searchable select в dump использует именно TextBox selected-value;
+		-- отдельного option-search внутри dropdown там нет.
+		valueBox = new("TextBox", ghost {
+			Name = "selected-value",
+			Size = UDim2.fromScale(1, 1),
+			Text = "",
+			PlaceholderText = cfg.Placeholder or name,
+			PlaceholderColor3 = T.Placeholder,
+			TextColor3 = T.Text,
+			TextSize = 16,
+			FontFace = FONT.Medium,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.SplitWord,
+			ClearTextOnFocus = false,
+			Parent = valueHold,
+		})
+	else
+		-- Несearchable select использует TextLabel; вся строка select-value
+		-- является кликабельной областью, как в снятом дереве.
+		valueBox = new("TextLabel", ghost {
+			Name = "selected-value",
+			Size = UDim2.fromScale(1, 1),
+			Text = "",
+			TextColor3 = T.Text,
+			TextTransparency = 0.5,
+			TextSize = 16,
+			FontFace = FONT.Medium,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.SplitWord,
+			Parent = valueHold,
+		})
+	end
 
 	local openBtn = hitbox {
 		Name = "select-open-btn",
-		Size = UDim2.fromOffset(25, 25),
+		Size = cfg.Search and UDim2.fromOffset(25, 25) or UDim2.new(1, 0, 0, 25),
 		Position = UDim2.new(1, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(1, 0.5),
 		Parent = value,
@@ -2013,52 +2816,23 @@ function Section:Dropdown(cfg)
 		Parent = openBtn,
 	})
 
+	local dropHeight = math.clamp(#options * 30 + 10, 40, tonumber(cfg.MaxHeight) or 310)
 	local drop = new("CanvasGroup", {
 		Name = "selected-holder",
-		Size = UDim2.new(1, 0, 0, 0),
+		Size = UDim2.new(1, 0, 0, dropHeight),
 		Position = UDim2.new(0, 0, 1, 5),
 		BackgroundColor3 = T.Window,
 		BorderSizePixel = 0,
-		ClipsDescendants = true,
 		Visible = false,
 		GroupTransparency = 1,
 		ZIndex = 3,
 		Parent = value,
 	}, { corner(4) })
 
-	-- поиск внутри списка опций
-	local searchBar, searchBox
-	if cfg.Search then
-		searchBar = new("Frame", {
-			Name = "option-search",
-			Size = UDim2.new(1, -10, 0, 22),
-			Position = UDim2.fromOffset(5, 5),
-			BackgroundColor3 = T.Widget,
-			BorderSizePixel = 0,
-			ZIndex = 4,
-			Parent = drop,
-		}, { corner(2), stroke(T.Text, 0.5, 0) })
-		searchBox = new("TextBox", ghost {
-			Name = "search-value",
-			Size = UDim2.new(1, -10, 1, 0),
-			Position = UDim2.fromOffset(5, 0),
-			Text = "",
-			PlaceholderText = "Keywords...",
-			PlaceholderColor3 = T.Placeholder,
-			TextColor3 = T.Text,
-			TextSize = 15,
-			FontFace = FONT.Medium,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			ClearTextOnFocus = false,
-			ZIndex = 5,
-			Parent = searchBar,
-		})
-	end
-
 	local dropList = new("ScrollingFrame", ghost {
 		Name = "selected-container",
-		Size = UDim2.new(1, 0, 1, cfg.Search and -37 or -10),
-		Position = UDim2.fromOffset(0, cfg.Search and 32 or 5),
+		Size = UDim2.new(1, 0, 1, -10),
+		Position = UDim2.fromOffset(0, 5),
 		ClipsDescendants = true,
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -2068,20 +2842,38 @@ function Section:Dropdown(cfg)
 		VerticalScrollBarInset = Enum.ScrollBarInset.None,
 		ZIndex = 3,
 		Parent = drop,
-	}, { list("Vertical", "Center", "Top", 5) })
+	}, { list("Vertical", "Center", "Top", 5, "LayoutOrder", "selected-container-list-layout") })
+	local savedValue = new("StringValue", {
+		Name = "selected-holder-saved-value",
+		Value = "",
+		Parent = drop,
+	})
 
 	------------------------------------------------------------------- логика
 	local selected = multi and {} or nil
 	local rows, isOpen = {}, false
 	local api = { Frame = wrap, Kind = "Dropdown", Multi = multi }
+	local searchFocused = false
 
 	local function display()
+		local shown
 		if multi then
 			local acc = {}
 			for _, o in ipairs(options) do if selected[o] then acc[#acc + 1] = tostring(o) end end
-			valueBox.Text = table.concat(acc, ", ")
+			shown = table.concat(acc, ", ")
 		else
-			valueBox.Text = selected and tostring(selected) or ""
+			shown = selected and tostring(selected) or ""
+		end
+		savedValue.Value = shown
+		if cfg.Search then
+			if not searchFocused then valueBox.Text = "" end
+			if shown ~= "" then
+				valueBox.PlaceholderText = tostring(cfg.Placeholder or name) .. ": " .. shown
+			else
+				valueBox.PlaceholderText = tostring(cfg.Placeholder or name)
+			end
+		else
+			valueBox.Text = tostring(cfg.Placeholder or name) .. (shown ~= "" and (": " .. shown) or ": ")
 		end
 	end
 
@@ -2090,8 +2882,13 @@ function Section:Dropdown(cfg)
 		return selected == opt
 	end
 
-	local function paint(row, on)
-		tween(row, TW_FAST, { BackgroundTransparency = on and 0 or 1 })
+	local function paint(row, on, instant)
+		local transparency = on and 0 or 1
+		if instant then
+			row.BackgroundTransparency = transparency
+		else
+			tween(row, TW_FAST, { BackgroundTransparency = transparency })
+		end
 	end
 
 	local function fire()
@@ -2126,72 +2923,105 @@ function Section:Dropdown(cfg)
 	end
 
 	local function resize()
-		if not isOpen then return end
 		local rowsH = visibleCount() * 30 + 10
-		local h = math.clamp(rowsH + (cfg.Search and 27 or 0), 40, 310)
-		tween(drop, TW_FAST, { Size = UDim2.new(1, 0, 0, h) })
-		task.defer(claimSpace, h)
+		local h = math.clamp(rowsH, 40, tonumber(cfg.MaxHeight) or 310)
+		dropHeight = h
+		if isOpen then
+			tween(drop, TW_FAST, { Size = UDim2.new(1, 0, 0, h) })
+			task.defer(claimSpace, h)
+		else
+			drop.Size = UDim2.new(1, 0, 0, h)
+		end
+	end
+
+	local function applyFilter()
+		local q = (cfg.Search and searchFocused) and valueBox.Text:lower() or ""
+		for opt, row in pairs(rows) do
+			row.Visible = (q == "") or stripRich(opt):lower():find(q, 1, true) ~= nil
+		end
+	end
+
+	local function makeRow(opt, index)
+		if rows[opt] then
+			rows[opt].LayoutOrder = index
+			return rows[opt]
+		end
+		local row = new("Frame", {
+			Name = tostring(opt),
+			Size = UDim2.new(1, -10, 0, 25),
+			BackgroundColor3 = T.Accent,
+			BackgroundTransparency = isOn(opt) and 0 or 1,
+			BorderSizePixel = 0,
+			LayoutOrder = index,
+			ZIndex = 4,
+			Parent = dropList,
+		}, { corner(4) })
+		new("TextLabel", ghost {
+			Name = "option-label",
+			Size = UDim2.new(1, -10, 1, 0),
+			Position = UDim2.fromOffset(5, 0),
+			Text = tostring(opt),
+			RichText = true,
+			TextColor3 = T.Text,
+			TextSize = 16,
+			FontFace = FONT.Medium,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.SplitWord,
+			ZIndex = 5,
+			Parent = row,
+		})
+		local b = hitbox { Name = "option-select-btn", Size = UDim2.fromScale(1, 1), ZIndex = 6, Parent = row }
+
+		b.MouseButton1Click:Connect(function()
+			if multi then
+				if selected[opt] and required then
+					local count = 0
+					for _, on in pairs(selected) do if on then count += 1 end end
+					if count <= 1 then return end
+				end
+				selected[opt] = (not selected[opt]) or nil
+				paint(row, selected[opt] == true)
+			else
+				selected = opt
+				for o, r in pairs(rows) do paint(r, o == opt) end
+				api:Close()
+			end
+			display()
+			fire()
+		end)
+		b.MouseEnter:Connect(function()
+			if not isOn(opt) then tween(row, TW_FAST, { BackgroundTransparency = 0.85 }) end
+		end)
+		b.MouseLeave:Connect(function()
+			if not isOn(opt) then tween(row, TW_FAST, { BackgroundTransparency = 1 }) end
+		end)
+
+		rows[opt] = row
+		return row
 	end
 
 	local function buildRows()
 		for _, r in pairs(rows) do r:Destroy() end
 		rows = {}
-		for i, opt in ipairs(options) do
-			local row = new("Frame", {
-				Name = tostring(opt),
-				Size = UDim2.new(1, -10, 0, 25),
-				BackgroundColor3 = T.Accent,
-				BackgroundTransparency = isOn(opt) and 0 or 1,
-				BorderSizePixel = 0,
-				LayoutOrder = i,
-				ZIndex = 4,
-				Parent = dropList,
-			}, { corner(4) })
-			new("TextLabel", ghost {
-				Name = "option-label",
-				Size = UDim2.new(1, -10, 1, 0),
-				Position = UDim2.fromOffset(5, 0),
-				Text = tostring(opt),
-				RichText = true,
-				TextColor3 = T.Text,
-				TextSize = 16,
-				FontFace = FONT.Medium,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				TextTruncate = Enum.TextTruncate.SplitWord,
-				ZIndex = 5,
-				Parent = row,
-			})
-			local b = hitbox { Name = "option-select-btn", Size = UDim2.fromScale(1, 1), ZIndex = 6, Parent = row }
-
-			b.MouseButton1Click:Connect(function()
-				if multi then
-					selected[opt] = (not selected[opt]) or nil
-					paint(row, selected[opt] == true)
-				else
-					selected = opt
-					for o, r in pairs(rows) do paint(r, o == opt) end
-					api:Close()
-				end
-				display()
-				fire()
-			end)
-			b.MouseEnter:Connect(function()
-				if not isOn(opt) then tween(row, TW_FAST, { BackgroundTransparency = 0.85 }) end
-			end)
-			b.MouseLeave:Connect(function()
-				if not isOn(opt) then tween(row, TW_FAST, { BackgroundTransparency = 1 }) end
-			end)
-
-			rows[opt] = row
-		end
+		for i, opt in ipairs(options) do makeRow(opt, i) end
+		applyFilter()
 	end
 
-	if searchBox then
-		searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-			local q = searchBox.Text:lower()
-			for opt, row in pairs(rows) do
-				row.Visible = (q == "") or stripRich(opt):lower():find(q, 1, true) ~= nil
-			end
+	if cfg.Search then
+		valueBox.Focused:Connect(function()
+			searchFocused = true
+			if not isOpen then api:Open() end
+		end)
+		valueBox.FocusLost:Connect(function()
+			searchFocused = false
+			valueBox.Text = ""
+			applyFilter()
+			display()
+			resize()
+		end)
+		valueBox:GetPropertyChangedSignal("Text"):Connect(function()
+			if not searchFocused then return end
+			applyFilter()
 			resize()
 		end)
 	end
@@ -2216,12 +3046,14 @@ function Section:Dropdown(cfg)
 		section:Raise(wrap, false)
 		section:SetOverlay(0)
 		tween(openIco, TW_MED, { Rotation = 0 })
-		local t = tween(drop, TW_MED, { Size = UDim2.new(1, 0, 0, 0), GroupTransparency = 1 })
+		if cfg.Search and searchFocused then pcall(function() valueBox:ReleaseFocus() end) end
+		local t = tween(drop, TW_MED, { GroupTransparency = 1 })
 		t.Completed:Once(function() if not isOpen then drop.Visible = false end end)
 	end
 
 	function api:SetOptions(newOptions)
-		options = newOptions or {}
+		options = {}
+		for i, value in ipairs(newOptions or {}) do options[i] = value end
 		if multi then
 			for k in pairs(selected) do
 				local keep = false
@@ -2234,6 +3066,41 @@ function Section:Dropdown(cfg)
 			if not keep then selected = nil end
 		end
 		buildRows(); display(); resize()
+	end
+
+	-- Инкрементальный путь нужен большим динамическим спискам (юниты/карты):
+	-- Insert/Remove одной опции больше не уничтожает сотни существующих строк.
+	function api:AddOptions(newOptions)
+		if type(newOptions) ~= "table" then return end
+		for _, opt in ipairs(newOptions) do
+			local exists = false
+			for _, current in ipairs(options) do
+				if current == opt then exists = true break end
+			end
+			if not exists then
+				options[#options + 1] = opt
+				makeRow(opt, #options)
+			end
+		end
+		applyFilter(); display(); resize()
+	end
+
+	function api:DropOptions(remove)
+		if type(remove) ~= "table" then return end
+		local dropSet = {}
+		for _, opt in ipairs(remove) do dropSet[opt] = true end
+		local kept = {}
+		for _, opt in ipairs(options) do
+			if dropSet[opt] then
+				if rows[opt] then rows[opt]:Destroy(); rows[opt] = nil end
+				if multi then selected[opt] = nil elseif selected == opt then selected = nil end
+			else
+				kept[#kept + 1] = opt
+			end
+		end
+		options = kept
+		for i, opt in ipairs(options) do if rows[opt] then rows[opt].LayoutOrder = i end end
+		applyFilter(); display(); resize()
 	end
 
 	function api:GetOptions() return options end
@@ -2251,7 +3118,9 @@ function Section:Dropdown(cfg)
 		else
 			selected = v
 		end
-		for o, r in pairs(rows) do paint(r, isOn(o)) end
+		-- Программный Set/LoadConfig бывает массовым: визуал обновляется сразу,
+		-- без сотен параллельных Tween на каждом option-row.
+		for o, r in pairs(rows) do paint(r, isOn(o), true) end
 		display()
 		if not silent then fire() end
 	end
@@ -2271,7 +3140,7 @@ function Section:Dropdown(cfg)
 	if cfg.Default ~= nil then api:Set(cfg.Default, true) end
 	display()
 
-	connectToPrevious(self, wrap, cfg.Connect ~= false and "select" or nil)
+	connectToPrevious(self, wrap, "select", connectionSetting(cfg))
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	return api
 end
@@ -2285,12 +3154,37 @@ function Section:Slider(cfg)
 	local name     = cfg.Name or "Slider"
 	local min      = cfg.Min or 0
 	local max      = cfg.Max or 100
-	local decimals = cfg.Decimals or 0
+	local decimals = math.max(0, math.floor(tonumber(cfg.Decimals) or 0))
+	local prefix   = cfg.Prefix or ""
 	local suffix   = cfg.Suffix or ""
+	local displayMethod = cfg.DisplayMethod or "Value"
 
 	local function round(v)
 		local m = 10 ^ decimals
 		return math.floor(v * m + 0.5) / m
+	end
+	local function fixed(v, precision)
+		precision = math.max(0, math.floor(tonumber(precision) or 0))
+		return string.format("%." .. precision .. "f", v)
+	end
+	local function displayValue(v)
+		local body
+		if displayMethod == "Hundredths" then
+			body = string.format("%.2f", v)
+		elseif displayMethod == "Tenths" then
+			body = string.format("%.1f", v)
+		elseif displayMethod == "Round" then
+			body = fixed(v, decimals)
+		elseif displayMethod == "Degrees" then
+			body = fixed(v, decimals) .. "°"
+		elseif displayMethod == "Percent" then
+			local pct = max ~= min and ((v - min) / (max - min) * 100) or 0
+			body = fixed(pct, decimals) .. "%"
+		else
+			-- Value: Precision=1/2 обязан сохранять хвостовые нули (3.0/3.00).
+			body = fixed(v, decimals)
+		end
+		return tostring(prefix) .. body .. tostring(suffix)
 	end
 	local value = math.clamp(round(cfg.Default or min), min, max)
 
@@ -2309,7 +3203,7 @@ function Section:Slider(cfg)
 		BorderSizePixel = 0,
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
-	}, { corner(4), list("Vertical", "Center", "Center", 0) })
+	}, { corner(4), list("Vertical", "Center", "Center", 0, "LayoutOrder", "slider-list") })
 
 	local titleBox = new("Frame", ghost {
 		Name = "slider-title-container",
@@ -2370,7 +3264,7 @@ function Section:Slider(cfg)
 	local valueText = new("TextBox", ghost {
 		Name = "slider-value",
 		Size = UDim2.new(1, -5, 1, 0),
-		Text = tostring(value) .. suffix,
+		Text = displayValue(value),
 		TextColor3 = T.Text,
 		TextSize = 16,
 		FontFace = FONT.Medium,
@@ -2385,7 +3279,7 @@ function Section:Slider(cfg)
 		api.Value = v
 		local alpha = (max > min) and (v - min) / (max - min) or 0
 		bar.Size = UDim2.new(alpha, 0, 0, 6)
-		valueText.Text = tostring(v) .. suffix
+		valueText.Text = displayValue(v)
 		if not silent and cfg.Callback then task.spawn(cfg.Callback, v) end
 	end
 	function api:Set(v, silent) apply(v, silent) end
@@ -2415,12 +3309,19 @@ function Section:Slider(cfg)
 	end))
 
 	valueText.FocusLost:Connect(function()
-		local n = tonumber((valueText.Text:gsub("%a", "")))
-		if n then apply(n) else valueText.Text = tostring(api.Value) .. suffix end
+		local rawText = valueText.Text:match("^%s*(.-)%s*$") or valueText.Text
+		local numberText, percent = rawText:match("^(%-?%d+%.?%d*)(%%?)$")
+		local n = tonumber(numberText)
+		if n then
+			if percent == "%" then n = min + (n / 100) * (max - min) end
+			apply(n)
+		else
+			valueText.Text = displayValue(api.Value)
+		end
 	end)
 
 	apply(value, true)
-	connectToPrevious(self, wrap, nil)  -- у slider-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "slider", connectionSetting(cfg))
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	return api
 end
@@ -2448,7 +3349,7 @@ function Section:Button(cfg)
 		BorderSizePixel = 0,
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
-	}, { corner(4), list("Vertical", "Center", "Center", 0, "Name") })
+	}, { corner(4), list("Vertical", "Center", "Center", 0, "Name", "button-list") })
 
 	local head = new("Frame", ghost {
 		Name = "button-container",
@@ -2513,7 +3414,7 @@ function Section:Button(cfg)
 	local api = { Frame = wrap, Kind = "Button" }
 	function api:SetText(t) btn.Text = t end
 
-	connectToPrevious(self, wrap, nil)  -- у button-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "button", connectionSetting(cfg))
 	registerWidget(self, name, wrap, api, nil)
 	return api
 end
@@ -2541,7 +3442,7 @@ function Section:Input(cfg)
 		BorderSizePixel = 0,
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
-	}, { corner(4), list("Vertical", "Center", "Center", 0, "Name") })
+	}, { corner(4), list("Vertical", "Center", "Center", 0, "Name", "box-list") })
 
 	local head = new("Frame", ghost {
 		Name = "box-container",
@@ -2591,12 +3492,30 @@ function Section:Input(cfg)
 		Parent = hold,
 	})
 
-	if cfg.Numeric then
-		field:GetPropertyChangedSignal("Text"):Connect(function()
-			local cleaned = field.Text:gsub("[^%d%.%-]", "")
-			if cleaned ~= field.Text then field.Text = cleaned end
-		end)
-	end
+	local filtering = false
+	field:GetPropertyChangedSignal("Text"):Connect(function()
+		if filtering then return end
+		local current = field.Text
+		local filtered = current
+		if type(cfg.Filter) == "function" then
+			local ok, value = pcall(cfg.Filter, current)
+			if ok and value ~= nil then filtered = tostring(value) end
+		elseif cfg.Numeric then
+			filtered = current:match("^%-?%d*$") and current or current:gsub("[^%d-]", "")
+			if filtered:sub(1, 1) == "-" then
+				filtered = "-" .. filtered:sub(2):gsub("%-", "")
+			else
+				filtered = filtered:gsub("%-", "")
+			end
+		end
+		if cfg.CharacterLimit then filtered = filtered:sub(1, math.max(0, tonumber(cfg.CharacterLimit) or 0)) end
+		if filtered ~= current then
+			filtering = true
+			field.Text = filtered
+			filtering = false
+		end
+		if type(cfg.OnChanged) == "function" then task.spawn(cfg.OnChanged, filtered) end
+	end)
 
 	field.FocusLost:Connect(function(enter)
 		if cfg.Callback then task.spawn(cfg.Callback, field.Text, enter) end
@@ -2609,7 +3528,284 @@ function Section:Input(cfg)
 		if not silent and cfg.Callback then task.spawn(cfg.Callback, field.Text, false) end
 	end
 
-	connectToPrevious(self, wrap, nil)  -- у box-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "box", false)
+	registerWidget(self, name, wrap, api, cfg.Flag)
+	return api
+end
+
+--------------------------------------------------------------------------------
+--  Colorpicker — расширение API (в конкретном снятом snapshot не использован)
+--------------------------------------------------------------------------------
+
+function Section:Colorpicker(cfg)
+	cfg = cfg or {}
+	local section = self
+	local name = cfg.Name or "Color"
+	local color = typeof(cfg.Default) == "Color3" and cfg.Default or T.Accent
+	local alphaEnabled = cfg.Alpha ~= nil or cfg.AllowAlpha == true
+	local alpha = math.clamp(tonumber(cfg.Alpha) or 0, 0, 1)
+	local hue, saturation, brightness = color:ToHSV()
+	local open = false
+
+	local wrap = new("Frame", ghost {
+		Name = "color-input-" .. name,
+		Size = UDim2.new(1, 0, 0, 10),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Parent = self.Frame,
+	})
+	local bg = new("Frame", {
+		Name = "color-bg",
+		Size = UDim2.new(1, -10, 1, 15),
+		Position = UDim2.fromOffset(5, 0),
+		BackgroundColor3 = T.Widget,
+		BorderSizePixel = 0,
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Parent = wrap,
+	}, { corner(4), list("Vertical", "Center", "Center", 0, "Name", "color-list") })
+	local head = new("Frame", ghost {
+		Name = "color-container",
+		Size = UDim2.new(1, -10, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Parent = bg,
+	})
+	new("Frame", ghost { Name = "color-container-gap", Size = UDim2.new(1, 0, 1, 6), Parent = head })
+	widgetHeader(head, "color", name, cfg.Desc, -5)
+
+	local main = new("Frame", {
+		Name = "color-value-main",
+		Size = UDim2.new(1, -10, 0, 25),
+		BackgroundColor3 = T.Window,
+		BorderSizePixel = 0,
+		Parent = bg,
+	}, { corner(4), stroke(T.Text, 1, 0.5) })
+	local preview = new("Frame", {
+		Name = "color-preview",
+		Size = UDim2.fromOffset(44, 17),
+		Position = UDim2.new(1, -4, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		BackgroundColor3 = color,
+		BackgroundTransparency = alpha,
+		BorderSizePixel = 0,
+		Parent = main,
+	}, { corner(3), stroke(T.Text, 1, 0.65) })
+	local valueLabel = new("TextLabel", ghost {
+		Name = "color-value",
+		Size = UDim2.new(1, -58, 1, 0),
+		Position = UDim2.fromOffset(7, 0),
+		Text = "",
+		TextColor3 = T.Text,
+		TextSize = 15,
+		FontFace = FONT.Medium,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = main,
+	})
+	local openButton = hitbox { Name = "color-open-btn", Size = UDim2.fromScale(1, 1), Parent = main }
+
+	local pickerHeight = alphaEnabled and 205 or 175
+	local picker = new("CanvasGroup", {
+		Name = "color-picker-holder",
+		Size = UDim2.new(1, 0, 0, pickerHeight),
+		Position = UDim2.new(0, 0, 1, 5),
+		BackgroundColor3 = T.Window,
+		BorderSizePixel = 0,
+		Visible = false,
+		GroupTransparency = 1,
+		ZIndex = 30,
+		Parent = main,
+	}, { corner(4), stroke(T.Text, 1, 0.55) })
+
+	local sv = new("Frame", {
+		Name = "color-sv",
+		Size = UDim2.new(1, -46, 0, 130),
+		Position = UDim2.fromOffset(8, 8),
+		BackgroundColor3 = Color3.fromHSV(hue, 1, 1),
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		ZIndex = 31,
+		Parent = picker,
+	}, { corner(3) })
+	new("Frame", {
+		Name = "color-sv-white",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ZIndex = 32,
+		Parent = sv,
+	}, {
+		new("UIGradient", {
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1),
+			}),
+		}),
+	})
+	new("Frame", {
+		Name = "color-sv-black",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BorderSizePixel = 0,
+		ZIndex = 33,
+		Parent = sv,
+	}, {
+		new("UIGradient", {
+			Rotation = 90,
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0),
+			}),
+		}),
+	})
+	local svMarker = new("Frame", {
+		Name = "color-sv-marker",
+		Size = UDim2.fromOffset(10, 10),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 35,
+		Parent = sv,
+	}, { pill(), stroke(T.Text, 2, 0) })
+	local svButton = hitbox { Name = "color-sv-btn", Size = UDim2.fromScale(1, 1), ZIndex = 34, Parent = sv }
+
+	local hueBar = new("Frame", {
+		Name = "color-hue",
+		Size = UDim2.fromOffset(22, 130),
+		Position = UDim2.new(1, -30, 0, 8),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		ZIndex = 31,
+		Parent = picker,
+	}, {
+		corner(3),
+		new("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+				ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+				ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+				ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+				ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+				ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
+			}),
+		}),
+	})
+	local hueMarker = new("Frame", {
+		Name = "color-hue-marker",
+		Size = UDim2.new(1, 4, 0, 3),
+		Position = UDim2.new(0.5, 0, hue, 0),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = T.Text,
+		BorderSizePixel = 0,
+		ZIndex = 35,
+		Parent = hueBar,
+	}, { corner(2) })
+	local hueButton = hitbox { Name = "color-hue-btn", Size = UDim2.fromScale(1, 1), ZIndex = 34, Parent = hueBar }
+
+	local alphaBar, alphaFill, alphaButton
+	if alphaEnabled then
+		alphaBar = new("Frame", {
+			Name = "color-alpha",
+			Size = UDim2.new(1, -16, 0, 18),
+			Position = UDim2.fromOffset(8, 146),
+			BackgroundColor3 = T.Section,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			ZIndex = 31,
+			Parent = picker,
+		}, { corner(3) })
+		alphaFill = new("Frame", {
+			Name = "color-alpha-fill",
+			Size = UDim2.new(1 - alpha, 0, 1, 0),
+			BackgroundColor3 = color,
+			BorderSizePixel = 0,
+			ZIndex = 32,
+			Parent = alphaBar,
+		})
+		alphaButton = hitbox { Name = "color-alpha-btn", Size = UDim2.fromScale(1, 1), ZIndex = 34, Parent = alphaBar }
+	end
+
+	local api = { Frame = wrap, Kind = "Colorpicker", Color = color, Alpha = alpha }
+	local function hex(c)
+		return string.format("#%02X%02X%02X", math.floor(c.R * 255 + 0.5), math.floor(c.G * 255 + 0.5), math.floor(c.B * 255 + 0.5))
+	end
+	local function render()
+		color = Color3.fromHSV(hue, saturation, brightness)
+		api.Color, api.Alpha = color, alpha
+		sv.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+		svMarker.Position = UDim2.fromScale(saturation, 1 - brightness)
+		hueMarker.Position = UDim2.new(0.5, 0, hue, 0)
+		preview.BackgroundColor3 = color
+		preview.BackgroundTransparency = alpha
+		valueLabel.Text = hex(color) .. (alphaEnabled and string.format("  A %.2f", 1 - alpha) or "")
+		if alphaFill then alphaFill.BackgroundColor3 = color; alphaFill.Size = UDim2.new(1 - alpha, 0, 1, 0) end
+	end
+	local function fire()
+		if cfg.Callback then task.spawn(cfg.Callback, api.Color, alphaEnabled and api.Alpha or nil) end
+	end
+	function api:SetColor(value, silent)
+		if typeof(value) ~= "Color3" then return end
+		hue, saturation, brightness = value:ToHSV()
+		render()
+		if not silent then fire() end
+	end
+	function api:SetAlpha(value, silent)
+		alpha = math.clamp(tonumber(value) or alpha, 0, 1)
+		render()
+		if not silent then fire() end
+	end
+	function api:Get() return api.Color end
+	function api:GetAlpha() return api.Alpha end
+	function api:Open()
+		if open then return end
+		open = true
+		section:Raise(wrap, true)
+		picker.Visible = true
+		tween(picker, TW_FAST, { GroupTransparency = 0 })
+		section:SetOverlay(pickerHeight + 8)
+	end
+	function api:Close()
+		if not open then return end
+		open = false
+		section:SetOverlay(0)
+		section:Raise(wrap, false)
+		local t = tween(picker, TW_FAST, { GroupTransparency = 1 })
+		t.Completed:Once(function() if not open then picker.Visible = false end end)
+	end
+	openButton.MouseButton1Click:Connect(function() if open then api:Close() else api:Open() end end)
+
+	local dragMode
+	local function updateFromPoint(mode, point)
+		if mode == "sv" then
+			saturation = math.clamp((point.X - sv.AbsolutePosition.X) / math.max(1, sv.AbsoluteSize.X), 0, 1)
+			brightness = 1 - math.clamp((point.Y - sv.AbsolutePosition.Y) / math.max(1, sv.AbsoluteSize.Y), 0, 1)
+		elseif mode == "hue" then
+			hue = math.clamp((point.Y - hueBar.AbsolutePosition.Y) / math.max(1, hueBar.AbsoluteSize.Y), 0, 1)
+		elseif mode == "alpha" and alphaBar then
+			alpha = 1 - math.clamp((point.X - alphaBar.AbsolutePosition.X) / math.max(1, alphaBar.AbsoluteSize.X), 0, 1)
+		end
+		render(); fire()
+	end
+	local function begin(mode, input)
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1
+		and input.UserInputType ~= Enum.UserInputType.Touch then return end
+		dragMode = mode
+		updateFromPoint(mode, input.Position)
+	end
+	svButton.InputBegan:Connect(function(input) begin("sv", input) end)
+	hueButton.InputBegan:Connect(function(input) begin("hue", input) end)
+	if alphaButton then alphaButton.InputBegan:Connect(function(input) begin("alpha", input) end) end
+	self.Window:_track(UserInputService.InputChanged:Connect(function(input)
+		if not dragMode then return end
+		if input.UserInputType ~= Enum.UserInputType.MouseMovement
+		and input.UserInputType ~= Enum.UserInputType.Touch then return end
+		updateFromPoint(dragMode, input.Position)
+	end))
+	self.Window:_track(UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then dragMode = nil end
+	end))
+
+	render()
+	connectToPrevious(self, wrap, "color", false)
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	return api
 end
@@ -2628,7 +3824,7 @@ function Section:Keybind(cfg)
 		Size = UDim2.new(1, 0, 0, 41),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = self.Frame,
-	}, { list("Vertical", "Center", "Center", 5, "Name") })
+	}, { list("Vertical", "Center", "Center", 5, "Name", "bind-list") })
 
 	local container = new("Frame", ghost {
 		Name = "bind-container",
@@ -2701,17 +3897,32 @@ function Section:Keybind(cfg)
 		label.Text = "..."
 		local c
 		c = UserInputService.InputBegan:Connect(function(input)
-			if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+			local nextKey
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				if input.KeyCode == Enum.KeyCode.Escape then
+					c:Disconnect()
+					listening = false
+					label.Text = keyName(key)
+					return
+				end
+				nextKey = input.KeyCode
+			elseif input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.MouseButton2 then
+				nextKey = input.UserInputType
+			else
+				return
+			end
 			c:Disconnect()
 			listening = false
-			if input.KeyCode == Enum.KeyCode.Escape then
+			if not nextKey then
 				label.Text = keyName(key)
 				return
 			end
-			key = input.KeyCode
+			key = nextKey
 			label.Text = keyName(key)
 			if cfg.Callback then task.spawn(cfg.Callback, key) end
 		end)
+		self.Window:_track(c)
 	end)
 
 	local api = { Frame = wrap, Kind = "Keybind" }
@@ -2722,7 +3933,7 @@ function Section:Keybind(cfg)
 		if not silent and cfg.Callback then task.spawn(cfg.Callback, key) end
 	end
 
-	connectToPrevious(self, wrap, nil)  -- у bind-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "bind", false)
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	return api
 end
@@ -2740,6 +3951,7 @@ function Section:Priority(cfg)
 
 	local ROW_H, GAP = 20, 5
 	local STEP = ROW_H + GAP
+	local DROP_H = math.clamp(#items * ROW_H + 10, 40, tonumber(cfg.MaxHeight) or 210)
 
 	local wrap = new("Frame", ghost {
 		Name = "trello-input-" .. name,
@@ -2756,7 +3968,7 @@ function Section:Priority(cfg)
 		BorderSizePixel = 0,
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = wrap,
-	}, { corner(4), list("Vertical", "Center", "Top", 0, "Name") })
+	}, { corner(4), list("Vertical", "Center", "Top", 0, "Name", "trello-list") })
 
 	local head = new("Frame", ghost {
 		Name = "trello-container",
@@ -2842,11 +4054,10 @@ function Section:Priority(cfg)
 
 	local drop = new("CanvasGroup", {
 		Name = "trello-options-holder",
-		Size = UDim2.new(1, 0, 0, 0),
+		Size = UDim2.new(1, 0, 0, DROP_H),
 		Position = UDim2.new(0, 0, 1, 5),
 		BackgroundColor3 = T.Window,
 		BorderSizePixel = 0,
-		ClipsDescendants = true,
 		Visible = false,
 		GroupTransparency = 1,
 		ZIndex = 3,
@@ -2859,12 +4070,23 @@ function Section:Priority(cfg)
 		Position = UDim2.fromOffset(0, 5),
 		ClipsDescendants = true,
 		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollBarThickness = 5,
 		ScrollBarImageColor3 = T.Text,
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 		VerticalScrollBarInset = Enum.ScrollBarInset.None,
 		ZIndex = 3,
 		Parent = drop,
+	})
+	new("ScrollingFrame", ghost {
+		Name = "trello-gap",
+		Size = UDim2.new(1, 0, 0, 5),
+		Position = UDim2.new(0, 0, 1, 5),
+		AnchorPoint = Vector2.new(0, 1),
+		LayoutOrder = 999999,
+		CanvasSize = UDim2.new(),
+		ScrollBarThickness = 0,
+		Parent = canvas,
 	})
 
 	local rows, isOpen = {}, false
@@ -2879,11 +4101,10 @@ function Section:Priority(cfg)
 		for i, item in ipairs(items) do
 			local row = rows[item]
 			if row then
-				local n = #items - i          -- верхний = наибольший приоритет
-				row.LayoutOrder = i
-				row.Frame["trello-value-bg"]["trello-value-text"].Text =
-					string.format("<b>%d</b>. %s", n, item)
-				row.Frame["trello-value-bg"]["trello-value-num"]["trello-value-holder"]["trello-value"].Text = tostring(n)
+				local n = #items - i + 1      -- верхний = N, нижний = 1
+				row.Frame.LayoutOrder = i
+				row.TextLabel.Text = string.format("<b>%d</b>. %s", n, item)
+				row.NumberValue.Text = tostring(n)
 				if row.Frame ~= skip then
 					row.Frame.Position = UDim2.fromOffset(0, (i - 1) * STEP)
 				end
@@ -2907,6 +4128,17 @@ function Section:Priority(cfg)
 			ZIndex = 4,
 			Parent = canvas,
 		})
+		-- В исходном snapshot каждая строка trello содержит UIDragDetector
+		-- (171 экземпляр суммарно). Ручной обработчик ниже остаётся fallback для
+		-- окружений, где новый класс Roblox недоступен или ведёт себя иначе.
+		pcall(function()
+			local detector = Instance.new("UIDragDetector")
+			detector.Name = "UIDragDetector"
+			detector.Parent = frame
+			-- Не даём detector одновременно с fallback менять Position; сам узел
+			-- сохраняется для совместимости дерева/инспекторов.
+			pcall(function() detector.Enabled = false end)
+		end)
 		local rowBg = new("Frame", {
 			Name = "trello-value-bg",
 			Size = UDim2.new(1, -15, 0, ROW_H),
@@ -2917,7 +4149,7 @@ function Section:Priority(cfg)
 			Parent = frame,
 		}, { corner(4) })
 
-		new("TextLabel", ghost {
+		local textLabel = new("TextLabel", ghost {
 			Name = "trello-value-text",
 			Size = UDim2.new(1, -85, 0, ROW_H),
 			Position = UDim2.fromOffset(5, 0),
@@ -2933,7 +4165,7 @@ function Section:Priority(cfg)
 		})
 
 		local numBox = new("Frame", {
-			Name = "trello-value-num",
+			Name = "Frame",
 			Size = UDim2.fromOffset(70, 14),
 			Position = UDim2.new(1, -3, 0, 3),
 			AnchorPoint = Vector2.new(1, 0),
@@ -2949,7 +4181,7 @@ function Section:Priority(cfg)
 			ZIndex = 5,
 			Parent = numBox,
 		})
-		new("TextBox", ghost {
+		local numberValue = new("TextBox", ghost {
 			Name = "trello-value",
 			Size = UDim2.new(1, -5, 1, 0),
 			Text = "0",
@@ -3007,7 +4239,7 @@ function Section:Priority(cfg)
 		self.Window:_track(moveConn)
 		self.Window:_track(endConn)
 
-		return { Frame = frame }
+		return { Frame = frame, TextLabel = textLabel, NumberValue = numberValue }
 	end
 
 	for _, item in ipairs(items) do rows[item] = makeRow(item) end
@@ -3021,8 +4253,8 @@ function Section:Priority(cfg)
 		isOpen = true
 		section:Raise(wrap, true)
 		drop.Visible = true
-		local h = math.clamp(#items * STEP + 10, 40, 240)
-		tween(drop, TW_MED, { Size = UDim2.new(1, 0, 0, h), GroupTransparency = 0 })
+		local h = DROP_H
+		tween(drop, TW_MED, { GroupTransparency = 0 })
 		task.defer(function()
 			local scale = math.max(0.01, section.Window.Scale)
 			local dropTop = (drop.AbsolutePosition.Y - section.Frame.AbsolutePosition.Y) / scale
@@ -3035,7 +4267,7 @@ function Section:Priority(cfg)
 		isOpen = false
 		section:Raise(wrap, false)
 		section:SetOverlay(0)
-		local t = tween(drop, TW_MED, { Size = UDim2.new(1, 0, 0, 0), GroupTransparency = 1 })
+		local t = tween(drop, TW_MED, { GroupTransparency = 1 })
 		t.Completed:Once(function() if not isOpen then drop.Visible = false end end)
 	end
 	function api:Get() return table.clone(items) end
@@ -3055,10 +4287,57 @@ function Section:Priority(cfg)
 		if isOpen then api:Close() else api:Open() end
 	end)
 
-	connectToPrevious(self, wrap, nil)  -- у trello-обёртки свой layout, склейки в оригинале нет
+	connectToPrevious(self, wrap, "trello", connectionSetting(cfg))
 	registerWidget(self, name, wrap, api, cfg.Flag)
 	return api
 end
+
+--------------------------------------------------------------------------------
+--  Split row — два select/slider/button в одной строке
+--------------------------------------------------------------------------------
+
+function Section:Split(leftType, leftCfg, rightType, rightCfg)
+	if type(leftType) == "table" then
+		leftCfg = leftType
+		leftType = leftCfg.Type or leftCfg.Kind or leftCfg.Class or "Button"
+	end
+	if type(rightType) == "table" then
+		rightCfg = rightType
+		rightType = rightCfg.Type or rightCfg.Kind or rightCfg.Class or "Button"
+	end
+	leftCfg, rightCfg = leftCfg or {}, rightCfg or {}
+	local allowed = { Dropdown = true, Slider = true, Button = true }
+	if not allowed[leftType] or not allowed[rightType] then
+		error("Nousigi Section:Split supports Dropdown, Slider and Button", 2)
+	end
+
+	-- Не склеиваем две половины bridge-ом: их соединение задаёт wrapper.
+	if leftCfg.Connect == nil then leftCfg.Connect = false end
+	if rightCfg.Connect == nil then rightCfg.Connect = false end
+	local left = self[leftType](self, leftCfg)
+	local right = self[rightType](self, rightCfg)
+	local wrapper = applySplitFrames(left.Frame, right.Frame)
+	if not wrapper then
+		error("Unable to create split wrapper for " .. tostring(leftType), 2)
+	end
+	task.defer(function() self:Refresh() end)
+	return {
+		Frame = left.Frame,
+		Wrapper = wrapper,
+		Left = left,
+		Right = right,
+		SetVisibility = function(row, state)
+			row.Frame.Visible = state and true or false
+			task.defer(function() self:Refresh() end)
+		end,
+	}
+end
+
+Section.Pair = Section.Split
+Section.Checkbox = Section.Toggle
+Section.Select = Section.Dropdown
+Section.Trello = Section.Priority
+Section.Textbox = Section.Input
 
 --==============================================================================
 --  КОНФИГ  (Flag -> значение)
@@ -3110,12 +4389,32 @@ function Nousigi:ImportConfig(json)
 end
 
 function Nousigi:Destroy()
-	if self.Destroyed then return end
-	self.Destroyed = true
+	if self.Destroyed then return true end
+	if self.Destroying then return false end
+	self.Destroying = true
 	for _, c in ipairs(self.Conns) do pcall(function() c:Disconnect() end) end
 	table.clear(self.Conns)
-	if self.Gui then self.Gui:Destroy() end
-	if self.ExtraGui then self.ExtraGui:Destroy() end
+
+	local function destroyField(field)
+		local inst = self[field]
+		if not inst then return true end
+		local ok = pcall(function() inst:Destroy() end)
+		if ok then
+			local readOk, parent = pcall(function() return inst.Parent end)
+			ok = readOk and parent == nil
+		end
+		if ok then self[field] = nil end
+		return ok
+	end
+
+	local mainOk = destroyField("Gui")
+	local extraOk = destroyField("ExtraGui")
+	local effectOk = destroyField("EffectGui")
+	local blurOk = destroyField("_AcrylicEffect")
+	local complete = mainOk and extraOk and effectOk and blurOk
+	self.Destroying = false
+	self.Destroyed = complete
+	return complete
 end
 
 --==============================================================================
@@ -3134,6 +4433,7 @@ local MacLib = (function()
 		Folder = "NousigiHub",
 		ConfigMode = "shared",
 		Native = Nousigi,
+		Snapshot = Nousigi.Snapshot,
 		Theme = T,
 	}
 
@@ -3150,7 +4450,11 @@ local MacLib = (function()
 
 	local function callback(fn, ...)
 		if type(fn) ~= "function" then return true end
-		return pcall(fn, ...)
+		local ok, result = pcall(fn, ...)
+		if not ok then
+			warn("[Nousigi/MacLib callback] " .. tostring(result))
+		end
+		return ok, result
 	end
 
 	local function refresh(section)
@@ -3181,7 +4485,17 @@ local MacLib = (function()
 		obj.Frame = raw and raw.Frame
 		obj.IgnoreConfig = obj.IgnoreConfig == true
 		function obj:SetVisibility(state)
-			if self.Frame then self.Frame.Visible = state and true or false end
+			if self.Frame then
+				local wanted = state and true or false
+				self.Frame:SetAttribute("ApelHidden", not wanted)
+				if wanted and section and section._raw and section._raw.SearchValue then
+					local q = section._raw.SearchValue.Text:lower()
+					local searchName = self.Settings and (self.Settings.Name or self.Settings.Text or self.Settings.Header) or ""
+					wanted = (q == "")
+						or stripRich(searchName):lower():find(q, 1, true) ~= nil
+				end
+				self.Frame.Visible = wanted
+			end
 			refresh(section)
 		end
 		return obj
@@ -3194,6 +4508,11 @@ local MacLib = (function()
 
 	local function descOf(settings)
 		return settings.Description or settings.Desc
+	end
+	local function connectOf(settings)
+		if settings.Connect ~= nil then return settings.Connect end
+		if settings.Connected ~= nil then return settings.Connected end
+		return settings.Join
 	end
 
 	------------------------------------------------------------------------
@@ -3215,6 +4534,7 @@ local MacLib = (function()
 			Desc = descOf(settings),
 			Default = obj.State,
 			FireDefault = false,
+			Connect = connectOf(settings),
 			Callback = function(v)
 				obj.State = v and true or false
 				callback(settings.Callback, obj.State)
@@ -3255,7 +4575,10 @@ local MacLib = (function()
 			Max = settings.Maximum ~= nil and settings.Maximum or settings.Max,
 			Default = settings.Default,
 			Decimals = settings.Precision ~= nil and settings.Precision or settings.Decimals,
+			DisplayMethod = settings.DisplayMethod,
+			Prefix = settings.Prefix,
 			Suffix = settings.Suffix,
+			Connect = connectOf(settings),
 			Callback = function(v)
 				obj.Value = v
 				callback(settings.Callback, v)
@@ -3286,8 +4609,11 @@ local MacLib = (function()
 		local raw = section._raw:Button({
 			Name = settings.Name or "Button",
 			Desc = descOf(settings),
-			Text = settings.Text,
+			-- MacLib's Name is the visible button caption. Native Nousigi keeps
+			-- its own "Click me >.<" default when called without the facade.
+			Text = settings.Text or settings.Name,
 			Icon = settings.Icon or settings.Image,
+			Connect = connectOf(settings),
 			Callback = settings.Callback,
 		})
 		local obj = common({
@@ -3298,6 +4624,7 @@ local MacLib = (function()
 		function obj:UpdateName(name)
 			settings.Name = tostring(name)
 			setChildText(self.Frame, "button-title", name)
+			raw:SetText(settings.Name)
 		end
 		function obj:UpdateText(text)
 			raw:SetText(tostring(text or ""))
@@ -3315,6 +4642,14 @@ local MacLib = (function()
 			Text = tostring(settings.Default or ""),
 		}
 		local accepted = tostring(settings.AcceptedCharacters or "")
+		local inputFilter
+		if type(settings.AcceptedCharacters) == "function" then
+			inputFilter = settings.AcceptedCharacters
+		elseif accepted == "Alphabetic" then
+			inputFilter = function(value) return tostring(value):gsub("[^a-zA-Z ]", "") end
+		elseif accepted == "AlphaNumeric" then
+			inputFilter = function(value) return tostring(value):gsub("[^a-zA-Z0-9]", "") end
+		end
 		local raw
 		raw = section._raw:Input({
 			Name = settings.Name or "Input",
@@ -3322,6 +4657,9 @@ local MacLib = (function()
 			Default = obj.Text,
 			Placeholder = settings.Placeholder,
 			Numeric = settings.Numeric or accepted == "Number" or accepted == "Numeric",
+			Filter = inputFilter,
+			CharacterLimit = settings.CharacterLimit,
+			OnChanged = settings.onChanged or settings.OnChanged,
 			Callback = function(text, enterPressed)
 				obj.Text = tostring(text or "")
 				callback(settings.Callback, obj.Text, enterPressed)
@@ -3377,8 +4715,10 @@ local MacLib = (function()
 
 		local win = section._window
 		if win and win._ui then
-			win._ui:_track(UserInputService.InputBegan:Connect(function(input, gpe)
-				if gpe or not obj.BindKey or UserInputService:GetFocusedTextBox() then return end
+			win._ui:_track(UserInputService.InputBegan:Connect(function(input)
+				-- MacLib intentionally did not filter gameProcessedEvent: gameplay
+				-- keybinds (Pause/CC) must still work over Roblox's own UI.
+				if not obj.BindKey or UserInputService:GetFocusedTextBox() then return end
 				if input.KeyCode == obj.BindKey or input.UserInputType == obj.BindKey then
 					callback(settings.Callback, obj.BindKey)
 					callback(settings.onBindHeld, true, obj.BindKey)
@@ -3492,11 +4832,14 @@ local MacLib = (function()
 		raw = section._raw:Dropdown({
 			Name = settings.Name or "Dropdown",
 			Desc = descOf(settings),
-			Options = initialOptions,
+			-- Facade и native держат независимые массивы: иначе InsertOptions
+			-- сначала менял таблицу native, а затем просил native добавить её снова.
+			Options = copyArray(initialOptions),
 			Multi = obj.Multi,
+			Required = settings.Required,
 			Search = settings.Search,
 			Placeholder = settings.Placeholder,
-			Connect = settings.Connect,
+			Connect = connectOf(settings),
 			Default = nil,
 			Callback = function(value)
 				if obj.Multi then
@@ -3512,7 +4855,8 @@ local MacLib = (function()
 
 		local function applySilent(value)
 			if obj.Multi then
-				local arr = normalizeMulti(value)
+				local arr, requested = normalizeMulti(value)
+				if requested > 0 and #arr == 0 then return false end
 				raw:Set(arr, true)
 				obj.Value = copyArray(arr)
 				return true
@@ -3524,7 +4868,18 @@ local MacLib = (function()
 			return true
 		end
 
-		if settings.Default ~= nil then applySilent(settings.Default) end
+		if settings.Default ~= nil then
+			-- MacLib historically accepts an index for a single dropdown Default;
+			-- a string Default is intentionally NOT selected until caller explicitly
+			-- invokes UpdateSelection. Multi defaults remain value lists.
+			if obj.Multi or type(settings.Default) == "number" then
+				if not applySilent(settings.Default) then
+					obj._PendingValue = settings.Default
+					obj._PendingSkipAutoSave = true
+					obj._PendingVisualOnly = true
+				end
+			end
+		end
 
 		function obj:UpdateSelection(value, skipAutoSave)
 			if value == nil then return end
@@ -3534,6 +4889,7 @@ local MacLib = (function()
 				if requested > 0 and #arr == 0 then
 					self._PendingValue = value
 					self._PendingSkipAutoSave = skipAutoSave
+					self._PendingVisualOnly = false
 					return
 				end
 				raw:Set(arr, true)
@@ -3544,13 +4900,14 @@ local MacLib = (function()
 				if one == nil then
 					self._PendingValue = value
 					self._PendingSkipAutoSave = skipAutoSave
+					self._PendingVisualOnly = false
 					return
 				end
 				raw:Set(one, true)
 				self.Value = one
 				cbValue = one
 			end
-			self._PendingValue, self._PendingSkipAutoSave = nil, nil
+			self._PendingValue, self._PendingSkipAutoSave, self._PendingVisualOnly = nil, nil, nil
 			callback(settings.Callback, cbValue)
 			if not skipAutoSave then Lib:AutoSave() end
 		end
@@ -3586,20 +4943,34 @@ local MacLib = (function()
 
 		function obj:InsertOptions(newOptions)
 			if type(newOptions) ~= "table" then return end
+			local added = {}
 			for _, value in ipairs(newOptions) do
 				if not optionIndex(self._options, value) then
 					self._options[#self._options + 1] = value
+					added[#added + 1] = value
 				end
 			end
 			settings.Options = self._options
-			raw:SetOptions(self._options)
+			if raw.AddOptions then raw:AddOptions(added) else raw:SetOptions(self._options) end
 
 			if self._PendingValue ~= nil then
 				local pending, skip = self._PendingValue, self._PendingSkipAutoSave
-				self._PendingValue, self._PendingSkipAutoSave = nil, nil
-				self:UpdateSelection(pending, skip)
+				if self._PendingVisualOnly then
+					if applySilent(pending) then
+						self._PendingValue, self._PendingSkipAutoSave, self._PendingVisualOnly = nil, nil, nil
+					end
+				else
+					self:UpdateSelection(pending, skip)
+				end
 			elseif self.Value ~= nil then
-				applySilent(self.Value)
+				if not applySilent(self.Value) then
+					-- Clear -> Insert может приходить несколькими порциями. Пока ни
+					-- одного старого option нет, сохраняем Value, а не превращаем его
+					-- в {} и не даём AutoSave зафиксировать потерю на диске.
+					self._PendingValue = self.Multi and copyArray(self.Value) or self.Value
+					self._PendingSkipAutoSave = true
+					self._PendingVisualOnly = true
+				end
 			end
 		end
 
@@ -3613,7 +4984,7 @@ local MacLib = (function()
 			end
 			self._options = kept
 			settings.Options = kept
-			raw:SetOptions(kept)
+			if raw.DropOptions then raw:DropOptions(remove) else raw:SetOptions(kept) end
 			if self.Multi then
 				local selected = {}
 				for _, value in ipairs(self.Value or {}) do
@@ -3628,6 +4999,10 @@ local MacLib = (function()
 				raw:Set(self.Value, true)
 			end
 		end
+		-- Feature-detectable incremental API used by the Nousigi shim. Keep the
+		-- historical MacLib names too, so callers can migrate without branching.
+		obj.AddOptions = obj.InsertOptions
+		obj.DropOptions = obj.RemoveOptions
 
 		function obj:UpdateName(name)
 			settings.Name = tostring(name)
@@ -3635,6 +5010,95 @@ local MacLib = (function()
 		end
 		function obj:Open() return raw:Open() end
 		function obj:Close() return raw:Close() end
+		return putFlag(flag, obj)
+	end
+
+	local function makeColorpicker(section, settings, flag)
+		settings = asSettings(settings, "Colorpicker")
+		flag = flag or settings.Flag
+		local allowAlpha = settings.Alpha ~= nil and settings.Alpha ~= false
+		local initialAlpha = type(settings.Alpha) == "number" and settings.Alpha or 0
+		local obj = {
+			Class = "Colorpicker",
+			Settings = settings,
+			IgnoreConfig = settings.IgnoreConfig == true,
+			Color = typeof(settings.Default) == "Color3" and settings.Default or T.Accent,
+			Alpha = initialAlpha,
+		}
+		local raw
+		raw = section._raw:Colorpicker({
+			Name = settings.Name or "Colorpicker",
+			Desc = descOf(settings),
+			Default = obj.Color,
+			Alpha = allowAlpha and initialAlpha or nil,
+			AllowAlpha = allowAlpha,
+			Callback = function(color, alpha)
+				obj.Color = color
+				if allowAlpha then obj.Alpha = alpha or 0 end
+				callback(settings.Callback, obj.Color, allowAlpha and obj.Alpha or nil)
+				Lib:AutoSave()
+			end,
+		})
+		common(obj, raw, section)
+		function obj:SetColor(color, skipAutoSave)
+			if typeof(color) ~= "Color3" then return end
+			raw:SetColor(color, true)
+			self.Color = raw.Color
+			callback(settings.Callback, self.Color, allowAlpha and self.Alpha or nil)
+			if not skipAutoSave then Lib:AutoSave() end
+		end
+		function obj:SetAlpha(value, skipAutoSave)
+			if not allowAlpha then return end
+			raw:SetAlpha(value, true)
+			self.Alpha = raw.Alpha
+			callback(settings.Callback, self.Color, self.Alpha)
+			if not skipAutoSave then Lib:AutoSave() end
+		end
+		function obj:UpdateName(name)
+			settings.Name = tostring(name)
+			setChildText(self.Frame, "color-title", name)
+		end
+		return putFlag(flag, obj)
+	end
+
+	local function makePriority(section, settings, flag)
+		settings = asSettings(settings, "Priority")
+		flag = flag or settings.Flag
+		local source = settings.Items or settings.Options or settings.Default or {}
+		local obj = {
+			Class = "Priority",
+			Settings = settings,
+			IgnoreConfig = settings.IgnoreConfig == true,
+			Value = copyArray(source),
+		}
+		local raw
+		raw = section._raw:Priority({
+			Name = settings.Name or "Priority",
+			Desc = descOf(settings),
+			Items = source,
+			Connect = connectOf(settings),
+			Callback = function(order)
+				obj.Value = copyArray(order)
+				callback(settings.Callback, copyArray(obj.Value))
+				Lib:AutoSave()
+			end,
+		})
+		common(obj, raw, section)
+		function obj:Set(order, skipAutoSave)
+			raw:Set(order, true)
+			self.Value = raw:Get()
+			callback(settings.Callback, copyArray(self.Value))
+			if not skipAutoSave then Lib:AutoSave() end
+		end
+		obj.UpdateOrder = obj.Set
+		function obj:Get() return copyArray(self.Value) end
+		obj.GetOrder = obj.Get
+		function obj:Open() raw:Open() end
+		function obj:Close() raw:Close() end
+		function obj:UpdateName(name)
+			settings.Name = tostring(name)
+			setChildText(self.Frame, "trello-title", name)
+		end
 		return putFlag(flag, obj)
 	end
 
@@ -3707,11 +5171,47 @@ local MacLib = (function()
 		function section:Input(s, f) return makeInput(self, s, f) end
 		function section:Keybind(s, f) return makeKeybind(self, s, f) end
 		function section:Dropdown(s, f) return makeDropdown(self, s, f) end
+		function section:Colorpicker(s, f) return makeColorpicker(self, s, f) end
+		function section:Priority(s, f) return makePriority(self, s, f) end
+		section.Trello = section.Priority
+		section.Checkbox = section.Toggle
+		section.Select = section.Dropdown
+		section.Textbox = section.Input
 		function section:Label(s) return makeSimpleText(self, s, "Label") end
 		function section:Header(s) return makeSimpleText(self, s, "Header") end
 		function section:SubLabel(s) return makeSimpleText(self, s, "SubLabel") end
 		function section:Paragraph(s) return makeParagraph(self, s) end
 		function section:Divider() return self._raw:Divider() end
+		function section:Spacer(settings)
+			local height = type(settings) == "table" and (settings.Height or settings.Size) or settings
+			return self._raw:Spacer(tonumber(height) or 27)
+		end
+		section.Gap = section.Spacer
+		function section:Split(left, right)
+			left, right = left or {}, right or {}
+			local leftType = left.Type or left.Kind or left.Class or "Button"
+			local rightType = right.Type or right.Kind or right.Class or "Button"
+			local function splitSettings(desc)
+				local cfg = shallowCopy(desc.Settings or desc)
+				cfg.Connect = false
+				cfg.Connected = false
+				cfg.Join = false
+				return cfg
+			end
+			local makers = {
+				Button = function(desc) return makeButton(self, splitSettings(desc)) end,
+				Slider = function(desc) return makeSlider(self, splitSettings(desc), desc.Flag) end,
+				Dropdown = function(desc) return makeDropdown(self, splitSettings(desc), desc.Flag) end,
+			}
+			if not makers[leftType] or not makers[rightType] then
+				error("Mac facade Split supports Button, Slider and Dropdown", 2)
+			end
+			local l = makers[leftType](left)
+			local r = makers[rightType](right)
+			local wrapper = applySplitFrames(l.Frame, r.Frame)
+			refresh(self)
+			return { Left = l, Right = r, Frame = l.Frame, Wrapper = wrapper }
+		end
 		function section:SetVisibility(state)
 			self._raw.Frame.Visible = state and true or false
 		end
@@ -3719,31 +5219,58 @@ local MacLib = (function()
 			settings.Name = tostring(name)
 			self._raw:SetTitle(settings.Name)
 		end
-		function section:SetCollapsed(state) self._raw:SetCollapsed(state) end
+		function section:SetCollapsed(state) self._raw:SetCollapsed(state, false) end
 		function section:GetCollapsed() return self._raw.Collapsed and true or false end
-		function section:LoadCollapsed(state) self._raw:SetCollapsed(state) end
+		function section:LoadCollapsed(state) self._raw:SetCollapsed(state, true) end
 		function section:Section(childSettings, childFlag)
 			childSettings = asSettings(childSettings, "Section")
 			local childRaw = self._raw:Section(childSettings.Name or "Section", {
 				Collapsible = childSettings.Collapsible ~= false,
 				Open = childSettings.Open ~= false and childSettings.Collapsed ~= true,
 				Color = childSettings.Color,
+				Searchable = childSettings.Searchable == true or childSettings.Search == true,
 			})
 			local child = wrapSection(window, tab, childRaw, childSettings, childFlag)
 			if childFlag then putFlag(childFlag, child) end
 			return child
 		end
-		if flag then putFlag(flag, section) end
+		-- MacLib сохраняет collapsed-state как обычную option. Для секций без
+		-- явного Flag создаём стабильный SEC_<Name>; одинаковые имена получают
+		-- детерминированный суффикс, чтобы не выталкивать друг друга из Options.
+		if settings.Collapsible ~= false then
+			local baseFlag = flag or settings.Flag
+			if not baseFlag and settings.Name and settings.Name ~= "" then
+				baseFlag = "SEC_" .. tostring(settings.Name)
+			end
+			if baseFlag then
+				local configFlag, n = tostring(baseFlag), 1
+				while Lib.Options[configFlag] and Lib.Options[configFlag] ~= section do
+					n += 1
+					configFlag = tostring(baseFlag) .. "_" .. n
+				end
+				Lib.Options[configFlag] = section
+				section._configFlag = configFlag
+				if not section.IgnoreConfig then
+					raw.OnCollapsedChanged = function() Lib:AutoSave() end
+				end
+			end
+		elseif flag then
+			putFlag(flag, section)
+		end
 		return section
 	end
 
 	local function createTab(window, settings)
 		settings = asSettings(settings, "Tab")
+		local isSettingsPage = settings.Name == "Settings" or settings.Name == "UI Setting"
 		local page = window._ui:Page(settings.Name or "Tab", {
 			Order = settings.Order,
-			Hidden = settings.Hidden,
+			-- У живого Nousigi UI Setting не дублируется в прокручиваемом меню:
+			-- для неё существует собственная закреплённая кнопка внизу сайдбара.
+			Hidden = settings.Hidden or isSettingsPage,
 			Icon = settings.Image or settings.Icon,
 		})
+		if isSettingsPage then page:SetTitle("UI Setting") end
 		local tab = {
 			Settings = settings,
 			_page = page,
@@ -3753,11 +5280,13 @@ local MacLib = (function()
 		function tab:Section(sectionSettings, flag)
 			sectionSettings = asSettings(sectionSettings, "Section")
 			local raw = page:Section(sectionSettings.Name or "Section", {
+				Side = sectionSettings.Side or "Left",
 				Collapsible = sectionSettings.Collapsible ~= false,
 				-- MacLib sections are open by default; Nousigi native sections are
 				-- collapsed by default. Facade keeps the caller's expectation.
 				Open = sectionSettings.Open ~= false and sectionSettings.Collapsed ~= true,
 				Color = sectionSettings.Color,
+				Searchable = sectionSettings.Searchable == true or sectionSettings.Search == true,
 			})
 			local wrapped = wrapSection(window, self, raw, sectionSettings, flag)
 			self._sections[#self._sections + 1] = wrapped
@@ -3771,6 +5300,135 @@ local MacLib = (function()
 			settings.Name = tostring(name)
 			page:SetTitle(settings.Name)
 			if page.MenuItem then setChildText(page.MenuItem, "menu-child-label", settings.Name) end
+		end
+
+		function tab:InsertConfigSection(side)
+			local configSection = self:Section({
+				Name = "Config",
+				Side = side or "Left",
+				Collapsible = false,
+				IgnoreConfig = true,
+			})
+			local configs = Lib:RefreshConfigList()
+			if type(configs) ~= "table" then
+				configSection:Label({ Text = tostring(configs or "Config system unavailable.") })
+				return configSection
+			end
+
+			local inputPath = ""
+			local selectedConfig = configs[1]
+			configSection:Input({
+				Name = "Config Name",
+				Placeholder = "Name",
+				AcceptedCharacters = "All",
+				IgnoreConfig = true,
+				Callback = function(value) inputPath = tostring(value or "") end,
+			})
+			local selection = configSection:Dropdown({
+				Name = "Select Config",
+				Multi = false,
+				Required = false,
+				Search = true,
+				Options = configs,
+				Default = selectedConfig,
+				IgnoreConfig = true,
+				Callback = function(value) selectedConfig = value end,
+			})
+			local autoloadLabel = configSection:Label({
+				Text = "Autoload config: " .. tostring(Lib:GetAutoload() or "None"),
+			})
+
+			local function notify(text)
+				window:Notify({ Title = "Interface", Description = text })
+			end
+			local function refreshList()
+				local values = Lib:RefreshConfigList()
+				if type(values) ~= "table" then notify(tostring(values)); return end
+				selection:ClearOptions()
+				selection:InsertOptions(values)
+				if selectedConfig and selection:IsOption(selectedConfig) then
+					selection:UpdateSelection(selectedConfig, true)
+				elseif values[1] then
+					selectedConfig = values[1]
+					selection:UpdateSelection(selectedConfig, true)
+				else
+					selectedConfig = nil
+				end
+			end
+
+			configSection:Button({ Name = "Create Config", Callback = function()
+				local name = inputPath:gsub("^%s+", ""):gsub("%s+$", "")
+				if name == "" then notify("Config name cannot be empty."); return end
+				local ok, err = Lib:SaveConfig(name)
+				if not ok then notify("Unable to save config: " .. tostring(err)); return end
+				selectedConfig = name
+				notify(string.format("Created config %q", name))
+				refreshList()
+			end })
+			configSection:Button({ Name = "Load Config", Callback = function()
+				local name = selectedConfig or selection.Value
+				local ok, err = Lib:LoadConfig(name)
+				if not ok then notify("Unable to load config: " .. tostring(err)); return end
+				notify(string.format("Loaded config %q", tostring(name)))
+			end })
+			configSection:Button({ Name = "Overwrite Config", Callback = function()
+				local name = selectedConfig or selection.Value
+				local ok, err = Lib:SaveConfig(name)
+				if not ok then notify("Unable to overwrite config: " .. tostring(err)); return end
+				notify(string.format("Overwrote config %q", tostring(name)))
+			end })
+			configSection:Button({ Name = "Refresh Config List", Callback = refreshList })
+			configSection:Button({ Name = "Set as autoload", Callback = function()
+				local name = selectedConfig or selection.Value
+				local ok, err = Lib:SetAutoload(name)
+				if not ok then notify(tostring(err)); return end
+				autoloadLabel:UpdateName("Autoload config: " .. tostring(name))
+				notify(string.format("Set %q as autoload", tostring(name)))
+			end })
+			configSection:Button({ Name = "Remove autoload", Callback = function()
+				local ok, err = Lib:RemoveAutoload()
+				autoloadLabel:UpdateName("Autoload config: None")
+				notify(ok and "Autoload has been disabled" or tostring(err))
+			end })
+			configSection:Button({ Name = "Delete Config", Callback = function()
+				local name = selectedConfig or selection.Value
+				local ok, err = Lib:DeleteConfig(name)
+				if not ok then notify(tostring(err)); return end
+				notify(string.format("Deleted config %q", tostring(name)))
+				selectedConfig = nil
+				refreshList()
+			end })
+			return configSection
+		end
+
+		function tab:InsertConfigModeSection(side)
+			local modeSection = self:Section({
+				Name = "Config Mode",
+				Side = side or "Right",
+				Collapsible = false,
+				IgnoreConfig = true,
+			})
+			modeSection:Header({ Text = "Config Mode" })
+			modeSection:Paragraph({
+				Header = "How it works",
+				Body = "Shared: one config for all accounts on this device.\nPer Account: each Roblox account gets its own config.",
+			})
+			modeSection:Toggle({
+				Name = "Separate config per account",
+				Default = Lib.ConfigMode == "perUser",
+				IgnoreConfig = true,
+				Callback = function(value)
+					Lib.ConfigMode = value and "perUser" or "shared"
+					Lib:SaveConfigMode()
+					window:Notify({
+						Title = "Config Mode",
+						Description = value
+							and "Configs are now separate per account. Restart to apply."
+							or "Configs are now shared. Restart to apply.",
+					})
+				end,
+			})
+			return modeSection
 		end
 		return tab
 	end
@@ -3791,22 +5449,22 @@ local MacLib = (function()
 	end
 
 	local function destroyOldScreens()
-		local roots = {}
-		local pg = LocalPlayer and LocalPlayer:FindFirstChildOfClass("PlayerGui")
-		if pg then roots[#roots + 1] = pg end
-		if typeof(gethui) == "function" then
-			local ok, hui = pcall(gethui)
-			if ok and hui then roots[#roots + 1] = hui end
-		end
-		for _, root in ipairs(roots) do
+		for _, root in ipairs(guiParentCandidates()) do
 			pcall(function()
 				for _, child in ipairs(root:GetChildren()) do
-					if child.Name == "Nousigi Hub GUI" or child.Name == "Nousigi Hub GUI [ETC]" then
+					if child.Name == "Nousigi Hub GUI"
+					or child.Name == "Nousigi Hub GUI [ETC]"
+					or child.Name == "Nousigi Hub GUI [EFFECT]" then
 						child:Destroy()
 					end
 				end
 			end)
 		end
+		pcall(function()
+			for _, child in ipairs(Lighting:GetChildren()) do
+				if child.Name == "NousigiHubGUI-AcrylicBlur" then child:Destroy() end
+			end
+		end)
 	end
 
 	function Lib:Window(settings)
@@ -3826,6 +5484,7 @@ local MacLib = (function()
 			pcall(sharedEnv._NousigiHubCleanup)
 		end
 		table.clear(self.Options)
+		self._configModeSetting = nil
 		destroyOldScreens()
 
 		local title = tostring(settings.Title or "Nousigi Hub")
@@ -3840,12 +5499,14 @@ local MacLib = (function()
 			Size = sizeVector(settings.Size),
 			Key = settings.Keybind or Enum.KeyCode.RightControl,
 			Logo = settings.Logo or settings.Icon,
+			DragStyle = settings.DragStyle or 1,
 		})
 		-- При UIScale окно остаётся по центру (MacLib-совместимое поведение).
 		ui.Root.AnchorPoint = Vector2.new(0.5, 0.5)
 		ui.Root.Position = UDim2.fromScale(0.5, 0.5)
-		pcall(function() ui.Gui.DisplayOrder = 2147483647 end)
-		pcall(function() ui.ExtraGui.DisplayOrder = 2147483647 end)
+		pcall(function() ui.Gui.DisplayOrder = 2147483645 end)
+		pcall(function() ui.ExtraGui.DisplayOrder = 2147483646 end)
+		pcall(function() ui.EffectGui.DisplayOrder = 2147483647 end)
 		local cleanup = function() pcall(function() ui:Destroy() end) end
 		if sharedEnv then sharedEnv._NousigiHubCleanup = cleanup end
 
@@ -3859,8 +5520,10 @@ local MacLib = (function()
 			_showUserInfo = settings.ShowUserInfo ~= false,
 			_unloadCallbacks = {},
 			_unloaded = false,
+			_disabledWindowControls = settings.DisabledWindowControls or {},
 		}
 		self._window = window
+		if window._acrylic then ui:SetAcrylicBlur(true) end
 
 		function window:TabGroup()
 			local group = { _window = self }
@@ -3873,12 +5536,55 @@ local MacLib = (function()
 			return group
 		end
 
+		function window:UpdateTitle(value)
+			settings.Title = tostring(value or "")
+			ui.Title = settings.Title
+			ui.TitleLabel.Text = settings.Title
+		end
+		function window:UpdateSubtitle(value)
+			settings.Subtitle = tostring(value or "")
+			local text = settings.Subtitle
+			if not ui.SubtitleLabel then
+				ui.SubtitleLabel = new("TextLabel", ghost {
+					Name = "top-subtitle",
+					Size = UDim2.fromOffset(140, 12),
+					Position = UDim2.fromOffset(35, 16),
+					Text = "",
+					TextColor3 = T.TextDim,
+					TextSize = 10,
+					FontFace = FONT.Medium,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Visible = false,
+					Parent = ui.Top,
+				})
+			end
+			ui.SubtitleLabel.Text = text
+			ui.SubtitleLabel.Visible = text ~= ""
+			if text ~= "" then
+				ui.TitleLabel.Position = UDim2.fromOffset(35, 1)
+				ui.TitleLabel.Size = UDim2.fromOffset(140, 16)
+				ui.TitleLabel.TextSize = 14
+			else
+				ui.TitleLabel.Position = UDim2.fromOffset(35, 5)
+				ui.TitleLabel.Size = UDim2.fromOffset(140, 20)
+				ui.TitleLabel.TextSize = 16
+			end
+		end
+		function window:Popup(popupSettings)
+			return ui:Popup(popupSettings)
+		end
+		window.CreatePopup = window.Popup
+
 		function window:SetState(state) ui:SetVisible(state) end
 		function window:GetState() return ui.Visible end
 		function window:SetScale(scale) ui:SetScale(tonumber(scale) or 1) end
 		function window:GetScale() return ui.Scale end
 		function window:SetKeybind(key) ui.ToggleKey = key end
-		function window:SetAcrylicBlurState(state) self._acrylic = state and true or false end
+		function window:SetAcrylicBlurState(state)
+			self._acrylic = state and true or false
+			ui:SetAcrylicBlur(self._acrylic)
+		end
 		function window:GetAcrylicBlurState() return self._acrylic end
 		function window:SetUserInfoState(state) self._showUserInfo = state and true or false end
 		function window:GetUserInfoState() return self._showUserInfo end
@@ -3904,9 +5610,13 @@ local MacLib = (function()
 			local card = ui:Notify({
 				Title = notifySettings.Title,
 				Text = notifySettings.Description or notifySettings.Text or "",
-				Duration = notifySettings.Lifetime or notifySettings.Duration,
+				Duration = notifySettings.Lifetime or notifySettings.Duration or 3,
 				Position = notifySettings.Position,
 				Color = notifySettings.Color,
+				Width = notifySettings.SizeX or notifySettings.Width,
+				Scale = notifySettings.Scale,
+				Style = notifySettings.Style,
+				Callback = notifySettings.Callback,
 			})
 			local api = { Frame = card }
 			function api:Cancel() if card and card.Parent then card:Destroy() end end
@@ -3923,9 +5633,13 @@ local MacLib = (function()
 				Text = dialogSettings.Description or dialogSettings.Text,
 				Buttons = dialogSettings.Buttons,
 			})
-			return {
-				Cancel = function() if raw and raw.Close then raw:Close() end end,
-			}
+			local api = { Frame = raw and raw.Frame }
+			function api:Cancel() if raw and raw.Cancel then raw:Cancel() end end
+			function api:UpdateTitle(text) if raw and raw.UpdateTitle then raw:UpdateTitle(text) end end
+			function api:UpdateDescription(text)
+				if raw and raw.UpdateDescription then raw:UpdateDescription(text) end
+			end
+			return api
 		end
 
 		function window:GlobalSetting(globalSettings)
@@ -3945,34 +5659,197 @@ local MacLib = (function()
 
 		function window:CreateMinimizer(config)
 			config = config or {}
+			if self._minimizer and self._minimizer.Destroy then self._minimizer:Destroy() end
 			ui.HideButtonEnabled = true
 			local button = ui.HideButton
-			if config.Size then
-				button.Size = config.Size
-				local bg = button:FindFirstChild("btn-hide-bg")
-				if bg then bg.Size = UDim2.fromScale(1, 1) end
-			end
-			if config.Position then
-				button.AnchorPoint = Vector2.new(1, 0.5)
-				button.Position = config.Position
-			end
+			local bg = button:FindFirstChild("btn-hide-bg")
+			local img = button:FindFirstChild("img-hide", true)
+			button.AnchorPoint = config.AnchorPoint or Vector2.new(1, 0.5)
+			button.Size = config.Size or UDim2.fromOffset(50, 50)
+			button.Position = config.Position or UDim2.new(1, -10, 0.5, 0)
+			if bg then bg.Size = UDim2.fromScale(1, 1) end
 			if config.Icon then
-				local img = button:FindFirstChild("img-hide", true)
 				if img then img.Image = config.Icon end
 			end
 			button.Visible = true
-			local minimizer = { Button = button, Gui = ui.ExtraGui }
+
+			local minimizer = { Button = button, Gui = ui.ExtraGui, _connections = {} }
+			local dragging = false
+			local moved = false
+			local dragStart, startPos
+			local function track(conn)
+				minimizer._connections[#minimizer._connections + 1] = conn
+				ui:_track(conn)
+				return conn
+			end
+
+			track(button.InputBegan:Connect(function(input)
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1
+				and input.UserInputType ~= Enum.UserInputType.Touch then return end
+				dragging, moved = true, false
+				dragStart, startPos = input.Position, button.Position
+			end))
+			track(UserInputService.InputChanged:Connect(function(input)
+				if not dragging then return end
+				if input.UserInputType ~= Enum.UserInputType.MouseMovement
+				and input.UserInputType ~= Enum.UserInputType.Touch then return end
+				local delta = input.Position - dragStart
+				if delta.Magnitude > 4 then moved = true end
+				local viewport = Vector2.new(1920, 1080)
+				pcall(function() if workspace.CurrentCamera then viewport = workspace.CurrentCamera.ViewportSize end end)
+				local x = startPos.X.Offset + delta.X
+				local y = startPos.Y.Offset + delta.Y
+				-- Clamp с учётом AnchorPoint/Scale, чтобы кнопку нельзя было потерять.
+				local absX = viewport.X * startPos.X.Scale + x
+				local absY = viewport.Y * startPos.Y.Scale + y
+				local w, h = button.AbsoluteSize.X, button.AbsoluteSize.Y
+				local ap = button.AnchorPoint
+				absX = math.clamp(absX, ap.X * w, viewport.X - (1 - ap.X) * w)
+				absY = math.clamp(absY, ap.Y * h, viewport.Y - (1 - ap.Y) * h)
+				button.Position = UDim2.new(0, absX, 0, absY)
+			end))
+			track(UserInputService.InputEnded:Connect(function(input)
+				if not dragging then return end
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1
+				and input.UserInputType ~= Enum.UserInputType.Touch then return end
+				dragging = false
+				if moved then button:SetAttribute("SuppressNextClick", true) end
+			end))
+			track(button.MouseEnter:Connect(function()
+				if bg then tween(bg, TW_FAST, { BackgroundColor3 = T.AccentLight }) end
+			end))
+			track(button.MouseLeave:Connect(function()
+				if bg then tween(bg, TW_FAST, { BackgroundColor3 = T.Text }) end
+			end))
+
+			function minimizer:SetPosition(position)
+				if typeof(position) == "UDim2" then button.Position = position end
+			end
+			function minimizer:SetSize(size)
+				if typeof(size) == "UDim2" then button.Size = size end
+			end
+			function minimizer:SetVisibility(state)
+				button.Visible = state and true or false
+			end
 			function minimizer:Destroy()
+				if self._destroyed then return end
+				self._destroyed = true
+				for _, conn in ipairs(self._connections) do pcall(function() conn:Disconnect() end) end
 				ui.HideButtonEnabled = false
 				button.Visible = false
 			end
+			self._minimizer = minimizer
 			return minimizer
 		end
 
 		function window:SetKeyTimer(expiresAt)
-			-- Nousigi topbar не имеет отдельного key-timer slot. Значение
-			-- сохраняем в API, чтобы вызов был совместим и доступен скрипту.
 			self.KeyExpiresAt = expiresAt
+			if self._keyTimerConnection then
+				pcall(function() self._keyTimerConnection:Disconnect() end)
+				self._keyTimerConnection = nil
+			end
+
+			local searchRoot = ui.TopSearch and ui.TopSearch.Parent
+			local timer = self._keyTimerText
+			if not timer then
+				timer = new("TextLabel", ghost {
+					Name = "key-timer",
+					Size = UDim2.fromOffset(180, 20),
+					Position = UDim2.new(1, -235, 0, 0),
+					Text = "",
+					TextColor3 = Color3.fromRGB(252, 190, 57),
+					TextTransparency = 0.2,
+					TextSize = 13,
+					FontFace = FONT.Medium,
+					TextXAlignment = Enum.TextXAlignment.Right,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Visible = false,
+					ZIndex = 5,
+					Parent = searchRoot,
+				})
+				self._keyTimerText = timer
+			end
+
+			local function setVisible(state)
+				timer.Visible = state
+				if ui.TopSearch then
+					ui.TopSearch.Size = UDim2.new(1, state and -270 or -85, 1, 0)
+				end
+			end
+			if expiresAt == nil or expiresAt == "" then
+				setVisible(false)
+				return
+			end
+
+			local s = tostring(expiresAt)
+			if expiresAt == math.huge or expiresAt == -1 or expiresAt == 0
+			or s == "-1" or s == "0" or s:lower():find("lifetime", 1, true)
+			or s:lower():find("never", 1, true) then
+				timer.Text = "🔑 Key: Lifetime"
+				setVisible(true)
+				return
+			end
+
+			local function parseUnix(value)
+				local n = tonumber(value)
+				if not n or n ~= n or n <= 0 then return nil end
+				if n > 1e12 then n = math.floor(n / 1000) end
+				if n < 1e9 then return os.time() + math.floor(n) end
+				return math.floor(n)
+			end
+			local function parseCustom(value)
+				if type(value) ~= "string" then return nil end
+				local month, day, year, hour, minute = value:match("(%d+)/(%d+)/(%d+)_(%d+):(%d+)")
+				if not month then return nil end
+				year = tonumber(year)
+				if year < 100 then year += 2000 end
+				return os.time({
+					year = year, month = tonumber(month), day = tonumber(day),
+					hour = tonumber(hour), min = tonumber(minute), sec = 0,
+				}) + (8 * 3600)
+			end
+			local function parseISO(value)
+				if type(value) ~= "string" then return nil end
+				local year, month, day, hour, minute, second = value:match(
+					"(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):([%d%.]+)"
+				)
+				if not year then return nil end
+				return os.time({
+					year = tonumber(year), month = tonumber(month), day = tonumber(day),
+					hour = tonumber(hour), min = tonumber(minute), sec = math.floor(tonumber(second)),
+				})
+			end
+			local expiry = parseUnix(expiresAt) or parseCustom(expiresAt) or parseISO(expiresAt)
+			if not expiry then
+				timer.Text = "🔑 Key: Invalid date"
+				setVisible(true)
+				return
+			end
+
+			local function formatRemaining(seconds)
+				if seconds <= 0 then return "🔑 Key: Expired" end
+				local days = math.floor(seconds / 86400)
+				local hours = math.floor((seconds % 86400) / 3600)
+				local minutes = math.floor((seconds % 3600) / 60)
+				local secs = math.floor(seconds % 60)
+				if days > 0 then return string.format("🔑 Key: %dd %dh %dm %ds", days, hours, minutes, secs) end
+				if hours > 0 then return string.format("🔑 Key: %dh %dm %ds", hours, minutes, secs) end
+				return string.format("🔑 Key: %dm %ds", minutes, secs)
+			end
+
+			setVisible(true)
+			local last
+			local function update()
+				local remaining = math.floor(expiry - os.time())
+				if remaining ~= last then last = remaining; timer.Text = formatRemaining(remaining) end
+				if remaining <= 0 and window._keyTimerConnection then
+					window._keyTimerConnection:Disconnect()
+					window._keyTimerConnection = nil
+				end
+			end
+			update()
+			self._keyTimerConnection = RunService.Heartbeat:Connect(update)
+			ui:_track(self._keyTimerConnection)
 		end
 
 		function window.onUnloaded(a, b)
@@ -3983,14 +5860,27 @@ local MacLib = (function()
 		end
 
 		function window:Unload()
-			if self._unloaded then return end
-			self._unloaded = true
-			for _, fn in ipairs(self._unloadCallbacks) do callback(fn) end
-			ui:Destroy()
-			if sharedEnv and sharedEnv._NousigiHubCleanup == cleanup then
-				sharedEnv._NousigiHubCleanup = nil
+			if self._unloaded then return true end
+			if not self._unloadCallbacksFired then
+				self._unloadCallbacksFired = true
+				for _, fn in ipairs(self._unloadCallbacks) do callback(fn) end
 			end
+			local ok, destroyed = pcall(ui.Destroy, ui)
+			if not ok or destroyed ~= true then return false end
+			self._unloaded = true
+			if sharedEnv and sharedEnv._NousigiHubCleanup == cleanup then sharedEnv._NousigiHubCleanup = nil end
+			return true
 		end
+
+		if settings.Subtitle and settings.Subtitle ~= "" then window:UpdateSubtitle(settings.Subtitle) end
+
+		-- Если SetFolder был вызван до Window(), восстанавливаем тот же
+		-- автоматический global setting "Config per account", что и MacLib.
+		task.defer(function()
+			if not window._unloaded and Lib._folderInitialized and Lib._ensureConfigModeSetting then
+				Lib:_ensureConfigModeSetting()
+			end
+		end)
 
 		return window
 	end
@@ -4068,11 +5958,32 @@ local MacLib = (function()
 		return name
 	end
 
+	function Lib:_ensureConfigModeSetting()
+		local window = self._window
+		if not window or window._unloaded then return nil end
+		if self._configModeSetting then
+			self._configModeSetting:UpdateState(self.ConfigMode == "perUser", true)
+			return self._configModeSetting
+		end
+		self._configModeSetting = window:GlobalSetting({
+			Name = "Config per account",
+			Default = self.ConfigMode == "perUser",
+			IgnoreConfig = true,
+			Callback = function(state)
+				Lib.ConfigMode = state and "perUser" or "shared"
+				if Lib.SaveConfigMode then pcall(function() Lib:SaveConfigMode() end) end
+			end,
+		})
+		return self._configModeSetting
+	end
+
 	function Lib:SetFolder(folder)
 		if type(folder) == "string" and folder ~= "" then self.Folder = folder end
 		if not fileApi() then return "Config system unavailable." end
 		baseGameFolder()
 		loadConfigMode()
+		self._folderInitialized = true
+		self:_ensureConfigModeSetting()
 		return true
 	end
 
@@ -4101,6 +6012,15 @@ local MacLib = (function()
 				bind = key.Name,
 				bindType = key.EnumType == Enum.UserInputType and "UserInputType" or "KeyCode",
 			}
+		elseif obj.Class == "Colorpicker" then
+			local c = obj.Color or Color3.new(1, 1, 1)
+			return {
+				type = "Colorpicker", flag = flag,
+				color = string.format("#%02X%02X%02X", math.floor(c.R * 255 + 0.5), math.floor(c.G * 255 + 0.5), math.floor(c.B * 255 + 0.5)),
+				alpha = obj.Alpha,
+			}
+		elseif obj.Class == "Priority" then
+			return { type = "Priority", flag = flag, value = obj:Get() }
 		elseif obj.Class == "Section" then
 			return { type = "Section", flag = flag, collapsed = obj:GetCollapsed() }
 		end
@@ -4145,6 +6065,15 @@ local MacLib = (function()
 				key = Enum.KeyCode[item.bind]
 			end
 			if key then obj:Bind(key) end
+		elseif item.type == "Colorpicker" and obj.SetColor and type(item.color) == "string" then
+			local hex = item.color:gsub("#", "")
+			if #hex == 6 then
+				local r, g, b = tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5, 6), 16)
+				if r and g and b then obj:SetColor(Color3.fromRGB(r, g, b), true) end
+			end
+			if item.alpha ~= nil and obj.SetAlpha then obj:SetAlpha(item.alpha, true) end
+		elseif item.type == "Priority" and obj.Set and type(item.value) == "table" then
+			obj:Set(item.value, true)
 		elseif item.type == "Section" and obj.LoadCollapsed then
 			obj:LoadCollapsed(item.collapsed)
 		end
@@ -4166,6 +6095,75 @@ local MacLib = (function()
 			pcall(loadObject, item)
 		end
 		return true
+	end
+
+	function Lib:RefreshConfigList()
+		if not fileApi() or type(listfiles) ~= "function" then
+			return "Config system unavailable."
+		end
+		local out, seen = {}, {}
+		local function append(dir)
+			if not dir or not isfolder(dir) then return end
+			local ok, files = pcall(listfiles, dir)
+			if not ok or type(files) ~= "table" then return end
+			for _, path in ipairs(files) do
+				local file = tostring(path):match("[^/\\]+$") or tostring(path)
+				local name = file:match("^(.*)%.json$")
+				if name and name ~= "options" and not seen[name] then
+					seen[name] = true
+					out[#out + 1] = name
+				end
+			end
+		end
+		append(gameFolder())
+		append(baseGameFolder())
+		table.sort(out, function(a, b) return a:lower() < b:lower() end)
+		return out
+	end
+
+	function Lib:GetAutoload()
+		if not fileApi() then return nil end
+		local userPath = gameFolder() .. "/autoload.txt"
+		local basePath = baseGameFolder() .. "/autoload.txt"
+		local path = isfile(userPath) and userPath or (isfile(basePath) and basePath or nil)
+		if not path then return nil end
+		local value = tostring(readfile(path) or ""):gsub("%s+$", "")
+		return value ~= "" and value or nil
+	end
+
+	function Lib:SetAutoload(name)
+		if not fileApi() then return false, "Config system unavailable." end
+		name = tostring(name or ""):gsub("%s+$", "")
+		if name == "" then return false, "Please select a config file." end
+		writefile(gameFolder() .. "/autoload.txt", name)
+		return true
+	end
+
+	function Lib:RemoveAutoload()
+		if not fileApi() then return false, "Config system unavailable." end
+		local paths = { gameFolder() .. "/autoload.txt", baseGameFolder() .. "/autoload.txt" }
+		local removed = false
+		for _, path in ipairs(paths) do
+			if isfile(path) then
+				removed = true
+				if type(delfile) == "function" then pcall(delfile, path)
+				else pcall(writefile, path, "") end
+			end
+		end
+		return removed, removed and nil or "There is no autoload set."
+	end
+
+	function Lib:DeleteConfig(name)
+		if not fileApi() then return false, "Config system unavailable." end
+		if type(delfile) ~= "function" then return false, "delfile is unavailable." end
+		name = tostring(name or "")
+		if name == "" then return false, "Please select a config file." end
+		local removed = false
+		for _, dir in ipairs({ gameFolder(), baseGameFolder() }) do
+			local path = dir .. "/" .. name .. ".json"
+			if isfile(path) then pcall(delfile, path); removed = true end
+		end
+		return removed, removed and nil or "Invalid file"
 	end
 
 	function Lib:AutoSave()
