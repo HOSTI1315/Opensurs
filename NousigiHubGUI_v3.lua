@@ -1,7 +1,7 @@
 --!nonstrict
 --[[
 ================================================================================
-  Nousigi Hub GUI  —  динамическая UI-библиотека + MacLib facade          v4.1
+  Nousigi Hub GUI  —  динамическая UI-библиотека + MacLib facade          v4.2
 ================================================================================
   ОДИН ФАЙЛ. Никаких require / HttpGet / loadstring / внешних ассетов кроме
   штатных rbxassetid. Работает и в Roblox Studio (LocalScript в
@@ -376,6 +376,8 @@ function Nousigi.new(cfg)
 	self.SectionByFrame = {}
 	self.SidebarOpen = true
 	self.Scale       = 1
+	self._requestedScale = 1
+	self._scaleRequestSerial = 0
 	self.Visible     = true
 
 	self:_buildMain()
@@ -996,16 +998,31 @@ end
 
 function Nousigi:SetScale(scale)
 	local target = math.clamp(tonumber(scale) or 1, 0.5, 2)
+	self._scaleRequestSerial += 1
+	local requestSerial = self._scaleRequestSerial
+	self._requestedScale = target
+
+	local function isCurrent()
+		return not self.Destroyed
+			and not self.Destroying
+			and self._scaleRequestSerial == requestSerial
+			and self._requestedScale == target
+	end
 	local function apply()
+		if not isCurrent() then return false end
 		local ok = pcall(function() self.UIScale.Scale = target end)
-		if ok then self.Scale = target end
+		if ok and isCurrent() then self.Scale = target end
 		return ok
 	end
 	if apply() then return true end
 	task.spawn(function()
 		for _ = 1, 29 do
-			if self.Destroyed then return end
+			-- Новый SetScale сразу делает этот retry устаревшим. Проверяем token
+			-- с обеих сторон yield, чтобы старое значение не могло проснуться
+			-- после пользовательского движения UI Size и перетереть новое.
+			if not isCurrent() then return end
 			task.wait(0.1)
+			if not isCurrent() then return end
 			if apply() then return end
 		end
 	end)
